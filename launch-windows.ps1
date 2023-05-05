@@ -4,8 +4,8 @@ if (Test-Path "src/Properties/launchSettings.json") {
 }
 # Building first is more reliable than running directly from src
 dotnet build
-# Env configuration, should be handled externally for real usage
-$Env:ASPNETCORE_ENVIRONMENT = "Development"
+# Default env configuration, gets overwritten by the C# code's settings handler
+$Env:ASPNETCORE_ENVIRONMENT = "Production"
 $Env:ASPNETCORE_URLS = "http://*:7801"
 # Actual runner.
-dotnet src\bin\Debug\net7.0\StableUI.dll
+dotnet src\bin\Debug\net7.0\StableUI.dll @args
