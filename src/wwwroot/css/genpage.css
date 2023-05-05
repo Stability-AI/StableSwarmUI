@@ -1,0 +1,9 @@
+.prompt-box {
+    width: 100%;
+}
+.generate-button {
+    background-color: orange;
+    font-size: 200%;
+    font-weight: bold;
+    padding: 1rem;
+}

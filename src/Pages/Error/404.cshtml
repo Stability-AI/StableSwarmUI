@@ -1,0 +1,11 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Error 404: File Not Found";
+    Response.StatusCode = 404;
+}
+
+<center>
+    <h1>Error 404: File Not Found</h1>
+    <h4>That request doesn't seem to lead anywhere, unfortunately.</h4>
+</center>

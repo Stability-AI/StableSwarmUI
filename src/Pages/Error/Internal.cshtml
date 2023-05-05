@@ -1,0 +1,11 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Error 500: Internal Server Error";
+    Response.StatusCode = 500;
+}
+
+<center>
+    <h1>Error 500: Internal Server Error</h1>
+    <h4>Something went wrong. If this is your server, check the console for an error message.</h4>
+</center>

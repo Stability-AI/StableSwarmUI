@@ -1,5 +1,6 @@
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using StableUI.WebAPI;
 
 namespace StableUI.Core;
 
@@ -20,6 +21,7 @@ public class Program
             Console.WriteLine($"Command line arguments given are invalid: {ex.Message}");
             return;
         }
+        BasicAPIFeatures.Register();
         WebServer.Launch();
     }
 

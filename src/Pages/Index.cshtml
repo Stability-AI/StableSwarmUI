@@ -1,7 +1,16 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Demo Test Page";
+}
+@section Header {
+    <link rel="stylesheet" href="/css/genpage.css" asp-append-version="true" />
 }
 
-Test!
+<textarea class="prompt-box" id="input_prompt" placeholder="Type your prompt here" rows="3"></textarea>
+<br><textarea class="prompt-box" id="input_negative_prompt" placeholder="Type your negative prompt here" rows="3"></textarea>
+<br><button class="generate-button" id="generate_button">Generate!</button>
+
+@section Scripts {
+    <script src="/js/genpage.js"></script>
+}
