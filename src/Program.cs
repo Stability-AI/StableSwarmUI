@@ -1,30 +1,14 @@
-namespace StableUI
+using FreneticUtilities.FreneticToolkit;
+
+namespace StableUI;
+
+public class Program
 {
-    public class Program
+    /// <summary>Primary execution entry point.</summary>
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-            builder.Services.AddRazorPages();
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Error");
-            }
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.MapRazorPages();
-
-            app.Run();
-        }
+        // Fix for MS's broken localization
+        SpecialTools.Internationalize();
+        WebServer.Launch();
     }
 }
