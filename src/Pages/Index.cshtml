@@ -22,7 +22,9 @@
     <br>@WebUtil.AutoSlider("Width", "Image width, in pixels.", "input_width", 0, 8192, 1024, 64)
     <br>@WebUtil.AutoSlider("Height", "Image height, in pixels.", "input_height", 0, 8192, 1024, 64)
 </div>
-<div id="image_spot"></div>
+<div class="main-image-area">
+    <div id="image_spot"></div>
+</div>
 
 @section Scripts {
     <script src="/js/genpage.js?vary=@Utilities.VaryID"></script>
