@@ -13,12 +13,19 @@ public static class WebServer
     /// <summary>The internal web host url this webserver is using.</summary>
     public static string HostURL;
 
+    /// <summary>Minimum ASP.NET Log Level.</summary>
+    public static LogLevel LogLevel;
+
     /// <summary>Called by <see cref="Program"/>, generally should not be touched externally.</summary>
     public static void Launch()
     {
         // ASP.NET web init
-        var builder = WebApplication.CreateBuilder();
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "src/wwwroot" });
         builder.Services.AddRazorPages();
+        if (!builder.Environment.IsDevelopment())
+        {
+            builder.Logging.SetMinimumLevel(LogLevel);
+        }
         WebApp = builder.Build();
         if (WebApp.Environment.IsDevelopment())
         {
@@ -29,7 +36,7 @@ public static class WebServer
         {
             WebApp.UseExceptionHandler("/Error/Internal");
         }
-        WebApp.UseStaticFiles();
+        WebApp.UseStaticFiles(new StaticFileOptions());
         WebApp.UseRouting();
         WebApp.UseAuthorization();
         WebApp.MapRazorPages();

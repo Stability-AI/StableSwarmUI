@@ -1,6 +1,7 @@
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using StableUI.Backends;
+using StableUI.Utils;
 using StableUI.WebAPI;
 
 namespace StableUI.Core;
@@ -15,18 +16,28 @@ public class Program
     public static void Main(string[] args)
     {
         SpecialTools.Internationalize(); // Fix for MS's broken localization
+        Logs.Init("=== StableUI Starting ===");
         try
         {
+            Logs.Init("Parsing command line...");
             ParseCommandLineArgs(args);
+            Logs.Init("Applying settings...");
             ApplyCoreSettings();
         }
         catch (InvalidDataException ex)
         {
-            Console.WriteLine($"Command line arguments given are invalid: {ex.Message}");
+            Logs.Error($"Command line arguments given are invalid: {ex.Message}");
             return;
         }
+        Logs.Init("Loading backends...");
         Backends = new();
+        Logs.Init("Prepping API...");
         BasicAPIFeatures.Register();
+        foreach (string str in CommandLineFlags.Keys.Where(k => !CommandLineFlagsRead.Contains(k)))
+        {
+            Logs.Warning($"Unused command line flag '{str}'");
+        }
+        Logs.Init("Launching server...");
         WebServer.Launch();
     }
 
@@ -34,17 +45,19 @@ public class Program
     /// <summary>Pre-applies settings choices from command line (or other sources).</summary>
     public static void ApplyCoreSettings()
     {
-        string environment = CommandLineFlags.GetValueOrDefault("aspweb_mode", "production").ToLowerFast() switch
+        string environment = GetCommandLineFlag("environment", "production").ToLowerFast() switch
         {
             "dev" or "development" => "Development",
             "prod" or "production" => "Production",
             var mode => throw new InvalidDataException($"aspweb_mode value of '{mode}' is not valid")
         };
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", environment);
-        string host = CommandLineFlags.GetValueOrDefault("host", "localhost");
-        string port = CommandLineFlags.GetValueOrDefault("port", "7801");
+        string host = GetCommandLineFlag("host", "localhost");
+        string port = GetCommandLineFlag("port", "7801");
         WebServer.HostURL = $"http://{host}:{port}";
         Environment.SetEnvironmentVariable("ASPNETCORE_URLS", WebServer.HostURL);
+        string logLevel = GetCommandLineFlag("asp_loglevel", environment == "Development" ? "debug" : "warning");
+        WebServer.LogLevel = Enum.Parse<LogLevel>(logLevel, true);
     }
     #endregion
 
@@ -73,7 +86,17 @@ public class Program
         }
     }
 
-    /// <summary>Command line value-flags are contained here. Flags without value contain string 'true'.</summary>
+    /// <summary>Command line value-flags are contained here. Flags without value contain string 'true'. Don't read this directly, use <see cref="GetCommandLineFlag(string, string)"/>.</summary>
     public static Dictionary<string, string> CommandLineFlags = new();
+
+    /// <summary>Helper to identify when command line flags go unused.</summary>
+    public static HashSet<string> CommandLineFlagsRead = new();
+
+    /// <summary>Get the command line flag for a given name, and default value.</summary>
+    public static string GetCommandLineFlag(string key, string def)
+    {
+        CommandLineFlagsRead.Add(key);
+        return CommandLineFlags.GetValueOrDefault(key, def);
+    }
     #endregion
 }

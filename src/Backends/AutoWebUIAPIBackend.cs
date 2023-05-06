@@ -35,6 +35,7 @@ public class AutoWebUIAPIBackend : AbstractT2IBackend
 
     public override async Task<Image[]> Generate(string prompt, string negativePrompt, long seed, int steps, int width, int height, double cfgScale)
     {
+        Logs.Debug($"Sending AutoWebUI request for prompt '{prompt}'");
         JObject result = await Send("txt2img", new JObject() { ["prompt"] = prompt, ["negative_prompt"] = negativePrompt, ["seed"] = seed, ["steps"] = steps, ["width"] = width, ["height"] = height, ["cfg_scale"] = cfgScale });
         // TODO: Error handlers
         return result["images"].Select(i => new Image((string)i)).ToArray();

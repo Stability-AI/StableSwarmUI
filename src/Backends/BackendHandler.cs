@@ -1,5 +1,6 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using StableUI.Utils;
 
 namespace StableUI.Backends;
 
@@ -43,12 +44,15 @@ public class BackendHandler
         long startTime = Environment.TickCount64;
         while (true)
         {
-            if (new TimeSpan(Environment.TickCount64 - startTime) > maxWait)
+            TimeSpan waited = new(Environment.TickCount64 - startTime);
+            if (waited > maxWait)
             {
+                Logs.Info($"Backend usage timeout, all backends occupied, giving up after {waited.TotalSeconds} seconds.");
                 throw new TimeoutException();
             }
             if (T2IBackends.IsEmpty())
             {
+                Logs.Warning("No backends are available! Cannot generate anything.");
                 throw new InvalidOperationException("No backends available!");
             }
             lock (CentralLock)
@@ -62,7 +66,7 @@ public class BackendHandler
                     }
                 }
             }
-            BackendsAvailableSignal.WaitOne(maxWait);
+            BackendsAvailableSignal.WaitOne(TimeSpan.FromSeconds(2));
         }
     }
 }
