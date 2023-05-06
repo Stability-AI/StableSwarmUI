@@ -11,6 +11,8 @@
 <br><textarea class="prompt-box" id="input_negative_prompt" placeholder="Type your negative prompt here" rows="3"></textarea>
 <br><input type="number" id="input_seed", value="-1", min="-1", max="1000000000", step="1"></input>
 <br><button class="generate-button" id="generate_button">Generate!</button>
+<br>
+<div id="image_spot"></div>
 
 @section Scripts {
     <script src="/js/genpage.js?vary=@Utilities.VaryID"></script>

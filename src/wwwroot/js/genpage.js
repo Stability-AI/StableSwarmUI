@@ -13,13 +13,25 @@ function genericServerError() {
     showError('Failed to send generate request to server. Did the server crash?');
 }
 
+function gotImageResults(images) {
+    for (let image of images) {
+        let img = document.createElement('img');
+        img.src = 'data:image/png;base64,' + image;
+        document.getElementById('image_spot').appendChild(img);
+    }
+}
+
 function doGenerate() {
     let input = {};
     for (let id of core_inputs) {
         input[id] = document.getElementById('input_' + id).value;
     }
     sendJsonToServer('/API/GenerateText2Image', input, (status, data) => {
-        console.log(`Status: ${status}, data: ${JSON.stringify(data)}`);
+        if (data.error) {
+            showError(data.error);
+            return;
+        }
+        gotImageResults(data.images);
     }, genericServerError);
 }
 

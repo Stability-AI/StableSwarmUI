@@ -1,5 +1,6 @@
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using StableUI.Backends;
 using StableUI.WebAPI;
 
 namespace StableUI.Core;
@@ -7,6 +8,9 @@ namespace StableUI.Core;
 /// <summary>Class that handles the core entry-point access to the program, and initialization of program layers.</summary>
 public class Program
 {
+    /// <summary>Central store of available backends.</summary>
+    public static BackendHandler Backends; // TODO: better location for central values
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -21,6 +25,7 @@ public class Program
             Console.WriteLine($"Command line arguments given are invalid: {ex.Message}");
             return;
         }
+        Backends = new();
         BasicAPIFeatures.Register();
         WebServer.Launch();
     }
