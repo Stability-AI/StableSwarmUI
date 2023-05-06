@@ -21,23 +21,9 @@ public class API
     }
 
     /// <summary>Register a new API call handler.</summary>
-    public static void RegisterAPICall(object obj, string methodName)
+    public static void RegisterAPICall(Delegate method)
     {
-        MethodInfo method;
-        if (obj is Type type)
-        {
-            method = type.GetMethod(methodName);
-            obj = null;
-        }
-        else
-        {
-            method = obj.GetType().GetMethod(methodName);
-        }
-        if (method is null)
-        {
-            throw new Exception($"Cannot register API call '{methodName}', method not found!");
-        }
-        RegisterAPICall(new APICall(methodName, APICallReflectBuilder.BuildFor(obj, method)));
+        RegisterAPICall(new APICall(method.Method.Name, APICallReflectBuilder.BuildFor(method.Target, method.Method)));
     }
 
     /// <summary>Web access call route, triggered from <see cref="WebServer"/>.</summary>
@@ -45,7 +31,7 @@ public class API
     {
         void Error(string message)
         {
-            Console.WriteLine($"[WebAPI] Error handling API request '{context.Request.Path}': {message}");
+            Logs.Error($"[WebAPI] Error handling API request '{context.Request.Path}': {message}");
         }
         try
         {
