@@ -47,12 +47,12 @@ public class APICallReflectBuilder
                         {
                             return (null, param.DefaultValue);
                         }
-                        return ($"Missing required parameted {param.Name}", null);
+                        return ($"Missing required parameter '{param.Name}'", null);
                     }
                     (bool success, object output) = coercer(value);
                     if (!success)
                     {
-                        return ($"Invalid value '{value}' for parameter {param.Name}, must be type {param.ParameterType.Name}", null);
+                        return ($"Invalid value '{value}' for parameter '{param.Name}', must be type '{param.ParameterType.Name}'", null);
                     }
                     return (null, output);
                 });

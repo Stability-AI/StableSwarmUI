@@ -7,15 +7,35 @@ namespace StableUI.Accounts;
 public class SessionHandler
 {
     /// <summary>How long the random session ID tokens should be.</summary>
-    public static int SessionIDLength = 40; // TODO: Configurable
+    public int SessionIDLength = 40; // TODO: Configurable
 
     /// <summary>Map of currently tracked sessions by ID.</summary>
-    public static ConcurrentDictionary<string, Session> Sessions = new();
+    public ConcurrentDictionary<string, Session> Sessions = new();
 
-    public static Session CreateAdminSession(string source)
+    public Session CreateAdminSession(string source)
     {
         Logs.Info($"Creating new admin session for {source}");
-        return new()
+        for (int i = 0; i < 1000; i++)
+        {
+            Session sess = new()
+            {
+                OutputDirectory = "outputs/main/",
+                ID = Utilities.SecureRandomHex(SessionIDLength)
+            };
+            if (Sessions.TryAdd(sess.ID, sess))
+            {
+                return sess;
+            }
+        }
+        throw new InvalidOperationException("Something is critically wrong in the session handler, cannot generate unique IDs!");
+    }
+
+    /// <summary>Tries to get the session for an id.</summary>
+    /// <returns><see cref="true"/> if found, otherwise <see cref="false"/>.</returns>
+    public bool TryGetSession(string id, out Session session)
+    {
+        return Sessions.TryGetValue(id, out session);
+    }
         {
             OutputDirectory = "outputs/main/",
             ID = Utilities.SecureRandomHex(SessionIDLength)

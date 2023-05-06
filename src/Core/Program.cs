@@ -1,5 +1,6 @@
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Utils;
 using StableUI.WebAPI;
@@ -11,6 +12,9 @@ public class Program
 {
     /// <summary>Central store of available backends.</summary>
     public static BackendHandler Backends; // TODO: better location for central values
+
+    /// <summary>Central store of web sessions.</summary>
+    public static SessionHandler Sessions;
 
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
@@ -31,6 +35,8 @@ public class Program
         }
         Logs.Init("Loading backends...");
         Backends = new();
+        Logs.Init("Loading session handler...");
+        Sessions = new();
         Logs.Init("Prepping API...");
         BasicAPIFeatures.Register();
         foreach (string str in CommandLineFlags.Keys.Where(k => !CommandLineFlagsRead.Contains(k)))

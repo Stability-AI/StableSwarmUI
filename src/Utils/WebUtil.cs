@@ -54,6 +54,24 @@ public static class WebUtil
 """);
     }
 
+    public static HtmlString Toast(string box_id, string header, string small_side, string content_id, string content)
+    {
+        return new HtmlString($"""
+<div class="toast hide" role="alert" aria-live="assertive" aria-atomic="true" id="{box_id}">
+    <div class="toast-header">
+    <strong class="me-auto">{header}</strong>
+    <small>{small_side}</small>
+    <button type="button" class="btn-close ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close">
+        <span aria-hidden="true"></span>
+    </button>
+    </div>
+    <div class="toast-body" id="{content_id}">
+        {content}
+    </div>
+</div>
+""");
+    }
+
     /// <summary>Escapes a string for safe usage inside HTML blocks.</summary>
     public static string HtmlEscape(string str)
     {

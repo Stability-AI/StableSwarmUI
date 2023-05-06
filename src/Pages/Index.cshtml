@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="/css/genpage.css?vary=@Utilities.VaryID" />
 }
 
+<div class="center-toast" id="center_toast">
+    @WebUtil.Toast("error_toast_box", "Error", "", "error_toast_content", "")
+</div>
+
 <div class="input-sidebar" id="input_sidebar">
     <textarea class="prompt-box" id="input_prompt" placeholder="Type your prompt here" rows="3"></textarea>
     <br><textarea class="prompt-box" id="input_negative_prompt" placeholder="Type your negative prompt here" rows="3"></textarea>
