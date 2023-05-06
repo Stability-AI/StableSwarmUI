@@ -27,6 +27,7 @@ body {
     width: calc(100% - 2px);
 }
 .auto-number-box {
+    width: fit-content;
     max-width: 18rem;
 }
 .auto-input-name {
@@ -39,8 +40,8 @@ body {
     padding-left: 1rem;
     padding-right: 1rem;
     padding-bottom: 2px;
-    margin-bottom: 0px;
-    min-width: 6rem;
+    margin-bottom: 1px;
+    min-width: 7rem;
 }
 .auto-input-description {
     display: inline-block;
@@ -67,6 +68,11 @@ body {
 }
 .auto-number {
     width: 100%;
+    border-radius: 0.5rem;
+    margin-bottom: 0px;
+}
+.auto-number-small {
+    width: 5rem;
     border-radius: 0.5rem;
     margin-bottom: 0px;
 }

@@ -8,11 +8,12 @@ public static class WebUtil
     /// <summary>Generates a clean number slider input block.</summary>
     public static HtmlString AutoSlider(string name, string description, string id, double min, double max, double value, double step = 1)
     {
+        string js = $"{JSStringEscape(name)}: {JSStringEscape(description)}";
         name = HtmlEscape(name);
         description = HtmlEscape(description);
         return new HtmlString($"""
 <div class="auto-input auto-slider-box" title="{name}: {description}">
-    <div class="auto-input-fade-lock auto-slider-fade-contain">
+    <div class="auto-input-fade-lock auto-slider-fade-contain" onclick="alert('{js}')">
         <span class="auto-input-name">{name}</span> <span class="auto-input-description">{description}</span>
     </div>
     <input class="auto-slider-number" type="number" value="{value}" min="{min}" max="{max}" step="{step}">
@@ -26,14 +27,29 @@ public static class WebUtil
     /// <summary>Generates a clean number input block.</summary>
     public static HtmlString AutoNumber(string name, string description, string id, double min, double max, double value, double step = 1)
     {
+        string js = $"{JSStringEscape(name)}: {JSStringEscape(description)}";
         name = HtmlEscape(name);
         description = HtmlEscape(description);
         return new HtmlString($"""
 <div class="auto-input auto-number-box" title="{name}: {description}">
-    <div class="auto-input-fade-lock auto-fade-max-contain">
+    <div class="auto-input-fade-lock auto-fade-max-contain" onclick="alert('{js}')">
         <span class="auto-input-name">{name}</span> <span class="auto-input-description">{description}</span>
     </div>
     <input class="auto-number" type="number" id="{id}" value="{value}" min="{min}" max="{max}" step="{step}">
+</div>
+""");
+    }
+
+    /// <summary>Generates a clean number input block.</summary>
+    public static HtmlString AutoNumberSmall(string name, string description, string id, double min, double max, double value, double step = 1)
+    {
+        string js = $"{JSStringEscape(name)}: {JSStringEscape(description)}";
+        name = HtmlEscape(name);
+        description = HtmlEscape(description);
+        return new HtmlString($"""
+<div class="auto-input auto-number-box" title="{name}: {description}">
+    <span class="auto-input-name" onclick="alert('{js}')">{name}</span>
+    <input class="auto-number-small" type="number" id="{id}" value="{value}" min="{min}" max="{max}" step="{step}">
 </div>
 """);
     }

@@ -1,7 +1,24 @@
 let core_inputs = ['prompt', 'negative_prompt', 'seed', 'steps', 'width', 'height', 'images', 'cfg_scale'];
 
-function genpageLoad() {
-    document.getElementById('generate_button').addEventListener('click', doGenerate);
+let session_id = null;
+
+const time_started = Date.now();
+
+function genericRequest(url, data, callback) {
+    sendJsonToServer(`/API/${url}`, data, (status, data) => {
+        if (data.error) {
+            showError(data.error);
+            return;
+        }
+        callback(data);
+    }, genericServerError);
+}
+
+function getSession() {
+    genericRequest('GetNewSession', {}, data => {
+        console.log("Session started.");
+        session_id = data.session_id;
+    });
 }
 
 function showError(message) {
@@ -10,7 +27,7 @@ function showError(message) {
 }
 
 function genericServerError() {
-    showError('Failed to send generate request to server. Did the server crash?');
+    showError('Failed to send request to server. Did the server crash?');
 }
 
 function gotImageResults(images) {
@@ -22,17 +39,26 @@ function gotImageResults(images) {
 }
 
 function doGenerate() {
+    if (session_id == null) {
+        if (Date.now() - time_started > 1000 * 60) {
+            showError("Cannot generate, session not started. Did the server crash?");
+        }
+        else {
+            showError("Cannot generate, session not started. Please wait a moment for the page to load.");
+        }
+        return;
+    }
     let input = {};
     for (let id of core_inputs) {
         input[id] = document.getElementById('input_' + id).value;
     }
-    sendJsonToServer('/API/GenerateText2Image', input, (status, data) => {
-        if (data.error) {
-            showError(data.error);
-            return;
-        }
+    genericRequest('GenerateText2Image', {}, data => {
         gotImageResults(data.images);
-    }, genericServerError);
+    });
+}
+
+function genpageLoad() {
+    document.getElementById('generate_button').addEventListener('click', doGenerate);
 }
 
 genpageLoad();

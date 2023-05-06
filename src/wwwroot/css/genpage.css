@@ -1,5 +1,6 @@
 .prompt-box {
     width: 100%;
+    border-radius: 0.5rem;
 }
 .generate-button {
     background-color: orange;
@@ -7,11 +8,16 @@
     font-weight: bold;
     padding: 1rem;
     border-radius: 1rem;
+    width: 90%;
+    margin-left: 5%;
 }
-.image_size_slider {
-    vertical-align: middle;
-    width: 30rem;
-}
-.image_size_number {
-    vertical-align: middle;
+.input-sidebar {
+    position: fixed;
+    left: 0px;
+    width: calc(max(28rem, 20%));
+    padding: 0.5rem;
+    border-right: 1px solid purple;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: scroll;
 }
