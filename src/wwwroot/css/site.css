@@ -19,6 +19,13 @@ body {
     white-space: nowrap;
     overflow: hidden;
 }
+.auto-slider-fade-contain {
+    display: inline-block;
+    width: calc(min(100%, 50rem) - 5rem - 2px);
+}
+.auto-fade-max-contain {
+    width: calc(100% - 2px);
+}
 .auto-number-box {
     max-width: 18rem;
 }
@@ -44,6 +51,9 @@ body {
     line-height: 0.7rem;
     height: 1rem;
     white-space: nowrap;
+}
+.auto-input-fade-lock {
+    mask-image: linear-gradient(to right, black 70%, transparent 100%);
 }
 .auto-slider-range {
     width: 100%;
