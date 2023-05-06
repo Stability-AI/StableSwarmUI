@@ -7,3 +7,10 @@
     font-weight: bold;
     padding: 1rem;
 }
+.image_size_slider {
+    vertical-align: middle;
+    width: 30rem;
+}
+.image_size_number {
+    vertical-align: middle;
+}
