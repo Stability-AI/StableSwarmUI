@@ -34,6 +34,23 @@ public class BackendHandler
         AddBackend(new AutoWebUIAPIBackend("http://localhost:7860"));
     }
 
+    private volatile bool HasShutdown;
+
+    /// <summary>Main shutdown handler, triggered by <see cref="Program.Shutdown"/>.</summary>
+    public void Shutdown()
+    {
+        if (HasShutdown)
+        {
+            return;
+        }
+        HasShutdown = true;
+        BackendsAvailableSignal.Set();
+        foreach (T2iBackendData backend in T2IBackends)
+        {
+            backend.Backend.Shutdown(); // TODO: thread safe / in-use handling
+        }
+    }
+
     /// <summary>(Blocking) gets the next available Text2Image backend.</summary>
     /// <returns>A 'using'-compatible wrapper for a backend.</returns>
     /// <param name="maxWait">Maximum duration to wait for. If time runs out, throws <see cref="TimeoutException"/>.</param>
@@ -44,6 +61,10 @@ public class BackendHandler
         long startTime = Environment.TickCount64;
         while (true)
         {
+            if (HasShutdown)
+            {
+                throw new InvalidOperationException("Backend handler is shutting down.");
+            }
             TimeSpan waited = new(Environment.TickCount64 - startTime);
             if (waited > maxWait)
             {

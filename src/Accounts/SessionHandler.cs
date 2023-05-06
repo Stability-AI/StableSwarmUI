@@ -1,4 +1,5 @@
 ﻿using StableUI.Utils;
+using StableUI.Core;
 using System.Collections.Concurrent;
 
 namespace StableUI.Accounts;
@@ -14,6 +15,10 @@ public class SessionHandler
 
     public Session CreateAdminSession(string source)
     {
+        if (HasShutdown)
+        {
+            throw new InvalidOperationException("Session handler is shutting down.");
+        }
         Logs.Info($"Creating new admin session for {source}");
         for (int i = 0; i < 1000; i++)
         {
@@ -36,9 +41,18 @@ public class SessionHandler
     {
         return Sessions.TryGetValue(id, out session);
     }
+
+    private volatile bool HasShutdown;
+
+    /// <summary>Main shutdown handler, triggered by <see cref="Program.Shutdown"/>.</summary>
+    public void Shutdown()
+    {
+        if (HasShutdown)
         {
-            OutputDirectory = "outputs/main/",
-            ID = Utilities.SecureRandomHex(SessionIDLength)
-        };
+            return;
+        }
+        HasShutdown = true;
+        Sessions.Clear();
+        // TODO
     }
 }

@@ -36,6 +36,7 @@ public static class WebServer
         {
             WebApp.UseExceptionHandler("/Error/Internal");
         }
+        WebApp.Lifetime.ApplicationStopping.Register(Program.Shutdown);
         WebApp.UseStaticFiles(new StaticFileOptions());
         WebApp.UseRouting();
         WebApp.UseAuthorization();

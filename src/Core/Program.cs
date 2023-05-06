@@ -4,6 +4,8 @@ using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Utils;
 using StableUI.WebAPI;
+using System.Net.Sockets;
+using System.Runtime.Loader;
 
 namespace StableUI.Core;
 
@@ -21,6 +23,8 @@ public class Program
     {
         SpecialTools.Internationalize(); // Fix for MS's broken localization
         Logs.Init("=== StableUI Starting ===");
+        AssemblyLoadContext.Default.Unloading += (_) => Shutdown();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => Shutdown();
         try
         {
             Logs.Init("Parsing command line...");
@@ -45,6 +49,21 @@ public class Program
         }
         Logs.Init("Launching server...");
         WebServer.Launch();
+    }
+
+    private volatile static bool HasShutdown = false;
+
+    /// <summary>Main shutdown handler. Tells everything to stop.</summary>
+    public static void Shutdown()
+    {
+        if (HasShutdown)
+        {
+            return;
+        }
+        HasShutdown = true;
+        Logs.Info("Shutting down...");
+        Backends.Shutdown();
+        Sessions.Shutdown();
     }
 
     #region settings pre-apply
