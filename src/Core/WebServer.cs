@@ -39,7 +39,7 @@ public static class WebServer
         WebApp.Lifetime.ApplicationStopping.Register(Program.Shutdown);
         WebApp.UseStaticFiles(new StaticFileOptions());
         WebApp.UseRouting();
-        WebApp.UseAuthorization();
+        WebApp.UseWebSockets();
         WebApp.MapRazorPages();
         WebApp.Map("/API/{*Call}", API.HandleAsyncRequest);
         WebApp.Use(async (context, next) =>

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Net.WebSockets;
 using System.Reflection;
 
 namespace StableUI.WebAPI;
@@ -20,13 +21,14 @@ public class APICallReflectBuilder
         [typeof(string[])] = (JToken input) => (true, input.ToList().Select(j => j.ToString()).ToArray())
     };
 
-    public static Func<HttpContext, JObject, Task<JObject>> BuildFor(object obj, MethodInfo method)
+    public static APICall BuildFor(object obj, MethodInfo method)
     {
         if (method.ReturnType != typeof(Task<JObject>))
         {
             throw new Exception($"Invalid API return type '{method.ReturnType.Name}' for method '{method.DeclaringType.Name}.{method.Name}'");
         }
         APICaller caller = new(obj, method, new());
+        bool isWebSocket = false;
         foreach (ParameterInfo param in method.GetParameters())
         {
             if (param.ParameterType == typeof(HttpContext))
@@ -36,6 +38,11 @@ public class APICallReflectBuilder
             else if (param.ParameterType == typeof(JObject))
             {
                 caller.InputMappers.Add((_, input) => (null, input));
+            }
+            else if (param.ParameterType == typeof(WebSocket))
+            {
+                caller.InputMappers.Add((context, _) => (null, context.WebSockets.AcceptWebSocketAsync().Result));
+                isWebSocket = true;
             }
             else if (TypeCoercerMap.TryGetValue(param.ParameterType, out Func<JToken, (bool, object)> coercer))
             {
@@ -62,7 +69,7 @@ public class APICallReflectBuilder
                 throw new Exception($"Invalid API parameter type '{param.ParameterType.Name}' for param '{param.Name}' of method '{method.DeclaringType.Name}.{method.Name}'");
             }
         }
-        return caller.Call;
+        return new APICall(method.Name, caller.Call, isWebSocket);
     }
 
     public record class APICaller(object Obj, MethodInfo Method, List<Func<HttpContext, JObject, (string, object)>> InputMappers)

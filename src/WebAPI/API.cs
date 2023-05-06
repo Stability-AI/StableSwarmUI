@@ -24,7 +24,7 @@ public class API
     /// <summary>Register a new API call handler.</summary>
     public static void RegisterAPICall(Delegate method)
     {
-        RegisterAPICall(new APICall(method.Method.Name, APICallReflectBuilder.BuildFor(method.Target, method.Method)));
+        RegisterAPICall(APICallReflectBuilder.BuildFor(method.Target, method.Method));
     }
 
     /// <summary>Web access call route, triggered from <see cref="WebServer"/>.</summary>
@@ -98,6 +98,18 @@ public class API
                 return;
             }
             // TODO: Authorization check
+            if (handler.IsWebSocket && !context.WebSockets.IsWebSocketRequest)
+            {
+                Error("API route is a websocket but request is not");
+                context.Response.Redirect("/Error/BasicAPI");
+                return;
+            }
+            if (!handler.IsWebSocket && context.WebSockets.IsWebSocketRequest)
+            {
+                Error("API route is not a websocket but request is");
+                context.Response.Redirect("/Error/BasicAPI");
+                return;
+            }
             JObject output = await handler.Call(context, input);
             if (output is null)
             {
