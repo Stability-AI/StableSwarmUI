@@ -1,4 +1,5 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using StableUI.Utils;
 using StableUI.WebAPI;
 
 namespace StableUI.Core;
@@ -21,6 +22,7 @@ public static class WebServer
         WebApp = builder.Build();
         if (WebApp.Environment.IsDevelopment())
         {
+            Utilities.VaryID += ".DEV" + Random.Shared.Next(99999);
             WebApp.UseDeveloperExceptionPage();
         }
         else

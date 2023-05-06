@@ -6,5 +6,6 @@ function sendJsonToServer(url, json_input, callback, error_callback) {
         callback(xhr.status, xhr.response);
     };
     xhr.onerror = error_callback;
-    xhr.send(json_input);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify(json_input));
 };

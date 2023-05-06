@@ -1,4 +1,4 @@
-let core_inputs = ['prompt', 'negative_prompt'];
+let core_inputs = ['prompt', 'negative_prompt', 'seed'];
 
 function load() {
     document.getElementById('generate_button').addEventListener('click', doGenerate);
@@ -18,8 +18,8 @@ function doGenerate() {
     for (let id of core_inputs) {
         input[id] = document.getElementById('input_' + id).value;
     }
-    sendJsonToServer('/API/Generate', input, (status, data) => {
-        console.log(`Status: ${status}, data: ${data}`);
+    sendJsonToServer('/API/GenerateText2Image', input, (status, data) => {
+        console.log(`Status: ${status}, data: ${JSON.stringify(data)}`);
     }, genericServerError);
 }
 

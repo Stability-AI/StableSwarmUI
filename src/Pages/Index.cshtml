@@ -4,13 +4,14 @@
     ViewData["Title"] = "Demo Test Page";
 }
 @section Header {
-    <link rel="stylesheet" href="/css/genpage.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/genpage.css?vary=@Utilities.VaryID" />
 }
 
 <textarea class="prompt-box" id="input_prompt" placeholder="Type your prompt here" rows="3"></textarea>
 <br><textarea class="prompt-box" id="input_negative_prompt" placeholder="Type your negative prompt here" rows="3"></textarea>
+<br><input type="number" id="input_seed", value="-1", min="-1", max="1000000000", step="1"></input>
 <br><button class="generate-button" id="generate_button">Generate!</button>
 
 @section Scripts {
-    <script src="/js/genpage.js"></script>
+    <script src="/js/genpage.js?vary=@Utilities.VaryID"></script>
 }

@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StableUI.Core;
 using StableUI.Utils;
+using System.Reflection;
 using System.Text;
 
 namespace StableUI.WebAPI;
@@ -13,41 +14,72 @@ public class API
     /// <summary>Internal mapping of API handlers, key is API path name, value is an .</summary>
     public static Dictionary<string, APICall> APIHandlers = new();
 
-    /// <summary>Represents an API Call route and associated core data (permissions, etc).</summary>
-    /// <param name="Name">The name, ie the call path, in full.</param>
-    /// <param name="Call">Actual call function: an async function that takes the HttpContext and the JSON input, and returns JSON output.</param>
-    public record class APICall(string Name, Func<HttpContext, JObject, Task<JObject>> Call); // TODO: Permissions, etc.
-
     /// <summary>Register a new API call handler.</summary>
     public static void RegisterAPICall(APICall call)
     {
         APIHandlers.Add(call.Name, call);
     }
 
+    /// <summary>Register a new API call handler.</summary>
+    public static void RegisterAPICall(object obj, string methodName)
+    {
+        MethodInfo method;
+        if (obj is Type type)
+        {
+            method = type.GetMethod(methodName);
+            obj = null;
+        }
+        else
+        {
+            method = obj.GetType().GetMethod(methodName);
+        }
+        if (method is null)
+        {
+            throw new Exception($"Cannot register API call '{methodName}', method not found!");
+        }
+        RegisterAPICall(new APICall(methodName, APICallReflectBuilder.BuildFor(obj, method)));
+    }
+
     /// <summary>Web access call route, triggered from <see cref="WebServer"/>.</summary>
     public static async Task HandleAsyncRequest(HttpContext context)
     {
+        void Error(string message)
+        {
+            Console.WriteLine($"[WebAPI] Error handling API request '{context.Request.Path}': {message}");
+        }
         try
         {
             if (context.Request.Method != "POST")
             {
+                Error($"Invalid request method: {context.Request.Method}");
                 context.Response.Redirect("/Error/NoGetAPI");
                 return;
             }
             if (!context.Request.HasJsonContentType())
             {
+                Error($"Request has wrong content-type: {context.Request.ContentType}");
                 context.Response.Redirect("/Error/BasicAPI");
                 return;
             }
-            JObject input = Utilities.StreamToJSON(context.Request.Body);
+            if (context.Request.ContentLength <= 0 || context.Request.ContentLength >= 10 * 1024 * 1024) // TODO: put max length as setting
+            {
+                Error($"Request has invalid content length: {context.Request.ContentLength}");
+                context.Response.Redirect("/Error/BasicAPI");
+                return;
+            }
+            byte[] rawData = new byte[(int)context.Request.ContentLength];
+            await context.Request.Body.ReadExactlyAsync(rawData, 0, rawData.Length);
+            JObject input = JObject.Parse(Encoding.UTF8.GetString(rawData));
             if (input is null)
             {
+                Error($"Request input parsed to null");
                 context.Response.Redirect("/Error/BasicAPI");
                 return;
             }
             string path = context.Request.Path.ToString().After("/API/");
             if (!APIHandlers.TryGetValue(path, out APICall handler))
             {
+                Error("Unknown API route");
                 context.Response.Redirect("/Error/404");
                 return;
             }
@@ -55,16 +87,18 @@ public class API
             JObject output = await handler.Call(context, input);
             if (output is null)
             {
+                Error("API handler returned null");
                 context.Response.Redirect("/Error/BasicAPI");
                 return;
             }
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = 200;
             await context.Response.WriteAsync(output.ToString(Formatting.None));
+            await context.Response.CompleteAsync();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Internal error handling API request '{context.Request.Path}': {ex}");
+            Error($"Internal exception: {ex}");
             context.Response.Redirect("/Error/Internal");
         }
     }
