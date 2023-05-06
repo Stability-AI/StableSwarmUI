@@ -1,4 +1,4 @@
-let core_inputs = ['prompt', 'negative_prompt', 'seed', 'steps', 'width', 'height'];
+let core_inputs = ['prompt', 'negative_prompt', 'seed', 'steps', 'width', 'height', 'images', 'cfg_scale'];
 
 function genpageLoad() {
     document.getElementById('generate_button').addEventListener('click', doGenerate);

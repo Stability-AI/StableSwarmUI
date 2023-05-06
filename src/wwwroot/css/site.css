@@ -1,27 +1,32 @@
 :root {
     --background: #0b0f20;
-    --background-soft: #404080;
+    --background-soft: #203040;
+    --shadow: #404080;
     --light-border: #a0c0c0;
 }
 
 body {
     background-color: var(--background);
 }
-.auto-slider-box {
+.auto-input {
     display: inline-block;
     border-radius: 0.5rem;
     max-width: 50rem;
     width: 100%;
     margin: 5px;
     padding-left: 2px;
-    padding-right: 2px;
-    box-shadow: var(--background-soft) 0px 0px 1px 1px;
+    box-shadow: var(--shadow) 0px 0px 1px 1px;
+    white-space: nowrap;
+    overflow: hidden;
 }
-.auto-slider-name {
+.auto-number-box {
+    max-width: 18rem;
+}
+.auto-input-name {
     display: inline-block;
     text-align: center;
     font-weight: bold;
-    box-shadow: var(--background-soft) 0px 1px 1px 1px;
+    box-shadow: var(--shadow) 0px 1px 1px 1px;
     border-bottom-left-radius: 0.5rem;
     border-bottom-right-radius: 0.5rem;
     padding-left: 1rem;
@@ -30,11 +35,15 @@ body {
     margin-bottom: 0px;
     min-width: 6rem;
 }
-.auto-slider-description {
+.auto-input-description {
+    display: inline-block;
     font-size: 80%;
     color: #aaaaaa;
     margin-bottom: 0px;
     margin-left: 0.5rem;
+    line-height: 0.7rem;
+    height: 1rem;
+    white-space: nowrap;
 }
 .auto-slider-range {
     width: 100%;
@@ -45,4 +54,13 @@ body {
     width: 5rem;
     border-radius: 0.5rem;
     margin-bottom: 0px;
+}
+.auto-number {
+    width: 100%;
+    border-radius: 0.5rem;
+    margin-bottom: 0px;
+}
+textarea, input {
+    border-color: var(--shadow);
+    background-color: var(--background-soft);
 }

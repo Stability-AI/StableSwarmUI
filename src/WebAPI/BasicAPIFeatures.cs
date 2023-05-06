@@ -17,7 +17,7 @@ public static class BasicAPIFeatures
 #pragma warning disable CS1998 // "CS1998 Async method lacks 'await' operators and will run synchronously"
 
     /// <summary>API route to generate an image.</summary>
-    public static async Task<JObject> GenerateText2Image(string prompt, string negative_prompt, long seed, int steps = 20, int width = 512, int height = 512)
+    public static async Task<JObject> GenerateText2Image(string prompt, string negative_prompt = "", int images = 1, long seed = -1, int steps = 20, double cfg_scale = 7, int width = 512, int height = 512)
     {
         T2IBackendAccess backend;
         try
@@ -32,10 +32,19 @@ public static class BasicAPIFeatures
         {
             return new JObject() { ["error"] = "Timeout! All backends are occupied with other tasks." };
         }
-        using (backend)
+        List<Image> allOutputs = new();
+        if (seed == -1)
         {
-            Image[] images = await backend.Backend.Generate(prompt, negative_prompt, seed, steps, width, height);
-            return new JObject() { ["images"] = JToken.FromObject(images.Select(i => i.AsBase64).ToList()) };
+            seed = Random.Shared.Next(int.MaxValue);
         }
+        for (int i = 0; i < images; i++)
+        {
+            using (backend)
+            {
+                Image[] outputs = await backend.Backend.Generate(prompt, negative_prompt, seed + i, steps, width, height, cfg_scale);
+                allOutputs.AddRange(outputs);
+            }
+        }
+        return new JObject() { ["images"] = JToken.FromObject(allOutputs.Select(i => i.AsBase64).ToList()) };
     }
 }

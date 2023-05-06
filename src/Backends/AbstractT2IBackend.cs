@@ -12,5 +12,5 @@ public abstract class AbstractT2IBackend
     public abstract void Shutdown();
 
     /// <summary>Generate an image.</summary>
-    public abstract Task<Image[]> Generate(string prompt, string negativePrompt, long seed, int steps, int width, int height);
+    public abstract Task<Image[]> Generate(string prompt, string negativePrompt, long seed, int steps, int width, int height, double cfgScale);
 }
