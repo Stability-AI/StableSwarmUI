@@ -9,11 +9,11 @@
 
 <textarea class="prompt-box" id="input_prompt" placeholder="Type your prompt here" rows="3"></textarea>
 <br><textarea class="prompt-box" id="input_negative_prompt" placeholder="Type your negative prompt here" rows="3"></textarea>
-<br><label for="input_seed">Seed: </label> <input type="number" id="input_seed", value="-1", min="-1", max="1000000000", step="1"></input>
-<br><label for="input_steps">Steps: </label> <input type="range" id="input_steps" value="20" min="1" max="100"></input>
-<br><span class="range-box"><label for="input_width">Width: </label> <input class="image_size_slider" type="range" id="input_width" value="1024" min="0" max="8192" step="64"></input> <input class="image_size_number" type="number" value="1024"></span>
-<br><span class="range-box"><label for="input_height">Height: </label> <input class="image_size_slider" type="range" id="input_height" value="1024" min="0" max="8192" step="64"></input> <input class="image_size_number" type="number" value="1024"></span>
-<br><button class="generate-button" id="generate_button">Generate!</button>
+<br><label for="input_seed">Seed: </label> <input type="number" id="input_seed" value="-1", min="-1" max="1000000000" step="1">
+<br>@WebUtil.AutoSlider("Steps", "How many times to run the model. More steps = better quality, but more time.", "input_steps", 1, 100, 20)
+<br>@WebUtil.AutoSlider("Width", "Image width, in pixels.", "input_width", 0, 8192, 1024, 64)
+<br>@WebUtil.AutoSlider("Height", "Image height, in pixels.", "input_height", 0, 8192, 1024, 64)
+<br><button class="generate-button" id="generate_button">Generate</button>
 <br>
 <div id="image_spot"></div>
 

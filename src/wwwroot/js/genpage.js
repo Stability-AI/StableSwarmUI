@@ -1,12 +1,7 @@
 let core_inputs = ['prompt', 'negative_prompt', 'seed', 'steps', 'width', 'height'];
 
-function load() {
+function genpageLoad() {
     document.getElementById('generate_button').addEventListener('click', doGenerate);
-    for (let range of document.getElementsByClassName('image_size_slider')) {
-        let number = range.nextElementSibling;
-        range.addEventListener('input', () => number.value = range.value);
-        number.addEventListener('input', () => range.value = number.value);
-    }
 }
 
 function showError(message) {
@@ -40,4 +35,4 @@ function doGenerate() {
     }, genericServerError);
 }
 
-load();
+genpageLoad();

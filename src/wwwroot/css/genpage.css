@@ -6,6 +6,7 @@
     font-size: 200%;
     font-weight: bold;
     padding: 1rem;
+    border-radius: 1rem;
 }
 .image_size_slider {
     vertical-align: middle;

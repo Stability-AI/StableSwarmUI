@@ -1,0 +1,48 @@
+:root {
+    --background: #0b0f20;
+    --background-soft: #404080;
+    --light-border: #a0c0c0;
+}
+
+body {
+    background-color: var(--background);
+}
+.auto-slider-box {
+    display: inline-block;
+    border-radius: 0.5rem;
+    max-width: 50rem;
+    width: 100%;
+    margin: 5px;
+    padding-left: 2px;
+    padding-right: 2px;
+    box-shadow: var(--background-soft) 0px 0px 1px 1px;
+}
+.auto-slider-name {
+    display: inline-block;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: var(--background-soft) 0px 1px 1px 1px;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 2px;
+    margin-bottom: 0px;
+    min-width: 6rem;
+}
+.auto-slider-description {
+    font-size: 80%;
+    color: #aaaaaa;
+    margin-bottom: 0px;
+    margin-left: 0.5rem;
+}
+.auto-slider-range {
+    width: 100%;
+    vertical-align: middle;
+}
+.auto-slider-number {
+    float: right;
+    width: 5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0px;
+}
