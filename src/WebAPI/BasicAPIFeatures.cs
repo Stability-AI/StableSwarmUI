@@ -14,7 +14,7 @@ public static class BasicAPIFeatures
     public static void Register()
     {
         API.RegisterAPICall(GetNewSession);
-        API.RegisterAPICall(T2IAPI.GenerateText2Image);
+        T2IAPI.Register();
     }
 
 #pragma warning disable CS1998 // "CS1998 Async method lacks 'await' operators and will run synchronously"

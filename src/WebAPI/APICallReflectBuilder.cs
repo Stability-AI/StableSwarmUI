@@ -33,20 +33,20 @@ public class APICallReflectBuilder
         {
             if (param.ParameterType == typeof(HttpContext))
             {
-                caller.InputMappers.Add((context, _) => (null, context));
+                caller.InputMappers.Add((context, _, _) => (null, context));
             }
             else if (param.ParameterType == typeof(JObject))
             {
-                caller.InputMappers.Add((_, input) => (null, input));
+                caller.InputMappers.Add((_, _, input) => (null, input));
             }
             else if (param.ParameterType == typeof(WebSocket))
             {
-                caller.InputMappers.Add((context, _) => (null, context.WebSockets.AcceptWebSocketAsync().Result));
+                caller.InputMappers.Add((_, socket, _) => (null, socket));
                 isWebSocket = true;
             }
             else if (TypeCoercerMap.TryGetValue(param.ParameterType, out Func<JToken, (bool, object)> coercer))
             {
-                caller.InputMappers.Add((_, input) =>
+                caller.InputMappers.Add((_, _, input) =>
                 {
                     if (!input.TryGetValue(param.Name, out JToken value))
                     {
@@ -72,14 +72,14 @@ public class APICallReflectBuilder
         return new APICall(method.Name, caller.Call, isWebSocket);
     }
 
-    public record class APICaller(object Obj, MethodInfo Method, List<Func<HttpContext, JObject, (string, object)>> InputMappers)
+    public record class APICaller(object Obj, MethodInfo Method, List<Func<HttpContext, WebSocket, JObject, (string, object)>> InputMappers)
     {
-        public Task<JObject> Call(HttpContext context, JObject input)
+        public Task<JObject> Call(HttpContext context, WebSocket socket, JObject input)
         {
             object[] arr = new object[InputMappers.Count];
             for (int i = 0; i < InputMappers.Count; i++)
             {
-                (string error, object value) = InputMappers[i](context, input);
+                (string error, object value) = InputMappers[i](context, socket, input);
                 if (error is not null)
                 {
                     return Task.FromResult(new JObject() { ["error"] = error });

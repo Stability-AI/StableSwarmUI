@@ -18,6 +18,11 @@ public class Program
     /// <summary>Central store of web sessions.</summary>
     public static SessionHandler Sessions;
 
+    private static readonly CancellationTokenSource GlobalCancelSource = new();
+
+    /// <summary>If this is signalled, the program is cancelled.</summary>
+    public static CancellationToken GlobalProgramCancel = GlobalCancelSource.Token;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -62,6 +67,7 @@ public class Program
         }
         HasShutdown = true;
         Logs.Info("Shutting down...");
+        GlobalCancelSource.Cancel();
         Backends.Shutdown();
         Sessions.Shutdown();
     }

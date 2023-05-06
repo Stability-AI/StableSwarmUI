@@ -4,7 +4,9 @@ using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Core;
 using StableUI.Utils;
+using System.Net.WebSockets;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace StableUI.WebAPI;
@@ -34,8 +36,15 @@ public class API
         {
             Logs.Error($"[WebAPI] Error handling API request '{context.Request.Path}': {message}");
         }
+        WebSocket socket = null;
         async Task YieldJson(int status, JObject obj)
         {
+            if (socket != null)
+            {
+                await socket.SendJson(obj, TimeSpan.FromMinutes(1));
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, Utilities.TimedCancel(TimeSpan.FromMinutes(1)));
+                return;
+            }
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = status;
             await context.Response.WriteAsync(obj.ToString(Formatting.None));
@@ -47,27 +56,36 @@ public class API
         }
         try
         {
-            if (context.Request.Method != "POST")
+            JObject input;
+            if (context.WebSockets.IsWebSocketRequest)
+            {
+                socket = await context.WebSockets.AcceptWebSocketAsync();
+                input = await socket.ReceiveJson(TimeSpan.FromMinutes(1), 10 * 1024 * 1024); // TODO: Configurable limits
+            }
+            else if (context.Request.Method == "POST")
+            {
+                if (!context.Request.HasJsonContentType())
+                {
+                    Error($"Request has wrong content-type: {context.Request.ContentType}");
+                    context.Response.Redirect("/Error/BasicAPI");
+                    return;
+                }
+                if (context.Request.ContentLength <= 0 || context.Request.ContentLength >= 10 * 1024 * 1024) // TODO: Configurable limits
+                {
+                    Error($"Request has invalid content length: {context.Request.ContentLength}");
+                    context.Response.Redirect("/Error/BasicAPI");
+                    return;
+                }
+                byte[] rawData = new byte[(int)context.Request.ContentLength];
+                await context.Request.Body.ReadExactlyAsync(rawData, 0, rawData.Length);
+                input = JObject.Parse(Encoding.UTF8.GetString(rawData));
+            }
+            else
             {
                 Error($"Invalid request method: {context.Request.Method}");
                 context.Response.Redirect("/Error/NoGetAPI");
                 return;
             }
-            if (!context.Request.HasJsonContentType())
-            {
-                Error($"Request has wrong content-type: {context.Request.ContentType}");
-                context.Response.Redirect("/Error/BasicAPI");
-                return;
-            }
-            if (context.Request.ContentLength <= 0 || context.Request.ContentLength >= 10 * 1024 * 1024) // TODO: put max length as setting
-            {
-                Error($"Request has invalid content length: {context.Request.ContentLength}");
-                context.Response.Redirect("/Error/BasicAPI");
-                return;
-            }
-            byte[] rawData = new byte[(int)context.Request.ContentLength];
-            await context.Request.Body.ReadExactlyAsync(rawData, 0, rawData.Length);
-            JObject input = JObject.Parse(Encoding.UTF8.GetString(rawData));
             if (input is null)
             {
                 Error("Request input parsed to null");
@@ -98,19 +116,24 @@ public class API
                 return;
             }
             // TODO: Authorization check
-            if (handler.IsWebSocket && !context.WebSockets.IsWebSocketRequest)
+            if (handler.IsWebSocket && socket is null)
             {
                 Error("API route is a websocket but request is not");
                 context.Response.Redirect("/Error/BasicAPI");
                 return;
             }
-            if (!handler.IsWebSocket && context.WebSockets.IsWebSocketRequest)
+            if (!handler.IsWebSocket && socket is not null)
             {
                 Error("API route is not a websocket but request is");
                 context.Response.Redirect("/Error/BasicAPI");
                 return;
             }
-            JObject output = await handler.Call(context, input);
+            JObject output = await handler.Call(context, socket, input);
+            if (socket is not null)
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, Utilities.TimedCancel(TimeSpan.FromMinutes(1)));
+                return;
+            }
             if (output is null)
             {
                 Error("API handler returned null");
