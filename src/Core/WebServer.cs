@@ -55,6 +55,7 @@ public static class WebServer
             }
         });
         // Launch actual web host process
+        Logs.Init($"Starting webserver on {HostURL}");
         WebApp.Run();
     }
 }

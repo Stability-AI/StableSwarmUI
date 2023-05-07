@@ -145,7 +145,20 @@ public class API
         catch (Exception ex)
         {
             Error($"Internal exception: {ex}");
-            context.Response.Redirect("/Error/Internal");
+            if (socket is null)
+            {
+                context.Response.Redirect("/Error/Internal");
+                return;
+            }
+            try
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.InternalServerError, null, Utilities.TimedCancel(TimeSpan.FromMinutes(1)));
+                return;
+            }
+            catch (Exception ex2)
+            {
+                Error($"Internal exception while handling prior exception closure: {ex2}");
+            }
         }
     }
 }
