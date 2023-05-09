@@ -4,3 +4,6 @@ obj/
 .vscode/
 *.user
 *.suo
+Output/
+Data/
+Models/

@@ -13,6 +13,14 @@ public class SessionHandler
     /// <summary>Map of currently tracked sessions by ID.</summary>
     public ConcurrentDictionary<string, Session> Sessions = new();
 
+    /// <summary>Basic reusable admin user.</summary>
+    public User AdminUser = new() { UserID = "local" };
+
+    public SessionHandler()
+    {
+        AdminUser.Restrictions.Admin = true;
+    }
+
     public Session CreateAdminSession(string source)
     {
         if (HasShutdown)
@@ -24,8 +32,8 @@ public class SessionHandler
         {
             Session sess = new()
             {
-                OutputDirectory = "outputs/main/",
-                ID = Utilities.SecureRandomHex(SessionIDLength)
+                ID = Utilities.SecureRandomHex(SessionIDLength),
+                User = AdminUser
             };
             if (Sessions.TryAdd(sess.ID, sess))
             {

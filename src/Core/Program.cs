@@ -1,3 +1,4 @@
+using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using StableUI.Accounts;
@@ -18,6 +19,9 @@ public class Program
     /// <summary>Central store of web sessions.</summary>
     public static SessionHandler Sessions;
 
+    /// <summary>Holder of server admin settings.</summary>
+    public static Settings ServerSettings = new();
+
     private static readonly CancellationTokenSource GlobalCancelSource = new();
 
     /// <summary>If this is signalled, the program is cancelled.</summary>
@@ -34,8 +38,11 @@ public class Program
         {
             Logs.Init("Parsing command line...");
             ParseCommandLineArgs(args);
-            Logs.Init("Applying settings...");
-            ApplyCoreSettings();
+            string settingsFile = CommandLineFlags.GetValueOrDefault("settings_file", "Data/Settings.fds");
+            Logs.Init("Loading settings file...");
+            LoadSettingsFile(settingsFile);
+            Logs.Init("Applying command line settings...");
+            ApplyCommandLineSettings();
         }
         catch (InvalidDataException ex)
         {
@@ -71,10 +78,31 @@ public class Program
         Backends.Shutdown();
         Sessions.Shutdown();
     }
+    
+    /// <summary>Load the user settings file.</summary>
+    public static void LoadSettingsFile(string path)
+    {
+        FDSSection section;
+        try
+        {
+            section = FDSUtility.ReadFile(path);
+        }
+        catch (FileNotFoundException)
+        {
+            Logs.Init("No settings file found.");
+            return;
+        }
+        catch (Exception ex)
+        {
+            Logs.Error($"Error loading settings file: {ex}");
+            return;
+        }
+        ServerSettings.Load(section);
+    }
 
     #region settings pre-apply
-    /// <summary>Pre-applies settings choices from command line (or other sources).</summary>
-    public static void ApplyCoreSettings()
+    /// <summary>Pre-applies settings choices from command line.</summary>
+    public static void ApplyCommandLineSettings()
     {
         string environment = GetCommandLineFlag("environment", "production").ToLowerFast() switch
         {
@@ -83,8 +111,8 @@ public class Program
             var mode => throw new InvalidDataException($"aspweb_mode value of '{mode}' is not valid")
         };
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", environment);
-        string host = GetCommandLineFlag("host", "localhost");
-        string port = GetCommandLineFlag("port", "7801");
+        string host = GetCommandLineFlag("host", ServerSettings.Host);
+        string port = GetCommandLineFlag("port", $"{ServerSettings.Port}");
         WebServer.HostURL = $"http://{host}:{port}";
         Environment.SetEnvironmentVariable("ASPNETCORE_URLS", WebServer.HostURL);
         string logLevel = GetCommandLineFlag("asp_loglevel", environment == "Development" ? "debug" : "warning");
