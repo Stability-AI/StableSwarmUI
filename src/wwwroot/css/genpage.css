@@ -62,19 +62,29 @@
 }
 .image-block {
     height: 10rem;
+    width: 10rem;
     padding: 0.5rem;
     display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
 }
 .image-block img {
-    height: 9rem;
-    display: inline-block;
+    height: 8rem;
+    display: block;
 }
 .current_image img {
     height: 29rem;
 }
-.image-block img:hover {
-    box-shadow: var(--shadow) 0px 0px 2px 2px;
+.image-block:hover {
+    background-color: var(--shadow);
 }
 .image-batch-0 {
+    background-color: rgba(200, 200, 255, 0.25);
+}
+.image-batch-1 {
     background-color: rgba(255, 255, 255, 0.5);
+}
+.image-preview-text {
+    font-size: 70%;
+    font-family: 'Courier New', Courier, monospace;
 }

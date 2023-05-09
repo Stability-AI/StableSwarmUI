@@ -1,4 +1,5 @@
-﻿using FreneticUtilities.FreneticToolkit;
+﻿using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StableUI.Core;
@@ -17,6 +18,9 @@ public static class Utilities
 
     /// <summary>Used by linked pages to prevent cache errors when data changes.</summary>
     public static string VaryID = Version;
+
+    /// <summary>Matcher for characters banned or specialcased by Windows or other OS's.</summary>
+    public static AsciiMatcher FilePathForbidden = new(c => c < 32 || "<>:\"\\|?*~&@;".Contains(c));
 
     /// <summary>Gets a secure hex string of a given length (will generate half as many bytes).</summary>
     public static string SecureRandomHex(int length)
@@ -80,5 +84,40 @@ public static class Utilities
     public static JObject ErrorObj(string message, string error_id)
     {
         return new JObject() { ["error"] = message, ["error_id"] = error_id };
+    }
+
+    /// <summary>A mapping of common file extensions to their content type.</summary>
+    public static Dictionary<string, string> CommonContentTypes = new()
+        {
+            { "png", "image/png" },
+            { "jpg", "image/jpeg" },
+            { "jpeg", "image/jpeg" },
+            { "gif", "image/gif" },
+            { "ico", "image/x-icon" },
+            { "svg", "image/svg+xml" },
+            { "mp3", "audio/mpeg" },
+            { "wav", "audio/x-wav" },
+            { "js", "application/javascript" },
+            { "ogg", "application/ogg" },
+            { "json", "application/json" },
+            { "zip", "application/zip" },
+            { "dat", "application/octet-stream" },
+            { "css", "text/css" },
+            { "htm", "text/html" },
+            { "html", "text/html" },
+            { "txt", "text/plain" },
+            { "yml", "text/plain" },
+            { "fds", "text/plain" },
+            { "xml", "text/xml" },
+            { "mp4", "video/mp4" },
+            { "mpeg", "video/mpeg" },
+            { "webm", "video/webm" }
+        };
+
+    /// <summary>Guesses the content type based on path for common file types.</summary>
+    public static string GuessContentType(string path)
+    {
+        string extension = path.AfterLast('.');
+        return CommonContentTypes.GetValueOrDefault(extension, "application/octet-stream");
     }
 }

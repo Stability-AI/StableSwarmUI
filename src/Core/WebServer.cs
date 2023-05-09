@@ -1,6 +1,8 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using StableUI.Utils;
 using StableUI.WebAPI;
+using System.ComponentModel.Design;
+using System.Web;
 
 namespace StableUI.Core;
 
@@ -42,6 +44,7 @@ public static class WebServer
         WebApp.UseWebSockets();
         WebApp.MapRazorPages();
         WebApp.Map("/API/{*Call}", API.HandleAsyncRequest);
+        WebApp.Map("/Output/{*Path}", ViewOutput);
         WebApp.Use(async (context, next) =>
         {
             await next();
@@ -57,5 +60,59 @@ public static class WebServer
         // Launch actual web host process
         Logs.Init($"Starting webserver on {HostURL}");
         WebApp.Run();
+    }
+
+    /// <summary>Test the validity of a user-given file path. Returns (path, consoleError, userError).</summary>
+    public static (string, string, string) CheckOutputFilePath(string path, string userId)
+    {
+        path = Utilities.FilePathForbidden.TrimToNonMatches(path);
+        while (path.Contains(".."))
+        {
+            path = path.Replace("..", "");
+        }
+        path = $"{Environment.CurrentDirectory}/{Program.ServerSettings.OutputPath}/{userId}/{path}";
+        string expectedPath = $"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}{Program.ServerSettings.OutputPath}{Path.DirectorySeparatorChar}{userId}";
+        if (!Directory.GetParent(path).FullName.StartsWith(expectedPath))
+        {
+            return (null, $"Refusing dangerous access, got path '{path}' which resolves to '{Directory.GetParent(path)}' which does not obey expected root '{expectedPath}'",
+                "Unacceptable path. If you are the server owner, check program console log.");
+        }
+        return (path, null, null);
+    }
+
+    public static async Task ViewOutput(HttpContext context)
+    {
+        string path = context.Request.Path.ToString().After("/Output/");
+        path = HttpUtility.UrlDecode(path);
+        string userId = "local"; // TODO: From login cookie
+        (path, string consoleError, string userError) = CheckOutputFilePath(path, userId);
+        if (consoleError is not null)
+        {
+            Logs.Error(consoleError);
+            await context.YieldJsonOutput(null, 400, Utilities.ErrorObj(userError, "bad_path"));
+            return;
+        }
+        byte[] data;
+        try
+        {
+            data = await File.ReadAllBytesAsync(path);
+        }
+        catch (Exception ex)
+        {
+            if (ex is FileNotFoundException || ex is DirectoryNotFoundException || ex is PathTooLongException)
+            {
+                await context.YieldJsonOutput(null, 04, Utilities.ErrorObj("404, file not found.", "file_not_found"));
+            }
+            else
+            {
+                Logs.Error($"Failed to read output file '{path}': {ex}");
+                await context.YieldJsonOutput(null, 500, Utilities.ErrorObj("Error reading file. If you are the server owner, check program console log.", "file_error"));
+            }
+            return;
+        }
+        context.Response.ContentType = Utilities.GuessContentType(path);
+        context.Response.StatusCode = 200;
+        await context.Response.Body.WriteAsync(data);
+        await context.Response.CompleteAsync();
     }
 }
