@@ -1,3 +1,6 @@
+# Ensure correct local path.
+$thisPath = Split-Path $MyInvocation.MyCommand.Path -Parent
+cd $thisPath
 # Visual Studio likes to generate invalid files here for some reason, so autonuke it
 if (Test-Path "src/Properties/launchSettings.json") {
     rm src/Properties/launchSettings.json
