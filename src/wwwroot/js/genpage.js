@@ -87,7 +87,7 @@ function loadHistory(path) {
         else {
             prefix = path + '/';
             let above = path.split('/').slice(0, -1).join('/');
-            let div = appendImage('image_history', '/imgs/folder.png', 'folder', `../`);
+            let div = appendImage('image_history', '/imgs/folder_up.png', 'folder', `../`);
             div.addEventListener('click', () => loadHistory(above));
         }
         for (let folder of data.folders) {
@@ -95,7 +95,7 @@ function loadHistory(path) {
             div.addEventListener('click', () => loadHistory(`${prefix}${folder}`));
         }
         for (let img of data.images) {
-            let div = appendImage('image_history', `Output/${prefix}${img.src}`, img.batch_id, '(Image metadata TODO)');
+            let div = appendImage('image_history', `Output/${prefix}${img.src}`, img.batch_id, img.src);
             div.addEventListener('click', () => selectImageInHistory(div));
         }
     });
