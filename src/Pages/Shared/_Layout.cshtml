@@ -9,6 +9,9 @@
     @RenderSection("Header", required: false)
 </head>
 <body>
+    <div class="center-toast" id="center_toast">
+        @WebUtil.Toast("error_toast_box", "Error", "", "error_toast_content", "", false)
+    </div>
     @RenderBody()
     <script src="/js/jquery.min.js"></script>
     <script src="/js/bootstrap.bundle.min.js"></script>

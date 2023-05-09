@@ -80,3 +80,18 @@ textarea, input {
     border-color: var(--shadow);
     background-color: var(--background-soft);
 }
+@keyframes toast-flash {
+    0% {background-color: transparent;}
+    50% {background-color: #FF0000;}
+    100% {background-color: transparent;}
+}
+.center-toast {
+    position: fixed;
+    z-index: 1000;
+    margin: auto;
+    top: 3rem;
+    left: 50%;
+    transform: translate(-50%, 0);
+    animation-name: toast-flash;
+    animation-duration: 2s;
+}

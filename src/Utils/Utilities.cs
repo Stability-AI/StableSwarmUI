@@ -60,7 +60,6 @@ public static class Utilities
     public static async Task<JObject> ReceiveJson(this WebSocket socket, TimeSpan maxDuration, int maxBytes)
     {
         string raw = Encoding.UTF8.GetString(await ReceiveData(socket, maxDuration, maxBytes));
-        Console.WriteLine($"Received: {raw}");
         return JObject.Parse(raw);
     }
 }
