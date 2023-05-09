@@ -114,10 +114,14 @@ public static class T2IAPI
                 }
             }));
         }
-        await Task.WhenAll(tasks);
-        while (allOutputs.TryDequeue(out Image output))
+        while (tasks.Any())
         {
-            yield return (output, null);
+            await Task.WhenAny(tasks);
+            tasks.RemoveAll(t => t.IsCompleted);
+            while (allOutputs.TryDequeue(out Image output))
+            {
+                yield return (output, null);
+            }
         }
         errorOut = Volatile.Read(ref errorOut);
         if (errorOut is not null)
