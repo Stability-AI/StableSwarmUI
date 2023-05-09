@@ -1,4 +1,5 @@
-﻿using StableUI.Utils;
+﻿using StableUI.DataHolders;
+using StableUI.Utils;
 
 namespace StableUI.Backends;
 
@@ -12,5 +13,5 @@ public abstract class AbstractT2IBackend
     public abstract void Shutdown();
 
     /// <summary>Generate an image.</summary>
-    public abstract Task<Image[]> Generate(string prompt, string negativePrompt, long seed, int steps, int width, int height, double cfgScale);
+    public abstract Task<Image[]> Generate(T2IParams user_input);
 }

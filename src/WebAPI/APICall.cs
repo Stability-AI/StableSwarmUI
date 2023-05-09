@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using StableUI.Accounts;
 using System.Net.WebSockets;
 
 namespace StableUI.WebAPI;
@@ -8,7 +9,7 @@ namespace StableUI.WebAPI;
 /// <param name="Name">The name, ie the call path, in full.</param>
 /// <param name="Call">Actual call function: an async function that takes the HttpContext and the JSON input, and returns JSON output.</param>
 /// <param name="IsWebSocket">Whether this call is for websockets. If false, normal HTTP API.</param>
-public record class APICall(string Name, Func<HttpContext, WebSocket, JObject, Task<JObject>> Call, bool IsWebSocket)
+public record class APICall(string Name, Func<HttpContext, Session, WebSocket, JObject, Task<JObject>> Call, bool IsWebSocket)
 {
     // TODO: Permissions, etc.
 }

@@ -1,7 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using FreneticUtilities.FreneticExtensions;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Core;
+using StableUI.DataHolders;
 using StableUI.Utils;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
@@ -16,17 +19,19 @@ public static class T2IAPI
     {
         API.RegisterAPICall(GenerateText2Image);
         API.RegisterAPICall(GenerateText2ImageWS);
+        API.RegisterAPICall(ListImages);
     }
 
+#pragma warning disable CS1998 // "CS1998 Async method lacks 'await' operators and will run synchronously"
 
     /// <summary>API route to generate images with WebSocket updates.</summary>
-    public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, string prompt, string negative_prompt = "", int images = 1, long seed = -1, int steps = 20, double cfg_scale = 7, int width = 512, int height = 512)
+    public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, Session session, int images, T2IParams user_input)
     {
-        await foreach ((Image img, JObject err) in GenT2I_Internal(prompt, negative_prompt, images, seed, steps, cfg_scale, width, height))
+        await foreach ((string img, JObject err) in GenT2I_Internal(session, images, user_input))
         {
             if (img is not null)
             {
-                await socket.SendJson(new JObject() { ["image"] = img.AsBase64 }, TimeSpan.FromMinutes(1)); // TODO: Configurable timeout
+                await socket.SendJson(new JObject() { ["image"] = img }, TimeSpan.FromMinutes(1)); // TODO: Configurable timeout
             }
             if (err is not null)
             {
@@ -38,10 +43,10 @@ public static class T2IAPI
     }
 
     /// <summary>API route to generate images directly as HTTP.</summary>
-    public static async Task<JObject> GenerateText2Image(string prompt, string negative_prompt = "", int images = 1, long seed = -1, int steps = 20, double cfg_scale = 7, int width = 512, int height = 512)
+    public static async Task<JObject> GenerateText2Image(Session session, int images, T2IParams user_input)
     {
-        List<Image> outputs = new();
-        await foreach ((Image img, JObject err) in GenT2I_Internal(prompt, negative_prompt, images, seed, steps, cfg_scale, width, height))
+        List<string> outputs = new();
+        await foreach ((string img, JObject err) in GenT2I_Internal(session, images, user_input))
         {
             if (img is not null)
             {
@@ -52,16 +57,17 @@ public static class T2IAPI
                 return err;
             }
         }
-        return new JObject(JToken.FromObject(outputs.Select(i => i.AsBase64).ToList()));
+        return new JObject() { ["images"] = JToken.FromObject(outputs) };
     }
 
     /// <summary>Internal route for generating images.</summary>
-    public static async IAsyncEnumerable<(Image, JObject)> GenT2I_Internal(string prompt, string negative_prompt, int images, long seed, int steps, double cfg_scale, int width, int height)
+    public static async IAsyncEnumerable<(string, JObject)> GenT2I_Internal(Session session, int images, T2IParams user_input)
     {
-        ConcurrentQueue<Image> allOutputs = new();
-        if (seed == -1)
+        ConcurrentQueue<string> allOutputs = new();
+        user_input = user_input.Clone();
+        if (user_input.Seed == -1)
         {
-            seed = Random.Shared.Next(int.MaxValue);
+            user_input.Seed = Random.Shared.Next(int.MaxValue);
         }
         JObject errorOut = null;
         List<Task> tasks = new();
@@ -78,7 +84,7 @@ public static class T2IAPI
                 yield return (null, errorOut);
                 yield break;
             }
-            while (allOutputs.TryDequeue(out Image output))
+            while (allOutputs.TryDequeue(out string output))
             {
                 yield return (output, null);
             }
@@ -106,10 +112,18 @@ public static class T2IAPI
                 }
                 using (backend)
                 {
-                    Image[] outputs = await backend.Backend.Generate(prompt, negative_prompt, seed + index, steps, width, height, cfg_scale);
+                    T2IParams thisParams = user_input.Clone();
+                    thisParams.Seed += index;
+                    Image[] outputs = await backend.Backend.Generate(thisParams);
                     foreach (Image image in outputs)
                     {
-                        allOutputs.Enqueue(image);
+                        string url = session.SaveImage(image, thisParams);
+                        if (url == "ERROR")
+                        {
+                            Volatile.Write(ref errorOut, new JObject() { ["error"] = $"Server failed to save images." });
+                            return;
+                        }
+                        allOutputs.Enqueue(url);
                     }
                 }
             }));
@@ -118,7 +132,7 @@ public static class T2IAPI
         {
             await Task.WhenAny(tasks);
             tasks.RemoveAll(t => t.IsCompleted);
-            while (allOutputs.TryDequeue(out Image output))
+            while (allOutputs.TryDequeue(out string output))
             {
                 yield return (output, null);
             }
@@ -128,6 +142,40 @@ public static class T2IAPI
         {
             yield return (null, errorOut);
             yield break;
+        }
+    }
+
+    public static HashSet<string> ImageExtensions = new() { "png", "jpg" };
+
+    /// <summary>API route to get a list of available history images.</summary>
+    public static async Task<JObject> ListImages(Session session, string path="")
+    {
+        (path, string consoleError, string userError) = WebServer.CheckOutputFilePath(path, session.User.UserID);
+        Console.WriteLine($"Path: {path}");
+        if (consoleError is not null)
+        {
+            Logs.Error(consoleError);
+            return new JObject() { ["error"] = userError };
+        }
+        try
+        {
+            return new JObject()
+            {
+                ["folders"] = JToken.FromObject(Directory.EnumerateDirectories(path).Select(Path.GetFileName).ToList()),
+                ["images"] = JToken.FromObject(Directory.EnumerateFiles(path).Where(f => ImageExtensions.Contains(f.AfterLast('.'))).Select(f => f.Replace('\\', '/').AfterLast('/')).Select(f => new JObject() { ["src"] = f, ["batch_id"] = 0 }).ToList())
+            };
+        }
+        catch (Exception ex)
+        {
+            if (ex is FileNotFoundException || ex is DirectoryNotFoundException || ex is PathTooLongException)
+            {
+                return new JObject() { ["error"] = "404, path not found." };
+            }
+            else
+            {
+                Logs.Error($"Failed to create output image file list '{path}': {ex}");
+                return new JObject() { ["error"] = "Error reading file list." };
+            }
         }
     }
 }

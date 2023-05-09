@@ -1,7 +1,10 @@
 ﻿using Newtonsoft.Json.Linq;
+using StableUI.Accounts;
+using StableUI.DataHolders;
 using System;
 using System.Net.WebSockets;
 using System.Reflection;
+using static StableUI.DataHolders.DataHolderHelper;
 
 namespace StableUI.WebAPI;
 
@@ -33,20 +36,24 @@ public class APICallReflectBuilder
         {
             if (param.ParameterType == typeof(HttpContext))
             {
-                caller.InputMappers.Add((context, _, _) => (null, context));
+                caller.InputMappers.Add((context, _, _, _) => (null, context));
+            }
+            else if (param.ParameterType == typeof(Session))
+            {
+                caller.InputMappers.Add((_, session, _, _) => (null, session));
             }
             else if (param.ParameterType == typeof(JObject))
             {
-                caller.InputMappers.Add((_, _, input) => (null, input));
+                caller.InputMappers.Add((_, _, _, input) => (null, input));
             }
             else if (param.ParameterType == typeof(WebSocket))
             {
-                caller.InputMappers.Add((_, socket, _) => (null, socket));
+                caller.InputMappers.Add((_, _, socket, _) => (null, socket));
                 isWebSocket = true;
             }
             else if (TypeCoercerMap.TryGetValue(param.ParameterType, out Func<JToken, (bool, object)> coercer))
             {
-                caller.InputMappers.Add((_, _, input) =>
+                caller.InputMappers.Add((_, _, _, input) =>
                 {
                     if (!input.TryGetValue(param.Name, out JToken value))
                     {
@@ -64,6 +71,48 @@ public class APICallReflectBuilder
                     return (null, output);
                 });
             }
+            else if (typeof(IDataHolder).IsAssignableFrom(param.ParameterType))
+            {
+                List<Func<JObject, IDataHolder, string>> subAppliers = new();
+                foreach (FieldData field in IDataHolder.GetHelper(param.ParameterType).Fields)
+                {
+                    if (!TypeCoercerMap.TryGetValue(field.Type, out Func<JToken, (bool, object)> fieldCoercer))
+                    {
+                        throw new Exception($"Invalid API parameter type '{field.Type.Name}' for field '{field.Name}' in object '{param.ParameterType.Name}' of param '{param.Name}' of method '{method.DeclaringType.Name}.{method.Name}'");
+                    }
+                    subAppliers.Add((input, outObj) =>
+                    {
+                        if (!input.TryGetValue(field.Name, out JToken value))
+                        {
+                            if (field.Required)
+                            {
+                                return $"Missing required parameter '{field.Name}'";
+                            }
+                            return null;
+                        }
+                        (bool success, object output) = fieldCoercer(value);
+                        if (!success)
+                        {
+                            return $"Invalid value '{value}' for parameter '{field.Name}', must be type '{field.Type.Name}'";
+                        }
+                        field.Field.SetValue(outObj, output);
+                        return null;
+                    });
+                }
+                caller.InputMappers.Add((_, _, _, input) =>
+                {
+                    IDataHolder holder = Activator.CreateInstance(param.ParameterType) as IDataHolder;
+                    foreach (Func<JObject, IDataHolder, string> getter in subAppliers)
+                    {
+                        string err = getter(input, holder);
+                        if (err != null)
+                        {
+                            return (err, null);
+                        }
+                    }
+                    return (null, holder);
+                });
+            }
             else
             {
                 throw new Exception($"Invalid API parameter type '{param.ParameterType.Name}' for param '{param.Name}' of method '{method.DeclaringType.Name}.{method.Name}'");
@@ -72,14 +121,14 @@ public class APICallReflectBuilder
         return new APICall(method.Name, caller.Call, isWebSocket);
     }
 
-    public record class APICaller(object Obj, MethodInfo Method, List<Func<HttpContext, WebSocket, JObject, (string, object)>> InputMappers)
+    public record class APICaller(object Obj, MethodInfo Method, List<Func<HttpContext, Session, WebSocket, JObject, (string, object)>> InputMappers)
     {
-        public Task<JObject> Call(HttpContext context, WebSocket socket, JObject input)
+        public Task<JObject> Call(HttpContext context, Session session, WebSocket socket, JObject input)
         {
             object[] arr = new object[InputMappers.Count];
             for (int i = 0; i < InputMappers.Count; i++)
             {
-                (string error, object value) = InputMappers[i](context, socket, input);
+                (string error, object value) = InputMappers[i](context, session, socket, input);
                 if (error is not null)
                 {
                     return Task.FromResult(new JObject() { ["error"] = error });

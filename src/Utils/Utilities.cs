@@ -62,4 +62,23 @@ public static class Utilities
         string raw = Encoding.UTF8.GetString(await ReceiveData(socket, maxDuration, maxBytes));
         return JObject.Parse(raw);
     }
+
+    public static async Task YieldJsonOutput(this HttpContext context, WebSocket socket, int status, JObject obj)
+    {
+        if (socket != null)
+        {
+            await socket.SendJson(obj, TimeSpan.FromMinutes(1));
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, Utilities.TimedCancel(TimeSpan.FromMinutes(1)));
+            return;
+        }
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = status;
+        await context.Response.WriteAsync(obj.ToString(Formatting.None));
+        await context.Response.CompleteAsync();
+    }
+
+    public static JObject ErrorObj(string message, string error_id)
+    {
+        return new JObject() { ["error"] = message, ["error_id"] = error_id };
+    }
 }

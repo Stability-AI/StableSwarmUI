@@ -1,6 +1,7 @@
 ﻿using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using StableUI.DataHolders;
 using StableUI.Utils;
 using System.Net.Http.Headers;
 
@@ -33,10 +34,18 @@ public class AutoWebUIAPIBackend : AbstractT2IBackend
         // Nothing to do, not our server.
     }
 
-    public override async Task<Image[]> Generate(string prompt, string negativePrompt, long seed, int steps, int width, int height, double cfgScale)
+    public override async Task<Image[]> Generate(T2IParams user_input)
     {
-        Logs.Debug($"Sending AutoWebUI request for prompt '{prompt}'");
-        JObject result = await Send("txt2img", new JObject() { ["prompt"] = prompt, ["negative_prompt"] = negativePrompt, ["seed"] = seed, ["steps"] = steps, ["width"] = width, ["height"] = height, ["cfg_scale"] = cfgScale });
+        JObject result = await Send("txt2img", new JObject()
+        {
+            ["prompt"] = user_input.Prompt,
+            ["negative_prompt"] = user_input.NegativePrompt,
+            ["seed"] = user_input.Seed,
+            ["steps"] = user_input.Steps,
+            ["width"] = user_input.Width,
+            ["height"] = user_input.Height,
+            ["cfg_scale"] = user_input.CFGScale
+        });
         // TODO: Error handlers
         return result["images"].Select(i => new Image((string)i)).ToArray();
     }
