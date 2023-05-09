@@ -19,7 +19,9 @@
     <br>@WebUtil.AutoSlider("height", "Height", "Image height, in pixels.", "input_height", 0, 8192, 1024, 64)
 </div>
 <div class="main-image-area">
-    <div id="image_spot"></div>
+    <div class="current_image" id="current_image"></div>
+    <div class="current_image_batch" id="current_image_batch"></div>
+    <div class="image_history" id="image_history"></div>
 </div>
 
 @section Scripts {

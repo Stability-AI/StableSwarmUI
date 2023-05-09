@@ -4,10 +4,21 @@ let session_id = null;
 
 const time_started = Date.now();
 
-function gotImageResult(image) {
+function appendImage(spot, imageSrc) {
+    let div = document.createElement('div');
+    div.classList.add('image-block');
     let img = document.createElement('img');
-    img.src = 'data:image/png;base64,' + image;
-    document.getElementById('image_spot').appendChild(img);
+    img.src = imageSrc;
+    div.appendChild(img);
+    document.getElementById(spot).appendChild(div);
+}
+
+function gotImageResult(image) {
+    let src = 'data:image/png;base64,' + image;
+    appendImage('current_image_batch', src);
+    appendImage('image_history', src);
+    document.getElementById('current_image').innerHTML = '';
+    appendImage('current_image', src);
 }
 
 function doGenerate() {
@@ -24,6 +35,7 @@ function doGenerate() {
     for (let id of core_inputs) {
         input[id] = document.getElementById('input_' + id).value;
     }
+    document.getElementById('current_image_batch').innerHTML = '';
     makeWSRequest('GenerateText2ImageWS', input, data => {
         gotImageResult(data.image);
     });

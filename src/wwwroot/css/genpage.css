@@ -29,5 +29,33 @@
     width: calc(100vw - max(28rem, 20vw));
     padding: 0.5rem;
     height: 100vw;
+    overflow-y: hidden;
+}
+.current_image {
+    height: 20rem;
+}
+.current_image_batch {
+    height: 20rem;
+    width: 100%;
+    border-top: 1px solid var(--light-border);
+    border-bottom: 1px solid var(--light-border);
+    white-space: nowrap;
+    overflow-x: scroll;
+}
+.image_history {
+    width: 100%;
+    height: calc(100% - 20rem - 20rem);
     overflow-y: scroll;
+}
+.image-block {
+    height: 19rem;
+    padding: 0.5rem;
+    display: inline-block;
+}
+.image-block img {
+    height: 19rem;
+    display: inline-block;
+}
+.image-block img:hover {
+    box-shadow: var(--shadow) 0px 0px 2px 2px;
 }
