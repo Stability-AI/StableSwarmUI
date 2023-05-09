@@ -32,30 +32,49 @@
     overflow-y: hidden;
 }
 .current_image {
-    height: 20rem;
+    position: fixed;
+    top: 0px;
+    height: 31rem;
+    width: fit-content;
+    min-width: 30rem;
+    padding: 0.5rem;
+    border: 1px solid var(--light-border);
 }
 .current_image_batch {
-    height: 20rem;
-    width: 100%;
+    position: fixed;
+    top: 0px;
+    left: calc(30rem + max(28rem, 20vw) + 1rem);
+    width: calc(100vw - 30rem - max(28rem, 20vw) - 1rem);
+    height: 31rem;
     border-top: 1px solid var(--light-border);
     border-bottom: 1px solid var(--light-border);
     white-space: nowrap;
     overflow-x: scroll;
 }
 .image_history {
+    position: fixed;
+    top: 31rem;
     width: 100%;
-    height: calc(100% - 20rem - 20rem);
+    left: calc(max(28rem, 20vw));
+    height: calc(100vh - 31rem - 1rem);
+    width: calc(100vw - max(28rem, 20vw));
     overflow-y: scroll;
 }
 .image-block {
-    height: 19rem;
+    height: 10rem;
     padding: 0.5rem;
     display: inline-block;
 }
 .image-block img {
-    height: 19rem;
+    height: 9rem;
     display: inline-block;
+}
+.current_image img {
+    height: 29rem;
 }
 .image-block img:hover {
     box-shadow: var(--shadow) 0px 0px 2px 2px;
+}
+.image-batch-0 {
+    background-color: rgba(255, 255, 255, 0.5);
 }

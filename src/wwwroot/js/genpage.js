@@ -2,23 +2,51 @@ let core_inputs = ['prompt', 'negative_prompt', 'seed', 'steps', 'width', 'heigh
 
 let session_id = null;
 
+let batches = 0;
+
 const time_started = Date.now();
 
-function appendImage(spot, imageSrc) {
+function clickImageInBatch(div) {
+    setCurrentImage(div.getElementsByTagName('img')[0].src);
+}
+
+function selectImageInHistory(div) {
+    let batchId = div.dataset.batch_id;
+    document.getElementById('current_image_batch').innerHTML = '';
+    for (let img of document.getElementById('image_history').querySelectorAll(`[data-batch_id="${batchId}"]`)) {
+        let batch_div = appendImage('current_image_batch', img.getElementsByTagName('img')[0].src, batchId);
+        batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
+    }
+    setCurrentImage(div.getElementsByTagName('img')[0].src);
+}
+
+function setCurrentImage(src) {
+    let curImg = document.getElementById('current_image');
+    curImg.innerHTML = '';
+    let img = document.createElement('img');
+    img.src = src;
+    curImg.appendChild(img);
+}
+
+function appendImage(spot, imageSrc, batchId) {
     let div = document.createElement('div');
     div.classList.add('image-block');
+    div.classList.add(`image-batch-${batchId % 2}`);
+    div.dataset.batch_id = batchId;
     let img = document.createElement('img');
     img.src = imageSrc;
     div.appendChild(img);
     document.getElementById(spot).appendChild(div);
+    return div;
 }
 
 function gotImageResult(image) {
     let src = 'data:image/png;base64,' + image;
-    appendImage('current_image_batch', src);
-    appendImage('image_history', src);
-    document.getElementById('current_image').innerHTML = '';
-    appendImage('current_image', src);
+    let batch_div = appendImage('current_image_batch', src, batches);
+    batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
+    let history_div = appendImage('image_history', src, batches);
+    history_div.addEventListener('click', () => selectImageInHistory(history_div));
+    setCurrentImage(src);
 }
 
 function doGenerate() {
@@ -36,6 +64,7 @@ function doGenerate() {
         input[id] = document.getElementById('input_' + id).value;
     }
     document.getElementById('current_image_batch').innerHTML = '';
+    batches++;
     makeWSRequest('GenerateText2ImageWS', input, data => {
         gotImageResult(data.image);
     });
