@@ -18,3 +18,4 @@ Argument | Default | Description
 `--port` | `7801` | Can be used to override the 'port' setting.
 `--asp_loglevel` | `warning` for Production environment, `debug` for development | Sets the minimum log level for ASP.NET web logger, as any of: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, `None`. StableUI's own logger will hide debug if the level is above `Debug`.
 `--user_id` | `local` | Set the local user's default UserID (for running in single-user mode, not useful in shared mode).
+`--lock_settings` | `false` | If enabled, blocks in-UI editing of server settings by admins. Settings cannot be modified in this mode without editing the settings file and restarting the server.

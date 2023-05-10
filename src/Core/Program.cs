@@ -27,6 +27,9 @@ public class Program
     /// <summary>If this is signalled, the program is cancelled.</summary>
     public static CancellationToken GlobalProgramCancel = GlobalCancelSource.Token;
 
+    /// <summary>If enabled, settings will be locked to prevent user editing.</summary>
+    public static bool LockSettings = false;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -118,6 +121,7 @@ public class Program
         string logLevel = GetCommandLineFlag("asp_loglevel", environment == "Development" ? "debug" : "warning");
         WebServer.LogLevel = Enum.Parse<LogLevel>(logLevel, true);
         SessionHandler.LocalUserID = GetCommandLineFlag("user_id", SessionHandler.LocalUserID);
+        LockSettings = GetCommandLineFlagAsBool("lock_settings", false);
     }
     #endregion
 
@@ -157,6 +161,17 @@ public class Program
     {
         CommandLineFlagsRead.Add(key);
         return CommandLineFlags.GetValueOrDefault(key, def);
+    }
+
+    /// <summary>Gets the command line flag for the given key as a boolean.</summary>
+    public static bool GetCommandLineFlagAsBool(string key, bool def)
+    {
+        return GetCommandLineFlag(key, def.ToString()).ToLowerFast() switch
+        {
+            "true" or "yes" or "1" => true,
+            "false" or "no" or "0" => false,
+            var mode => throw new InvalidDataException($"Command line flag '{key}' value of '{mode}' is not valid")
+        };
     }
     #endregion
 }
