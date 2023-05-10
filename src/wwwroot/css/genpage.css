@@ -13,7 +13,7 @@
 }
 .input-sidebar {
     position: fixed;
-    top: 0px;
+    top: 3rem;
     left: 0px;
     width: calc(max(28rem, 20vw));
     padding: 0.5rem;
@@ -24,7 +24,7 @@
 }
 .main-image-area {
     position: fixed;
-    top: 0px;
+    top: 3rem;
     left: calc(max(28rem, 20vw));
     width: calc(100vw - max(28rem, 20vw));
     padding: 0.5rem;
@@ -33,7 +33,7 @@
 }
 .current_image {
     position: fixed;
-    top: 0px;
+    top: 3rem;
     height: 31rem;
     width: fit-content;
     min-width: 30rem;
@@ -42,21 +42,20 @@
 }
 .current_image_batch {
     position: fixed;
-    top: 0px;
+    top: 3rem;
     left: calc(30rem + max(28rem, 20vw) + 1rem);
     width: calc(100vw - 30rem - max(28rem, 20vw) - 1rem);
     height: 31rem;
     border-top: 1px solid var(--light-border);
     border-bottom: 1px solid var(--light-border);
-    white-space: nowrap;
-    overflow-x: scroll;
+    overflow-y: scroll;
 }
 .image_history {
     position: fixed;
-    top: 31rem;
+    top: 34rem;
     width: 100%;
     left: calc(max(28rem, 20vw));
-    height: calc(100vh - 31rem - 1rem);
+    height: calc(100vh - 31rem - 4rem);
     width: calc(100vw - max(28rem, 20vw));
     overflow-y: scroll;
 }
