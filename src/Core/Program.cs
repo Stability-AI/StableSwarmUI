@@ -30,6 +30,9 @@ public class Program
     /// <summary>If enabled, settings will be locked to prevent user editing.</summary>
     public static bool LockSettings = false;
 
+    /// <summary>Path to the settings file, as set by command line.</summary>
+    public static string SettingsFilePath;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -41,9 +44,14 @@ public class Program
         {
             Logs.Init("Parsing command line...");
             ParseCommandLineArgs(args);
-            string settingsFile = CommandLineFlags.GetValueOrDefault("settings_file", "Data/Settings.fds");
             Logs.Init("Loading settings file...");
-            LoadSettingsFile(settingsFile);
+            SettingsFilePath = CommandLineFlags.GetValueOrDefault("settings_file", "Data/Settings.fds");
+            LoadSettingsFile();
+            if (!LockSettings)
+            {
+                Logs.Init("Re-saving settings file...");
+                SaveSettingsFile();
+            }
             Logs.Init("Applying command line settings...");
             ApplyCommandLineSettings();
         }
@@ -81,14 +89,15 @@ public class Program
         Backends.Shutdown();
         Sessions.Shutdown();
     }
-    
-    /// <summary>Load the user settings file.</summary>
-    public static void LoadSettingsFile(string path)
+
+    #region settings
+    /// <summary>Load the settings file.</summary>
+    public static void LoadSettingsFile()
     {
         FDSSection section;
         try
         {
-            section = FDSUtility.ReadFile(path);
+            section = FDSUtility.ReadFile(SettingsFilePath);
         }
         catch (FileNotFoundException)
         {
@@ -103,7 +112,26 @@ public class Program
         ServerSettings.Load(section);
     }
 
-    #region settings pre-apply
+    /// <summary>Save the settings file.</summary>
+    public static void SaveSettingsFile()
+    {
+        if (LockSettings)
+        {
+            return;
+        }
+        try
+        {
+            FDSUtility.SaveToFile(ServerSettings.Save(true), SettingsFilePath);
+        }
+        catch (Exception ex)
+        {
+            Logs.Error($"Error saving settings file: {ex}");
+            return;
+        }
+    }
+    #endregion
+
+    #region command-line pre-apply
     /// <summary>Pre-applies settings choices from command line.</summary>
     public static void ApplyCommandLineSettings()
     {
