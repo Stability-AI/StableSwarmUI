@@ -31,3 +31,18 @@ function getWSAddress() {
     }
     return wsPrefix + url;
 }
+
+function createDiv(id, classes) {
+    let div = document.createElement('div');
+    div.id = id;
+    div.className = classes;
+    return div;
+}
+
+function escapeHtml(text) {
+    return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+}
+
+function escapeJsString(text) {
+    return text.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll("'", "\\'").replaceAll('\n', '\\n').replaceAll('\r', '\\r').replaceAll('\t', '\\t');
+}

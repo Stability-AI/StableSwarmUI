@@ -1,8 +1,13 @@
 :root {
     --background: #0b0f20;
     --background-soft: #203040;
+    --background-gray: #1f2336;
+    --background-gray-danger: #361f1f;
+    --background-danger: #200b0b;
     --shadow: #404080;
     --light-border: #a0c0c0;
+    --red: #ff0000;
+    --green: #00ff00;
 }
 
 body {
@@ -18,6 +23,78 @@ body {
     box-shadow: var(--shadow) 0px 0px 1px 1px;
     white-space: nowrap;
     overflow: hidden;
+}
+.backend_add_button_container {
+    margin: 0.5rem;
+}
+.backends_list {
+    margin: 0.5rem;
+}
+.backend-card {
+    max-width: 55rem;
+    border-radius: 0.5rem;
+}
+.backend-dead {
+    border: 1px solid #ff0000;
+}
+.backend-active {
+    border: 1px solid #00aa33;
+}
+.card-header {
+    background-color: var(--background-gray);
+}
+.card-body {
+    background-color: var(--background);
+}
+.backend-dead .card-header {
+    background-color: var(--background-gray-danger);
+}
+.backend-dead .card-body {
+    background-color: var(--background-danger);
+}
+.backend-card .card-header button {
+    height: 1.8rem;
+    width: 1.8rem;
+    text-align: center;
+    background-color: transparent;
+    border-radius: 0.2rem;
+    margin-left: 0.5rem;
+    padding: 0.1rem;
+    padding-top: -0.5rem;
+    float: right;
+}
+.backend-edit-button {
+    color: var(--green);
+    border: 1px solid var(--green);
+}
+.backend-edit-button:hover {
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    background-color: var(--green) !important;
+}
+.backend-edit-button:disabled {
+    color: #505050 !important;
+    border: 1px solid #505050 !important;
+    background-color: transparent !important;
+}
+.backend-delete-button {
+    color: var(--red);
+    border: 1px solid var(--red);
+}
+.backend-delete-button:hover {
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    background-color: var(--red) !important;
+}
+.backend-save-button {
+    width: 3rem !important;
+    color: var(--green);
+    border: 1px solid var(--green);
+}
+.backend-save-button:hover {
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    background-color: var(--green) !important;
 }
 .auto-slider-fade-contain {
     display: inline-block;
@@ -55,6 +132,10 @@ body {
 }
 .auto-input-fade-lock {
     mask-image: linear-gradient(to right, black 70%, transparent 100%);
+}
+.auto-text {
+    width: 100%;
+    vertical-align: middle;
 }
 .auto-slider-range {
     width: 100%;

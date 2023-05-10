@@ -62,6 +62,7 @@ public class Program
         }
         Logs.Init("Loading backends...");
         Backends = new();
+        Backends.Load();
         Logs.Init("Loading session handler...");
         Sessions = new();
         Logs.Init("Prepping API...");

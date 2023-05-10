@@ -67,6 +67,33 @@ public static class Utilities
         return JObject.Parse(raw);
     }
 
+    /// <summary>Converts the JSON data to predictable basic data.</summary>
+    public static object ToBasicObject(this JToken token)
+    {
+        return token.Type switch
+        {
+            JTokenType.Object => ((JObject)token).ToBasicObject(),
+            JTokenType.Array => ((JArray)token).Select(ToBasicObject).ToList(),
+            JTokenType.Integer => (long)token,
+            JTokenType.Float => (double)token,
+            JTokenType.String => (string)token,
+            JTokenType.Boolean => (bool)token,
+            JTokenType.Null => null,
+            _ => throw new Exception("Unknown token type: " + token.Type),
+        };
+    }
+
+    /// <summary>Converts the JSON data to predictable basic data.</summary>
+    public static Dictionary<string, object> ToBasicObject(this JObject obj)
+    {
+        Dictionary<string, object> result = new();
+        foreach ((string key, JToken val) in obj)
+        {
+            result[key] = val.ToBasicObject();
+        }
+        return result;
+    }
+
     public static async Task YieldJsonOutput(this HttpContext context, WebSocket socket, int status, JObject obj)
     {
         if (socket != null)

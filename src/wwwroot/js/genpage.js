@@ -4,6 +4,10 @@ let session_id = null;
 
 let batches = 0;
 
+let backend_types = {};
+
+let backends_loaded = [];
+
 const time_started = Date.now();
 
 function clickImageInBatch(div) {
@@ -29,9 +33,7 @@ function setCurrentImage(src) {
 }
 
 function appendImage(spot, imageSrc, batchId, textPreview) {
-    let div = document.createElement('div');
-    div.classList.add('image-block');
-    div.classList.add(`image-batch-${batchId % 2}`);
+    let div = createDiv(null, `image-block image-bitch-${batchId % 2}`);
     div.dataset.batch_id = batchId;
     let img = document.createElement('img');
     img.addEventListener('load', () => {
@@ -39,8 +41,7 @@ function appendImage(spot, imageSrc, batchId, textPreview) {
     });
     img.src = imageSrc;
     div.appendChild(img);
-    let textBlock = document.createElement('div');
-    textBlock.classList.add('image-preview-text');
+    let textBlock = createDiv(null, 'image-preview-text');
     textBlock.innerText = textPreview;
     div.appendChild(textBlock);
     document.getElementById(spot).appendChild(div);
@@ -101,10 +102,120 @@ function loadHistory(path) {
     });
 }
 
+function addNewBackend(type_id) {
+    genericRequest('AddNewBackend', {'type_id': type_id}, data => {
+        addBackendToHtml(data, false);
+    });
+}
+
+function addBackendToHtml(backend, disable, spot = null) {
+    if (spot == null) {
+        spot = createDiv(`backend-wrapper-spot-${backend.id}`, 'backend-wrapper-spot');
+        document.getElementById('backends_list').appendChild(spot);
+    }
+    spot.innerHTML = '';
+    let type = backend_types[backend.type];
+    let cardBase = createDiv(null, `card backend-${(backend.valid ? 'active' : 'dead')} backend-card`);
+    let cardHeader = createDiv(null, 'card-header');
+    cardHeader.innerText = `${(backend.valid ? 'Loaded Backend' : 'Inactive Backend')} (${backend.id}): ${type.name}`;
+    let deleteButton = document.createElement('button');
+    deleteButton.className = 'backend-delete-button';
+    deleteButton.innerText = '✕';
+    deleteButton.title = 'Delete';
+    let editButton = document.createElement('button');
+    editButton.className = 'backend-edit-button';
+    editButton.innerText = '✎';
+    editButton.title = 'Edit';
+    editButton.disabled = !disable;
+    let saveButton = document.createElement('button');
+    saveButton.className = 'backend-save-button';
+    saveButton.innerText = 'Save';
+    saveButton.title = 'Save changes';
+    saveButton.style.display = disable ? 'none' : 'inline-block';
+    cardHeader.appendChild(deleteButton);
+    cardHeader.appendChild(editButton);
+    cardHeader.appendChild(saveButton);
+    deleteButton.addEventListener('click', () => {
+        if (confirm(`Are you sure you want to delete backend ${backend.id} (${type.name})?`)) {
+            genericRequest('DeleteBackend', {'backend_id': backend.id}, data => {
+                cardBase.remove();
+            });
+        }
+    });
+    let cardBody = createDiv(null, 'card-body');
+    for (let setting of type.settings) {
+        let input;
+        if (setting.type == 'text') {
+            input = document.createElement('div');
+            input.innerHTML = makeTextInput(`setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name], 1, setting.placeholder);
+        }
+        else {
+            console.log(`Cannot create input slot of type ${setting.type}`);
+        }
+        cardBody.appendChild(input);
+    }
+    cardBase.appendChild(cardHeader);
+    cardBase.appendChild(cardBody);
+    spot.appendChild(cardBase);
+    for (let entry of cardBody.querySelectorAll('[data-name]')) {
+        entry.disabled = disable;
+    }
+    editButton.addEventListener('click', () => {
+        saveButton.style.display = 'inline-block';
+        editButton.disabled = true;
+        for (let entry of cardBody.querySelectorAll('[data-name]')) {
+            entry.disabled = false;
+        }
+    });
+    saveButton.addEventListener('click', () => {
+        saveButton.style.display = 'none';
+        for (let entry of cardBody.querySelectorAll('[data-name]')) {
+            let name = entry.dataset.name;
+            let value = entry.value;
+            backend.settings[name] = value;
+            entry.disabled = true;
+            console.log(`Setting ${name} to ${value} from ${entry}`)
+        }
+        genericRequest('EditBackend', {'backend_id': backend.id, 'settings': backend.settings}, data => {
+            addBackendToHtml(data, true, spot);
+        });
+    });
+}
+
+function loadBackendsList() {
+    let listSection = document.getElementById('backends_list');
+    genericRequest('ListBackends', {}, data => {
+        backends_loaded = data.list;
+        listSection.innerHTML = '';
+        for (let backend of backends_loaded) {
+            addBackendToHtml(backend, true);
+        }
+    });
+}
+
+function loadBackendTypesMenu() {
+    let addButtonsSection = document.getElementById('backend_add_buttons');
+    genericRequest('ListBackendTypes', {}, data => {
+        backend_types = {};
+        addButtonsSection.innerHTML = '';
+        for (let type of data.list) {
+            backend_types[type.id] = type;
+            let button = document.createElement('button');
+            button.title = type.description;
+            button.innerText = type.name;
+            let id = type.id;
+            button.addEventListener('click', () => { addNewBackend(id); });
+            addButtonsSection.appendChild(button);
+        }
+        loadBackendsList();
+    });
+}
+
 function genpageLoad() {
     document.getElementById('generate_button').addEventListener('click', doGenerate);
     getSession(() => {
         loadHistory('');
+        loadBackendTypesMenu();
     });
 }
 

@@ -1,36 +1,41 @@
-﻿using FreneticUtilities.FreneticToolkit;
+﻿using FreneticUtilities.FreneticDataSyntax;
+using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StableUI.DataHolders;
 using StableUI.Utils;
-using System.Net.Http.Headers;
+using static StableUI.Backends.AutoWebUIAPIBackend;
 
 namespace StableUI.Backends;
 
 /// <summary>T2I Backend using the Automatic1111/Stable-Diffusion-WebUI API.</summary>
-public class AutoWebUIAPIBackend : AbstractT2IBackend
+public class AutoWebUIAPIBackend : AbstractT2IBackend<AutoWebUIAPISettings>
 {
-    /// <summary>Base web address of the auto webui instance.</summary>
-    public string Address;
+    public class AutoWebUIAPISettings : AutoConfiguration
+    {
+        /// <summary>Base web address of the auto webui instance.</summary>
+        [SuggestionPlaceholder(Text = "WebUI's address...")]
+        [ConfigComment("The address of the WebUI, eg 'http://localhost:7860'.")]
+        public string Address = "";
+    }
 
-    /// <summary>
-    /// 
-    /// </summary>
+    /// <summary>Internal HTTP handler.</summary>
     public HttpClient HttpClient = new();
 
-    public AutoWebUIAPIBackend(string _address)
+    public AutoWebUIAPIBackend()
     {
-        Address = _address;
         HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"StableUI/{Utilities.Version}");
     }
 
     public override void Init()
     {
+        IsValid = !string.IsNullOrWhiteSpace(Settings.Address);
         // TODO: Validate the server is alive.
     }
 
     public override void Shutdown()
     {
+        IsValid = false;
         // Nothing to do, not our server.
     }
 
@@ -52,7 +57,7 @@ public class AutoWebUIAPIBackend : AbstractT2IBackend
 
     public async Task<JObject> Send(string url, JObject payload)
     {
-        HttpResponseMessage response = await HttpClient.PostAsync($"{Address}/sdapi/v1/{url}", new StringContent(payload.ToString(Formatting.None), StringConversionHelper.UTF8Encoding, "application/json"));
+        HttpResponseMessage response = await HttpClient.PostAsync($"{Settings.Address}/sdapi/v1/{url}", new StringContent(payload.ToString(Formatting.None), StringConversionHelper.UTF8Encoding, "application/json"));
         string content = await response.Content.ReadAsStringAsync();
         return JObject.Parse(content);
     }

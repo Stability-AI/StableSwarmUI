@@ -60,6 +60,10 @@ function makeWSRequest(url, in_data, callback, depth = 0) {
 function genericRequest(url, in_data, callback, depth = 0) {
     in_data['session_id'] = session_id;
     sendJsonToServer(`/API/${url}`, in_data, (status, data) => {
+        if (!data) {
+            showError('Failed to send request to server. Did the server crash?');
+            return;
+        }
         if (data.error_id && data.error_id == 'invalid_session_id') {
             if (depth > 3) {
                 showError('Failed to get session ID after 3 tries. Your account may have been invalidated. Try refreshing the page, or contact the site owner.');
@@ -87,6 +91,19 @@ function getSession(callback) {
             callback();
         }
     });
+}
+
+function makeTextInput(id, name, description, value, rows, placeholder) {
+    js = `${escapeJsString(name)}: ${escapeJsString(description)}`;
+    name = escapeHtml(name);
+    description = escapeHtml(description);
+    return `
+    <div class="auto-input auto-text-box" title="${name}: ${description}">
+        <div class="auto-input-fade-lock auto-fade-max-contain" onclick="alert('${js}')">
+            <span class="auto-input-name">${name}</span> <span class="auto-input-description">${description}</span>
+        </div>
+        <textarea class="auto-text" id="${id}" rows="${rows}" placeholder="${escapeHtml(placeholder)}" data-name="${name}">${escapeHtml(value)}</textarea>
+    </div>`;
 }
 
 siteLoad();
