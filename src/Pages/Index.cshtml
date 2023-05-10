@@ -18,8 +18,8 @@
         <a class="nav-link" data-bs-toggle="tab" href="#Settings" aria-selected="false" tabindex="-1" role="tab">Settings</a>
     </li>
 </ul>
-<div id="myTabContent" class="tab-content">
-    <div class="tab-pane fade show active" id="Text2Image" role="tabpanel">
+<div class="tab-content">
+    <div class="tab-pane show active" id="Text2Image" role="tabpanel">
         <div class="input-sidebar" id="input_sidebar">
             <textarea class="prompt-box" id="input_prompt" placeholder="Type your prompt here" rows="3"></textarea>
             <br><textarea class="prompt-box" id="input_negative_prompt" placeholder="Type your negative prompt here" rows="3"></textarea>
@@ -37,11 +37,25 @@
             <div class="image_history" id="image_history"></div>
         </div>
     </div>
-    <div class="tab-pane fade" id="Models" role="tabpanel">
+    <div class="tab-pane" id="Models" role="tabpanel">
         Placeholder.
     </div>
-    <div class="tab-pane fade" id="Settings" role="tabpanel">
-        Placeholder.
+    <div class="tab-pane" id="Settings" role="tabpanel">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" data-bs-toggle="tab" href="#Settings-Backends" aria-selected="true" role="tab">Backends</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#Settings-Test" aria-selected="false" tabindex="-1" role="tab">Some other menu</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane show active" id="Settings-Backends" role="tabpanel">
+            </div>
+            <div class="tab-pane" id="Settings-Test" role="tabpanel">
+                Placeholder.
+            </div>
+        </div>
     </div>
 </div>
 
