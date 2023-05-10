@@ -13,8 +13,11 @@ public class SessionHandler
     /// <summary>Map of currently tracked sessions by ID.</summary>
     public ConcurrentDictionary<string, Session> Sessions = new();
 
+    /// <summary>ID to use for the local user when in single-user mode.</summary>
+    public static string LocalUserID = "local";
+
     /// <summary>Basic reusable admin user.</summary>
-    public User AdminUser = new() { UserID = "local" };
+    public User AdminUser = new() { UserID = LocalUserID };
 
     public SessionHandler()
     {

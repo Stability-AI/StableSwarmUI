@@ -117,6 +117,7 @@ public class Program
         Environment.SetEnvironmentVariable("ASPNETCORE_URLS", WebServer.HostURL);
         string logLevel = GetCommandLineFlag("asp_loglevel", environment == "Development" ? "debug" : "warning");
         WebServer.LogLevel = Enum.Parse<LogLevel>(logLevel, true);
+        SessionHandler.LocalUserID = GetCommandLineFlag("user_id", SessionHandler.LocalUserID);
     }
     #endregion
 
