@@ -19,3 +19,6 @@ Argument | Default | Description
 `--asp_loglevel` | `warning` for Production environment, `debug` for development | Sets the minimum log level for ASP.NET web logger, as any of: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, `None`. StableUI's own logger will hide debug if the level is above `Debug`.
 `--user_id` | `local` | Set the local user's default UserID (for running in single-user mode, not useful in shared mode).
 `--lock_settings` | `false` | If enabled, blocks in-UI editing of server settings by admins. Settings cannot be modified in this mode without editing the settings file and restarting the server.
+`--ngrok-path` | (None) | If specified, will be used as the path to an `ngrok` executable, and will automatically load and configure ngrok when launching, to share your UI instance on a publicly accessible URL.
+`--ngrok-region` | (None) | If specified, sets the ngrok region. If unspecified, defaults to closest.
+`--ngrok-basic-auth` | (None) | If specified, sets an ngrok basic-auth requirement to access.

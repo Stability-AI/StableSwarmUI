@@ -38,6 +38,10 @@ public static class WebServer
         {
             WebApp.UseExceptionHandler("/Error/Internal");
         }
+        if (Program.Ngrok is not null)
+        {
+            WebApp.Lifetime.ApplicationStarted.Register(Program.Ngrok.Start);
+        }
         WebApp.Lifetime.ApplicationStopping.Register(Program.Shutdown);
         WebApp.UseStaticFiles(new StaticFileOptions());
         WebApp.UseRouting();

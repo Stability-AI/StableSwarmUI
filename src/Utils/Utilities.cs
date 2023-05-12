@@ -3,8 +3,10 @@ using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StableUI.Core;
+using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -147,4 +149,8 @@ public static class Utilities
         string extension = path.AfterLast('.');
         return CommonContentTypes.GetValueOrDefault(extension, "application/octet-stream");
     }
+
+    /// <summary>Kill system process..</summary>
+    [DllImport("libc", SetLastError = true, EntryPoint = "kill")]
+    public static extern int sys_kill(int pid, int signal);
 }

@@ -33,6 +33,9 @@ public class Program
     /// <summary>Path to the settings file, as set by command line.</summary>
     public static string SettingsFilePath;
 
+    /// <summary>Ngrok instance, if loaded at all.</summary>
+    public static NgrokHandler Ngrok;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -89,6 +92,7 @@ public class Program
         GlobalCancelSource.Cancel();
         Backends.Shutdown();
         Sessions.Shutdown();
+        Ngrok?.Stop();
     }
 
     #region settings
@@ -151,6 +155,15 @@ public class Program
         WebServer.LogLevel = Enum.Parse<LogLevel>(logLevel, true);
         SessionHandler.LocalUserID = GetCommandLineFlag("user_id", SessionHandler.LocalUserID);
         LockSettings = GetCommandLineFlagAsBool("lock_settings", false);
+        if (CommandLineFlags.ContainsKey("ngrok-path"))
+        {
+            Ngrok = new()
+            {
+                Path = GetCommandLineFlag("ngrok-path", null),
+                Region = GetCommandLineFlag("ngrok-region", null),
+                BasicAuth = GetCommandLineFlag("ngrok-basic-auth", null)
+            };
+        }
     }
     #endregion
 
