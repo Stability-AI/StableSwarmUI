@@ -34,11 +34,17 @@ body {
     max-width: 55rem;
     border-radius: 0.5rem;
 }
-.backend-dead {
+.backend-errored {
     border: 1px solid #ff0000;
 }
-.backend-active {
+.backend-disabled {
+    border: 1px solid #ffaa00;
+}
+.backend-running {
     border: 1px solid #00aa33;
+}
+.backend-loading {
+    border: 1px solid #335500;
 }
 .card-header {
     background-color: var(--background-gray);
@@ -46,10 +52,10 @@ body {
 .card-body {
     background-color: var(--background);
 }
-.backend-dead .card-header {
+.backend-errored .card-header {
     background-color: var(--background-gray-danger);
 }
-.backend-dead .card-body {
+.backend-errored .card-body {
     background-color: var(--background-danger);
 }
 .backend-card .card-header button {

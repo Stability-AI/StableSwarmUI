@@ -96,6 +96,19 @@ function getSession(callback) {
     });
 }
 
+function makeNumberInput(id, name, description, value, min, max, step = 1) {
+    js = `${escapeJsString(name)}: ${escapeJsString(description)}`;
+    name = escapeHtml(name);
+    description = escapeHtml(description);
+    return `
+    <div class="auto-input auto-number-box" title="${name}: ${description}">
+        <div class="auto-input-fade-lock auto-fade-max-contain" onclick="alert('${js}')">
+            <span class="auto-input-name">${name}</span> <span class="auto-input-description">${description}</span>
+        </div>
+        <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}">
+    </div>`
+}
+
 function makeTextInput(id, name, description, value, rows, placeholder) {
     js = `${escapeJsString(name)}: ${escapeJsString(description)}`;
     name = escapeHtml(name);

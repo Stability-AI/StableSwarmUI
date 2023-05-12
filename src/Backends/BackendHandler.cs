@@ -101,6 +101,7 @@ public class BackendHandler
         };
         data.Backend.InternalSettingsAccess = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
         data.Backend.HandlerTypeData = type;
+        data.Backend.Handler = this;
         data.Backend.Init();
         lock (CentralLock)
         {
@@ -187,6 +188,7 @@ public class BackendHandler
             data.Backend.InternalSettingsAccess = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
             data.Backend.InternalSettingsAccess.Load(section.GetSection("settings"));
             data.Backend.HandlerTypeData = type;
+            data.Backend.Handler = this;
             await data.Backend.Init();
             lock (CentralLock)
             {
@@ -233,7 +235,7 @@ public class BackendHandler
         bool result = await Task.Run(async () => // TODO: this is weird async jank
         {
             bool any = false;
-            foreach (T2IBackendData backend in T2IBackends.Values.Where(b => b.Backend.IsValid))
+            foreach (T2IBackendData backend in T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING))
             {
                 lock (CentralLock)
                 {
@@ -262,6 +264,7 @@ public class BackendHandler
     public BackendHandler()
     {
         RegisterBackendType<AutoWebUIAPIBackend>("auto_webui_api", "Auto1111 SD-WebUI API By URL", "A backend powered by a pre-existing installation of the AUTOMATIC1111/Stable-Diffusion-WebUI launched in '--api' mode, referenced via API base URL.");
+        RegisterBackendType<AutoWebUISelfStartBackend>("auto_webui_selfstart", "Auto111 SD-WebUI Self-Starting", "A backend powered by a pre-existing installation of the AUTOMATIC1111/Stable-Diffusion-WebUI, automatically launched and managed by this UI server.");
     }
 
     private volatile bool HasShutdown;
@@ -308,7 +311,7 @@ public class BackendHandler
                 Logs.Info($"Backend usage timeout, all backends occupied, giving up after {waited.TotalSeconds} seconds.");
                 throw new TimeoutException();
             }
-            if (!T2IBackends.Values.Any(b => b.Backend.IsValid))
+            if (!T2IBackends.Values.Any(b => b.Backend.Status == BackendStatus.RUNNING))
             {
                 Logs.Warning("No backends are available! Cannot generate anything.");
                 throw new InvalidOperationException("No backends available!");
@@ -317,7 +320,7 @@ public class BackendHandler
             {
                 foreach (T2IBackendData backend in T2IBackends.Values)
                 {
-                    if (!backend.IsInUse && backend.Backend.IsValid)
+                    if (!backend.IsInUse && backend.Backend.Status == BackendStatus.RUNNING)
                     {
                         backend.IsInUse = true;
                         return new T2IBackendAccess(backend);

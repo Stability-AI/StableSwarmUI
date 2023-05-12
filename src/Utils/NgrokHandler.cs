@@ -42,10 +42,10 @@ public class NgrokHandler
         NgrokProcess = new() { StartInfo = start };
         NgrokProcess.Start();
         Logs.Debug($"Ngrok launched as process #{NgrokProcess.Id}.");
-        Task.Factory.StartNew(async () =>
+        new Thread(() =>
         {
             string line;
-            while ((line = await NgrokProcess.StandardOutput.ReadLineAsync()) != null)
+            while ((line = NgrokProcess.StandardOutput.ReadLine()) != null)
             {
                 Logs.Debug($"Ngrok says: {line}");
                 string[] parts = line.SplitFast(' ');
@@ -60,7 +60,7 @@ public class NgrokHandler
                 }
             }
             Logs.Info("Ngrok process exited.");
-        });
+        }).Start();
     }
 
     public void Stop()

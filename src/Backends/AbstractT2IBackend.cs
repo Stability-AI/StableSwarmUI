@@ -18,7 +18,13 @@ public abstract class AbstractT2IBackend
     public abstract Task<Image[]> Generate(T2IParams user_input);
 
     /// <summary>Whether this backend has been configured validly.</summary>
-    public volatile bool IsValid;
+    public volatile BackendStatus Status = BackendStatus.DISABLED;
+
+    /// <summary>Whether this backend is alive and ready.</summary>
+    public bool IsAlive()
+    {
+        return Status == BackendStatus.RUNNING;
+    }
 
     /// <summary>Currently loaded model, or null if none.</summary>
     public string CurrentModelName;
@@ -29,8 +35,19 @@ public abstract class AbstractT2IBackend
     /// <summary>Backend type data for the internal handler.</summary>
     public BackendHandler.BackendType HandlerTypeData;
 
+    /// <summary>The backing <see cref="BackendHandler"/> instance.</summary>
+    public BackendHandler Handler;
+
     /// <summary>Tell the backend to load a specific model. Return true if loaded, false if failed.</summary>
     public abstract Task<bool> LoadModel(T2IModel model);
+}
+
+public enum BackendStatus
+{
+    DISABLED,
+    ERRORED,
+    LOADING,
+    RUNNING
 }
 
 /// <summary>Represents a basic abstracted Text2Image backend provider.</summary>

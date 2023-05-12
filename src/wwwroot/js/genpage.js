@@ -148,9 +148,9 @@ function addBackendToHtml(backend, disable, spot = null) {
     }
     spot.innerHTML = '';
     let type = backend_types[backend.type];
-    let cardBase = createDiv(null, `card backend-${(backend.valid ? 'active' : 'dead')} backend-card`);
+    let cardBase = createDiv(null, `card backend-${backend.status} backend-card`);
     let cardHeader = createDiv(null, 'card-header');
-    cardHeader.innerText = `${(backend.valid ? 'Loaded Backend' : 'Inactive Backend')} (${backend.id}): ${type.name}`;
+    cardHeader.innerText = `${backend.status} backend: (${backend.id}): ${type.name}`;
     let deleteButton = document.createElement('button');
     deleteButton.className = 'backend-delete-button';
     deleteButton.innerText = '✕';
@@ -181,6 +181,10 @@ function addBackendToHtml(backend, disable, spot = null) {
         if (setting.type == 'text') {
             input = document.createElement('div');
             input.innerHTML = makeTextInput(`setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name], 1, setting.placeholder);
+        }
+        else if (setting.type == 'integer') {
+            input = document.createElement('div');
+            input.innerHTML = makeNumberInput(`setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name], 0, 1000, 1);
         }
         else {
             console.log(`Cannot create input slot of type ${setting.type}`);

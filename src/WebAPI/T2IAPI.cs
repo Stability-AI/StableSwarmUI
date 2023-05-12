@@ -45,7 +45,7 @@ public static class T2IAPI
         return new JObject()
         {
             ["type"] = backend.Backend.HandlerTypeData.ID,
-            ["valid"] = backend.Backend.IsValid,
+            ["status"] = backend.Backend.Status.ToString().ToLowerFast(),
             ["id"] = backend.ID,
             ["settings"] = JToken.FromObject(backend.Backend.InternalSettingsAccess.Save(true).ToSimple())
         };
