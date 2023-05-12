@@ -24,10 +24,7 @@ public static class WebServer
         // ASP.NET web init
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "src/wwwroot" });
         builder.Services.AddRazorPages();
-        if (!builder.Environment.IsDevelopment())
-        {
-            builder.Logging.SetMinimumLevel(LogLevel);
-        }
+        builder.Logging.SetMinimumLevel(LogLevel);
         WebApp = builder.Build();
         if (WebApp.Environment.IsDevelopment())
         {

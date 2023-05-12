@@ -151,8 +151,8 @@ public class Program
         string port = GetCommandLineFlag("port", $"{ServerSettings.Port}");
         WebServer.HostURL = $"http://{host}:{port}";
         Environment.SetEnvironmentVariable("ASPNETCORE_URLS", WebServer.HostURL);
-        string logLevel = GetCommandLineFlag("asp_loglevel", environment == "Development" ? "debug" : "warning");
-        WebServer.LogLevel = Enum.Parse<LogLevel>(logLevel, true);
+        WebServer.LogLevel = Enum.Parse<LogLevel>(GetCommandLineFlag("asp_loglevel", "warning"), true);
+        Logs.MinimumLevel = Enum.Parse<Logs.LogLevel>(GetCommandLineFlag("loglevel", "info"), true);
         SessionHandler.LocalUserID = GetCommandLineFlag("user_id", SessionHandler.LocalUserID);
         LockSettings = GetCommandLineFlagAsBool("lock_settings", false);
         if (CommandLineFlags.ContainsKey("ngrok-path"))

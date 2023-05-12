@@ -16,7 +16,8 @@ Argument | Default | Description
 `--environment` | `Production` | Can be `development` or `production` to set what ASP.NET Web Environment to use. `Development` gives detailed debug logs and errors, while `Production` is optimized for normal usage.
 `--host` | `localhost` | Can be used to override the 'host' setting.
 `--port` | `7801` | Can be used to override the 'port' setting.
-`--asp_loglevel` | `warning` for Production environment, `debug` for development | Sets the minimum log level for ASP.NET web logger, as any of: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, `None`. StableUI's own logger will hide debug if the level is above `Debug`.
+`--asp_loglevel` | `warning` | Sets the minimum log level for ASP.NET web logger, as any of: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, `None`. Note 'information' here spams debug output.
+`--loglevel` | `Info` | Minimum StableUI log level, as any of: `Debug`, `Info`, `Init`, `Warning`, `Error`, `None`. 'Info' here is the normal usage data.
 `--user_id` | `local` | Set the local user's default UserID (for running in single-user mode, not useful in shared mode).
 `--lock_settings` | `false` | If enabled, blocks in-UI editing of server settings by admins. Settings cannot be modified in this mode without editing the settings file and restarting the server.
 `--ngrok-path` | (None) | If specified, will be used as the path to an `ngrok` executable, and will automatically load and configure ngrok when launching, to share your UI instance on a publicly accessible URL.
