@@ -217,7 +217,6 @@ public static class T2IAPI
     public static async Task<JObject> ListImages(Session session, string path="")
     {
         (path, string consoleError, string userError) = WebServer.CheckOutputFilePath(path, session.User.UserID);
-        Console.WriteLine($"Path: {path}");
         if (consoleError is not null)
         {
             Logs.Error(consoleError);

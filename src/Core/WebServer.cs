@@ -1,7 +1,6 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using StableUI.Utils;
 using StableUI.WebAPI;
-using System.ComponentModel.Design;
 using System.Web;
 
 namespace StableUI.Core;
@@ -44,6 +43,7 @@ public static class WebServer
         WebApp.UseRouting();
         WebApp.UseWebSockets();
         WebApp.MapRazorPages();
+        WebApp.Map("/", () => Results.Redirect("/Text2Image"));
         WebApp.Map("/API/{*Call}", API.HandleAsyncRequest);
         WebApp.Map("/Output/{*Path}", ViewOutput);
         WebApp.Use(async (context, next) =>
