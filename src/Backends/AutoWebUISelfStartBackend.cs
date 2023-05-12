@@ -143,6 +143,10 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
         {
             Logs.Debug($"Auto WebUI launcher: {line}");
         }
+        if (Status == BackendStatus.RUNNING)
+        {
+            Status = BackendStatus.ERRORED;
+        }
         Logs.Info($"Self-Start WebUI on port {Port} exited.");
     }
 }
