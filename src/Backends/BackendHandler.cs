@@ -31,7 +31,7 @@ public class BackendHandler
     public int LastBackendID = 0;
 
     /// <summary>The path to where the backend list is saved.</summary>
-    public string SaveFilePath = $"{Program.ServerSettings.DataPath}/Backends.fds";
+    public string SaveFilePath = "Data/Backends.fds";
 
     /// <summary>Metadata about backend types.</summary>
     public record class BackendType(string ID, string Name, string Description, Type SettingsClass, AutoConfiguration.Internal.AutoConfigData SettingsInternal, Type BackendClass, JObject NetDescription);

@@ -72,6 +72,7 @@ public class Program
         T2IModels.Refresh();
         Logs.Init("Loading backends...");
         Backends = new();
+        Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);
         await Backends.Load();
         Logs.Init("Loading session handler...");
         Sessions = new();
