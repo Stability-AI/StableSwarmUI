@@ -57,11 +57,7 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
         }
         catch (Exception ex)
         {
-            if (ignoreWebError)
-            {
-                Logs.Debug($"Auto WebUI handler supressing error: {ex}");
-            }
-            else
+            if (!ignoreWebError)
             {
                 Status = BackendStatus.ERRORED;
                 Logs.Warning($"Backend {HandlerTypeData.Name} with address '{Address}' failed to initialize: {ex}");
