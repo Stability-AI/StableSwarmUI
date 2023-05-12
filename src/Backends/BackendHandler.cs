@@ -4,9 +4,11 @@ using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableUI.Core;
 using StableUI.DataHolders;
+using StableUI.Text2Image;
 using StableUI.Utils;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 
 namespace StableUI.Backends;
 
@@ -105,6 +107,7 @@ public class BackendHandler
             data.ID = LastBackendID++;
             T2IBackends.TryAdd(data.ID, data);
         }
+        ReassignLoadedModelsList();
         return data;
     }
 
@@ -119,7 +122,8 @@ public class BackendHandler
         {
             await Task.Delay(TimeSpan.FromSeconds(0.5));
         }
-        data.Backend.Shutdown();
+        await data.Backend.Shutdown();
+        ReassignLoadedModelsList();
         return true;
     }
 
@@ -134,14 +138,15 @@ public class BackendHandler
         {
             await Task.Delay(TimeSpan.FromSeconds(0.5));
         }
-        data.Backend.Shutdown();
+        await data.Backend.Shutdown();
         data.Backend.InternalSettingsAccess.Load(newSettings);
-        data.Backend.Init();
+        await data.Backend.Init();
+        ReassignLoadedModelsList();
         return data;
     }
 
     /// <summary>Loads the backends list from a file.</summary>
-    public void Load()
+    public async Task Load()
     {
         Logs.Init("Loading backends from file...");
         if (T2IBackends.Any())
@@ -182,10 +187,27 @@ public class BackendHandler
             data.Backend.InternalSettingsAccess = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
             data.Backend.InternalSettingsAccess.Load(section.GetSection("settings"));
             data.Backend.HandlerTypeData = type;
-            data.Backend.Init();
+            await data.Backend.Init();
             lock (CentralLock)
             {
                 T2IBackends.TryAdd(data.ID, data);
+            }
+        }
+        ReassignLoadedModelsList();
+    }
+
+    /// <summary>Updates what model(s) are currently loaded.</summary>
+    public void ReassignLoadedModelsList()
+    {
+        foreach (T2IModel model in Program.T2IModels.Models.Values)
+        {
+            model.AnyBackendsHaveLoaded = false;
+        }
+        foreach (T2IBackendData backend in T2IBackends.Values)
+        {
+            if (backend.Backend.CurrentModelName is not null && Program.T2IModels.Models.TryGetValue(backend.Backend.CurrentModelName, out T2IModel model))
+            {
+                model.AnyBackendsHaveLoaded = true;
             }
         }
     }
@@ -205,6 +227,38 @@ public class BackendHandler
         FDSUtility.SaveToFile(saveFile, SaveFilePath);
     }
 
+    /// <summary>Tells all backends to load a given model. Returns true if any backends have loaded it, or false if not.</summary>
+    public async Task<bool> LoadModelOnAll(T2IModel model)
+    {
+        bool result = await Task.Run(async () => // TODO: this is weird async jank
+        {
+            bool any = false;
+            foreach (T2IBackendData backend in T2IBackends.Values.Where(b => b.Backend.IsValid))
+            {
+                lock (CentralLock)
+                {
+                    while (backend.IsInUse)
+                    {
+                        Thread.Sleep(100);
+                    }
+                    backend.IsInUse = true;
+                }
+                try
+                {
+                    any = (await backend.Backend.LoadModel(model)) || any;
+                }
+                catch (Exception ex)
+                {
+                    Logs.Error($"Error loading model on backend {backend.ID} ({backend.Backend.HandlerTypeData.Name}): {ex}");
+                }
+                backend.IsInUse = false;
+            }
+            return any;
+        });
+        ReassignLoadedModelsList();
+        return result;
+    }
+
     public BackendHandler()
     {
         RegisterBackendType<AutoWebUIAPIBackend>("auto_webui_api", "Auto1111 SD-WebUI API By URL", "A backend powered by a pre-existing installation of the AUTOMATIC1111/Stable-Diffusion-WebUI launched in '--api' mode, referenced via API base URL.");
@@ -221,10 +275,16 @@ public class BackendHandler
         }
         HasShutdown = true;
         BackendsAvailableSignal.Set();
+        List<Task> tasks = new();
         foreach (T2IBackendData backend in T2IBackends.Values)
         {
-            backend.Backend.Shutdown(); // TODO: thread safe / in-use handling
+            while (backend.IsInUse)
+            {
+                Thread.Sleep(100);
+            }
+            tasks.Add(backend.Backend.Shutdown());
         }
+        Task.WaitAll(tasks.ToArray());
         Save();
     }
 

@@ -1,5 +1,6 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
 using StableUI.DataHolders;
+using StableUI.Text2Image;
 using StableUI.Utils;
 
 namespace StableUI.Backends;
@@ -8,10 +9,10 @@ namespace StableUI.Backends;
 public abstract class AbstractT2IBackend
 {
     /// <summary>Load this backend and get it ready for usage. Do not return until ready. Throw an exception if not possible.</summary>
-    public abstract void Init();
+    public abstract Task Init();
 
     /// <summary>Shut down this backend and clear any memory/resources/etc. Do not return until fully cleared.</summary>
-    public abstract void Shutdown();
+    public abstract Task Shutdown();
 
     /// <summary>Generate an image.</summary>
     public abstract Task<Image[]> Generate(T2IParams user_input);
@@ -19,11 +20,17 @@ public abstract class AbstractT2IBackend
     /// <summary>Whether this backend has been configured validly.</summary>
     public volatile bool IsValid;
 
+    /// <summary>Currently loaded model, or null if none.</summary>
+    public string CurrentModelName;
+
     /// <summary>Internal usage, settings accessor.</summary>
     public abstract AutoConfiguration InternalSettingsAccess { get; set; }
 
     /// <summary>Backend type data for the internal handler.</summary>
     public BackendHandler.BackendType HandlerTypeData;
+
+    /// <summary>Tell the backend to load a specific model. Return true if loaded, false if failed.</summary>
+    public abstract Task<bool> LoadModel(T2IModel model);
 }
 
 /// <summary>Represents a basic abstracted Text2Image backend provider.</summary>

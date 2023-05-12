@@ -28,6 +28,7 @@ public static class T2IAPI
         API.RegisterAPICall(GenerateText2ImageWS);
         API.RegisterAPICall(ListImages);
         API.RegisterAPICall(ListModels);
+        API.RegisterAPICall(SelectModel);
     }
 
 #pragma warning disable CS1998 // "CS1998 Async method lacks 'await' operators and will run synchronously"
@@ -68,7 +69,6 @@ public static class T2IAPI
             return new() { ["error"] = "Missing settings." };
         }
         FDSSection parsed = FDSSection.FromSimple(settings.ToBasicObject());
-        Console.WriteLine($"Will apply: {settings} as {parsed}");
         BackendHandler.T2IBackendData result = await Program.Backends.EditById(backend_id, parsed);
         if (result is null)
         {
@@ -248,7 +248,7 @@ public static class T2IAPI
     }
 
     /// <summary>API route to get a list of available history images.</summary>
-    public static async Task<JObject> ListImages(Session session, string path = "")
+    public static async Task<JObject> ListImages(Session session, string path)
     {
         string root = $"{Environment.CurrentDirectory}/{Program.ServerSettings.OutputPath}/{session.User.UserID}";
         return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject() { ["src"] = name, ["batch_id"] = 0 });
@@ -257,13 +257,13 @@ public static class T2IAPI
     public static HashSet<string> ModelExtensions = new() { "safetensors", "ckpt" };
 
     /// <summary>API route to get a list of available models.</summary>
-    public static async Task<JObject> ListModels(Session session, string path = "")
+    public static async Task<JObject> ListModels(Session session, string path)
     {
-        string allowedStr = session.User.Restrictions.AllowedModels;
         if (path != "")
         {
             path += '/';
         }
+        string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         List<T2IModel> matches = Program.T2IModels.Models.Values.Where(m => m.Name.StartsWith(path) && m.Name.Length > path.Length && (allowed is null || allowed.IsMatch(m.Name))).ToList();
         return new JObject()
@@ -271,5 +271,25 @@ public static class T2IAPI
             ["folders"] = JToken.FromObject(matches.Where(m => m.Name[path.Length..].Contains('/')).Select(m => m.Name.BeforeLast('/').AfterLast('/')).Distinct().ToList()),
             ["files"] = JToken.FromObject(matches.Where(m => !m.Name[path.Length..].Contains('/')).Select(m => m.ToNetObject()).ToList())
         };
+    }
+
+    /// <summary>API route to select a model for loading.</summary>
+    public static async Task<JObject> SelectModel(Session session, string model)
+    {
+        if (!session.User.Restrictions.CanChangeModels)
+        {
+            return new JObject() { ["error"] = "You are not allowed to change models." };
+        }
+        string allowedStr = session.User.Restrictions.AllowedModels;
+        Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        if (allowed != null && !allowed.IsMatch(model) || !Program.T2IModels.Models.TryGetValue(model, out T2IModel actualModel))
+        {
+            return new JObject() { ["error"] = "Model not found." };
+        }
+        if (!(await Program.Backends.LoadModelOnAll(actualModel)))
+        {
+            return new JObject() { ["error"] = "Model failed to load." };
+        }
+        return new JObject() { ["success"] = true };
     }
 }

@@ -18,7 +18,7 @@
     width: calc(max(28rem, 20vw));
     padding: 0.5rem;
     border-right: 1px solid purple;
-    height: 100vw;
+    height: calc(100vw - 4rem);
     overflow-x: hidden;
     overflow-y: scroll;
 }
@@ -100,10 +100,14 @@
     white-space: nowrap;
     vertical-align: top;
 }
-.model-block:hover {
+.model-loaded {
+    border: 1px solid #00ff00;
+    background-color: rgba(200, 255, 200, 0.3);
+}
+.model-block-hoverable:hover {
     background-color: var(--shadow);
 }
-.model-block:hover img {
+.model-block-hoverable:hover img {
     border: 2px solid white;
 }
 .model-block img {

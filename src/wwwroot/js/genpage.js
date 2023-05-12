@@ -249,7 +249,8 @@ let cur_model = null;
 
 function appendModel(container, prefix, model) {
     models[`${prefix}${model.name}`] = model;
-    let div = createDiv(null, `model-block image-batch-${Object.keys(models).length % 2}`);
+    let batch = model.loaded ? 'model-loaded' : `image-batch-${Object.keys(models).length % 2}`;
+    let div = createDiv(null, `model-block model-block-hoverable ${batch}`);
     let img = document.createElement('img');
     img.src = model.preview_image;
     div.appendChild(img);
@@ -257,7 +258,15 @@ function appendModel(container, prefix, model) {
     textBlock.innerText = `${model.name}\n${model.description}`;
     div.appendChild(textBlock);
     container.appendChild(div);
-    div.addEventListener('click', () => {});
+    div.addEventListener('click', () => {
+        for (let possible of container.getElementsByTagName('div')) {
+            possible.classList.remove('model-block-hoverable');
+            possible.parentElement.replaceChild(possible.cloneNode(true), possible);
+        }
+        genericRequest('SelectModel', {'model': model.name}, data => {
+            loadModelList(lastModelDir);
+        });
+    });
 }
 
 function loadModelList(path) {
