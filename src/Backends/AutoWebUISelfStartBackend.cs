@@ -91,7 +91,7 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
         Status = BackendStatus.LOADING;
         _ = Task.Run(() =>
         {
-            Task.Delay(Settings.StartDelaySeconds, Program.GlobalProgramCancel).Wait();
+            Task.Delay(Settings.StartDelaySeconds * 1000, Program.GlobalProgramCancel).Wait();
             RunningProcess = new() { StartInfo = start };
             RunningProcess.Start();
             Logs.Init($"Self-Start WebUI on port {Port} is loading...");
