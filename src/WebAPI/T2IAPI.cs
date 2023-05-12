@@ -141,7 +141,7 @@ public static class T2IAPI
         }
         JObject errorOut = null;
         List<Task> tasks = new();
-        int max_degrees = 4; // TODO: Configure max degrees parallel based on user limit / global limit / backend count
+        int max_degrees = session.User.Settings.MaxT2ISimultaneous;
         for (int i = 0; i < images; i++)
         {
             tasks.RemoveAll(t => t.IsCompleted);

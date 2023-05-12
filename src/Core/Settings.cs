@@ -77,5 +77,8 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("Whether to store metadata on saved images. Defaults enabled.")]
         public bool SaveMetadata = true;
+
+        [ConfigComment("How many images can try to be generating at the same time on the default user.")]
+        public int MaxT2ISimultaneous = 8;
     }
 }
