@@ -4,7 +4,7 @@ A Modular Stable Diffusion Web-User-Interface.
 
 # Documentation
 
-See (the documentation folder)[/docs/]
+See [the documentation folder](docs)
 
 # Legal
 
