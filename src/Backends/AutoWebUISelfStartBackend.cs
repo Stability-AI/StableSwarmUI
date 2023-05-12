@@ -143,7 +143,7 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
         {
             Logs.Debug($"Auto WebUI launcher: {line}");
         }
-        if (Status == BackendStatus.RUNNING)
+        if (Status == BackendStatus.RUNNING || Status == BackendStatus.LOADING)
         {
             Status = BackendStatus.ERRORED;
         }
