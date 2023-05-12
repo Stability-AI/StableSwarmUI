@@ -1,20 +1,24 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
+using System.Text.RegularExpressions;
 
 namespace StableUI.Core;
 
 /// <summary>Central default settings list.</summary>
 public class Settings : AutoConfiguration
 {
-    [ConfigComment("Root path for model files. Defaults to (your dir)/Models")]
+    [ConfigComment("Root path for model files. Defaults to 'Models'")]
     public string ModelRoot = "Models";
 
-    /// <summary>(Getter) Path for Stable Diffusion models.</summary>
-    public string SDModelFullPath => $"{Environment.CurrentDirectory}/{ModelRoot}/Stable-Diffusion";
+    [ConfigComment("The model folder to use within 'ModelRoot'. Use a full-formed path (starting with '/' or a Windows drive like 'C:') to use an absolute path. Defaults to 'Stable-Diffusion'.")]
+    public string SDModelFolder = "Stable-Diffusion";
 
-    [ConfigComment("Root path for data (user configs, etc). Defaults to (your dir)/Data")]
+    /// <summary>(Getter) Path for Stable Diffusion models.</summary>
+    public string SDModelFullPath => SDModelFolder.StartsWith('/') || (SDModelFolder.Length > 2 && SDModelFolder[1] == ':') ? SDModelFolder : $"{Environment.CurrentDirectory}/{ModelRoot}/{SDModelFolder}";
+
+    [ConfigComment("Root path for data (user configs, etc). Defaults to 'Data'")]
     public string DataPath = "Data";
 
-    [ConfigComment("Root path for output files (images, etc). Defaults to (your dir)/Output")]
+    [ConfigComment("Root path for output files (images, etc). Defaults to 'Output'")]
     public string OutputPath = "Output";
 
     [ConfigComment("What web host address to use, `localhost` means your PC only,"
@@ -42,6 +46,12 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("If true, the user is treated as a full admin. This includes the ability to modify these settings.")]
         public bool Admin = false;
+
+        [ConfigComment("If true, user may load models. If false, they may only use already-loaded models.")]
+        public bool CanChangeModels = true;
+
+        [ConfigComment("What models are allowed, as a path regex. Directory-separator is always '/'. Can be '.*' for all, 'MyFolder/.*' for only within that folder, etc. Default is all.")]
+        public string AllowedModels = ".*";
     }
 
     /// <summary>Settings per-user.</summary>

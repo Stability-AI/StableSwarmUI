@@ -3,6 +3,7 @@ using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using StableUI.Accounts;
 using StableUI.Backends;
+using StableUI.Text2Image;
 using StableUI.Utils;
 using StableUI.WebAPI;
 using System.Net.Sockets;
@@ -18,6 +19,9 @@ public class Program
 
     /// <summary>Central store of web sessions.</summary>
     public static SessionHandler Sessions;
+
+    /// <summary>Central store of Text2Image models.</summary>
+    public static T2IModelHandler T2IModels;
 
     /// <summary>Holder of server admin settings.</summary>
     public static Settings ServerSettings = new();
@@ -66,6 +70,9 @@ public class Program
         Logs.Init("Loading backends...");
         Backends = new();
         Backends.Load();
+        Logs.Init("Loading models list...");
+        T2IModels = new();
+        T2IModels.Refresh();
         Logs.Init("Loading session handler...");
         Sessions = new();
         Logs.Init("Prepping API...");

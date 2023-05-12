@@ -8,6 +8,10 @@ let backend_types = {};
 
 let backends_loaded = [];
 
+let lastImageDir = '';
+
+let lastModelDir = '';
+
 const time_started = Date.now();
 
 function clickImageInBatch(div) {
@@ -32,19 +36,23 @@ function setCurrentImage(src) {
     curImg.appendChild(img);
 }
 
-function appendImage(spot, imageSrc, batchId, textPreview) {
-    let div = createDiv(null, `image-block image-bitch-${batchId % 2}`);
+function appendImage(container, imageSrc, batchId, textPreview) {
+    if (typeof container == 'string') {
+        container = document.getElementById(container);
+    }
+    let div = createDiv(null, `image-block image-batch-${batchId % 2}`);
     div.dataset.batch_id = batchId;
     let img = document.createElement('img');
     img.addEventListener('load', () => {
-        div.style.width = `calc(${img.width}px + 2rem)`;
+        let ratio = img.width / img.height;
+        div.style.width = `${(ratio * 8) + 2}rem`;
     });
     img.src = imageSrc;
     div.appendChild(img);
     let textBlock = createDiv(null, 'image-preview-text');
     textBlock.innerText = textPreview;
     div.appendChild(textBlock);
-    document.getElementById(spot).appendChild(div);
+    container.appendChild(div);
     return div;
 }
 
@@ -78,9 +86,22 @@ function doGenerate() {
     });
 }
 
-function loadHistory(path) {
-    genericRequest('ListImages', {'path': path}, data => {
-        document.getElementById('image_history').innerHTML = '';
+class FileListCallHelper {
+    // Attempt to prevent callback recursion.
+    // In practice this seems to not work.
+    // Either JavaScript itself or Firefox seems to really love tracking the stack and refusing to let go.
+    // TODO: Guarantee it actually works so we can't stack overflow from file browsing ffs.
+    constructor(path, loadCaller) {
+        this.path = path;
+        this.loadCaller = loadCaller;
+    }
+    call() {
+        this.loadCaller(this.path);
+    }
+};
+
+function loadFileList(api, path, container, loadCaller, fileCallback) {
+    genericRequest(api, {'path': path}, data => {
         let prefix;
         if (path == '') {
             prefix = '';
@@ -88,17 +109,29 @@ function loadHistory(path) {
         else {
             prefix = path + '/';
             let above = path.split('/').slice(0, -1).join('/');
-            let div = appendImage('image_history', '/imgs/folder_up.png', 'folder', `../`);
-            div.addEventListener('click', () => loadHistory(above));
+            let div = appendImage(container, '/imgs/folder_up.png', 'folder', `../`);
+            let helper = new FileListCallHelper(above, loadCaller);
+            div.addEventListener('click', helper.call.bind(helper));
         }
         for (let folder of data.folders) {
-            let div = appendImage('image_history', '/imgs/folder.png', 'folder', `${folder}/`);
-            div.addEventListener('click', () => loadHistory(`${prefix}${folder}`));
+            let div = appendImage(container, '/imgs/folder.png', 'folder', `${folder}/`);
+            let helper = new FileListCallHelper(`${prefix}${folder}`, loadCaller);
+            div.addEventListener('click', helper.call.bind(helper));
         }
-        for (let img of data.images) {
-            let div = appendImage('image_history', `Output/${prefix}${img.src}`, img.batch_id, img.src);
-            div.addEventListener('click', () => selectImageInHistory(div));
+        container.appendChild(document.createElement('br'));
+        for (let file of data.files) {
+            fileCallback(prefix, file);
         }
+    });
+}
+
+function loadHistory(path) {
+    let container = document.getElementById('image_history');
+    lastImageDir = path;
+    container.innerHTML = '';
+    loadFileList('ListImages', path, container, loadHistory, (prefix, img) => {
+        let div = appendImage('image_history', `Output/${prefix}${img.src}`, img.batch_id, img.src);
+        div.addEventListener('click', () => selectImageInHistory(div));
     });
 }
 
@@ -211,10 +244,40 @@ function loadBackendTypesMenu() {
     });
 }
 
+let models = {};
+let cur_model = null;
+
+function appendModel(container, prefix, model) {
+    models[`${prefix}${model.name}`] = model;
+    let div = createDiv(null, `model-block image-batch-${Object.keys(models).length % 2}`);
+    let img = document.createElement('img');
+    img.src = model.preview_image;
+    div.appendChild(img);
+    let textBlock = createDiv(null, 'model-descblock');
+    textBlock.innerText = `${model.name}\n${model.description}`;
+    div.appendChild(textBlock);
+    container.appendChild(div);
+    div.addEventListener('click', () => {});
+}
+
+function loadModelList(path) {
+    let container = document.getElementById('model_list');
+    lastModelDir = path;
+    container.innerHTML = '';
+    let id = 0;
+    models = {};
+    loadFileList('ListModels', path, container, loadModelList, (prefix, model) => {
+        appendModel(container, prefix, model);
+    });
+}
+
 function genpageLoad() {
     document.getElementById('generate_button').addEventListener('click', doGenerate);
+    document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
+    document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir));
     getSession(() => {
         loadHistory('');
+        loadModelList('');
         loadBackendTypesMenu();
     });
 }

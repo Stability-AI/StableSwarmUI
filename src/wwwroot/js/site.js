@@ -8,7 +8,6 @@ function siteLoad() {
 }
 
 function showError(message) {
-    console.log(`Error: ${message}`);
     let container = document.getElementById('center_toast');
     let box = document.getElementById('error_toast_box');
     document.getElementById('error_toast_content').innerText = message;
@@ -27,6 +26,7 @@ function genericServerError() {
 function makeWSRequest(url, in_data, callback, depth = 0) {
     let ws_address = getWSAddress();
     if (ws_address == null) {
+        console.log(`Tried making WS request ${url} but failed.`);
         showError('Failed to get WebSocket address. You may be connecting to the server in an unexpected way. Please use "http" or "https" URLs.');
         return;
     }
@@ -49,6 +49,7 @@ function makeWSRequest(url, in_data, callback, depth = 0) {
             return;
         }
         if (data.error) {
+            console.log(`Tried making WS request ${url} but failed with error: ${data.error}`);
             showError(data.error);
             return;
         }
@@ -61,6 +62,7 @@ function genericRequest(url, in_data, callback, depth = 0) {
     in_data['session_id'] = session_id;
     sendJsonToServer(`/API/${url}`, in_data, (status, data) => {
         if (!data) {
+            console.log(`Tried making generic request ${url} but failed.`);
             showError('Failed to send request to server. Did the server crash?');
             return;
         }
@@ -76,6 +78,7 @@ function genericRequest(url, in_data, callback, depth = 0) {
             return;
         }
         if (data.error) {
+            console.log(`Tried making generic request ${url} but failed with error: ${data.error}`);
             showError(data.error);
             return;
         }

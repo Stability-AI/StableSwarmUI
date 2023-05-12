@@ -5,9 +5,12 @@ using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Core;
 using StableUI.DataHolders;
+using StableUI.Text2Image;
 using StableUI.Utils;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
+using System.Text.RegularExpressions;
+using static StableUI.Core.Settings;
 
 namespace StableUI.WebAPI;
 
@@ -24,6 +27,7 @@ public static class T2IAPI
         API.RegisterAPICall(GenerateText2Image);
         API.RegisterAPICall(GenerateText2ImageWS);
         API.RegisterAPICall(ListImages);
+        API.RegisterAPICall(ListModels);
     }
 
 #pragma warning disable CS1998 // "CS1998 Async method lacks 'await' operators and will run synchronously"
@@ -214,9 +218,9 @@ public static class T2IAPI
     public static HashSet<string> ImageExtensions = new() { "png", "jpg" };
 
     /// <summary>API route to get a list of available history images.</summary>
-    public static async Task<JObject> ListImages(Session session, string path="")
+    private static JObject GetListAPIInternal(Session session, string path, string root, HashSet<string> extensions, Func<string, bool> isAllowed, Func<string, string, JObject> valToObj)
     {
-        (path, string consoleError, string userError) = WebServer.CheckOutputFilePath(path, session.User.UserID);
+        (path, string consoleError, string userError) = WebServer.CheckFilePath(root, path);
         if (consoleError is not null)
         {
             Logs.Error(consoleError);
@@ -226,8 +230,8 @@ public static class T2IAPI
         {
             return new JObject()
             {
-                ["folders"] = JToken.FromObject(Directory.EnumerateDirectories(path).Select(Path.GetFileName).ToList()),
-                ["images"] = JToken.FromObject(Directory.EnumerateFiles(path).Where(f => ImageExtensions.Contains(f.AfterLast('.'))).Select(f => f.Replace('\\', '/').AfterLast('/')).Select(f => new JObject() { ["src"] = f, ["batch_id"] = 0 }).ToList())
+                ["folders"] = JToken.FromObject(Directory.EnumerateDirectories(path).Select(Path.GetFileName).Where(isAllowed).ToList()),
+                ["files"] = JToken.FromObject(Directory.EnumerateFiles(path).Where(isAllowed).Where(f => extensions.Contains(f.AfterLast('.'))).Select(f => f.Replace('\\', '/')).Select(f => valToObj(f, f.AfterLast('/'))).ToList())
             };
         }
         catch (Exception ex)
@@ -238,9 +242,34 @@ public static class T2IAPI
             }
             else
             {
-                Logs.Error($"Failed to create output image file list '{path}': {ex}");
                 return new JObject() { ["error"] = "Error reading file list." };
             }
         }
+    }
+
+    /// <summary>API route to get a list of available history images.</summary>
+    public static async Task<JObject> ListImages(Session session, string path = "")
+    {
+        string root = $"{Environment.CurrentDirectory}/{Program.ServerSettings.OutputPath}/{session.User.UserID}";
+        return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject() { ["src"] = name, ["batch_id"] = 0 });
+    }
+
+    public static HashSet<string> ModelExtensions = new() { "safetensors", "ckpt" };
+
+    /// <summary>API route to get a list of available models.</summary>
+    public static async Task<JObject> ListModels(Session session, string path = "")
+    {
+        string allowedStr = session.User.Restrictions.AllowedModels;
+        if (path != "")
+        {
+            path += '/';
+        }
+        Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        List<T2IModel> matches = Program.T2IModels.Models.Values.Where(m => m.Name.StartsWith(path) && m.Name.Length > path.Length && (allowed is null || allowed.IsMatch(m.Name))).ToList();
+        return new JObject()
+        {
+            ["folders"] = JToken.FromObject(matches.Where(m => m.Name[path.Length..].Contains('/')).Select(m => m.Name.BeforeLast('/').AfterLast('/')).Distinct().ToList()),
+            ["files"] = JToken.FromObject(matches.Where(m => !m.Name[path.Length..].Contains('/')).Select(m => m.ToNetObject()).ToList())
+        };
     }
 }

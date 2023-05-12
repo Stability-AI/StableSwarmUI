@@ -34,7 +34,9 @@ function getWSAddress() {
 
 function createDiv(id, classes) {
     let div = document.createElement('div');
-    div.id = id;
+    if (id != null) {
+        div.id = id;
+    }
     div.className = classes;
     return div;
 }

@@ -1,6 +1,8 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using StableUI.Accounts;
 using StableUI.Utils;
 using StableUI.WebAPI;
+using System.Text.RegularExpressions;
 using System.Web;
 
 namespace StableUI.Core;
@@ -66,16 +68,23 @@ public static class WebServer
     /// <summary>Test the validity of a user-given file path. Returns (path, consoleError, userError).</summary>
     public static (string, string, string) CheckOutputFilePath(string path, string userId)
     {
+        string root = $"{Environment.CurrentDirectory}/{Program.ServerSettings.OutputPath}/{userId}";
+        return CheckFilePath(root, path);
+    }
+
+    /// <summary>Test the validity of a user-given file path. Returns (path, consoleError, userError).</summary>
+    public static (string, string, string) CheckFilePath(string root, string path)
+    {
         path = Utilities.FilePathForbidden.TrimToNonMatches(path);
         while (path.Contains(".."))
         {
             path = path.Replace("..", "");
         }
-        path = $"{Environment.CurrentDirectory}/{Program.ServerSettings.OutputPath}/{userId}/{path}";
-        string expectedPath = $"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}{Program.ServerSettings.OutputPath}{Path.DirectorySeparatorChar}{userId}";
-        if (!Directory.GetParent(path).FullName.StartsWith(expectedPath))
+        root = root.Replace('\\', '/');
+        path = $"{root}/{path}";
+        if (!Directory.GetParent(path).FullName.Replace('\\', '/').StartsWith(root))
         {
-            return (null, $"Refusing dangerous access, got path '{path}' which resolves to '{Directory.GetParent(path)}' which does not obey expected root '{expectedPath}'",
+            return (null, $"Refusing dangerous access, got path '{path}' which resolves to '{Directory.GetParent(path)}' which does not obey expected root '{root}'",
                 "Unacceptable path. If you are the server owner, check program console log.");
         }
         return (path, null, null);
@@ -84,8 +93,8 @@ public static class WebServer
     public static async Task ViewOutput(HttpContext context)
     {
         string path = context.Request.Path.ToString().After("/Output/");
-        path = HttpUtility.UrlDecode(path);
-        string userId = "local"; // TODO: From login cookie
+        path = HttpUtility.UrlDecode(path).Replace('\\', '/');
+        string userId = Program.Sessions.AdminUser.UserID; // TODO: From login cookie
         (path, string consoleError, string userError) = CheckOutputFilePath(path, userId);
         if (consoleError is not null)
         {
