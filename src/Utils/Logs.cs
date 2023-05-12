@@ -67,13 +67,13 @@ public static class Logs
         lock (ConsoleLock)
         {
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write($"{DateTimeOffset.Now:HH:mm:ss.fff} [");
             Console.BackgroundColor = prefixBackground;
             Console.ForegroundColor = prefixForeground;
             Console.Write(prefix);
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write("] ");
             Console.BackgroundColor = messageBackground;
             Console.ForegroundColor = messageForeground;

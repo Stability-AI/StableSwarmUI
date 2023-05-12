@@ -96,7 +96,7 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
             {
                 try
                 {
-                    Thread.Sleep(500);
+                    Thread.Sleep(1000);
                     Logs.Debug($"Auto WebUI port {Port} checking for server...");
                     InitInternal(true).Wait();
                     if (Status == BackendStatus.RUNNING)
