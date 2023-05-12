@@ -20,6 +20,9 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
 
         [ConfigComment("Which GPU to use, if multiple are available.")]
         public int GPU_ID = 0; // TODO: Determine GPU count and provide correct max
+
+        [ConfigComment("Optional delay in seconds before starting the WebUI.")]
+        public int StartDelaySeconds = 0;
     }
 
     public Process RunningProcess;
@@ -85,13 +88,14 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
         start.ArgumentList.Add(Path.GetDirectoryName(path));
         start.ArgumentList.Add(path);
         start.ArgumentList.Add($"{Settings.ExtraArgs} --api --port {Port}");
-        RunningProcess = new() { StartInfo = start };
-        RunningProcess.Start();
         Status = BackendStatus.LOADING;
-        Logs.Init($"Self-Start WebUI on port {Port} is loading...");
-        new Thread(MonitorLoop).Start();
         _ = Task.Run(() =>
         {
+            Task.Delay(Settings.StartDelaySeconds, Program.GlobalProgramCancel).Wait();
+            RunningProcess = new() { StartInfo = start };
+            RunningProcess.Start();
+            Logs.Init($"Self-Start WebUI on port {Port} is loading...");
+            new Thread(MonitorLoop).Start();
             while (Status == BackendStatus.LOADING)
             {
                 try
