@@ -105,7 +105,7 @@ function makeNumberInput(id, name, description, value, min, max, step = 1) {
         <div class="auto-input-fade-lock auto-fade-max-contain" onclick="alert('${js}')">
             <span class="auto-input-name">${name}</span> <span class="auto-input-description">${description}</span>
         </div>
-        <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}">
+        <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}">
     </div>`
 }
 
