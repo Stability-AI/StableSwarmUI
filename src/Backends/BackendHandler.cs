@@ -114,8 +114,9 @@ public class BackendHandler
             data.ID = LastBackendID++;
             T2IBackends.TryAdd(data.ID, data);
         }
+        data.Backend.Status = BackendStatus.WAITING;
         BackendsToInit.Enqueue(data);
-        ReassignLoadedModelsList();
+        NewBackendInitSignal.Set();
         return data;
     }
 
@@ -148,8 +149,9 @@ public class BackendHandler
         }
         await data.Backend.Shutdown();
         data.Backend.InternalSettingsAccess.Load(newSettings);
+        data.ModCount++;
+        data.Backend.Status = BackendStatus.WAITING;
         BackendsToInit.Enqueue(data);
-        ReassignLoadedModelsList();
         return data;
     }
 
@@ -197,6 +199,7 @@ public class BackendHandler
             data.Backend.InternalSettingsAccess.Load(section.GetSection("settings"));
             data.Backend.HandlerTypeData = type;
             data.Backend.Handler = this;
+            data.Backend.Status = BackendStatus.WAITING;
             BackendsToInit.Enqueue(data);
             lock (CentralLock)
             {

@@ -15,6 +15,7 @@ public static class BasicAPIFeatures
     {
         API.RegisterAPICall(GetNewSession);
         T2IAPI.Register();
+        BackendAPI.Register();
     }
 
 #pragma warning disable CS1998 // "CS1998 Async method lacks 'await' operators and will run synchronously"
