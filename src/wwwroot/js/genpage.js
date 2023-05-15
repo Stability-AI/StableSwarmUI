@@ -167,11 +167,41 @@ function loadModelList(path) {
     });
 }
 
+let statusBarElem = document.getElementById('top_status_bar');
+
+function getCurrentStatus() {
+    if (!hasLoadedBackends) {
+        return 'Loading...';
+    }
+    if (Object.values(backends_loaded).length == 0) {
+        return 'No backends present. You must configure backends on the Settings page before you can continue.';
+    }
+    if (countBackendsByStatus('running') == 0) {
+        if (countBackendsByStatus('waiting') + countBackendsByStatus('loading') > 0) {
+            return 'Backends are still loading on the server...';
+        }
+        if (countBackendsByStatus('errored') > 0) {
+            return 'Some backends have errored on the server. Check the server logs for details.';
+        }
+        if (countBackendsByStatus('disabled') > 0) {
+            return 'Some backends are disabled. Please configure them to continue.';
+        }
+        return 'Something is wrong with your backends. Please check the Backends Settings page or the server logs.';
+    }
+    return '';
+}
+
+function reviseStatusBar() {
+    statusBarElem.innerText = getCurrentStatus();
+}
+
 function genpageLoop() {
     backendLoopUpdate();
+    reviseStatusBar();
 }
 
 function genpageLoad() {
+    reviseStatusBar();
     document.getElementById('generate_button').addEventListener('click', doGenerate);
     document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
     document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir));

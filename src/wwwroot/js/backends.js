@@ -3,6 +3,8 @@ let backend_types = {};
 
 let backends_loaded = {};
 
+let hasLoadedBackends = false;
+
 function addNewBackend(type_id) {
     genericRequest('AddNewBackend', {'type_id': type_id}, data => {
         addBackendToHtml(data, false);
@@ -91,6 +93,7 @@ function addBackendToHtml(backend, disable, spot = null) {
 
 function loadBackendsList() {
     genericRequest('ListBackends', {}, data => {
+        hasLoadedBackends = true;
         for (let oldBack of Object.values(backends_loaded)) {
             let spot = document.getElementById(`backend-wrapper-spot-${oldBack.id}`);
             let newBack = data[oldBack.id];
@@ -120,6 +123,10 @@ function loadBackendsList() {
     });
 }
 
+function countBackendsByStatus(status) {
+    return Object.values(backends_loaded).filter(x => x.status == status).length;
+}
+
 function loadBackendTypesMenu() {
     let addButtonsSection = document.getElementById('backend_add_buttons');
     genericRequest('ListBackendTypes', {}, data => {
@@ -142,7 +149,8 @@ let backendsListView = document.getElementById('backends_list');
 let backendsCheckRateCounter = 0;
 
 function backendLoopUpdate() {
-    if (backendsListView.checkVisibility()) { // TODO: Safari is apparently dumb about this? Test and fix.
+    let loading = countBackendsByStatus('loading') + countBackendsByStatus('waiting');
+    if (loading > 0 || backendsListView.checkVisibility()) { // TODO: Safari is apparently dumb about 'checkVisibility'? Test and fix.
         if (backendsCheckRateCounter++ % 5 == 0) {
             loadBackendsList(); // TODO: only if have permission
         }

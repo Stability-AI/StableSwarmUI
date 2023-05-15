@@ -9,9 +9,23 @@
     --red: #ff0000;
     --green: #00ff00;
 }
-
 body {
     background-color: var(--background);
+}
+@keyframes status_glow {
+    0% {background-color: #dddd55;}
+    50% {background-color: #888800;}
+    100% {background-color: #dddd55;}
+}
+.top-status-bar {
+    position: sticky;
+    color: #000000;
+    top: 0px;
+    z-index: 100;
+    animation-name: status_glow;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    padding-left: 1rem;
 }
 .auto-input {
     display: inline-block;
