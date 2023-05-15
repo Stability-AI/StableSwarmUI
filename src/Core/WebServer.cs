@@ -29,7 +29,7 @@ public static class WebServer
         WebApp = builder.Build();
         if (WebApp.Environment.IsDevelopment())
         {
-            Utilities.VaryID += ".DEV" + Random.Shared.Next(99999);
+            Utilities.VaryID += ".DEV" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             WebApp.UseDeveloperExceptionPage();
         }
         else
