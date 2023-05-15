@@ -211,7 +211,6 @@ function addBackendToHtml(backend, disable, spot = null) {
             let value = entry.value;
             backend.settings[name] = value;
             entry.disabled = true;
-            console.log(`Setting ${name} to ${value} from ${entry}`)
         }
         genericRequest('EditBackend', {'backend_id': backend.id, 'settings': backend.settings}, data => {
             addBackendToHtml(data, true, spot);

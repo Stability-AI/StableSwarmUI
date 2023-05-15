@@ -18,7 +18,7 @@ public abstract class AbstractT2IBackend
     public abstract Task<Image[]> Generate(T2IParams user_input);
 
     /// <summary>Whether this backend has been configured validly.</summary>
-    public volatile BackendStatus Status = BackendStatus.DISABLED;
+    public volatile BackendStatus Status = BackendStatus.WAITING;
 
     /// <summary>Whether this backend is alive and ready.</summary>
     public bool IsAlive()
@@ -46,6 +46,7 @@ public enum BackendStatus
 {
     DISABLED,
     ERRORED,
+    WAITING,
     LOADING,
     RUNNING
 }

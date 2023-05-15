@@ -55,12 +55,11 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
             }
             Status = BackendStatus.RUNNING;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             if (!ignoreWebError)
             {
-                Status = BackendStatus.ERRORED;
-                Logs.Warning($"Backend {HandlerTypeData.Name} with address '{Address}' failed to initialize: {ex}");
+                throw;
             }
         }
     }

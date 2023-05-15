@@ -20,9 +20,6 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
 
         [ConfigComment("Which GPU to use, if multiple are available.")]
         public int GPU_ID = 0; // TODO: Determine GPU count and provide correct max
-
-        [ConfigComment("Optional delay in seconds before starting the WebUI.")]
-        public int StartDelaySeconds = 0;
     }
 
     public Process RunningProcess;
@@ -89,33 +86,21 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
         start.ArgumentList.Add(path);
         start.ArgumentList.Add($"{Settings.ExtraArgs} --api --port {Port}");
         Status = BackendStatus.LOADING;
-        _ = Task.Run(() =>
+        RunningProcess = new() { StartInfo = start };
+        RunningProcess.Start();
+        Logs.Init($"Self-Start WebUI on port {Port} is loading...");
+        new Thread(MonitorLoop) { Name = $"SelfStartWebUI_{Port}_Monitor" }.Start();
+        while (Status == BackendStatus.LOADING)
         {
-            Task.Delay(Settings.StartDelaySeconds * 1000, Program.GlobalProgramCancel).Wait();
-            RunningProcess = new() { StartInfo = start };
-            RunningProcess.Start();
-            Logs.Init($"Self-Start WebUI on port {Port} is loading...");
-            new Thread(MonitorLoop).Start();
-            while (Status == BackendStatus.LOADING)
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            Logs.Debug($"Auto WebUI port {Port} checking for server...");
+            InitInternal(true).Wait();
+            if (Status == BackendStatus.RUNNING)
             {
-                try
-                {
-                    Thread.Sleep(1000);
-                    Logs.Debug($"Auto WebUI port {Port} checking for server...");
-                    InitInternal(true).Wait();
-                    if (Status == BackendStatus.RUNNING)
-                    {
-                        Logs.Init($"Self-Start WebUI on port {Port} started.");
-                        Handler.ReassignLoadedModelsList();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logs.Error($"Error with Auto WebUI self-starter: {ex}");
-                }
+                Logs.Init($"Self-Start WebUI on port {Port} started.");
             }
-            Logs.Debug($"Auto WebUI self-start port {Port} loop ending.");
-        });
+        }
+        Logs.Debug($"Auto WebUI self-start port {Port} loop ending.");
     }
 
     public override async Task Shutdown()

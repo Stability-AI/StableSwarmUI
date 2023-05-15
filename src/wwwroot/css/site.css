@@ -46,6 +46,9 @@ body {
 .backend-loading {
     border: 1px solid #335500;
 }
+.backend-waiting {
+    border: 1px solid #335500;
+}
 .card-header {
     background-color: var(--background-gray);
 }

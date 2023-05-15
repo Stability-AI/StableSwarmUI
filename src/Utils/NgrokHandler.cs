@@ -22,6 +22,7 @@ public class NgrokHandler
     /// <summary>The publicly accessible Ngrok URL generated (once known).</summary>
     public string PublicURL;
 
+    /// <summary>Starts ngrok.</summary>
     public void Start()
     {
         ProcessStartInfo start = new() { FileName = Path, UseShellExecute = false, RedirectStandardOutput = true };
@@ -60,9 +61,10 @@ public class NgrokHandler
                 }
             }
             Logs.Info("Ngrok process exited.");
-        }).Start();
+        }) { Name = "NgrokMonitor" }.Start();
     }
 
+    /// <summary>Stops and closes ngrok cleanly.</summary>
     public void Stop()
     {
         try

@@ -8,7 +8,6 @@ using StableUI.Text2Image;
 using StableUI.Utils;
 using System.Collections.Concurrent;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 
 namespace StableUI.Backends;
 
@@ -32,6 +31,12 @@ public class BackendHandler
 
     /// <summary>The path to where the backend list is saved.</summary>
     public string SaveFilePath = "Data/Backends.fds";
+
+    /// <summary>Queue of backends to initialize.</summary>
+    public ConcurrentQueue<T2IBackendData> BackendsToInit = new();
+
+    /// <summary>Signal for when a new backend is added to <see cref="BackendsToInit"/>.</summary>
+    public AutoResetEvent NewBackendInitSignal = new(false);
 
     /// <summary>Metadata about backend types.</summary>
     public record class BackendType(string ID, string Name, string Description, Type SettingsClass, AutoConfiguration.Internal.AutoConfigData SettingsInternal, Type BackendClass, JObject NetDescription);
@@ -90,9 +95,11 @@ public class BackendHandler
         public BackendHandler Handler;
 
         public int ID;
+
+        public int InitAttempts = 0;
     }
 
-    /// <summary>Adds a new backend of the given type, and returns its data.</summary>
+    /// <summary>Adds a new backend of the given type, and returns its data. Note that the backend will not be initialized at first.</summary>
     public T2IBackendData AddNewOfType(BackendType type)
     {
         T2IBackendData data = new()
@@ -102,12 +109,12 @@ public class BackendHandler
         data.Backend.InternalSettingsAccess = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
         data.Backend.HandlerTypeData = type;
         data.Backend.Handler = this;
-        data.Backend.Init();
         lock (CentralLock)
         {
             data.ID = LastBackendID++;
             T2IBackends.TryAdd(data.ID, data);
         }
+        BackendsToInit.Enqueue(data);
         ReassignLoadedModelsList();
         return data;
     }
@@ -128,7 +135,7 @@ public class BackendHandler
         return true;
     }
 
-    /// <summary>Replace the settings of a given backend.</summary>
+    /// <summary>Replace the settings of a given backend. Shuts it down immediately and queues a reload.</summary>
     public async Task<T2IBackendData> EditById(int id, FDSSection newSettings)
     {
         if (!T2IBackends.TryGetValue(id, out T2IBackendData data))
@@ -141,19 +148,20 @@ public class BackendHandler
         }
         await data.Backend.Shutdown();
         data.Backend.InternalSettingsAccess.Load(newSettings);
-        await data.Backend.Init();
+        BackendsToInit.Enqueue(data);
         ReassignLoadedModelsList();
         return data;
     }
 
     /// <summary>Loads the backends list from a file.</summary>
-    public async Task Load()
+    public void Load()
     {
-        Logs.Init("Loading backends from file...");
-        if (T2IBackends.Any())
+        if (T2IBackends.Any()) // Backup to prevent duplicate calls
         {
             return;
         }
+        Logs.Init("Loading backends from file...");
+        new Thread(InternalInitMonitor) { Name = "BackendHandler_Init_Monitor" }.Start();
         FDSSection file;
         try
         {
@@ -189,13 +197,58 @@ public class BackendHandler
             data.Backend.InternalSettingsAccess.Load(section.GetSection("settings"));
             data.Backend.HandlerTypeData = type;
             data.Backend.Handler = this;
-            await data.Backend.Init();
+            BackendsToInit.Enqueue(data);
             lock (CentralLock)
             {
                 T2IBackends.TryAdd(data.ID, data);
             }
         }
+        NewBackendInitSignal.Set();
         ReassignLoadedModelsList();
+    }
+
+    /// <summary>Internal thread path for processing new backend initializations.</summary>
+    public void InternalInitMonitor()
+    {
+        while (!HasShutdown)
+        {
+            bool any = false;
+            while (BackendsToInit.TryDequeue(out T2IBackendData data))
+            {
+                try
+                {
+                    data.InitAttempts++;
+                    data.Backend.Init().Wait();
+                    any = true;
+                }
+                catch (Exception ex)
+                {
+                    if (data.InitAttempts <= Program.ServerSettings.MaxBackendInitAttempts)
+                    {
+                        data.Backend.Status = BackendStatus.WAITING;
+                        Logs.Error($"Error #{data.InitAttempts} while initializing backend {data.Backend.HandlerTypeData.Name} #{data.ID} - will retry");
+                        BackendsToInit.Enqueue(data);
+                    }
+                    else
+                    {
+                        data.Backend.Status = BackendStatus.ERRORED;
+                        Logs.Error($"Final error ({data.InitAttempts}) while initializing backend {data.Backend.HandlerTypeData.Name} #{data.ID}, giving up: {ex}");
+                    }
+                }
+            }
+            if (any)
+            {
+                try
+                {
+                    ReassignLoadedModelsList();
+                }
+                catch (Exception ex)
+                {
+                    Logs.Error($"Error while reassigning loaded models list: {ex}");
+                }
+            }
+            NewBackendInitSignal.WaitOne(TimeSpan.FromSeconds(2));
+        }
     }
 
     /// <summary>Updates what model(s) are currently loaded.</summary>

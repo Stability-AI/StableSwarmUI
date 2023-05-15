@@ -41,7 +41,7 @@ public class Program
     public static NgrokHandler Ngrok;
 
     /// <summary>Primary execution entry point.</summary>
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
         SpecialTools.Internationalize(); // Fix for MS's broken localization
         Logs.Init("=== StableUI Starting ===");
@@ -73,7 +73,7 @@ public class Program
         Logs.Init("Loading backends...");
         Backends = new();
         Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);
-        await Backends.Load();
+        Backends.Load();
         Logs.Init("Loading session handler...");
         Sessions = new();
         Logs.Init("Prepping API...");

@@ -35,6 +35,9 @@ public class Settings : AutoConfiguration
     [ConfigComment("Default settings for users (unless the user modifies them, if so permitted).")]
     public User DefaultUser = new();
 
+    [ConfigComment("How many times to retry initializing a backend before giving up. Default is 3.")]
+    public int MaxBackendInitAttempts = 3;
+
     /// <summary>Settings to control restrictions on users.</summary>
     public class UserRestriction : AutoConfiguration
     {
