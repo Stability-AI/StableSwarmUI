@@ -6,7 +6,7 @@ let batches = 0;
 
 let backend_types = {};
 
-let backends_loaded = [];
+let backends_loaded = {};
 
 let lastImageDir = '';
 
@@ -148,9 +148,12 @@ function addBackendToHtml(backend, disable, spot = null) {
     }
     spot.innerHTML = '';
     let type = backend_types[backend.type];
-    let cardBase = createDiv(null, `card backend-${backend.status} backend-card`);
+    let cardBase = createDiv(`backend-card-${backend.id}`, `card backend-${backend.status} backend-card`);
     let cardHeader = createDiv(null, 'card-header');
-    cardHeader.innerText = `${backend.status} backend: (${backend.id}): ${type.name}`;
+    let cardTitleSpan = document.createElement('span');
+    cardTitleSpan.className = 'card-title-span';
+    cardTitleSpan.innerText = `${backend.status} backend: (${backend.id}): ${type.name}`;
+    cardHeader.appendChild(cardTitleSpan);
     let deleteButton = document.createElement('button');
     deleteButton.className = 'backend-delete-button';
     deleteButton.innerText = '✕';
@@ -219,13 +222,33 @@ function addBackendToHtml(backend, disable, spot = null) {
 }
 
 function loadBackendsList() {
-    let listSection = document.getElementById('backends_list');
     genericRequest('ListBackends', {}, data => {
-        backends_loaded = data.list;
-        listSection.innerHTML = '';
-        for (let backend of backends_loaded) {
-            addBackendToHtml(backend, true);
+        for (let oldBack of Object.values(backends_loaded)) {
+            let spot = document.getElementById(`backend-wrapper-spot-${oldBack.id}`);
+            let newBack = data[oldBack.id];
+            if (!newBack) {
+                delete backends_loaded[oldBack.id];
+                spot.remove();
+            }
+            else {
+                if (oldBack.status != newBack.status) {
+                    let card = document.getElementById(`backend-card-${oldBack.id}`);
+                    card.classList.remove(`backend-${oldBack.status}`);
+                    card.classList.add(`backend-${newBack.status}`);
+                    card.querySelector('.card-title-span').innerText = `${newBack.status} backend: (${newBack.id}): ${backend_types[newBack.type].name}`;
+                }
+                if (newBack.modcount > oldBack.modcount) {
+                    addBackendToHtml(newBack, true, spot);
+                }
+            }
         }
+        for (let newBack of Object.values(data)) {
+            let oldBack = backends_loaded[newBack.id];
+            if (!oldBack) {
+                addBackendToHtml(newBack, true);
+            }
+        }
+        backends_loaded = data;
     });
 }
 
@@ -292,6 +315,21 @@ function genpageLoad() {
         loadModelList('');
         loadBackendTypesMenu();
     });
+    setInterval(genpageLoop, 1000);
+}
+
+let backendsListView = document.getElementById('backends_list');
+let backendsCheckRateCounter = 0;
+
+function genpageLoop() {
+    if (backendsListView.checkVisibility()) { // TODO: Safari is apparently dumb about this? Test and fix.
+        if (backendsCheckRateCounter++ % 5 == 0) {
+            loadBackendsList(); // TODO: only if have permission
+        }
+    }
+    else {
+        backendsCheckRateCounter = 0;
+    }
 }
 
 genpageLoad();

@@ -97,6 +97,8 @@ public class BackendHandler
         public int ID;
 
         public int InitAttempts = 0;
+
+        public int ModCount = 0;
     }
 
     /// <summary>Adds a new backend of the given type, and returns its data. Note that the backend will not be initialized at first.</summary>

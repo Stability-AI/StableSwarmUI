@@ -34,13 +34,18 @@ public class BackendAPI
             ["type"] = backend.Backend.HandlerTypeData.ID,
             ["status"] = backend.Backend.Status.ToString().ToLowerFast(),
             ["id"] = backend.ID,
-            ["settings"] = JToken.FromObject(backend.Backend.InternalSettingsAccess.Save(true).ToSimple())
+            ["settings"] = JToken.FromObject(backend.Backend.InternalSettingsAccess.Save(true).ToSimple()),
+            ["modcount"] = backend.ModCount
         };
     }
 
     /// <summary>API route to shutdown and delete a registered backend.</summary>
     public static async Task<JObject> DeleteBackend(int backend_id)
     {
+        if (Program.LockSettings)
+        {
+            return new() { ["error"] = "Settings are locked." };
+        }
         if (await Program.Backends.DeleteById(backend_id))
         {
             return new JObject() { ["result"] = "Deleted." };
@@ -51,6 +56,10 @@ public class BackendAPI
     /// <summary>API route to modify and re-init an already registered backend.</summary>
     public static async Task<JObject> EditBackend(int backend_id, JObject raw_inp)
     {
+        if (Program.LockSettings)
+        {
+            return new() { ["error"] = "Settings are locked." };
+        }
         if (!raw_inp.TryGetValue("settings", out JToken jval) || jval is not JObject settings)
         {
             return new() { ["error"] = "Missing settings." };
@@ -67,12 +76,21 @@ public class BackendAPI
     /// <summary>API route to list currently registered backends.</summary>
     public static async Task<JObject> ListBackends()
     {
-        return new JObject() { ["list"] = JToken.FromObject(Program.Backends.T2IBackends.Values.OrderBy(d => d.ID).Select(BackendToNet).ToList()) };
+        JObject toRet = new();
+        foreach (BackendHandler.T2IBackendData data in Program.Backends.T2IBackends.Values.OrderBy(d => d.ID))
+        {
+            toRet[data.ID.ToString()] = BackendToNet(data);
+        }
+        return toRet;
     }
 
     /// <summary>API route to add a new backend.</summary>
     public static async Task<JObject> AddNewBackend(string type_id)
     {
+        if (Program.LockSettings)
+        {
+            return new() { ["error"] = "Settings are locked." };
+        }
         if (!Program.Backends.BackendTypes.TryGetValue(type_id, out BackendHandler.BackendType type))
         {
             return new() { ["error"] = $"Invalid backend type: {type_id}" };
