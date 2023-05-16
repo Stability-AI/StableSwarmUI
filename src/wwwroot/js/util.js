@@ -48,3 +48,55 @@ function escapeHtml(text) {
 function escapeJsString(text) {
     return text.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll("'", "\\'").replaceAll('\n', '\\n').replaceAll('\r', '\\r').replaceAll('\t', '\\t');
 }
+
+let shiftMonitor = false;
+document.addEventListener('keydown', (event) => {
+    shiftMonitor = event.shiftKey;
+});
+document.addEventListener('keyup', (event) => {
+    shiftMonitor = event.shiftKey;
+});
+
+/**
+ * This function has the goal of never being noticed until it's missing. A thankless mathematical hero to the end-user.
+ * Used for width/height sliders, this shifts the range of the slider into exponential Power-of-Two (POT) range.
+ * That is to say, it naturally sections the values in even 256, 512, 1024, etc. increments, with sub-increments like 768 accessible in-between.
+ * This makes the slider an absolute pleasure to use, even with a very large potential range of values.
+ * (This is as opposed to a normal linear slider, which would have very small steps that are hard to land on exactly the number you want if the range is too high.)
+ */
+function linearToPot(val, max, min, step) {
+    let norm = val / max;
+    let increments = Math.log2(max);
+    let discardIncr = min == 0 ? 0 : Math.log2(min);
+    let normIncr = norm * (increments - discardIncr) + discardIncr;
+    if (shiftMonitor) {
+        return Math.round(2 ** normIncr);
+    }
+    let incrLow = Math.floor(normIncr);
+    let incrHigh = Math.ceil(normIncr);
+    let realLow = Math.round(2 ** incrLow); // Note: round to prevent floating point errors
+    let realHigh = Math.round(2 ** incrHigh);
+    if (realLow == realHigh) {
+        return realLow;
+    }
+    let stepCount = 9999;
+    step /= 2;
+    while (stepCount > 4) {
+        step *= 2;
+        stepCount = Math.round((realHigh - realLow) / step);
+        if (stepCount <= 1) {
+            return 2 ** Math.round(normIncr);
+        }
+    }
+    let subProg = (normIncr - incrLow) / (incrHigh - incrLow);
+    let subStep = Math.round(subProg * stepCount);
+    return realLow + subStep * step;
+}
+
+function potToLinear(val, max, min, step) {
+    let norm = Math.log2(val);
+    let increments = Math.log2(max);
+    let discardIncr = min == 0 ? 0 : Math.log2(min);
+    let normIncr = (norm - discardIncr) / (increments - discardIncr);
+    return Math.round(normIncr * max);
+}

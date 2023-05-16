@@ -53,11 +53,11 @@ function addBackendToHtml(backend, disable, spot = null) {
         let input;
         if (setting.type == 'text') {
             input = document.createElement('div');
-            input.innerHTML = makeTextInput(`setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name], 1, setting.placeholder);
+            input.innerHTML = makeTextInput(null, `setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name], 1, setting.placeholder);
         }
         else if (setting.type == 'integer') {
             input = document.createElement('div');
-            input.innerHTML = makeNumberInput(`setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name], 0, 1000, 1);
+            input.innerHTML = makeNumberInput(null, `setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name], 0, 1000, 1);
         }
         else {
             console.log(`Cannot create input slot of type ${setting.type}`);

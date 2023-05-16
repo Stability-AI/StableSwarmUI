@@ -206,7 +206,21 @@ function genpageLoop() {
     reviseStatusBar();
 }
 
+function genInputs() {
+    let area = document.getElementById('main_inputs_area');
+    let html = '';
+    html += makeNumberInput(null, 'input_images', 'Images', 'How many images to generate at once.', 1, 1, 100, 1, true);
+    html += makeNumberInput('seed', 'input_seed', 'Seed', 'Image seed. -1 = random.', -1, -1, 1000000000, 1, true);
+    html += makeNumberInput('steps', 'input_steps', 'Steps', 'How many times to run the model. More steps = better quality, but more time.', 20, 1, 100, 1, true);
+    html += makeNumberInput('cfg_scale', 'input_cfg_scale', 'CFG Scale', 'How strongly to scale prompt input. Too-high values can cause corrupted/burnt images, too-low can cause nonsensical images.', 7, 0, 30, 0.25, 1, true);
+    html += '<br>' + makeSliderInput('width', 'input_width', 'Width', 'Image width, in pixels.', 1024, 128, 4096, 64, true);
+    html += '<br>' + makeSliderInput('height', 'input_height', 'Height', 'Image height, in pixels.', 1024, 128, 4096, 64, true);
+    area.innerHTML = html;
+    enableSlidersIn(area);
+}
+
 function genpageLoad() {
+    genInputs();
     reviseStatusBar();
     document.getElementById('generate_button').addEventListener('click', doGenerate);
     document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));

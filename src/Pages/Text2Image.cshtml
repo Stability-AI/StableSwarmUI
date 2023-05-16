@@ -25,13 +25,7 @@
                     <textarea class="prompt-box" id="input_prompt" placeholder="Type your prompt here" rows="3"></textarea>
                     <br><textarea class="prompt-box" id="input_negative_prompt" placeholder="Type your negative prompt here" rows="3"></textarea>
                     <br><button class="generate-button" id="generate_button">Generate</button>
-                    <br>@WebUtil.AutoNumberSmall("", "Images", "How many images to generate at once.", "input_images", 1, 100, 1)
-                    @WebUtil.AutoNumberSmall("seed", "Seed", "Image seed. -1 = random.", "input_seed", -1, 1000000000, -1)
-                    @WebUtil.AutoNumberSmall("steps", "Steps", "How many times to run the model. More steps = better quality, but more time.", "input_steps", 1, 100, 20)
-                    @WebUtil.AutoNumberSmall("cfg_scale", "CFG Scale", "How strongly to scale prompt input. Too-high values can cause corrupted/burnt images, too-low can cause nonsensical images.", "input_cfg_scale", 0, 30, 7, 0.25)
-                    <br>@WebUtil.AutoSlider("width", "Width", "Image width, in pixels.", "input_width", 0, 8192, 1024, 64)
-                    <br>@WebUtil.AutoSlider("height", "Height", "Image height, in pixels.", "input_height", 0, 8192, 1024, 64)
-                    <div id="current_model_card">TODO</div>
+                    <div id="main_inputs_area"></div>
                 </div>
                 <div class="main-image-area">
                     <div class="current_image" id="current_image"></div>
