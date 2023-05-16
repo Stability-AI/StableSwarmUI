@@ -1,3 +1,7 @@
+body {
+    height: 100vh;
+    overflow: hidden;
+}
 .prompt-box {
     width: 100%;
     border-radius: 0.5rem;
@@ -39,7 +43,11 @@
 .t2i-bottom-bar {
     border-top: 1px solid var(--light-border);
     display: block;
-    height: 100%;
+}
+.t2i-bottom-bar .tab-content {
+    width: 100%;
+    height: 49vh;
+    overflow-y: scroll;
 }
 .current_image {
     display: inline-block;
