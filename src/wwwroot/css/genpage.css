@@ -11,56 +11,47 @@
     width: 90%;
     margin-left: 5%;
 }
+.t2i-top-bar {
+    display: flex;
+}
 .input-sidebar {
-    position: fixed;
-    top: 3rem;
-    left: 0px;
+    display: inline-block;
     width: calc(max(28rem, 20vw));
     padding: 0.5rem;
     border-right: 1px solid purple;
-    height: calc(100vw - 4rem);
+    height: 50vw;
     overflow-x: hidden;
     overflow-y: scroll;
+    flex-grow: 1;
 }
 .main-image-area {
-    position: fixed;
-    top: 3rem;
-    left: calc(max(28rem, 20vw));
-    width: calc(100vw - max(28rem, 20vw));
+    display: inline-block;
+    width: calc(100vw - 1rem - max(28rem, 20vw));
     padding: 0.5rem;
-    height: 100vw;
-    overflow-y: hidden;
+    height: 50vw;
+    overflow: hidden;
+}
+.bottom-bar {
+    display: block;
+    height: 49vw;
 }
 .current_image {
-    position: fixed;
-    top: 3rem;
+    display: inline-block;
     height: 31rem;
-    width: fit-content;
-    min-width: 30rem;
+    width: 31rem;
     padding: 0.5rem;
     border: 1px solid var(--light-border);
 }
 .current_image_batch {
-    position: fixed;
-    top: 3rem;
-    left: calc(30rem + max(28rem, 20vw) + 1rem);
-    width: calc(100vw - 30rem - max(28rem, 20vw) - 1rem);
+    display: inline-block;
+    width: calc(100vw - 31rem - max(28rem, 20vw) - 5rem);
     height: 31rem;
     border-top: 1px solid var(--light-border);
     border-bottom: 1px solid var(--light-border);
     overflow-y: scroll;
 }
-.image-history-refresh {
-    position: fixed;
-    top: 34rem;
-}
 .image_history {
-    position: fixed;
-    top: 37rem;
     width: 100%;
-    left: calc(max(28rem, 20vw));
-    height: calc(100vh - 37rem - 1rem);
-    width: calc(100vw - max(28rem, 20vw));
     overflow-y: scroll;
 }
 .image-block {
