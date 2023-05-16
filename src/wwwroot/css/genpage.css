@@ -24,6 +24,7 @@
     border-right: 1px solid purple;
     overflow-x: hidden;
     overflow-y: scroll;
+    white-space: normal;
     height: 50vh;
 }
 .main-image-area {

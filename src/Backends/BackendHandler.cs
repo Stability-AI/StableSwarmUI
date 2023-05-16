@@ -335,6 +335,7 @@ public class BackendHandler
             return;
         }
         HasShutdown = true;
+        NewBackendInitSignal.Set();
         BackendsAvailableSignal.Set();
         List<Task> tasks = new();
         foreach (T2IBackendData backend in T2IBackends.Values)
