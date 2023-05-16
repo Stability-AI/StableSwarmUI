@@ -11,49 +11,56 @@
     width: 90%;
     margin-left: 5%;
 }
-.t2i-top-bar-container {
+.t2i-top-bar {
     display: block;
     height: 50vh;
-    max-height: 50vh;
     overflow: hidden;
-}
-.t2i-top-bar {
-    display: flex;
-    align-items: stretch;
+    white-space: nowrap;
 }
 .input-sidebar {
-    display: block;
+    display: inline-block;
     width: calc(max(28rem, 20vw));
     padding: 0.5rem;
     border-right: 1px solid purple;
     overflow-x: hidden;
     overflow-y: scroll;
-    flex-shrink: 3;
+    height: 50vh;
 }
 .main-image-area {
-    display: flex;
-    align-items: stretch;
+    display: inline-block;
     padding: 0.5rem;
     overflow: hidden;
-    flex-grow: 3;
+    width: calc(100vw - max(28rem, 20vw));
+    height: 50vh;
+    white-space: nowrap;
+    vertical-align: top;
 }
-.bottom-bar {
+.t2i-bottom-bar {
     border-top: 1px solid var(--light-border);
     display: block;
-    height: 49vw;
+    height: 100%;
 }
 .current_image {
-    display: block;
+    display: inline-block;
     padding: 0.5rem;
     border: 1px solid var(--light-border);
-    flex-grow: 1;
+    width: calc(min(max(40vw, 28rem), 49vh));
+    height: 49vh;
+    vertical-align: top;
+}
+.current_image img {
+    max-width: 100%;
+    max-height: 100%;
 }
 .current_image_batch {
-    display: block;
+    display: inline-block;
     border-top: 1px solid var(--light-border);
     border-bottom: 1px solid var(--light-border);
     overflow-y: scroll;
-    flex-grow: 2;
+    width: calc(100vw - max(28rem, 20vw) - min(28rem, 49vh));
+    height: 50vh;
+    vertical-align: top;
+    white-space: normal;
 }
 .image_history {
     width: 100%;
@@ -70,9 +77,6 @@
 .image-block img {
     height: 8rem;
     display: block;
-}
-.current_image img {
-    height: 29rem;
 }
 .image-block:hover {
     background-color: var(--shadow);
