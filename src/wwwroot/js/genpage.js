@@ -171,28 +171,34 @@ let statusBarElem = document.getElementById('top_status_bar');
 
 function getCurrentStatus() {
     if (!hasLoadedBackends) {
-        return 'Loading...';
+        return ['warn', 'Loading...'];
     }
     if (Object.values(backends_loaded).length == 0) {
-        return 'No backends present. You must configure backends on the Settings page before you can continue.';
+        return ['warn', 'No backends present. You must configure backends on the Settings page before you can continue.'];
     }
+    let loading = countBackendsByStatus('waiting') + countBackendsByStatus('loading');
     if (countBackendsByStatus('running') == 0) {
-        if (countBackendsByStatus('waiting') + countBackendsByStatus('loading') > 0) {
-            return 'Backends are still loading on the server...';
+        if (loading > 0) {
+            return ['warn', 'Backends are still loading on the server...'];
         }
         if (countBackendsByStatus('errored') > 0) {
-            return 'Some backends have errored on the server. Check the server logs for details.';
+            return ['error', 'Some backends have errored on the server. Check the server logs for details.'];
         }
         if (countBackendsByStatus('disabled') > 0) {
-            return 'Some backends are disabled. Please configure them to continue.';
+            return ['warn', 'Some backends are disabled. Please configure them to continue.'];
         }
-        return 'Something is wrong with your backends. Please check the Backends Settings page or the server logs.';
+        return ['error', 'Something is wrong with your backends. Please check the Backends Settings page or the server logs.'];
     }
-    return '';
+    if (loading > 0) {
+        return ['soft', 'Some backends are ready, but others are still loading...'];
+    }
+    return ['', ''];
 }
 
 function reviseStatusBar() {
-    statusBarElem.innerText = getCurrentStatus();
+    let status = getCurrentStatus();
+    statusBarElem.innerText = status[1];
+    statusBarElem.className = `top-status-bar status-bar-${status[0]}`;
 }
 
 function genpageLoop() {

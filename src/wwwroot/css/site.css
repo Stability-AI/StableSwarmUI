@@ -12,20 +12,33 @@
 body {
     background-color: var(--background);
 }
-@keyframes status_glow {
+@keyframes status_glow-warn {
     0% {background-color: #dddd55;}
     50% {background-color: #888800;}
     100% {background-color: #dddd55;}
+}
+@keyframes status_glow-error {
+    0% {background-color: #dd5555;}
+    50% {background-color: #880000;}
+    100% {background-color: #dd5555;}
 }
 .top-status-bar {
     position: sticky;
     color: #000000;
     top: 0px;
     z-index: 100;
-    animation-name: status_glow;
     animation-duration: 2s;
     animation-iteration-count: infinite;
     padding-left: 1rem;
+}
+.status-bar-warn {
+    animation-name: status_glow-warn;
+}
+.status-bar-error {
+    animation-name: status_glow-error;
+}
+.status-bar-soft {
+    background-color: #888800;
 }
 .auto-input {
     display: inline-block;
