@@ -11,44 +11,49 @@
     width: 90%;
     margin-left: 5%;
 }
+.t2i-top-bar-container {
+    display: block;
+    height: 50vh;
+    max-height: 50vh;
+    overflow: hidden;
+}
 .t2i-top-bar {
     display: flex;
+    align-items: stretch;
 }
 .input-sidebar {
-    display: inline-block;
+    display: block;
     width: calc(max(28rem, 20vw));
     padding: 0.5rem;
     border-right: 1px solid purple;
-    height: 50vw;
     overflow-x: hidden;
     overflow-y: scroll;
-    flex-grow: 1;
+    flex-shrink: 3;
 }
 .main-image-area {
-    display: inline-block;
-    width: calc(100vw - 1rem - max(28rem, 20vw));
+    display: flex;
+    align-items: stretch;
     padding: 0.5rem;
-    height: 50vw;
     overflow: hidden;
+    flex-grow: 3;
 }
 .bottom-bar {
+    border-top: 1px solid var(--light-border);
     display: block;
     height: 49vw;
 }
 .current_image {
-    display: inline-block;
-    height: 31rem;
-    width: 31rem;
+    display: block;
     padding: 0.5rem;
     border: 1px solid var(--light-border);
+    flex-grow: 1;
 }
 .current_image_batch {
-    display: inline-block;
-    width: calc(100vw - 31rem - max(28rem, 20vw) - 5rem);
-    height: 31rem;
+    display: block;
     border-top: 1px solid var(--light-border);
     border-bottom: 1px solid var(--light-border);
     overflow-y: scroll;
+    flex-grow: 2;
 }
 .image_history {
     width: 100%;
