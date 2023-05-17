@@ -319,12 +319,6 @@ public class BackendHandler
         return result;
     }
 
-    public BackendHandler()
-    {
-        RegisterBackendType<AutoWebUIAPIBackend>("auto_webui_api", "Auto1111 SD-WebUI API By URL", "A backend powered by a pre-existing installation of the AUTOMATIC1111/Stable-Diffusion-WebUI launched in '--api' mode, referenced via API base URL.");
-        RegisterBackendType<AutoWebUISelfStartBackend>("auto_webui_selfstart", "Auto111 SD-WebUI Self-Starting", "A backend powered by a pre-existing installation of the AUTOMATIC1111/Stable-Diffusion-WebUI, automatically launched and managed by this UI server.");
-    }
-
     private volatile bool HasShutdown;
 
     /// <summary>Main shutdown handler, triggered by <see cref="Program.Shutdown"/>.</summary>

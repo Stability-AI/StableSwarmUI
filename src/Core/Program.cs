@@ -23,6 +23,9 @@ public class Program
     /// <summary>Central store of Text2Image models.</summary>
     public static T2IModelHandler T2IModels;
 
+    /// <summary>All extensions currently loaded.</summary>
+    public static List<Extension> Extensions = new();
+
     /// <summary>Holder of server admin settings.</summary>
     public static Settings ServerSettings = new();
 
@@ -47,6 +50,7 @@ public class Program
         Logs.Init("=== StableUI Starting ===");
         AssemblyLoadContext.Default.Unloading += (_) => Shutdown();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Shutdown();
+        PrepExtensions();
         try
         {
             Logs.Init("Parsing command line...");
@@ -67,21 +71,26 @@ public class Program
             Logs.Error($"Command line arguments given are invalid: {ex.Message}");
             return;
         }
-        Logs.Init("Loading models list...");
+        RunOnAllExtensions(e => e.OnPreInit());
+        Logs.Init("Prepping options...");
         T2IModels = new();
-        T2IModels.Refresh();
-        Logs.Init("Loading backends...");
         Backends = new();
         Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);
-        Backends.Load();
-        Logs.Init("Loading session handler...");
         Sessions = new();
+        RunOnAllExtensions(e => e.OnInit());
+        Logs.Init("Loading models list...");
+        T2IModels.Refresh();
+        Logs.Init("Loading backends...");
+        Backends.Load();
         Logs.Init("Prepping API...");
         BasicAPIFeatures.Register();
         foreach (string str in CommandLineFlags.Keys.Where(k => !CommandLineFlagsRead.Contains(k)))
         {
             Logs.Warning($"Unused command line flag '{str}'");
         }
+        Logs.Init("Prepping webserver...");
+        WebServer.Prep();
+        RunOnAllExtensions(e => e.OnPreLaunch());
         Logs.Init("Launching server...");
         WebServer.Launch();
     }
@@ -102,6 +111,42 @@ public class Program
         Sessions.Shutdown();
         Ngrok?.Stop();
     }
+
+    #region extensions
+    /// <summary>Initial call that prepares the extensions list.</summary>
+    public static void PrepExtensions()
+    {
+        foreach (Type extType in AppDomain.CurrentDomain.GetAssemblies().ToList().SelectMany(x => x.GetTypes()).Where(t => typeof(Extension).IsAssignableFrom(t) && !t.IsAbstract))
+        {
+            try
+            {
+                Extensions.Add(Activator.CreateInstance(extType) as Extension);
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Failed to create extension of type {extType.FullName}: {ex}");
+            }
+        }
+        RunOnAllExtensions(e => e.OnFirstInit());
+
+    }
+
+    /// <summary>Runs an action on all extensions.</summary>
+    public static void RunOnAllExtensions(Action<Extension> action)
+    {
+        foreach (Extension ext in Extensions)
+        {
+            try
+            {
+                action(ext);
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Failed to run event on extension {ext.GetType().FullName}: {ex}");
+            }
+        }
+    }
+    #endregion
 
     #region settings
     /// <summary>Load the settings file.</summary>

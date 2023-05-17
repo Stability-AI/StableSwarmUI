@@ -19,10 +19,9 @@ public static class WebServer
     /// <summary>Minimum ASP.NET Log Level.</summary>
     public static LogLevel LogLevel;
 
-    /// <summary>Called by <see cref="Program"/>, generally should not be touched externally.</summary>
-    public static void Launch()
+    /// <summary>Initial prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>
+    public static void Prep()
     {
-        // ASP.NET web init
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "src/wwwroot" });
         builder.Services.AddRazorPages();
         builder.Logging.SetMinimumLevel(LogLevel);
@@ -60,7 +59,11 @@ public static class WebServer
                 }
             }
         });
-        // Launch actual web host process
+    }
+
+    /// <summary>Called by <see cref="Program"/>, generally should not be touched externally.</summary>
+    public static void Launch()
+    {
         Logs.Init($"Starting webserver on {HostURL}");
         WebApp.Run();
     }

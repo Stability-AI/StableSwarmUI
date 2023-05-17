@@ -4,9 +4,10 @@ using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Utils;
 using System.Diagnostics;
+using StableUI.Backends;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace StableUI.Backends;
+namespace StableUI.Builtin_AutoWebUIExtension;
 
 public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISelfStartBackend.AutoWebUISelfStartSettings>
 {

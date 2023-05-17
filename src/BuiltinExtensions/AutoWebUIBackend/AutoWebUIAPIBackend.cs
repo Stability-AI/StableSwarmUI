@@ -1,7 +1,8 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
 using StableUI.DataHolders;
+using StableUI.Backends;
 
-namespace StableUI.Backends;
+namespace StableUI.Builtin_AutoWebUIExtension;
 
 public class AutoWebUIAPIBackend : AutoWebUIAPIAbstractBackend<AutoWebUIAPIBackend.AutoWebUIAPISettings>
 {

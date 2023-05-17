@@ -7,9 +7,10 @@ using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
+using StableUI.Backends;
 using System;
 
-namespace StableUI.Backends;
+namespace StableUI.Builtin_AutoWebUIExtension;
 
 /// <summary>T2I Backend using the Automatic1111/Stable-Diffusion-WebUI API.</summary>
 public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where T : AutoConfiguration
