@@ -21,7 +21,7 @@
                 <div class="input-sidebar" id="input_sidebar">
                     <textarea class="prompt-box" id="input_prompt" placeholder="Type your prompt here" rows="3"></textarea>
                     <br><textarea class="prompt-box" id="input_negative_prompt" placeholder="Type your negative prompt here" rows="3"></textarea>
-                    <br><button class="generate-button" id="generate_button">Generate</button>
+                    <br><button class="generate-button" id="generate_button">Generate Image</button>
                     <div id="main_inputs_area"></div>
                 </div>
                 <div class="main-image-area">
@@ -52,7 +52,11 @@
                     <div class="model_list" id="model_list"></div>
                 </div>
                 <div class="tab-pane" id="Tools-Tab" role="tabpanel">
-                    Placeholder.
+                    <select id="tool_selector">
+                        <option value="" selected></option>
+                    </select>
+                    <div class="tool-container" id="tool_container">
+                    </div>
                 </div>
             </div>
             <div style="height: 2rem"></div> <!-- Spacer to fix scrolling -->

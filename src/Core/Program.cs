@@ -43,6 +43,9 @@ public class Program
     /// <summary>Ngrok instance, if loaded at all.</summary>
     public static NgrokHandler Ngrok;
 
+    /// <summary>Central web server core.</summary>
+    public static WebServer Web;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -77,6 +80,7 @@ public class Program
         Backends = new();
         Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);
         Sessions = new();
+        Web = new();
         RunOnAllExtensions(e => e.OnInit());
         Logs.Init("Loading models list...");
         T2IModels.Refresh();
@@ -89,10 +93,10 @@ public class Program
             Logs.Warning($"Unused command line flag '{str}'");
         }
         Logs.Init("Prepping webserver...");
-        WebServer.Prep();
+        Web.Prep();
         RunOnAllExtensions(e => e.OnPreLaunch());
         Logs.Init("Launching server...");
-        WebServer.Launch();
+        Web.Launch();
     }
 
     private volatile static bool HasShutdown = false;
@@ -116,11 +120,32 @@ public class Program
     /// <summary>Initial call that prepares the extensions list.</summary>
     public static void PrepExtensions()
     {
+        string[] builtins = Directory.EnumerateDirectories("./src/BuiltinExtensions").Select(s => s.Replace('\\', '/').AfterLast("/src/")).ToArray();
+        string[] extras = File.Exists("./src/Extensions") ? Directory.EnumerateDirectories("src/Extensions/").Select(s => s.Replace('\\', '/').AfterLast("/src/")).ToArray() : Array.Empty<string>();
         foreach (Type extType in AppDomain.CurrentDomain.GetAssemblies().ToList().SelectMany(x => x.GetTypes()).Where(t => typeof(Extension).IsAssignableFrom(t) && !t.IsAbstract))
         {
             try
             {
-                Extensions.Add(Activator.CreateInstance(extType) as Extension);
+                Logs.Info($"Prepping extension: {extType.FullName}...");
+                Extension extension = Activator.CreateInstance(extType) as Extension;
+                extension.ExtensionName = extType.Name;
+                Extensions.Add(extension);
+                string[] possible = extType.Namespace.StartsWith("StableUI.") ? builtins : extras;
+                foreach (string path in possible)
+                {
+                    if (File.Exists($"src/{path}/{extType.Name}.cs"))
+                    {
+                        if (extension.FilePath is not null)
+                        {
+                            Logs.Error($"Multiple extensions with the same name {extType.Name}! Something will break.");
+                        }
+                        extension.FilePath = $"src/{path}/";
+                    }
+                }
+                if (extension.FilePath is null)
+                {
+                    Logs.Error($"Could not determine path for extension {extType.Name} - is the classname mismatched from the filename?");
+                }
             }
             catch (Exception ex)
             {

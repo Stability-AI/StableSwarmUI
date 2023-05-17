@@ -1,14 +1,14 @@
 ﻿using FreneticUtilities.FreneticExtensions;
-using StableUI.Accounts;
+using Microsoft.AspNetCore.Html;
 using StableUI.Utils;
 using StableUI.WebAPI;
-using System.Text.RegularExpressions;
+using System.Text;
 using System.Web;
 
 namespace StableUI.Core;
 
 /// <summary>Core handler for the web-server (mid-layer & front-end).</summary>
-public static class WebServer
+public class WebServer
 {
     /// <summary>Primary core ASP.NET <see cref="WebApplication"/> reference.</summary>
     public static WebApplication WebApp;
@@ -19,8 +19,17 @@ public static class WebServer
     /// <summary>Minimum ASP.NET Log Level.</summary>
     public static LogLevel LogLevel;
 
+    /// <summary>Extra file content added by extensions.</summary>
+    public Dictionary<string, string> ExtensionSharedFiles = new();
+
+    /// <summary>Extra content for the page header. Automatically set based on extensions.</summary>
+    public static HtmlString PageHeaderExtra = new("");
+
+    /// <summary>Extra content for the page footer. Automatically set based on extensions.</summary>
+    public static HtmlString PageFooterExtra = new("");
+
     /// <summary>Initial prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>
-    public static void Prep()
+    public void Prep()
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "src/wwwroot" });
         builder.Services.AddRazorPages();
@@ -44,9 +53,10 @@ public static class WebServer
         WebApp.UseRouting();
         WebApp.UseWebSockets();
         WebApp.MapRazorPages();
-        WebApp.Map("/", () => Results.Redirect("/Text2Image"));
+        WebApp.MapGet("/", () => Results.Redirect("/Text2Image"));
         WebApp.Map("/API/{*Call}", API.HandleAsyncRequest);
-        WebApp.Map("/Output/{*Path}", ViewOutput);
+        WebApp.MapGet("/Output/{*Path}", ViewOutput);
+        WebApp.MapGet("/ExtensionFile/{*f}", ViewExtensionScript);
         WebApp.Use(async (context, next) =>
         {
             await next();
@@ -59,17 +69,40 @@ public static class WebServer
                 }
             }
         });
+        GatherExtensionPageAdditions();
+    }
+
+    public void GatherExtensionPageAdditions()
+    {
+        StringBuilder scripts = new(), stylesheets = new();
+        Program.RunOnAllExtensions(e =>
+        {
+            foreach (string script in e.ScriptFiles)
+            {
+                string fname = $"/ExtensionFile/{e.ExtensionName}/{script}";
+                ExtensionSharedFiles.Add(fname, File.ReadAllText($"{e.FilePath}{script}"));
+                scripts.Append($"<script src=\"{fname}?vary={Utilities.VaryID}\"></script>\n");
+            }
+            foreach (string css in e.StyleSheetFiles)
+            {
+                string fname = $"/ExtensionFile/{e.ExtensionName}/{css}";
+                ExtensionSharedFiles.Add(fname, File.ReadAllText($"{e.FilePath}{css}"));
+                stylesheets.Append($"<link rel=\"stylesheet\" href=\"{fname}?vary={Utilities.VaryID}\" />");
+            }
+        });
+        PageHeaderExtra = new(stylesheets.ToString());
+        PageFooterExtra = new(scripts.ToString());
     }
 
     /// <summary>Called by <see cref="Program"/>, generally should not be touched externally.</summary>
-    public static void Launch()
+    public void Launch()
     {
         Logs.Init($"Starting webserver on {HostURL}");
         WebApp.Run();
     }
 
     /// <summary>Test the validity of a user-given file path. Returns (path, consoleError, userError).</summary>
-    public static (string, string, string) CheckOutputFilePath(string path, string userId)
+    public (string, string, string) CheckOutputFilePath(string path, string userId)
     {
         string root = $"{Environment.CurrentDirectory}/{Program.ServerSettings.OutputPath}/{userId}";
         return CheckFilePath(root, path);
@@ -93,7 +126,25 @@ public static class WebServer
         return (path, null, null);
     }
 
-    public static async Task ViewOutput(HttpContext context)
+    /// <summary>Web route for scripts from extensions.</summary>
+    public async Task ViewExtensionScript(HttpContext context)
+    {
+        if (ExtensionSharedFiles.TryGetValue(context.Request.Path.Value, out string script))
+        {
+            context.Response.ContentType = Utilities.GuessContentType(context.Request.Path.Value);
+            context.Response.StatusCode = 200;
+            await context.Response.WriteAsync(script);
+        }
+        else
+        {
+            context.Response.StatusCode = 404;
+            await context.Response.WriteAsync("404, file not found.");
+        }
+        await context.Response.CompleteAsync();
+    }
+
+    /// <summary>Web route for viewing output images.</summary>
+    public async Task ViewOutput(HttpContext context)
     {
         string path = context.Request.Path.ToString().After("/Output/");
         path = HttpUtility.UrlDecode(path).Replace('\\', '/');

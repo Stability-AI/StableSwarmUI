@@ -3,6 +3,18 @@
 /// <summary>Abstract representation of an extension. Extensions should have a 'main' class that derives from this one.</summary>
 public abstract class Extension
 {
+    /// <summary>Automatically calculated path to this extension's directory (relative to process root path), eg "src/Extensions/MyExtension/".</summary>
+    public string FilePath;
+
+    /// <summary>Automatically set, extension internal name. Editing this is a bad idea.</summary>
+    public string ExtensionName;
+
+    /// <summary>Optional, filenames (relative to extension directory) of additional script files to use, eg "Assets/my_ext.js". You should populate this during <see cref="OnInit"/> or earlier.</summary>
+    public List<string> ScriptFiles = new();
+
+    /// <summary>Optional, filenames (relative to extension directory) of additional CSS files to use, eg "Assets/my_ext.css". You should populate this during <see cref="OnInit"/> or earlier.</summary>
+    public List<string> StyleSheetFiles = new();
+
     /// <summary>Called when the extension is initialized for the first time, before settings or anything else is loaded, very early in the extension cycle.</summary>
     public virtual void OnFirstInit()
     {

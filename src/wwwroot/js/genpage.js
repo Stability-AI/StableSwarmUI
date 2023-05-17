@@ -219,8 +219,38 @@ function genInputs() {
     enableSlidersIn(area);
 }
 
+let toolSelector = document.getElementById('tool_selector');
+let toolContainer = document.getElementById('tool_container');
+
+function genToolsList() {
+    toolSelector.value = '';
+    // TODO: Dynamic-from-server option list generation
+    toolSelector.addEventListener('change', () => {
+        for (let opened of toolContainer.getElementsByClassName('tool-open')) {
+            opened.classList.remove('tool-open');
+        }
+        let tool = toolSelector.value;
+        if (tool == '') {
+            return;
+        }
+        let div = document.getElementById(`tool_${tool}`);
+        div.classList.add('tool-open');
+    });
+}
+
+function registerNewTool(id, name) {
+    let option = document.createElement('option');
+    option.value = id;
+    option.innerText = name;
+    toolSelector.appendChild(option);
+    let div = createDiv(`tool_${id}`, 'tool');
+    toolContainer.appendChild(div);
+    return div;
+}
+
 function genpageLoad() {
     genInputs();
+    genToolsList();
     reviseStatusBar();
     document.getElementById('generate_button').addEventListener('click', doGenerate);
     document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));

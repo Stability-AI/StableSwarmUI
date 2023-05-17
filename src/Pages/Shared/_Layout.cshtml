@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/css/site.css?vary=@Utilities.VaryID" />
     @RenderSection("Header", required: false)
+    @WebServer.PageHeaderExtra
 </head>
 <body>
     <div class="top-status-bar" id="top_status_bar"></div>
@@ -19,5 +20,6 @@
     <script src="/js/util.js?vary=@Utilities.VaryID"></script>
     <script src="/js/site.js?vary=@Utilities.VaryID"></script>
     @RenderSection("Scripts", required: false)
+    @WebServer.PageFooterExtra
 </body>
 </html>
