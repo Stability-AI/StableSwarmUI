@@ -1,0 +1,183 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "type": "object",
+    "properties": {
+        "grid": {
+            "$ref": "#/definitions/Grid"
+        },
+        "axes": {
+            "$ref": "#/definitions/Axes"
+        },
+        "variables": {
+            "$ref": "#/definitions/Variables"
+        }
+    },
+    "required": [
+        "axes",
+        "grid"
+    ],
+    "title": "InfinityGrid",
+    "definitions": {
+        "Variables": {
+            "type": "object",
+            "patternProperties": {
+                "\\(.*\\)": {
+                    "oneOf": [
+                        {"type": "string"},
+                        {"type": "number"}
+                    ]
+                }
+            }
+        },
+        "Axes": {
+            "type": "object",
+            "patternProperties": {
+                ".*": {
+                    "$ref": "#/definitions/Axis" 
+                }
+            },
+            "title": "Axes"
+        },
+        "Axis": {
+            "oneOf": [{
+                "type": "string"
+            },
+            {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "oneOf": [
+                            {"type": "string"},
+                            {"type": "number"}
+                        ]
+                    },
+                    "default": {
+                        "oneOf": [{
+                                "type": "string"
+                            },
+                            {
+                                "type": "number"
+                            }
+                        ]
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "values": {
+                        "patternProperties": {
+                            ".*": {
+                                "$ref": "#/definitions/Value"
+                            }
+                        }
+                    }
+                },
+                "required": ["title", "values"]
+            }]
+        },
+        "Value": {
+            "oneOf": [{
+                "type": "string",
+                "pattern": "(Sampler|sampler|Model|model|VAE|vae|Prompt|prompt|NegativePrompt|negativeprompt|Negative Prompt|negative prompt|PromptReplace|promptreplace|Prompt Replace|prompt replace|Prompt Replace|prompt replace|Seed|seed|Steps|steps|CFGScale|cfgscale|CFG Scale|cfg scale|CFGscale|CFG scale|Width|width|Height|height|OutWidth|outwidth|Out Width|out width|OutHeight|outheight|Out Height|out height|ClipSkip|clipskip|Clip Skip|clip skip|VarSeed|varseed|Var Seed|var seed|VarStrength|varstrength|Var Strength|var strength|CodeFormerWeight|codeformerweight|CodeFormer Weight|codeformer weight|Denoising|denoising|ETA|eta|ETANoiseSeedDelta|etanoiseseeddelta|ETA Noise Seed Delta|eta noise seed delta|SigmaChurn|sigmachurn|Sigma Churn|sigma churn|SigmaTmin|sigmatmin|Sigma Tmin|sigma tmin|SigmaTmax|sigmatmax|Sigma Tmax|sigma tmax|SigmaNoise|sigmanoise|Sigma Noise|sigma noise|Tiling|tiling|ImageMaskWeight|imagemaskweight|Image Mask Weight|image mask weight|EnableHighresFix|enablehighresfix|Enable Highres Fix|enable highres fix|HighresScale|highresscale|Highres Scale|highres scale|HighresSteps|highressteps|Highres Steps|highres steps|HighresUpscaler|highresupscaler|Highres Upscaler|highres upscaler|HighresResizeWidth|highresresizewidth|Highres Resize Width|highres resize width|HighresResizeHeight|highresresizeheight|Highres Resize Height|highres resize height|HighresUpscaleToWidth|highresupscaletowidth|Highres Upscale To Width|highres upscale to width|HighresUpscaleToHeight|highresupscaletoheight|Highres Upscale To Height|highres upscale to height|RestoreFaces|Restore Faces|restorefaces|restore faces|([dD]ynamic\\s?[Tt]hreshold.*)|)\\=.*"
+            },
+            {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "oneOf": [
+                            {"type": "string"},
+                            {"type": "number"}
+                        ]
+                    },
+                    "skip": {
+                        "type": "boolean"
+                    },
+                    "show": {
+                        "type": "boolean"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "params": {
+                        "$ref": "#/definitions/GridParams"
+                    }
+                },
+                "required": ["title", "params"]
+            }
+        ]
+        },
+        "Grid": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "params": {
+                    "$ref": "#/definitions/GridParams"
+                },
+                "format": {
+                    "type": "string",
+                    "enum": ["png", "jpg"]
+                }
+            },
+            "required": [
+                "author",
+                "description",
+                "format",
+                "title"
+            ],
+            "title": "Grid"
+        },
+        "GridParams": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Sampler": { "type": "string" }, "sampler": { "type": "string" },
+                "Model": { "type": "string" }, "model": { "type": "string" },
+                "VAE": { "type": "string" }, "vae": { "type": "string" },
+                "Prompt": { "type": "string" }, "prompt": { "type": "string" },
+                "NegativePrompt": { "type": "string" }, "negativeprompt": { "type": "string" }, "Negative Prompt": { "type": "string" }, "negative prompt": { "type": "string" },
+                "PromptReplace": { "type": "string" }, "promptreplace": { "type": "string" }, "Prompt Replace": { "type": "string" }, "prompt replace": { "type": "string" }, "Prompt  Replace": { "type": "string" }, "prompt  replace": { "type": "string" },
+                "Seed": { "type": "integer" }, "seed": { "type": "integer" },
+                "Steps": { "type": "integer" }, "steps": { "type": "integer" },
+                "CFGScale": { "type": "number" }, "cfgscale": { "type": "number" }, "CFG Scale": { "type": "number" }, "cfg scale": { "type": "number" }, "CFGscale": { "type": "number" }, "CFG scale": { "type": "number" },
+                "Width": { "type": "integer" }, "width": { "type": "integer" },
+                "Height": { "type": "integer" }, "height": { "type": "integer" },
+                "OutWidth": { "type": "integer" }, "outwidth": { "type": "integer" }, "Out Width": { "type": "integer" }, "out width": { "type": "integer" },
+                "OutHeight": { "type": "integer" }, "outheight": { "type": "integer" }, "Out Height": { "type": "integer" }, "out height": { "type": "integer" },
+                "ClipSkip": { "type": "integer" }, "clipskip": { "type": "integer" }, "Clip Skip": { "type": "integer" }, "clip skip": { "type": "integer" },
+                "VarSeed": { "type": "integer" }, "varseed": { "type": "integer" }, "Var Seed": { "type": "integer" }, "var seed": { "type": "integer" },
+                "VarStrength": { "type": "number" }, "varstrength": { "type": "number" }, "Var Strength": { "type": "number" }, "var strength": { "type": "number" },
+                "CodeFormerWeight": { "type": "number" }, "codeformerweight": { "type": "number" }, "CodeFormer Weight": { "type": "number" }, "codeformer weight": { "type": "number" },
+                "Denoising": { "type": "number" }, "denoising": { "type": "number" },
+                "ETA": { "type": "number" }, "eta": { "type": "number" },
+                "ETANoiseSeedDelta": { "type": "integer" }, "etanoiseseeddelta": { "type": "integer" }, "ETA Noise Seed Delta": { "type": "integer" }, "eta noise seed delta": { "type": "integer" },
+                "SigmaChurn": { "type": "number" }, "sigmachurn": { "type": "number" }, "Sigma Churn": { "type": "number" }, "sigma churn": { "type": "number" },
+                "SigmaTmin": { "type": "number" }, "sigmatmin": { "type": "number" }, "Sigma Tmin": { "type": "number" }, "sigma tmin": { "type": "number" },
+                "SigmaTmax": { "type": "number" }, "sigmatmax": { "type": "number" }, "Sigma Tmax": { "type": "number" }, "sigma tmax": { "type": "number" },
+                "SigmaNoise": { "type": "number" }, "sigmanoise": { "type": "number" }, "Sigma Noise": { "type": "number" }, "sigma noise": { "type": "number" },
+                "Tiling": { "type": "boolean" }, "tiling": { "type": "boolean" },
+                "ImageMaskWeight": { "type": "number" }, "imagemaskweight": { "type": "number" }, "Image Mask Weight": { "type": "number" }, "image mask weight": { "type": "number" },
+                "EnableHighresFix": { "type": "boolean" }, "enablehighresfix": { "type": "boolean" }, "Enable Highres Fix": { "type": "boolean" }, "enable highres fix": { "type": "boolean" },
+                "HighresScale": { "type": "number" }, "highresscale": { "type": "number" }, "Highres Scale": { "type": "number" }, "highres scale": { "type": "number" },
+                "HighresSteps": { "type": "integer" }, "highressteps": { "type": "integer" }, "Highres Steps": { "type": "integer" }, "highres steps": { "type": "integer" },
+                "HighresUpscaler": { "type": "string" }, "highresupscaler": { "type": "string" }, "Highres Upscaler": { "type": "string" }, "highres upscaler": { "type": "string" },
+                "HighresResizeWidth": { "type": "integer" }, "highresresizewidth": { "type": "integer" }, "Highres Resize Width": { "type": "integer" }, "highres resize width": { "type": "integer" },
+                "HighresResizeHeight": { "type": "integer" }, "highresresizeheight": { "type": "integer" }, "Highres Resize Height": { "type": "integer" }, "highres resize height": { "type": "integer" },
+                "HighresUpscaleToWidth": { "type": "integer" }, "highresupscaletowidth": { "type": "integer" }, "Highres Upscale To Width": { "type": "integer" }, "highres upscale to width": { "type": "integer" },
+                "HighresUpscaleToHeight": { "type": "integer" }, "highresupscaletoheight": { "type": "integer" }, "Highres Upscale To Height": { "type": "integer" }, "highres upscale to height": { "type": "integer" },
+                "RestoreFaces": { "oneOf": [{ "type" : "boolean"}, { "type": "string", "enum": ["GFPGan", "CodeFormer", "true", "false", "gfpgan", "codeformer"] }]},
+                "Restore Faces": { "oneOf": [{ "type" : "boolean"}, { "type": "string", "enum": ["GFPGan", "CodeFormer", "true", "false", "gfpgan", "codeformer"] }]},
+                "restorefaces": { "oneOf": [{ "type" : "boolean"}, { "type": "string", "enum": ["GFPGan", "CodeFormer", "true", "false", "gfpgan", "codeformer"] }]},
+                "restore faces": { "oneOf": [{ "type" : "boolean"}, { "type": "string", "enum": ["GFPGan", "CodeFormer", "true", "false", "gfpgan", "codeformer"] }]}
+            },
+            "title": "GridParams"
+        }
+    }
+}

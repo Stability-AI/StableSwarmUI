@@ -1,6 +1,8 @@
 let gridGen_mainDiv = null;
 let gridGrid_lastAxisId = 0;
 
+let gridGen_extraParams = ['prompt_replace', 'model'];
+
 function gridGen_addAxis() {
     let id = gridGrid_lastAxisId++;
     let wrapper = createDiv(null, 'grid-gen-axis-wrapper');
@@ -8,7 +10,7 @@ function gridGen_addAxis() {
     axisTypeSelector.className = 'grid-gen-selector';
     axisTypeSelector.id = `grid-gen-axis-type-${id}`;
     axisTypeSelector.add(new Option('', '', true, true));
-    for (let option of core_inputs) {
+    for (let option of core_inputs + gridGen_extraParams) {
         axisTypeSelector.add(new Option(option, option));
     }
     let inputBox = document.createElement('textarea');

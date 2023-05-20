@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="bootstrap.min.css" media="screen">
+    <link rel="stylesheet" href="styles.css?vary={VERSION}" media="screen">
+    <title>{TITLE}</title>
+    <meta name="description" content="{CLEAN_DESCRIPTION}" />
+    <script src="jquery.min.js"></script>
+</head>
+<body>
+    <center>
+        <h1>{TITLE}</h1>
+        <h4>{DESCRIPTION}</h4>
+        <noscript>This page requires JavaScript to work. Don't worry, it's all local to the current page, and open source on GitHub.</noscript>
+        <hr>
+        <div id="top_nav_bar">
+            <div class="accordion navigation_accordion" id="navigation_accordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="navigation_accordion_heading">
+                        <button class="accordion-button" type="button" id="toggle_nav_button" data-bs-toggle="collapse" data-bs-target="#navigation_accordion_collapse" aria-expanded="true" aria-controls="navigation_accordion_collapse">Navigation</button>
+                    </h2>
+                    <div id="navigation_accordion_collapse" class="accordion-collapse collapse show" aria-labelledby="navigation_accordion_heading" data-bs-parent="navigation_accordion">
+                        <div class="accordion-body">
+                            <div>
+                                <div class="accordion advanced_settings_section" id="settings_accordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="setting_accordion_heading">
+                                            <button class="accordion-button collapsed" id="toggle_adv_button" type="button" data-bs-toggle="collapse" data-bs-target="#settings_accordion_collapse" aria-expanded="false" aria-controls="settings_accordion_collapse">Advanced Settings</button>
+                                        </h2>
+                                        <div id="settings_accordion_collapse" class="accordion-collapse collapse" aria-labelledby="setting_accordion_heading" data-bs-parent="#settings_accordion">
+                                            <div class="accordion-body">
+                                                {ADVANCED_SETTINGS}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+                            {CONTENT}
+                            <center>
+                                <input class="form-check-input" type="checkbox" id="showDescriptions" checked="true" autocomplete="off" onchange="javascript:toggleDescriptions()"> <label class="form-check-label" for="showDescriptions" title="Uncheck this to focus on the grid. Check it to see the full descriptions of each option.">Show descriptions of axes and values</label>
+                                &emsp;&emsp;<input class="form-check-input" type="checkbox" autocomplete="off" value="" id="autoScaleImages"> <label class="form-check-label" for="autoScaleImages">Auto-scale images to viewport width</label>
+                                &emsp;&emsp;<input class="form-check-input" type="checkbox" autocomplete="off" value="" id="stickyNavigation"> <label class="form-check-label" for="stickyNavigation">Sticky navigation</label>
+                            </center>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="margin: auto; width: fit-content;">
+            <div id="save_image_helper">
+                <button onclick="makeImage()">Click Here To Save Image Of Current View</button> <select name="Image Type" id="makeimage_type"><option>jpeg</option><option>png</option></select>
+                <div id="save_image_info" style="display: none;">Here's your image! To share it, just use right click -> Copy image or Save Image As</div>
+            </div>
+            <table id="image_table"></table>
+        </div>
+    </center>
+    <div class="modal modal-fullscreen popup_modal_background" id="image_info_modal"></div>
+    <br><div style="width:256px;height:512px;"></div> <!-- Spacer to reduce screen-jumping if images load while you're scrolled down -->
+    <footer>
+        <center>
+            <hr>
+            Created by: {AUTHOR}
+            <br>The technology that powers this page is <a href="https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script">Infinity Grid Generator</a>, published under the MIT license by Alex 'mcmonkey' Goodwin.
+            <br>This software allows users to generate pages with any content they desire. Therefore, content on this page (images, text, etc.) is the property of whoever generated this specific page.
+            <br>{EXTRA_FOOTER}
+            <br>Made using the <a href="https://bootswatch.com/darkly/">Darkly Bootstrap Theme</a> by Thomas Park, which was released under the <a href="https://github.com/thomaspark/bootswatch/blob/95df99d76147797cbcb1014b639805add2327f65/LICENSE">MIT License</a>.
+            <br>
+            <br><div style="width:256px;height:512px;"></div>
+        </center>
+    </footer>
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="data.js?vary={VERSION}"></script>
+    <script src="proc.js?vary={VERSION}"></script>
+</body>
