@@ -345,9 +345,10 @@ public class BackendHandler
     /// <summary>(Blocking) gets the next available Text2Image backend.</summary>
     /// <returns>A 'using'-compatible wrapper for a backend.</returns>
     /// <param name="maxWait">Maximum duration to wait for. If time runs out, throws <see cref="TimeoutException"/>.</param>
+    /// <param name="model">The model to use, or null for any. Specifying a model directly will prefer a backend with that model loaded, or cause a backend to load it if not available.</param>
     /// <exception cref="TimeoutException">Thrown if <paramref name="maxWait"/> is reached.</exception>
     /// <exception cref="InvalidOperationException">Thrown if no backends are available.</exception>
-    public T2IBackendAccess GetNextT2IBackend(TimeSpan maxWait)
+    public T2IBackendAccess GetNextT2IBackend(TimeSpan maxWait, T2IModel model = null)
     {
         long startTime = Environment.TickCount64;
         while (true)
@@ -362,20 +363,32 @@ public class BackendHandler
                 Logs.Info($"Backend usage timeout, all backends occupied, giving up after {waited.TotalSeconds} seconds.");
                 throw new TimeoutException();
             }
-            if (!T2IBackends.Values.Any(b => b.Backend.Status == BackendStatus.RUNNING))
-            {
-                Logs.Warning("No backends are available! Cannot generate anything.");
-                throw new InvalidOperationException("No backends available!");
-            }
             lock (CentralLock)
             {
-                foreach (T2IBackendData backend in T2IBackends.Values)
+                List<T2IBackendData> possible = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING).ToList();
+                if (!possible.Any())
                 {
-                    if (!backend.IsInUse && backend.Backend.Status == BackendStatus.RUNNING)
+                    Logs.Warning("No backends are available! Cannot generate anything.");
+                    throw new InvalidOperationException("No backends available!");
+                }
+                List<T2IBackendData> available = possible.Where(b => !b.IsInUse).ToList();
+                if (model is not null)
+                {
+                    List<T2IBackendData> correctModel = available.Where(b => b.Backend.CurrentModelName == model.Name).ToList();
+                    if (correctModel.Any())
                     {
-                        backend.IsInUse = true;
-                        return new T2IBackendAccess(backend);
+                        available = correctModel;
                     }
+                }
+                T2IBackendData backend = available.FirstOrDefault();
+                if (backend is not null)
+                {
+                    backend.IsInUse = true;
+                    if (model is not null && backend.Backend.CurrentModelName != model.Name)
+                    {
+                        backend.Backend.LoadModel(model).Wait();
+                    }
+                    return new T2IBackendAccess(backend);
                 }
             }
             BackendsAvailableSignal.WaitOne(TimeSpan.FromSeconds(2));

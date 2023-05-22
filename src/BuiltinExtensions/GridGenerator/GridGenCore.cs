@@ -50,6 +50,71 @@ public partial class GridGenCore
 
     public static GridGeneratorExtension Extension;
 
+    public static string GetBestInList(string name, List<string> list)
+    {
+        string backup = null;
+        int bestLen = 999;
+        name = CleanName(name);
+        foreach (string listVal in list)
+        {
+            string listValClean = CleanName(listVal);
+            if (listValClean == name)
+            {
+                return listVal;
+            }
+            if (listValClean.Contains(name))
+            {
+                if (listValClean.Length < bestLen)
+                {
+                    backup = listVal;
+                    bestLen = listValClean.Length;
+                }
+            }
+        }
+        return backup;
+    }
+
+    public static string ValidateParam(GridMode mode, string val)
+    {
+        if (mode is null)
+        {
+            throw new InvalidDataException("Unknown mode");
+        }
+        switch (mode.Type)
+        {
+            case GridModeType.INTEGER:
+                if (!int.TryParse(val, out int valInt))
+                {
+                    throw new InvalidDataException("Invalid integer value - must be a valid integer (eg '0', '3', '-5', etc)");
+                }
+                return valInt.ToString();
+            case GridModeType.DECIMAL:
+                if (!double.TryParse(val, out double valDouble))
+                {
+                    throw new InvalidDataException("Invalid decimal value - must be a valid decimal (eg '0.0', '3.5', '-5.2', etc)");
+                }
+                return valDouble.ToString();
+            case GridModeType.BOOLEAN:
+                val = val.ToLowerFast();
+                if (val != "true" && val != "false")
+                {
+                    throw new InvalidDataException("Invalid boolean value - must be exactly 'true' or 'false'");
+                }
+                return val;
+            case GridModeType.TEXT:
+                if (mode.GetValues is not null)
+                {
+                    val = GetBestInList(val, mode.GetValues());
+                    if (val is null)
+                    {
+                        throw new InvalidDataException($"Invalid text value - must be one of: `{string.Join("`, `", mode.GetValues())}`");
+                    }
+                }
+                return val;
+        }
+        throw new InvalidDataException("Unknown mode type");
+    }
+
     public static void RegisterMode(GridMode mode)
     {
         GridModes.Add(CleanMode(mode.Name), mode);
@@ -203,7 +268,12 @@ public partial class GridGenCore
                     {
                         continue;
                     }
-                    Values.Add(new AxisValue(grid, this, index.ToString(), $"{id}={val}"));
+                    valStr = ValidateParam(Mode, valStr);
+                    Values.Add(new AxisValue(grid, this, index.ToString(), $"{id}={valStr}"));
+                }
+                catch (InvalidDataException ex)
+                {
+                    throw new InvalidDataException($"value '{val}' errored: {ex.Message}");
                 }
                 catch (Exception ex)
                 {
@@ -588,6 +658,8 @@ public partial class GridGenCore
         }
     }
 
+    // TODO: Clever model logic switching so this doesn't spam-switch
+
     public static void Run(T2IParams baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
         Grid grid = new()
@@ -611,6 +683,10 @@ public partial class GridGenCore
                     Axis newAxis = new();
                     newAxis.BuildFromListStr(id, grid, axis["vals"].ToString());
                     grid.Axes.Add(newAxis);
+                }
+                catch (InvalidDataException ex)
+                {
+                    throw new InvalidDataException($"Invalid axis '{id}': {ex.Message}");
                 }
                 catch (Exception ex)
                 {

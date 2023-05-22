@@ -20,6 +20,8 @@ public interface IDataHolder
     {
         return Helpers.GetOrCreate(t, () => Activator.CreateInstance(typeof(DataHolderHelper<>).MakeGenericType(t)) as DataHolderHelper);
     }
+
+    IDataHolder Clone();
 }
 
 public class DataHolderHelper

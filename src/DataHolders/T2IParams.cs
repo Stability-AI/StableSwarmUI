@@ -1,4 +1,5 @@
-﻿using static StableUI.DataHolders.IDataHolder;
+﻿using StableUI.Text2Image;
+using static StableUI.DataHolders.IDataHolder;
 
 namespace StableUI.DataHolders;
 
@@ -24,10 +25,21 @@ public class T2IParams : IDataHolder
     public int Height = 512;
 
     [NetData(Name = "steps")]
-    public int Steps = 2;
+    public int Steps = 20;
+
+    public T2IModel Model;
+
+    public IDataHolder ExternalData;
 
     public T2IParams Clone()
     {
-        return MemberwiseClone() as T2IParams;
+        T2IParams res = MemberwiseClone() as T2IParams;
+        if (res.ExternalData is not null)
+        {
+            res.ExternalData = res.ExternalData.Clone();
+        }
+        return res;
     }
+
+    IDataHolder IDataHolder.Clone() => Clone();
 }
