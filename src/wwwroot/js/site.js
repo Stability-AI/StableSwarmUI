@@ -147,7 +147,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
     }
     if (small) {
         return `
-        <div class="auto-input auto-number-box" title="${name}: ${description}""${featureid}>
+        <div class="auto-input auto-number-box" title="${name}: ${description}"${featureid}>
             <span class="auto-input-name" onclick="alert('${js}')">${name}</span>
             <input class="auto-number-small" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}">
         </div>`;
@@ -176,5 +176,20 @@ function makeTextInput(featureid, id, name, description, value, rows, placeholde
             <span class="auto-input-name">${name}</span> <span class="auto-input-description">${description}</span>
         </div>
         <textarea class="auto-text" id="${id}" rows="${rows}" placeholder="${escapeHtml(placeholder)}" data-name="${name}">${escapeHtml(value)}</textarea>
+    </div>`;
+}
+
+function makeCheckboxInput(featureid, id, name, description, value) {
+    let js = `${escapeJsString(name)}: ${escapeJsString(description)}`;
+    name = escapeHtml(name);
+    description = escapeHtml(description);
+    if (featureid != null) {
+        featureid = ` data-feature-require="${featureid}"`;
+    }
+    let checked = value ? ' checked="true"' : '';
+    return `
+    <div class="auto-input auto-checkbox-box" title="${name}: ${description}"${featureid}>
+        <span class="auto-input-name" onclick="alert('${js}')">${name}</span>
+        <br><input class="auto-checkbox" type="checkbox" id="${id}""${checked}"> <span class="auto-input-description">${description}</span>
     </div>`;
 }

@@ -152,3 +152,16 @@ body {
 .tool-container .tool-open {
     display: block !important;
 }
+.tool-container {
+    border-radius: 1rem;
+    margin-top: 0.5rem;
+    width: 95%;
+    margin-left: 2.5%;
+    padding: 0.5rem;
+    border: 1px solid var(--light-border);
+}
+.tool-selector {
+    margin-top: 0.5rem;
+    width: 90%;
+    margin-left: 5%;
+}

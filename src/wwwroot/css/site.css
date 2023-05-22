@@ -139,7 +139,7 @@ body {
 .auto-fade-max-contain {
     width: calc(100% - 2px);
 }
-.auto-number-box {
+.auto-number-box, .auto-checkbox-box {
     width: fit-content;
     max-width: 18rem;
 }

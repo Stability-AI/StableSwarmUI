@@ -1,3 +1,27 @@
 .grid-gen-axis-wrapper {
     width: 100%;
+    margin-bottom: 0.5rem;
+}
+.grid-gen-run-button {
+    background-color: orange;
+    font-size: 200%;
+    font-weight: bold;
+    padding: 1rem;
+    border-radius: 1rem;
+}
+.grid-gen-axis-area {
+    border-radius: 1rem;
+    margin-top: 0.5rem;
+    width: 99%;
+    margin-left: 0.5%;
+    padding: 0.5rem;
+    border: 1px solid var(--light-border);
+}
+.grid-gen-axis-input {
+    width: calc(max(60vw, 25rem));
+    vertical-align: top;
+}
+.grid-gen-selector {
+    vertical-align: top;
+    margin-right: 0.5rem;
 }
