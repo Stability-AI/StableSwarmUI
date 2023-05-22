@@ -10,10 +10,41 @@ namespace StableUI.Builtin_GridGeneratorExtension;
 
 public partial class GridGenCore
 {
-    /*
+    #region Local Settings
+    public static string ASSETS_DIR;
+
+    public static string EXTRA_FOOTER;
+
+    public static List<string> EXTRA_ASSETS = new();
+
+    public static Action<SingleGridCall, T2IParams, bool> GridCallApplyHook;
+
+    public static Func<SingleGridCall, string, string, bool> GridCallParamAddHook;
+
+    public static Action<GridRunner> GridRunnerPreRunHook, GridRunnerPreDryHook;
+
+    public static Action<GridRunner, T2IParams, SingleGridCall> GridRunnerPostDryHook;
+
+    public static Action<SingleGridCall> GridCallInitHook;
+    #endregion
+
     public enum GridModeType { TEXT, INTEGER, DECIMAL, BOOLEAN }
 
-    public record class GridMode(string Name, bool Dry, GridModeType Type, Action<string, T2IParams> Apply, Func<string, string> Clean = null, Func<List<string>> GetValues = null, Func<List<string>, List<string>> ParseList = null);
+    public record class GridMode(string Name, bool Dry, GridModeType Type, Action<string, T2IParams> Apply, double Min = 0, double Max = 0, Func<string, string> Clean = null, Func<List<string>> GetValues = null, Func<List<string>, List<string>> ParseList = null)
+    {
+        public JObject ToNet()
+        {
+            return new JObject()
+            {
+                ["name"] = Name,
+                ["dry"] = Dry,
+                ["type"] = Type.ToString().ToLowerFast(),
+                ["min"] = Min,
+                ["max"] = Max,
+                ["values"] = GetValues == null ? null : JToken.FromObject(GetValues())
+            };
+        }
+    }
 
     public static Dictionary<string, GridMode> GridModes = new();
 
@@ -21,7 +52,7 @@ public partial class GridGenCore
 
     public static void RegisterMode(GridMode mode)
     {
-        GridModes.Add(mode.Name, mode);
+        GridModes.Add(CleanMode(mode.Name), mode);
     }
 
     public static string CleanForWeb(string text)
@@ -129,7 +160,7 @@ public partial class GridGenCore
 
         public List<AxisValue> Values = new();
 
-        public string Title, Description;
+        public string Title, Description = "";
 
         public string DefaultID;
 
@@ -139,6 +170,9 @@ public partial class GridGenCore
 
         public void BuildFromListStr(string id, Grid grid, string listStr)
         {
+            RawID = id;
+            ID = CleanID(id);
+            Title = RawID;
             bool isSplitByDoublePipe = listStr.Contains("||");
             List<string> valuesList = listStr.Split(isSplitByDoublePipe ? "||" : ",").ToList();
             ModeName = CleanName(id);
@@ -189,15 +223,19 @@ public partial class GridGenCore
 
         public string Format;
 
-        public T2IParams BaseParams;
+        public Dictionary<string, string> BaseParams = new();
 
         public int MinWidth, MinHeight;
 
         public bool Autoscale, ShowDescriptions, Sticky;
 
-        public string DefaultX, DefaultY, DefaultX2, DefaultY2;
+        public string DefaultX, DefaultY, DefaultX2 = "none", DefaultY2 = "none";
 
         public List<(string, DateTimeOffset)> LastUpdates = new(); // TODO: rework to just use the server instead of this legacy trick (holdover from python version)
+
+        public T2IParams InitialParams;
+
+        public object LocalData;
     }
 
     public class SingleGridCall
@@ -210,17 +248,23 @@ public partial class GridGenCore
 
         public string Data;
 
-        public T2IParams Params;
+        public Dictionary<string, string> Params;
 
-        public SingleGridCall(List<AxisValue> values)
+        public object LocalData;
+
+        public Grid Grid;
+
+        public SingleGridCall(Grid grid, List<AxisValue> values)
         {
+            Grid = grid;
             Values = values;
             Skip = values.Any(v => v.Skip);
+            GridCallInitHook?.Invoke(this);
         }
 
         public void FlattenParams(Grid grid)
         {
-            Params = grid.BaseParams.Clone();
+            Params = new Dictionary<string, string>(grid.BaseParams);
             foreach (AxisValue val in Values)
             {
                 foreach (KeyValuePair<string, string> pair in val.Params)
@@ -243,10 +287,7 @@ public partial class GridGenCore
                     mode.Apply(pair.Value, p);
                 }
             }
-            if (GridCallApplyHook != null)
-            {
-                GridCallApplyHook(this, p, dry);
-            }
+            GridCallApplyHook?.Invoke(this, p, dry);
         }
     }
 
@@ -263,6 +304,8 @@ public partial class GridGenCore
         public bool FastSkip;
 
         public int TotalRun = 0, TotalSkip = 0, TotalSteps = 0;
+
+        public List<SingleGridCall> Sets;
 
         public void UpdateLiveFile(string newFile)
         {
@@ -281,7 +324,7 @@ public partial class GridGenCore
             Axis curAxis = axisList[0];
             if (axisList.Count == 1)
             {
-                return curAxis.Values.Where(v => !v.Skip || !FastSkip).ToList().Select(v => new SingleGridCall(new() { v })).ToList();
+                return curAxis.Values.Where(v => !v.Skip || !FastSkip).Select(v => new SingleGridCall(Grid, new() { v })).ToList();
             }
             List<SingleGridCall> result = new();
             List<Axis> nextAxisList = axisList.GetRange(1, axisList.Count - 1);
@@ -293,7 +336,7 @@ public partial class GridGenCore
                     {
                         List<AxisValue> newList = obj.Values.ToList();
                         newList.Add(val);
-                        result.Add(new SingleGridCall(newList));
+                        result.Add(new SingleGridCall(Grid, newList));
                     }
                 }
             }
@@ -302,11 +345,15 @@ public partial class GridGenCore
 
         public void Preprocess()
         {
-            List<SingleGridCall> valueSets = BuildValueSetList(Grid.Axes.ToList());
-            Logs.Info($"Have {valueSets.Count} unique value sets, will go into {BasePath}");
-            foreach (SingleGridCall set in valueSets)
+            if (!Directory.Exists(BasePath))
             {
-                set.Filepath = BasePath + "/" + string.Join("/", set.Values.Select(v => CleanName(v.Key)));
+                Directory.CreateDirectory(BasePath);
+            }
+            Sets = BuildValueSetList(Grid.Axes.ToList());
+            Logs.Info($"Have {Sets.Count} unique value sets, will go into {BasePath}");
+            foreach (SingleGridCall set in Sets)
+            {
+                set.Filepath = BasePath + "/" + string.Join("/", set.Values.Select(v => CleanName(v.Key)).Reverse());
                 set.Data = string.Join(", ", set.Values.Select(v => $"{v.Axis.Title}={v.Title}"));
                 set.FlattenParams(Grid);
                 set.Skip = set.Skip || !DoOverwrite && File.Exists(set.Filepath + "." + Grid.Format);
@@ -317,21 +364,22 @@ public partial class GridGenCore
                 else
                 {
                     TotalRun++;
-                    TotalSteps += set.Params.Steps;
+                    int steps = Params.Steps;
+                    if (set.Params.TryGetValue("steps", out string stepStr) && int.TryParse(stepStr, out int stepInt))
+                    {
+                        steps = stepInt;
+                    }
+                    TotalSteps += steps;
                 }
             }
             Logs.Info($"Skipped {TotalSkip} files, will run {TotalRun} files, for {TotalSteps} total steps");
         }
 
-        public SingleGridCall Run(bool dry)
+        public void Run(bool dry)
         {
-            if (GridRunnerPreRunHook != null)
-            {
-                GridRunnerPreRunHook(this);
-            }
+            GridRunnerPreRunHook?.Invoke(this);
             int iteration = 0;
-            SingleGridCall last = null;
-            foreach (SingleGridCall set in BuildValueSetList(Grid.Axes.ToList()))
+            foreach (SingleGridCall set in Sets)
             {
                 if (set.Skip)
                 {
@@ -343,10 +391,7 @@ public partial class GridGenCore
                     Logs.Info($"On {iteration}/{TotalRun} ... Set: {set.Data}, file {set.Filepath}");
                 }
                 T2IParams p = Params.Clone();
-                if (GridRunnerPreDryHook != null)
-                {
-                    GridRunnerPreDryHook(this);
-                }
+                GridRunnerPreDryHook?.Invoke(this);
                 set.ApplyTo(p, dry);
                 if (dry)
                 {
@@ -354,7 +399,7 @@ public partial class GridGenCore
                 }
                 try
                 {
-                    last = GridRunnerPostDryHook(this, p, set);
+                    GridRunnerPostDryHook(this, p, set);
                 }
                 catch (FileNotFoundException e)
                 {
@@ -365,8 +410,7 @@ public partial class GridGenCore
                     }
                     throw e;
                 }
-                UpdateLiveFile(set.Filepath + "." + Grid.Format);
-                return last;
+                UpdateLiveFile(set.Filepath + "." + Grid.Format); // TODO: set at correct time (this is incorrect due to threading)
             }
         }
 
@@ -442,7 +486,7 @@ public partial class GridGenCore
 
         public string BuildHtml()
         {
-            string html = File.ReadAllText($"{Extension.FilePath}/Assets/index.html");
+            string html = File.ReadAllText($"{ASSETS_DIR}/page.html");
             string xSelect = "";
             string ySelect = "";
             string x2Select = RadioButtonHtml("x2_axis_selector", "x2_none", "None", "None");
@@ -514,7 +558,8 @@ public partial class GridGenCore
             content += AxisBar("X Super-Axis", x2Select);
             content += AxisBar("Y Super-Axis", y2Select);
             content += "</div></div>\n";
-            html = html.Replace("{TITLE}", Grid.Title).Replace("{CLEAN_DESCRIPTION}", CleanForWeb(Grid.Description ?? "")).Replace("{DESCRIPTION}", Grid.Description ?? "").Replace("{CONTENT}", content).Replace("{ADVANCED_SETTINGS}", advancedSettings).Replace("{AUTHOR}", Grid.Author).Replace("{EXTRA_FOOTER}", EXTRA_FOOTER).Replace("{VERSION}", GetVersion());
+            html = html.Replace("{TITLE}", Grid.Title).Replace("{CLEAN_DESCRIPTION}", CleanForWeb(Grid.Description ?? "")).Replace("{DESCRIPTION}", Grid.Description ?? "")
+                .Replace("{CONTENT}", content).Replace("{ADVANCED_SETTINGS}", advancedSettings).Replace("{AUTHOR}", Grid.Author).Replace("{EXTRA_FOOTER}", EXTRA_FOOTER).Replace("{VERSION}", Utilities.Version);
             return html;
         }
 
@@ -527,9 +572,14 @@ public partial class GridGenCore
                 File.WriteAllText(path + "/last.js", "window.lastUpdated = []");
             }
             File.WriteAllText(path + "/data.js", "rawData = " + json);
-            foreach (string f in new string[] { "bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "styles.css", "placeholder.png" })
+            foreach (string f in EXTRA_ASSETS.Union(new string[] { "bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "styles.css", "placeholder.png" }))
             {
-                File.Copy("Assets/" + f, path + "/" + f);
+                string target = $"{path}/{f}";
+                if (File.Exists(target))
+                {
+                    File.Delete(target);
+                }
+                File.Copy($"{ASSETS_DIR}/{f}", target);
             }
             string html = BuildHtml();
             File.WriteAllText(path + "/index.html", html);
@@ -538,7 +588,7 @@ public partial class GridGenCore
         }
     }
 
-    public static void Run(T2IParams baseParams, JObject axes, string inputFile, string outputFolderBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
+    public static void Run(T2IParams baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
         Grid grid = new()
         {
@@ -547,22 +597,19 @@ public partial class GridGenCore
             Author = "Unspecified",
             Format = "png",
             Axes = new(),
-            BaseParams = baseParams
+            BaseParams = new(),
+            InitialParams = baseParams.Clone(),
+            LocalData = LocalData
         };
-        foreach (JToken axis in axes["axes"])
+        foreach (JToken axis in axes)
         {
-            string id = axis["id"].ToString().ToLowerFast().Trim();
+            string id = axis["mode"].ToString().ToLowerFast().Trim();
             if (id != "")
             {
                 try
                 {
-                    Axis newAxis = new()
-                    {
-                        RawID = id,
-                        ID = id,
-                        ModeName = axis["mode"].ToString(),
-                        Mode = GridModes[axis["mode"].ToString()]
-                    };
+                    Axis newAxis = new();
+                    newAxis.BuildFromListStr(id, grid, axis["vals"].ToString());
                     grid.Axes.Add(newAxis);
                 }
                 catch (Exception ex)
@@ -571,6 +618,8 @@ public partial class GridGenCore
                 }
             }
         }
+        grid.DefaultX = grid.Axes[0].ID;
+        grid.DefaultY = grid.Axes[^1].ID;
         if (outputFolderName.Trim() == "")
         {
             outputFolderName = inputFile.Replace(".yml", "");
@@ -601,5 +650,5 @@ public partial class GridGenCore
             File.WriteAllText(folder + "/data.js", "rawData = " + json);
             File.Delete(folder + "/last.js");
         }
-    }*/
+    }
 }
