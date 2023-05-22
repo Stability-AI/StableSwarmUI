@@ -35,6 +35,18 @@ public class GridGeneratorExtension : Extension
         GridGenCore.RegisterMode(new GridGenCore.GridMode("Width", true, GridGenCore.GridModeType.INTEGER, (s, p) => p.Width = int.Parse(s)));
         GridGenCore.RegisterMode(new GridGenCore.GridMode("Height", true, GridGenCore.GridModeType.INTEGER, (s, p) => p.Height = int.Parse(s)));
         GridGenCore.RegisterMode(new GridGenCore.GridMode("Model", true, GridGenCore.GridModeType.TEXT, (s, p) => p.ExternalData = new T2IExtra() { Model = Program.T2IModels.Models[s] }, GetValues: () => Program.T2IModels.Models.Keys.ToList()));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Model Swap Model", true, GridGenCore.GridModeType.TEXT, (s, p) => p.OtherParams["swap_model_id"] = s, GetValues: () => Program.T2IModels.Models.Keys.ToList()));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Model Swap Step", true, GridGenCore.GridModeType.INTEGER, (s, p) => p.OtherParams["swap_model_step"] = int.Parse(s), Min: 0, Max: 1000));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Size Code", true, GridGenCore.GridModeType.INTEGER, (s, p) => p.OtherParams["size_cond"] = int.Parse(s)));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Aesthetic Scale", true, GridGenCore.GridModeType.DECIMAL, (s, p) => p.OtherParams["a_scale"] = double.Parse(s)));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Aesthetic Uncond Scale", true, GridGenCore.GridModeType.DECIMAL, (s, p) => p.OtherParams["a_uc_scale"] = double.Parse(s)));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Crop Top", true, GridGenCore.GridModeType.DECIMAL, (s, p) => p.OtherParams["crop_top"] = int.Parse(s)));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Crop Left", true, GridGenCore.GridModeType.DECIMAL, (s, p) => p.OtherParams["crop_left"] = int.Parse(s)));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Negative Crop Top", true, GridGenCore.GridModeType.DECIMAL, (s, p) => p.OtherParams["neg_crop_top"] = int.Parse(s)));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Negative Crop Left", true, GridGenCore.GridModeType.DECIMAL, (s, p) => p.OtherParams["neg_crop_left"] = int.Parse(s)));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Enable Alt T5", true, GridGenCore.GridModeType.BOOLEAN, (s, p) => p.OtherParams["enable_alt_t5"] = s == "true"));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Alt T5 Prompt", true, GridGenCore.GridModeType.TEXT, (s, p) => p.OtherParams["alt_t5_prompt"] = s));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Alt T5 Negative Prompt", true, GridGenCore.GridModeType.TEXT, (s, p) => p.OtherParams["alt_t5_negative_prompt"] = s));
         GridGenCore.GridCallInitHook = (call) =>
         {
             call.LocalData = new GridCallData();
@@ -74,6 +86,10 @@ public class GridGeneratorExtension : Extension
                 string val = parts[1].Trim();
                 param.Prompt = param.Prompt.Replace(key, val);
                 param.NegativePrompt = param.NegativePrompt.Replace(key, val);
+                foreach (string paramId in param.OtherParams.Keys.Where(k => k.EndsWith("_prompt") && param.OtherParams[key] is string).ToArray())
+                {
+                    param.OtherParams[paramId] = param.OtherParams[paramId].ToString().Replace(key, val);
+                }
             }
         };
         GridGenCore.GridRunnerPreRunHook = (runner) =>
@@ -90,9 +106,11 @@ public class GridGeneratorExtension : Extension
             {
                 param.Seed = Random.Shared.Next();
             }
-            // TODO: subseed
+            if (param.VarSeed == -1)
+            {
+                param.VarSeed = Random.Shared.Next();
+            }
             StableUIGridData data = runner.Grid.LocalData as StableUIGridData;
-            // TODO: Generate image
             Task[] waitOn = data.GetActive();
             if (waitOn.Length > data.Session.User.Settings.MaxT2ISimultaneous)
             {
@@ -205,6 +223,14 @@ public class GridGeneratorExtension : Extension
 
     public async Task<JObject> GridGenRun(WebSocket socket, Session session, T2IParams baseParams, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, string wanted_model = null)
     {
+        if (baseParams.Seed == -1)
+        {
+            baseParams.Seed = Random.Shared.Next();
+        }
+        if (baseParams.VarSeed == -1)
+        {
+            baseParams.VarSeed = Random.Shared.Next();
+        }
         T2IModel targetModel = null;
         if (wanted_model is not null && !Program.T2IModels.Models.TryGetValue(wanted_model, out targetModel))
         {

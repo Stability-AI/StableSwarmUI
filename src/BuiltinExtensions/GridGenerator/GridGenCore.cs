@@ -87,11 +87,25 @@ public partial class GridGenCore
                 {
                     throw new InvalidDataException("Invalid integer value - must be a valid integer (eg '0', '3', '-5', etc)");
                 }
+                if (mode.Min != 0 || mode.Max != 0)
+                {
+                    if (valInt < mode.Min || valInt > mode.Max)
+                    {
+                        throw new InvalidDataException($"Invalid integer value - must be between {mode.Min} and {mode.Max}");
+                    }
+                }
                 return valInt.ToString();
             case GridModeType.DECIMAL:
                 if (!double.TryParse(val, out double valDouble))
                 {
                     throw new InvalidDataException("Invalid decimal value - must be a valid decimal (eg '0.0', '3.5', '-5.2', etc)");
+                }
+                if (mode.Min != 0 || mode.Max != 0)
+                {
+                    if (valDouble < mode.Min || valDouble > mode.Max)
+                    {
+                        throw new InvalidDataException($"Invalid decimal value - must be between {mode.Min} and {mode.Max}");
+                    }
                 }
                 return valDouble.ToString();
             case GridModeType.BOOLEAN:

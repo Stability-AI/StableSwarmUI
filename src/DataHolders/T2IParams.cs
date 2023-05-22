@@ -27,9 +27,17 @@ public class T2IParams : IDataHolder
     [NetData(Name = "steps")]
     public int Steps = 20;
 
+    [NetData(Name = "var_seed")]
+    public int VarSeed = -1;
+
+    [NetData(Name = "var_seed_strength")]
+    public float VarSeedStrength = 0;
+
     public T2IModel Model;
 
     public IDataHolder ExternalData;
+
+    public Dictionary<string, object> OtherParams = new();
 
     public T2IParams Clone()
     {
@@ -38,6 +46,7 @@ public class T2IParams : IDataHolder
         {
             res.ExternalData = res.ExternalData.Clone();
         }
+        res.OtherParams = new(OtherParams);
         return res;
     }
 

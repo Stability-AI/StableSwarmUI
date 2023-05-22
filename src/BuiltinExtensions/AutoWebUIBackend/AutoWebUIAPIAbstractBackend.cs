@@ -74,7 +74,7 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
 
     public override async Task<Image[]> Generate(T2IParams user_input)
     {
-        JObject result = await SendPost<JObject>("txt2img", new JObject()
+        JObject toSend = new()
         {
             ["prompt"] = user_input.Prompt,
             ["negative_prompt"] = user_input.NegativePrompt,
@@ -82,8 +82,15 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
             ["steps"] = user_input.Steps,
             ["width"] = user_input.Width,
             ["height"] = user_input.Height,
-            ["cfg_scale"] = user_input.CFGScale
-        });
+            ["cfg_scale"] = user_input.CFGScale,
+            ["subseed"] = user_input.VarSeed,
+            ["subseed_strength"] = user_input.VarSeedStrength
+        };
+        foreach (KeyValuePair<string, object> pair in user_input.OtherParams)
+        {
+            toSend[pair.Key] = JToken.FromObject(pair.Value);
+        }
+        JObject result = await SendPost<JObject>("txt2img", toSend);
         // TODO: Error handlers
         return result["images"].Select(i => new Image((string)i)).ToArray();
     }
