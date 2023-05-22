@@ -18,8 +18,6 @@ public static class BasicAPIFeatures
         BackendAPI.Register();
     }
 
-#pragma warning disable CS1998 // "CS1998 Async method lacks 'await' operators and will run synchronously"
-
     /// <summary>API Route to create a new session automatically.</summary>
     public static async Task<JObject> GetNewSession(HttpContext context)
     {

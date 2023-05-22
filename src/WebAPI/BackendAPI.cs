@@ -18,8 +18,6 @@ public class BackendAPI
         API.RegisterAPICall(AddNewBackend);
     }
 
-#pragma warning disable CS1998 // "CS1998 Async method lacks 'await' operators and will run synchronously"
-
     /// <summary>API route to list currently available backend-types.</summary>
     public static async Task<JObject> ListBackendTypes()
     {

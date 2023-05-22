@@ -99,8 +99,13 @@ public class APICallReflectBuilder
                         return null;
                     });
                 }
+                string keyCheck = param.Name;
                 caller.InputMappers.Add((_, _, _, input) =>
                 {
+                    if (input.TryGetValue(keyCheck, out JToken keyVal) && keyVal is JObject subInp)
+                    {
+                        input = subInp;
+                    }
                     IDataHolder holder = Activator.CreateInstance(param.ParameterType) as IDataHolder;
                     foreach (Func<JObject, IDataHolder, string> getter in subAppliers)
                     {

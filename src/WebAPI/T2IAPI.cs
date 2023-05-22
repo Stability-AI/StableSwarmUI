@@ -25,8 +25,6 @@ public static class T2IAPI
         API.RegisterAPICall(SelectModel);
     }
 
-#pragma warning disable CS1998 // "CS1998 Async method lacks 'await' operators and will run synchronously"
-
     /// <summary>API route to generate images with WebSocket updates.</summary>
     public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, Session session, int images, T2IParams user_input)
     {
@@ -109,12 +107,12 @@ public static class T2IAPI
                     Volatile.Write(ref errorOut, new JObject() { ["error"] = "Timeout! All backends are occupied with other tasks." });
                     return;
                 }
-                if (Volatile.Read(ref errorOut) is not null)
-                {
-                    return;
-                }
                 using (backend)
                 {
+                    if (Volatile.Read(ref errorOut) is not null)
+                    {
+                        return;
+                    }
                     T2IParams thisParams = user_input.Clone();
                     thisParams.Seed += index;
                     Image[] outputs = await backend.Backend.Generate(thisParams);

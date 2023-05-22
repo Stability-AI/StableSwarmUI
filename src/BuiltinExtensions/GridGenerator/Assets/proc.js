@@ -38,7 +38,6 @@ function loadData() {
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
-            console.log('find ' + axis + '_' + rawData.defaults[axis]);
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
         }
     }

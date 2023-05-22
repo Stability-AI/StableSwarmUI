@@ -61,6 +61,14 @@ function gotImageResult(image) {
     setCurrentImage(src);
 }
 
+function getGenInput() {
+    let input = {};
+    for (let id of core_inputs) {
+        input[id] = document.getElementById('input_' + id).value;
+    }
+    return input;
+}
+
 function doGenerate() {
     if (session_id == null) {
         if (Date.now() - time_started > 1000 * 60) {
@@ -71,13 +79,9 @@ function doGenerate() {
         }
         return;
     }
-    let input = {};
-    for (let id of core_inputs) {
-        input[id] = document.getElementById('input_' + id).value;
-    }
     document.getElementById('current_image_batch').innerHTML = '';
     batches++;
-    makeWSRequest('GenerateText2ImageWS', input, data => {
+    makeWSRequest('GenerateText2ImageWS', getGenInput(), data => {
         gotImageResult(data.image);
     });
 }
@@ -248,7 +252,10 @@ function registerNewTool(id, name) {
     return div;
 }
 
+let sessionReadyCallbacks = [];
+
 function genpageLoad() {
+    console.log('Load page...');
     genInputs();
     genToolsList();
     reviseStatusBar();
@@ -256,11 +263,15 @@ function genpageLoad() {
     document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
     document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir));
     getSession(() => {
+        console.log('First session loaded - prepping page.');
         loadHistory('');
         loadModelList('');
         loadBackendTypesMenu();
+        for (let callback of sessionReadyCallbacks) {
+            callback();
+        }
     });
     setInterval(genpageLoop, 1000);
 }
 
-genpageLoad();
+setTimeout(genpageLoad, 1);

@@ -92,8 +92,6 @@ public class BackendHandler
 
         public LockObject AccessLock = new();
 
-        public BackendHandler Handler;
-
         public int ID;
 
         public int InitAttempts = 0;
@@ -397,7 +395,7 @@ public record class T2IBackendAccess(BackendHandler.T2IBackendData Data) : IDisp
         {
             IsDisposed = true;
             Data.IsInUse = false;
-            Data.Handler.BackendsAvailableSignal.Set();
+            Backend.Handler.BackendsAvailableSignal.Set();
             GC.SuppressFinalize(this);
         }
     }
