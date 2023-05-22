@@ -46,6 +46,26 @@ public static class Utilities
         await socket.SendAsync(StringConversionHelper.UTF8Encoding.GetBytes(obj.ToString(Formatting.None)), WebSocketMessageType.Text, true, TimedCancel(maxDuration));
     }
 
+    /// <summary>Equivalent to <see cref="Task.WhenAny(IEnumerable{Task})"/> but doesn't break on an empty list.</summary>
+    public static Task WhenAny(IEnumerable<Task> tasks)
+    {
+        if (tasks.IsEmpty())
+        {
+            return Task.CompletedTask;
+        }
+        return Task.WhenAny(tasks);
+    }
+
+    /// <summary>Equivalent to <see cref="Task.WhenAny(Task[])"/> but doesn't break on an empty list.</summary>
+    public static Task WhenAny(params Task[] tasks)
+    {
+        if (tasks.IsEmpty())
+        {
+            return Task.CompletedTask;
+        }
+        return Task.WhenAny(tasks);
+    }
+
     /// <summary>Receive raw binary data from a WebSocket.</summary>
     public static async Task<byte[]> ReceiveData(this WebSocket socket, TimeSpan maxDuration, int maxBytes)
     {
@@ -101,7 +121,7 @@ public static class Utilities
         if (socket != null)
         {
             await socket.SendJson(obj, TimeSpan.FromMinutes(1));
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, Utilities.TimedCancel(TimeSpan.FromMinutes(1)));
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, TimedCancel(TimeSpan.FromMinutes(1)));
             return;
         }
         context.Response.ContentType = "application/json";

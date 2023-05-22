@@ -70,8 +70,13 @@ function gridGen_register() {
             axisData.push({ 'mode': type, 'vals': input });
         }
         data['gridAxes'] = axisData;
-        genericRequest('GridGenRun', data, data => {
-            console.log('Grid complete!');
+        makeWSRequest('GridGenRun', data, data => {
+            if (data.image) {
+                gotImageResult(data.image);
+            }
+            else if (data.success) {
+                outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="Output/${outputFolder.value}/index.html" target="_blank">Output/<code>${outputFolder.value}</code></a>`;
+            }
         });
     });
     gridGen_addAxis();

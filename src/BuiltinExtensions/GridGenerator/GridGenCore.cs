@@ -23,7 +23,7 @@ public partial class GridGenCore
 
     public static Action<GridRunner> GridRunnerPreRunHook, GridRunnerPreDryHook;
 
-    public static Action<GridRunner, T2IParams, SingleGridCall> GridRunnerPostDryHook;
+    public static Func<GridRunner, T2IParams, SingleGridCall, Task> GridRunnerPostDryHook;
 
     public static Action<SingleGridCall> GridCallInitHook;
     #endregion
@@ -303,9 +303,13 @@ public partial class GridGenCore
 
         public List<(string, DateTimeOffset)> LastUpdates = new(); // TODO: rework to just use the server instead of this legacy trick (holdover from python version)
 
+        public LockObject LastUpdatLock = new();
+
         public T2IParams InitialParams;
 
         public object LocalData;
+
+        public GridRunner Runner;
     }
 
     public class SingleGridCall
@@ -314,7 +318,7 @@ public partial class GridGenCore
 
         public bool Skip;
 
-        public string Filepath;
+        public string BaseFilepath;
 
         public string Data;
 
@@ -369,6 +373,8 @@ public partial class GridGenCore
 
         public string BasePath;
 
+        public string URLBase;
+
         public T2IParams Params;
 
         public bool FastSkip;
@@ -379,10 +385,13 @@ public partial class GridGenCore
 
         public void UpdateLiveFile(string newFile)
         {
-            DateTimeOffset tNow = DateTimeOffset.Now;
-            Grid.LastUpdates = Grid.LastUpdates.Where(x => (tNow - x.Item2).TotalSeconds < 20).ToList();
-            Grid.LastUpdates.Add((newFile, tNow));
-            File.WriteAllText(BasePath + "/last.js", $"window.lastUpdated = [\"{string.Join("\", \"", Grid.LastUpdates)}\"]");
+            lock (Grid.LastUpdatLock)
+            {
+                DateTimeOffset tNow = DateTimeOffset.Now;
+                Grid.LastUpdates = Grid.LastUpdates.Where(x => (tNow - x.Item2).TotalSeconds < 20).ToList();
+                Grid.LastUpdates.Add((newFile, tNow));
+                File.WriteAllText(BasePath + "/last.js", $"window.lastUpdated = [\"{string.Join("\", \"", Grid.LastUpdates.Select(p => p.Item1))}\"]");
+            }
         }
 
         public List<SingleGridCall> BuildValueSetList(List<Axis> axisList)
@@ -423,10 +432,10 @@ public partial class GridGenCore
             Logs.Info($"Have {Sets.Count} unique value sets, will go into {BasePath}");
             foreach (SingleGridCall set in Sets)
             {
-                set.Filepath = BasePath + "/" + string.Join("/", set.Values.Select(v => CleanName(v.Key)).Reverse());
+                set.BaseFilepath = string.Join("/", set.Values.Select(v => CleanName(v.Key)).Reverse());
                 set.Data = string.Join(", ", set.Values.Select(v => $"{v.Axis.Title}={v.Title}"));
                 set.FlattenParams(Grid);
-                set.Skip = set.Skip || !DoOverwrite && File.Exists(set.Filepath + "." + Grid.Format);
+                set.Skip = set.Skip || !DoOverwrite && File.Exists($"{BasePath}/{set.BaseFilepath}.{Grid.Format}");
                 if (set.Skip)
                 {
                     TotalSkip++;
@@ -458,7 +467,7 @@ public partial class GridGenCore
                 iteration++;
                 if (!dry)
                 {
-                    Logs.Info($"On {iteration}/{TotalRun} ... Set: {set.Data}, file {set.Filepath}");
+                    Logs.Info($"On {iteration}/{TotalRun} ... Set: {set.Data}, file {set.BaseFilepath}");
                 }
                 T2IParams p = Params.Clone();
                 GridRunnerPreDryHook?.Invoke(this);
@@ -469,7 +478,10 @@ public partial class GridGenCore
                 }
                 try
                 {
-                    GridRunnerPostDryHook(this, p, set);
+                    GridRunnerPostDryHook(this, p, set).ContinueWith(_ =>
+                    {
+                        UpdateLiveFile($"{URLBase}/{set.BaseFilepath}.{Grid.Format}");
+                    });
                 }
                 catch (FileNotFoundException e)
                 {
@@ -480,7 +492,6 @@ public partial class GridGenCore
                     }
                     throw e;
                 }
-                UpdateLiveFile(set.Filepath + "." + Grid.Format); // TODO: set at correct time (this is incorrect due to threading)
             }
         }
 
@@ -660,7 +671,7 @@ public partial class GridGenCore
 
     // TODO: Clever model logic switching so this doesn't spam-switch
 
-    public static void Run(T2IParams baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
+    public static void Run(T2IParams baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
         Grid grid = new()
         {
@@ -706,9 +717,11 @@ public partial class GridGenCore
             Grid = grid,
             DoOverwrite = doOverwrite,
             BasePath = folder,
+            URLBase = urlBase + "/" + outputFolderName,
             Params = baseParams,
             FastSkip = fastSkip
         };
+        grid.Runner = runner;
         runner.Preprocess();
         string json = "";
         if (generatePage)

@@ -1,4 +1,5 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Backends;
@@ -8,6 +9,8 @@ using StableUI.Text2Image;
 using StableUI.Utils;
 using StableUI.WebAPI;
 using System;
+using System.Collections.Concurrent;
+using System.Net.WebSockets;
 
 namespace StableUI.Builtin_GridGeneratorExtension;
 
@@ -90,17 +93,17 @@ public class GridGeneratorExtension : Extension
             // TODO: subseed
             StableUIGridData data = runner.Grid.LocalData as StableUIGridData;
             // TODO: Generate image
-            data.Rendering.RemoveAll(x => x.IsCompleted);
-            if (data.Rendering.Count > data.Session.User.Settings.MaxT2ISimultaneous)
+            Task[] waitOn = data.GetActive();
+            if (waitOn.Length > data.Session.User.Settings.MaxT2ISimultaneous)
             {
-                Task.WaitAny(data.Rendering.ToArray());
+                Task.WaitAny(waitOn);
             }
             if (Volatile.Read(ref data.ErrorOut) is not null)
             {
                 throw new InvalidOperationException("Errored");
             }
             T2IParams thisParams = param.Clone();
-            data.Rendering.Add(Task.Run(async () =>
+            Task t = Task.Run(async () =>
             {
                 T2IBackendAccess backend;
                 try
@@ -131,12 +134,14 @@ public class GridGeneratorExtension : Extension
                     }
                     try
                     {
-                        string dir = set.Filepath.Replace('\\', '/').BeforeLast('/');
+                        string targetPath = $"{set.Grid.Runner.BasePath}/{set.BaseFilepath}.{set.Grid.Format}";
+                        string dir = targetPath.Replace('\\', '/').BeforeLast('/');
                         if (!Directory.Exists(dir))
                         {
                             Directory.CreateDirectory(dir);
                         }
-                        File.WriteAllBytes(set.Filepath + ".png", outputs[0].ImageData);
+                        File.WriteAllBytes(targetPath, outputs[0].ImageData);
+                        data.Generated.Enqueue($"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}");
                     }
                     catch (Exception ex)
                     {
@@ -145,7 +150,12 @@ public class GridGeneratorExtension : Extension
                         return;
                     }
                 }
-            }));
+            });
+            lock (data.UpdateLock)
+            {
+                data.Rendering.Add(t);
+            }
+            return t;
         };
     }
 
@@ -168,9 +178,21 @@ public class GridGeneratorExtension : Extension
     {
         public List<Task> Rendering = new();
 
+        public LockObject UpdateLock = new();
+
+        public ConcurrentQueue<string> Generated = new();
+
         public Session Session;
 
         public JObject ErrorOut;
+
+        public Task[] GetActive()
+        {
+            lock (UpdateLock)
+            {
+                return Rendering.Where(x => !x.IsCompleted).ToArray();
+            }
+        }
     }
 
     public async Task<JObject> GridGenListModes()
@@ -181,44 +203,70 @@ public class GridGeneratorExtension : Extension
         };
     }
 
-    // TODO: WebSocket mode probably
-    public async Task<JObject> GridGenRun(Session session, T2IParams baseParams, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, string wanted_model = null)
+    public async Task<JObject> GridGenRun(WebSocket socket, Session session, T2IParams baseParams, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, string wanted_model = null)
     {
         T2IModel targetModel = null;
         if (wanted_model is not null && !Program.T2IModels.Models.TryGetValue(wanted_model, out targetModel))
         {
-            return new JObject() { ["error"] = "Invalid model name" };
+            await socket.SendJson(new JObject() { ["error"] = "Invalid model name" }, TimeSpan.FromMinutes(1));
+            return null;
         }
         baseParams.ExternalData = new T2IExtra() {  Model = targetModel };
+        outputFolderName = Utilities.FilePathForbidden.TrimToNonMatches(outputFolderName);
+        if (outputFolderName.Contains('.'))
+        {
+            await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot contain dots." }, TimeSpan.FromMinutes(1));
+            return null;
+        }
         if (outputFolderName.Trim() == "")
         {
-            return new JObject() { ["error"] = "Output folder name cannot be empty." };
+            await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot be empty." }, TimeSpan.FromMinutes(1));
+            return null;
         }
         StableUIGridData data = new() { Session = session };
         try
         {
-            GridGenCore.Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun);
-            await Task.WhenAll(data.Rendering);
+            Task mainRun = Task.Run(() => GridGenCore.Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, "Output", outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun));
+            while (!mainRun.IsCompleted || data.GetActive().Any())
+            {
+                await Utilities.WhenAny(Utilities.WhenAny(data.GetActive()), Task.Delay(TimeSpan.FromSeconds(2)));
+                Program.GlobalProgramCancel.ThrowIfCancellationRequested();
+                while (data.Generated.TryDequeue(out string nextImage))
+                {
+                    await socket.SendJson(new JObject() { ["image"] = nextImage }, TimeSpan.FromMinutes(1));
+                }
+            }
         }
         catch (InvalidDataException ex)
         {
-            return new JObject() { ["error"] = $"Failed due to error: {ex.Message}" };
+            await socket.SendJson(new JObject() { ["error"] = $"Failed due to error: {ex.Message}" }, TimeSpan.FromMinutes(1));
+            return null;
         }
         catch (Exception ex)
         {
             JObject err2 = Volatile.Read(ref data.ErrorOut);
             if (err2 is not null)
             {
-                return err2;
+                await socket.SendJson(new JObject() { ["error"] = err2 }, TimeSpan.FromMinutes(1));
+                return null;
             }
             Logs.Error($"GridGen failed: {ex}");
-            return new JObject() { ["error"] = "Failed due to internal error." };
+            await socket.SendJson(new JObject() { ["error"] = "Failed due to internal error." }, TimeSpan.FromMinutes(1));
+            return null;
         }
         JObject err = Volatile.Read(ref data.ErrorOut);
         if (err is not null)
         {
-            return err;
+            await socket.SendJson(new JObject() { ["error"] = err }, TimeSpan.FromMinutes(1));
+            return null;
         }
-        return new JObject() { ["success"] = true };
+        while (data.Generated.TryDequeue(out string nextImage))
+        {
+            await socket.SendJson(new JObject() { ["image"] = nextImage }, TimeSpan.FromMinutes(1));
+        }
+        Logs.Info("Grid Generator completed successfully");
+        File.Delete($"{session.User.OutputDirectory}/{outputFolderName}/last.js");
+        await socket.SendJson(new JObject() { ["success"] = "complete" }, TimeSpan.FromMinutes(1));
+        return null;
     }
 }
