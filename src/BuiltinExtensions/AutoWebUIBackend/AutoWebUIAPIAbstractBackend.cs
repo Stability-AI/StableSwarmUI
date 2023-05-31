@@ -54,6 +54,7 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
                     CurrentModelName = model.Name;
                 }
             }
+            HttpClient.Timeout = TimeSpan.FromMinutes(10);
             Status = BackendStatus.RUNNING;
         }
         catch (Exception)
@@ -95,37 +96,14 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
         return result["images"].Select(i => new Image((string)i)).ToArray();
     }
 
-    public static StringContent JSONContent(JObject jobj)
-    {
-        return new StringContent(jobj.ToString(Formatting.None), StringConversionHelper.UTF8Encoding, "application/json");
-    }
-
-    public static async Task<JType> Parse<JType>(HttpResponseMessage message) where JType : class
-    {
-        string content = await message.Content.ReadAsStringAsync();
-        if (typeof(JType) == typeof(JObject)) // TODO: Surely C# has syntax for this?
-        {
-            return JObject.Parse(content) as JType;
-        }
-        else if (typeof(JType) == typeof(JArray))
-        {
-            return JArray.Parse(content) as JType;
-        }
-        else if (typeof(JType) == typeof(string))
-        {
-            return content as JType;
-        }
-        throw new NotImplementedException();
-    }
-
     public async Task<JType> SendGet<JType>(string url) where JType : class
     {
-        return await Parse<JType>(await HttpClient.GetAsync($"{Address}/sdapi/v1/{url}"));
+        return await NetworkBackendUtils.Parse<JType>(await HttpClient.GetAsync($"{Address}/sdapi/v1/{url}"));
     }
 
     public async Task<JType> SendPost<JType>(string url, JObject payload) where JType : class
     {
-        return await Parse<JType>(await HttpClient.PostAsync($"{Address}/sdapi/v1/{url}", JSONContent(payload)));
+        return await NetworkBackendUtils.Parse<JType>(await HttpClient.PostAsync($"{Address}/sdapi/v1/{url}", Utilities.JSONContent(payload)));
     }
 
     public async Task<string> QueryLoadedModel()

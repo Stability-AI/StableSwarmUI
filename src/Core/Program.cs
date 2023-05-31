@@ -121,7 +121,7 @@ public class Program
     public static void PrepExtensions()
     {
         string[] builtins = Directory.EnumerateDirectories("./src/BuiltinExtensions").Select(s => s.Replace('\\', '/').AfterLast("/src/")).ToArray();
-        string[] extras = File.Exists("./src/Extensions") ? Directory.EnumerateDirectories("src/Extensions/").Select(s => s.Replace('\\', '/').AfterLast("/src/")).ToArray() : Array.Empty<string>();
+        string[] extras = Directory.Exists("./src/Extensions") ? Directory.EnumerateDirectories("./src/Extensions/").Select(s => s.Replace('\\', '/').AfterLast("/src/")).ToArray() : Array.Empty<string>();
         foreach (Type extType in AppDomain.CurrentDomain.GetAssemblies().ToList().SelectMany(x => x.GetTypes()).Where(t => typeof(Extension).IsAssignableFrom(t) && !t.IsAbstract))
         {
             try
@@ -144,7 +144,7 @@ public class Program
                 }
                 if (extension.FilePath is null)
                 {
-                    Logs.Error($"Could not determine path for extension {extType.Name} - is the classname mismatched from the filename?");
+                    Logs.Error($"Could not determine path for extension {extType.Name} - is the classname mismatched from the filename? Searched in {string.Join(", ", possible)} for '{extType.Name}.cs'");
                 }
             }
             catch (Exception ex)

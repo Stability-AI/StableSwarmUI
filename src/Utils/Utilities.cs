@@ -135,6 +135,11 @@ public static class Utilities
         return new JObject() { ["error"] = message, ["error_id"] = error_id };
     }
 
+    public static StringContent JSONContent(JObject jobj)
+    {
+        return new StringContent(jobj.ToString(Formatting.None), StringConversionHelper.UTF8Encoding, "application/json");
+    }
+
     /// <summary>A mapping of common file extensions to their content type.</summary>
     public static Dictionary<string, string> CommonContentTypes = new()
         {
@@ -168,6 +173,19 @@ public static class Utilities
     {
         string extension = path.AfterLast('.');
         return CommonContentTypes.GetValueOrDefault(extension, "application/octet-stream");
+    }
+
+    public static Dictionary<string, T> ApplyMap<T>(Dictionary<string, T> orig, Dictionary<string, string> map)
+    {
+        Dictionary<string, T> result = new(orig);
+        foreach ((string mapFrom, string mapTo) in map)
+        {
+            if (result.Remove(mapFrom, out T value))
+            {
+                result[mapTo] = value;
+            }
+        }
+        return result;
     }
 
     /// <summary>Kill system process..</summary>

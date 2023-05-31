@@ -31,36 +31,6 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
 
     public override string Address => $"http://localhost:{Port}";
 
-    private bool IsValidStartPath(string path, string ext)
-    {
-        if (path.Length < 5)
-        {
-            return false;
-        }
-        if (ext != "sh" && ext != "bat")
-        {
-            Logs.Error($"Refusing init of {HandlerTypeData.Name} with non-script target. Please verify your start script location.");
-            return false;
-        }
-        if (path.AfterLast('/').BeforeLast('.') == "webui-user")
-        {
-            Logs.Error($"Refusing init of {HandlerTypeData.Name} with 'web-ui' target script. Please use the 'webui' script instead.");
-            return false;
-        }
-        string subPath = path[1] == ':' ? path[2..] : path;
-        if (Utilities.FilePathForbidden.ContainsAnyMatch(subPath))
-        {
-            Logs.Error($"Failed init of {HandlerTypeData.Name} with script target '{path}' because that file path contains invalid characters ( {Utilities.FilePathForbidden.TrimToMatches(subPath)} ). Please verify your start script location.");
-            return false;
-        }
-        if (!File.Exists(path))
-        {
-            Logs.Error($"Failed init of {HandlerTypeData.Name} with script target '{path}' because that file does not exist. Please verify your start script location.");
-            return false;
-        }
-        return true;
-    }
-
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     public override async Task Init()
     {
@@ -71,7 +41,7 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
         }
         string path = Settings.StartScript.Replace('\\', '/');
         string ext = path.AfterLast('.');
-        if (!IsValidStartPath(path, ext))
+        if (!NetworkBackendUtils.IsValidStartPath(HandlerTypeData.Name, path, ext))
         {
             Status = BackendStatus.ERRORED;
             return;
@@ -79,13 +49,14 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
         Port = NextPort++;
         ProcessStartInfo start = new()
         {
-            FileName = ext == "bat" ? "./launchtools/auto-webui.bat" : "./launchtools/auto-webui.sh",
+            FileName = ext == "bat" ? "./launchtools/generic-launcher.bat" : "./launchtools/generic-launcher.sh",
             RedirectStandardOutput = true,
         };
         start.ArgumentList.Add($"{Settings.GPU_ID}");
         start.ArgumentList.Add(Path.GetDirectoryName(path));
         start.ArgumentList.Add(path);
-        start.ArgumentList.Add($"{Settings.ExtraArgs} --api --port {Port}");
+        string addedArgs = $"--api --port {Port}";
+        start.ArgumentList.Add(string.IsNullOrWhiteSpace(Settings.ExtraArgs) ? addedArgs : $"{Settings.ExtraArgs} {addedArgs}");
         Status = BackendStatus.LOADING;
         RunningProcess = new() { StartInfo = start };
         RunningProcess.Start();
