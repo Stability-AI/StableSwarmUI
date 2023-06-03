@@ -291,7 +291,11 @@ public class GridGeneratorExtension : Extension
             await socket.SendJson(new JObject() { ["image"] = nextImage }, TimeSpan.FromMinutes(1));
         }
         Logs.Info("Grid Generator completed successfully");
-        File.Delete($"{session.User.OutputDirectory}/{outputFolderName}/last.js");
+        string lastJsFile = $"{session.User.OutputDirectory}/{outputFolderName}/last.js";
+        if (File.Exists(lastJsFile))
+        {
+            File.Delete(lastJsFile);
+        }
         await socket.SendJson(new JObject() { ["success"] = "complete" }, TimeSpan.FromMinutes(1));
         return null;
     }
