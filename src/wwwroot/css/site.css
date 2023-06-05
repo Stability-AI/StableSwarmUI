@@ -57,6 +57,13 @@ body {
 .backends_list {
     margin: 0.5rem;
 }
+.tab-hundred {
+    height: 100%;
+}
+.tab-pane-vw {
+    height: 100%;
+    overflow: scroll;
+}
 .backend-card {
     max-width: 55rem;
     border-radius: 0.5rem;
