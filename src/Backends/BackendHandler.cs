@@ -220,6 +220,7 @@ public class BackendHandler
             {
                 try
                 {
+                    Logs.Init($"Initializing backend {data.Backend.HandlerTypeData.Name} #{data.ID}...");
                     data.InitAttempts++;
                     data.Backend.Init().Wait();
                     any = true;
