@@ -7,6 +7,7 @@ let hasLoadedBackends = false;
 
 function addNewBackend(type_id) {
     genericRequest('AddNewBackend', {'type_id': type_id}, data => {
+        backends_loaded[data.id] = data;
         addBackendToHtml(data, false);
     });
 }

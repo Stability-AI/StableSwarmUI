@@ -203,6 +203,7 @@ public class BackendHandler
                 Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend,
                 ID = int.Parse(idstr)
             };
+            LastBackendID = Math.Max(LastBackendID, data.ID + 1);
             data.Backend.InternalSettingsAccess = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
             data.Backend.InternalSettingsAccess.Load(section.GetSection("settings"));
             data.Backend.HandlerTypeData = type;
