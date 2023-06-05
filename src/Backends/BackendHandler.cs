@@ -443,7 +443,7 @@ public class BackendHandler
                     }
                     if (requestPressure is null && model is not null)
                     {
-                        requestPressure = ModelRequests.GetOrCreate(model.Name, () => new());
+                        requestPressure = ModelRequests.GetOrCreate(model.Name, () => new() { Model = model });
                         requestPressure.Count++;
                     }
                     long timeRel = Environment.TickCount64;
