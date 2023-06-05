@@ -23,6 +23,7 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
     public AutoWebUIAPIAbstractBackend()
     {
         HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"StableUI/{Utilities.Version}");
+        HttpClient.Timeout = TimeSpan.FromMinutes(10);
     }
 
     public async Task InitInternal(bool ignoreWebError)
@@ -54,7 +55,6 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
                     CurrentModelName = model.Name;
                 }
             }
-            HttpClient.Timeout = TimeSpan.FromMinutes(10);
             Status = BackendStatus.RUNNING;
         }
         catch (Exception)
