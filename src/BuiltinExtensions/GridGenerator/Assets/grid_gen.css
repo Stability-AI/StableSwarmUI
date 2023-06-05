@@ -20,8 +20,23 @@
 .grid-gen-axis-input {
     width: calc(max(60vw, 25rem));
     vertical-align: top;
+    display: inline-block;
+    border: 1px solid var(--light-border);
+    background-color: var(--background-soft);
+    white-space: pre-wrap;
+}
+.grid-gen-axis-input-separator {
+    font-weight: bold;
+    color: #ffff55;
+    background-color: color-mix(in srgb, var(--light-border) 20%, var(--background-soft));
 }
 .grid-gen-selector {
     vertical-align: top;
     margin-right: 0.5rem;
+}
+.grid-gen-axis-fill-button {
+    margin-left: 0.5rem;
+    background-color: orange;
+    border-radius: 0.2rem;
+    font-weight: bold;
 }

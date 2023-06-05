@@ -30,7 +30,8 @@ public partial class GridGenCore
 
     public enum GridModeType { TEXT, INTEGER, DECIMAL, BOOLEAN }
 
-    public record class GridMode(string Name, bool Dry, GridModeType Type, Action<string, T2IParams> Apply, double Min = 0, double Max = 0, Func<string, string> Clean = null, Func<List<string>> GetValues = null, Func<List<string>, List<string>> ParseList = null)
+    public record class GridMode(string Name, bool Dry, GridModeType Type, Action<string, T2IParams> Apply, double Min = 0, double Max = 0,
+        Func<string, string> Clean = null, Func<List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null)
     {
         public JObject ToNet()
         {
@@ -41,7 +42,8 @@ public partial class GridGenCore
                 ["type"] = Type.ToString().ToLowerFast(),
                 ["min"] = Min,
                 ["max"] = Max,
-                ["values"] = GetValues == null ? null : JToken.FromObject(GetValues())
+                ["values"] = GetValues == null ? null : JToken.FromObject(GetValues()),
+                ["examples"] = Examples == null ? null : JToken.FromObject(Examples)
             };
         }
     }

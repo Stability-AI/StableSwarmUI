@@ -100,3 +100,83 @@ function potToLinear(val, max, min, step) {
     let normIncr = (norm - discardIncr) / (increments - discardIncr);
     return Math.round(normIncr * max);
 }
+
+function getTextNodesIn(node) {
+    var textNodes = [];
+    if (node.nodeType == 3) {
+        textNodes.push(node);
+    }
+    else {
+        for (let child of node.childNodes) {
+            textNodes.push.apply(textNodes, getTextNodesIn(child));
+        }
+    }
+    return textNodes;
+}
+
+function setSelectionRange(el, start, end) {
+    let range = document.createRange();
+    range.selectNodeContents(el);
+    let textNodes = getTextNodesIn(el);
+    let foundStart = false;
+    let charCount = 0
+    let endCharCount;
+    for (let textNode of textNodes) {
+        endCharCount = charCount + textNode.length;
+        if (!foundStart && start >= charCount && start <= endCharCount) {
+            range.setStart(textNode, start - charCount);
+            foundStart = true;
+        }
+        if (foundStart && end <= endCharCount) {
+            range.setEnd(textNode, end - charCount);
+            break;
+        }
+        charCount = endCharCount;
+    }
+    let sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+
+function isChildOf(node, parentId) {
+    while (node != null) {
+        if (node.id == parentId) {
+            return true;
+        }
+        node = node.parentNode;
+    }
+    return false;
+}
+
+function getCurrentCursorPosition(parentId) {
+    let selection = window.getSelection();
+    let charCount = -1;
+    let node;
+    if (selection.focusNode && isChildOf(selection.focusNode, parentId)) {
+        node = selection.focusNode;
+        charCount = selection.focusOffset;
+        if (node.id == parentId) {
+            let i = 0;
+            let altCount = 0;
+            for (let child of node.childNodes) {
+                if (i++ < charCount) {
+                    altCount += child.textContent.length;
+                }
+            }
+            return altCount;
+        }
+        while (node) {
+            if (node.id == parentId) {
+                break;
+            }
+            else if (node.previousSibling) {
+                node = node.previousSibling;
+                charCount += node.textContent.length;
+            }
+            else {
+                node = node.parentNode;
+            }
+        }
+    }
+    return charCount;
+}

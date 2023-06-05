@@ -15,17 +15,79 @@ function gridGen_addAxis() {
     for (let option of gridGen_modes) {
         axisTypeSelector.add(new Option(option.name, option.name));
     }
-    let inputBox = document.createElement('textarea');
+    let inputBox = document.createElement('div');
     inputBox.className = 'grid-gen-axis-input';
-    inputBox.rows = 1;
     inputBox.id = `grid-gen-axis-input-${id}`;
+    //let lastSelection = 0;
+    let updateInput = () => {
+        let lastSelection = getCurrentCursorPosition(inputBox.id);
+        let text = inputBox.innerText;
+        let separator = text.includes('||') ? '||' : ',';
+        let parts = text.split(separator);
+        let html = '';
+        for (let i in parts) {
+            html += parts[i] + (i == parts.length - 1 ? '' : `<span class="grid-gen-axis-input-separator">${separator}</span>`);
+        }
+        inputBox.innerHTML = html;
+        if (lastSelection != -1) {
+            setSelectionRange(inputBox, lastSelection, lastSelection);
+        }
+        lastSelection = -1;
+    };
+    inputBox.addEventListener('input', updateInput);
+    inputBox.contentEditable = true;
+    let fillButton = document.createElement('button');
+    fillButton.style.visibility = 'hidden';
+    fillButton.innerText = 'Fill';
+    fillButton.className = 'grid-gen-axis-fill-button';
+    fillButton.title = 'Fill with available values';
+    fillButton.addEventListener('click', () => {
+        let toFill = fillButton.dataset.values;
+        let text = inputBox.innerText.trim();
+        if (!toFill.includes(',') && !text.includes('||')) {
+            toFill = toFill.replaceAll(' || ', ', ');
+        }
+        if (text == '') {
+            inputBox.innerText = toFill;
+        }
+        else if (text.includes(',') && toFill.includes('||')) {
+            inputBox.innerText = text.replaceAll(',', ' ||') + ' || ' + toFill;
+        }
+        else {
+            inputBox.innerText = text + (toFill.includes('||') ? ' || ' : ', ') + toFill;
+        }
+        updateInput();
+    });
     axisTypeSelector.addEventListener('change', () => {
+        let mode = gridGen_modes.find(e => e.name == axisTypeSelector.value);
+        if (mode && mode.values) {
+            fillButton.innerText = 'Fill';
+            fillButton.style.visibility = 'visible';
+            fillButton.dataset.values = mode.values.join(' || ');
+            fillButton.title = 'Fill with available values';
+        }
+        else if (mode && mode.type == 'boolean') {
+            fillButton.innerText = 'Fill';
+            fillButton.style.visibility = 'visible';
+            fillButton.dataset.values = 'true || false';
+            fillButton.title = 'Fill with "true" and "false"';
+        }
+        else if (mode && mode.examples) {
+            fillButton.innerText = 'Examples';
+            fillButton.style.visibility = 'visible';
+            fillButton.dataset.values = mode.examples.join(' || ');
+            fillButton.title = 'Fill with example values';
+        }
+        else {
+            fillButton.style.visibility = 'hidden';
+        }
         if (Array.from(gridGen_axisDiv.getElementsByClassName('grid-gen-selector')).filter(e => e.value == '').length == 0) {
             gridGen_addAxis();
         }
     });
     wrapper.appendChild(axisTypeSelector);
     wrapper.appendChild(inputBox);
+    wrapper.appendChild(fillButton);
     gridGen_axisDiv.appendChild(wrapper);
 }
 
@@ -66,7 +128,7 @@ function gridGen_register() {
         let axisData = [];
         for (let axis of gridGen_axisDiv.getElementsByClassName('grid-gen-axis-wrapper')) {
             let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
-            let input = axis.getElementsByClassName('grid-gen-axis-input')[0].value;
+            let input = axis.getElementsByClassName('grid-gen-axis-input')[0].innerText;
             axisData.push({ 'mode': type, 'vals': input });
         }
         data['gridAxes'] = axisData;
