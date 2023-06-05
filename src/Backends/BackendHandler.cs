@@ -363,6 +363,9 @@ public class BackendHandler
         /// <summary>How many requests are waiting.</summary>
         public int Count;
 
+        /// <summary>Whether something is currently loading for this request.</summary>
+        public bool IsLoading;
+
         /// <summary>Gets a loose heuristic for model order preference - sort by earliest requester, but higher count of requests is worth 10 seconds.</summary>
         public long Heuristic(long timeRel) => Count * 10 + ((timeRel - TimeFirstRequest) / 1000); // TODO: 10 -> ?
     }
@@ -447,25 +450,31 @@ public class BackendHandler
                         requestPressure.Count++;
                     }
                     long timeRel = Environment.TickCount64;
-                    T2IBackendData availableBackend = available.FirstOrDefault();
-                    if (availableBackend is not null)
+                    if (available.Any())
                     {
-                        ModelRequestPressure highestPressure = ModelRequests.Values.OrderByDescending(p => p.Heuristic(timeRel)).FirstOrDefault();
+                        T2IBackendData availableBackend = available.MinBy(a => a.TimeLastRelease);
+                        ModelRequestPressure highestPressure = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).FirstOrDefault();
                         if (highestPressure is not null)
                         {
                             long timeWait = timeRel - availableBackend.TimeLastRelease;
                             if (possible.Count == 1 || timeWait > 1500)
                             {
                                 Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} will load a model: {highestPressure.Model.Name}, with {highestPressure.Count} requests waiting for {timeWait / 1000} seconds");
+                                highestPressure.IsLoading = true;
                                 T2IBackendAccess access = new(availableBackend);
                                 Task.Factory.StartNew(() =>
                                 {
                                     try
                                     {
                                         availableBackend.Backend.LoadModel(highestPressure.Model).Wait();
+                                        Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} loaded model, returning to pool");
                                     }
                                     finally
                                     {
+                                        lock (CentralLock)
+                                        {
+                                            highestPressure.IsLoading = false;
+                                        }
                                         access.Dispose();
                                     }
                                 });
