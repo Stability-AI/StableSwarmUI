@@ -455,6 +455,9 @@ function crunchMetadata(parts) {
         return {};
     }
     var initialData = structuredClone(rawData.metadata);
+    if (!initialData) {
+        return {};
+    }
     for (var index = 0; index < parts.length; index++) {
         var part = parts[index];
         var axis = rawData.axes[index];
