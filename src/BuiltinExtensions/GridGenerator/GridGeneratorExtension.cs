@@ -128,7 +128,7 @@ public class GridGeneratorExtension : Extension
                     T2IExtra extra = thisParams.ExternalData as T2IExtra;
                     string backType = extra.BackendTypeMatcher?.ToLowerFast();
                     Func<BackendHandler.T2IBackendData, bool> filter = backType is null ? null : (d) => d.Backend.HandlerTypeData.ID.ToLowerFast() == backType;
-                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), extra.Model, filter); // TODO: Max timespan configurable
+                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(10), extra.Model, filter); // TODO: Max timespan configurable
                 }
                 catch (InvalidOperationException ex)
                 {
