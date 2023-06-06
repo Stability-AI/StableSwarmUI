@@ -32,7 +32,8 @@ public class GridGeneratorExtension : Extension
         GridGenCore.RegisterMode(new GridGenCore.GridMode("CFG Scale", true, GridGenCore.GridModeType.DECIMAL, (s, p) => p.CFGScale = float.Parse(s), Examples: new[] { "5", "6", "7", "8", "9" }));
         GridGenCore.RegisterMode(new GridGenCore.GridMode("Width", true, GridGenCore.GridModeType.INTEGER, (s, p) => p.Width = int.Parse(s), Examples: new[] { "512", "768", "1024" }));
         GridGenCore.RegisterMode(new GridGenCore.GridMode("Height", true, GridGenCore.GridModeType.INTEGER, (s, p) => p.Height = int.Parse(s), Examples: new[] { "512", "768", "1024" }));
-        GridGenCore.RegisterMode(new GridGenCore.GridMode("Model", true, GridGenCore.GridModeType.TEXT, (s, p) => p.ExternalData = new T2IExtra() { Model = Program.T2IModels.Models[s] }, GetValues: () => Program.T2IModels.Models.Keys.ToList()));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("Model", true, GridGenCore.GridModeType.TEXT, (s, p) => (p.ExternalData as T2IExtra).Model = Program.T2IModels.Models[s], GetValues: () => Program.T2IModels.Models.Keys.ToList()));
+        GridGenCore.RegisterMode(new GridGenCore.GridMode("[Internal] Backend Type", true, GridGenCore.GridModeType.TEXT, (s, p) => (p.ExternalData as T2IExtra).BackendTypeMatcher = s, GetValues: () => Program.Backends.BackendTypes.Keys.ToList()));
         GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Model Swap Model", true, GridGenCore.GridModeType.TEXT, (s, p) => p.OtherParams["swap_model_id"] = s, GetValues: () => Program.T2IModels.Models.Keys.ToList()));
         GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Model Swap Step", true, GridGenCore.GridModeType.INTEGER, (s, p) => p.OtherParams["swap_model_step"] = int.Parse(s), Min: 0, Max: 1000));
         GridGenCore.RegisterMode(new GridGenCore.GridMode("[Experimental] Size Code", true, GridGenCore.GridModeType.INTEGER, (s, p) => p.OtherParams["size_cond"] = int.Parse(s)));
@@ -124,7 +125,10 @@ public class GridGeneratorExtension : Extension
                 T2IBackendAccess backend;
                 try
                 {
-                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), (thisParams.ExternalData as T2IExtra).Model); // TODO: Max timespan configurable
+                    T2IExtra extra = thisParams.ExternalData as T2IExtra;
+                    string backType = extra.BackendTypeMatcher?.ToLowerFast();
+                    Func<BackendHandler.T2IBackendData, bool> filter = backType is null ? null : (d) => d.Backend.HandlerTypeData.ID.ToLowerFast() == backType;
+                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), extra.Model, filter); // TODO: Max timespan configurable
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -191,6 +195,8 @@ public class GridGeneratorExtension : Extension
     {
         public T2IModel Model;
 
+        public string BackendTypeMatcher;
+
         public IDataHolder Clone()
         {
             return MemberwiseClone() as T2IExtra;
@@ -242,7 +248,7 @@ public class GridGeneratorExtension : Extension
             await socket.SendJson(new JObject() { ["error"] = "Invalid model name" }, TimeSpan.FromMinutes(1));
             return null;
         }
-        baseParams.ExternalData = new T2IExtra() {  Model = targetModel };
+        baseParams.ExternalData = new T2IExtra() { Model = targetModel };
         outputFolderName = Utilities.FilePathForbidden.TrimToNonMatches(outputFolderName);
         if (outputFolderName.Contains('.'))
         {

@@ -381,9 +381,10 @@ public class BackendHandler
     /// <returns>A 'using'-compatible wrapper for a backend.</returns>
     /// <param name="maxWait">Maximum duration to wait for. If time runs out, throws <see cref="TimeoutException"/>.</param>
     /// <param name="model">The model to use, or null for any. Specifying a model directly will prefer a backend with that model loaded, or cause a backend to load it if not available.</param>
+    /// <param name="filter">Optional genericfilter for backend acceptance.</param>
     /// <exception cref="TimeoutException">Thrown if <paramref name="maxWait"/> is reached.</exception>
     /// <exception cref="InvalidOperationException">Thrown if no backends are available.</exception>
-    public T2IBackendAccess GetNextT2IBackend(TimeSpan maxWait, T2IModel model = null)
+    public T2IBackendAccess GetNextT2IBackend(TimeSpan maxWait, T2IModel model = null, Func<T2IBackendData, bool> filter = null)
     {
         long requestId = Interlocked.Increment(ref BackendRequestsCounter);
         Logs.Debug($"[BackendHandler] Backend request #{requestId} for model {model?.Name ?? "any"}, maxWait={maxWait}.");
@@ -426,7 +427,7 @@ public class BackendHandler
                         ReleasePressure();
                         throw new InvalidOperationException("No backends available!");
                     }
-                    List<T2IBackendData> available = possible.Where(b => !b.IsInUse).ToList();
+                    List<T2IBackendData> available = possible.Where(b => !b.IsInUse && (filter is null || filter(b))).ToList();
                     T2IBackendData firstAvail = available.FirstOrDefault();
                     if (model is null && firstAvail is not null)
                     {
