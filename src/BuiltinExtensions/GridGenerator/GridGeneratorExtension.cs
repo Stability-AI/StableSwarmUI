@@ -138,35 +138,36 @@ public class GridGeneratorExtension : Extension
                     Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = "Timeout! All backends are occupied with other tasks." });
                     return;
                 }
+                Image[] outputs;
                 using (backend)
                 {
                     if (Volatile.Read(ref data.ErrorOut) is not null)
                     {
                         return;
                     }
-                    Image[] outputs = await backend.Backend.Generate(thisParams);
-                    if (outputs.Length != 1)
+                    outputs = await backend.Backend.Generate(thisParams);
+                }
+                if (outputs.Length != 1)
+                {
+                    Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = $"Server generated {outputs.Length} images when only expecting 1." });
+                    return;
+                }
+                try
+                {
+                    string targetPath = $"{set.Grid.Runner.BasePath}/{set.BaseFilepath}.{set.Grid.Format}";
+                    string dir = targetPath.Replace('\\', '/').BeforeLast('/');
+                    if (!Directory.Exists(dir))
                     {
-                        Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = $"Server generated {outputs.Length} images when only expecting 1." });
-                        return;
+                        Directory.CreateDirectory(dir);
                     }
-                    try
-                    {
-                        string targetPath = $"{set.Grid.Runner.BasePath}/{set.BaseFilepath}.{set.Grid.Format}";
-                        string dir = targetPath.Replace('\\', '/').BeforeLast('/');
-                        if (!Directory.Exists(dir))
-                        {
-                            Directory.CreateDirectory(dir);
-                        }
-                        File.WriteAllBytes(targetPath, outputs[0].ImageData);
-                        data.Generated.Enqueue($"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logs.Error($"Grid gen failed to save image: {ex}");
-                        Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = "Server failed to save image to file." });
-                        return;
-                    }
+                    File.WriteAllBytes(targetPath, outputs[0].ImageData);
+                    data.Generated.Enqueue($"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}");
+                }
+                catch (Exception ex)
+                {
+                    Logs.Error($"Grid gen failed to save image: {ex}");
+                    Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = "Server failed to save image to file." });
+                    return;
                 }
             });
             lock (data.UpdateLock)
