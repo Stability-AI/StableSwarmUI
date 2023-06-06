@@ -17,10 +17,8 @@ namespace StableUI.Builtin_GridGeneratorExtension;
 /// <summary>Extension that adds a tool to generate grids of images.</summary>
 public class GridGeneratorExtension : Extension
 {
-    public override void OnInit()
+    public override void OnPreInit()
     {
-        API.RegisterAPICall(GridGenListModes);
-        API.RegisterAPICall(GridGenRun);
         ScriptFiles.Add("Assets/grid_gen.js");
         StyleSheetFiles.Add("Assets/grid_gen.css");
         GridGenCore.ASSETS_DIR = $"{FilePath}/Assets";
@@ -176,6 +174,12 @@ public class GridGeneratorExtension : Extension
             }
             return t;
         };
+    }
+
+    public override void OnInit()
+    {
+        API.RegisterAPICall(GridGenListModes);
+        API.RegisterAPICall(GridGenRun);
     }
 
     public class GridCallData
