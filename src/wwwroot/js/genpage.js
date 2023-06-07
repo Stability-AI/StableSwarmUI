@@ -89,15 +89,16 @@ function doGenerate() {
         }
         return;
     }
-    setCurrentModel();
-    if (document.getElementById('current_model').innerText == '') {
-        showError("Cannot generate, no model selected.");
-        return;
-    }
-    document.getElementById('current_image_batch').innerHTML = '';
-    batches++;
-    makeWSRequest('GenerateText2ImageWS', getGenInput(), data => {
-        gotImageResult(data.image);
+    setCurrentModel(() => {
+        if (document.getElementById('current_model').innerText == '') {
+            showError("Cannot generate, no model selected.");
+            return;
+        }
+        document.getElementById('current_image_batch').innerHTML = '';
+        batches++;
+        makeWSRequest('GenerateText2ImageWS', getGenInput(), data => {
+            gotImageResult(data.image);
+        });
     });
 }
 
@@ -128,13 +129,13 @@ function loadFileList(api, path, container, loadCaller, fileCallback, endCallbac
             let helper = new FileListCallHelper(above, loadCaller);
             div.addEventListener('click', helper.call.bind(helper));
         }
-        for (let folder of data.folders) {
+        for (let folder of data.folders.sort()) {
             let div = appendImage(container, '/imgs/folder.png', 'folder', `${folder}/`);
             let helper = new FileListCallHelper(`${prefix}${folder}`, loadCaller);
             div.addEventListener('click', helper.call.bind(helper));
         }
         container.appendChild(document.createElement('br'));
-        for (let file of data.files) {
+        for (let file of data.files.sort()) {
             fileCallback(prefix, file);
         }
         if (endCallback) {
@@ -374,7 +375,7 @@ function registerNewTool(id, name) {
 
 let sessionReadyCallbacks = [];
 
-function setCurrentModel() {
+function setCurrentModel(callback) {
     let currentModel = document.getElementById('current_model');
     if (currentModel.innerText == '') {
         genericRequest('ListLoadedModels', {}, data => {
@@ -382,7 +383,15 @@ function setCurrentModel() {
                 currentModel.innerText = data.models[0].name;
                 document.getElementById('input_model').value = data.models[0].name;
             }
+            if (callback) {
+                callback();
+            }
         });
+    }
+    else {
+        if (callback) {
+            callback();
+        }
     }
 }
 
