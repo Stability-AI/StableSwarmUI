@@ -22,7 +22,8 @@ public class Session
         {
             return "data:image/png;base64," + image.AsBase64;
         }
-        string imagePath = User.BuildImageOutputPath(user_input);
+        string rawImagePath = User.BuildImageOutputPath(user_input);
+        string imagePath = rawImagePath;
         string extension = "png";
         string fullPath = $"{User.OutputDirectory}/{imagePath}.{extension}";
         lock (User.UserLock)
@@ -30,9 +31,11 @@ public class Session
             try
             {
                 int num = 0;
-                while (File.Exists($"{imagePath}-{(num == 0 ? "" : num)}.{extension}"))
+                while (File.Exists(fullPath))
                 {
                     num++;
+                    imagePath = $"{rawImagePath}-{num}";
+                    fullPath = $"{User.OutputDirectory}/{imagePath}.{extension}";
                 }
                 Directory.CreateDirectory(Directory.GetParent(fullPath).FullName);
                 File.WriteAllBytes(fullPath, image.ImageData);
