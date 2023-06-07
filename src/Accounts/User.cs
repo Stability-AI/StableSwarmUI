@@ -22,6 +22,12 @@ public class User
 
     public LockObject UserLock = new();
 
+    /// <summary>Returns whether this user has the given generic permission flag.</summary>
+    public bool HasGenericPermission(string permName)
+    {
+        return Restrictions.PermissionFlags.Contains(permName) || Restrictions.PermissionFlags.Contains("*");
+    }
+
     /// <summary>Converts the user's output path setting to a real path for the given parameters. Note that the path is partially cleaned, but not completely.</summary>
     public string BuildImageOutputPath(T2IParams user_input)
     {
