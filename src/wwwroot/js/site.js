@@ -119,7 +119,24 @@ function getSession(callback) {
     });
 }
 
-function makeSliderInput(featureid, id, name, description, value, min, max, step = 1, isPot = false) {
+function doToggleEnable(id) {
+    let elem = document.getElementById(id);
+    if (!elem) {
+        console.log(`Tried to toggle ${id} but it doesn't exist.`);
+        return;
+    }
+    let toggler = document.getElementById(id + "_toggle");
+    if (!toggler) {
+        console.log(`Tried to toggle ${id} but the toggler doesn't exist.`);
+    }
+    elem.disabled = !toggler.checked;
+}
+
+function getToggleHtml(toggles, id, name) {
+    return toggles ? `<input class="auto-slider-toggle" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="javascript:doToggleEnable('${id}')">` : '';
+}
+
+function makeSliderInput(featureid, id, name, description, value, min, max, step = 1, isPot = false, toggles = false) {
     let js = `${escapeJsString(name)}: ${escapeJsString(description)}`;
     name = escapeHtml(name);
     description = escapeHtml(description);
@@ -130,7 +147,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, step
     return `
     <div class="auto-input auto-slider-box" title="${name}: ${description}"${featureid}>
         <div class="auto-input-fade-lock auto-slider-fade-contain" onclick="alert('${js}')">
-            <span class="auto-input-name">${name}</span> <span class="auto-input-description">${description}</span>
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}</span> <span class="auto-input-description">${description}</span>
         </div>
         <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}">
         <br>
@@ -138,7 +155,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, step
     </div>`;
 }
 
-function makeNumberInput(featureid, id, name, description, value, min, max, step = 1, small = false) {
+function makeNumberInput(featureid, id, name, description, value, min, max, step = 1, small = false, toggles = false) {
     let js = `${escapeJsString(name)}: ${escapeJsString(description)}`;
     name = escapeHtml(name);
     description = escapeHtml(description);
@@ -148,7 +165,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
     if (small) {
         return `
         <div class="auto-input auto-number-box" title="${name}: ${description}"${featureid}>
-            <span class="auto-input-name" onclick="alert('${js}')">${name}</span>
+            <span class="auto-input-name" onclick="alert('${js}')">${getToggleHtml(toggles, id, name)}${name}</span>
             <input class="auto-number-small" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}">
         </div>`;
     }
@@ -156,14 +173,14 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
     return `
         <div class="auto-input auto-number-box" title="${name}: ${description}"${featureid}>
             <div class="auto-input-fade-lock auto-fade-max-contain" onclick="alert('${js}')">
-                <span class="auto-input-name">${name}</span> <span class="auto-input-description">${description}</span>
+                <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}</span> <span class="auto-input-description">${description}</span>
             </div>
             <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}">
         </div>`
     }
 }
 
-function makeTextInput(featureid, id, name, description, value, rows, placeholder) {
+function makeTextInput(featureid, id, name, description, value, rows, placeholder, toggles = false) {
     let js = `${escapeJsString(name)}: ${escapeJsString(description)}`;
     name = escapeHtml(name);
     description = escapeHtml(description);
@@ -173,13 +190,13 @@ function makeTextInput(featureid, id, name, description, value, rows, placeholde
     return `
     <div class="auto-input auto-text-box" title="${name}: ${description}"${featureid}>
         <div class="auto-input-fade-lock auto-fade-max-contain" onclick="alert('${js}')">
-            <span class="auto-input-name">${name}</span> <span class="auto-input-description">${description}</span>
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}</span> <span class="auto-input-description">${description}</span>
         </div>
         <textarea class="auto-text" id="${id}" rows="${rows}" placeholder="${escapeHtml(placeholder)}" data-name="${name}">${escapeHtml(value)}</textarea>
     </div>`;
 }
 
-function makeCheckboxInput(featureid, id, name, description, value) {
+function makeCheckboxInput(featureid, id, name, description, value, toggles = false) {
     let js = `${escapeJsString(name)}: ${escapeJsString(description)}`;
     name = escapeHtml(name);
     description = escapeHtml(description);
@@ -189,7 +206,30 @@ function makeCheckboxInput(featureid, id, name, description, value) {
     let checked = value ? ' checked="true"' : '';
     return `
     <div class="auto-input auto-checkbox-box" title="${name}: ${description}"${featureid}>
-        <span class="auto-input-name" onclick="alert('${js}')">${name}</span>
+        <span class="auto-input-name" onclick="alert('${js}')">${getToggleHtml(toggles, id, name)}${name}</span>
         <br><input class="auto-checkbox" type="checkbox" id="${id}""${checked}"> <span class="auto-input-description">${description}</span>
     </div>`;
+}
+
+function makeDropdownInput(featureid, id, name, description, values, defaultVal, toggles = false) {
+    let js = `${escapeJsString(name)}: ${escapeJsString(description)}`;
+    name = escapeHtml(name);
+    description = escapeHtml(description);
+    if (featureid != null) {
+        featureid = ` data-feature-require="${featureid}"`;
+    }
+    let html = `
+    <div class="auto-input auto-dropdown-box" title="${name}: ${description}"${featureid}>
+        <div class="auto-input-fade-lock auto-fade-max-contain" onclick="alert('${js}')">
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}</span> <span class="auto-input-description">${description}</span>
+        </div>
+        <select class="auto-dropdown" id="${id}">`;
+    for (let value of values) {
+        let selected = value == defaultVal ? ' selected="true"' : '';
+        html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
+    }
+    html += `
+        </select>
+    </div>`;
+    return html;
 }

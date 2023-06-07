@@ -23,6 +23,7 @@ public static class T2IAPI
         API.RegisterAPICall(ListImages);
         API.RegisterAPICall(ListModels);
         API.RegisterAPICall(SelectModel);
+        API.RegisterAPICall(ListT2IParams);
     }
 
     /// <summary>API route to generate images with WebSocket updates.</summary>
@@ -228,5 +229,14 @@ public static class T2IAPI
             return new JObject() { ["error"] = "Model failed to load." };
         }
         return new JObject() { ["success"] = true };
+    }
+
+    /// <summary>API route to get a list of parameter types.</summary>
+    public static async Task<JObject> ListT2IParams()
+    {
+        return new JObject()
+        {
+            ["list"] = JToken.FromObject(T2IParamTypes.Types.Values.Select(v => v.ToNet()).ToList())
+        };
     }
 }

@@ -200,7 +200,12 @@ body {
     border-radius: 0.5rem;
     margin-bottom: 0px;
 }
-textarea, input {
+.auto-dropdown {
+    width: 100%;
+    border-radius: 0.5rem;
+    margin-bottom: 0px;
+}
+textarea, input, select {
     border-color: var(--shadow);
     background-color: var(--background-soft);
 }

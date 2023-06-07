@@ -3,8 +3,6 @@ let gridGen_axisDiv = null;
 let gridGen_settingsDiv = null;
 let gridGrid_lastAxisId = 0;
 
-let gridGen_modes = [];
-
 function gridGen_addAxis() {
     let id = gridGrid_lastAxisId++;
     let wrapper = createDiv(null, 'grid-gen-axis-wrapper');
@@ -12,7 +10,7 @@ function gridGen_addAxis() {
     axisTypeSelector.className = 'grid-gen-selector';
     axisTypeSelector.id = `grid-gen-axis-type-${id}`;
     axisTypeSelector.add(new Option('', '', true, true));
-    for (let option of gridGen_modes) {
+    for (let option of gen_param_types) {
         axisTypeSelector.add(new Option(option.name, option.name));
     }
     let inputBox = document.createElement('div');
@@ -59,7 +57,7 @@ function gridGen_addAxis() {
         updateInput();
     });
     axisTypeSelector.addEventListener('change', () => {
-        let mode = gridGen_modes.find(e => e.name == axisTypeSelector.value);
+        let mode = gen_param_types.find(e => e.name == axisTypeSelector.value);
         if (mode && mode.values) {
             fillButton.innerText = 'Fill';
             fillButton.style.visibility = 'visible';
@@ -146,9 +144,6 @@ function gridGen_register() {
 
 if (registerNewTool) {
     sessionReadyCallbacks.push(() => {
-        genericRequest('GridGenListModes', {}, data => {
-            gridGen_modes = data.list;
-            gridGen_register();
-        });
+        gridGen_register();
     });
 }

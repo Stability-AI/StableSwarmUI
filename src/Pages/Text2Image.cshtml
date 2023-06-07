@@ -19,10 +19,16 @@
         <div class="t2i-top-bar-container">
             <div class="t2i-top-bar">
                 <div class="input-sidebar" id="input_sidebar">
-                    <textarea class="prompt-box" id="input_prompt" placeholder="Type your prompt here" rows="3"></textarea>
-                    <br><textarea class="prompt-box" id="input_negative_prompt" placeholder="Type your negative prompt here" rows="3"></textarea>
-                    <br><button class="generate-button" id="generate_button">Generate Image</button>
-                    <div id="main_inputs_area"></div>
+                    <button class="generate-button" id="generate_button">Generate Image</button>
+                    <div class="main_inputs_area_wrapper">
+                        <div id="main_inputs_area"></div>
+                        <div class="advanced_input_checkbox">
+                            <input type="checkbox" id="advanced_options_checkbox" onclick="javascript:toggle_advanced()"/>
+                            <span onclick="javascript:toggle_advanced_checkbox_manual()">Display Advanced Options?</span>
+                        </div>
+                        <div id="main_inputs_area_advanced" class="main_inputs_area_advanced" style="display:none;"></div>
+                        <div id="main_inputs_area_hidden" class="main_inputs_area_hidden"></div>
+                    </div>
                 </div>
                 <div class="main-image-area">
                     <div class="current_image" id="current_image"></div><div class="current_image_batch" id="current_image_batch"></div>

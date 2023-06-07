@@ -14,6 +14,7 @@ body {
     border-radius: 1rem;
     width: 90%;
     margin-left: 5%;
+    height: 5rem;
 }
 .t2i-top-bar {
     display: block;
@@ -24,12 +25,27 @@ body {
 .input-sidebar {
     display: inline-block;
     width: calc(max(28rem, 20vw));
-    padding: 0.5rem;
-    border-right: 1px solid purple;
+    height: 50vh;
+}
+.advanced_input_checkbox {
+    width: 100%;
+    text-align: center;
+    background-color: var(--background-soft);
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+.main_inputs_area_wrapper {
     overflow-x: hidden;
     overflow-y: scroll;
     white-space: normal;
-    height: 50vh;
+    padding: 0.5rem;
+    padding-right: 1rem;
+    width: calc(max(28rem, 20vw));
+    height: calc(50vh - 6rem);
+}
+.main_inputs_area_hidden {
+    display: none;
+    visibility: hidden;
 }
 .main-image-area {
     display: inline-block;

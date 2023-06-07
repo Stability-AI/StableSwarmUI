@@ -77,6 +77,7 @@ public class Program
         RunOnAllExtensions(e => e.OnPreInit());
         Logs.Init("Prepping options...");
         T2IModels = new();
+        T2IParamTypes.RegisterDefaults();
         Backends = new();
         Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);
         Sessions = new();

@@ -1,4 +1,4 @@
-let core_inputs = ['prompt', 'negative_prompt', 'seed', 'steps', 'width', 'height', 'images', 'cfg_scale'];
+let gen_param_types = null;
 
 let session_id = null;
 
@@ -63,8 +63,8 @@ function gotImageResult(image) {
 
 function getGenInput() {
     let input = {};
-    for (let id of core_inputs) {
-        input[id] = document.getElementById('input_' + id).value;
+    for (let type of gen_param_types) {
+        input[type.id] = document.getElementById('input_' + type.id).value;
     }
     return input;
 }
@@ -171,6 +171,17 @@ function loadModelList(path) {
     });
 }
 
+function toggle_advanced() {
+    let advancedArea = document.getElementById('main_inputs_area_advanced');
+    let toggler = document.getElementById('advanced_options_checkbox');
+    advancedArea.style.display = toggler.checked ? 'block' : 'none';
+}
+function toggle_advanced_checkbox_manual() {
+    let toggler = document.getElementById('advanced_options_checkbox');
+    toggler.checked = !toggler.checked;
+    toggle_advanced();
+}
+
 let statusBarElem = document.getElementById('top_status_bar');
 
 function getCurrentStatus() {
@@ -212,15 +223,55 @@ function genpageLoop() {
 
 function genInputs() {
     let area = document.getElementById('main_inputs_area');
-    let html = '';
-    html += makeNumberInput(null, 'input_images', 'Images', 'How many images to generate at once.', 1, 1, 100, 1, true);
-    html += makeNumberInput('seed', 'input_seed', 'Seed', 'Image seed. -1 = random.', -1, -1, 1000000000, 1, true);
-    html += makeNumberInput('steps', 'input_steps', 'Steps', 'How many times to run the model. More steps = better quality, but more time.', 20, 1, 100, 1, true);
-    html += makeNumberInput('cfg_scale', 'input_cfg_scale', 'CFG Scale', 'How strongly to scale prompt input. Too-high values can cause corrupted/burnt images, too-low can cause nonsensical images.', 7, 0, 30, 0.25, 1, true);
-    html += '<br>' + makeSliderInput('width', 'input_width', 'Width', 'Image width, in pixels.', 1024, 128, 4096, 64, true);
-    html += '<br>' + makeSliderInput('height', 'input_height', 'Height', 'Image height, in pixels.', 1024, 128, 4096, 64, true);
+    let advancedAea = document.getElementById('main_inputs_area_advanced');
+    let hiddenArea = document.getElementById('main_inputs_area_hidden');
+    let html = '', advancedHtml = '', hiddenHtml = '';
+    for (let param of gen_param_types) {
+        let paramHtml;
+        switch (param.type) {
+            case 'text':
+                // function makeTextInput(featureid, id, name, description, value, rows, placeholder)
+                paramHtml = makeTextInput(param.feature_flag, `input_${param.id}`, param.name, '', param.default, 3, param.description, param.toggleable);
+                break;
+            case 'decimal':
+            case 'integer':
+                let min = param.min;
+                let max = param.max;
+                if (min == 0 && max == 0) {
+                    min = -9999999;
+                    max = 9999999;
+                }
+                paramHtml = makeNumberInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable);
+                break;
+            case 'pot_slider':
+                paramHtml = makeSliderInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable);
+                break;
+            case 'boolean':
+                paramHtml = makeCheckboxInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.toggleable);
+                break;
+            case 'dropdown':
+                paramHtml = makeDropdownInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.values, param.default, param.toggleable);
+                break;
+        }
+        if (!param.visible) {
+            hiddenHtml += paramHtml;
+        }
+        else if (param.advanced) {
+            advancedHtml += paramHtml;
+        }
+        else {
+            html += paramHtml;
+        }
+    }
     area.innerHTML = html;
+    advancedAea.innerHTML = advancedHtml;
+    hiddenArea.innerHTML = hiddenHtml;
     enableSlidersIn(area);
+    for (let param of gen_param_types) {
+        if (param.toggleable) {
+            doToggleEnable(`input_${param.id}`);
+        }
+    }
 }
 
 let toolSelector = document.getElementById('tool_selector');
@@ -256,20 +307,25 @@ let sessionReadyCallbacks = [];
 
 function genpageLoad() {
     console.log('Load page...');
-    genInputs();
-    genToolsList();
     reviseStatusBar();
-    document.getElementById('generate_button').addEventListener('click', doGenerate);
-    document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
-    document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir));
     getSession(() => {
         console.log('First session loaded - prepping page.');
         loadHistory('');
         loadModelList('');
         loadBackendTypesMenu();
-        for (let callback of sessionReadyCallbacks) {
-            callback();
-        }
+        genericRequest('ListT2IParams', {}, data => {
+            gen_param_types = data.list.sort((a, b) => a.priority - b.priority);
+            genInputs(data);
+            genToolsList();
+            reviseStatusBar();
+            toggle_advanced();
+            document.getElementById('generate_button').addEventListener('click', doGenerate);
+            document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
+            document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir));
+            for (let callback of sessionReadyCallbacks) {
+                callback();
+            }
+        });
     });
     setInterval(genpageLoop, 1000);
 }

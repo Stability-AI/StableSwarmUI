@@ -2,9 +2,8 @@
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableUI.DataHolders;
+using StableUI.Text2Image;
 using StableUI.Utils;
-using System.Numerics;
-using System.Text.RegularExpressions;
 
 namespace StableUI.Builtin_GridGeneratorExtension;
 
@@ -28,113 +27,7 @@ public partial class GridGenCore
     public static Action<SingleGridCall> GridCallInitHook;
     #endregion
 
-    public enum GridModeType { TEXT, INTEGER, DECIMAL, BOOLEAN }
-
-    public record class GridMode(string Name, bool Dry, GridModeType Type, Action<string, T2IParams> Apply, double Min = 0, double Max = 0,
-        Func<string, string> Clean = null, Func<List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null)
-    {
-        public JObject ToNet()
-        {
-            return new JObject()
-            {
-                ["name"] = Name,
-                ["dry"] = Dry,
-                ["type"] = Type.ToString().ToLowerFast(),
-                ["min"] = Min,
-                ["max"] = Max,
-                ["values"] = GetValues == null ? null : JToken.FromObject(GetValues()),
-                ["examples"] = Examples == null ? null : JToken.FromObject(Examples)
-            };
-        }
-    }
-
-    public static Dictionary<string, GridMode> GridModes = new();
-
     public static GridGeneratorExtension Extension;
-
-    public static string GetBestInList(string name, List<string> list)
-    {
-        string backup = null;
-        int bestLen = 999;
-        name = CleanName(name);
-        foreach (string listVal in list)
-        {
-            string listValClean = CleanName(listVal);
-            if (listValClean == name)
-            {
-                return listVal;
-            }
-            if (listValClean.Contains(name))
-            {
-                if (listValClean.Length < bestLen)
-                {
-                    backup = listVal;
-                    bestLen = listValClean.Length;
-                }
-            }
-        }
-        return backup;
-    }
-
-    public static string ValidateParam(GridMode mode, string val)
-    {
-        if (mode is null)
-        {
-            throw new InvalidDataException("Unknown mode");
-        }
-        switch (mode.Type)
-        {
-            case GridModeType.INTEGER:
-                if (!int.TryParse(val, out int valInt))
-                {
-                    throw new InvalidDataException("Invalid integer value - must be a valid integer (eg '0', '3', '-5', etc)");
-                }
-                if (mode.Min != 0 || mode.Max != 0)
-                {
-                    if (valInt < mode.Min || valInt > mode.Max)
-                    {
-                        throw new InvalidDataException($"Invalid integer value - must be between {mode.Min} and {mode.Max}");
-                    }
-                }
-                return valInt.ToString();
-            case GridModeType.DECIMAL:
-                if (!double.TryParse(val, out double valDouble))
-                {
-                    throw new InvalidDataException("Invalid decimal value - must be a valid decimal (eg '0.0', '3.5', '-5.2', etc)");
-                }
-                if (mode.Min != 0 || mode.Max != 0)
-                {
-                    if (valDouble < mode.Min || valDouble > mode.Max)
-                    {
-                        throw new InvalidDataException($"Invalid decimal value - must be between {mode.Min} and {mode.Max}");
-                    }
-                }
-                return valDouble.ToString();
-            case GridModeType.BOOLEAN:
-                val = val.ToLowerFast();
-                if (val != "true" && val != "false")
-                {
-                    throw new InvalidDataException("Invalid boolean value - must be exactly 'true' or 'false'");
-                }
-                return val;
-            case GridModeType.TEXT:
-                if (mode.GetValues is not null)
-                {
-                    val = GetBestInList(val, mode.GetValues());
-                    if (val is null)
-                    {
-                        throw new InvalidDataException($"Invalid text value - must be one of: `{string.Join("`, `", mode.GetValues())}`");
-                    }
-                }
-                return val;
-        }
-        throw new InvalidDataException("Unknown mode type");
-    }
-
-    public static void RegisterMode(GridMode mode)
-    {
-        GridModes.Add(CleanMode(mode.Name), mode);
-    }
 
     public static string CleanForWeb(string text)
     {
@@ -142,22 +35,10 @@ public partial class GridGenCore
     }
 
     public static AsciiMatcher CleanIDMatcher = new(AsciiMatcher.LowercaseLetters + AsciiMatcher.Digits + "_");
-    public static AsciiMatcher CleanModeMatcher = new(AsciiMatcher.LowercaseLetters);
 
     public static string CleanID(string id)
     {
         return CleanIDMatcher.TrimToMatches(id.ToLowerFast().Trim());
-    }
-
-
-    public static string CleanMode(string id)
-    {
-        return CleanModeMatcher.TrimToMatches(id.ToLowerFast().Trim());
-    }
-
-    public static string CleanName(string name)
-    {
-        return name.ToLowerFast().Replace(" ", "").Replace("[", "").Replace("]", "").Trim();
     }
 
     public static List<string> ExpandNumericListRanges(List<string> inList, Type numType)
@@ -231,7 +112,7 @@ public partial class GridGenCore
             //halves[1] = grid.ProcVariables(halves[1]);
             //halves[1] = ValidateSingleParam(halves[0], halves[1]);
             Title = halves[1];
-            Params[CleanMode(halves[0])] = halves[1];
+            Params[T2IParamTypes.CleanTypeName(halves[0])] = halves[1];
         }
     }
 
@@ -247,7 +128,7 @@ public partial class GridGenCore
 
         public string ModeName;
 
-        public GridMode Mode;
+        public T2IParamType Mode;
 
         public void BuildFromListStr(string id, Grid grid, string listStr)
         {
@@ -256,16 +137,16 @@ public partial class GridGenCore
             Title = RawID;
             bool isSplitByDoublePipe = listStr.Contains("||");
             List<string> valuesList = listStr.Split(isSplitByDoublePipe ? "||" : ",").ToList();
-            ModeName = CleanName(id);
-            if (!GridModes.TryGetValue(CleanMode(ModeName), out Mode))
+            ModeName = T2IParamTypes.CleanNameGeneric(id);
+            if (!T2IParamTypes.Types.TryGetValue(T2IParamTypes.CleanTypeName(ModeName), out Mode))
             {
                 throw new Exception($"Invalid axis mode '{Mode}' from '{id}': unknown mode");
             }
-            if (Mode.Type == GridModeType.INTEGER)
+            if (Mode.Type == T2IParamDataType.INTEGER)
             {
                 valuesList = ExpandNumericListRanges(valuesList, typeof(int));
             }
-            else if (Mode.Type == GridModeType.DECIMAL)
+            else if (Mode.Type == T2IParamDataType.DECIMAL)
             {
                 valuesList = ExpandNumericListRanges(valuesList, typeof(float));
             }
@@ -284,7 +165,7 @@ public partial class GridGenCore
                     {
                         continue;
                     }
-                    valStr = ValidateParam(Mode, valStr);
+                    valStr = T2IParamTypes.ValidateParam(Mode, valStr);
                     Values.Add(new AxisValue(grid, this, index.ToString(), $"{id}={valStr}"));
                 }
                 catch (InvalidDataException ex)
@@ -371,11 +252,8 @@ public partial class GridGenCore
         {
             foreach (KeyValuePair<string, string> pair in Params)
             {
-                GridMode mode = GridModes[CleanMode(pair.Key)];
-                if (!dry || mode.Dry)
-                {
-                    mode.Apply(pair.Value, p);
-                }
+                T2IParamType mode = T2IParamTypes.Types[T2IParamTypes.CleanTypeName(pair.Key)];
+                mode.Apply(pair.Value, p);
             }
             GridCallApplyHook?.Invoke(this, p, dry);
         }
@@ -448,7 +326,7 @@ public partial class GridGenCore
             Logs.Info($"Have {Sets.Count} unique value sets, will go into {BasePath}");
             foreach (SingleGridCall set in Sets)
             {
-                set.BaseFilepath = string.Join("/", set.Values.Select(v => CleanName(v.Key)).Reverse());
+                set.BaseFilepath = string.Join("/", set.Values.Select(v => T2IParamTypes.CleanNameGeneric(v.Key)).Reverse());
                 set.Data = string.Join(", ", set.Values.Select(v => $"{v.Axis.Title}={v.Title}"));
                 set.FlattenParams(Grid);
                 set.Skip = set.Skip || !DoOverwrite && File.Exists($"{BasePath}/{set.BaseFilepath}.{Grid.Format}");
