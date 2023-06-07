@@ -420,12 +420,19 @@ public class BackendHandler
                 }
                 lock (CentralLock)
                 {
-                    List<T2IBackendData> possible = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && (filter is null || filter(b))).ToList();
+                    List<T2IBackendData> possible = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING).ToList();
                     if (!possible.Any())
                     {
                         Logs.Warning("[BackendHandler] No backends are available! Cannot generate anything.");
                         ReleasePressure();
                         throw new InvalidOperationException("No backends available!");
+                    }
+                    possible = filter is null ? possible : possible.Where(filter).ToList();
+                    if (!possible.Any())
+                    {
+                        Logs.Warning("[BackendHandler] No backends match the request! Cannot generate anything.");
+                        ReleasePressure();
+                        throw new InvalidOperationException("No backends match the settings of the request given!");
                     }
                     List<T2IBackendData> available = possible.Where(b => !b.IsInUse).ToList();
                     T2IBackendData firstAvail = available.FirstOrDefault();

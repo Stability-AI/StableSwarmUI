@@ -62,6 +62,17 @@ public class T2IParams : IDataHolder
 
     public bool BackendMatcher(BackendHandler.T2IBackendData backend)
     {
-        return BackendType == "any" || BackendType.ToLowerFast() == backend.Backend.HandlerTypeData.ID.ToLowerFast();
+        if (BackendType != "any" && BackendType.ToLowerFast() != backend.Backend.HandlerTypeData.ID.ToLowerFast())
+        {
+            return false;
+        }
+        foreach (string flag in RequiredFlags)
+        {
+            if (!backend.Backend.DoesProvideFeature(flag))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }
