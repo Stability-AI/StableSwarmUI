@@ -225,7 +225,7 @@ public class BackendHandler
         while (!HasShutdown)
         {
             bool any = false;
-            while (BackendsToInit.TryDequeue(out T2IBackendData data))
+            while (BackendsToInit.TryDequeue(out T2IBackendData data) && !HasShutdown)
             {
                 try
                 {
