@@ -140,7 +140,7 @@ body {
     background-color: rgba(200, 255, 200, 0.3);
 }
 .model-loaded {
-    border: 1px solid rgba(100, 255, 100, 1.0);
+    border: 1px solid rgba(100, 255, 100, 0.5);
     background-color: rgba(220, 255, 220, 0.3);
 }
 .model-block-hoverable:hover {

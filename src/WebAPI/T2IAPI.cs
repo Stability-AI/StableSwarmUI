@@ -74,7 +74,6 @@ public static class T2IAPI
             {
                 if (T2IParamTypes.Types.ContainsKey(T2IParamTypes.CleanTypeName(key)))
                 {
-                    Logs.Info($"Apply param {key} as {val}");
                     T2IParamTypes.ApplyParameter(key, val.ToString(), user_input, session);
                 }
             }
