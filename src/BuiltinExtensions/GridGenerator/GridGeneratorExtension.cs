@@ -187,8 +187,24 @@ public class GridGeneratorExtension : Extension
         }
     }
 
-    public async Task<JObject> GridGenRun(WebSocket socket, Session session, T2IParams baseParams, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, string wanted_model = null)
+    public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
+        T2IParams baseParams = new();
+        try
+        {
+            foreach ((string key, JToken val) in (raw["baseParams"] as JObject))
+            {
+                if (T2IParamTypes.Types.ContainsKey(T2IParamTypes.CleanTypeName(key)))
+                {
+                    T2IParamTypes.ApplyParameter(key, val.ToString(), baseParams, session);
+                }
+            }
+        }
+        catch (InvalidDataException ex)
+        {
+            await socket.SendJson(new JObject() { ["error"] = ex.Message }, TimeSpan.FromMinutes(1));
+            return null;
+        }
         if (baseParams.Seed == -1)
         {
             baseParams.Seed = Random.Shared.Next();
@@ -196,11 +212,6 @@ public class GridGeneratorExtension : Extension
         if (baseParams.VarSeed == -1)
         {
             baseParams.VarSeed = Random.Shared.Next();
-        }
-        if (wanted_model is not null && !Program.T2IModels.Models.TryGetValue(wanted_model, out T2IModel targetModel))
-        {
-            await socket.SendJson(new JObject() { ["error"] = "Invalid model name" }, TimeSpan.FromMinutes(1));
-            return null;
         }
         outputFolderName = Utilities.FilePathForbidden.TrimToNonMatches(outputFolderName);
         if (outputFolderName.Contains('.'))
