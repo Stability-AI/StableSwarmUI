@@ -33,11 +33,17 @@ public class T2IParams : IDataHolder
     [NetData(Name = "var_seed_strength")]
     public float VarSeedStrength = 0;
 
+    [NetData(Name = "backend_type")]
+    public string BackendType = "any";
+
     public T2IModel Model;
 
     public IDataHolder ExternalData;
 
     public Dictionary<string, object> OtherParams = new();
+
+    /// <summary>What feature flags, if any, are required by this request.</summary>
+    public HashSet<string> RequiredFlags = new();
 
     public T2IParams Clone()
     {
