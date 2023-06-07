@@ -8,6 +8,7 @@
     --light-border: #a0c0c0;
     --red: #ff0000;
     --green: #00ff00;
+    --qbutton: #00a0a0;
 }
 body {
     background-color: var(--background);
@@ -223,4 +224,26 @@ textarea, input, select {
     transform: translate(-50%, 0);
     animation-name: toast-flash;
     animation-duration: 2s;
+}
+.auto-input-qbutton {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    padding-left: 0.3rem;
+    padding-right: 0.3rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--qbutton);
+    color: var(--qbutton);
+}
+.sui-popover {
+    background-color: black;
+    color: white;
+    border: 1px solid gray;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: fit-content;
+    z-index: 1000;
 }

@@ -117,7 +117,7 @@ public static class T2IAPI
                 T2IBackendAccess backend;
                 try
                 {
-                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), user_input.Model); // TODO: Max timespan configurable
+                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), user_input.Model, user_input.BackendMatcher); // TODO: Max timespan configurable
                 }
                 catch (InvalidOperationException ex)
                 {

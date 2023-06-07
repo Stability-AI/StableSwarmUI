@@ -104,10 +104,7 @@ public class GridGeneratorExtension : Extension
                 T2IBackendAccess backend;
                 try
                 {
-                    T2IExtra extra = thisParams.ExternalData as T2IExtra;
-                    string backType = extra.BackendTypeMatcher?.ToLowerFast();
-                    Func<BackendHandler.T2IBackendData, bool> filter = backType is null ? null : (d) => d.Backend.HandlerTypeData.ID.ToLowerFast() == backType;
-                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(10), extra.Model, filter); // TODO: Max timespan configurable
+                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(10), thisParams.Model, thisParams.BackendMatcher); // TODO: Max timespan configurable
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -169,18 +166,6 @@ public class GridGeneratorExtension : Extension
         public List<string> Replacements = new();
     }
 
-    public class T2IExtra : IDataHolder
-    {
-        public T2IModel Model;
-
-        public string BackendTypeMatcher;
-
-        public IDataHolder Clone()
-        {
-            return MemberwiseClone() as T2IExtra;
-        }
-    }
-
     public class StableUIGridData
     {
         public List<Task> Rendering = new();
@@ -212,13 +197,11 @@ public class GridGeneratorExtension : Extension
         {
             baseParams.VarSeed = Random.Shared.Next();
         }
-        T2IModel targetModel = null;
-        if (wanted_model is not null && !Program.T2IModels.Models.TryGetValue(wanted_model, out targetModel))
+        if (wanted_model is not null && !Program.T2IModels.Models.TryGetValue(wanted_model, out T2IModel targetModel))
         {
             await socket.SendJson(new JObject() { ["error"] = "Invalid model name" }, TimeSpan.FromMinutes(1));
             return null;
         }
-        baseParams.ExternalData = new T2IExtra() { Model = targetModel };
         outputFolderName = Utilities.FilePathForbidden.TrimToNonMatches(outputFolderName);
         if (outputFolderName.Contains('.'))
         {

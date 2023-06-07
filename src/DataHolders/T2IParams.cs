@@ -1,4 +1,6 @@
-﻿using StableUI.Text2Image;
+﻿using FreneticUtilities.FreneticExtensions;
+using StableUI.Backends;
+using StableUI.Text2Image;
 using static StableUI.DataHolders.IDataHolder;
 
 namespace StableUI.DataHolders;
@@ -57,4 +59,9 @@ public class T2IParams : IDataHolder
     }
 
     IDataHolder IDataHolder.Clone() => Clone();
+
+    public bool BackendMatcher(BackendHandler.T2IBackendData backend)
+    {
+        return BackendType == "any" || BackendType.ToLowerFast() == backend.Backend.HandlerTypeData.ID.ToLowerFast();
+    }
 }

@@ -257,6 +257,36 @@ function genpageLoop() {
     reviseStatusBar();
 }
 
+let mouseX, mouseY;
+let popHide = [];
+
+document.addEventListener('click', (e) => {
+    mouseX = e.pageX;
+    mouseY = e.pageY;
+    for (let id of popHide) {
+        let pop = document.getElementById(`popover_${id}`);
+        pop.style.display = 'none';
+        pop.dataset.visible = "false";
+    }
+    popHide = [];
+}, true);
+
+function doPopover(id) {
+    let pop = document.getElementById(`popover_${id}`);
+    if (pop.dataset.visible == "true") {
+        pop.style.display = 'none';
+        pop.dataset.visible = "false";
+        delete popHide[popHide.indexOf(id)]; // wtf? JavaScript doesn't have remove(...)?
+    }
+    else {
+        pop.style.display = 'block';
+        pop.dataset.visible = "true";
+        pop.style.left = `${mouseX}px`;
+        pop.style.top = `${mouseY}px`;
+        popHide.push(id);
+    }
+}
+
 function genInputs() {
     let area = document.getElementById('main_inputs_area');
     let advancedAea = document.getElementById('main_inputs_area_advanced');
@@ -264,10 +294,12 @@ function genInputs() {
     let html = '', advancedHtml = '', hiddenHtml = '';
     for (let param of gen_param_types) {
         let paramHtml;
+        // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
+        let example = param.examples ? `<br><br>Examples: <code>${param.examples.map(escapeHtml).join("</code>,&emsp;<code>")}</code>` : '';
+        let pop = `<div class="sui-popover" id="popover_input_${param.id}"><b>${escapeHtml(param.name)}</b> (${param.type}):<br>&emsp;${escapeHtml(param.description)}${example}</div>`;
         switch (param.type) {
             case 'text':
-                // function makeTextInput(featureid, id, name, description, value, rows, placeholder)
-                paramHtml = makeTextInput(param.feature_flag, `input_${param.id}`, param.name, '', param.default, 3, param.description, param.toggleable);
+                paramHtml = makeTextInput(param.feature_flag, `input_${param.id}`, param.name, '', param.default, 3, param.description, param.toggleable, pop);
                 break;
             case 'decimal':
             case 'integer':
@@ -277,18 +309,19 @@ function genInputs() {
                     min = -9999999;
                     max = 9999999;
                 }
-                paramHtml = makeNumberInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable);
+                paramHtml = makeNumberInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable, pop);
                 break;
             case 'pot_slider':
-                paramHtml = makeSliderInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable);
+                paramHtml = makeSliderInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable, pop);
                 break;
             case 'boolean':
-                paramHtml = makeCheckboxInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.toggleable);
+                paramHtml = makeCheckboxInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.toggleable, pop);
                 break;
             case 'dropdown':
-                paramHtml = makeDropdownInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.values, param.default, param.toggleable);
+                paramHtml = makeDropdownInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.values, param.default, param.toggleable, pop);
                 break;
         }
+        paramHtml += pop;
         if (!param.visible) {
             hiddenHtml += paramHtml;
         }
