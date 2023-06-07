@@ -64,8 +64,18 @@ function gotImageResult(image) {
 function getGenInput() {
     let input = {};
     for (let type of gen_param_types) {
-        input[type.id] = document.getElementById('input_' + type.id).value;
+        if (type.toggleable && !document.getElementById(`input_${type.id}_toggle`).checked) {
+            continue;
+        }
+        let elem = document.getElementById('input_' + type.id);
+        if (type.type == "boolean") {
+            input[type.id] = elem.checked;
+        }
+        else {
+            input[type.id] = elem.value;
+        }
     }
+    console.log("Will request: " + JSON.stringify(input));
     return input;
 }
 

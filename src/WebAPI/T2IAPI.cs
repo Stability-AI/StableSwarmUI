@@ -27,9 +27,9 @@ public static class T2IAPI
     }
 
     /// <summary>API route to generate images with WebSocket updates.</summary>
-    public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, Session session, int images, T2IParams user_input, string wanted_model = null)
+    public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, Session session, int images, JObject rawInput)
     {
-        await foreach ((string img, JObject err) in GenT2I_Internal(session, images, user_input, wanted_model))
+        await foreach ((string img, JObject err) in GenT2I_Internal(session, images, rawInput))
         {
             if (img is not null)
             {
@@ -45,10 +45,10 @@ public static class T2IAPI
     }
 
     /// <summary>API route to generate images directly as HTTP.</summary>
-    public static async Task<JObject> GenerateText2Image(Session session, int images, T2IParams user_input, string wanted_model = null)
+    public static async Task<JObject> GenerateText2Image(Session session, int images, JObject rawInput)
     {
         List<string> outputs = new();
-        await foreach ((string img, JObject err) in GenT2I_Internal(session, images, user_input, wanted_model))
+        await foreach ((string img, JObject err) in GenT2I_Internal(session, images, rawInput))
         {
             if (img is not null)
             {
@@ -63,19 +63,34 @@ public static class T2IAPI
     }
 
     /// <summary>Internal route for generating images.</summary>
-    public static async IAsyncEnumerable<(string, JObject)> GenT2I_Internal(Session session, int images, T2IParams user_input, string wanted_model)
+    public static async IAsyncEnumerable<(string, JObject)> GenT2I_Internal(Session session, int images, JObject rawInput)
     {
+        T2IParams user_input = new();
+        string err = null;
+        try
+        {
+            foreach ((string key, JToken val) in rawInput)
+            {
+                if (T2IParamTypes.Types.ContainsKey(T2IParamTypes.CleanTypeName(key)))
+                {
+                    Logs.Info($"Apply param {key} as {val}");
+                    T2IParamTypes.ApplyParameter(key, val.ToString(), user_input, session);
+                }
+            }
+        }
+        catch (InvalidDataException ex)
+        {
+            err = ex.Message; // NOTE: Weird C# limit, can't 'yield return' inside a 'catch'.
+        }
+        if (err is not null)
+        {
+            yield return (null, new JObject() { ["error"] = err });
+            yield break;
+        }
         ConcurrentQueue<string> allOutputs = new();
-        user_input = user_input.Clone();
         if (user_input.Seed == -1)
         {
             user_input.Seed = Random.Shared.Next(int.MaxValue);
-        }
-        T2IModel targetModel = null;
-        if (wanted_model is not null && !Program.T2IModels.Models.TryGetValue(wanted_model, out targetModel))
-        {
-            yield return (null, new JObject() { ["error"] = "Invalid model name" });
-            yield break;
         }
         JObject errorOut = null;
         List<Task> tasks = new();
@@ -102,7 +117,7 @@ public static class T2IAPI
                 T2IBackendAccess backend;
                 try
                 {
-                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), targetModel); // TODO: Max timespan configurable
+                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), user_input.Model); // TODO: Max timespan configurable
                 }
                 catch (InvalidOperationException ex)
                 {

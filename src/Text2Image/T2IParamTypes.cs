@@ -177,26 +177,26 @@ public class T2IParamTypes
             case T2IParamDataType.POT_SLIDER:
                 if (!int.TryParse(val, out int valInt))
                 {
-                    throw new InvalidDataException("Invalid integer value - must be a valid integer (eg '0', '3', '-5', etc)");
+                    throw new InvalidDataException($"Invalid integer value for param {type.Name} - must be a valid integer (eg '0', '3', '-5', etc)");
                 }
                 if (type.Min != 0 || type.Max != 0)
                 {
-                    if (valInt < type.Max)
+                    if (valInt < type.Min || valInt > type.Max)
                     {
-                        throw new InvalidDataException($"Invalid integer value - must be between {type.Min} and {type.Max}");
+                        throw new InvalidDataException($"Invalid integer value for param {type.Name} - must be between {type.Min} and {type.Max}");
                     }
                 }
                 return valInt.ToString();
             case T2IParamDataType.DECIMAL:
                 if (!double.TryParse(val, out double valDouble))
                 {
-                    throw new InvalidDataException("Invalid decimal value - must be a valid decimal (eg '0.0', '3.5', '-5.2', etc)");
+                    throw new InvalidDataException($"Invalid decimal value for param {type.Name} - must be a valid decimal (eg '0.0', '3.5', '-5.2', etc)");
                 }
                 if (type.Min != 0 || type.Max != 0)
                 {
                     if (valDouble < type.Min || valDouble > type.Max)
                     {
-                        throw new InvalidDataException($"Invalid decimal value - must be between {type.Min} and {type.Max}");
+                        throw new InvalidDataException($"Invalid decimal value for param {type.Name} - must be between {type.Min} and {type.Max}");
                     }
                 }
                 return valDouble.ToString();
@@ -204,7 +204,7 @@ public class T2IParamTypes
                 val = val.ToLowerFast();
                 if (val != "true" && val != "false")
                 {
-                    throw new InvalidDataException("Invalid boolean value - must be exactly 'true' or 'false'");
+                    throw new InvalidDataException($"Invalid boolean value for param {type.Name} - must be exactly 'true' or 'false'");
                 }
                 return val;
             case T2IParamDataType.TEXT:
@@ -214,7 +214,7 @@ public class T2IParamTypes
                     val = GetBestInList(val, type.GetValues());
                     if (val is null)
                     {
-                        throw new InvalidDataException($"Invalid text value - must be one of: `{string.Join("`, `", type.GetValues())}`");
+                        throw new InvalidDataException($"Invalid value for param {type.Name} - must be one of: `{string.Join("`, `", type.GetValues())}`");
                     }
                 }
                 return val;
