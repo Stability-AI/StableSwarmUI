@@ -143,4 +143,9 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
         await SendPost<string>("options", new JObject() { ["sd_model_checkpoint"] = name });
         return true;
     }
+
+    public override bool DoesProvideFeature(string feature)
+    {
+        return false;
+    }
 }

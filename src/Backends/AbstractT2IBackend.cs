@@ -40,6 +40,9 @@ public abstract class AbstractT2IBackend
 
     /// <summary>Tell the backend to load a specific model. Return true if loaded, false if failed.</summary>
     public abstract Task<bool> LoadModel(T2IModel model);
+
+    /// <summary>Return true if the given feature ID is provided by this backend, otherwise false.</summary>
+    public abstract bool DoesProvideFeature(string feature);
 }
 
 public enum BackendStatus
