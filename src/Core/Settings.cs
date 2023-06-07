@@ -55,6 +55,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("What models are allowed, as a path regex. Directory-separator is always '/'. Can be '.*' for all, 'MyFolder/.*' for only within that folder, etc. Default is all.")]
         public string AllowedModels = ".*";
+
+        [ConfigComment("Generic permission flags. '*' means all. Default is all.")]
+        public List<string> PermissionFlags = new() { "*" };
     }
 
     /// <summary>Settings per-user.</summary>
