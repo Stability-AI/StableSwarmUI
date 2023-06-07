@@ -19,6 +19,22 @@ body {
 .generate-button:hover {
     background-color: color-mix(in srgb, orange 70%, black);
 }
+.splitter-bar {
+    display: inline-block;
+    background-color: var(--light-border);
+    margin: 0px;
+}
+.splitter-bar:hover {
+    background-color: var(--shadow);
+}
+.t2i-top-split-bar {
+    height: 50vh;
+    width: 7px;
+}
+.t2i-mid-split-bar {
+    width: 100vw;
+    height: 7px;
+}
 .t2i-top-bar {
     display: block;
     height: 50vh;
@@ -27,8 +43,9 @@ body {
 }
 .input-sidebar {
     display: inline-block;
-    width: calc(max(28rem, 20vw));
+    width: calc(max(28rem, 20vw) - 5px);
     height: 50vh;
+    top: 0px;
 }
 .advanced_input_checkbox {
     width: 100%;
@@ -43,7 +60,7 @@ body {
     white-space: normal;
     padding: 0.5rem;
     padding-right: 1rem;
-    width: calc(max(28rem, 20vw));
+    width: calc(max(28rem, 20vw) - 5px);
     height: calc(50vh - 6rem);
 }
 .main_inputs_area_hidden {
@@ -60,7 +77,6 @@ body {
     vertical-align: top;
 }
 .t2i-bottom-bar {
-    border-top: 1px solid var(--light-border);
     display: block;
 }
 .t2i-bottom-bar .tab-content {
@@ -82,8 +98,6 @@ body {
 }
 .current_image_batch {
     display: inline-block;
-    border-top: 1px solid var(--light-border);
-    border-bottom: 1px solid var(--light-border);
     overflow-y: scroll;
     width: calc(100vw - max(28rem, 20vw) - min(max(40vw, 28rem), 49vh));
     height: 50vh;

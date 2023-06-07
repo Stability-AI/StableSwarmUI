@@ -395,8 +395,54 @@ function setCurrentModel(callback) {
     }
 }
 
+function pageSizer() {
+    let topSplit = document.getElementById('t2i-top-split-bar');
+    let midSplit = document.getElementById('t2i-mid-split-bar');
+    let topBar = document.getElementById('t2i_top_bar');
+    let bottomBarContent = document.getElementById('t2i_bottom_bar_content');
+    let inputSidebar = document.getElementById('input_sidebar');
+    let mainInputsAreaWrapper = document.getElementById('main_inputs_area_wrapper');
+    let mainImageArea = document.getElementById('main_image_area');
+    let currentImageBatch = document.getElementById('current_image_batch');
+    let topDrag = false;
+    let midDrag = false;
+    topSplit.addEventListener('mousedown', (e) => {
+        topDrag = true;
+        e.preventDefault();
+    }, true);
+    midSplit.addEventListener('mousedown', (e) => {
+        midDrag = true;
+        e.preventDefault();
+    }, true);
+    document.addEventListener('mousemove', (e) => {
+        if (topDrag) {
+            let offX = e.pageX - 2;
+            inputSidebar.style.width = `${offX}px`;
+            mainInputsAreaWrapper.style.width = `${offX}px`;
+            mainImageArea.style.width = `calc(100vw - ${offX}px)`;
+            currentImageBatch.style.width = `calc(100vw - ${offX}px - min(max(40vw, 28rem), 49vh))`;
+        }
+        if (midDrag) {
+            let topY = currentImageBatch.getBoundingClientRect().top;
+            let offY = (e.pageY - topY - 2) / window.innerHeight * 100;
+            topSplit.style.height = `${offY}vh`;
+            inputSidebar.style.height = `${offY}vh`;
+            mainInputsAreaWrapper.style.height = `calc(${offY}vh - 6rem)`;
+            mainImageArea.style.height = `${offY}vh`;
+            topBar.style.height = `${offY}vh`;
+            let invOff = 100 - offY;
+            bottomBarContent.style.height = `calc(${invOff}vh - 2rem)`;
+        }
+    });
+    document.addEventListener('mouseup', (e) => {
+        topDrag = false;
+        midDrag = false;
+    });
+}
+
 function genpageLoad() {
     console.log('Load page...');
+    pageSizer();
     reviseStatusBar();
     getSession(() => {
         console.log('First session loaded - prepping page.');

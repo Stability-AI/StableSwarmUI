@@ -17,10 +17,10 @@
 <div class="tab-content tab-hundred">
     <div class="tab-pane show active" id="Text2Image" role="tabpanel">
         <div class="t2i-top-bar-container">
-            <div class="t2i-top-bar">
+            <div class="t2i-top-bar" id="t2i_top_bar">
                 <div class="input-sidebar" id="input_sidebar">
                     <button class="generate-button" id="generate_button">Generate Image</button>
-                    <div class="main_inputs_area_wrapper">
+                    <div class="main_inputs_area_wrapper" id="main_inputs_area_wrapper">
                         <div id="main_inputs_area"></div>
                         <div class="advanced_input_checkbox">
                             <input type="checkbox" id="advanced_options_checkbox" onclick="javascript:toggle_advanced()"/>
@@ -30,12 +30,14 @@
                         <div id="main_inputs_area_hidden" class="main_inputs_area_hidden"></div>
                     </div>
                 </div>
-                <div class="main-image-area">
+                <div class="t2i-top-split-bar splitter-bar" id="t2i-top-split-bar"></div>
+                <div class="main-image-area" id="main_image_area">
                     <div class="current_image" id="current_image"></div><div class="current_image_batch" id="current_image_batch"></div>
                 </div>
             </div>
         </div>
-        <div class="t2i-bottom-bar">
+        <div class="t2i-mid-split-bar splitter-bar" id="t2i-mid-split-bar"></div>
+        <div class="t2i-bottom-bar" id="t2i_bottom_bar">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <a class="nav-link active" data-bs-toggle="tab" href="#Image-History-Tab" aria-selected="true" role="tab">Image History</a>
@@ -47,7 +49,7 @@
                     <a class="nav-link" data-bs-toggle="tab" href="#Tools-Tab" aria-selected="false" tabindex="-1" role="tab">Tools</a>
                 </li>
             </ul>
-            <div class="tab-content">
+            <div class="tab-content" id="t2i_bottom_bar_content">
                 <div class="tab-pane show active" id="Image-History-Tab" role="tabpanel">
                     <button id="image_history_refresh_button" class="image-history-refresh refresh-button">Refresh</button>
                     <div class="image_history" id="image_history"></div>
@@ -63,7 +65,7 @@
                     <div class="tool-container" id="tool_container">
                     </div>
                 </div>
-                <div style="height: 5rem"></div> <!-- Spacer to fix scrolling -->
+                <div style="height: 10rem"></div> <!-- Spacer to fix scrolling -->
             </div>
         </div>
     </div>
