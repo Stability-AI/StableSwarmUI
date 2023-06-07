@@ -30,10 +30,12 @@ body {
 .t2i-top-split-bar {
     height: 50vh;
     width: 7px;
+    cursor: col-resize;
 }
 .t2i-mid-split-bar {
     width: 100vw;
     height: 7px;
+    cursor: row-resize;
 }
 .t2i-top-bar {
     display: block;
