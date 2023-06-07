@@ -89,6 +89,11 @@ function doGenerate() {
         }
         return;
     }
+    setCurrentModel();
+    if (document.getElementById('current_model').innerText == '') {
+        showError("Cannot generate, no model selected.");
+        return;
+    }
     document.getElementById('current_image_batch').innerHTML = '';
     batches++;
     makeWSRequest('GenerateText2ImageWS', getGenInput(), data => {
@@ -110,7 +115,7 @@ class FileListCallHelper {
     }
 };
 
-function loadFileList(api, path, container, loadCaller, fileCallback) {
+function loadFileList(api, path, container, loadCaller, fileCallback, endCallback) {
     genericRequest(api, {'path': path}, data => {
         let prefix;
         if (path == '') {
@@ -132,6 +137,9 @@ function loadFileList(api, path, container, loadCaller, fileCallback) {
         for (let file of data.files) {
             fileCallback(prefix, file);
         }
+        if (endCallback) {
+            endCallback();
+        }
     });
 }
 
@@ -150,16 +158,26 @@ let cur_model = null;
 
 function appendModel(container, prefix, model) {
     models[`${prefix}${model.name}`] = model;
-    let batch = model.loaded ? 'model-loaded' : `image-batch-${Object.keys(models).length % 2}`;
+    let batch = document.getElementById('current_model').innerText == model.name ? 'model-selected' : (model.loaded ? 'model-loaded' : `image-batch-${Object.keys(models).length % 2}`);
     let div = createDiv(null, `model-block model-block-hoverable ${batch}`);
     let img = document.createElement('img');
     img.src = model.preview_image;
     div.appendChild(img);
     let textBlock = createDiv(null, 'model-descblock');
-    textBlock.innerText = `${model.name}\n${model.description}`;
+    textBlock.innerText = `${model.name}\n${model.description}\n`;
+    let loadButton = createDiv(null, 'model-load-button');
+    loadButton.innerText = 'Load Now';
+    textBlock.appendChild(loadButton);
     div.appendChild(textBlock);
     container.appendChild(div);
     div.addEventListener('click', () => {
+        document.getElementById('input_model').value = model.name;
+        document.getElementById('current_model').innerText = model.name;
+        loadModelList(lastModelDir);
+    });
+    loadButton.addEventListener('click', () => {
+        document.getElementById('input_model').value = model.name;
+        document.getElementById('current_model').innerText = model.name;
         for (let possible of container.getElementsByTagName('div')) {
             possible.classList.remove('model-block-hoverable');
             possible.parentElement.replaceChild(possible.cloneNode(true), possible);
@@ -174,10 +192,18 @@ function loadModelList(path) {
     let container = document.getElementById('model_list');
     lastModelDir = path;
     container.innerHTML = '';
-    let id = 0;
     models = {};
     loadFileList('ListModels', path, container, loadModelList, (prefix, model) => {
         appendModel(container, prefix, model);
+    }, () => {
+        let current_model = document.getElementById('current_model');
+        if (current_model.innerText == '') {
+            let model = Object.values(models).find(m => m.loaded);
+            if (model) {
+                document.getElementById('input_model').value = model.name;
+                current_model.innerText = model.name;
+            }
+        }
     });
 }
 
@@ -315,6 +341,18 @@ function registerNewTool(id, name) {
 
 let sessionReadyCallbacks = [];
 
+function setCurrentModel() {
+    let currentModel = document.getElementById('current_model');
+    if (currentModel.innerText == '') {
+        genericRequest('ListLoadedModels', {}, data => {
+            if (data.models.length > 0) {
+                currentModel.innerText = data.models[0].name;
+                document.getElementById('input_model').value = data.models[0].name;
+            }
+        });
+    }
+}
+
 function genpageLoad() {
     console.log('Load page...');
     reviseStatusBar();
@@ -329,6 +367,7 @@ function genpageLoad() {
             genToolsList();
             reviseStatusBar();
             toggle_advanced();
+            setCurrentModel();
             document.getElementById('generate_button').addEventListener('click', doGenerate);
             document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
             document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir));

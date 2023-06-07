@@ -16,6 +16,9 @@ body {
     margin-left: 5%;
     height: 5rem;
 }
+.generate-button:hover {
+    background-color: color-mix(in srgb, orange 70%, black);
+}
 .t2i-top-bar {
     display: block;
     height: 50vh;
@@ -116,6 +119,13 @@ body {
     font-size: 70%;
     font-family: 'Courier New', Courier, monospace;
 }
+.current_model_view {
+    display: inline-block;
+    border: 1px dotted var(--light-border);
+    border-radius: 0.3rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+}
 .model-block {
     height: 10rem;
     width: 40rem;
@@ -125,15 +135,29 @@ body {
     white-space: nowrap;
     vertical-align: top;
 }
-.model-loaded {
-    border: 1px solid #00ff00;
+.model-selected {
+    border: 1px solid rgba(0, 255, 0, 1.0);
     background-color: rgba(200, 255, 200, 0.3);
+}
+.model-loaded {
+    border: 1px solid rgba(100, 255, 100, 1.0);
+    background-color: rgba(220, 255, 220, 0.3);
 }
 .model-block-hoverable:hover {
     background-color: var(--shadow);
 }
 .model-block-hoverable:hover img {
     border: 2px solid white;
+}
+.model-load-button {
+    display: inline-block;
+    background-color: orange;
+    color: white;
+    font-weight: bold;
+    border-radius: 0.5rem;
+}
+.model-load-button:hover {
+    background-color: color-mix(in srgb, orange 70%, black);
 }
 .model-block img {
     max-height: 8rem;

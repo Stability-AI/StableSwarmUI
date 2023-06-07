@@ -22,6 +22,7 @@ public static class T2IAPI
         API.RegisterAPICall(GenerateText2ImageWS);
         API.RegisterAPICall(ListImages);
         API.RegisterAPICall(ListModels);
+        API.RegisterAPICall(ListLoadedModels);
         API.RegisterAPICall(SelectModel);
         API.RegisterAPICall(ListT2IParams);
     }
@@ -223,6 +224,18 @@ public static class T2IAPI
         {
             ["folders"] = JToken.FromObject(matches.Where(m => m.Name[path.Length..].Contains('/')).Select(m => m.Name.BeforeLast('/').AfterLast('/')).Distinct().ToList()),
             ["files"] = JToken.FromObject(matches.Where(m => !m.Name[path.Length..].Contains('/')).Select(m => m.ToNetObject()).ToList())
+        };
+    }
+
+    /// <summary>API route to get a list of currently loaded models.</summary>
+    public static async Task<JObject> ListLoadedModels(Session session)
+    {
+        string allowedStr = session.User.Restrictions.AllowedModels;
+        Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        List<T2IModel> matches = Program.T2IModels.Models.Values.Where(m => m.AnyBackendsHaveLoaded && (allowed is null || allowed.IsMatch(m.Name))).ToList();
+        return new JObject()
+        {
+            ["models"] = JToken.FromObject(matches.Select(m => m.ToNetObject()).ToList())
         };
     }
 
