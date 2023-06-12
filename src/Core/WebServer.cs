@@ -37,7 +37,7 @@ public class WebServer
         WebApp = builder.Build();
         if (WebApp.Environment.IsDevelopment())
         {
-            Utilities.VaryID += ".DEV" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            Utilities.VaryID += ".DEV" + ((DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 10L) % 1000000L);
             WebApp.UseDeveloperExceptionPage();
         }
         else

@@ -64,7 +64,40 @@
                     <div class="image_history" id="image_history"></div>
                 </div>
                 <div class="tab-pane" id="Presets-Tab" role="tabpanel">
-                    <button id="preset_list_refresh_button" class="refresh-button">Refresh</button> <button id="preset_list_create_new_button" class="refresh-button">Create New Preset</button>
+                    <button id="preset_list_refresh_button" class="refresh-button" onclick="javascript:loadUserData()">Refresh</button>
+                    <button id="preset_list_create_new_button" class="refresh-button" onclick="javascript:create_new_preset_button()">Create New Preset</button>
+                    <button id="preset_list_apply_button" class="refresh-button" onclick="javascript:apply_presets()" title="Apply all current presets directly to your parameter list.">Apply Presets</button>
+                    <span>Current presets<span id="preset_info_slot"></span>: </span> <span id="current_preset_list_view"></span>
+                    <div class="modal" tabindex="-1" role="dialog" id="add_preset_modal">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Create New Preset: <input type="text" id="new_preset_name" placeholder="Preset Name" /></h5>
+                                </div>
+                                <div class="modal-body">
+                                    <textarea class="auto-text" id="preset_description" rows="3" placeholder="Preset description text..."></textarea>
+                                    <span class="form-check form-switch display-inline-block">
+                                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('${id}')"> Use Image
+                                    </span>
+                                    <div id="new_preset_image" class="new_preset_image"></div>
+                                    <hr>
+                                    <h5>Parameters in the Preset</h5>
+                                    <p>Select the checkbox next to inputs you want included in the preset.<br>Use <code>{value}</code> in text inputs for the preset to use the UI value.</p>
+                                    <div id="new_preset_modal_inputs"></div>
+                                    <div class="advanced_input_checkbox">
+                                        <input type="checkbox" id="preset_advanced_options_checkbox" onclick="javascript:preset_toggle_advanced()"/>
+                                        <span onclick="javascript:preset_toggle_advanced_checkbox_manual()">Display Advanced Options?</span>
+                                    </div>
+                                    <div id="new_preset_modal_advanced_inputs" style="display:none;"></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <span id="new_preset_modal_error" class="new_preset_modal_error"></span>
+                                    <button type="button" class="btn btn-primary" onclick="javascript:save_new_preset()">Save</button>
+                                    <button type="button" class="btn btn-secondary" onclick="javascript:close_create_new_preset()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="preset_list" id="preset_list"></div>
                 </div>
                 <div class="tab-pane" id="Models-Tab" role="tabpanel">
@@ -117,5 +150,6 @@
 
 @section Scripts {
     <script src="/js/backends.js?vary=@Utilities.VaryID"></script>
+    <script src="/js/genpage_presets.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage.js?vary=@Utilities.VaryID"></script>
 }

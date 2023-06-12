@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Core;
 using StableUI.DataHolders;
+using StableUI.Utils;
 
 namespace StableUI.Text2Image;
 
@@ -39,6 +40,7 @@ public enum T2IParamDataType
 /// <param name="GetValues">A method that returns a list of valid values, for input validation.</param>
 /// <param name="Examples">A set of example values to be visible in some UIs.</param>
 /// <param name="ParseList">An optional special method to clean up a list of text inputs.</param>
+/// <param name="ValidateValues">If set to false, prevents the normal validation of the 'Values' list.</param>
 /// <param name="VisibleNormally">Whether the parameter should be visible in the main UI.</param>
 /// <param name="IsAdvanced">If 'false', this is an advanced setting that should be hidden by a dropdown.</param>
 /// <param name="FeatureFlag">If set, this parameter is only available when backends or models provide the given feature flag.</param>
@@ -46,10 +48,10 @@ public enum T2IParamDataType
 /// <param name="Toggleable">If true, the setting's presence can be toggled on/off.</param>
 /// <param name="OrderPriority">Value to help sort parameter types appropriately.</param>
 public record class T2IParamType(string Name, string Description, T2IParamDataType Type, string Default, Action<string, T2IParams> Apply, double Min = 0, double Max = 0, double Step = 1,
-    Func<string, string> Clean = null, Func<List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null,
+    Func<string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10)
 {
-    public JObject ToNet()
+    public JObject ToNet(Session session)
     {
         return new JObject()
         {
@@ -61,7 +63,7 @@ public record class T2IParamType(string Name, string Description, T2IParamDataTy
             ["min"] = Min,
             ["max"] = Max,
             ["step"] = Step,
-            ["values"] = GetValues == null ? null : JToken.FromObject(GetValues()),
+            ["values"] = GetValues == null ? null : JToken.FromObject(GetValues(session)),
             ["examples"] = Examples == null ? null : JToken.FromObject(Examples),
             ["visible"] = VisibleNormally,
             ["advanced"] = IsAdvanced,
@@ -100,14 +102,24 @@ public class T2IParamTypes
         return name.ToLowerFast().Replace(" ", "").Replace("[", "").Replace("]", "").Trim();
     }
 
+    /// <summary>Applies a string edit, with support for "{value}" notation.</summary>
+    public static string ApplyStringEdit(string prior, string update)
+    {
+        if (update.Contains("{value}"))
+        {
+            return update.Replace("{value}", prior ?? "");
+        }
+        return update;
+    }
+
     /// <summary>(Called by <see cref="Program"/> during startup) registers all default parameter types.</summary>
     public static void RegisterDefaults()
     {
         Register(new("Prompt", "The input prompt text that describes the image you want to generate.",
-            T2IParamDataType.TEXT, "", (s, p) => p.Prompt = s, Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100
+            T2IParamDataType.TEXT, "", (s, p) => p.Prompt = ApplyStringEdit(p.Prompt, s), Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100
             ));
         Register(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.",
-            T2IParamDataType.TEXT, "", (s, p) => p.NegativePrompt = s, Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90
+            T2IParamDataType.TEXT, "", (s, p) => p.NegativePrompt = ApplyStringEdit(p.NegativePrompt, s), Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90
             ));
         Register(new("Images", "How many images to generate at once.",
             T2IParamDataType.INTEGER, "1", (s, p) => { }, Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50
@@ -128,10 +140,10 @@ public class T2IParamTypes
             T2IParamDataType.POT_SLIDER, "1024", (s, p) => p.Height = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -9
             ));
         Register(new("Model", "What model should be used.",
-            T2IParamDataType.DROPDOWN, "", (s, p) => p.Model = Program.T2IModels.Models[s], GetValues: () => Program.T2IModels.Models.Keys.ToList(), Permission: "param_model", VisibleNormally: false
+            T2IParamDataType.DROPDOWN, "", (s, p) => p.Model = Program.T2IModels.Models[s], GetValues: (session) => Program.T2IModels.ListModelsFor(session).Select(m => m.Name).ToList(), Permission: "param_model", VisibleNormally: false
             ));
         Register(new("[Internal] Backend Type", "Which backend type should be used for this request.",
-            T2IParamDataType.DROPDOWN, "Any", (s, p) => p.BackendType = s, GetValues: () => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true
+            T2IParamDataType.DROPDOWN, "Any", (s, p) => p.BackendType = s, GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true
             ));
     }
 
@@ -161,7 +173,7 @@ public class T2IParamTypes
     }
 
     /// <summary>Converts a parameter value in a valid input for that parameter, or throws <see cref="InvalidDataException"/> if it can't.</summary>
-    public static string ValidateParam(T2IParamType type, string val)
+    public static string ValidateParam(T2IParamType type, string val, Session session)
     {
         if (type is null)
         {
@@ -209,12 +221,12 @@ public class T2IParamTypes
                 return val;
             case T2IParamDataType.TEXT:
             case T2IParamDataType.DROPDOWN:
-                if (type.GetValues is not null)
+                if (type.GetValues is not null && type.ValidateValues)
                 {
-                    val = GetBestInList(val, type.GetValues());
+                    val = GetBestInList(val, type.GetValues(session));
                     if (val is null)
                     {
-                        throw new InvalidDataException($"Invalid value for param {type.Name} - must be one of: `{string.Join("`, `", type.GetValues())}`");
+                        throw new InvalidDataException($"Invalid value for param {type.Name} - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
                     }
                 }
                 return val;
@@ -223,7 +235,7 @@ public class T2IParamTypes
     }
 
     /// <summary>Takes user input of a parameter and applies it to the parameter tracking data object.</summary>
-    public static void ApplyParameter(string paramTypeName, string value, T2IParams data, Session session)
+    public static void ApplyParameter(string paramTypeName, string value, T2IParams data)
     {
         if (!Types.TryGetValue(CleanTypeName(paramTypeName), out T2IParamType type))
         {
@@ -231,12 +243,12 @@ public class T2IParamTypes
         }
         if (type.Permission is not null)
         {
-            if (!session.User.HasGenericPermission(type.Permission))
+            if (!data.SourceSession.User.HasGenericPermission(type.Permission))
             {
                 throw new InvalidDataException($"You do not have permission to use parameter {type.Name}.");
             }
         }
-        value = ValidateParam(type, value);
+        value = ValidateParam(type, value, data.SourceSession);
         type.Apply(value, data);
         if (type.FeatureFlag is not null)
         {

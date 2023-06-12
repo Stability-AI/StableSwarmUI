@@ -1,4 +1,5 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Text2Image;
 using static StableUI.DataHolders.IDataHolder;
@@ -43,6 +44,9 @@ public class T2IParams : IDataHolder
     public IDataHolder ExternalData;
 
     public Dictionary<string, object> OtherParams = new();
+
+    /// <summary>The session this request came from, if known.</summary>
+    public Session SourceSession;
 
     /// <summary>What feature flags, if any, are required by this request.</summary>
     public HashSet<string> RequiredFlags = new();

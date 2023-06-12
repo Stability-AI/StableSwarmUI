@@ -3,6 +3,7 @@ using StableUI.Core;
 using System.Collections.Concurrent;
 using LiteDB;
 using StableUI.Text2Image;
+using FreneticUtilities.FreneticToolkit;
 
 namespace StableUI.Accounts;
 
@@ -27,15 +28,17 @@ public class SessionHandler
 
     public ILiteCollection<T2IPreset> T2IPresets;
 
+    public LockObject DBLock = new();
+
     public SessionHandler()
     {
-        AdminUser.Restrictions.Admin = true;
         Database = new LiteDatabase("Data/Users.ldb");
         UserDatabase = Database.GetCollection<User.DatabaseEntry>("users");
         T2IPresets = Database.GetCollection<T2IPreset>("t2i_presets");
         User.DatabaseEntry adminUserData = UserDatabase.FindById(LocalUserID);
-        adminUserData ??= new() { _id = LocalUserID };
+        adminUserData ??= new() { ID = LocalUserID, RawSettings = "\n" };
         AdminUser = new(this, adminUserData);
+        AdminUser.Restrictions.Admin = true;
     }
 
     public Session CreateAdminSession(string source)
@@ -77,7 +80,10 @@ public class SessionHandler
             return;
         }
         HasShutdown = true;
-        Sessions.Clear();
-        Database.Dispose();
+        lock (DBLock)
+        {
+            Sessions.Clear();
+            Database.Dispose();
+        }
     }
 }

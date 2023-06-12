@@ -1,6 +1,7 @@
 using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using LiteDB;
 using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Text2Image;
@@ -50,6 +51,7 @@ public class Program
     public static void Main(string[] args)
     {
         SpecialTools.Internationalize(); // Fix for MS's broken localization
+        BsonMapper.Global.EmptyStringToNull = false; // Fix for LiteDB's broken handling of empty strings
         Logs.Init("=== StableUI Starting ===");
         AssemblyLoadContext.Default.Unloading += (_) => Shutdown();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Shutdown();

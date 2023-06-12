@@ -75,6 +75,7 @@ function getGenInput() {
             input[type.id] = elem.value;
         }
     }
+    input["presets"] = currentPresets.map(p => p.title);
     console.log("Will request: " + JSON.stringify(input));
     return input;
 }
@@ -116,7 +117,7 @@ class FileListCallHelper {
     }
 };
 
-function loadFileList(api, path, container, loadCaller, fileCallback, endCallback) {
+function loadFileList(api, path, container, loadCaller, fileCallback, endCallback, sortFunc) {
     genericRequest(api, {'path': path}, data => {
         let prefix;
         if (path == '') {
@@ -135,7 +136,7 @@ function loadFileList(api, path, container, loadCaller, fileCallback, endCallbac
             div.addEventListener('click', helper.call.bind(helper));
         }
         container.appendChild(document.createElement('br'));
-        for (let file of data.files.sort()) {
+        for (let file of sortFunc(data.files)) {
             fileCallback(prefix, file);
         }
         if (endCallback) {
@@ -151,7 +152,7 @@ function loadHistory(path) {
     loadFileList('ListImages', path, container, loadHistory, (prefix, img) => {
         let div = appendImage('image_history', `Output/${prefix}${img.src}`, img.batch_id, img.src);
         div.addEventListener('click', () => selectImageInHistory(div));
-    });
+    }, null, (list) => list.sort((a, b) => b.src.toLowerCase().localeCompare(a.src.toLowerCase())).sort((a, b) => b.batch_id - a.batch_id));
 }
 
 let models = {};
@@ -205,7 +206,7 @@ function loadModelList(path) {
                 current_model.innerText = model.name;
             }
         }
-    });
+    }, (list) => list.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())));
 }
 
 function toggle_advanced() {
@@ -277,7 +278,7 @@ function doPopover(id) {
     if (pop.dataset.visible == "true") {
         pop.style.display = 'none';
         pop.dataset.visible = "false";
-        delete popHide[popHide.indexOf(id)]; // wtf? JavaScript doesn't have remove(...)?
+        popHide.splice(popHide.indexOf(id), 1);
     }
     else {
         pop.style.display = 'block';
@@ -288,41 +289,41 @@ function doPopover(id) {
     }
 }
 
+function getHtmlForParam(param, prefix) {
+    // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
+    let example = param.examples ? `<br><br>Examples: <code>${param.examples.map(escapeHtml).join("</code>,&emsp;<code>")}</code>` : '';
+    let pop = `<div class="sui-popover" id="popover_${prefix}${param.id}"><b>${escapeHtml(param.name)}</b> (${param.type}):<br>&emsp;${escapeHtml(param.description)}${example}</div>`;
+    switch (param.type) {
+        case 'text':
+            return makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, '', param.default, 3, param.description, param.toggleable) + pop;
+        case 'decimal':
+        case 'integer':
+            let min = param.min;
+            let max = param.max;
+            if (min == 0 && max == 0) {
+                min = -9999999;
+                max = 9999999;
+            }
+            return makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
+        case 'pot_slider':
+            return makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
+        case 'boolean':
+            return makeCheckboxInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.toggleable) + pop;
+        case 'dropdown':
+            return makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, param.toggleable) + pop;
+    }
+    return null;
+}
+
 function genInputs() {
     let area = document.getElementById('main_inputs_area');
     let advancedAea = document.getElementById('main_inputs_area_advanced');
     let hiddenArea = document.getElementById('main_inputs_area_hidden');
-    let html = '', advancedHtml = '', hiddenHtml = '';
+    let presetArea = document.getElementById('new_preset_modal_inputs');
+    let presetAdvancedArea = document.getElementById('new_preset_modal_advanced_inputs');
+    let html = '', advancedHtml = '', hiddenHtml = '', presetHtml = '', presetAdvancedHtml = '';
     for (let param of gen_param_types) {
-        let paramHtml;
-        // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
-        let example = param.examples ? `<br><br>Examples: <code>${param.examples.map(escapeHtml).join("</code>,&emsp;<code>")}</code>` : '';
-        let pop = `<div class="sui-popover" id="popover_input_${param.id}"><b>${escapeHtml(param.name)}</b> (${param.type}):<br>&emsp;${escapeHtml(param.description)}${example}</div>`;
-        switch (param.type) {
-            case 'text':
-                paramHtml = makeTextInput(param.feature_flag, `input_${param.id}`, param.name, '', param.default, 3, param.description, param.toggleable, pop);
-                break;
-            case 'decimal':
-            case 'integer':
-                let min = param.min;
-                let max = param.max;
-                if (min == 0 && max == 0) {
-                    min = -9999999;
-                    max = 9999999;
-                }
-                paramHtml = makeNumberInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable, pop);
-                break;
-            case 'pot_slider':
-                paramHtml = makeSliderInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable, pop);
-                break;
-            case 'boolean':
-                paramHtml = makeCheckboxInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.default, param.toggleable, pop);
-                break;
-            case 'dropdown':
-                paramHtml = makeDropdownInput(param.feature_flag, `input_${param.id}`, param.name, param.description, param.values, param.default, param.toggleable, pop);
-                break;
-        }
-        paramHtml += pop;
+        let paramHtml = getHtmlForParam(param, "input_");
         if (!param.visible) {
             hiddenHtml += paramHtml;
         }
@@ -332,10 +333,24 @@ function genInputs() {
         else {
             html += paramHtml;
         }
+        let presetParam = JSON.parse(JSON.stringify(param));
+        presetParam.toggleable = true;
+        let presetParamHtml = getHtmlForParam(presetParam, "preset_input_");
+        if (!param.visible) {
+            // Hidden excluded from presets.
+        }
+        else if (param.advanced) {
+            presetAdvancedHtml += presetParamHtml;
+        }
+        else {
+            presetHtml += presetParamHtml;
+        }
     }
     area.innerHTML = html;
     advancedAea.innerHTML = advancedHtml;
     hiddenArea.innerHTML = hiddenHtml;
+    presetArea.innerHTML = presetHtml;
+    presetAdvancedArea.innerHTML = presetAdvancedHtml;
     enableSlidersIn(area);
     for (let param of gen_param_types) {
         if (param.toggleable) {
@@ -440,6 +455,16 @@ function pageSizer() {
     });
 }
 
+
+function loadUserData() {
+    genericRequest('GetMyUserData', {}, data => {
+        document.getElementById('preset_list').innerHTML = '';
+        for (let preset of data.presets) {
+            addPreset(preset);
+        }
+    });
+}
+
 function genpageLoad() {
     console.log('Load page...');
     pageSizer();
@@ -456,6 +481,7 @@ function genpageLoad() {
             reviseStatusBar();
             toggle_advanced();
             setCurrentModel();
+            loadUserData();
             document.getElementById('generate_button').addEventListener('click', doGenerate);
             document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
             document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir));

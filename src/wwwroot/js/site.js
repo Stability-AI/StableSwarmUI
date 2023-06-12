@@ -133,15 +133,13 @@ function doToggleEnable(id) {
 }
 
 function getToggleHtml(toggles, id, name) {
-    return toggles ? `<input class="auto-slider-toggle" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="javascript:doToggleEnable('${id}')">` : '';
+    return toggles ? `<span class="form-check form-switch display-inline-block"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="javascript:doToggleEnable('${id}')"></span>` : '';
 }
 
-function makeSliderInput(featureid, id, name, description, value, min, max, step = 1, isPot = false, toggles = false, pop = "") {
+function makeSliderInput(featureid, id, name, description, value, min, max, step = 1, isPot = false, toggles = false) {
     name = escapeHtml(name);
     description = escapeHtml(description);
-    if (featureid != null) {
-        featureid = ` data-feature-require="${featureid}"`;
-    }
+    featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let rangeVal = isPot ? potToLinear(value, max, min, step) : value;
     return `
     <div class="auto-input auto-slider-box" title="${name}: ${description}"${featureid}>
@@ -154,12 +152,10 @@ function makeSliderInput(featureid, id, name, description, value, min, max, step
     </div>`;
 }
 
-function makeNumberInput(featureid, id, name, description, value, min, max, step = 1, small = false, toggles = false, pop = "") {
+function makeNumberInput(featureid, id, name, description, value, min, max, step = 1, small = false, toggles = false) {
     name = escapeHtml(name);
     description = escapeHtml(description);
-    if (featureid != null) {
-        featureid = ` data-feature-require="${featureid}"`;
-    }
+    featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     if (small) {
         return `
         <div class="auto-input auto-number-box" title="${name}: ${description}"${featureid}>
@@ -178,12 +174,10 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
     }
 }
 
-function makeTextInput(featureid, id, name, description, value, rows, placeholder, toggles = false, pop = "") {
+function makeTextInput(featureid, id, name, description, value, rows, placeholder, toggles = false) {
     name = escapeHtml(name);
     description = escapeHtml(description);
-    if (featureid != null) {
-        featureid = ` data-feature-require="${featureid}"`;
-    }
+    featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     return `
     <div class="auto-input auto-text-box" title="${name}: ${description}"${featureid}>
         <div class="auto-input-fade-lock auto-fade-max-contain">
@@ -193,12 +187,10 @@ function makeTextInput(featureid, id, name, description, value, rows, placeholde
     </div>`;
 }
 
-function makeCheckboxInput(featureid, id, name, description, value, toggles = false, pop = "") {
+function makeCheckboxInput(featureid, id, name, description, value, toggles = false) {
     name = escapeHtml(name);
     description = escapeHtml(description);
-    if (featureid != null) {
-        featureid = ` data-feature-require="${featureid}"`;
-    }
+    featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let checked = `${value}` == "true" ? ' checked="true"' : '';
     return `
     <div class="auto-input auto-checkbox-box" title="${name}: ${description}"${featureid}>
@@ -207,12 +199,10 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
     </div>`;
 }
 
-function makeDropdownInput(featureid, id, name, description, values, defaultVal, toggles = false, pop = "") {
+function makeDropdownInput(featureid, id, name, description, values, defaultVal, toggles = false) {
     name = escapeHtml(name);
     description = escapeHtml(description);
-    if (featureid != null) {
-        featureid = ` data-feature-require="${featureid}"`;
-    }
+    featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let html = `
     <div class="auto-input auto-dropdown-box" title="${name}: ${description}"${featureid}>
         <div class="auto-input-fade-lock auto-fade-max-contain">

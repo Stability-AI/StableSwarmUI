@@ -34,6 +34,14 @@ public class GridGeneratorExtension : Extension
                 string first = list[0];
                 return list.Select(v => $"{first}={v}").ToList();
             }));
+        T2IParamTypes.Register(new("[Grid Gen] Presets", "Apply parameter presets to the image. Can use a comma-separated list to apply multiple per-cell, eg 'a, b || a, c || b, c'",
+            T2IParamDataType.TEXT, "", (s, p) =>
+            {
+                foreach (T2IPreset preset in s.SplitFast(',').Select(s => p.SourceSession.User.GetPreset(s.Trim())).Where(p => p is not null))
+                {
+                    preset.ApplyTo(p);
+                }
+            }, VisibleNormally: false, Toggleable: true, ValidateValues: false, GetValues: (session) => session.User.GetAllPresets().Select(p => p.Title).ToList()));
         GridGenCore.GridCallInitHook = (call) =>
         {
             call.LocalData = new GridCallData();
@@ -198,14 +206,14 @@ public class GridGeneratorExtension : Extension
 
     public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
-        T2IParams baseParams = new();
+        T2IParams baseParams = new() { SourceSession = session };
         try
         {
             foreach ((string key, JToken val) in (raw["baseParams"] as JObject))
             {
                 if (T2IParamTypes.Types.ContainsKey(T2IParamTypes.CleanTypeName(key)))
                 {
-                    T2IParamTypes.ApplyParameter(key, val.ToString(), baseParams, session);
+                    T2IParamTypes.ApplyParameter(key, val.ToString(), baseParams);
                 }
             }
         }

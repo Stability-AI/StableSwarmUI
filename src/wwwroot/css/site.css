@@ -10,6 +10,9 @@
     --green: #00ff00;
     --qbutton: #00a0a0;
 }
+.modal-content {
+    background-color: var(--background) !important;
+}
 body {
     background-color: var(--background);
 }
@@ -149,7 +152,7 @@ body {
 }
 .auto-number-box, .auto-checkbox-box {
     width: fit-content;
-    max-width: 18rem;
+    max-width: 25rem;
 }
 .auto-input-name {
     display: inline-block;
@@ -234,6 +237,10 @@ textarea, input, select {
     border: 1px solid var(--qbutton);
     color: var(--qbutton);
 }
+.auto-input-qbutton:hover {
+    background-color: var(--qbutton);
+    color: #000000 !important;
+}
 .sui-popover {
     background-color: black;
     color: white;
@@ -241,9 +248,17 @@ textarea, input, select {
     border-radius: 0.5rem;
     padding: 0.5rem;
     display: none;
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
     width: fit-content;
     z-index: 1000;
+}
+.auto-slider-toggle {
+    position: relative;
+    left: -0.5rem;
+}
+.display-inline-block {
+    display: inline-block !important;
+    vertical-align: middle;
 }

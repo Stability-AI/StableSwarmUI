@@ -171,6 +171,10 @@ body {
     color: white;
     font-weight: bold;
     border-radius: 0.5rem;
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
 }
 .model-load-button:hover {
     background-color: color-mix(in srgb, orange 70%, black);
@@ -220,4 +224,45 @@ body {
     margin-top: 0.5rem;
     width: 90%;
     margin-left: 5%;
+}
+.new_preset_modal_error {
+    color: red;
+}
+.preset-block {
+    border: 1px solid var(--light-border);
+    width: 30rem;
+}
+.preset-descblock {
+    width: 20rem;
+    word-wrap: normal;
+    white-space: normal;
+    word-break: normal;
+}
+.preset-in-list {
+    display: inline-block;
+    border: 1px solid var(--light-border);
+    padding-left: 0.5rem;
+    border-radius: 1rem;
+    border-right: none;
+}
+.preset-remove-button {
+    display: inline-block;
+    color: white;
+    font-weight: bold;
+    border: 1px solid red;
+    border-radius: 0.5rem;
+    margin-left: 0.2rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+}
+.preset-remove-button:hover {
+    background-color: color-mix(in srgb, red 70%, black);
+}
+.new_preset_image {
+    align-items: center;
+    text-align: center;
+}
+.new_preset_image img {
+    max-width: 100%;
+    max-height: 20rem;
 }

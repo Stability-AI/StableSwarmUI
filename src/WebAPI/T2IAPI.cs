@@ -66,7 +66,7 @@ public static class T2IAPI
     /// <summary>Internal route for generating images.</summary>
     public static async IAsyncEnumerable<(string, JObject)> GenT2I_Internal(Session session, int images, JObject rawInput)
     {
-        T2IParams user_input = new();
+        T2IParams user_input = new() { SourceSession = session };
         string err = null;
         try
         {
@@ -74,8 +74,13 @@ public static class T2IAPI
             {
                 if (T2IParamTypes.Types.ContainsKey(T2IParamTypes.CleanTypeName(key)))
                 {
-                    T2IParamTypes.ApplyParameter(key, val.ToString(), user_input, session);
+                    T2IParamTypes.ApplyParameter(key, val.ToString(), user_input);
                 }
+            }
+            foreach (JToken presetName in rawInput["presets"].Values())
+            {
+                T2IPreset presetObj = session.User.GetPreset(presetName.ToString());
+                presetObj.ApplyTo(user_input);
             }
         }
         catch (InvalidDataException ex)
@@ -259,11 +264,11 @@ public static class T2IAPI
     }
 
     /// <summary>API route to get a list of parameter types.</summary>
-    public static async Task<JObject> ListT2IParams()
+    public static async Task<JObject> ListT2IParams(Session session)
     {
         return new JObject()
         {
-            ["list"] = JToken.FromObject(T2IParamTypes.Types.Values.Select(v => v.ToNet()).ToList())
+            ["list"] = JToken.FromObject(T2IParamTypes.Types.Values.Select(v => v.ToNet(session)).ToList())
         };
     }
 }

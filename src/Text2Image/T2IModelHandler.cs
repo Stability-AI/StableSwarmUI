@@ -1,7 +1,12 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using Newtonsoft.Json.Linq;
+using StableUI.Accounts;
 using StableUI.Core;
+using StableUI.Utils;
 using System.Collections.Concurrent;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace StableUI.Text2Image;
 
@@ -13,6 +18,17 @@ public class T2IModelHandler
 
     /// <summary>Lock used when modifying the model list.</summary>
     public LockObject ModificationLock = new();
+
+    public List<T2IModel> ListModelsFor(Session session)
+    {
+        string allowedStr = session.User.Restrictions.AllowedModels;
+        if (allowedStr == ".*")
+        {
+            return Models.Values.ToList();
+        }
+        Regex allowed = new(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        return Models.Values.Where(m => allowed.IsMatch(m.Name)).ToList();
+    }
 
     /// <summary>Refresh the model list.</summary>
     public void Refresh()

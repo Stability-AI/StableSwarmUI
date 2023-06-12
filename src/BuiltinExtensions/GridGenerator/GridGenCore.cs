@@ -1,6 +1,7 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
+using StableUI.Accounts;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
@@ -165,7 +166,7 @@ public partial class GridGenCore
                     {
                         continue;
                     }
-                    valStr = T2IParamTypes.ValidateParam(Mode, valStr);
+                    valStr = T2IParamTypes.ValidateParam(Mode, valStr, grid.InitialParams.SourceSession);
                     Values.Add(new AxisValue(grid, this, index.ToString(), $"{id}={valStr}"));
                 }
                 catch (InvalidDataException ex)
