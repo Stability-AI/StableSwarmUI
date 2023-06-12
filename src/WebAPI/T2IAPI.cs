@@ -23,6 +23,7 @@ public static class T2IAPI
         API.RegisterAPICall(ListImages);
         API.RegisterAPICall(ListModels);
         API.RegisterAPICall(ListLoadedModels);
+        API.RegisterAPICall(RefreshModels);
         API.RegisterAPICall(SelectModel);
         API.RegisterAPICall(ListT2IParams);
     }
@@ -77,10 +78,13 @@ public static class T2IAPI
                     T2IParamTypes.ApplyParameter(key, val.ToString(), user_input);
                 }
             }
-            foreach (JToken presetName in rawInput["presets"].Values())
+            if (rawInput.TryGetValue("presets", out JToken presets))
             {
-                T2IPreset presetObj = session.User.GetPreset(presetName.ToString());
-                presetObj.ApplyTo(user_input);
+                foreach (JToken presetName in presets.Values())
+                {
+                    T2IPreset presetObj = session.User.GetPreset(presetName.ToString());
+                    presetObj.ApplyTo(user_input);
+                }
             }
         }
         catch (InvalidDataException ex)
@@ -241,6 +245,13 @@ public static class T2IAPI
         {
             ["models"] = JToken.FromObject(matches.Select(m => m.ToNetObject()).ToList())
         };
+    }
+
+    /// <summary>API route to trigger a reload of the model list.</summary>
+    public static async Task<JObject> RefreshModels(Session session)
+    {
+        Program.T2IModels.Refresh();
+        return new JObject() { ["success"] = true };
     }
 
     /// <summary>API route to select a model for loading.</summary>

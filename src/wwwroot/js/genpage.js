@@ -190,12 +190,12 @@ function appendModel(container, prefix, model) {
     });
 }
 
-function loadModelList(path) {
+function loadModelList(path, isRefresh = false) {
     let container = document.getElementById('model_list');
     lastModelDir = path;
     container.innerHTML = '';
     models = {};
-    loadFileList('ListModels', path, container, loadModelList, (prefix, model) => {
+    call = () => loadFileList('ListModels', path, container, loadModelList, (prefix, model) => {
         appendModel(container, prefix, model);
     }, () => {
         let current_model = document.getElementById('current_model');
@@ -207,6 +207,14 @@ function loadModelList(path) {
             }
         }
     }, (list) => list.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())));
+    if (isRefresh) {
+        genericRequest('RefreshModels', {}, data => {
+            call();
+        });
+    }
+    else {
+        call();
+    }
 }
 
 function toggle_advanced() {
@@ -484,7 +492,7 @@ function genpageLoad() {
             loadUserData();
             document.getElementById('generate_button').addEventListener('click', doGenerate);
             document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
-            document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir));
+            document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir, true));
             for (let callback of sessionReadyCallbacks) {
                 callback();
             }
