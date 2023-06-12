@@ -1,6 +1,8 @@
 ﻿using StableUI.Utils;
 using StableUI.Core;
 using System.Collections.Concurrent;
+using LiteDB;
+using StableUI.Text2Image;
 
 namespace StableUI.Accounts;
 
@@ -17,11 +19,23 @@ public class SessionHandler
     public static string LocalUserID = "local";
 
     /// <summary>Basic reusable admin user.</summary>
-    public User AdminUser = new() { UserID = LocalUserID };
+    public User AdminUser;
+
+    public ILiteDatabase Database;
+
+    public ILiteCollection<User.DatabaseEntry> UserDatabase;
+
+    public ILiteCollection<T2IPreset> T2IPresets;
 
     public SessionHandler()
     {
         AdminUser.Restrictions.Admin = true;
+        Database = new LiteDatabase("Data/Users.ldb");
+        UserDatabase = Database.GetCollection<User.DatabaseEntry>("users");
+        T2IPresets = Database.GetCollection<T2IPreset>("t2i_presets");
+        User.DatabaseEntry adminUserData = UserDatabase.FindById(LocalUserID);
+        adminUserData ??= new() { _id = LocalUserID };
+        AdminUser = new(this, adminUserData);
     }
 
     public Session CreateAdminSession(string source)
@@ -64,6 +78,6 @@ public class SessionHandler
         }
         HasShutdown = true;
         Sessions.Clear();
-        // TODO
+        Database.Dispose();
     }
 }

@@ -1,4 +1,6 @@
 ﻿using FreneticUtilities.FreneticToolkit;
+using FreneticUtilities.FreneticDataSyntax;
+using LiteDB;
 using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Utils;
@@ -8,8 +10,40 @@ namespace StableUI.Accounts;
 /// <summary>Represents a single user account.</summary>
 public class User
 {
+    /// <summary>Data for the user that goes directly to the database.</summary>
+    public class DatabaseEntry
+    {
+        [BsonId]
+        public string _id;
+
+        /// <summary>What presets this user has saved, matched to the preset database.</summary>
+        public List<string> Presets = new();
+
+        /// <summary>This users stored settings data.</summary>
+        public string RawSettings = "";
+    }
+
+    public User(SessionHandler sessions, DatabaseEntry data)
+    {
+        Sessions = sessions;
+        Data = data;
+        Settings.Load(new FDSSection(data.RawSettings));
+    }
+
+    /// <summary>Save this user's data to the backend handler.</summary>
+    public void Save()
+    {
+        Sessions.UserDatabase.Upsert(Data);
+    }
+
+    /// <summary>The relevant sessions handler backend.</summary>
+    public SessionHandler Sessions;
+
+    /// <summary>Core data for this user in the backend database.</summary>
+    public DatabaseEntry Data;
+
     /// <summary>The short static User-ID for this user.</summary>
-    public string UserID;
+    public string UserID => Data._id;
 
     /// <summary>What restrictions apply to this user.</summary>
     public Settings.UserRestriction Restrictions = new();

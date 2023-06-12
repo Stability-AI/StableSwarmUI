@@ -49,6 +49,9 @@
                     <a class="nav-link active" data-bs-toggle="tab" href="#Image-History-Tab" aria-selected="true" role="tab">Image History</a>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <a class="nav-link" data-bs-toggle="tab" href="#Presets-Tab" aria-selected="false" tabindex="-1" role="tab">Presets</a>
+                </li>
+                <li class="nav-item" role="presentation">
                     <a class="nav-link" data-bs-toggle="tab" href="#Models-Tab" aria-selected="false" tabindex="-1" role="tab">Models</a>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -59,6 +62,10 @@
                 <div class="tab-pane show active" id="Image-History-Tab" role="tabpanel">
                     <button id="image_history_refresh_button" class="image-history-refresh refresh-button">Refresh</button>
                     <div class="image_history" id="image_history"></div>
+                </div>
+                <div class="tab-pane" id="Presets-Tab" role="tabpanel">
+                    <button id="preset_list_refresh_button" class="refresh-button">Refresh</button> <button id="preset_list_create_new_button" class="refresh-button">Create New Preset</button>
+                    <div class="preset_list" id="preset_list"></div>
                 </div>
                 <div class="tab-pane" id="Models-Tab" role="tabpanel">
                     <button id="model_list_refresh_button" class="refresh-button">Refresh</button> Current Model: <span class="current_model_view" id="current_model"></span>
