@@ -21,8 +21,9 @@ public class Settings : AutoConfiguration
     [ConfigComment("Root path for output files (images, etc). Defaults to 'Output'")]
     public string OutputPath = "Output";
 
-    [ConfigComment("What web host address to use, `localhost` means your PC only,"
-        + " `*` means accessible to anyone that can connect to your PC (ie LAN users, or the public if your firewall is open)."
+    [ConfigComment("What web host address to use. `localhost` means your PC only."
+        + " Linux users may use `0.0.0.0` to mean accessible to anyone that can connect to your PC (ie LAN users, or the public if your firewall is open)."
+        + " Windows users may use `*` for that, though it may require additional Windows firewall configuration."
         + " Advanced server users may wish to manually specify a host bind address here.")]
     public string Host = "localhost";
 
@@ -66,7 +67,8 @@ public class Settings : AutoConfiguration
         public class OutPath : AutoConfiguration
         {
             [ConfigComment("Builder for output file paths. Can use auto-filling placeholders like '[model]' for the model name, '[prompt]' for a snippet of prompt text, etc.")]
-            public string Format = "[model]/[prompt]/[seed]";
+            // TODO: Docs link that documents full set of options here.
+            public string Format = "raw/[year]-[month]-[day]/[prompt]-[model]-[seed]";
 
             [ConfigComment("How long any one part can be. Default is 40 characters.")]
             public int MaxLenPerPart = 40;

@@ -31,17 +31,46 @@ public class User
     /// <summary>Converts the user's output path setting to a real path for the given parameters. Note that the path is partially cleaned, but not completely.</summary>
     public string BuildImageOutputPath(T2IParams user_input)
     {
-        string path = Settings.OutPathBuilder.Format;
         int maxLen = Settings.OutPathBuilder.MaxLenPerPart;
-        foreach (DataHolderHelper.FieldData field in DataHolderHelper<T2IParams>.Instance.Fields)
+        DateTimeOffset time = DateTimeOffset.Now;
+        string buildPathPart(string part)
         {
-            string piece = field.Field.GetValue(user_input).ToString();
-            if (piece.Length > maxLen)
+            string data = part switch
             {
-                piece = piece[..maxLen];
+                "year" => $"{time.Year}",
+                "month" => $"{time.Month}",
+                "month_name" => $"{time:MMMM}",
+                "day" => $"{time.Day}",
+                "day_name" => $"{time:dddd}",
+                "hour" => $"{time.Hour}",
+                "minute" => $"{time.Minute}",
+                "second" => $"{time.Second}",
+                "prompt" => user_input.Prompt,
+                "negative_prompt" => user_input.NegativePrompt,
+                "seed" => $"{user_input.Seed}",
+                "cfg_scale" => $"{user_input.CFGScale}",
+                "width" => $"{user_input.Width}",
+                "height" => $"{user_input.Height}",
+                "steps" => $"{user_input.Steps}",
+                "var_seed" => $"{user_input.VarSeed}",
+                "var_strength" => $"{user_input.VarSeedStrength}",
+                "model" => user_input.Model?.Name ?? "unknown",
+                "user_name" => UserID,
+                string other => user_input.OtherParams.TryGetValue(other, out object val) ? val.ToString() : null
+            };
+            if (data is null)
+            {
+                return null;
             }
-            path = path.Replace($"[{field.Name}]", piece.Replace("//", ""));
+            if (data.Length > maxLen)
+            {
+                data = data[..maxLen];
+            }
+            data = data.Replace("/", "");
+            return data;
         }
+        string path = Settings.OutPathBuilder.Format;
+        path = StringConversionHelper.QuickSimpleTagFiller(path, "[", "]", buildPathPart);
         path = Utilities.FilePathForbidden.TrimToNonMatches(path).Replace(".", "");
         if (path.Length < 5) // Quiet trick: some short file names, eg 'CON.png', would hit Windows reserved names, so quietly break that.
         {
