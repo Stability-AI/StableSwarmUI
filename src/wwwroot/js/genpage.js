@@ -438,17 +438,24 @@ function setCurrentModel(callback) {
 
 function pageSizer() {
     let topSplit = document.getElementById('t2i-top-split-bar');
+    let topSplit2 = document.getElementById('t2i-top-2nd-split-bar');
     let midSplit = document.getElementById('t2i-mid-split-bar');
     let topBar = document.getElementById('t2i_top_bar');
     let bottomBarContent = document.getElementById('t2i_bottom_bar_content');
     let inputSidebar = document.getElementById('input_sidebar');
     let mainInputsAreaWrapper = document.getElementById('main_inputs_area_wrapper');
     let mainImageArea = document.getElementById('main_image_area');
+    let currentImage = document.getElementById('current_image');
     let currentImageBatch = document.getElementById('current_image_batch');
     let topDrag = false;
+    let topDrag2 = false;
     let midDrag = false;
     topSplit.addEventListener('mousedown', (e) => {
         topDrag = true;
+        e.preventDefault();
+    }, true);
+    topSplit2.addEventListener('mousedown', (e) => {
+        topDrag2 = true;
         e.preventDefault();
     }, true);
     midSplit.addEventListener('mousedown', (e) => {
@@ -456,20 +463,28 @@ function pageSizer() {
         e.preventDefault();
     }, true);
     document.addEventListener('mousemove', (e) => {
+        let offX = e.pageX - 5;
         if (topDrag) {
-            let offX = e.pageX - 2;
             inputSidebar.style.width = `${offX}px`;
             mainInputsAreaWrapper.style.width = `${offX}px`;
             mainImageArea.style.width = `calc(100vw - ${offX}px)`;
             currentImageBatch.style.width = `calc(100vw - ${offX}px - min(max(40vw, 28rem), 49vh))`;
         }
+        if (topDrag2) {
+            let adaptedX = offX - inputSidebar.getBoundingClientRect().width - 17;
+            currentImage.style.width = `${adaptedX}px`;
+            currentImageBatch.style.width = `calc(100vw - ${offX}px)`;
+        }
         if (midDrag) {
             let topY = currentImageBatch.getBoundingClientRect().top;
             let offY = (e.pageY - topY - 2) / window.innerHeight * 100;
             topSplit.style.height = `${offY}vh`;
+            topSplit2.style.height = `${offY}vh`;
             inputSidebar.style.height = `${offY}vh`;
             mainInputsAreaWrapper.style.height = `calc(${offY}vh - 6rem)`;
             mainImageArea.style.height = `${offY}vh`;
+            currentImage.style.height = `${offY}vh`;
+            currentImageBatch.style.height = `calc(${offY}vh - 2rem)`;
             topBar.style.height = `${offY}vh`;
             let invOff = 100 - offY;
             bottomBarContent.style.height = `calc(${invOff}vh - 2rem)`;
@@ -477,6 +492,7 @@ function pageSizer() {
     });
     document.addEventListener('mouseup', (e) => {
         topDrag = false;
+        topDrag2 = false;
         midDrag = false;
     });
 }
