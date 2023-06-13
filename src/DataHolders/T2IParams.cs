@@ -2,6 +2,7 @@
 using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Text2Image;
+using StableUI.Utils;
 using static StableUI.DataHolders.IDataHolder;
 
 namespace StableUI.DataHolders;
@@ -39,10 +40,16 @@ public class T2IParams : IDataHolder
     [NetData(Name = "backend_type")]
     public string BackendType = "any";
 
+    [NetData(Name = "image_init_strength")]
+    public float ImageInitStrength = 0.6f;
+
+    /// <summary>What model the user wants this image generated with.</summary>
     public T2IModel Model;
 
+    /// <summary>Optional external data, from eg an extension that needs its own data tracking.</summary>
     public IDataHolder ExternalData;
 
+    /// <summary>General-purpose holder of other parameters to pass along.</summary>
     public Dictionary<string, object> OtherParams = new();
 
     /// <summary>The session this request came from, if known.</summary>
@@ -50,6 +57,9 @@ public class T2IParams : IDataHolder
 
     /// <summary>What feature flags, if any, are required by this request.</summary>
     public HashSet<string> RequiredFlags = new();
+
+    /// <summary>Optional initialization image for img2img generations.</summary>
+    public Image InitImage;
 
     public T2IParams Clone()
     {

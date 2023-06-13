@@ -17,7 +17,7 @@ function enableSlidersIn(elem) {
             }
             number.dataset.old_value = number.value;
         });
-        if (range.dataset.ispot) {
+        if (range.dataset.ispot == "true") {
             let max = parseInt(range.getAttribute('max')), min = parseInt(range.getAttribute('min')), step = parseInt(range.getAttribute('step'));
             range.addEventListener('input', () => number.value = linearToPot(range.value, max, min, step));
             number.addEventListener('input', () => range.value = potToLinear(number.value, max, min, step));
@@ -136,6 +136,18 @@ function getToggleHtml(toggles, id, name) {
     return toggles ? `<span class="form-check form-switch display-inline-block"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="javascript:doToggleEnable('${id}')"></span>` : '';
 }
 
+function load_image_file(e) {
+    let file = e.files[0];
+    if (file) {
+        let reader = new FileReader();
+        reader.addEventListener("load", () => { e.dataset.filedata = reader.result; }, false);
+        reader.readAsDataURL(file);
+    }
+    else {
+        e.dataset.filedata = null;
+    }
+}
+
 function makeSliderInput(featureid, id, name, description, value, min, max, step = 1, isPot = false, toggles = false) {
     name = escapeHtml(name);
     description = escapeHtml(description);
@@ -215,6 +227,20 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
     }
     html += `
         </select>
+    </div>`;
+    return html;
+}
+
+function makeImageInput(featureid, id, name, description, toggles = false) {
+    name = escapeHtml(name);
+    description = escapeHtml(description);
+    featureid = featureid ? ` data-feature-require="${featureid}"` : '';
+    let html = `
+    <div class="auto-input auto-file-box" title="${name}: ${description}"${featureid}>
+        <div class="auto-input-fade-lock auto-fade-max-contain">
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
+        </div>
+        <br><input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)">
     </div>`;
     return html;
 }

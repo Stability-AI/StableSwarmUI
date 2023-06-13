@@ -87,11 +87,18 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
             ["subseed"] = user_input.VarSeed,
             ["subseed_strength"] = user_input.VarSeedStrength
         };
+        string route = "txt2img";
+        if (user_input.InitImage is not null)
+        {
+            route = "img2img";
+            toSend["init_images"] = new JArray(user_input.InitImage.AsBase64);
+            toSend["denoising_strength"] = user_input.ImageInitStrength;
+        }
         foreach (KeyValuePair<string, object> pair in user_input.OtherParams)
         {
             toSend[pair.Key] = JToken.FromObject(pair.Value);
         }
-        JObject result = await SendPost<JObject>("txt2img", toSend);
+        JObject result = await SendPost<JObject>(route, toSend);
         // TODO: Error handlers
         return result["images"].Select(i => new Image((string)i)).ToArray();
     }

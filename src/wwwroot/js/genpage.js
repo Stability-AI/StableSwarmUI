@@ -71,6 +71,11 @@ function getGenInput() {
         if (type.type == "boolean") {
             input[type.id] = elem.checked;
         }
+        else if (type.type == "image") {
+            if (elem.dataset.filedata) {
+                input[type.id] = elem.dataset.filedata;
+            }
+        }
         else {
             input[type.id] = elem.value;
         }
@@ -312,14 +317,27 @@ function getHtmlForParam(param, prefix) {
                 min = -9999999;
                 max = 9999999;
             }
-            return makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
-        case 'pot_slider':
-            return makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
+            console.log(`will build param ${param.id} with min ${min} and max ${max} and step ${param.step}`)
+            switch (param.number_view_type) {
+                case 'small':
+                    return makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
+                case 'big':
+                    return makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop;
+                case 'slider':
+                    let val = makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop;
+                    console.log(`will use ${val}`)
+                    return val;
+                case 'pot_slider':
+                    return makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
+            }
         case 'boolean':
             return makeCheckboxInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.toggleable) + pop;
         case 'dropdown':
             return makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, param.toggleable) + pop;
+        case 'image':
+            return makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop;
     }
+    console.log(`Cannot generate input for param ${param.id} of type ${param.type} - unknown type`);
     return null;
 }
 

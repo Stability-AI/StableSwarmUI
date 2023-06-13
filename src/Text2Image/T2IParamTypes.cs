@@ -17,12 +17,25 @@ public enum T2IParamDataType
     INTEGER,
     /// <summary>Number with decimal input.</summary>
     DECIMAL,
-    /// <summary>Special-case integer input: Power-of-Two slider, used especially for Width/Height of an image.</summary>
-    POT_SLIDER,
     /// <summary>Input is just 'true' or 'false'; a checkbox.</summary>
     BOOLEAN,
     /// <summary>Selection explicitly from a list.</summary>
-    DROPDOWN
+    DROPDOWN,
+    /// <summary>Image file input.</summary>
+    IMAGE
+}
+
+/// <summary>Which format to display a number in.</summary>
+public enum NumberViewType
+{
+    /// <summary>Small numeric input box.</summary>
+    SMALL,
+    /// <summary>Large numeric input box.</summary>
+    BIG,
+    /// <summary>Ordinary range slider.</summary>
+    SLIDER,
+    /// <summary>Power-of-Two slider, used especially for Width/Height of an image.</summary>
+    POT_SLIDER
 }
 
 /// <summary>
@@ -47,9 +60,12 @@ public enum T2IParamDataType
 /// <param name="Permission">If set, users must have the given permission flag to use this parameter.</param>
 /// <param name="Toggleable">If true, the setting's presence can be toggled on/off.</param>
 /// <param name="OrderPriority">Value to help sort parameter types appropriately.</param>
+/// <param name="Group">Optional grouping label.</param>
+/// <param name="NumberView">How to display a number input.</param>
+/// 
 public record class T2IParamType(string Name, string Description, T2IParamDataType Type, string Default, Action<string, T2IParams> Apply, double Min = 0, double Max = 0, double Step = 1,
     Func<string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
-    bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10)
+    bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, string Group = null, NumberViewType NumberView = NumberViewType.SMALL)
 {
     public JObject ToNet(Session session)
     {
@@ -69,7 +85,9 @@ public record class T2IParamType(string Name, string Description, T2IParamDataTy
             ["advanced"] = IsAdvanced,
             ["feature_flag"] = FeatureFlag,
             ["toggleable"] = Toggleable,
-            ["priority"] = OrderPriority
+            ["priority"] = OrderPriority,
+            ["group"] = Group,
+            ["number_view_type"] = NumberView.ToString().ToLowerFast()
         };
     }
 }
@@ -134,10 +152,16 @@ public class T2IParamTypes
             T2IParamDataType.DECIMAL, "7", (s, p) => p.CFGScale = float.Parse(s), Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18
             ));
         Register(new("Width", "Image width, in pixels.",
-            T2IParamDataType.POT_SLIDER, "1024", (s, p) => p.Width = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10
+            T2IParamDataType.INTEGER, "512", (s, p) => p.Width = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
             ));
         Register(new("Height", "Image height, in pixels.",
-            T2IParamDataType.POT_SLIDER, "1024", (s, p) => p.Height = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -9
+            T2IParamDataType.INTEGER, "512", (s, p) => p.Height = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -9, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
+            ));
+        Register(new("Init Image", "Init-image, to edit an image using diffusion.",
+            T2IParamDataType.IMAGE, "", (s, p) => p.InitImage = string.IsNullOrWhiteSpace(s) ? null : new(s), OrderPriority: -5, Group: "Init Image"
+            ));
+        Register(new("Init Image Creativity", "Higher values make the generation more creative, lower values follow the init image closer.",
+            T2IParamDataType.DECIMAL, "0.6", (s, p) => p.ImageInitStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, NumberView: NumberViewType.SLIDER, Group: "Init Image"
             ));
         Register(new("Model", "What model should be used.",
             T2IParamDataType.DROPDOWN, "", (s, p) => p.Model = Program.T2IModels.Models[s], GetValues: (session) => Program.T2IModels.ListModelsFor(session).Select(m => m.Name).ToList(), Permission: "param_model", VisibleNormally: false
@@ -172,6 +196,9 @@ public class T2IParamTypes
         return backup;
     }
 
+    /// <summary>Quick hex validator.</summary>
+    public static AsciiMatcher ValidBase64Matcher = new(AsciiMatcher.BothCaseLetters + AsciiMatcher.Digits + "+/=");
+
     /// <summary>Converts a parameter value in a valid input for that parameter, or throws <see cref="InvalidDataException"/> if it can't.</summary>
     public static string ValidateParam(T2IParamType type, string val, Session session)
     {
@@ -186,7 +213,6 @@ public class T2IParamTypes
         switch (type.Type)
         {
             case T2IParamDataType.INTEGER:
-            case T2IParamDataType.POT_SLIDER:
                 if (!int.TryParse(val, out int valInt))
                 {
                     throw new InvalidDataException($"Invalid integer value for param {type.Name} - must be a valid integer (eg '0', '3', '-5', etc)");
@@ -228,6 +254,20 @@ public class T2IParamTypes
                     {
                         throw new InvalidDataException($"Invalid value for param {type.Name} - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
                     }
+                }
+                return val;
+            case T2IParamDataType.IMAGE:
+                if (val.StartsWith("data:"))
+                {
+                    val = val.After(',');
+                }
+                if (string.IsNullOrWhiteSpace(val))
+                {
+                    return "";
+                }
+                if (!ValidBase64Matcher.IsOnlyMatches(val) || val.Length < 10)
+                {
+                    throw new InvalidDataException($"Invalid image value for param {type.Name} - must be a valid base64 string");
                 }
                 return val;
         }
