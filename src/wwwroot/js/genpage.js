@@ -8,6 +8,8 @@ let lastImageDir = '';
 
 let lastModelDir = '';
 
+let input_overrides = {};
+
 const time_started = Date.now();
 
 function clickImageInBatch(div) {
@@ -24,12 +26,39 @@ function selectImageInHistory(div) {
     setCurrentImage(div.getElementsByTagName('img')[0].src);
 }
 
+function upscale_current_image() {
+    let currentImage = document.getElementById('current_image');
+    let actualImage = currentImage.getElementsByTagName('img')[0];
+    toDataURL(actualImage.src, (url => {
+        input_overrides['initimage'] = url;
+        input_overrides['width'] = actualImage.width * 2;
+        input_overrides['height'] = actualImage.height * 2;
+        doGenerate();
+    }));
+}
+
+function star_current_image() {
+    alert('Stars are TODO');
+}
+
+function copy_current_image_params() {
+    alert('TODO');
+}
+
 function setCurrentImage(src) {
     let curImg = document.getElementById('current_image');
     curImg.innerHTML = '';
     let img = document.createElement('img');
     img.src = src;
     curImg.appendChild(img);
+    let buttons = createDiv(null, 'current-image-buttons');
+    buttons.innerHTML = `<button class="cur-img-button" onclick="javascript:upscale_current_image()">Upscale 2x</button>
+    <button class="cur-img-button" onclick="javascript:star_current_image()">Star</button>
+    <button class="cur-img-button" onclick="javascript:copy_current_image_params()">Copy Parameters</button>`;
+    curImg.appendChild(buttons);
+    let data = createDiv(null, 'current-image-data');
+    data.innerText = "TODO: Metadata";
+    curImg.appendChild(data);
 }
 
 function appendImage(container, imageSrc, batchId, textPreview) {
@@ -81,6 +110,9 @@ function getGenInput() {
         }
     }
     input["presets"] = currentPresets.map(p => p.title);
+    for (let key in input_overrides) {
+        input[key] = input_overrides[key];
+    }
     console.log("Will request: " + JSON.stringify(input));
     return input;
 }
