@@ -117,6 +117,7 @@ public class Program
         Backends.Shutdown();
         Sessions.Shutdown();
         Ngrok?.Stop();
+        Logs.Info("All core shutdowns complete.");
     }
 
     #region extensions

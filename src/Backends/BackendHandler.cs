@@ -231,7 +231,7 @@ public class BackendHandler
                 {
                     Logs.Init($"Initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name}...");
                     data.InitAttempts++;
-                    data.Backend.Init().Wait();
+                    data.Backend.Init().Wait(Program.GlobalProgramCancel);
                     any = true;
                 }
                 catch (Exception ex)
@@ -475,7 +475,7 @@ public class BackendHandler
                                 {
                                     try
                                     {
-                                        availableBackend.Backend.LoadModel(highestPressure.Model).Wait();
+                                        availableBackend.Backend.LoadModel(highestPressure.Model).Wait(Program.GlobalProgramCancel);
                                         Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} loaded model, returning to pool");
                                     }
                                     finally
