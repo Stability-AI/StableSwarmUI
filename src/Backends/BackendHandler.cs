@@ -90,6 +90,8 @@ public class BackendHandler
 
         public volatile bool IsInUse = false;
 
+        public bool CheckIsInUse => IsInUse && Backend.Status == BackendStatus.RUNNING;
+
         public LockObject AccessLock = new();
 
         public int ID;
@@ -135,8 +137,12 @@ public class BackendHandler
         {
             return false;
         }
-        while (data.IsInUse)
+        while (data.CheckIsInUse)
         {
+            if (Program.GlobalProgramCancel.IsCancellationRequested)
+            {
+                return false;
+            }
             await Task.Delay(TimeSpan.FromSeconds(0.5));
         }
         await data.Backend.Shutdown();
@@ -151,8 +157,12 @@ public class BackendHandler
         {
             return null;
         }
-        while (data.IsInUse)
+        while (data.CheckIsInUse)
         {
+            if (Program.GlobalProgramCancel.IsCancellationRequested)
+            {
+                return null;
+            }
             await Task.Delay(TimeSpan.FromSeconds(0.5));
         }
         await data.Backend.Shutdown();
@@ -305,8 +315,12 @@ public class BackendHandler
             {
                 lock (CentralLock)
                 {
-                    while (backend.IsInUse)
+                    while (backend.CheckIsInUse)
                     {
+                        if (Program.GlobalProgramCancel.IsCancellationRequested)
+                        {
+                            return false;
+                        }
                         Thread.Sleep(100);
                     }
                     backend.IsInUse = true;
@@ -339,17 +353,38 @@ public class BackendHandler
         HasShutdown = true;
         NewBackendInitSignal.Set();
         BackendsAvailableSignal.Set();
-        List<Task> tasks = new();
+        List<(T2IBackendData, Task)> tasks = new();
         foreach (T2IBackendData backend in T2IBackends.Values)
         {
-            while (backend.IsInUse)
+            tasks.Add((backend, Task.Run(async () =>
             {
-                Thread.Sleep(100);
-            }
-            tasks.Add(backend.Backend.Shutdown());
+                int backTicks = 0;
+                while (backend.CheckIsInUse)
+                {
+                    if (backTicks++ > 50)
+                    {
+                        Logs.Info($"Backend {backend.ID} ({backend.Backend.HandlerTypeData.Name}) has been locked in use for at least 5 seconds after shutdown, giving up and killing anyway.");
+                        break;
+                    }
+                    Thread.Sleep(100);
+                }
+                tasks.Add((backend, backend.Backend.Shutdown()));
+            })));
         }
-        Task.WaitAll(tasks.ToArray());
+        int ticks = 0;
+        while (tasks.Any())
+        {
+            if (ticks++ > 20)
+            {
+                ticks = 0;
+                Logs.Info($"Still waiting for {tasks.Count} backends to shut down ({string.Join(", ", tasks.Select(p => p.Item1).Select(b => $"{b.ID}: {b.Backend.HandlerTypeData.Name}"))})...");
+            }
+            Task.Delay(TimeSpan.FromMilliseconds(100)).Wait();
+            tasks = tasks.Where(t => !t.Item2.IsCompleted).ToList();
+        }
+        Logs.Info("All backends shut down, saving file...");
         Save();
+        Logs.Info("Backend handler shutdown complete.");
     }
 
     /// <summary>Helper data for a model being requested, used to inform backend model switching choices.</summary>

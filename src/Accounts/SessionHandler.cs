@@ -80,10 +80,13 @@ public class SessionHandler
             return;
         }
         HasShutdown = true;
+        Logs.Info("Will shut down session handler...");
         lock (DBLock)
         {
             Sessions.Clear();
+            Logs.Info("Will save user data.");
             Database.Dispose();
         }
+        Logs.Info("Session handler is shut down.");
     }
 }
