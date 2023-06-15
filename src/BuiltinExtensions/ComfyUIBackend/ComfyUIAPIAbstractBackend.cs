@@ -101,11 +101,10 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
         }
         Logs.Debug($"ComfyUI history said: {output}");
         List<Image> outputs = new();
-        foreach (JObject outData in output[promptId]["outputs"].Values())
+        foreach (JToken outData in output[promptId]["outputs"].Values())
         {
-            foreach (JObject outImage in outData["images"])
+            foreach (JToken outImage in outData["images"])
             {
-                Logs.Info($"Got output: {outImage}");
                 string fname = outImage["filename"].ToString();
                 byte[] image = await (await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}")).Content.ReadAsByteArrayAsync();
                 outputs.Add(new Image(image));
