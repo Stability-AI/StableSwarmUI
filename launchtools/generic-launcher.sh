@@ -5,4 +5,9 @@ export COMMANDLINE_ARGS=$4
 
 cd "$2"
 
-"$3" $4
+if [[ $5 -eq py ]]
+then
+    python3 "$3" $4
+else
+    "$3" $4
+fi

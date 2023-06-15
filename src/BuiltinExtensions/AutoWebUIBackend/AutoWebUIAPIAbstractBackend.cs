@@ -18,13 +18,7 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
     public abstract string Address { get; }
 
     /// <summary>Internal HTTP handler.</summary>
-    public HttpClient HttpClient = new();
-
-    public AutoWebUIAPIAbstractBackend()
-    {
-        HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"StableUI/{Utilities.Version}");
-        HttpClient.Timeout = TimeSpan.FromMinutes(10);
-    }
+    public HttpClient HttpClient = NetworkBackendUtils.MakeHttpClient();
 
     public async Task InitInternal(bool ignoreWebError)
     {

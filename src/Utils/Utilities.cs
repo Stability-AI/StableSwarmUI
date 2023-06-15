@@ -140,6 +140,25 @@ public static class Utilities
         return new StringContent(jobj.ToString(Formatting.None), StringConversionHelper.UTF8Encoding, "application/json");
     }
 
+    public static string EscapeJsonString(string input)
+    {
+        string cleaned = input.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\b", "\\b").Replace("\t", "\\t").Replace("\f", "\\f").Replace("/", "\\/");
+        StringBuilder output = new(input.Length);
+        foreach (char c in cleaned)
+        {
+            if (c < 32)
+            {
+                output.Append("\\u");
+                output.Append(((int)c).ToString("X4"));
+            }
+            else
+            {
+                output.Append(c);
+            }
+        }
+        return output.ToString();
+    }
+
     /// <summary>A mapping of common file extensions to their content type.</summary>
     public static Dictionary<string, string> CommonContentTypes = new()
         {

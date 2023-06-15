@@ -138,25 +138,39 @@ public static class T2IAPI
                     Volatile.Write(ref errorOut, new JObject() { ["error"] = "Timeout! All backends are occupied with other tasks." });
                     return;
                 }
-                using (backend)
+                try
                 {
-                    if (Volatile.Read(ref errorOut) is not null)
+                    using (backend)
                     {
-                        return;
-                    }
-                    T2IParams thisParams = user_input.Clone();
-                    thisParams.Seed += index;
-                    Image[] outputs = await backend.Backend.Generate(thisParams);
-                    foreach (Image image in outputs)
-                    {
-                        string url = session.SaveImage(image, thisParams);
-                        if (url == "ERROR")
+                        if (Volatile.Read(ref errorOut) is not null)
                         {
-                            Volatile.Write(ref errorOut, new JObject() { ["error"] = $"Server failed to save images." });
                             return;
                         }
-                        allOutputs.Enqueue(url);
+                        T2IParams thisParams = user_input.Clone();
+                        thisParams.Seed += index;
+                        Image[] outputs = await backend.Backend.Generate(thisParams);
+                        foreach (Image image in outputs)
+                        {
+                            string url = session.SaveImage(image, thisParams);
+                            if (url == "ERROR")
+                            {
+                                Volatile.Write(ref errorOut, new JObject() { ["error"] = $"Server failed to save images." });
+                                return;
+                            }
+                            allOutputs.Enqueue(url);
+                        }
                     }
+                }
+                catch (InvalidDataException ex)
+                {
+                    Volatile.Write(ref errorOut, new JObject() { ["error"] = $"Invalid data: {ex.Message}" });
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    Logs.Error($"Internal error processing T2I request: {ex}");
+                    Volatile.Write(ref errorOut, new JObject() { ["error"] = "Something went wrong while generating images." });
+                    return;
                 }
             }));
         }
