@@ -76,7 +76,7 @@
     "9": {
         "class_type": "SaveImage",
         "inputs": {
-            "filename_prefix": "ComfyUI",
+            "filename_prefix": "${prefix}",
             "images": [
                 "8",
                 0
