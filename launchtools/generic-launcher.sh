@@ -5,8 +5,7 @@ export COMMANDLINE_ARGS=$4
 
 cd "$2"
 
-if [[ $5 -eq py ]]
-then
+if [[ $5 -eq py ]]; then
     if test -f "$2/venv/bin/activate"; then
         source "$2/venv/bin/activate"
     fi

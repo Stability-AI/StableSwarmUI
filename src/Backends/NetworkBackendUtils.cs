@@ -103,6 +103,10 @@ public static class NetworkBackendUtils
         {
             start.ArgumentList.Add("py");
         }
+        else
+        {
+            start.ArgumentList.Add("shellexec");
+        }
         backend.Status = BackendStatus.LOADING;
         Process runningProcess = new() { StartInfo = start };
         takeOutput(port, runningProcess);
