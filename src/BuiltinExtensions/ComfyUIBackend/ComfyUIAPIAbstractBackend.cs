@@ -83,6 +83,11 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
         workflow = $"{{\"prompt\": {workflow}}}";
         JObject result = await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/prompt", new StringContent(workflow, StringConversionHelper.UTF8Encoding, "application/json")));
         Logs.Debug($"ComfyUI prompt said: {result}");
+        if (result.ContainsKey("error"))
+        {
+            Logs.Error($"ComfyUI error: {result}");
+            throw new Exception("ComfyUI errored");
+        }
         string promptId = result["prompt_id"].ToString();
         JObject output;
         while (true)
