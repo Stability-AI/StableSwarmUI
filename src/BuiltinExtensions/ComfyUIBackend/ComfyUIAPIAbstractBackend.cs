@@ -82,8 +82,8 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
         }));
         workflow = $"{{\"prompt\": {workflow}}}";
         JObject result = await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/prompt", new StringContent(workflow, StringConversionHelper.UTF8Encoding, "application/json")));
+        Logs.Debug($"ComfyUI prompt said: {result}");
         string promptId = result["prompt_id"].ToString();
-        Logs.Info($"PromptID : {promptId}");
         JObject output;
         while (true)
         {
@@ -94,6 +94,7 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
             }
             Thread.Sleep(100);
         }
+        Logs.Debug($"ComfyUI history said: {output}");
         List<Image> outputs = new();
         foreach (JObject outData in output[promptId]["outputs"].Values())
         {
