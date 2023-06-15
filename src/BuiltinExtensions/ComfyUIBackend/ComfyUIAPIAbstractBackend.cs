@@ -78,6 +78,7 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
             "comfy_sampler" => user_input.OtherParams.GetValueOrDefault("comfy_sampler")?.ToString() ?? "euler",
             "comfy_scheduler" => user_input.OtherParams.GetValueOrDefault("comfy_scheduler")?.ToString() ?? "normal",
             "model" => user_input.Model.Name.Replace('/', Path.DirectorySeparatorChar),
+            "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
             _ => user_input.OtherParams.GetValueOrDefault(tag)?.ToString() ?? tag
         }));
         workflow = $"{{\"prompt\": {workflow}}}";
