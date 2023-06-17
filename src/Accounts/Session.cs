@@ -85,14 +85,15 @@ public class Session
     /// <summary>Save an image as this user, and returns the new URL. If user has disabled saving, returns a data URL.</summary>
     public string SaveImage(Image image, T2IParams user_input)
     {
-        // TODO: File conversion, metadata, etc.
+        string metadata = User.Settings.SaveMetadata ? user_input.GenMetadata() : null;
+        image = image.ConvertTo(User.Settings.ImageFormat, metadata);
         if (!User.Settings.SaveFiles)
         {
-            return "data:image/png;base64," + image.AsBase64;
+            return "data:image/" + (User.Settings.ImageFormat == "png" ? "png" : "jpeg") + ";base64," + image.AsBase64;
         }
         string rawImagePath = User.BuildImageOutputPath(user_input);
         string imagePath = rawImagePath;
-        string extension = "png";
+        string extension = (User.Settings.ImageFormat == "png" ? "png" : "jpg");
         string fullPath = $"{User.OutputDirectory}/{imagePath}.{extension}";
         lock (User.UserLock)
         {

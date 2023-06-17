@@ -80,8 +80,8 @@ public class Settings : AutoConfiguration
         [ConfigComment("Whether your files save to server data drive or not.")]
         public bool SaveFiles = true;
 
-        [ConfigComment("What format to save images in. Default is '.png'.")] // TODO: Enum/whitelist of valid options?
-        public string ImageFormat = "png";
+        [ConfigComment("What format to save images in. Default is '.jpg' (at 100% quality).")]
+        public string ImageFormat = "jpg"; // TODO: Use enum
 
         [ConfigComment("Whether to store metadata on saved images. Defaults enabled.")]
         public bool SaveMetadata = true;

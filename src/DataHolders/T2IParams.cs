@@ -1,4 +1,5 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Text2Image;
@@ -97,5 +98,29 @@ public class T2IParams : IDataHolder
             }
         }
         return true;
+    }
+
+    public JObject ToJson()
+    {
+        return new JObject()
+        {
+            ["prompt"] = Prompt,
+            ["negative_prompt"] = NegativePrompt,
+            ["cfg_scale"] = CFGScale,
+            ["seed"] = Seed,
+            ["width"] = Width,
+            ["height"] = Height,
+            ["steps"] = Steps,
+            ["var_seed"] = VarSeed,
+            ["var_seed_strength"] = VarSeedStrength,
+            ["image_init_strength"] = ImageInitStrength,
+            ["model"] = Model.Name,
+            ["other_params"] = JObject.FromObject(OtherParams)
+        };
+    }
+
+    public string GenMetadata()
+    {
+        return new JObject() { ["stableui_image_params"] = ToJson() }.ToString();
     }
 }
