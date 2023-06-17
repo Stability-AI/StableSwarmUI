@@ -139,7 +139,9 @@ function updateGenCount() {
 }
 
 function doInterrupt() {
-    genericRequest('InterruptAll', {}, data => {});
+    genericRequest('InterruptAll', {}, data => {
+        updateGenCount();
+    });
 }
 
 function doGenerate() {
