@@ -2,11 +2,13 @@ using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using LiteDB;
+using Microsoft.Extensions.Logging;
 using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Text2Image;
 using StableUI.Utils;
 using StableUI.WebAPI;
+using System.IO;
 using System.Net.Sockets;
 using System.Runtime.Loader;
 

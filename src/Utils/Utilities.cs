@@ -1,9 +1,12 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StableUI.Core;
 using System.Diagnostics;
+using System.IO;
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.InteropServices;

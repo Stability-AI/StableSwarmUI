@@ -9,6 +9,8 @@ using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
 using System;
+using System.IO;
+using System.Net.Http;
 using System.Web;
 
 namespace StableUI.Builtin_ComfyUIBackend;

@@ -4,6 +4,8 @@ using Newtonsoft.Json.Linq;
 using StableUI.Core;
 using StableUI.Utils;
 using System.Diagnostics;
+using System.IO;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 
 namespace StableUI.Backends;

@@ -2,6 +2,7 @@
 using StableUI.Builtin_AutoWebUIExtension;
 using StableUI.Core;
 using StableUI.Text2Image;
+using System.IO;
 
 namespace StableUI.Builtin_ComfyUIBackend;
 

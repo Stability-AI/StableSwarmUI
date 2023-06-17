@@ -8,6 +8,7 @@ using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net.WebSockets;
 using System.Text.RegularExpressions;
 

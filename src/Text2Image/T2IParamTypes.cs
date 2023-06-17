@@ -5,6 +5,7 @@ using StableUI.Accounts;
 using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Utils;
+using System.IO;
 
 namespace StableUI.Text2Image;
 

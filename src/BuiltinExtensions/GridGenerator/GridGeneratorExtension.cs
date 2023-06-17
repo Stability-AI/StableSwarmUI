@@ -10,6 +10,7 @@ using StableUI.Utils;
 using StableUI.WebAPI;
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 

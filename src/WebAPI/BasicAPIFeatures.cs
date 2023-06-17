@@ -6,6 +6,7 @@ using StableUI.Accounts;
 using System.Runtime.ConstrainedExecution;
 using StableUI.Text2Image;
 using FreneticUtilities.FreneticExtensions;
+using Microsoft.AspNetCore.Http;
 
 namespace StableUI.WebAPI;
 

@@ -9,6 +9,7 @@ using StableUI.Text2Image;
 using StableUI.Utils;
 using StableUI.Backends;
 using System;
+using System.Net.Http;
 
 namespace StableUI.Builtin_AutoWebUIExtension;
 
