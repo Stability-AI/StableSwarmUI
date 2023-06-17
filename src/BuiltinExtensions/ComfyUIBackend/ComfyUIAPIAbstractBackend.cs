@@ -55,6 +55,7 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
     public async Task<Image[]> AwaitJob(string workflow, CancellationToken interrupt)
     {
         workflow = $"{{\"prompt\": {workflow}}}";
+        Logs.Debug($"Will use workflow: {workflow}");
         JObject result = await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/prompt", new StringContent(workflow, StringConversionHelper.UTF8Encoding, "application/json"), interrupt));
         Logs.Debug($"ComfyUI prompt said: {result}");
         if (result.ContainsKey("error"))
@@ -120,8 +121,8 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
             "subseed_strength" => $"{user_input.VarSeedStrength}",
             "init_image" => user_input.InitImage.AsBase64,
             "init_image_strength" => $"{user_input.ImageInitStrength}",
-            "comfy_sampler" => user_input.OtherParams.GetValueOrDefault("comfy_sampler")?.ToString() ?? "euler",
-            "comfy_scheduler" => user_input.OtherParams.GetValueOrDefault("comfy_scheduler")?.ToString() ?? "normal",
+            "comfy_sampler" => user_input.OtherParams.GetValueOrDefault("comfyui_sampler")?.ToString() ?? "euler",
+            "comfy_scheduler" => user_input.OtherParams.GetValueOrDefault("comfyui_scheduler")?.ToString() ?? "normal",
             "model" => user_input.Model.Name.Replace('/', Path.DirectorySeparatorChar),
             "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
             _ => user_input.OtherParams.GetValueOrDefault(tag)?.ToString() ?? tag
