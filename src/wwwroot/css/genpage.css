@@ -15,9 +15,20 @@ body {
     width: 90%;
     margin-left: 5%;
     height: 5rem;
+    margin-bottom: 0.5rem;
 }
 .generate-button:hover {
     background-color: color-mix(in srgb, orange 70%, black);
+}
+.interrupt-button {
+    background-color: #550000;
+    font-weight: bold;
+    padding: 0.2rem;
+    border-radius: 0.7rem;
+    margin-left: 2rem;
+}
+.interrupt-button:hover {
+    background-color: color-mix(in srgb, #550000 70%, black);
 }
 .splitter-bar {
     display: inline-block;

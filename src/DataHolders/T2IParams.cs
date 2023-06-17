@@ -61,6 +61,15 @@ public class T2IParams : IDataHolder
     /// <summary>Optional initialization image for img2img generations.</summary>
     public Image InitImage;
 
+    /// <summary>Interrupt token from the session.</summary>
+    public CancellationToken InterruptToken;
+
+    public T2IParams(Session session)
+    {
+        SourceSession = session;
+        InterruptToken = session.SessInterrupt.Token;
+    }
+
     public T2IParams Clone()
     {
         T2IParams res = MemberwiseClone() as T2IParams;

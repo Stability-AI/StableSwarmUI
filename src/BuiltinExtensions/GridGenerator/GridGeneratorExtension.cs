@@ -11,6 +11,7 @@ using StableUI.WebAPI;
 using System;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
+using System.Text;
 
 namespace StableUI.Builtin_GridGeneratorExtension;
 
@@ -106,6 +107,11 @@ public class GridGeneratorExtension : Extension
                 param.VarSeed = Random.Shared.Next();
             }
             StableUIGridData data = runner.Grid.LocalData as StableUIGridData;
+            if (data.Claim.ShouldCancel)
+            {
+                runner.Grid.MustCancel = true;
+                return Task.CompletedTask;
+            }
             Task[] waitOn = data.GetActive();
             if (waitOn.Length > data.Session.User.Settings.MaxT2ISimultaneous)
             {
@@ -156,6 +162,7 @@ public class GridGeneratorExtension : Extension
                         Directory.CreateDirectory(dir);
                     }
                     File.WriteAllBytes(targetPath, outputs[0].ImageData);
+                    data.Claim.Complete(1);
                     data.Generated.Enqueue($"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}");
                 }
                 catch (Exception ex)
@@ -170,6 +177,10 @@ public class GridGeneratorExtension : Extension
                 data.Rendering.Add(t);
             }
             return t;
+        };
+        GridGenCore.PostPreprocessCallback = (grid) =>
+        {
+            (grid.Grid.LocalData as StableUIGridData).Claim.Extend(grid.TotalRun);
         };
     }
 
@@ -193,6 +204,8 @@ public class GridGeneratorExtension : Extension
 
         public Session Session;
 
+        public Session.GenClaim Claim;
+
         public JObject ErrorOut;
 
         public Task[] GetActive()
@@ -206,7 +219,8 @@ public class GridGeneratorExtension : Extension
 
     public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
-        T2IParams baseParams = new() { SourceSession = session };
+        using Session.GenClaim claim = session.Claim(1);
+        T2IParams baseParams = new(session);
         try
         {
             foreach ((string key, JToken val) in (raw["baseParams"] as JObject))
@@ -241,7 +255,7 @@ public class GridGeneratorExtension : Extension
             await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot be empty." }, TimeSpan.FromMinutes(1));
             return null;
         }
-        StableUIGridData data = new() { Session = session };
+        StableUIGridData data = new() { Session = session, Claim = claim };
         try
         {
             Task mainRun = Task.Run(() => GridGenCore.Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, "Output", outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun));

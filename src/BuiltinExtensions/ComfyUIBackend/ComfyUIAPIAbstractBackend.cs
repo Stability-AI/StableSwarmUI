@@ -52,6 +52,51 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
         return Task.CompletedTask;
     }
 
+    public async Task<Image[]> AwaitJob(string workflow, CancellationToken interrupt)
+    {
+        workflow = $"{{\"prompt\": {workflow}}}";
+        JObject result = await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/prompt", new StringContent(workflow, StringConversionHelper.UTF8Encoding, "application/json"), interrupt));
+        Logs.Debug($"ComfyUI prompt said: {result}");
+        if (result.ContainsKey("error"))
+        {
+            Logs.Error($"ComfyUI error: {result}");
+            throw new Exception("ComfyUI errored");
+        }
+        string promptId = result["prompt_id"].ToString();
+        JObject output;
+        while (true)
+        {
+            output = await SendGet<JObject>($"history/{promptId}");
+            if (!output.Properties().IsEmpty())
+            {
+                break;
+            }
+            if (Program.GlobalProgramCancel.IsCancellationRequested)
+            {
+                return null;
+            }
+            if (interrupt.IsCancellationRequested)
+            {
+                Logs.Debug("ComfyUI Interrupt requested");
+                await HttpClient.PostAsync($"{Address}/interrupt", new StringContent(""), interrupt);
+                break;
+            }
+            Thread.Sleep(100);
+        }
+        Logs.Debug($"ComfyUI history said: {output}");
+        List<Image> outputs = new();
+        foreach (JToken outData in output[promptId]["outputs"].Values())
+        {
+            foreach (JToken outImage in outData["images"])
+            {
+                string fname = outImage["filename"].ToString();
+                byte[] image = await (await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
+                outputs.Add(new Image(image));
+            }
+        }
+        return outputs.ToArray();
+    }
+
     public override async Task<Image[]> Generate(T2IParams user_input)
     {
         if (!user_input.OtherParams.TryGetValue("comfyui_workflow", out object workflowObj) || workflowObj is not string workflowName)
@@ -81,37 +126,7 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
             "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
             _ => user_input.OtherParams.GetValueOrDefault(tag)?.ToString() ?? tag
         }));
-        workflow = $"{{\"prompt\": {workflow}}}";
-        JObject result = await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/prompt", new StringContent(workflow, StringConversionHelper.UTF8Encoding, "application/json")));
-        Logs.Debug($"ComfyUI prompt said: {result}");
-        if (result.ContainsKey("error"))
-        {
-            Logs.Error($"ComfyUI error: {result}");
-            throw new Exception("ComfyUI errored");
-        }
-        string promptId = result["prompt_id"].ToString();
-        JObject output;
-        while (true)
-        {
-            output = await SendGet<JObject>($"history/{promptId}");
-            if (!output.Properties().IsEmpty())
-            {
-                break;
-            }
-            Thread.Sleep(100);
-        }
-        Logs.Debug($"ComfyUI history said: {output}");
-        List<Image> outputs = new();
-        foreach (JToken outData in output[promptId]["outputs"].Values())
-        {
-            foreach (JToken outImage in outData["images"])
-            {
-                string fname = outImage["filename"].ToString();
-                byte[] image = await (await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}")).Content.ReadAsByteArrayAsync();
-                outputs.Add(new Image(image));
-            }
-        }
-        return outputs.ToArray();
+        return await AwaitJob(workflow, user_input.InterruptToken);
     }
 
     public async Task<JType> SendGet<JType>(string url) where JType : class
@@ -126,7 +141,8 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
 
     public override async Task<bool> LoadModel(T2IModel model)
     {
-        // TODO: ComfyUI doesn't preload models, so... no reasonable implementation here.
+        string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model}", Utilities.EscapeJsonString(model.Name.Replace('/', Path.DirectorySeparatorChar)));
+        await AwaitJob(workflow, CancellationToken.None);
         CurrentModelName = model.Name;
         return true;
     }

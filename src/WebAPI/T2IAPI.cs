@@ -67,7 +67,8 @@ public static class T2IAPI
     /// <summary>Internal route for generating images.</summary>
     public static async IAsyncEnumerable<(string, JObject)> GenT2I_Internal(Session session, int images, JObject rawInput)
     {
-        T2IParams user_input = new() { SourceSession = session };
+        using Session.GenClaim claim = session.Claim(images);
+        T2IParams user_input = new(session);
         string err = null;
         try
         {
@@ -106,6 +107,10 @@ public static class T2IAPI
         int max_degrees = session.User.Settings.MaxT2ISimultaneous;
         for (int i = 0; i < images; i++)
         {
+            if (claim.ShouldCancel)
+            {
+                break;
+            }
             tasks.RemoveAll(t => t.IsCompleted);
             if (tasks.Count > max_degrees)
             {
@@ -123,10 +128,14 @@ public static class T2IAPI
             int index = i;
             tasks.Add(Task.Run(async () =>
             {
+                if (claim.ShouldCancel)
+                {
+                    return;
+                }
                 T2IBackendAccess backend;
                 try
                 {
-                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), user_input.Model, user_input.BackendMatcher); // TODO: Max timespan configurable
+                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), user_input.Model, user_input.BackendMatcher, claim.InterruptToken); // TODO: Max timespan configurable
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -138,11 +147,16 @@ public static class T2IAPI
                     Volatile.Write(ref errorOut, new JObject() { ["error"] = "Timeout! All backends are occupied with other tasks." });
                     return;
                 }
+                if (claim.ShouldCancel)
+                {
+                    backend.Dispose();
+                    return;
+                }
                 try
                 {
                     using (backend)
                     {
-                        if (Volatile.Read(ref errorOut) is not null)
+                        if (Volatile.Read(ref errorOut) is not null || claim.ShouldCancel)
                         {
                             return;
                         }
@@ -157,6 +171,7 @@ public static class T2IAPI
                                 Volatile.Write(ref errorOut, new JObject() { ["error"] = $"Server failed to save images." });
                                 return;
                             }
+                            claim.Complete(1);
                             allOutputs.Enqueue(url);
                         }
                     }
@@ -164,6 +179,10 @@ public static class T2IAPI
                 catch (InvalidDataException ex)
                 {
                     Volatile.Write(ref errorOut, new JObject() { ["error"] = $"Invalid data: {ex.Message}" });
+                    return;
+                }
+                catch (TaskCanceledException)
+                {
                     return;
                 }
                 catch (Exception ex)
@@ -181,6 +200,10 @@ public static class T2IAPI
             while (allOutputs.TryDequeue(out string output))
             {
                 yield return (output, null);
+            }
+            if (claim.ShouldCancel)
+            {
+                break;
             }
         }
         errorOut = Volatile.Read(ref errorOut);

@@ -19,6 +19,8 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(GetMyUserData);
         API.RegisterAPICall(AddNewPreset);
         API.RegisterAPICall(DeletePreset);
+        API.RegisterAPICall(GetCurrentWaiting);
+        API.RegisterAPICall(InterruptAll);
         T2IAPI.Register();
         BackendAPI.Register();
     }
@@ -64,10 +66,23 @@ public static class BasicAPIFeatures
         return new JObject() { ["success"] = true };
     }
 
-
     /// <summary>API Route to delete a user preset.</summary>
     public static async Task<JObject> DeletePreset(Session session, string preset)
     {
         return new JObject() { ["success"] = session.User.DeletePreset(preset) };
+    }
+
+    /// <summary>API Route to get current waiting generation count.</summary>
+    public static async Task<JObject> GetCurrentWaiting(Session session)
+    {
+        return new JObject() { ["count"] = session.WaitingGenerations };
+    }
+
+    /// <summary>API Route to tell all waiting generations to interrupt.</summary>
+    public static async Task<JObject> InterruptAll(Session session)
+    {
+        session.SessInterrupt.Cancel();
+        session.SessInterrupt = new();
+        return new JObject() { ["success"] = true };
     }
 }

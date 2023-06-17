@@ -26,6 +26,8 @@ public partial class GridGenCore
     public static Func<GridRunner, T2IParams, SingleGridCall, Task> GridRunnerPostDryHook;
 
     public static Action<SingleGridCall> GridCallInitHook;
+
+    public static Action<GridRunner> PostPreprocessCallback;
     #endregion
 
     public static GridGeneratorExtension Extension;
@@ -208,6 +210,8 @@ public partial class GridGenCore
         public object LocalData;
 
         public GridRunner Runner;
+
+        public volatile bool MustCancel;
     }
 
     public class SingleGridCall
@@ -347,6 +351,7 @@ public partial class GridGenCore
                 }
             }
             Logs.Info($"Skipped {TotalSkip} files, will run {TotalRun} files, for {TotalSteps} total steps");
+            PostPreprocessCallback?.Invoke(this);
         }
 
         public void Run(bool dry)
@@ -358,6 +363,10 @@ public partial class GridGenCore
                 if (set.Skip)
                 {
                     continue;
+                }
+                if (Grid.MustCancel)
+                {
+                    return;
                 }
                 iteration++;
                 if (!dry)

@@ -417,9 +417,10 @@ public class BackendHandler
     /// <param name="maxWait">Maximum duration to wait for. If time runs out, throws <see cref="TimeoutException"/>.</param>
     /// <param name="model">The model to use, or null for any. Specifying a model directly will prefer a backend with that model loaded, or cause a backend to load it if not available.</param>
     /// <param name="filter">Optional genericfilter for backend acceptance.</param>
+    /// <param name="cancel">Optional request cancellation.</param>
     /// <exception cref="TimeoutException">Thrown if <paramref name="maxWait"/> is reached.</exception>
     /// <exception cref="InvalidOperationException">Thrown if no backends are available.</exception>
-    public T2IBackendAccess GetNextT2IBackend(TimeSpan maxWait, T2IModel model = null, Func<T2IBackendData, bool> filter = null)
+    public T2IBackendAccess GetNextT2IBackend(TimeSpan maxWait, T2IModel model = null, Func<T2IBackendData, bool> filter = null, CancellationToken cancel = default)
     {
         long requestId = Interlocked.Increment(ref BackendRequestsCounter);
         Logs.Debug($"[BackendHandler] Backend request #{requestId} for model {model?.Name ?? "any"}, maxWait={maxWait}.");
@@ -437,20 +438,26 @@ public class BackendHandler
                 requestPressure = null;
             }
         }
+        if (!cancel.CanBeCanceled)
+        {
+            cancel = Program.GlobalProgramCancel;
+        }
         try
         {
             while (true)
             {
                 if (HasShutdown)
                 {
-                    ReleasePressure();
                     throw new InvalidOperationException("Backend handler is shutting down.");
+                }
+                if (cancel.IsCancellationRequested)
+                {
+                    return null;
                 }
                 TimeSpan waited = TimeSpan.FromMilliseconds(Environment.TickCount64 - startTime);
                 if (waited > maxWait)
                 {
                     Logs.Info($"[BackendHandler] Backend usage timeout, all backends occupied, giving up after {waited.TotalSeconds} seconds.");
-                    ReleasePressure();
                     throw new TimeoutException();
                 }
                 lock (CentralLock)
@@ -510,7 +517,7 @@ public class BackendHandler
                                 {
                                     try
                                     {
-                                        availableBackend.Backend.LoadModel(highestPressure.Model).Wait(Program.GlobalProgramCancel);
+                                        availableBackend.Backend.LoadModel(highestPressure.Model).Wait(cancel);
                                         Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} loaded model, returning to pool");
                                     }
                                     finally
@@ -521,7 +528,7 @@ public class BackendHandler
                                         }
                                         access.Dispose();
                                     }
-                                });
+                                }, cancel);
                             }
                         }
                     }

@@ -10,6 +10,8 @@ let lastModelDir = '';
 
 let input_overrides = {};
 
+let num_current_gens = 0;
+
 const time_started = Date.now();
 
 function clickImageInBatch(div) {
@@ -82,6 +84,7 @@ function appendImage(container, imageSrc, batchId, textPreview) {
 }
 
 function gotImageResult(image) {
+    updateGenCount();
     let src = image;
     let batch_div = appendImage('current_image_batch', src, batches, '(TODO)');
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
@@ -117,6 +120,28 @@ function getGenInput() {
     return input;
 }
 
+let doesHaveGenCountUpdateQueued = false;
+
+function updateGenCount() {
+    let elem = document.getElementById('num_jobs_span');
+    elem.innerText = num_current_gens;
+    if (doesHaveGenCountUpdateQueued) {
+        return;
+    }
+    doesHaveGenCountUpdateQueued = true;
+    setTimeout(() => {
+        genericRequest('GetCurrentWaiting', {}, data => {
+            doesHaveGenCountUpdateQueued = false;
+            num_current_gens = data.count;
+            elem.innerText = num_current_gens;
+        });
+    }, 500);
+}
+
+function doInterrupt() {
+    genericRequest('InterruptAll', {}, data => {});
+}
+
 function doGenerate() {
     if (session_id == null) {
         if (Date.now() - time_started > 1000 * 60) {
@@ -127,6 +152,7 @@ function doGenerate() {
         }
         return;
     }
+    num_current_gens += parseInt(document.getElementById('input_images').value);
     setCurrentModel(() => {
         if (document.getElementById('current_model').innerText == '') {
             showError("Cannot generate, no model selected.");
@@ -136,7 +162,9 @@ function doGenerate() {
         batches++;
         makeWSRequest('GenerateText2ImageWS', getGenInput(), data => {
             gotImageResult(data.image);
+            updateGenCount();
         });
+        updateGenCount();
     });
 }
 
@@ -496,6 +524,7 @@ function pageSizer() {
     }, true);
     document.addEventListener('mousemove', (e) => {
         let offX = e.pageX - 5;
+        offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
         if (topDrag) {
             inputSidebar.style.width = `${offX}px`;
             mainInputsAreaWrapper.style.width = `${offX}px`;
@@ -504,12 +533,14 @@ function pageSizer() {
         }
         if (topDrag2) {
             let adaptedX = offX - inputSidebar.getBoundingClientRect().width - 17;
+            adaptedX = Math.min(Math.max(adaptedX, 100), window.innerWidth - 100);
             currentImage.style.width = `${adaptedX}px`;
             currentImageBatch.style.width = `calc(100vw - ${offX}px)`;
         }
         if (midDrag) {
             let topY = currentImageBatch.getBoundingClientRect().top;
             let offY = (e.pageY - topY - 2) / window.innerHeight * 100;
+            offY = Math.min(Math.max(offY, 5), 95);
             topSplit.style.height = `${offY}vh`;
             topSplit2.style.height = `${offY}vh`;
             inputSidebar.style.height = `${offY}vh`;
