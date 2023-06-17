@@ -2,7 +2,7 @@
     "4": {
         "class_type": "CheckpointLoaderSimple",
         "inputs": {
-            "ckpt_name": "${model}"
+            "ckpt_name": "${model:error_missing_model}"
         }
     },
     "5": {

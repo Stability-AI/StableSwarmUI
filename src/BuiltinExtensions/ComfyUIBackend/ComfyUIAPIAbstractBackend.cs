@@ -110,25 +110,30 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
         {
             throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
         }
-        workflow = StringConversionHelper.QuickSimpleTagFiller(workflow, "${", "}", (tag) => Utilities.EscapeJsonString(tag switch
-        {
-            "prompt" => user_input.Prompt,
-            "negative_prompt" => user_input.NegativePrompt,
-            "seed" => $"{user_input.Seed}",
-            "steps" => $"{user_input.Steps}",
-            "width" => $"{user_input.Width}",
-            "height" => $"{user_input.Height}",
-            "cfg_scale" => $"{user_input.CFGScale}",
-            "subseed" => $"{user_input.VarSeed}",
-            "subseed_strength" => $"{user_input.VarSeedStrength}",
-            "init_image" => user_input.InitImage.AsBase64,
-            "init_image_strength" => $"{user_input.ImageInitStrength}",
-            "comfy_sampler" => user_input.OtherParams.GetValueOrDefault("comfyui_sampler")?.ToString() ?? "euler",
-            "comfy_scheduler" => user_input.OtherParams.GetValueOrDefault("comfyui_scheduler")?.ToString() ?? "normal",
-            "model" => user_input.Model.Name.Replace('/', Path.DirectorySeparatorChar),
-            "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
-            _ => user_input.OtherParams.GetValueOrDefault(tag)?.ToString() ?? tag
-        }));
+        workflow = StringConversionHelper.QuickSimpleTagFiller(workflow, "${", "}", (tag) => {
+            string tagName = tag.BeforeAndAfter(':', out string defVal);
+            string filled = tagName switch
+            {
+                "prompt" => user_input.Prompt,
+                "negative_prompt" => user_input.NegativePrompt,
+                "seed" => $"{user_input.Seed}",
+                "steps" => $"{user_input.Steps}",
+                "width" => $"{user_input.Width}",
+                "height" => $"{user_input.Height}",
+                "cfg_scale" => $"{user_input.CFGScale}",
+                "subseed" => $"{user_input.VarSeed}",
+                "subseed_strength" => $"{user_input.VarSeedStrength}",
+                "init_image" => user_input.InitImage.AsBase64,
+                "init_image_strength" => $"{user_input.ImageInitStrength}",
+                "comfy_sampler" => user_input.OtherParams.GetValueOrDefault("comfyui_sampler")?.ToString(),
+                "comfy_scheduler" => user_input.OtherParams.GetValueOrDefault("comfyui_scheduler")?.ToString(),
+                "model" => user_input.Model.Name.Replace('/', Path.DirectorySeparatorChar),
+                "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
+                _ => user_input.OtherParams.GetValueOrDefault(tag)?.ToString()
+            };
+            filled ??= defVal;
+            return Utilities.EscapeJsonString(filled);
+        });
         return await AwaitJob(workflow, user_input.InterruptToken);
     }
 
@@ -144,7 +149,7 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
 
     public override async Task<bool> LoadModel(T2IModel model)
     {
-        string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model}", Utilities.EscapeJsonString(model.Name.Replace('/', Path.DirectorySeparatorChar)));
+        string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model:error_missing_model}", Utilities.EscapeJsonString(model.Name.Replace('/', Path.DirectorySeparatorChar)));
         await AwaitJob(workflow, CancellationToken.None);
         CurrentModelName = model.Name;
         return true;

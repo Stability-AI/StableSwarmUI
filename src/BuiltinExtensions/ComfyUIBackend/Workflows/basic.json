@@ -2,7 +2,7 @@
     "3": {
         "class_type": "KSampler",
         "inputs": {
-            "cfg": ${cfg_scale},
+            "cfg": ${cfg_scale:7},
             "denoise": 1,
             "latent_image": [
                 "5",
@@ -20,24 +20,24 @@
                 "6",
                 0
             ],
-            "sampler_name": "${comfy_sampler}",
-            "scheduler": "${comfy_scheduler}",
-            "seed": ${seed},
-            "steps": ${steps}
+            "sampler_name": "${comfy_sampler:euler}",
+            "scheduler": "${comfy_scheduler:karras}",
+            "seed": ${seed:1},
+            "steps": ${steps:20}
         }
     },
     "4": {
         "class_type": "CheckpointLoaderSimple",
         "inputs": {
-            "ckpt_name": "${model}"
+            "ckpt_name": "${model:error_missing_model}"
         }
     },
     "5": {
         "class_type": "EmptyLatentImage",
         "inputs": {
             "batch_size": 1,
-            "height": ${width},
-            "width": ${height}
+            "height": ${width:512},
+            "width": ${height:512}
         }
     },
     "6": {
@@ -47,7 +47,7 @@
                 "4",
                 1
             ],
-            "text": "${prompt}"
+            "text": "${prompt:}"
         }
     },
     "7": {
@@ -57,7 +57,7 @@
                 "4",
                 1
             ],
-            "text": "${negative_prompt}"
+            "text": "${negative_prompt:}"
         }
     },
     "8": {
@@ -76,7 +76,7 @@
     "9": {
         "class_type": "SaveImage",
         "inputs": {
-            "filename_prefix": "${prefix}",
+            "filename_prefix": "${prefix:}",
             "images": [
                 "8",
                 0
