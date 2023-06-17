@@ -131,12 +131,11 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
         return true;
     }
 
+    /// <summary>Set of all feature-ids supported by ComfyUI backends.</summary>
+    public static HashSet<string> FeaturesSupported = new() { "comfyui" };
+
     public override bool DoesProvideFeature(string feature)
     {
-        if (feature == "comfyui")
-        {
-            return true;
-        }
-        return false;
+        return FeaturesSupported.Contains(feature);
     }
 }
