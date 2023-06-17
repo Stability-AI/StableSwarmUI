@@ -68,12 +68,6 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
         return Task.CompletedTask;
     }
 
-    /// <summary>List of actions to run when generating an image, primarily to alter the input data.</summary>
-    public static List<Action<JObject, T2IParams>> OtherGenHandlers = new();
-
-    /// <summary>Set of all feature-ids supported by Auto WebUI backends.</summary>
-    public static HashSet<string> FeaturesSupported = new();
-
     public override async Task<Image[]> Generate(T2IParams user_input)
     {
         JObject toSend = new()
@@ -99,7 +93,7 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
         {
             toSend[pair.Key] = JToken.FromObject(pair.Value);
         }
-        foreach (Action<JObject, T2IParams> handler in OtherGenHandlers)
+        foreach (Action<JObject, T2IParams> handler in AutoWebUIBackendExtension.OtherGenHandlers)
         {
             handler(toSend, user_input);
         }
@@ -158,6 +152,6 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
 
     public override bool DoesProvideFeature(string feature)
     {
-        return FeaturesSupported.Contains(feature);
+        return AutoWebUIBackendExtension.FeaturesSupported.Contains(feature);
     }
 }

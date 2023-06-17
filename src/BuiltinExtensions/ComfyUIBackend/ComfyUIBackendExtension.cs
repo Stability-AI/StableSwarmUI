@@ -13,6 +13,9 @@ public class ComfyUIBackendExtension : Extension
 
     public static Dictionary<string, string> Workflows;
 
+    /// <summary>Set of all feature-ids supported by ComfyUI backends.</summary>
+    public static HashSet<string> FeaturesSupported = new() { "comfyui" };
+
     public override void OnPreInit()
     {
         Folder = FilePath;
