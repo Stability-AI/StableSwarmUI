@@ -129,7 +129,7 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
                 "comfy_scheduler" => user_input.OtherParams.GetValueOrDefault("comfyui_scheduler")?.ToString(),
                 "model" => user_input.Model.Name.Replace('/', Path.DirectorySeparatorChar),
                 "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
-                _ => user_input.OtherParams.GetValueOrDefault(tag)?.ToString()
+                _ => user_input.OtherParams.GetValueOrDefault(tagName)?.ToString()
             };
             filled ??= defVal;
             return Utilities.EscapeJsonString(filled);
