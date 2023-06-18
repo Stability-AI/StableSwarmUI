@@ -33,7 +33,7 @@ public class DynamicThresholdingExtension : Extension
             T2IParamDataType.DECIMAL, "0", (s, p) => p.OtherParams["dt_mimic_scale_min"] = s, Min: 0, Max: 100, Toggleable: true, IsAdvanced: true, Group: "Dynamic Thresholding", FeatureFlag: "dynamic_thresholding",
             Examples: new[] { "0", "1", "2", "5" }
             ));
-        T2IParamTypes.Register(new("[DT] Power Value", "[Dynamic Thresholding] If either scale scheduler is 'Power', use this power factor.",
+        T2IParamTypes.Register(new("[DT] Scheduler Value", "[Dynamic Thresholding] If either scale scheduler is 'Power', this is the power factor. If using 'repeating', this is the number of repeats per image.",
             T2IParamDataType.DECIMAL, "4", (s, p) => p.OtherParams["dt_power_val"] = s, Toggleable: true, IsAdvanced: true, Group: "Dynamic Thresholding", FeatureFlag: "dynamic_thresholding",
             Examples: new[] { "2", "4", "8" }
             ));
