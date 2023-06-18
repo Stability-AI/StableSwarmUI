@@ -19,7 +19,7 @@ public class DynamicThresholdingExtension : Extension
             ));
         T2IParamTypes.Register(new("[DT] CFG Scale Mode", "[Dynamic Thresholding] Mode for the CFG Scale scheduler.",
             T2IParamDataType.DROPDOWN, "Constant", (s, p) => p.OtherParams["dt_cfg_mode"] = s, Toggleable: true, IsAdvanced: true, Group: "Dynamic Thresholding", FeatureFlag: "dynamic_thresholding",
-            GetValues: (_) => new() { "Constant", "Linear Down", "Half Cosine Down", "Cosine Down", "Linear Up", "Half Cosine Up", "Cosine Up", "Power Up", "Power Down" }
+            GetValues: (_) => new() { "Constant", "Linear Down", "Half Cosine Down", "Cosine Down", "Linear Up", "Half Cosine Up", "Cosine Up", "Power Up", "Power Down", "Linear Repeating", "Cosine Repeating" }
             ));
         T2IParamTypes.Register(new("[DT] CFG Scale Minimum", "[Dynamic Thresholding] CFG Scale minimum value (for non-constant CFG mode).",
             T2IParamDataType.DECIMAL, "0", (s, p) => p.OtherParams["dt_cfg_scale_min"] = s, Min: 0, Max: 100, Toggleable: true, IsAdvanced: true, Group: "Dynamic Thresholding", FeatureFlag: "dynamic_thresholding",
@@ -27,7 +27,7 @@ public class DynamicThresholdingExtension : Extension
             ));
         T2IParamTypes.Register(new("[DT] Mimic Scale Mode", "[Dynamic Thresholding] Mode for the Mimic Scale scheduler.",
             T2IParamDataType.DROPDOWN, "Constant", (s, p) => p.OtherParams["dt_mimic_mode"] = s, Toggleable: true, IsAdvanced: true, Group: "Dynamic Thresholding", FeatureFlag: "dynamic_thresholding",
-            GetValues: (_) => new() { "Constant", "Linear Down", "Half Cosine Down", "Cosine Down", "Linear Up", "Half Cosine Up", "Cosine Up", "Power Up", "Power Down" }
+            GetValues: (_) => new() { "Constant", "Linear Down", "Half Cosine Down", "Cosine Down", "Linear Up", "Half Cosine Up", "Cosine Up", "Power Up", "Power Down", "Linear Repeating", "Cosine Repeating" }
             ));
         T2IParamTypes.Register(new("[DT] Mimic Scale Minimum", "[Dynamic Thresholding] Mimic Scale minimum value (for non-constant mimic mode).",
             T2IParamDataType.DECIMAL, "0", (s, p) => p.OtherParams["dt_mimic_scale_min"] = s, Min: 0, Max: 100, Toggleable: true, IsAdvanced: true, Group: "Dynamic Thresholding", FeatureFlag: "dynamic_thresholding",
