@@ -110,6 +110,7 @@ public class GridGeneratorExtension : Extension
             StableUIGridData data = runner.Grid.LocalData as StableUIGridData;
             if (data.Claim.ShouldCancel)
             {
+                Logs.Debug("Grid gen hook cancelling per user interrupt request.");
                 runner.Grid.MustCancel = true;
                 return Task.CompletedTask;
             }
@@ -122,6 +123,11 @@ public class GridGeneratorExtension : Extension
             {
                 throw new InvalidOperationException("Errored");
             }
+            void setError(string message)
+            {
+                Logs.Error($"Grid generator hit error: {message}");
+                Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = message });
+            }
             T2IParams thisParams = param.Clone();
             Task t = Task.Run(async () =>
             {
@@ -132,12 +138,12 @@ public class GridGeneratorExtension : Extension
                 }
                 catch (InvalidOperationException ex)
                 {
-                    Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = $"Invalid operation: {ex.Message}" });
+                    setError($"Invalid operation: {ex.Message}");
                     return;
                 }
                 catch (TimeoutException)
                 {
-                    Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = "Timeout! All backends are occupied with other tasks." });
+                    setError("Timeout! All backends are occupied with other tasks.");
                     return;
                 }
                 Image[] outputs;
@@ -151,7 +157,7 @@ public class GridGeneratorExtension : Extension
                 }
                 if (outputs.Length != 1)
                 {
-                    Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = $"Server generated {outputs.Length} images when only expecting 1." });
+                    setError($"Server generated {outputs.Length} images when only expecting 1.");
                     return;
                 }
                 try
@@ -169,7 +175,7 @@ public class GridGeneratorExtension : Extension
                 catch (Exception ex)
                 {
                     Logs.Error($"Grid gen failed to save image: {ex}");
-                    Volatile.Write(ref data.ErrorOut, new JObject() { ["error"] = "Server failed to save image to file." });
+                    setError("Server failed to save image to file.");
                     return;
                 }
             });
@@ -292,6 +298,11 @@ public class GridGeneratorExtension : Extension
             Logs.Error($"GridGen failed: {ex}");
             await socket.SendJson(new JObject() { ["error"] = "Failed due to internal error." }, TimeSpan.FromMinutes(1));
             return null;
+        }
+        Task faulted = data.Rendering.FirstOrDefault(t => t.IsFaulted);
+        if (faulted is not null)
+        {
+            Logs.Error($"GridGen tasks failed: {faulted.Exception}");
         }
         JObject err = Volatile.Read(ref data.ErrorOut);
         if (err is not null)
