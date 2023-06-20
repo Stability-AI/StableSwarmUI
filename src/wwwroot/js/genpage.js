@@ -67,12 +67,14 @@ function appendImage(container, imageSrc, batchId, textPreview) {
     if (typeof container == 'string') {
         container = document.getElementById(container);
     }
-    let div = createDiv(null, `image-block image-batch-${batchId % 2}`);
+    let div = createDiv(null, `image-block image-batch-${batchId == "folder" ? "folder" : (batchId % 2)}`);
     div.dataset.batch_id = batchId;
     let img = document.createElement('img');
     img.addEventListener('load', () => {
         let ratio = img.width / img.height;
-        div.style.width = `${(ratio * 8) + 2}rem`;
+        if (batchId != "folder") {
+            div.style.width = `${(ratio * 8) + 2}rem`;
+        }
     });
     img.src = imageSrc;
     div.appendChild(img);

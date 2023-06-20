@@ -122,12 +122,16 @@ body {
     overflow-y: scroll;
 }
 .image-block {
-    height: 10rem;
+    height: 11rem;
     width: 10rem;
-    padding: 0.5rem;
+    padding-top: 0.25rem;
+    padding-left: 0.5rem;
+    padding-right: 0.25rem;
     display: inline-block;
     overflow: hidden;
-    white-space: nowrap;
+    white-space: pre-wrap;
+    word-break: break-all;
+    cursor: pointer;
 }
 .image-block img {
     height: 8rem;
@@ -142,8 +146,15 @@ body {
 .image-batch-1 {
     background-color: rgba(255, 255, 255, 0.3);
 }
+.image-batch-folder {
+    width: 6rem;
+    height: 6rem;
+}
+.image-batch-folder img {
+    height: 3.5rem;
+}
 .image-preview-text {
-    font-size: 70%;
+    font-size: 80%;
     font-family: 'Courier New', Courier, monospace;
 }
 .current_model_view {
@@ -161,6 +172,7 @@ body {
     overflow: hidden;
     white-space: nowrap;
     vertical-align: top;
+    cursor: pointer;
 }
 .model-selected {
     border: 1px solid rgba(0, 255, 0, 1.0);
@@ -186,6 +198,7 @@ body {
     margin-right: 0.2rem;
     padding-left: 0.2rem;
     padding-right: 0.2rem;
+    cursor: pointer;
 }
 .model-load-button:hover {
     background-color: color-mix(in srgb, orange 70%, black);
