@@ -596,6 +596,14 @@ public partial class GridGenCore
             {
                 try
                 {
+                    id = CleanID(id);
+                    string rawid = id;
+                    int c = 1;
+                    while (grid.Axes.Any(a => a.ID == id))
+                    {
+                        id = $"{rawid}_{c}";
+                        c++;
+                    }
                     Axis newAxis = new();
                     newAxis.BuildFromListStr(id, grid, axis["vals"].ToString());
                     grid.Axes.Add(newAxis);
