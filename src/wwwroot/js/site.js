@@ -120,6 +120,12 @@ function getSession(callback) {
     });
 }
 
+function textInputSize(elem) {
+    elem.style.height = '0px';
+    console.log('will resize to ' + elem.scrollHeight)
+    elem.style.height = `max(3.4rem, ${elem.scrollHeight + 5}px)`;
+}
+
 function doToggleEnable(id) {
     let elem = document.getElementById(id);
     if (!elem) {
@@ -191,12 +197,13 @@ function makeTextInput(featureid, id, name, description, value, rows, placeholde
     name = escapeHtml(name);
     description = escapeHtml(description);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
+    let onInp = rows == 1 ? '' : ' oninput="javascript:textInputSize(this)"';
     return `
     <div class="auto-input auto-text-box" title="${name}: ${description}"${featureid}>
         <div class="auto-input-fade-lock auto-fade-max-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
         </div>
-        <textarea class="auto-text" id="${id}" rows="${rows}" placeholder="${escapeHtml(placeholder)}" data-name="${name}">${escapeHtml(value)}</textarea>
+        <textarea class="auto-text" id="${id}" rows="${rows}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}">${escapeHtml(value)}</textarea>
     </div>`;
 }
 
@@ -241,7 +248,7 @@ function makeImageInput(featureid, id, name, description, toggles = false) {
         <div class="auto-input-fade-lock auto-fade-max-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
         </div>
-        <br><input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)">
+        <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)">
     </div>`;
     return html;
 }

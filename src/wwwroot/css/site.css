@@ -253,6 +253,7 @@ textarea, input, select {
     top: 0;
     width: fit-content;
     z-index: 1000;
+    white-space: pre-wrap;
 }
 .auto-slider-toggle {
     position: relative;
@@ -261,4 +262,7 @@ textarea, input, select {
 .display-inline-block {
     display: inline-block !important;
     vertical-align: middle;
+}
+.auto-file {
+    width: 100%;
 }

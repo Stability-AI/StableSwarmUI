@@ -143,31 +143,31 @@ public class T2IParamTypes
         Register(new("Images", "How many images to generate at once.",
             T2IParamDataType.INTEGER, "1", (s, p) => { }, Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50
             ));
-        Register(new("Steps", "How many times to run the model. More steps = better quality, but more time.",
-            T2IParamDataType.INTEGER, "20", (s, p) => p.Steps = int.Parse(s), Min: 1, Max: 200, Step: 1, Examples: new[] { "10", "15", "20", "25", "30" }, OrderPriority: -20
+        Register(new("Steps", "How many times to run the model.\nMore steps = better quality, but more time.\n20 is a good baseline for speed, 40 is good for maximizing quality.\nYou can go much higher, but it quickly becomes pointless above 70 or so.",
+            T2IParamDataType.INTEGER, "20", (s, p) => p.Steps = int.Parse(s), Min: 1, Max: 200, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20
             ));
-        Register(new("Seed", "Image seed. -1 = random.",
-            T2IParamDataType.INTEGER, "-1", (s, p) => p.Seed = int.Parse(s), Min: -1, Max: int.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -19
+        Register(new("Seed", "Image seed.\n-1 = random.",
+            T2IParamDataType.INTEGER, "-1", (s, p) => p.Seed = int.Parse(s), Min: -1, Max: int.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -19, NumberView: NumberViewType.BIG
             ));
-        Register(new("CFG Scale", "How strongly to scale prompt input. Too-high values can cause corrupted/burnt images, too-low can cause nonsensical images.",
-            T2IParamDataType.DECIMAL, "7", (s, p) => p.CFGScale = float.Parse(s), Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18
+        Register(new("CFG Scale", "How strongly to scale prompt input.\nToo-high values can cause corrupted/burnt images, too-low can cause nonsensical images.\n7 is a good baseline. Normal usages vary between 5 and 9.",
+            T2IParamDataType.DECIMAL, "7", (s, p) => p.CFGScale = float.Parse(s), Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER
             ));
-        Register(new("Width", "Image width, in pixels.",
+        Register(new("Width", "Image width, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
             T2IParamDataType.INTEGER, "512", (s, p) => p.Width = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
             ));
-        Register(new("Height", "Image height, in pixels.",
+        Register(new("Height", "Image height, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
             T2IParamDataType.INTEGER, "512", (s, p) => p.Height = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -9, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
             ));
-        Register(new("Init Image", "Init-image, to edit an image using diffusion.",
+        Register(new("Init Image", "Init-image, to edit an image using diffusion.\nThis process is sometimes called 'img2img' or 'Image To Image'.",
             T2IParamDataType.IMAGE, "", (s, p) => p.InitImage = string.IsNullOrWhiteSpace(s) ? null : new(s), OrderPriority: -5, Group: "Init Image"
             ));
-        Register(new("Init Image Creativity", "Higher values make the generation more creative, lower values follow the init image closer.",
+        Register(new("Init Image Creativity", "Higher values make the generation more creative, lower values follow the init image closer.\nSometimes referred to as 'Denoising Strength' for 'img2img'.",
             T2IParamDataType.DECIMAL, "0.6", (s, p) => p.ImageInitStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, NumberView: NumberViewType.SLIDER, Group: "Init Image"
             ));
-        Register(new("Model", "What model should be used.",
+        Register(new("Model", "What main checkpoint model should be used.",
             T2IParamDataType.DROPDOWN, "", (s, p) => p.Model = Program.T2IModels.Models[s], GetValues: (session) => Program.T2IModels.ListModelsFor(session).Select(m => m.Name).ToList(), Permission: "param_model", VisibleNormally: false
             ));
-        Register(new("[Internal] Backend Type", "Which backend type should be used for this request.",
+        Register(new("[Internal] Backend Type", "Which StableUI backend type should be used for this request.",
             T2IParamDataType.DROPDOWN, "Any", (s, p) => p.BackendType = s, GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true
             ));
     }

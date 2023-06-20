@@ -372,7 +372,7 @@ function getHtmlForParam(param, prefix) {
     let pop = `<div class="sui-popover" id="popover_${prefix}${param.id}"><b>${escapeHtml(param.name)}</b> (${param.type}):<br>&emsp;${escapeHtml(param.description)}${example}</div>`;
     switch (param.type) {
         case 'text':
-            return makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, '', param.default, 3, param.description, param.toggleable) + pop;
+            return makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, '', param.default, 2, param.description, param.toggleable) + pop;
         case 'decimal':
         case 'integer':
             let min = param.min;
