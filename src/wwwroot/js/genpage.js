@@ -472,6 +472,18 @@ function genInputs() {
             doToggleEnable(`input_${param.id}`);
         }
     }
+    let inputWidth = document.getElementById('input_width');
+    let inputWidthSlider = document.getElementById('input_width_rangeslider');
+    let inputHeight = document.getElementById('input_height');
+    let inputHeightSlider = document.getElementById('input_height_rangeslider');
+    let resGroupLabel = findParentOfClass(inputWidth, 'input-group').getElementsByClassName('input-group-header')[0];
+    let resTrick = () => {
+        resGroupLabel.innerText = resGroupLabel.innerText[0] + `Resolution: ${describeAspectRatio(inputWidth.value, inputHeight.value)} (${inputWidth.value}x${inputHeight.value})`;
+    };
+    for (let target of [inputWidth, inputWidthSlider, inputHeight, inputHeightSlider]) {
+        target.addEventListener('input', resTrick);
+    }
+    resTrick();
 }
 
 let toolSelector = document.getElementById('tool_selector');

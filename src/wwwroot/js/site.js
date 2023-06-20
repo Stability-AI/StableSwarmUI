@@ -166,7 +166,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, step
         </div>
         <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}">
         <br>
-        <input class="auto-slider-range" type="range" value="${rangeVal}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}">
+        <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}">
     </div>`;
 }
 
@@ -250,4 +250,30 @@ function makeImageInput(featureid, id, name, description, toggles = false) {
         <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)">
     </div>`;
     return html;
+}
+
+function describeAspectRatio(width, height) {
+    let wh = width / height;
+    let hw = height / width;
+    if (roundTo(wh, 0.01) == 1) {
+        return '1:1';
+    }
+    else if (roundTo(wh, 0.01) % 1 == 0) {
+        return `${Math.round(wh)}:1`;
+    }
+    else if (roundTo(hw, 0.01) % 1 == 0) {
+        return `1:${Math.round(hw)}`;
+    }
+    for (let i = 2; i < 50; i++) {
+        if (roundTo(wh * i, 0.01) % 1 == 0) {
+            return `${Math.round(wh * i)}:${i}`;
+        }
+        if (roundTo(hw * i, 0.01) % 1 == 0) {
+            return `${i}:${Math.round(hw * i)}`;
+        }
+    }
+    if (wh > 1) {
+        return `${roundTo(wh, 0.01)}:1`;
+    }
+    return `1:${roundTo(hw, 0.01)}`;
 }

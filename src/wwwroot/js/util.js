@@ -101,6 +101,16 @@ function potToLinear(val, max, min, step) {
     return Math.round(normIncr * max);
 }
 
+function findParentOfClass(elem, className) {
+    while (elem != null) {
+        if (elem.classList.contains(className)) {
+            return elem;
+        }
+        elem = elem.parentElement;
+    }
+    return null;
+}
+
 function getTextNodesIn(node) {
     var textNodes = [];
     if (node.nodeType == 3) {
@@ -193,4 +203,8 @@ function toDataURL(url, callback) {
     xhr.open('GET', url);
     xhr.responseType = 'blob';
     xhr.send();
+}
+
+function roundTo(val, step) {
+    return Math.round(val / step) * step;
 }

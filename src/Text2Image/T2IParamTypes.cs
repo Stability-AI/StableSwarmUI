@@ -168,10 +168,10 @@ public class T2IParamTypes
             T2IParamDataType.INTEGER, "512", (s, p) => p.Height = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -9, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
             ));
         Register(new("Init Image", "Init-image, to edit an image using diffusion.\nThis process is sometimes called 'img2img' or 'Image To Image'.",
-            T2IParamDataType.IMAGE, "", (s, p) => p.InitImage = string.IsNullOrWhiteSpace(s) ? null : new(s), OrderPriority: -5, Group: "Init Image"
+            T2IParamDataType.IMAGE, "", (s, p) => p.InitImage = string.IsNullOrWhiteSpace(s) ? null : new(s), OrderPriority: -5, Group: "Init Image", GroupOpen: false
             ));
         Register(new("Init Image Creativity", "Higher values make the generation more creative, lower values follow the init image closer.\nSometimes referred to as 'Denoising Strength' for 'img2img'.",
-            T2IParamDataType.DECIMAL, "0.6", (s, p) => p.ImageInitStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, NumberView: NumberViewType.SLIDER, Group: "Init Image"
+            T2IParamDataType.DECIMAL, "0.6", (s, p) => p.ImageInitStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, NumberView: NumberViewType.SLIDER, Group: "Init Image", GroupOpen: false
             ));
         Register(new("Model", "What main checkpoint model should be used.",
             T2IParamDataType.DROPDOWN, "", (s, p) => p.Model = Program.T2IModels.Models[s], GetValues: (session) => Program.T2IModels.ListModelsFor(session).Select(m => m.Name).Order().ToList(), Permission: "param_model", VisibleNormally: false
