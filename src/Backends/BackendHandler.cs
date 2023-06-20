@@ -407,6 +407,9 @@ public class BackendHandler
         /// <summary>Sessions that want the model.</summary>
         public HashSet<Session> Sessions = new();
 
+        /// <summary>Set of backends that tried to satisfy this request but failed.</summary>
+        public HashSet<int> BadBackends = new();
+
         /// <summary>Gets a loose heuristic for model order preference - sort by earliest requester, but higher count of requests is worth 10 seconds.</summary>
         public long Heuristic(long timeRel) => Count * 10 + ((timeRel - TimeFirstRequest) / 1000); // TODO: 10 -> ?
     }
@@ -514,13 +517,20 @@ public class BackendHandler
                     long timeRel = Environment.TickCount64;
                     if (available.Any())
                     {
-                        T2IBackendData availableBackend = available.MinBy(a => a.TimeLastRelease);
                         ModelRequestPressure highestPressure = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).FirstOrDefault();
                         if (highestPressure is not null)
                         {
                             long timeWait = timeRel - highestPressure.TimeFirstRequest;
                             if (possible.Count == 1 || timeWait > 1500)
                             {
+                                List<T2IBackendData> valid = available.Where(b => !highestPressure.BadBackends.Contains(b.ID)).ToList();
+                                if (valid.IsEmpty())
+                                {
+                                    Logs.Warning("[BackendHandler] All backends failed to load the model! Cannot generate anything.");
+                                    ReleasePressure();
+                                    throw new InvalidOperationException("All available backends failed to load the model.");
+                                }
+                                T2IBackendData availableBackend = valid.MinBy(a => a.TimeLastRelease);
                                 Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} will load a model: {highestPressure.Model.Name}, with {highestPressure.Count} requests waiting for {timeWait / 1000f:0.#} seconds");
                                 highestPressure.IsLoading = true;
                                 List<Session.GenClaim> claims = new();
@@ -540,6 +550,11 @@ public class BackendHandler
                                     {
                                         lock (CentralLock)
                                         {
+                                            if (availableBackend.Backend.CurrentModelName != highestPressure.Model.Name)
+                                            {
+                                                Logs.Warning($"[BackendHandler] backend #{availableBackend.ID} failed to load model {highestPressure.Model.Name}");
+                                                highestPressure.BadBackends.Add(availableBackend.ID);
+                                            }
                                             highestPressure.IsLoading = false;
                                             foreach (Session.GenClaim claim in claims)
                                             {
