@@ -118,7 +118,6 @@ function getGenInput() {
     for (let key in input_overrides) {
         input[key] = input_overrides[key];
     }
-    console.log("Will request: " + JSON.stringify(input));
     return input;
 }
 
@@ -381,7 +380,6 @@ function getHtmlForParam(param, prefix) {
                 min = -9999999;
                 max = 9999999;
             }
-            console.log(`will build param ${param.id} with min ${min} and max ${max} and step ${param.step}`)
             switch (param.number_view_type) {
                 case 'small':
                     return makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
@@ -389,7 +387,6 @@ function getHtmlForParam(param, prefix) {
                     return makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop;
                 case 'slider':
                     let val = makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop;
-                    console.log(`will use ${val}`)
                     return val;
                 case 'pot_slider':
                     return makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
@@ -426,6 +423,8 @@ function genInputs() {
         let presetArea = areaData[1] ? document.getElementById(areaData[1]) : null;
         let html = '', presetHtml = '';
         let lastGroup = null;
+        let groupsClose = [];
+        let groupId = 0;
         for (let param of gen_param_types.filter(areaData[2])) {
             if (param.group != lastGroup) {
                 if (lastGroup) {
@@ -435,9 +434,13 @@ function genInputs() {
                     }
                 }
                 if (param.group) {
-                    html += `<div class="input-group"><span onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
+                    groupId++;
+                    if (!param.group_open) {
+                        groupsClose.push(groupId);
+                    }
+                    html += `<div class="input-group"><span id="input_group_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
                     if (presetArea) {
-                        presetHtml += `<div class="input-group"><span onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
+                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
                     }
                 }
                 lastGroup = param.group;
@@ -454,6 +457,14 @@ function genInputs() {
         if (presetArea) {
             presetArea.innerHTML = presetHtml;
             enableSlidersIn(presetArea);
+        }
+        for (let group of groupsClose) {
+            let elem = document.getElementById(`input_group_${group}`);
+            toggleGroupOpen(elem);
+            let pelem = document.getElementById(`input_group_preset_${group}`);
+            if (pelem) {
+                toggleGroupOpen(pelem);
+            }
         }
     }
     for (let param of gen_param_types) {

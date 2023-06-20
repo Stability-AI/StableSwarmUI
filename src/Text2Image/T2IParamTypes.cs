@@ -62,11 +62,13 @@ public enum NumberViewType
 /// <param name="Toggleable">If true, the setting's presence can be toggled on/off.</param>
 /// <param name="OrderPriority">Value to help sort parameter types appropriately.</param>
 /// <param name="Group">Optional grouping label.</param>
+/// <param name="GroupOpen">(When defining a new group), whether the group should be open by default.</param>
 /// <param name="NumberView">How to display a number input.</param>
 /// 
 public record class T2IParamType(string Name, string Description, T2IParamDataType Type, string Default, Action<string, T2IParams> Apply, double Min = 0, double Max = 0, double Step = 1,
     Func<string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
-    bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, string Group = null, NumberViewType NumberView = NumberViewType.SMALL)
+    bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, string Group = null, bool GroupOpen = true,
+    NumberViewType NumberView = NumberViewType.SMALL)
 {
     public JObject ToNet(Session session)
     {
@@ -88,6 +90,7 @@ public record class T2IParamType(string Name, string Description, T2IParamDataTy
             ["toggleable"] = Toggleable,
             ["priority"] = OrderPriority,
             ["group"] = Group,
+            ["group_open"] = GroupOpen,
             ["number_view_type"] = NumberView.ToString().ToLowerFast()
         };
     }
@@ -147,10 +150,16 @@ public class T2IParamTypes
             T2IParamDataType.INTEGER, "20", (s, p) => p.Steps = int.Parse(s), Min: 1, Max: 200, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: "Core Parameters"
             ));
         Register(new("Seed", "Image seed.\n-1 = random.",
-            T2IParamDataType.INTEGER, "-1", (s, p) => p.Seed = int.Parse(s), Min: -1, Max: int.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -19, NumberView: NumberViewType.BIG, Group: "Core Parameters"
+            T2IParamDataType.INTEGER, "-1", (s, p) => p.Seed = int.Parse(s), Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -19, NumberView: NumberViewType.BIG, Group: "Core Parameters"
             ));
         Register(new("CFG Scale", "How strongly to scale prompt input.\nToo-high values can cause corrupted/burnt images, too-low can cause nonsensical images.\n7 is a good baseline. Normal usages vary between 5 and 9.",
             T2IParamDataType.DECIMAL, "7", (s, p) => p.CFGScale = float.Parse(s), Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER, Group: "Core Parameters"
+            ));
+        Register(new("Variation Seed", "Image-variation seed.\nCombined partially with the original seed to create a similar-but-different image for the same seed.\n-1 = random.",
+            T2IParamDataType.INTEGER, "-1", (s, p) => p.VarSeed = int.Parse(s), Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, NumberView: NumberViewType.BIG, Group: "Variation Seed", GroupOpen: false
+            ));
+        Register(new("Variation Seed Strength", "How strongly to apply the variation seed.\n0 = don't use, 1 = replace the base seed entirely. 0.5 is a good value.",
+            T2IParamDataType.DECIMAL, "0", (s, p) => p.VarSeedStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, NumberView: NumberViewType.SLIDER, Group: "Variation Seed", GroupOpen: false
             ));
         Register(new("Width", "Image width, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
             T2IParamDataType.INTEGER, "512", (s, p) => p.Width = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
@@ -165,7 +174,7 @@ public class T2IParamTypes
             T2IParamDataType.DECIMAL, "0.6", (s, p) => p.ImageInitStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, NumberView: NumberViewType.SLIDER, Group: "Init Image"
             ));
         Register(new("Model", "What main checkpoint model should be used.",
-            T2IParamDataType.DROPDOWN, "", (s, p) => p.Model = Program.T2IModels.Models[s], GetValues: (session) => Program.T2IModels.ListModelsFor(session).Select(m => m.Name).ToList(), Permission: "param_model", VisibleNormally: false
+            T2IParamDataType.DROPDOWN, "", (s, p) => p.Model = Program.T2IModels.Models[s], GetValues: (session) => Program.T2IModels.ListModelsFor(session).Select(m => m.Name).Order().ToList(), Permission: "param_model", VisibleNormally: false
             ));
         Register(new("[Internal] Backend Type", "Which StableUI backend type should be used for this request.",
             T2IParamDataType.DROPDOWN, "Any", (s, p) => p.BackendType = s, GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true

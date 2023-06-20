@@ -21,7 +21,7 @@ public class T2IParams : IDataHolder
     public float CFGScale = 7;
 
     [NetData(Name = "seed")]
-    public int Seed = -1;
+    public long Seed = -1;
 
     [NetData(Name = "width")]
     public int Width = 512;
@@ -33,7 +33,7 @@ public class T2IParams : IDataHolder
     public int Steps = 20;
 
     [NetData(Name = "var_seed")]
-    public int VarSeed = -1;
+    public long VarSeed = -1;
 
     [NetData(Name = "var_seed_strength")]
     public float VarSeedStrength = 0;

@@ -122,7 +122,6 @@ function getSession(callback) {
 
 function textInputSize(elem) {
     elem.style.height = '0px';
-    console.log('will resize to ' + elem.scrollHeight)
     elem.style.height = `max(3.4rem, ${elem.scrollHeight + 5}px)`;
 }
 
