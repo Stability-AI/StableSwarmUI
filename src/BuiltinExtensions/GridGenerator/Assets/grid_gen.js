@@ -24,7 +24,7 @@ function gridGen_addAxis() {
         let parts = text.split(separator);
         let html = '';
         for (let i in parts) {
-            html += parts[i] + (i == parts.length - 1 ? '' : `<span class="grid-gen-axis-input-separator">${separator}</span>`);
+            html += `<span class="grid-gen-axis-input-value">${parts[i]}</span>` + (i == parts.length - 1 ? '' : `<span class="grid-gen-axis-input-separator">${separator}</span>`);
         }
         inputBox.innerHTML = html;
         if (lastSelection != -1) {
@@ -95,7 +95,7 @@ function gridGen_register() {
     gridGen_settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
     gridGen_settingsDiv.innerHTML =
         '<button class="grid-gen-run-button" id="grid-gen-run-button">Create Grid</button><br>'
-        + '<br><div id="grid-gen-info-box"></div>'
+        + '<br><div id="grid-gen-info-box">...</div>'
         + makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', '', '', 1, 'Output folder name...')
         + '<br>'
         + makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false)
@@ -108,9 +108,13 @@ function gridGen_register() {
     gridGen_mainDiv.appendChild(gridGen_axisDiv);
     let outInfoBox = document.getElementById('grid-gen-info-box');
     let outputFolder = document.getElementById('grid-gen-output-folder-name');
-    outputFolder.addEventListener('input', () => {
+    let updateOutputInfo = () => {
         outInfoBox.innerHTML = `Output will be saved to <a href="Output/${outputFolder.value}/index.html" target="_blank">Output/<code>${outputFolder.value}</code></a>`;
-    });
+    };
+    outputFolder.addEventListener('input', updateOutputInfo);
+    let today = new Date();
+    outputFolder.value = `grid-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}-${today.getHours()}-${today.getMinutes()}-${today.getSeconds()}`;
+    updateOutputInfo();
     let runButton = document.getElementById('grid-gen-run-button');
     runButton.addEventListener('click', () => {
         let getOpt = (o) => document.getElementById('grid-gen-opt-' + o).checked;
