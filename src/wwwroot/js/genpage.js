@@ -405,6 +405,19 @@ function getHtmlForParam(param, prefix) {
     return null;
 }
 
+function toggleGroupOpen(elem) {
+    // ⮟⮞
+    let group = elem.parentElement.getElementsByClassName('input-group-content')[0];
+    if (group.style.display == 'none') {
+        group.style.display = 'block';
+        elem.innerText = '⮟' + elem.innerText.replaceAll('⮞', '');
+    }
+    else {
+        group.style.display = 'none';
+        elem.innerText = '⮞' + elem.innerText.replaceAll('⮟', '');
+    }
+}
+
 function genInputs() {
     for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !p.advanced],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && p.advanced],
@@ -416,15 +429,15 @@ function genInputs() {
         for (let param of gen_param_types.filter(areaData[2])) {
             if (param.group != lastGroup) {
                 if (lastGroup) {
-                    html += '</div>';
+                    html += '</div></div>';
                     if (presetArea) {
-                        presetHtml += '</div>';
+                        presetHtml += '</div></div>';
                     }
                 }
                 if (param.group) {
-                    html += `<div class="input-group"><span class="input-group-header">${escapeHtml(param.group)}</span>`;
+                    html += `<div class="input-group"><span onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
                     if (presetArea) {
-                        presetHtml += `<div class="input-group"><span class="input-group-header">${escapeHtml(param.group)}</span>`;
+                        presetHtml += `<div class="input-group"><span onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
                     }
                 }
                 lastGroup = param.group;

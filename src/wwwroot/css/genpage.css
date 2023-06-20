@@ -66,6 +66,7 @@ body {
     background-color: var(--background-soft);
     margin-top: 1rem;
     margin-bottom: 1.5rem;
+    cursor: pointer;
 }
 .main_inputs_area_wrapper {
     overflow-x: hidden;
