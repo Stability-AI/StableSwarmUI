@@ -134,10 +134,10 @@ public class T2IParamTypes
     /// <summary>(Called by <see cref="Program"/> during startup) registers all default parameter types.</summary>
     public static void RegisterDefaults()
     {
-        Register(new("Prompt", "The input prompt text that describes the image you want to generate.",
+        Register(new("Prompt", "The input prompt text that describes the image you want to generate.\nTell the AI what you want to see.",
             T2IParamDataType.TEXT, "", (s, p) => p.Prompt = ApplyStringEdit(p.Prompt, s), Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100
             ));
-        Register(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.",
+        Register(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.\nTell the AI things you don't want to see.",
             T2IParamDataType.TEXT, "", (s, p) => p.NegativePrompt = ApplyStringEdit(p.NegativePrompt, s), Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90
             ));
         Register(new("Images", "How many images to generate at once.",
