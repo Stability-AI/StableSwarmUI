@@ -406,42 +406,27 @@ function getHtmlForParam(param, prefix) {
 }
 
 function genInputs() {
-    let area = document.getElementById('main_inputs_area');
-    let advancedAea = document.getElementById('main_inputs_area_advanced');
-    let hiddenArea = document.getElementById('main_inputs_area_hidden');
-    let presetArea = document.getElementById('new_preset_modal_inputs');
-    let presetAdvancedArea = document.getElementById('new_preset_modal_advanced_inputs');
-    let html = '', advancedHtml = '', hiddenHtml = '', presetHtml = '', presetAdvancedHtml = '';
-    for (let param of gen_param_types) {
-        let paramHtml = getHtmlForParam(param, "input_");
-        if (!param.visible) {
-            hiddenHtml += paramHtml;
+    for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !p.advanced],
+            ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && p.advanced],
+            ['main_inputs_area_hidden', null, (p) => !p.visible]]) {
+        let area = document.getElementById(areaData[0]);
+        let presetArea = areaData[1] ? document.getElementById(areaData[1]) : null;
+        let html = '', presetHtml = '';
+        for (let param of gen_param_types.filter(areaData[2])) {
+            html += getHtmlForParam(param, "input_");
+            if (param.visible) { // Hidden excluded from presets.
+                let presetParam = JSON.parse(JSON.stringify(param));
+                presetParam.toggleable = true;
+                presetHtml += getHtmlForParam(presetParam, "preset_input_");
+            }
         }
-        else if (param.advanced) {
-            advancedHtml += paramHtml;
-        }
-        else {
-            html += paramHtml;
-        }
-        let presetParam = JSON.parse(JSON.stringify(param));
-        presetParam.toggleable = true;
-        let presetParamHtml = getHtmlForParam(presetParam, "preset_input_");
-        if (!param.visible) {
-            // Hidden excluded from presets.
-        }
-        else if (param.advanced) {
-            presetAdvancedHtml += presetParamHtml;
-        }
-        else {
-            presetHtml += presetParamHtml;
+        area.innerHTML = html;
+        enableSlidersIn(area);
+        if (presetArea) {
+            presetArea.innerHTML = presetHtml;
+            enableSlidersIn(presetArea);
         }
     }
-    area.innerHTML = html;
-    advancedAea.innerHTML = advancedHtml;
-    hiddenArea.innerHTML = hiddenHtml;
-    presetArea.innerHTML = presetHtml;
-    presetAdvancedArea.innerHTML = presetAdvancedHtml;
-    enableSlidersIn(area);
     for (let param of gen_param_types) {
         if (param.toggleable) {
             doToggleEnable(`input_${param.id}`);
