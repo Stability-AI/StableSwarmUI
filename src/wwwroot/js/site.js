@@ -72,8 +72,9 @@ function makeWSRequest(url, in_data, callback, depth = 0) {
             return;
         }
         if (data.error) {
-            console.log(`Tried making WS request ${url} but failed with error: ${data.error}`);
-            showError(data.error);
+            let error = JSON.stringify(data.error);
+            console.log(`Tried making WS request ${url} but failed with error: ${error}`);
+            showError(error);
             return;
         }
         callback(data);

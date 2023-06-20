@@ -300,11 +300,22 @@ public class GridGeneratorExtension : Extension
             return null;
         }
         Task faulted = data.Rendering.FirstOrDefault(t => t.IsFaulted);
+        JObject err = Volatile.Read(ref data.ErrorOut);
         if (faulted is not null)
         {
             Logs.Error($"GridGen tasks failed: {faulted.Exception}");
+            if (err is null)
+            {
+                if (faulted.Exception.InnerException is InvalidDataException)
+                {
+                    err = new JObject() { ["error"] = $"Failed due to: {faulted.Exception.InnerException.Message}" };
+                }
+                else
+                {
+                    err = new JObject() { ["error"] = "Failed due to internal error." };
+                }
+            }
         }
-        JObject err = Volatile.Read(ref data.ErrorOut);
         if (err is not null)
         {
             Logs.Error($"GridGen stopped while running: {err}");
