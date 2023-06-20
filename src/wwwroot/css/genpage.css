@@ -122,7 +122,7 @@ body {
     overflow-y: scroll;
 }
 .image-block {
-    height: 11rem;
+    height: 11.5rem;
     width: 10rem;
     padding-top: 0.25rem;
     padding-left: 0.5rem;
@@ -154,7 +154,7 @@ body {
     height: 3.5rem;
 }
 .image-preview-text {
-    font-size: 80%;
+    font-size: 70%;
     font-family: 'Courier New', Courier, monospace;
 }
 .current_model_view {
