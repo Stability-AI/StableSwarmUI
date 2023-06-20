@@ -292,7 +292,7 @@ public class GridGeneratorExtension : Extension
             if (err2 is not null)
             {
                 Logs.Error($"GridGen stopped while running2: {err2}");
-                await socket.SendJson(new JObject() { ["error"] = err2 }, TimeSpan.FromMinutes(1));
+                await socket.SendJson(err2, TimeSpan.FromMinutes(1));
                 return null;
             }
             Logs.Error($"GridGen failed: {ex}");
@@ -319,7 +319,7 @@ public class GridGeneratorExtension : Extension
         if (err is not null)
         {
             Logs.Error($"GridGen stopped while running: {err}");
-            await socket.SendJson(new JObject() { ["error"] = err }, TimeSpan.FromMinutes(1));
+            await socket.SendJson(err, TimeSpan.FromMinutes(1));
             return null;
         }
         while (data.Generated.TryDequeue(out string nextImage))
