@@ -20,7 +20,7 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(GetMyUserData);
         API.RegisterAPICall(AddNewPreset);
         API.RegisterAPICall(DeletePreset);
-        API.RegisterAPICall(GetCurrentWaiting);
+        API.RegisterAPICall(GetCurrentStatus);
         API.RegisterAPICall(InterruptAll);
         T2IAPI.Register();
         BackendAPI.Register();
@@ -73,10 +73,19 @@ public static class BasicAPIFeatures
         return new JObject() { ["success"] = session.User.DeletePreset(preset) };
     }
 
-    /// <summary>API Route to get current waiting generation count.</summary>
-    public static async Task<JObject> GetCurrentWaiting(Session session)
+    /// <summary>API Route to get current waiting generation count, model loading count, etc.</summary>
+    public static async Task<JObject> GetCurrentStatus(Session session)
     {
-        return new JObject() { ["count"] = session.WaitingGenerations };
+        lock (session.StatsLocker)
+        {
+            return new JObject()
+            {
+                ["waiting_gens"] = session.WaitingGenerations,
+                ["loading_models"] = session.LoadingModels,
+                ["waiting_backends"] = session.WaitingBackends,
+                ["live_gens"] = session.LiveGens
+            };
+        }
     }
 
     /// <summary>API Route to tell all waiting generations to interrupt.</summary>

@@ -1,14 +1,13 @@
-﻿using Microsoft.AspNetCore.StaticFiles;
+﻿using FreneticUtilities.FreneticToolkit;
 using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Utils;
-using System.Collections.Concurrent;
 using System.IO;
 
 namespace StableUI.Accounts;
 
 /// <summary>Container for information related to an active session.</summary>
-public class Session
+public class Session : IEquatable<Session>
 {
     /// <summary>Randomly generated ID.</summary>
     public string ID;
@@ -18,22 +17,25 @@ public class Session
 
     public CancellationTokenSource SessInterrupt = new();
 
-    public ConcurrentDictionary<GenClaim, GenClaim> Claims = new();
+    public List<GenClaim> Claims = new();
 
-    /// <summary>The number of generations currently running on this session.</summary>
-    public volatile int WaitingGenerations = 0;
+    /// <summary>Statistics about the generations currently waiting in this session.</summary>
+    public int WaitingGenerations = 0, LoadingModels = 0, WaitingBackends = 0, LiveGens = 0;
+
+    /// <summary>Locker for interacting with this session's statsdata.</summary>
+    public LockObject StatsLocker = new();
 
     /// <summary>Use "using <see cref="GenClaim"/> claim = session.Claim(image_count);" to track generation requests pending on this session.</summary>
-    public GenClaim Claim(int amt)
+    public GenClaim Claim(int gens, int modelLoads, int backendWaits, int liveGens)
     {
-        return new(this, amt);
+        return new(this, gens, modelLoads, backendWaits, liveGens);
     }
 
     /// <summary>Helper to claim an amount of generations and dispose it automatically cleanly.</summary>
     public class GenClaim : IDisposable
     {
         /// <summary>The number of generations tracked by this object.</summary>
-        public volatile int Amount;
+        public int WaitingGenerations = 0, LoadingModels = 0, WaitingBackends = 0, LiveGens = 0;
 
         /// <summary>The relevant original session.</summary>
         public Session Sess;
@@ -41,38 +43,53 @@ public class Session
         /// <summary>Cancel token that cancels if the user wants to interrupt all generations.</summary>
         public CancellationToken InterruptToken;
 
-        /// <summary>If true, the running generations should stop immediately.</summary>
-        public bool ShouldCancel => InterruptToken.IsCancellationRequested;
+        /// <summary>Token source to interrupt just this claim's set.</summary>
+        public CancellationTokenSource LocalClaimInterrupt = new();
 
-        public GenClaim(Session session, int amt)
+        /// <summary>If true, the running generations should stop immediately.</summary>
+        public bool ShouldCancel => InterruptToken.IsCancellationRequested || LocalClaimInterrupt.IsCancellationRequested;
+
+        public GenClaim(Session session, int gens, int modelLoads, int backendWaits, int liveGens)
         {
             Sess = session;
-            Amount = amt;
             InterruptToken = session.SessInterrupt.Token;
-            Interlocked.Add(ref session.WaitingGenerations, amt);
-            session.Claims.TryAdd(this, this);
+            lock (Sess.StatsLocker)
+            {
+                Extend(gens, modelLoads, backendWaits, liveGens);
+                session.Claims.Add(this);
+            }
         }
 
         /// <summary>Increase the size of the claim.</summary>
-        public void Extend(int count)
+        public void Extend(int gens, int modelLoads, int backendWaits, int liveGens)
         {
-            Interlocked.Add(ref Amount, count);
-            Interlocked.Add(ref Sess.WaitingGenerations, count);
+            lock (Sess.StatsLocker)
+            {
+                WaitingGenerations += gens;
+                LoadingModels += modelLoads;
+                WaitingBackends += backendWaits;
+                LiveGens += liveGens;
+                Sess.WaitingGenerations += gens;
+                Sess.LoadingModels += modelLoads;
+                Sess.WaitingBackends += backendWaits;
+                Sess.LiveGens += liveGens;
+            }
         }
 
         /// <summary>Mark a subset of these as complete.</summary>
-        public void Complete(int count)
+        public void Complete(int gens, int modelLoads, int backendWaits, int liveGens)
         {
-            Interlocked.Add(ref Amount, -count);
-            Interlocked.Add(ref Sess.WaitingGenerations, -count);
+            Extend(-gens, -modelLoads, -backendWaits, -liveGens);
         }
 
         /// <summary>Internal dispose route, called by 'using' statements.</summary>
         public void Dispose()
         {
-            Interlocked.Add(ref Sess.WaitingGenerations, -Amount);
-            Sess.Claims.TryRemove(this, out _);
-            Amount = 0;
+            lock (Sess.StatsLocker)
+            {
+                Complete(WaitingGenerations, LoadingModels, WaitingBackends, LiveGens);
+                Sess.Claims.Remove(this);
+            }
             GC.SuppressFinalize(this);
         }
 
@@ -126,5 +143,23 @@ public class Session
             }
         }
         return $"Output/{imagePath}.{extension}";
+    }
+
+    /// <summary>Gets a hash code for this session, for C# equality comparsion.</summary>
+    public override int GetHashCode()
+    {
+        return ID.GetHashCode();
+    }
+
+    /// <summary>Returns true if this session is the same as another.</summary>
+    public override bool Equals(object obj)
+    {
+        return obj is Session session && Equals(session);
+    }
+
+    /// <summary>Returns true if this session is the same as another.</summary>
+    public bool Equals(Session other)
+    {
+        return ID == other.ID;
     }
 }

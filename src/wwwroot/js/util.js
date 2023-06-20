@@ -208,3 +208,7 @@ function toDataURL(url, callback) {
 function roundTo(val, step) {
     return Math.round(val / step) * step;
 }
+
+function autoS(num) {
+    return num == 1 ? "" : "s";
+}

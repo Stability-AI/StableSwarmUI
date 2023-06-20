@@ -291,3 +291,11 @@ body {
     max-width: 100%;
     max-height: 20rem;
 }
+.interrupt_line {
+    display: block;
+    width: 100%;
+    white-space: normal;
+}
+.interrupt-line-part {
+    display: inline-block;
+}

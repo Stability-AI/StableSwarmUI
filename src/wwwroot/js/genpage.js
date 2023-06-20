@@ -10,7 +10,7 @@ let lastModelDir = '';
 
 let input_overrides = {};
 
-let num_current_gens = 0;
+let num_current_gens = 0, num_models_loading = 0, num_live_gens = 0, num_backends_waiting = 0;
 
 const time_started = Date.now();
 
@@ -121,20 +121,35 @@ function getGenInput() {
     return input;
 }
 
+function updateCurrentStatusDirect(data) {
+    if (data) {
+        num_current_gens = data.waiting_gens;
+        num_models_loading = data.loading_models;
+        num_live_gens = data.live_gens;
+        num_backends_waiting = data.waiting_backends;
+    }
+    let elem = document.getElementById('num_jobs_span');
+    function autoBlock(num, text) {
+        if (num == 0) {
+            return '';
+        }
+        return `<span class="interrupt-line-part">${num} ${text.replaceAll('%', autoS(num))},</span> `;
+    }
+    elem.innerHTML = `${autoBlock(num_current_gens, 'current generation%')}${autoBlock(num_live_gens, 'running')}${autoBlock(num_backends_waiting, 'queued')}${autoBlock(num_models_loading, 'waiting on model load')} ...`;
+}
+
 let doesHaveGenCountUpdateQueued = false;
 
 function updateGenCount() {
-    let elem = document.getElementById('num_jobs_span');
-    elem.innerText = num_current_gens;
+    updateCurrentStatusDirect(null);
     if (doesHaveGenCountUpdateQueued) {
         return;
     }
     doesHaveGenCountUpdateQueued = true;
     setTimeout(() => {
-        genericRequest('GetCurrentWaiting', {}, data => {
+        genericRequest('GetCurrentStatus', {}, data => {
             doesHaveGenCountUpdateQueued = false;
-            num_current_gens = data.count;
-            elem.innerText = num_current_gens;
+            updateCurrentStatusDirect(data);
         });
     }, 500);
 }
@@ -164,10 +179,13 @@ function doGenerate() {
         document.getElementById('current_image_batch').innerHTML = '';
         batches++;
         makeWSRequest('GenerateText2ImageWS', getGenInput(), data => {
-            gotImageResult(data.image);
-            updateGenCount();
+            if (data.status) {
+                updateCurrentStatusDirect(data.status);
+            }
+            else {
+                gotImageResult(data.image);
+            }
         });
-        updateGenCount();
     });
 }
 

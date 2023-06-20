@@ -1,5 +1,6 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Backends;
@@ -7,10 +8,13 @@ using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net.WebSockets;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 
 namespace StableUI.WebAPI;
 
@@ -29,21 +33,69 @@ public static class T2IAPI
         API.RegisterAPICall(ListT2IParams);
     }
 
+    public static TimeSpan WebsocketTimeout = TimeSpan.FromMinutes(2); // TODO: Configurable timeout
+
     /// <summary>API route to generate images with WebSocket updates.</summary>
     public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, Session session, int images, JObject rawInput)
     {
-        await foreach ((string img, JObject err) in GenT2I_Internal(session, images, rawInput))
+        ConcurrentQueue<(string, JObject)> allOutputs = new();
+        AsyncAutoResetEvent signal = new(false);
+        int waitGen = -1, loadMod = -1, waitBack = -1, liveGen = -1;
+        async Task sendStatus()
         {
-            if (img is not null)
+            bool doSend = false;
+            lock (session.StatsLocker)
             {
-                await socket.SendJson(new JObject() { ["image"] = img }, TimeSpan.FromMinutes(1)); // TODO: Configurable timeout
+                int waitGen2 = session.WaitingGenerations, loadMod2 = session.LoadingModels, waitBack2 = session.WaitingBackends, liveGen2 = session.LiveGens;
+                if (waitGen != waitGen2 || loadMod != loadMod2 || waitBack != waitBack2 || liveGen != liveGen2)
+                {
+                    waitGen = waitGen2;
+                    loadMod = loadMod2;
+                    waitBack = waitBack2;
+                    liveGen = liveGen2;
+                    doSend = true;
+                }
             }
-            if (err is not null)
+            if (doSend)
             {
-                await socket.SendJson(err, TimeSpan.FromMinutes(1));
-                break;
+                JObject status;
+                status = new JObject()
+                {
+                    ["waiting_gens"] = waitGen,
+                    ["loading_models"] = loadMod,
+                    ["waiting_backends"] = waitBack,
+                    ["live_gens"] = liveGen
+                };
+                await socket.SendJson(new JObject() { ["status"] = status }, WebsocketTimeout);
             }
         }
+        await sendStatus();
+
+        Task t = GenT2I_Internal(session, images, rawInput, false, allOutputs, signal);
+        while (!t.IsCompleted || allOutputs.Any())
+        {
+            while (allOutputs.TryDequeue(out (string, JObject) output))
+            {
+                if (output.Item1 == "data")
+                {
+                    await socket.SendJson(output.Item2, WebsocketTimeout);
+                }
+                else if (output.Item1 == "do_status")
+                {
+                    await sendStatus();
+                }
+                else if (output.Item1 is not null)
+                {
+                    await socket.SendJson(new JObject() { ["image"] = output.Item1 }, WebsocketTimeout);
+                }
+                else if (output.Item2 is not null)
+                {
+                    await socket.SendJson(output.Item2, WebsocketTimeout);
+                }
+            }
+            await signal.WaitAsync(TimeSpan.FromSeconds(2));
+        }
+        await sendStatus();
         return null;
     }
 
@@ -51,26 +103,32 @@ public static class T2IAPI
     public static async Task<JObject> GenerateText2Image(Session session, int images, JObject rawInput)
     {
         List<string> outputs = new();
-        await foreach ((string img, JObject err) in GenT2I_Internal(session, images, rawInput))
+        ConcurrentQueue<(string, JObject)> allOutputs = new();
+        AsyncAutoResetEvent signal = new(false);
+        Task t = GenT2I_Internal(session, images, rawInput, false, allOutputs, signal);
+        while (!t.IsCompleted || allOutputs.Any())
         {
-            if (img is not null)
+            while (allOutputs.TryDequeue(out (string, JObject) output))
             {
-                outputs.Add(img);
+                if (output.Item1 is not null)
+                {
+                    outputs.Add(output.Item1);
+                }
+                if (output.Item2 is not null)
+                {
+                    return output.Item2;
+                }
             }
-            if (err is not null)
-            {
-                return err;
-            }
+            await signal.WaitAsync(TimeSpan.FromSeconds(1));
         }
         return new JObject() { ["images"] = JToken.FromObject(outputs) };
     }
 
     /// <summary>Internal route for generating images.</summary>
-    public static async IAsyncEnumerable<(string, JObject)> GenT2I_Internal(Session session, int images, JObject rawInput)
+    public static async Task GenT2I_Internal(Session session, int images, JObject rawInput, bool isWS, ConcurrentQueue<(string, JObject)> allOutputs, AsyncAutoResetEvent signal)
     {
-        using Session.GenClaim claim = session.Claim(images);
+        using Session.GenClaim claim = session.Claim(images, 0, 0, 0);
         T2IParams user_input = new(session);
-        string err = null;
         try
         {
             foreach ((string key, JToken val) in rawInput)
@@ -91,127 +149,134 @@ public static class T2IAPI
         }
         catch (InvalidDataException ex)
         {
-            err = ex.Message; // NOTE: Weird C# limit, can't 'yield return' inside a 'catch'.
+            allOutputs.Enqueue((null, new JObject() { ["error"] = ex.Message }));
+            signal.Set();
+            return;
         }
-        if (err is not null)
-        {
-            yield return (null, new JObject() { ["error"] = err });
-            yield break;
-        }
-        ConcurrentQueue<string> allOutputs = new();
         if (user_input.Seed == -1)
         {
             user_input.Seed = Random.Shared.Next(int.MaxValue);
         }
-        JObject errorOut = null;
+        void setError(string message)
+        {
+            allOutputs.Enqueue((null, new JObject() { ["error"] = message }));
+            claim.LocalClaimInterrupt.Cancel();
+        }
         List<Task> tasks = new();
         int max_degrees = session.User.Settings.MaxT2ISimultaneous;
-        for (int i = 0; i < images; i++)
+        for (int i = 0; i < images && !claim.ShouldCancel; i++)
         {
+            tasks.RemoveAll(t => t.IsCompleted);
+            while (tasks.Count > max_degrees)
+            {
+                await Task.WhenAny(tasks);
+            }
             if (claim.ShouldCancel)
             {
                 break;
             }
-            tasks.RemoveAll(t => t.IsCompleted);
-            if (tasks.Count > max_degrees)
-            {
-                await Task.WhenAny(tasks);
-            }
-            if (Volatile.Read(ref errorOut) is not null)
-            {
-                yield return (null, errorOut);
-                yield break;
-            }
-            while (allOutputs.TryDequeue(out string output))
-            {
-                yield return (output, null);
-            }
             int index = i;
-            tasks.Add(Task.Run(async () =>
-            {
-                if (claim.ShouldCancel)
+            T2IParams thisParams = user_input.Clone();
+            thisParams.Seed += index;
+            tasks.Add(Task.Run(() => CreateImageTask(thisParams, signal, claim, allOutputs, setError, isWS, 2, // TODO: Max timespan configurable
+                (outputs) =>
                 {
-                    return;
-                }
-                T2IBackendAccess backend;
-                try
-                {
-                    backend = Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(2), user_input.Model, user_input.BackendMatcher, claim.InterruptToken); // TODO: Max timespan configurable
-                }
-                catch (InvalidOperationException ex)
-                {
-                    Volatile.Write(ref errorOut, new JObject() { ["error"] = $"Invalid operation: {ex.Message}" });
-                    return;
-                }
-                catch (TimeoutException)
-                {
-                    Volatile.Write(ref errorOut, new JObject() { ["error"] = "Timeout! All backends are occupied with other tasks." });
-                    return;
-                }
-                if (claim.ShouldCancel)
-                {
-                    backend.Dispose();
-                    return;
-                }
-                try
-                {
-                    using (backend)
+                    foreach (Image image in outputs)
                     {
-                        if (Volatile.Read(ref errorOut) is not null || claim.ShouldCancel)
+                        string url = session.SaveImage(image, user_input);
+                        if (url == "ERROR")
                         {
+                            setError($"Server failed to save images.");
                             return;
                         }
-                        T2IParams thisParams = user_input.Clone();
-                        thisParams.Seed += index;
-                        Image[] outputs = await backend.Backend.Generate(thisParams);
-                        foreach (Image image in outputs)
-                        {
-                            string url = session.SaveImage(image, thisParams);
-                            if (url == "ERROR")
-                            {
-                                Volatile.Write(ref errorOut, new JObject() { ["error"] = $"Server failed to save images." });
-                                return;
-                            }
-                            claim.Complete(1);
-                            allOutputs.Enqueue(url);
-                        }
+                        allOutputs.Enqueue((url, null));
                     }
-                }
-                catch (InvalidDataException ex)
-                {
-                    Volatile.Write(ref errorOut, new JObject() { ["error"] = $"Invalid data: {ex.Message}" });
-                    return;
-                }
-                catch (TaskCanceledException)
-                {
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    Logs.Error($"Internal error processing T2I request: {ex}");
-                    Volatile.Write(ref errorOut, new JObject() { ["error"] = "Something went wrong while generating images." });
-                    return;
-                }
-            }));
+                })));
         }
         while (tasks.Any())
         {
             await Task.WhenAny(tasks);
             tasks.RemoveAll(t => t.IsCompleted);
-            while (allOutputs.TryDequeue(out string output))
+        }
+        signal.Set();
+    }
+
+    /// <summary>Internal handler route to create an image based on a user request.</summary>
+    public static async Task CreateImageTask(T2IParams user_input, AsyncAutoResetEvent signal, Session.GenClaim claim, ConcurrentQueue<(string, JObject)> allOutputs, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image[]> saveImages)
+    {
+        if (claim.ShouldCancel)
+        {
+            return;
+        }
+        T2IBackendAccess backend;
+        int modelLoads = 0;
+        try
+        {
+            claim.Extend(0, 0, 1, 0);
+            allOutputs.Enqueue(("do_status", null));
+            signal.Set();
+            backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Model, filter: user_input.BackendMatcher, session: user_input.SourceSession, notifyWillLoad: () =>
             {
-                yield return (output, null);
-            }
-            if (claim.ShouldCancel)
+                allOutputs.Enqueue(("do_status", null));
+                signal.Set();
+            }, cancel: claim.InterruptToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            setError($"Invalid operation: {ex.Message}");
+            return;
+        }
+        catch (TimeoutException)
+        {
+            setError("Timeout! All backends are occupied with other tasks.");
+            return;
+        }
+        finally
+        {
+            claim.Complete(0, modelLoads, 1, 0);
+            allOutputs.Enqueue(("do_status", null));
+            signal.Set();
+        }
+        if (claim.ShouldCancel)
+        {
+            backend.Dispose();
+            return;
+        }
+        try
+        {
+            claim.Extend(0, 0, 0, 1);
+            allOutputs.Enqueue(("do_status", null));
+            signal.Set();
+            using (backend)
             {
-                break;
+                if (claim.ShouldCancel)
+                {
+                    return;
+                }
+                Image[] outputs = await backend.Backend.Generate(user_input);
+                saveImages(outputs);
             }
         }
-        errorOut = Volatile.Read(ref errorOut);
-        if (errorOut is not null)
+        catch (InvalidDataException ex)
         {
-            yield return (null, errorOut);
-            yield break;
+            setError($"Invalid data: {ex.Message}");
+            return;
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            Logs.Error($"Internal error processing T2I request: {ex}");
+            setError("Something went wrong while generating images.");
+            return;
+        }
+        finally
+        {
+            claim.Complete(1, 0, 0, 1);
+            allOutputs.Enqueue(("do_status", null));
+            signal.Set();
         }
     }
 

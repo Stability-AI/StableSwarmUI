@@ -2,6 +2,7 @@
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
+using StableUI.Accounts;
 using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
@@ -19,7 +20,7 @@ public class BackendHandler
     public ConcurrentDictionary<int, T2IBackendData> T2IBackends = new();
 
     /// <summary>Signal when any backends are available.</summary>
-    public AutoResetEvent BackendsAvailableSignal = new(false);
+    public AsyncAutoResetEvent BackendsAvailableSignal = new(false);
 
     /// <summary>Central locker to prevent issues with backend validating.</summary>
     public LockObject CentralLock = new();
@@ -37,7 +38,7 @@ public class BackendHandler
     public ConcurrentQueue<T2IBackendData> BackendsToInit = new();
 
     /// <summary>Signal for when a new backend is added to <see cref="BackendsToInit"/>.</summary>
-    public AutoResetEvent NewBackendInitSignal = new(false);
+    public AsyncAutoResetEvent NewBackendInitSignal = new(false);
 
     /// <summary>Metadata about backend types.</summary>
     public record class BackendType(string ID, string Name, string Description, Type SettingsClass, AutoConfiguration.Internal.AutoConfigData SettingsInternal, Type BackendClass, JObject NetDescription);
@@ -271,7 +272,7 @@ public class BackendHandler
                     Logs.Error($"Error while reassigning loaded models list: {ex}");
                 }
             }
-            NewBackendInitSignal.WaitOne(TimeSpan.FromSeconds(2));
+            NewBackendInitSignal.WaitAsync(TimeSpan.FromSeconds(2)).Wait();
         }
     }
 
@@ -403,6 +404,9 @@ public class BackendHandler
         /// <summary>Whether something is currently loading for this request.</summary>
         public bool IsLoading;
 
+        /// <summary>Sessions that want the model.</summary>
+        public HashSet<Session> Sessions = new();
+
         /// <summary>Gets a loose heuristic for model order preference - sort by earliest requester, but higher count of requests is worth 10 seconds.</summary>
         public long Heuristic(long timeRel) => Count * 10 + ((timeRel - TimeFirstRequest) / 1000); // TODO: 10 -> ?
     }
@@ -418,10 +422,12 @@ public class BackendHandler
     /// <param name="maxWait">Maximum duration to wait for. If time runs out, throws <see cref="TimeoutException"/>.</param>
     /// <param name="model">The model to use, or null for any. Specifying a model directly will prefer a backend with that model loaded, or cause a backend to load it if not available.</param>
     /// <param name="filter">Optional genericfilter for backend acceptance.</param>
+    /// <param name="session">The session responsible for this request, if any.</param>
+    /// <param name="notifyWillLoad">Optional callback for when this request will trigger a model load.</param>
     /// <param name="cancel">Optional request cancellation.</param>
     /// <exception cref="TimeoutException">Thrown if <paramref name="maxWait"/> is reached.</exception>
     /// <exception cref="InvalidOperationException">Thrown if no backends are available.</exception>
-    public T2IBackendAccess GetNextT2IBackend(TimeSpan maxWait, T2IModel model = null, Func<T2IBackendData, bool> filter = null, CancellationToken cancel = default)
+    public async Task<T2IBackendAccess> GetNextT2IBackend(TimeSpan maxWait, T2IModel model = null, Func<T2IBackendData, bool> filter = null, Session session = null, Action notifyWillLoad = null, CancellationToken cancel = default)
     {
         long requestId = Interlocked.Increment(ref BackendRequestsCounter);
         Logs.Debug($"[BackendHandler] Backend request #{requestId} for model {model?.Name ?? "any"}, maxWait={maxWait}.");
@@ -500,6 +506,10 @@ public class BackendHandler
                     {
                         requestPressure = ModelRequests.GetOrCreate(model.Name, () => new() { Model = model });
                         requestPressure.Count++;
+                        if (session is not null)
+                        {
+                            requestPressure.Sessions.Add(session);
+                        }
                     }
                     long timeRel = Environment.TickCount64;
                     if (available.Any())
@@ -508,11 +518,16 @@ public class BackendHandler
                         ModelRequestPressure highestPressure = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).FirstOrDefault();
                         if (highestPressure is not null)
                         {
-                            long timeWait = timeRel - availableBackend.TimeLastRelease;
+                            long timeWait = timeRel - highestPressure.TimeFirstRequest;
                             if (possible.Count == 1 || timeWait > 1500)
                             {
-                                Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} will load a model: {highestPressure.Model.Name}, with {highestPressure.Count} requests waiting for {timeWait / 1000} seconds");
+                                Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} will load a model: {highestPressure.Model.Name}, with {highestPressure.Count} requests waiting for {timeWait / 1000f:0.#} seconds");
                                 highestPressure.IsLoading = true;
+                                List<Session.GenClaim> claims = new();
+                                foreach (Session sess in highestPressure.Sessions)
+                                {
+                                    claims.Add(sess.Claim(0, 1, 0, 0));
+                                }
                                 T2IBackendAccess access = new(availableBackend);
                                 Task.Factory.StartNew(() =>
                                 {
@@ -526,6 +541,10 @@ public class BackendHandler
                                         lock (CentralLock)
                                         {
                                             highestPressure.IsLoading = false;
+                                            foreach (Session.GenClaim claim in claims)
+                                            {
+                                                claim.Dispose();
+                                            }
                                         }
                                         access.Dispose();
                                     }
@@ -533,8 +552,13 @@ public class BackendHandler
                             }
                         }
                     }
+                    if (requestPressure is not null && requestPressure.IsLoading && notifyWillLoad is not null)
+                    {
+                        notifyWillLoad();
+                        notifyWillLoad = null;
+                    }
                 }
-                BackendsAvailableSignal.WaitOne(TimeSpan.FromSeconds(1));
+                await BackendsAvailableSignal.WaitAsync(TimeSpan.FromSeconds(1));
             }
         }
         catch (Exception ex)
