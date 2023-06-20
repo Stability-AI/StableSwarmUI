@@ -412,7 +412,23 @@ function genInputs() {
         let area = document.getElementById(areaData[0]);
         let presetArea = areaData[1] ? document.getElementById(areaData[1]) : null;
         let html = '', presetHtml = '';
+        let lastGroup = null;
         for (let param of gen_param_types.filter(areaData[2])) {
+            if (param.group != lastGroup) {
+                if (lastGroup) {
+                    html += '</div>';
+                    if (presetArea) {
+                        presetHtml += '</div>';
+                    }
+                }
+                if (param.group) {
+                    html += `<div class="input-group"><span class="input-group-header">${escapeHtml(param.group)}</span>`;
+                    if (presetArea) {
+                        presetHtml += `<div class="input-group"><span class="input-group-header">${escapeHtml(param.group)}</span>`;
+                    }
+                }
+                lastGroup = param.group;
+            }
             html += getHtmlForParam(param, "input_");
             if (param.visible) { // Hidden excluded from presets.
                 let presetParam = JSON.parse(JSON.stringify(param));
@@ -533,7 +549,7 @@ function pageSizer() {
             topSplit.style.height = `${offY}vh`;
             topSplit2.style.height = `${offY}vh`;
             inputSidebar.style.height = `${offY}vh`;
-            mainInputsAreaWrapper.style.height = `calc(${offY}vh - 6rem)`;
+            mainInputsAreaWrapper.style.height = `calc(${offY}vh - 7rem)`;
             mainImageArea.style.height = `${offY}vh`;
             currentImage.style.height = `${offY}vh`;
             currentImageBatch.style.height = `calc(${offY}vh - 2rem)`;

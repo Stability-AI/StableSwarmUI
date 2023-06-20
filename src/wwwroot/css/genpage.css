@@ -74,7 +74,7 @@ body {
     padding: 0.5rem;
     padding-right: 1rem;
     width: calc(max(28rem, 20vw) - 5px);
-    height: calc(50vh - 6rem);
+    height: calc(50vh - 7rem);
 }
 .main_inputs_area_hidden {
     display: none;

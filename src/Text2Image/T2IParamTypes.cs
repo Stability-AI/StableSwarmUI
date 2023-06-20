@@ -141,16 +141,16 @@ public class T2IParamTypes
             T2IParamDataType.TEXT, "", (s, p) => p.NegativePrompt = ApplyStringEdit(p.NegativePrompt, s), Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90
             ));
         Register(new("Images", "How many images to generate at once.",
-            T2IParamDataType.INTEGER, "1", (s, p) => { }, Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50
+            T2IParamDataType.INTEGER, "1", (s, p) => { }, Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: "Core Parameters"
             ));
         Register(new("Steps", "How many times to run the model.\nMore steps = better quality, but more time.\n20 is a good baseline for speed, 40 is good for maximizing quality.\nYou can go much higher, but it quickly becomes pointless above 70 or so.",
-            T2IParamDataType.INTEGER, "20", (s, p) => p.Steps = int.Parse(s), Min: 1, Max: 200, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20
+            T2IParamDataType.INTEGER, "20", (s, p) => p.Steps = int.Parse(s), Min: 1, Max: 200, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: "Core Parameters"
             ));
         Register(new("Seed", "Image seed.\n-1 = random.",
-            T2IParamDataType.INTEGER, "-1", (s, p) => p.Seed = int.Parse(s), Min: -1, Max: int.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -19, NumberView: NumberViewType.BIG
+            T2IParamDataType.INTEGER, "-1", (s, p) => p.Seed = int.Parse(s), Min: -1, Max: int.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -19, NumberView: NumberViewType.BIG, Group: "Core Parameters"
             ));
         Register(new("CFG Scale", "How strongly to scale prompt input.\nToo-high values can cause corrupted/burnt images, too-low can cause nonsensical images.\n7 is a good baseline. Normal usages vary between 5 and 9.",
-            T2IParamDataType.DECIMAL, "7", (s, p) => p.CFGScale = float.Parse(s), Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER
+            T2IParamDataType.DECIMAL, "7", (s, p) => p.CFGScale = float.Parse(s), Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER, Group: "Core Parameters"
             ));
         Register(new("Width", "Image width, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
             T2IParamDataType.INTEGER, "512", (s, p) => p.Width = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
