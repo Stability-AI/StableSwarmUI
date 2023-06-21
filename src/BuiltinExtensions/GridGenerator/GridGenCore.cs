@@ -66,14 +66,14 @@ public partial class GridGenCore
                     throw new Exception($"Ellipses notation failed for step {step} between {prior} and {after} - steps backwards.");
                 }
                 int count = (int)((after - prior) / step);
-                for (int x = 1; x < count; x++)
+                for (int x = 1; x <= count; x++)
                 {
                     double outVal = prior + x * step;
                     if (numType == typeof(int))
                     {
                         outVal = (int)Math.Round(outVal);
                     }
-                    outList.Add(outVal.ToString());
+                    outList.Add($"{outVal:0.#}");
                 }
             }
             else
