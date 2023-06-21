@@ -90,7 +90,7 @@ public class Settings : AutoConfiguration
         }
 
         [ConfigComment("Settings related to saved file format.")]
-        public FileFormatData FileFormat;
+        public FileFormatData FileFormat = new();
 
         [ConfigComment("Whether your files save to server data drive or not.")]
         public bool SaveFiles = true;
