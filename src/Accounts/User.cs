@@ -30,6 +30,11 @@ public class User
     {
         Sessions = sessions;
         Data = data;
+        Settings.Load(Program.ServerSettings.DefaultUser.Save(false));
+        foreach (string field in Settings.InternalData.SharedData.Fields.Keys)
+        {
+            Settings.TrySetFieldModified(field, false);
+        }
         Settings.Load(new FDSSection(data.RawSettings));
     }
 

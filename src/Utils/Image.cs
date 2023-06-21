@@ -50,13 +50,15 @@ public class Image
         ExifProfile prof = new();
         if (metadata is not null)
         {
-            prof.SetValue(ExifTag.Copyright, metadata); // TODO: More appropriate metadata method?
+            prof.SetValue(ExifTag.Model, metadata); // TODO: More appropriate metadata method?
         }
         if (dpi > 0)
         {
             prof.SetValue(ExifTag.XResolution, new Rational((uint)dpi, 1));
             prof.SetValue(ExifTag.YResolution, new Rational((uint)dpi, 1));
             prof.SetValue(ExifTag.ResolutionUnit, (ushort)2);
+            img.Metadata.HorizontalResolution = dpi;
+            img.Metadata.VerticalResolution = dpi;
         }
         img.Metadata.ExifProfile = prof;
         switch (format)
