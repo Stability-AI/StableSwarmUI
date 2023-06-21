@@ -9,6 +9,7 @@ function loadData() {
     document.getElementById('x_' + rawData.axes[0].id).click();
     document.getElementById('x2_none').click();
     document.getElementById('y2_none').click();
+    let makegif_axis = document.getElementById('makegif_axis');
     // rawData.ext/title/description
     for (var axis of rawData.axes) {
         // axis.id/title/description
@@ -27,6 +28,7 @@ function loadData() {
         for (var label of ['x2_none', 'y2_none']) {
             document.getElementById(label).addEventListener('click', fillTable);
         }
+        makegif_axis.appendChild(new Option(axis.title, axis.id));
     }
     console.log(`Loaded data for '${rawData.title}'`);
     document.getElementById('autoScaleImages').addEventListener('change', updateScaling);
@@ -652,6 +654,76 @@ function makeImage() {
     var img = new Image(256, 256);
     img.src = data;
     holder.appendChild(img);
+}
+
+function makeGif() {
+    let holder = document.getElementById('save_image_helper');
+    document.getElementById('save_image_info').style.display = 'block';
+    for (var oldImage of holder.getElementsByTagName('img')) {
+        oldImage.remove();
+    }
+    let axisId = document.getElementById('makegif_axis').value;
+    let sizeMult = parseFloat(document.getElementById('makegif_size').value.replaceAll('x', ''));
+    let speed = parseFloat(document.getElementById('makegif_speed').value.replaceAll('/s', ''));
+    let axis = getAxisById(axisId);
+    let images = [];
+    let imgPath = [];
+    let index = 0;
+    for (let subAxis of rawData.axes) {
+        if (subAxis.id == axisId) {
+            index = imgPath.length;
+            imgPath.push(null);
+        }
+        else {
+            imgPath.push(getSelectedValKey(subAxis));
+        }
+    }
+    for (let val of axis.values) {
+        if (!canShowVal(axis.id, val.key)) {
+            continue;
+        }
+        imgPath[index] = val.key;
+        let actualUrl = imgPath.join('/') + '.' + rawData.ext;
+        images.push(actualUrl);
+    }
+    let encoder = new GIFEncoder();
+    encoder.setRepeat(0);
+    encoder.setDelay(1000 / speed);
+    encoder.start();
+    let image1 = new Image();
+    image1.src = images[0];
+    image1.decode().then(() => {
+        let canvas = document.createElement('canvas');
+        canvas.width = image1.naturalWidth * sizeMult;
+        canvas.height = image1.naturalHeight * sizeMult;
+        ctx = canvas.getContext('2d');
+        ctx.beginPath();
+        let id = 1;
+        let image2 = new Image();
+        let callback = () => {
+            ctx.drawImage(image2, 0, 0, canvas.width, canvas.height);
+            encoder.addFrame(ctx);
+            if (id >= images.length) {
+                encoder.finish();
+                let binary_gif = encoder.stream().getData();
+                let data_url = 'data:image/gif;base64,' + encode64(binary_gif);
+                let animatedImage = document.createElement('img');
+                animatedImage.src = data_url;
+                image1.remove();
+                image2.remove();
+                holder.appendChild(animatedImage);
+            }
+            else {
+                image2 = new Image();
+                image2.src = images[id];
+                id++;
+                image2.decode().then(callback);
+            }
+        };
+        image2.src = images[0];
+        image2.decode().then(callback);
+    });
+
 }
 
 function updateHash() {

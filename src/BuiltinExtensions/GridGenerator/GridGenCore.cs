@@ -65,8 +65,8 @@ public partial class GridGenCore
                 {
                     throw new Exception($"Ellipses notation failed for step {step} between {prior} and {after} - steps backwards.");
                 }
-                int count = (int)((after - prior) / step);
-                for (int x = 1; x <= count; x++)
+                int count = (int)Math.Round((after - prior) / step);
+                for (int x = 1; x < count; x++)
                 {
                     double outVal = prior + x * step;
                     if (numType == typeof(int))
@@ -558,7 +558,7 @@ public partial class GridGenCore
                 File.WriteAllText(path + "/last.js", "window.lastUpdated = []");
             }
             File.WriteAllText(path + "/data.js", "rawData = " + json);
-            foreach (string f in EXTRA_ASSETS.Union(new string[] { "bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "styles.css", "placeholder.png" }))
+            foreach (string f in EXTRA_ASSETS.Union(new string[] { "bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "jsgif.js", "styles.css", "placeholder.png" }))
             {
                 string target = $"{path}/{f}";
                 if (File.Exists(target))

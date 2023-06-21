@@ -214,6 +214,7 @@ public class GridGeneratorExtension : Extension
         }
         else
         {
+            Logs.Error($"Grid Generator hit error: {ex}");
             return new JObject() { ["error"] = "Failed due to internal error." };
         }
     }

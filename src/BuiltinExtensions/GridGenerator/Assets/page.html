@@ -48,7 +48,8 @@
                 </div>
             </div>
             <div id="save_image_helper">
-                <button onclick="makeImage()">Click Here To Save Image Of Current View</button> <select name="Image Type" id="makeimage_type"><option>jpeg</option><option>png</option></select>
+                <button onclick="makeImage()">Save Image Of Current View</button> <select title="Image Type" id="makeimage_type"><option>jpeg</option><option>png</option></select>
+                <button onclick="makeGif()">Create Axis GIF Animation</button> <select title="Axis" id="makegif_axis"></select> <select title="GIF Size" id="makegif_size"><option>1x</option><option>0.75x</option><option>0.5x</option><option>0.25x</option></select> <select title="GIF Speed" id="makegif_speed"><option>1/s</option><option>2/s</option><option>3/s</option><option>4/s</option><option>5/s</option><option>10/s</option></select>
                 <div id="save_image_info" style="display: none;">Here's your image! To share it, just use right click -> Copy image or Save Image As</div>
             </div>
         </div>
@@ -66,11 +67,13 @@
             <br>This software allows users to generate pages with any content they desire. Therefore, content on this page (images, text, etc.) is the property of whoever generated this specific page.
             <br>{EXTRA_FOOTER}
             <br>Made using the <a href="https://bootswatch.com/darkly/">Darkly Bootstrap Theme</a> by Thomas Park, which was released under the <a href="https://github.com/thomaspark/bootswatch/blob/95df99d76147797cbcb1014b639805add2327f65/LICENSE">MIT License</a>.
+            <br>Gifs are generated using <a href="https://github.com/antimatter15/jsgif">JSGif</a>, which was released under the <a href="https://github.com/antimatter15/jsgif/blob/b46429c50a53d23b762d6ebb00b375aece3ed843/LICENSE">MIT License</a>.
             <br>
             <br><div style="width:256px;height:512px;"></div>
         </center>
     </footer>
     <script src="bootstrap.bundle.min.js"></script>
+    <script src="jsgif.js"></script>
     <script src="data.js?vary={VERSION}"></script>
     <script src="proc.js?vary={VERSION}"></script>
 </body>
