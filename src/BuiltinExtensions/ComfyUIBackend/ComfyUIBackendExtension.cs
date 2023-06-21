@@ -20,9 +20,13 @@ public class ComfyUIBackendExtension : Extension
     {
         Folder = FilePath;
         Workflows = new();
-        foreach (string workflow in Directory.EnumerateFiles($"{Folder}/Workflows"))
+        foreach (string workflow in Directory.EnumerateFiles($"{Folder}/Workflows", "*.json", new EnumerationOptions() { RecurseSubdirectories = true }).Order())
         {
-            Workflows.Add(workflow.Replace('\\', '/').AfterLast('/').BeforeLast('.'), File.ReadAllText(workflow));
+            string fileName = workflow.Replace('\\', '/').After("/Workflows/");
+            if (fileName.EndsWith(".json"))
+            {
+                Workflows.Add(fileName.BeforeLast('.'), File.ReadAllText(workflow));
+            }
         }
     }
 
