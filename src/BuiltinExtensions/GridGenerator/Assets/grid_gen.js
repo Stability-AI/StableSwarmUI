@@ -116,7 +116,7 @@ function gridGen_register() {
     outputFolder.value = `grid-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}-${today.getHours()}-${today.getMinutes()}-${today.getSeconds()}`;
     updateOutputInfo();
     let runButton = document.getElementById('grid-gen-run-button');
-    runButton.addEventListener('click', () => {
+    let doGenerate = () => {
         let getOpt = (o) => document.getElementById('grid-gen-opt-' + o).checked;
         let data = {
             'baseParams': getGenInput(),
@@ -144,6 +144,15 @@ function gridGen_register() {
             else if (data.success) {
                 outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="Output/${outputFolder.value}/index.html" target="_blank">Output/<code>${outputFolder.value}</code></a>`;
             }
+        });
+    };
+    runButton.addEventListener('click', () => {
+        setCurrentModel(() => {
+            if (document.getElementById('current_model').innerText == '') {
+                showError("Cannot generate, no model selected.");
+                return;
+            }
+            doGenerate();
         });
     });
     gridGen_addAxis();
