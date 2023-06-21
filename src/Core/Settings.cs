@@ -77,14 +77,23 @@ public class Settings : AutoConfiguration
         [ConfigComment("Settings related to output path building.")]
         public OutPath OutPathBuilder = new();
 
+        public class FileFormatData : AutoConfiguration
+        {
+            [ConfigComment("What format to save images in. Default is '.jpg' (at 100% quality).")]
+            public string ImageFormat = "jpg"; // TODO: Use enum
+
+            [ConfigComment("Whether to store metadata on saved images. Defaults enabled.")]
+            public bool SaveMetadata = true;
+
+            [ConfigComment("If set to non-0, adds DPI metadata to saved images. '72' is a good value for compatibility with some external software.")]
+            public int DPI = 0;
+        }
+
+        [ConfigComment("Settings related to saved file format.")]
+        public FileFormatData FileFormat;
+
         [ConfigComment("Whether your files save to server data drive or not.")]
         public bool SaveFiles = true;
-
-        [ConfigComment("What format to save images in. Default is '.jpg' (at 100% quality).")]
-        public string ImageFormat = "jpg"; // TODO: Use enum
-
-        [ConfigComment("Whether to store metadata on saved images. Defaults enabled.")]
-        public bool SaveMetadata = true;
 
         [ConfigComment("How many images can try to be generating at the same time on the default user.")]
         public int MaxT2ISimultaneous = 8;

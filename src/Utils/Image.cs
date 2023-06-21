@@ -1,6 +1,5 @@
 ﻿namespace StableUI.Utils;
 
-using FreneticUtilities.FreneticToolkit;
 using SixLabors.ImageSharp;
 using System.IO;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
@@ -43,21 +42,23 @@ public class Image
     }
 
     /// <summary>Converts an image to the specified format, and the specific metadata text.</summary>
-    public Image ConvertTo(string format, string metadata = null)
+    public Image ConvertTo(string format, string metadata = null, int dpi = 0)
     {
         using MemoryStream ms = new();
         ISImage img = ToIS;
         img.Metadata.XmpProfile = null;
-        if (metadata is null)
+        ExifProfile prof = new();
+        if (metadata is not null)
         {
-            img.Metadata.ExifProfile = null;
-        }
-        else
-        {
-            ExifProfile prof = new();
             prof.SetValue(ExifTag.Copyright, metadata); // TODO: More appropriate metadata method?
-            img.Metadata.ExifProfile = prof;
         }
+        if (dpi > 0)
+        {
+            prof.SetValue(ExifTag.XResolution, new Rational((uint)dpi, 1));
+            prof.SetValue(ExifTag.YResolution, new Rational((uint)dpi, 1));
+            prof.SetValue(ExifTag.ResolutionUnit, (ushort)2);
+        }
+        img.Metadata.ExifProfile = prof;
         switch (format)
         {
             case "png":
