@@ -102,15 +102,15 @@ public class Session : IEquatable<Session>
     /// <summary>Save an image as this user, and returns the new URL. If user has disabled saving, returns a data URL.</summary>
     public string SaveImage(Image image, T2IParams user_input)
     {
-        string metadata = User.Settings.SaveMetadata ? user_input.GenMetadata() : null;
-        image = image.ConvertTo(User.Settings.ImageFormat, metadata);
+        string metadata = User.Settings.FileFormat.SaveMetadata ? user_input.GenMetadata() : null;
+        image = image.ConvertTo(User.Settings.FileFormat.ImageFormat, metadata, User.Settings.FileFormat.DPI);
         if (!User.Settings.SaveFiles)
         {
-            return "data:image/" + (User.Settings.ImageFormat == "png" ? "png" : "jpeg") + ";base64," + image.AsBase64;
+            return "data:image/" + (User.Settings.FileFormat.ImageFormat == "png" ? "png" : "jpeg") + ";base64," + image.AsBase64;
         }
         string rawImagePath = User.BuildImageOutputPath(user_input);
         string imagePath = rawImagePath;
-        string extension = (User.Settings.ImageFormat == "png" ? "png" : "jpg");
+        string extension = (User.Settings.FileFormat.ImageFormat == "png" ? "png" : "jpg");
         string fullPath = $"{User.OutputDirectory}/{imagePath}.{extension}";
         lock (User.UserLock)
         {
