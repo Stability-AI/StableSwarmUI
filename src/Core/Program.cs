@@ -49,6 +49,9 @@ public class Program
     /// <summary>Central web server core.</summary>
     public static WebServer Web;
 
+    /// <summary>Event triggered when a user wants to refresh the models list.</summary>
+    public static Action ModelRefreshEvent;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -116,8 +119,8 @@ public class Program
         HasShutdown = true;
         Logs.Info("Shutting down...");
         GlobalCancelSource.Cancel();
-        Backends.Shutdown();
-        Sessions.Shutdown();
+        Backends?.Shutdown();
+        Sessions?.Shutdown();
         Ngrok?.Stop();
         Logs.Info("All core shutdowns complete.");
     }

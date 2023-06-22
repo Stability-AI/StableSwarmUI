@@ -294,7 +294,26 @@ function loadModelList(path, isRefresh = false) {
         }
     }, (list) => list.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())));
     if (isRefresh) {
-        genericRequest('RefreshModels', {}, data => {
+        genericRequest('TriggerRefresh', {}, data => {
+            console.log(`got refresh data ${JSON.stringify(data)}`)
+            for (let param of data.list) {
+                console.log(`try update ${param.id}`)
+                let origParam = gen_param_types.find(p => p.id == param.id);
+                if (origParam) {
+                    console.log(`Updating param ${param.id} to ${JSON.stringify(param.values)} is ${origParam.type}`);
+                    origParam.values = param.values;
+                    if (origParam.type == "dropdown") {
+                        let dropdown = document.getElementById(`input_${param.id}`);
+                        let val = dropdown.value;
+                        let html = '';
+                        for (let value of param.values) {
+                            let selected = value == val ? ' selected="true"' : '';
+                            html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
+                        }
+                        dropdown.innerHTML = html;
+                    }
+                }
+            }
             call();
         });
     }

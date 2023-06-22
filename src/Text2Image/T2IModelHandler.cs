@@ -20,6 +20,11 @@ public class T2IModelHandler
     /// <summary>Lock used when modifying the model list.</summary>
     public LockObject ModificationLock = new();
 
+    public T2IModelHandler()
+    {
+        Program.ModelRefreshEvent += Refresh;
+    }
+
     public List<T2IModel> ListModelsFor(Session session)
     {
         string allowedStr = session.User.Restrictions.AllowedModels;

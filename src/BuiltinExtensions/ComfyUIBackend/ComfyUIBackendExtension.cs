@@ -19,6 +19,12 @@ public class ComfyUIBackendExtension : Extension
     public override void OnPreInit()
     {
         Folder = FilePath;
+        Refresh();
+        Program.ModelRefreshEvent += Refresh;
+    }
+
+    public void Refresh()
+    {
         Workflows = new();
         foreach (string workflow in Directory.EnumerateFiles($"{Folder}/Workflows", "*.json", new EnumerationOptions() { RecurseSubdirectories = true }).Order())
         {

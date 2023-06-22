@@ -28,7 +28,7 @@ public static class T2IAPI
         API.RegisterAPICall(ListImages);
         API.RegisterAPICall(ListModels);
         API.RegisterAPICall(ListLoadedModels);
-        API.RegisterAPICall(RefreshModels);
+        API.RegisterAPICall(TriggerRefresh);
         API.RegisterAPICall(SelectModel);
         API.RegisterAPICall(ListT2IParams);
     }
@@ -351,10 +351,10 @@ public static class T2IAPI
     }
 
     /// <summary>API route to trigger a reload of the model list.</summary>
-    public static async Task<JObject> RefreshModels(Session session)
+    public static async Task<JObject> TriggerRefresh(Session session)
     {
-        Program.T2IModels.Refresh();
-        return new JObject() { ["success"] = true };
+        Program.ModelRefreshEvent?.Invoke();
+        return await ListT2IParams(session);
     }
 
     /// <summary>API route to select a model for loading.</summary>
