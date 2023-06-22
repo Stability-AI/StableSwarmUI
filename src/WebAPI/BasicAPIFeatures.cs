@@ -73,19 +73,28 @@ public static class BasicAPIFeatures
         return new JObject() { ["success"] = session.User.DeletePreset(preset) };
     }
 
-    /// <summary>API Route to get current waiting generation count, model loading count, etc.</summary>
-    public static async Task<JObject> GetCurrentStatus(Session session)
+    /// <summary>Gets current session status. Not an API call.</summary>
+    public static JObject GetCurrentStatusRaw(Session session)
     {
         lock (session.StatsLocker)
         {
             return new JObject()
             {
-                ["waiting_gens"] = session.WaitingGenerations,
-                ["loading_models"] = session.LoadingModels,
-                ["waiting_backends"] = session.WaitingBackends,
-                ["live_gens"] = session.LiveGens
+                ["status"] = new JObject()
+                {
+                    ["waiting_gens"] = session.WaitingGenerations,
+                    ["loading_models"] = session.LoadingModels,
+                    ["waiting_backends"] = session.WaitingBackends,
+                    ["live_gens"] = session.LiveGens
+                }
             };
         }
+    }
+
+    /// <summary>API Route to get current waiting generation count, model loading count, etc.</summary>
+    public static async Task<JObject> GetCurrentStatus(Session session)
+    {
+        return GetCurrentStatusRaw(session);
     }
 
     /// <summary>API Route to tell all waiting generations to interrupt.</summary>

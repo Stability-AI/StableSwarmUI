@@ -149,9 +149,21 @@ function updateGenCount() {
     setTimeout(() => {
         genericRequest('GetCurrentStatus', {}, data => {
             doesHaveGenCountUpdateQueued = false;
-            updateCurrentStatusDirect(data);
+            updateCurrentStatusDirect(data.status);
         });
     }, 500);
+}
+
+function makeWSRequestT2I(url, in_data, callback) {
+    makeWSRequest(url, in_data, data => {
+        console.log(`Got data: ${JSON.stringify(data)}`)
+        if (data.status) {
+            updateCurrentStatusDirect(data.status);
+        }
+        else {
+            callback(data);
+        }
+    });
 }
 
 function doInterrupt() {
@@ -178,13 +190,8 @@ function doGenerate() {
         }
         document.getElementById('current_image_batch').innerHTML = '';
         batches++;
-        makeWSRequest('GenerateText2ImageWS', getGenInput(), data => {
-            if (data.status) {
-                updateCurrentStatusDirect(data.status);
-            }
-            else {
-                gotImageResult(data.image);
-            }
+        makeWSRequestT2I('GenerateText2ImageWS', getGenInput(), data => {
+            gotImageResult(data.image);
         });
     });
 }
@@ -270,7 +277,7 @@ function appendModel(container, prefix, model) {
             possible.classList.remove('model-block-hoverable');
             possible.parentElement.replaceChild(possible.cloneNode(true), possible);
         }
-        genericRequest('SelectModel', {'model': model.name}, data => {
+        makeWSRequestT2I('SelectModelWS', {'model': model.name}, data => {
             loadModelList(lastModelDir);
         });
     });

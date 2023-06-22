@@ -2,18 +2,13 @@
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
-using StableUI.Backends;
 using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
 using StableUI.WebAPI;
-using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Net.WebSockets;
-using System.Security.Claims;
-using System.Text;
 
 namespace StableUI.Builtin_GridGeneratorExtension;
 
@@ -131,7 +126,7 @@ public class GridGeneratorExtension : Extension
                 data.Signal.Set();
             }
             T2IParams thisParams = param.Clone();
-            Task t = Task.Run(() => T2IAPI.CreateImageTask(thisParams, data.Signal, data.Claim, data.Generated, setError, true, 10, // TODO: Max timespan configurable
+            Task t = Task.Run(() => T2IAPI.CreateImageTask(thisParams, data.Claim, data.AddOutput, setError, true, 10, // TODO: Max timespan configurable
                 (outputs) =>
                 {
                     if (outputs.Length != 1)
@@ -146,7 +141,7 @@ public class GridGeneratorExtension : Extension
                         Directory.CreateDirectory(dir);
                     }
                     File.WriteAllBytes(targetPath, outputs[0].ImageData);
-                    data.Generated.Enqueue(($"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}", null));
+                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}" });
                 }));
             lock (data.UpdateLock)
             {
@@ -158,8 +153,7 @@ public class GridGeneratorExtension : Extension
         {
             StableUIGridData data = grid.Grid.LocalData as StableUIGridData;
             data.Claim.Extend(grid.TotalRun, 0, 0, 0);
-            data.Generated.Enqueue(("do_status", null));
-            data.Signal.Set();
+            data.AddOutput(BasicAPIFeatures.GetCurrentStatusRaw(data.Session));
         };
     }
 
@@ -179,7 +173,7 @@ public class GridGeneratorExtension : Extension
 
         public LockObject UpdateLock = new();
 
-        public ConcurrentQueue<(string, JObject)> Generated = new();
+        public ConcurrentQueue<JObject> Generated = new();
 
         public Session Session;
 
@@ -195,6 +189,11 @@ public class GridGeneratorExtension : Extension
             {
                 return Rendering.Where(x => !x.IsCompleted).ToArray();
             }
+        }
+        public void AddOutput(JObject obj)
+        {
+            Generated.Append(obj);
+            Signal.Set();
         }
     }
 
@@ -235,7 +234,7 @@ public class GridGeneratorExtension : Extension
         }
         catch (InvalidDataException ex)
         {
-            await socket.SendJson(new JObject() { ["error"] = ex.Message }, T2IAPI.WebsocketTimeout);
+            await socket.SendJson(new JObject() { ["error"] = ex.Message }, API.WebsocketTimeout);
             return null;
         }
         if (baseParams.Seed == -1)
@@ -248,18 +247,18 @@ public class GridGeneratorExtension : Extension
         }
         async Task sendStatus()
         {
-            await socket.SendJson(new JObject() { ["status"] = await BasicAPIFeatures.GetCurrentStatus(session) }, T2IAPI.WebsocketTimeout);
+            await socket.SendJson(BasicAPIFeatures.GetCurrentStatusRaw(session), API.WebsocketTimeout);
         }
         await sendStatus();
         outputFolderName = Utilities.FilePathForbidden.TrimToNonMatches(outputFolderName);
         if (outputFolderName.Contains('.'))
         {
-            await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot contain dots." }, T2IAPI.WebsocketTimeout);
+            await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot contain dots." }, API.WebsocketTimeout);
             return null;
         }
         if (outputFolderName.Trim() == "")
         {
-            await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot be empty." }, T2IAPI.WebsocketTimeout);
+            await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot be empty." }, API.WebsocketTimeout);
             return null;
         }
         StableUIGridData data = new() { Session = session, Claim = claim };
@@ -270,17 +269,9 @@ public class GridGeneratorExtension : Extension
             {
                 await data.Signal.WaitAsync(TimeSpan.FromSeconds(1));
                 Program.GlobalProgramCancel.ThrowIfCancellationRequested();
-                while (data.Generated.TryDequeue(out (string, JObject) nextImage))
+                while (data.Generated.TryDequeue(out JObject toSend))
                 {
-                    if (nextImage.Item1 == "do_status")
-                    {
-                        await sendStatus();
-                    }
-                    else
-                    {
-                        JObject toSend = nextImage.Item2 is not null ? nextImage.Item2 : new JObject() { ["image"] = nextImage.Item1 };
-                        await socket.SendJson(toSend, T2IAPI.WebsocketTimeout);
-                    }
+                    await socket.SendJson(toSend, API.WebsocketTimeout);
                 }
             }
             if (mainRun.IsFaulted)
@@ -315,7 +306,7 @@ public class GridGeneratorExtension : Extension
         }
         claim.Complete(1, 0, 0, 0);
         await sendStatus();
-        await socket.SendJson(new JObject() { ["success"] = "complete" }, T2IAPI.WebsocketTimeout);
+        await socket.SendJson(new JObject() { ["success"] = "complete" }, API.WebsocketTimeout);
         return null;
     }
 }

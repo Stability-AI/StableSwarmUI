@@ -1,14 +1,11 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Core;
 using StableUI.Utils;
 using System.Net.WebSockets;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace StableUI.WebAPI;
 
@@ -145,5 +142,48 @@ public class API
                 Error($"Internal exception while handling prior exception closure: {ex2}");
             }
         }
+    }
+
+    /// <summary>Placeholder default WebSocket timeout.</summary>
+    public static TimeSpan WebsocketTimeout = TimeSpan.FromMinutes(2); // TODO: Configurable timeout
+
+    /// <summary>Helper to run simple websocket-multiresult action API calls.</summary>
+    public static async Task RunWebsocketHandlerCallWS<T>(Func<Session, T, Action<JObject>, bool, Task> handler, Session session, T val, WebSocket socket)
+    {
+        ConcurrentQueue<JObject> outputs = new();
+        AsyncAutoResetEvent signal = new(false);
+        void takeOutput(JObject obj)
+        {
+            if (obj is not null)
+            {
+                outputs.Enqueue(obj);
+            }
+            signal.Set();
+        }
+        Task t = handler(session, val, takeOutput, true);
+        Task _ = t.ContinueWith((t) => signal.Set());
+        while (!t.IsCompleted || outputs.Any())
+        {
+            while (outputs.TryDequeue(out JObject output))
+            {
+                await socket.SendJson(output, WebsocketTimeout);
+            }
+            await signal.WaitAsync(TimeSpan.FromSeconds(2));
+        }
+    }
+
+    /// <summary>Helper to run simple websocket-multiresult action API calls without a websocket.</summary>
+    public static async Task<List<JObject>> RunWebsocketHandlerCallDirect<T>(Func<Session, T, Action<JObject>, bool, Task> handler, Session session, T val)
+    {
+        ConcurrentQueue<JObject> outputs = new();
+        void takeOutput(JObject obj)
+        {
+            if (obj is not null)
+            {
+                outputs.Append(obj);
+            }
+        }
+        await handler(session, val, takeOutput, false);
+        return outputs.ToList();
     }
 }

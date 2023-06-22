@@ -1,6 +1,4 @@
-﻿using FreneticUtilities.FreneticDataSyntax;
-using FreneticUtilities.FreneticExtensions;
-using FreneticUtilities.FreneticToolkit;
+﻿using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Backends;
@@ -8,13 +6,9 @@ using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
-using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Net.WebSockets;
-using System.Security.Claims;
 using System.Text.RegularExpressions;
-using System.Threading.Channels;
 
 namespace StableUI.WebAPI;
 
@@ -30,103 +24,41 @@ public static class T2IAPI
         API.RegisterAPICall(ListLoadedModels);
         API.RegisterAPICall(TriggerRefresh);
         API.RegisterAPICall(SelectModel);
+        API.RegisterAPICall(SelectModelWS);
         API.RegisterAPICall(ListT2IParams);
     }
-
-    public static TimeSpan WebsocketTimeout = TimeSpan.FromMinutes(2); // TODO: Configurable timeout
 
     /// <summary>API route to generate images with WebSocket updates.</summary>
     public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, Session session, int images, JObject rawInput)
     {
-        ConcurrentQueue<(string, JObject)> allOutputs = new();
-        AsyncAutoResetEvent signal = new(false);
-        int waitGen = -1, loadMod = -1, waitBack = -1, liveGen = -1;
-        async Task sendStatus()
-        {
-            bool doSend = false;
-            lock (session.StatsLocker)
-            {
-                int waitGen2 = session.WaitingGenerations, loadMod2 = session.LoadingModels, waitBack2 = session.WaitingBackends, liveGen2 = session.LiveGens;
-                if (waitGen != waitGen2 || loadMod != loadMod2 || waitBack != waitBack2 || liveGen != liveGen2)
-                {
-                    waitGen = waitGen2;
-                    loadMod = loadMod2;
-                    waitBack = waitBack2;
-                    liveGen = liveGen2;
-                    doSend = true;
-                }
-            }
-            if (doSend)
-            {
-                JObject status;
-                status = new JObject()
-                {
-                    ["waiting_gens"] = waitGen,
-                    ["loading_models"] = loadMod,
-                    ["waiting_backends"] = waitBack,
-                    ["live_gens"] = liveGen
-                };
-                await socket.SendJson(new JObject() { ["status"] = status }, WebsocketTimeout);
-            }
-        }
-        await sendStatus();
-
-        Task t = GenT2I_Internal(session, images, rawInput, false, allOutputs, signal);
-        while (!t.IsCompleted || allOutputs.Any())
-        {
-            while (allOutputs.TryDequeue(out (string, JObject) output))
-            {
-                if (output.Item1 == "data")
-                {
-                    await socket.SendJson(output.Item2, WebsocketTimeout);
-                }
-                else if (output.Item1 == "do_status")
-                {
-                    await sendStatus();
-                }
-                else if (output.Item1 is not null)
-                {
-                    await socket.SendJson(new JObject() { ["image"] = output.Item1 }, WebsocketTimeout);
-                }
-                else if (output.Item2 is not null)
-                {
-                    await socket.SendJson(output.Item2, WebsocketTimeout);
-                }
-            }
-            await signal.WaitAsync(TimeSpan.FromSeconds(2));
-        }
-        await sendStatus();
+        await API.RunWebsocketHandlerCallWS(GenT2I_Internal, session, (images, rawInput), socket);
+        await socket.SendJson(BasicAPIFeatures.GetCurrentStatusRaw(session), API.WebsocketTimeout);
         return null;
     }
 
     /// <summary>API route to generate images directly as HTTP.</summary>
     public static async Task<JObject> GenerateText2Image(Session session, int images, JObject rawInput)
     {
-        List<string> outputs = new();
-        ConcurrentQueue<(string, JObject)> allOutputs = new();
-        AsyncAutoResetEvent signal = new(false);
-        Task t = GenT2I_Internal(session, images, rawInput, false, allOutputs, signal);
-        while (!t.IsCompleted || allOutputs.Any())
+        List<JObject> outputs = await API.RunWebsocketHandlerCallDirect(GenT2I_Internal, session, (images, rawInput));
+        List<string> imageOutputs = new();
+        foreach (JObject obj in outputs)
         {
-            while (allOutputs.TryDequeue(out (string, JObject) output))
+            if (obj.ContainsKey("error"))
             {
-                if (output.Item1 is not null)
-                {
-                    outputs.Add(output.Item1);
-                }
-                if (output.Item2 is not null)
-                {
-                    return output.Item2;
-                }
+                return obj;
             }
-            await signal.WaitAsync(TimeSpan.FromSeconds(1));
+            if (obj.ContainsKey("image"))
+            {
+                imageOutputs.Add(obj["image"].ToString());
+            }
         }
-        return new JObject() { ["images"] = JToken.FromObject(outputs) };
+        return new JObject() { ["images"] = JToken.FromObject(imageOutputs) };
     }
 
     /// <summary>Internal route for generating images.</summary>
-    public static async Task GenT2I_Internal(Session session, int images, JObject rawInput, bool isWS, ConcurrentQueue<(string, JObject)> allOutputs, AsyncAutoResetEvent signal)
+    public static async Task GenT2I_Internal(Session session, (int, JObject) input, Action<JObject> output, bool isWS)
     {
+        (int images, JObject rawInput) = input;
         using Session.GenClaim claim = session.Claim(images, 0, 0, 0);
         T2IParams user_input = new(session);
         try
@@ -149,8 +81,7 @@ public static class T2IAPI
         }
         catch (InvalidDataException ex)
         {
-            allOutputs.Enqueue((null, new JObject() { ["error"] = ex.Message }));
-            signal.Set();
+            output(new JObject() { ["error"] = ex.Message });
             return;
         }
         if (user_input.Seed == -1)
@@ -159,7 +90,7 @@ public static class T2IAPI
         }
         void setError(string message)
         {
-            allOutputs.Enqueue((null, new JObject() { ["error"] = message }));
+            output(new JObject() { ["error"] = message });
             claim.LocalClaimInterrupt.Cancel();
         }
         List<Task> tasks = new();
@@ -178,7 +109,7 @@ public static class T2IAPI
             int index = i;
             T2IParams thisParams = user_input.Clone();
             thisParams.Seed += index;
-            tasks.Add(Task.Run(() => CreateImageTask(thisParams, signal, claim, allOutputs, setError, isWS, 2, // TODO: Max timespan configurable
+            tasks.Add(Task.Run(() => CreateImageTask(thisParams, claim, output, setError, isWS, 2, // TODO: Max timespan configurable
                 (outputs) =>
                 {
                     foreach (Image image in outputs)
@@ -189,7 +120,7 @@ public static class T2IAPI
                             setError($"Server failed to save images.");
                             return;
                         }
-                        allOutputs.Enqueue((url, null));
+                        output(new JObject() { ["image"] = url });
                     }
                 })));
         }
@@ -198,12 +129,18 @@ public static class T2IAPI
             await Task.WhenAny(tasks);
             tasks.RemoveAll(t => t.IsCompleted);
         }
-        signal.Set();
     }
 
     /// <summary>Internal handler route to create an image based on a user request.</summary>
-    public static async Task CreateImageTask(T2IParams user_input, AsyncAutoResetEvent signal, Session.GenClaim claim, ConcurrentQueue<(string, JObject)> allOutputs, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image[]> saveImages)
+    public static async Task CreateImageTask(T2IParams user_input, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image[]> saveImages)
     {
+        void sendStatus()
+        {
+            if (isWS && user_input.SourceSession is not null)
+            {
+                output(BasicAPIFeatures.GetCurrentStatusRaw(user_input.SourceSession));
+            }
+        }
         if (claim.ShouldCancel)
         {
             return;
@@ -213,12 +150,10 @@ public static class T2IAPI
         try
         {
             claim.Extend(0, 0, 1, 0);
-            allOutputs.Enqueue(("do_status", null));
-            signal.Set();
+            sendStatus();
             backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Model, filter: user_input.BackendMatcher, session: user_input.SourceSession, notifyWillLoad: () =>
             {
-                allOutputs.Enqueue(("do_status", null));
-                signal.Set();
+                sendStatus();
             }, cancel: claim.InterruptToken);
         }
         catch (InvalidOperationException ex)
@@ -234,8 +169,7 @@ public static class T2IAPI
         finally
         {
             claim.Complete(0, modelLoads, 1, 0);
-            allOutputs.Enqueue(("do_status", null));
-            signal.Set();
+            sendStatus();
         }
         if (claim.ShouldCancel)
         {
@@ -245,8 +179,7 @@ public static class T2IAPI
         try
         {
             claim.Extend(0, 0, 0, 1);
-            allOutputs.Enqueue(("do_status", null));
-            signal.Set();
+            sendStatus();
             using (backend)
             {
                 if (claim.ShouldCancel)
@@ -275,8 +208,7 @@ public static class T2IAPI
         finally
         {
             claim.Complete(1, 0, 0, 1);
-            allOutputs.Enqueue(("do_status", null));
-            signal.Set();
+            sendStatus();
         }
     }
 
@@ -360,21 +292,43 @@ public static class T2IAPI
     /// <summary>API route to select a model for loading.</summary>
     public static async Task<JObject> SelectModel(Session session, string model)
     {
+        return (await API.RunWebsocketHandlerCallDirect(SelectModelInternal, session, model))[0];
+    }
+
+    /// <summary>API route to select a model for loading, as a websocket with live status updates.</summary>
+    public static async Task<JObject> SelectModelWS(WebSocket socket, Session session, string model)
+    {
+        await API.RunWebsocketHandlerCallWS(SelectModelInternal, session, model, socket);
+        await socket.SendJson(BasicAPIFeatures.GetCurrentStatusRaw(session), API.WebsocketTimeout);
+        return null;
+    }
+
+    /// <summary>Internal handler of the model-load API route.</summary>
+    public static async Task SelectModelInternal(Session session, string model, Action<JObject> output, bool isWS)
+    {
         if (!session.User.Restrictions.CanChangeModels)
         {
-            return new JObject() { ["error"] = "You are not allowed to change models." };
+            output(new JObject() { ["error"] = "You are not allowed to change models." });
+            return;
         }
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         if (allowed != null && !allowed.IsMatch(model) || !Program.T2IModels.Models.TryGetValue(model, out T2IModel actualModel))
         {
-            return new JObject() { ["error"] = "Model not found." };
+            output(new JObject() { ["error"] = "Model not found." });
+            return;
+        }
+        using Session.GenClaim claim = session.Claim(0, Program.Backends.T2IBackends.Count, 0, 0);
+        if (isWS)
+        {
+            output(BasicAPIFeatures.GetCurrentStatusRaw(session));
         }
         if (!(await Program.Backends.LoadModelOnAll(actualModel)))
         {
-            return new JObject() { ["error"] = "Model failed to load." };
+            output(new JObject() { ["error"] = "Model failed to load." });
+            return;
         }
-        return new JObject() { ["success"] = true };
+        output(new JObject() { ["success"] = true });
     }
 
     /// <summary>API route to get a list of parameter types.</summary>
