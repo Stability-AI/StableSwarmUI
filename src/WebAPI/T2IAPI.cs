@@ -146,17 +146,11 @@ public static class T2IAPI
             return;
         }
         T2IBackendAccess backend;
-        int modelLoads = 0;
         try
         {
             claim.Extend(backendWaits: 1);
             sendStatus();
-            backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Model, filter: user_input.BackendMatcher, session: user_input.SourceSession, notifyWillLoad: () =>
-            {
-                modelLoads++;
-                claim.Extend(modelLoads: 1);
-                sendStatus();
-            }, cancel: claim.InterruptToken);
+            backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Model, filter: user_input.BackendMatcher, session: user_input.SourceSession, cancel: claim.InterruptToken);
         }
         catch (InvalidOperationException ex)
         {
@@ -170,7 +164,7 @@ public static class T2IAPI
         }
         finally
         {
-            claim.Complete(modelLoads: modelLoads, backendWaits: 1);
+            claim.Complete(backendWaits: 1);
             sendStatus();
         }
         if (claim.ShouldCancel)
