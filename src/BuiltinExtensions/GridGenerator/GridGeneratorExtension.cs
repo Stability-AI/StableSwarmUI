@@ -220,7 +220,7 @@ public class GridGeneratorExtension : Extension
 
     public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
-        using Session.GenClaim claim = session.Claim(1, 0, 0, 0);
+        using Session.GenClaim claim = session.Claim(gens: 1);
         T2IParams baseParams = new(session);
         try
         {
@@ -304,7 +304,7 @@ public class GridGeneratorExtension : Extension
         {
             File.Delete(lastJsFile);
         }
-        claim.Complete(1, 0, 0, 0);
+        claim.Complete(gens: 1);
         await sendStatus();
         await socket.SendJson(new JObject() { ["success"] = "complete" }, API.WebsocketTimeout);
         return null;

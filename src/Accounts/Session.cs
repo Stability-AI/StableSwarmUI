@@ -26,7 +26,7 @@ public class Session : IEquatable<Session>
     public LockObject StatsLocker = new();
 
     /// <summary>Use "using <see cref="GenClaim"/> claim = session.Claim(image_count);" to track generation requests pending on this session.</summary>
-    public GenClaim Claim(int gens, int modelLoads, int backendWaits, int liveGens)
+    public GenClaim Claim(int gens = 0, int modelLoads = 0, int backendWaits = 0, int liveGens = 0)
     {
         return new(this, gens, modelLoads, backendWaits, liveGens);
     }
@@ -61,7 +61,7 @@ public class Session : IEquatable<Session>
         }
 
         /// <summary>Increase the size of the claim.</summary>
-        public void Extend(int gens, int modelLoads, int backendWaits, int liveGens)
+        public void Extend(int gens = 0, int modelLoads = 0, int backendWaits = 0, int liveGens = 0)
         {
             lock (Sess.StatsLocker)
             {
@@ -77,7 +77,7 @@ public class Session : IEquatable<Session>
         }
 
         /// <summary>Mark a subset of these as complete.</summary>
-        public void Complete(int gens, int modelLoads, int backendWaits, int liveGens)
+        public void Complete(int gens = 0, int modelLoads = 0, int backendWaits = 0, int liveGens = 0)
         {
             Extend(-gens, -modelLoads, -backendWaits, -liveGens);
         }

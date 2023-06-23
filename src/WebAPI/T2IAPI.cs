@@ -59,7 +59,7 @@ public static class T2IAPI
     public static async Task GenT2I_Internal(Session session, (int, JObject) input, Action<JObject> output, bool isWS)
     {
         (int images, JObject rawInput) = input;
-        using Session.GenClaim claim = session.Claim(images, 0, 0, 0);
+        using Session.GenClaim claim = session.Claim(gens: images);
         T2IParams user_input = new(session);
         try
         {
@@ -149,10 +149,12 @@ public static class T2IAPI
         int modelLoads = 0;
         try
         {
-            claim.Extend(0, 0, 1, 0);
+            claim.Extend(backendWaits: 1);
             sendStatus();
             backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Model, filter: user_input.BackendMatcher, session: user_input.SourceSession, notifyWillLoad: () =>
             {
+                modelLoads++;
+                claim.Extend(modelLoads: 1);
                 sendStatus();
             }, cancel: claim.InterruptToken);
         }
@@ -168,7 +170,7 @@ public static class T2IAPI
         }
         finally
         {
-            claim.Complete(0, modelLoads, 1, 0);
+            claim.Complete(modelLoads: modelLoads, backendWaits: 1);
             sendStatus();
         }
         if (claim.ShouldCancel)
@@ -178,7 +180,7 @@ public static class T2IAPI
         }
         try
         {
-            claim.Extend(0, 0, 0, 1);
+            claim.Extend(liveGens: 1);
             sendStatus();
             using (backend)
             {
@@ -207,7 +209,7 @@ public static class T2IAPI
         }
         finally
         {
-            claim.Complete(1, 0, 0, 1);
+            claim.Complete(gens: 1, liveGens: 1);
             sendStatus();
         }
     }
