@@ -7,7 +7,6 @@ using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
 
@@ -472,108 +471,66 @@ public class BackendHandler
                 }
                 lock (CentralLock)
                 {
-                    List<T2IBackendData> possible = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING).ToList();
+                    List<T2IBackendData> currentBackends = T2IBackends.Values.ToList();
+                    List<T2IBackendData> possible = currentBackends.Where(b => b.Backend.Status == BackendStatus.RUNNING).ToList();
                     if (!possible.Any())
                     {
-                        Logs.Warning("[BackendHandler] No backends are available! Cannot generate anything.");
-                        ReleasePressure();
-                        throw new InvalidOperationException("No backends available!");
-                    }
-                    possible = filter is null ? possible : possible.Where(filter).ToList();
-                    if (!possible.Any())
-                    {
-                        Logs.Warning("[BackendHandler] No backends match the request! Cannot generate anything.");
-                        ReleasePressure();
-                        throw new InvalidOperationException("No backends match the settings of the request given!");
-                    }
-                    List<T2IBackendData> available = possible.Where(b => !b.IsInUse).ToList();
-                    T2IBackendData firstAvail = available.FirstOrDefault();
-                    if (model is null && firstAvail is not null)
-                    {
-                        Logs.Debug($"[BackendHandler] Backend request #{requestId} will claim #{firstAvail.ID}");
-                        ReleasePressure();
-                        return new T2IBackendAccess(firstAvail);
-                    }
-                    if (model is not null)
-                    {
-                        List<T2IBackendData> correctModel = available.Where(b => b.Backend.CurrentModelName == model.Name).ToList();
-                        if (correctModel.Any())
+                        if (!currentBackends.Any(b => b.Backend.Status == BackendStatus.LOADING || b.Backend.Status == BackendStatus.WAITING))
                         {
-                            T2IBackendData backend = correctModel.FirstOrDefault();
-                            Logs.Debug($"[BackendHandler] Backend request #{requestId} found correct model on #{backend.ID}");
+                            Logs.Warning("[BackendHandler] No backends are available! Cannot generate anything.");
                             ReleasePressure();
-                            return new T2IBackendAccess(backend);
+                            throw new InvalidOperationException("No backends available!");
                         }
                     }
-                    if (requestPressure is null && model is not null)
+                    else
                     {
-                        requestPressure = ModelRequests.GetOrCreate(model.Name, () => new() { Model = model });
-                        requestPressure.Count++;
-                        if (session is not null)
+                        possible = filter is null ? possible : possible.Where(filter).ToList();
+                        if (!possible.Any())
                         {
-                            requestPressure.Sessions.Add(session);
+                            Logs.Warning("[BackendHandler] No backends match the request! Cannot generate anything.");
+                            ReleasePressure();
+                            throw new InvalidOperationException("No backends match the settings of the request given!");
                         }
-                    }
-                    long timeRel = Environment.TickCount64;
-                    if (available.Any())
-                    {
-                        ModelRequestPressure highestPressure = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).FirstOrDefault();
-                        if (highestPressure is not null)
+                        List<T2IBackendData> available = possible.Where(b => !b.IsInUse).ToList();
+                        T2IBackendData firstAvail = available.FirstOrDefault();
+                        if (model is null && firstAvail is not null)
                         {
-                            long timeWait = timeRel - highestPressure.TimeFirstRequest;
-                            if (possible.Count == 1 || timeWait > 1500)
+                            Logs.Debug($"[BackendHandler] Backend request #{requestId} will claim #{firstAvail.ID}");
+                            ReleasePressure();
+                            return new T2IBackendAccess(firstAvail);
+                        }
+                        if (model is not null)
+                        {
+                            List<T2IBackendData> correctModel = available.Where(b => b.Backend.CurrentModelName == model.Name).ToList();
+                            if (correctModel.Any())
                             {
-                                List<T2IBackendData> valid = available.Where(b => !highestPressure.BadBackends.Contains(b.ID)).ToList();
-                                if (valid.IsEmpty())
-                                {
-                                    Logs.Warning("[BackendHandler] All backends failed to load the model! Cannot generate anything.");
-                                    ReleasePressure();
-                                    throw new InvalidOperationException("All available backends failed to load the model.");
-                                }
-                                T2IBackendData availableBackend = valid.MinBy(a => a.TimeLastRelease);
-                                Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} will load a model: {highestPressure.Model.Name}, with {highestPressure.Count} requests waiting for {timeWait / 1000f:0.#} seconds");
-                                highestPressure.IsLoading = true;
-                                List<Session.GenClaim> claims = new();
-                                foreach (Session sess in highestPressure.Sessions)
-                                {
-                                    claims.Add(sess.Claim(0, 1, 0, 0));
-                                }
-                                T2IBackendAccess access = new(availableBackend);
-                                Task.Factory.StartNew(() =>
-                                {
-                                    try
-                                    {
-                                        availableBackend.Backend.LoadModel(highestPressure.Model).Wait(cancel);
-                                        Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} loaded model, returning to pool");
-                                    }
-                                    finally
-                                    {
-                                        lock (CentralLock)
-                                        {
-                                            if (availableBackend.Backend.CurrentModelName != highestPressure.Model.Name)
-                                            {
-                                                Logs.Warning($"[BackendHandler] backend #{availableBackend.ID} failed to load model {highestPressure.Model.Name}");
-                                                highestPressure.BadBackends.Add(availableBackend.ID);
-                                            }
-                                            highestPressure.IsLoading = false;
-                                            foreach (Session.GenClaim claim in claims)
-                                            {
-                                                claim.Dispose();
-                                            }
-                                        }
-                                        access.Dispose();
-                                    }
-                                }, cancel);
+                                T2IBackendData backend = correctModel.FirstOrDefault();
+                                Logs.Debug($"[BackendHandler] Backend request #{requestId} found correct model on #{backend.ID}");
+                                ReleasePressure();
+                                return new T2IBackendAccess(backend);
                             }
                         }
-                    }
-                    if (requestPressure is not null && requestPressure.IsLoading && notifyWillLoad is not null)
-                    {
-                        notifyWillLoad();
-                        notifyWillLoad = null;
+                        if (requestPressure is null && model is not null)
+                        {
+                            requestPressure = ModelRequests.GetOrCreate(model.Name, () => new() { Model = model });
+                            requestPressure.Count++;
+                            if (session is not null)
+                            {
+                                requestPressure.Sessions.Add(session);
+                            }
+                        }
+                        if (available.Any())
+                        {
+                            LoadHighestPressureNow(possible, available, ReleasePressure, cancel);
+                        }
+                        if (requestPressure is not null && requestPressure.IsLoading && notifyWillLoad is not null)
+                        {
+                            notifyWillLoad();
+                            notifyWillLoad = null;
+                        }
                     }
                 }
-                await BackendsAvailableSignal.WaitAsync(TimeSpan.FromSeconds(1));
+                await BackendsAvailableSignal.WaitAsync(TimeSpan.FromSeconds(1), cancel);
             }
         }
         catch (Exception ex)
@@ -593,10 +550,67 @@ public class BackendHandler
             }
         }
     }
+
+    /// <summary>Internal helper route for <see cref="GetNextT2IBackend"/> to trigger a backend model load.</summary>
+    public void LoadHighestPressureNow(List<T2IBackendData> possible, List<T2IBackendData> available, Action ReleasePressure, CancellationToken cancel)
+    {
+        long timeRel = Environment.TickCount64;
+        ModelRequestPressure highestPressure = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).FirstOrDefault();
+        if (highestPressure is not null)
+        {
+            long timeWait = timeRel - highestPressure.TimeFirstRequest;
+            if (possible.Count == 1 || timeWait > 1500)
+            {
+                List<T2IBackendData> valid = available.Where(b => !highestPressure.BadBackends.Contains(b.ID)).ToList();
+                if (valid.IsEmpty())
+                {
+                    Logs.Warning("[BackendHandler] All backends failed to load the model! Cannot generate anything.");
+                    ReleasePressure();
+                    throw new InvalidOperationException("All available backends failed to load the model.");
+                }
+                T2IBackendData availableBackend = valid.MinBy(a => a.TimeLastRelease);
+                Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} will load a model: {highestPressure.Model.Name}, with {highestPressure.Count} requests waiting for {timeWait / 1000f:0.#} seconds");
+                highestPressure.IsLoading = true;
+                List<Session.GenClaim> claims = new();
+                foreach (Session sess in highestPressure.Sessions)
+                {
+                    claims.Add(sess.Claim(0, 1, 0, 0));
+                }
+                T2IBackendAccess access = new(availableBackend);
+                Task.Factory.StartNew(() =>
+                {
+                    try
+                    {
+                        availableBackend.Backend.LoadModel(highestPressure.Model).Wait(cancel);
+                        Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} loaded model, returning to pool");
+                    }
+                    finally
+                    {
+                        lock (CentralLock)
+                        {
+                            if (availableBackend.Backend.CurrentModelName != highestPressure.Model.Name)
+                            {
+                                Logs.Warning($"[BackendHandler] backend #{availableBackend.ID} failed to load model {highestPressure.Model.Name}");
+                                highestPressure.BadBackends.Add(availableBackend.ID);
+                            }
+                            highestPressure.IsLoading = false;
+                            foreach (Session.GenClaim claim in claims)
+                            {
+                                claim.Dispose();
+                            }
+                        }
+                        access.Dispose();
+                    }
+                }, cancel);
+            }
+        }
+    }
 }
 
+/// <summary>Mini-helper to track a backend accessor's status and release the access claim when done.</summary>
 public class T2IBackendAccess : IDisposable
 {
+    /// <summary>The data for the backend that's claimed.</summary>
     public BackendHandler.T2IBackendData Data;
 
     public T2IBackendAccess(BackendHandler.T2IBackendData _data)
@@ -605,6 +619,7 @@ public class T2IBackendAccess : IDisposable
         Data.Claim();
     }
 
+    /// <summary>The backend that's claimed.</summary>
     public AbstractT2IBackend Backend => Data.Backend;
 
     private bool IsDisposed = false;
