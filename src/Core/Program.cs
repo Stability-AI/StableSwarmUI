@@ -123,6 +123,7 @@ public class Program
         Backends?.Shutdown();
         Sessions?.Shutdown();
         Ngrok?.Stop();
+        T2IModels?.Shutdown();
         Logs.Info("All core shutdowns complete.");
     }
 

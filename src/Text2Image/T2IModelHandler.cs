@@ -1,12 +1,10 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using LiteDB;
 using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Core;
-using StableUI.Utils;
-using System.Collections.Concurrent;
 using System.IO;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace StableUI.Text2Image;
@@ -17,16 +15,58 @@ public class T2IModelHandler
     /// <summary>All models known to this handler.</summary>
     public ConcurrentDictionary<string, T2IModel> Models = new();
 
+    /// <summary>Helper to sort model classes.</summary>
+    public T2IModelClassSorter ClassSorter = new();
+
     /// <summary>Lock used when modifying the model list.</summary>
     public LockObject ModificationLock = new();
+
+    public LiteDatabase ModelMetadataCache;
+
+    public ILiteCollection<ModelMetadataStore> ModelMetadataCollection;
+
+    public bool IsShutdown = false;
+
+    /// <summary>Helper, data store for model metadata.</summary>
+    public class ModelMetadataStore
+    {
+        [BsonId]
+        public string ModelName { get; set; }
+
+        public string ModelFileVersion { get; set; }
+
+        public string ModelClassType { get; set; }
+
+        public string ModelMetadataRaw { get; set; }
+    }
 
     public T2IModelHandler()
     {
         Program.ModelRefreshEvent += Refresh;
+        ModelMetadataCache = new(Program.ServerSettings.DataPath + "/model_metadata.ldb");
+        ModelMetadataCollection = ModelMetadataCache.GetCollection<ModelMetadataStore>("model_metadata");
+    }
+
+    public void Shutdown()
+    {
+        if (IsShutdown)
+        {
+            return;
+        }
+        IsShutdown = true;
+        lock (ModificationLock)
+        {
+            ModelMetadataCache?.Dispose();
+            ModelMetadataCache = null;
+        }
     }
 
     public List<T2IModel> ListModelsFor(Session session)
     {
+        if (IsShutdown)
+        {
+            return new();
+        }
         string allowedStr = session.User.Restrictions.AllowedModels;
         if (allowedStr == ".*")
         {
@@ -39,6 +79,10 @@ public class T2IModelHandler
     /// <summary>Refresh the model list.</summary>
     public void Refresh()
     {
+        if (IsShutdown)
+        {
+            return;
+        }
         lock (ModificationLock)
         {
             Models.Clear();
@@ -48,6 +92,10 @@ public class T2IModelHandler
 
     private void AddAllFromFolder(string folder)
     {
+        if (IsShutdown)
+        {
+              return;
+        }
         if (folder.StartsWith('.'))
         {
             return;
