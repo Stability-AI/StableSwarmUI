@@ -4,6 +4,7 @@ using FreneticUtilities.FreneticExtensions;
 using StableUI.Backends;
 using StableUI.Utils;
 using System.Diagnostics;
+using System.IO;
 
 namespace StableUI.Builtin_ComfyUIBackend;
 
@@ -49,5 +50,17 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend<ComfyUISelfStar
         {
             Logs.Error($"Error stopping Auto WebUI process: {ex}");
         }
+    }
+
+    public override void PostResultCallback(string filename)
+    {
+        string path = Settings.StartScript.Replace('\\', '/').BeforeLast('/') + "/output/" + filename;
+        Task.Run(() =>
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        });
     }
 }

@@ -54,6 +54,10 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
         return Task.CompletedTask;
     }
 
+    public virtual void PostResultCallback(string filename)
+    {
+    }
+
     public async Task<Image[]> AwaitJob(string workflow, CancellationToken interrupt)
     {
         workflow = $"{{\"prompt\": {workflow}}}";
@@ -95,6 +99,7 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
                 string fname = outImage["filename"].ToString();
                 byte[] image = await (await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
                 outputs.Add(new Image(image));
+                PostResultCallback(fname);
             }
         }
         return outputs.ToArray();
@@ -102,38 +107,42 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
 
     public override async Task<Image[]> Generate(T2IParams user_input)
     {
-        if (!user_input.OtherParams.TryGetValue("comfyui_workflow", out object workflowObj) || workflowObj is not string workflowName)
+        string workflow;
+        if (user_input.OtherParams.TryGetValue("comfyui_workflow", out object workflowObj))
         {
-            throw new InvalidDataException("Must select a ComfyUI Workflow.");
-        }
-        if (!ComfyUIBackendExtension.Workflows.TryGetValue(workflowName, out string workflow))
-        {
-            throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
-        }
-        workflow = StringConversionHelper.QuickSimpleTagFiller(workflow, "${", "}", (tag) => {
-            string tagName = tag.BeforeAndAfter(':', out string defVal);
-            string filled = tagName switch
+            if (workflowObj is not string workflowName || !ComfyUIBackendExtension.Workflows.TryGetValue(workflowName, out workflow))
             {
-                "prompt" => user_input.Prompt,
-                "negative_prompt" => user_input.NegativePrompt,
-                "seed" => $"{user_input.Seed}",
-                "steps" => $"{user_input.Steps}",
-                "width" => $"{user_input.Width}",
-                "height" => $"{user_input.Height}",
-                "cfg_scale" => $"{user_input.CFGScale}",
-                "subseed" => $"{user_input.VarSeed}",
-                "subseed_strength" => $"{user_input.VarSeedStrength}",
-                "init_image" => user_input.InitImage.AsBase64,
-                "init_image_strength" => $"{user_input.ImageInitStrength}",
-                "comfy_sampler" => user_input.OtherParams.GetValueOrDefault("comfyui_sampler")?.ToString(),
-                "comfy_scheduler" => user_input.OtherParams.GetValueOrDefault("comfyui_scheduler")?.ToString(),
-                "model" => user_input.Model.Name.Replace('/', Path.DirectorySeparatorChar),
-                "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
-                _ => user_input.OtherParams.GetValueOrDefault(tagName)?.ToString()
-            };
-            filled ??= defVal;
-            return Utilities.EscapeJsonString(filled);
-        });
+                throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
+            }
+            workflow = StringConversionHelper.QuickSimpleTagFiller(workflow, "${", "}", (tag) => {
+                string tagName = tag.BeforeAndAfter(':', out string defVal);
+                string filled = tagName switch
+                {
+                    "prompt" => user_input.Prompt,
+                    "negative_prompt" => user_input.NegativePrompt,
+                    "seed" => $"{user_input.Seed}",
+                    "steps" => $"{user_input.Steps}",
+                    "width" => $"{user_input.Width}",
+                    "height" => $"{user_input.Height}",
+                    "cfg_scale" => $"{user_input.CFGScale}",
+                    "subseed" => $"{user_input.VarSeed}",
+                    "subseed_strength" => $"{user_input.VarSeedStrength}",
+                    "init_image" => user_input.InitImage.AsBase64,
+                    "init_image_strength" => $"{user_input.ImageInitStrength}",
+                    "comfy_sampler" => user_input.OtherParams.GetValueOrDefault("comfyui_sampler")?.ToString(),
+                    "comfy_scheduler" => user_input.OtherParams.GetValueOrDefault("comfyui_scheduler")?.ToString(),
+                    "model" => user_input.Model.Name.Replace('/', Path.DirectorySeparatorChar),
+                    "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
+                    _ => user_input.OtherParams.GetValueOrDefault(tagName)?.ToString()
+                };
+                filled ??= defVal;
+                return Utilities.EscapeJsonString(filled);
+            });
+        }
+        else
+        {
+            workflow = new WorkflowGenerator() { UserInput = user_input }.Generate().ToString();
+        }
         return await AwaitJob(workflow, user_input.InterruptToken);
     }
 
