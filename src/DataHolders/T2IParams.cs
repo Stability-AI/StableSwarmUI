@@ -79,6 +79,7 @@ public class T2IParams : IDataHolder
             res.ExternalData = res.ExternalData.Clone();
         }
         res.OtherParams = new(OtherParams);
+        res.RequiredFlags = new(RequiredFlags);
         return res;
     }
 

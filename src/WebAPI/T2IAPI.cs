@@ -150,7 +150,7 @@ public static class T2IAPI
         {
             claim.Extend(backendWaits: 1);
             sendStatus();
-            backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Model, filter: user_input.BackendMatcher, session: user_input.SourceSession, cancel: claim.InterruptToken);
+            backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Model, filter: user_input.BackendMatcher, session: user_input.SourceSession, notifyWillLoad: sendStatus, cancel: claim.InterruptToken);
         }
         catch (InvalidOperationException ex)
         {

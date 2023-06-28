@@ -102,6 +102,7 @@ public class Program
         }
         Logs.Init("Prepping webserver...");
         Web.Prep();
+        Logs.Init("Readying extensions for launch...");
         RunOnAllExtensions(e => e.OnPreLaunch());
         Logs.Init("Launching server...");
         Web.Launch();
@@ -135,7 +136,7 @@ public class Program
         {
             try
             {
-                Logs.Info($"Prepping extension: {extType.FullName}...");
+                Logs.Init($"Prepping extension: {extType.FullName}...");
                 Extension extension = Activator.CreateInstance(extType) as Extension;
                 extension.ExtensionName = extType.Name;
                 Extensions.Add(extension);

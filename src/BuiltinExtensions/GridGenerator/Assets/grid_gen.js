@@ -134,12 +134,9 @@ function gridGen_register() {
             axisData.push({ 'mode': type, 'vals': input });
         }
         data['gridAxes'] = axisData;
-        makeWSRequest('GridGenRun', data, data => {
+        makeWSRequestT2I('GridGenRun', data, data => {
             if (data.image) {
                 gotImageResult(data.image);
-            }
-            else if (data.status) {
-                updateCurrentStatusDirect(data.status);
             }
             else if (data.success) {
                 outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="Output/${outputFolder.value}/index.html" target="_blank">Output/<code>${outputFolder.value}</code></a>`;

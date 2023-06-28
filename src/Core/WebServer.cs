@@ -75,6 +75,7 @@ public class WebServer
                 }
             }
         });
+        Logs.Init("Scan for web extensions...");
         GatherExtensionPageAdditions();
     }
 

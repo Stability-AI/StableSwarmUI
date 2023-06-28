@@ -156,7 +156,6 @@ function updateGenCount() {
 
 function makeWSRequestT2I(url, in_data, callback) {
     makeWSRequest(url, in_data, data => {
-        console.log(`Got data: ${JSON.stringify(data)}`)
         if (data.status) {
             updateCurrentStatusDirect(data.status);
         }
