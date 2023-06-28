@@ -7,6 +7,7 @@ using StableUI.Core;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -138,9 +139,11 @@ public static class Utilities
         return new JObject() { ["error"] = message, ["error_id"] = error_id };
     }
 
-    public static StringContent JSONContent(JObject jobj)
+    public static ByteArrayContent JSONContent(JObject jobj)
     {
-        return new StringContent(jobj.ToString(Formatting.None), StringConversionHelper.UTF8Encoding, "application/json");
+        ByteArrayContent content = new(StringConversionHelper.UTF8Encoding.GetBytes(jobj.ToString(Formatting.None)));
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        return content;
     }
 
     public static string EscapeJsonString(string input)
