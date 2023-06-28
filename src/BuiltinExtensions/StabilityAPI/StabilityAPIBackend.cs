@@ -30,8 +30,6 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
 
     public HttpClient WebClient;
 
-    public LockObject TrackerLock = new();
-
     public override async Task Init()
     {
         string fn = $"{Program.ServerSettings.DataPath}/{Settings.KeyFile}";
@@ -51,6 +49,7 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
             Status = BackendStatus.DISABLED;
             return;
         }
+        await RefreshEngines();
         Status = BackendStatus.RUNNING;
     }
 
@@ -74,7 +73,12 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
 
     public async Task<JObject> Get(string url)
     {
-        return JObject.Parse(await (await WebClient.GetAsync($"{Settings.Endpoint}/{url}")).Content.ReadAsStringAsync());
+        string data = await (await WebClient.GetAsync($"{Settings.Endpoint}/{url}")).Content.ReadAsStringAsync();
+        if (data.StartsWith('['))
+        {
+            data = "{\"data\":" + data + "}";
+        }
+        return JObject.Parse(data);
     }
 
     public async Task<JObject> Post(string url, JObject data)
@@ -82,10 +86,27 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
         return JObject.Parse(await (await WebClient.PostAsync($"{Settings.Endpoint}/{url}", Utilities.JSONContent(data))).Content.ReadAsStringAsync());
     }
 
+    public async Task RefreshEngines()
+    {
+        JObject engines = await Get("engines/list");
+        List<string> engineIds = engines["data"].Select(o => o["id"].ToString()).ToList();
+        Logs.Info($"Engines: {engines}");
+        lock (StabilityAPIExtension.TrackerLock)
+        {
+            foreach (string eng in engineIds)
+            {
+                if (!StabilityAPIExtension.Engines.Contains(eng))
+                {
+                    StabilityAPIExtension.Engines.Add(eng);
+                }
+            }
+        }
+    }
+
     public async Task UpdateBalance()
     {
         double _cred = (double)(await Get("user/balance"))["credits"];
-        lock (TrackerLock)
+        lock (StabilityAPIExtension.TrackerLock)
         {
             Credits = _cred;
         }
@@ -126,8 +147,9 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
             ["text_prompts"] = prompts,
             ["seed"] = user_input.Seed
         };
+        string engine = user_input.OtherParams.GetValueOrDefault("sapi_engine", "stable-diffusion-v1-5").ToString();
         // TODO: Model tracking.
-        JObject response = await Post("generation/stable-diffusion-v1-5/text-to-image", obj);
+        JObject response = await Post($"generation/{engine}/text-to-image", obj);
         List<Image> images = new();
         foreach (JObject img in response["artifacts"].Cast<JObject>())
         {
