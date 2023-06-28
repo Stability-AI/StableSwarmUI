@@ -143,7 +143,7 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
             ["width"] = user_input.Width,
             ["samples"] = 1,
             ["steps"] = user_input.Steps,
-            ["sampler"] = "K_EULER", // TODO: "DDIM" "DDPM" "K_DPMPP_2M" "K_DPMPP_2S_ANCESTRAL" "K_DPM_2" "K_DPM_2_ANCESTRAL" "K_EULER" "K_EULER_ANCESTRAL" "K_HEUN" "K_LMS"
+            ["sampler"] = user_input.OtherParams.GetValueOrDefault("sapi_sampler", "K_EULER").ToString(),
             ["text_prompts"] = prompts,
             ["seed"] = user_input.Seed
         };
