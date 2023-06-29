@@ -200,6 +200,18 @@ public static class Utilities
         return CommonContentTypes.GetValueOrDefault(extension, "application/octet-stream");
     }
 
+    public static JObject ParseToJson(this string input)
+    {
+        try
+        {
+            return JObject.Parse(input);
+        }
+        catch (JsonReaderException ex)
+        {
+            throw new JsonReaderException($"Failed to parse JSON `{input.Replace("\n", "  ")}`: {ex.Message}");
+        }
+    }
+
     public static Dictionary<string, T> ApplyMap<T>(Dictionary<string, T> orig, Dictionary<string, string> map)
     {
         Dictionary<string, T> result = new(orig);

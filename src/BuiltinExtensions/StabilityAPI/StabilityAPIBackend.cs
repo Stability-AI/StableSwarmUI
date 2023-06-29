@@ -78,12 +78,12 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
         {
             data = "{\"data\":" + data + "}";
         }
-        return JObject.Parse(data);
+        return data.ParseToJson();
     }
 
     public async Task<JObject> Post(string url, JObject data)
     {
-        return JObject.Parse(await (await WebClient.PostAsync($"{Settings.Endpoint}/{url}", Utilities.JSONContent(data))).Content.ReadAsStringAsync());
+        return (await (await WebClient.PostAsync($"{Settings.Endpoint}/{url}", Utilities.JSONContent(data))).Content.ReadAsStringAsync()).ParseToJson();
     }
 
     public async Task RefreshEngines()

@@ -121,6 +121,7 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
                     "prompt" => user_input.Prompt,
                     "negative_prompt" => user_input.NegativePrompt,
                     "seed" => $"{user_input.Seed}",
+                    "seed+1" => $"{user_input.Seed + 1}",
                     "steps" => $"{user_input.Steps}",
                     "width" => $"{user_input.Width}",
                     "height" => $"{user_input.Height}",
