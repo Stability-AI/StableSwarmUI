@@ -726,8 +726,10 @@ function genInputs() {
                 else {
                     elem.value = cookie;
                 }
+                elem.dispatchEvent(new Event('input'));
+                elem.dispatchEvent(new Event('change'));
             }
-            elem.addEventListener('input', () => {
+            elem.addEventListener('change', () => {
                 if (param.type == "boolean") {
                     setCookie(`lastparam_input_${param.id}`, elem.checked, 0.25);
                 }

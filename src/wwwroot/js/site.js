@@ -19,8 +19,14 @@ function enableSlidersIn(elem) {
         });
         if (range.dataset.ispot == "true") {
             let max = parseInt(range.getAttribute('max')), min = parseInt(range.getAttribute('min')), step = parseInt(range.getAttribute('step'));
-            range.addEventListener('input', () => number.value = linearToPot(range.value, max, min, step));
-            number.addEventListener('input', () => range.value = potToLinear(number.value, max, min, step));
+            range.addEventListener('input', () => {
+                number.value = linearToPot(range.value, max, min, step);
+                number.dispatchEvent(new Event('change'));
+            });
+            number.addEventListener('input', () => {
+                range.value = potToLinear(number.value, max, min, step);
+                range.dispatchEvent(new Event('change'));
+            });
             range.step = 1;
         }
         else {
