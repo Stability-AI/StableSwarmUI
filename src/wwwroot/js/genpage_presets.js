@@ -224,7 +224,7 @@ function addPreset(preset) {
     div.appendChild(img);
     let desc = createDiv(null, 'model-descblock preset-descblock');
     desc.innerText = preset.title + ":\n" + preset.description + "\n";
-    let addButton = createDiv(null, 'model-load-button');
+    let addButton = createDiv(null, 'basic-button');
     addButton.innerText = ' Use ';
     addButton.addEventListener('click', () => {
         if (!currentPresets.some(p => p.title == preset.title)) {
@@ -233,13 +233,13 @@ function addPreset(preset) {
         }
     });
     desc.appendChild(addButton);
-    let editButton = createDiv(null, 'model-load-button');
+    let editButton = createDiv(null, 'basic-button');
     editButton.innerText = ' Edit ';
     editButton.addEventListener('click', () => {
         editPreset(preset);
     });
     desc.appendChild(editButton);
-    let deleteButton = createDiv(null, 'model-load-button');
+    let deleteButton = createDiv(null, 'basic-button');
     deleteButton.innerText = ' Delete ';
     deleteButton.addEventListener('click', () => {
         if (confirm("Are you sure want to delete that preset?")) {

@@ -25,6 +25,7 @@ public static class T2IAPI
         API.RegisterAPICall(TriggerRefresh);
         API.RegisterAPICall(SelectModel);
         API.RegisterAPICall(SelectModelWS);
+        API.RegisterAPICall(EditModelMetadata);
         API.RegisterAPICall(ListT2IParams);
     }
 
@@ -325,6 +326,46 @@ public static class T2IAPI
             return;
         }
         output(new JObject() { ["success"] = true });
+    }
+
+    /// <summary>API route to modify the metadata of a model.</summary>
+    public static async Task<JObject> EditModelMetadata(Session session, string model, string title, string author, string type, string description, int standard_width, int standard_height, string preview_image)
+    {
+        if (!session.User.Restrictions.CanChangeModels)
+        {
+            return new JObject() { ["error"] = "You are not allowed to change models." };
+        }
+        // TODO: model-metadata-edit permission check
+        string allowedStr = session.User.Restrictions.AllowedModels;
+        Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        if (allowed != null && !allowed.IsMatch(model) || !Program.T2IModels.Models.TryGetValue(model, out T2IModel actualModel))
+        {
+            return new JObject() { ["error"] = "Model not found." };
+        }
+        lock (Program.T2IModels.ModificationLock)
+        {
+            actualModel.Title = string.IsNullOrWhiteSpace(title) ? null : title;
+            actualModel.Author = string.IsNullOrWhiteSpace(author) ? null : author;
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                actualModel.ModelClass = Program.T2IModels.ClassSorter.ModelClasses.GetValueOrDefault(type);
+            }
+            actualModel.Description = description;
+            if (standard_width > 0)
+            {
+                actualModel.StandardWidth = standard_width;
+            }
+            if (standard_height > 0)
+            {
+                actualModel.StandardHeight = standard_height;
+            }
+            if (!string.IsNullOrWhiteSpace(preview_image))
+            {
+                actualModel.PreviewImage = preview_image;
+            }
+        }
+        Program.T2IModels.ResetMetadataFrom(actualModel);
+        return new JObject() { ["success"] = true };
     }
 
     /// <summary>API route to get a list of parameter types.</summary>

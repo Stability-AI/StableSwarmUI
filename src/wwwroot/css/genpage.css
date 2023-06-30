@@ -168,6 +168,7 @@ body {
 .current_model_view {
     display: inline-block;
     border: 1px dotted var(--light-border);
+    background-color: var(--background-soft);
     border-radius: 0.3rem;
     padding-left: 0.2rem;
     padding-right: 0.2rem;
@@ -180,7 +181,18 @@ body {
     overflow: hidden;
     white-space: nowrap;
     vertical-align: top;
+    position: relative;
+}
+.model-block-menu-button {
+    display: block;
+    position: absolute;
+    top: 0.1rem;
+    right: 0.2rem;
+}
+.model-block-menu-button:hover {
+    background-color: var(--emphasis);
     cursor: pointer;
+    border: 1px solid black;
 }
 .model-selected {
     border: 1px solid rgba(0, 255, 0, 1.0);
@@ -190,28 +202,16 @@ body {
     border: 1px solid rgba(100, 255, 100, 0.5);
     background-color: rgba(220, 255, 220, 0.3);
 }
-.model-block-hoverable:hover {
-    background-color: var(--emphasis);
+.sui_popover_model {
+    white-space: normal;
 }
-.model-block-hoverable:hover img {
-    border: 2px solid white;
-}
-.model-load-button {
-    display: inline-block;
-    background-color: var(--button-background);
-    color: var(--button-text);
-    border: 1px solid var(--button-border);
-    font-weight: bold;
-    border-radius: 0.5rem;
-    margin-left: 0.2rem;
-    margin-right: 0.2rem;
-    padding-left: 0.2rem;
-    padding-right: 0.2rem;
+.sui_popover_model_button {
+    display: block;
+    width: 100%;
     cursor: pointer;
 }
-.model-load-button:hover {
-    background-color: var(--button-background-hover);
-    color: var(--button-foreground-hover);
+.sui_popover_model_button:hover {
+    background-color: var(--emphasis);
 }
 .model-block img {
     max-height: 8rem;
@@ -220,6 +220,10 @@ body {
     margin: 0.5rem;
     margin-bottom: 0px;
     vertical-align: top;
+    cursor: pointer;
+}
+.model-block img:hover {
+    border: 2px solid white;
 }
 .model-descblock {
     width: 30rem;

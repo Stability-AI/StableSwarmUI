@@ -12,14 +12,20 @@ public class T2IModel
     /// <summary>Full raw system filepath to this model.</summary>
     public string RawFilePath;
 
+    /// <summary>Proper title of the model, if identified.</summary>
+    public string Title;
+
+    /// <summary>Author of the model, if identified.</summary>
+    public string Author;
+
     /// <summary>Description text, if any, of the model.</summary>
     public string Description;
 
-    /// <summary>What type of model this is, if known.</summary>
-    public string Type;
-
     /// <summary>URL or data blob of a preview image for this model.</summary>
     public string PreviewImage;
+
+    /// <summary>This model's standard resolution, eg 1024x1024. 0 means unknown.</summary>
+    public int StandardWidth, StandardHeight;
 
     /// <summary>If true, at least one backend has this model currently loaded.</summary>
     public bool AnyBackendsHaveLoaded = false;
@@ -33,13 +39,16 @@ public class T2IModel
         return new JObject()
         {
             ["name"] = Name,
+            ["title"] = Title,
+            ["author"] = Author,
             ["description"] = Description,
-            ["type"] = Type,
+            ["model_class"] = ModelClass?.Name,
             ["preview_image"] = PreviewImage,
             ["loaded"] = AnyBackendsHaveLoaded,
             ["class"] = ModelClass?.Name,
-            ["standard_width"] = ModelClass?.StandardWidth ?? 0,
-            ["standard_height"] = ModelClass?.StandardHeight ?? 0,
+            ["standard_width"] = StandardWidth,
+            ["standard_height"] = StandardHeight,
+            ["is_safetensors"] = RawFilePath.EndsWith(".safetensors")
         };
     }
 

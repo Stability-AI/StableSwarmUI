@@ -250,6 +250,80 @@ function loadHistory(path) {
 let models = {};
 let cur_model = null;
 
+let curModelMenuModel = null;
+
+function modelMenuDoLoadNow() {
+    if (curModelMenuModel == null) {
+        return;
+    }
+    document.getElementById('input_model').value = curModelMenuModel.name;
+    document.getElementById('current_model').innerText = curModelMenuModel.name;
+    makeWSRequestT2I('SelectModelWS', {'model': curModelMenuModel.name}, data => {
+        loadModelList(lastModelDir);
+    });
+}
+
+function modelMenuDoEdit() {
+    let model = curModelMenuModel;
+    if (model == null) {
+        console.log("Model do edit: no model");
+        return;
+    }
+    let imageInput = document.getElementById('edit_model_image');
+    imageInput.innerHTML = '';
+    let enableImage = document.getElementById('edit_model_enable_image');
+    enableImage.checked = false;
+    enableImage.disabled = true;
+    let curImg = document.getElementById('current_image').getElementsByTagName('img')[0];
+    if (curImg) {
+        let newImg = curImg.cloneNode(true);
+        imageInput.appendChild(newImg);
+        enableImage.checked = true;
+        enableImage.disabled = false;
+    }
+    document.getElementById('edit_model_name').value = model.title == null ? model.name : model.title;
+    document.getElementById('edit_model_author').value = model.author == null ? '' : model.author;
+    document.getElementById('edit_model_type').value = model.class == null ? '' : model.class;
+    document.getElementById('edit_model_resolution').value = `${model.standard_width}x${model.standard_height}`;
+    document.getElementById('edit_model_description').value = model.description == null ? '' : model.description;
+    $('#edit_model_modal').modal('show');
+}
+
+function save_edit_model() {
+    let model = curModelMenuModel;
+    if (model == null) {
+        console.log("Model do save: no model");
+        return;
+    }
+    let resolution = document.getElementById('edit_model_resolution').value.split('x');
+    let data = {
+        'model': model.name,
+        'title': document.getElementById('edit_model_name').value,
+        'author': document.getElementById('edit_model_author').value,
+        'type': document.getElementById('edit_model_type').value,
+        'description': document.getElementById('edit_model_description').value,
+        'standard_width': parseInt(resolution[0]),
+        'standard_height': parseInt(resolution[1]),
+        'preview_image': ''
+    };
+    if (document.getElementById('edit_model_enable_image').checked) {
+        let img = document.getElementById('edit_model_image').getElementsByTagName('img')[0].src;
+        let index = img.indexOf('/Output/');
+        if (index != -1) {
+            img = img.substring(index);
+        }
+        data['preview_image'] = img;
+    }
+    genericRequest('EditModelMetadata', data, data => {
+        loadModelList(lastModelDir);
+    });
+    $('#edit_model_modal').modal('hide');
+}
+
+function close_edit_model() {
+    $('#edit_model_modal').modal('hide');
+}
+
 function appendModel(container, prefix, model) {
     models[`${prefix}${model.name}`] = model;
     let batch = document.getElementById('current_model').innerText == model.name ? 'model-selected' : (model.loaded ? 'model-loaded' : `image-batch-${Object.keys(models).length % 2}`);
@@ -258,27 +332,26 @@ function appendModel(container, prefix, model) {
     img.src = model.preview_image;
     div.appendChild(img);
     let textBlock = createDiv(null, 'model-descblock');
-    textBlock.innerText = `${model.name}\n${model.description}\n`;
-    let loadButton = createDiv(null, 'model-load-button');
-    loadButton.innerText = 'Load Now';
-    textBlock.appendChild(loadButton);
+    if (model.is_safetensors) {
+        let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
+        textBlock.innerHTML = `${escapeHtml(model.name)}<br>${getLine("Title", model.title)}${getLine("Author", model.author)}${getLine("Type", model.class)}${getLine("Resolution", `${model.standard_width}x${model.standard_height}`)}${getLine("Description", model.description)}`;
+    }
+    else {
+        textBlock.innerHTML = `${escapeHtml(model.name)}<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
+    }
     div.appendChild(textBlock);
     container.appendChild(div);
-    div.addEventListener('click', () => {
+    let menu = createDiv(null, 'model-block-menu-button');
+    menu.innerText = '⬤⬤⬤';
+    menu.addEventListener('click', () => {
+        curModelMenuModel = model;
+        doPopover('modelmenu');
+    });
+    div.appendChild(menu);
+    img.addEventListener('click', () => {
         document.getElementById('input_model').value = model.name;
         document.getElementById('current_model').innerText = model.name;
         loadModelList(lastModelDir);
-    });
-    loadButton.addEventListener('click', () => {
-        document.getElementById('input_model').value = model.name;
-        document.getElementById('current_model').innerText = model.name;
-        for (let possible of container.getElementsByTagName('div')) {
-            possible.classList.remove('model-block-hoverable');
-            possible.parentElement.replaceChild(possible.cloneNode(true), possible);
-        }
-        makeWSRequestT2I('SelectModelWS', {'model': model.name}, data => {
-            loadModelList(lastModelDir);
-        });
     });
 }
 
@@ -313,12 +386,9 @@ function loadModelList(path, isRefresh = false) {
     }, (list) => list.sort(sortModelName));
     if (isRefresh) {
         genericRequest('TriggerRefresh', {}, data => {
-            console.log(`got refresh data ${JSON.stringify(data)}`)
             for (let param of data.list) {
-                console.log(`try update ${param.id}`)
                 let origParam = gen_param_types.find(p => p.id == param.id);
                 if (origParam) {
-                    console.log(`Updating param ${param.id} to ${JSON.stringify(param.values)} is ${origParam.type}`);
                     origParam.values = param.values;
                     if (origParam.type == "dropdown") {
                         let dropdown = document.getElementById(`input_${param.id}`);

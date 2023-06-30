@@ -12,13 +12,13 @@
     --qbutton: #00a0a0;
     --popup-back: #000000;
     --popup-front: #ffffff;
-    --button-background-hover: #005500;
+    --button-background-hover: color-mix(in srgb, #7855e1 70%, black);
     --button-foreground-hover: #aaaaaa;
     --button-border: #3f3f46;
     --button-text: #ffffff;
     --button-background: #7855e1;
     --danger-button-background-hover: color-mix(in srgb, #550000 70%, black);
-    --danger-button-foreground-hover: #ffffff;
+    --danger-button-foreground-hover: #aaaaaa;
     --danger-button-border: #3f3f46;
     --danger-button-text: #ffffff;
     --danger-button-background: #550000;
@@ -300,4 +300,26 @@ textarea, input, select {
     top: -1rem;
     height: 0.5rem;
     cursor: pointer;
+}
+.basic-button {
+    display: inline-block;
+    background-color: var(--button-background);
+    color: var(--button-text);
+    border: 1px solid var(--button-border);
+    font-weight: bold;
+    border-radius: 0.5rem;
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+    cursor: pointer;
+}
+.basic-button:hover {
+    background-color: var(--button-background-hover);
+    color: var(--button-foreground-hover);
+}
+.modal_text_extra {
+    width: 100%;
+    margin-bottom: 0.1rem;
+    border-radius: 0.5rem;
 }

@@ -75,7 +75,7 @@
                                 <div class="modal-body">
                                     <textarea class="auto-text" id="preset_description" rows="3" placeholder="Preset description text..."></textarea>
                                     <span class="form-check form-switch display-inline-block">
-                                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('${id}')"> Use Image
+                                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('new_preset_image')"> Use Image
                                     </span>
                                     <div id="new_preset_image" class="new_preset_image"></div>
                                     <hr>
@@ -90,7 +90,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <span id="new_preset_modal_error" class="new_preset_modal_error"></span>
-                                    <button type="button" class="btn btn-primary" onclick="javascript:save_new_preset()">Save</button>
+                                    <button type="button" class="btn btn-primary basic-button" onclick="javascript:save_new_preset()">Save</button>
                                     <button type="button" class="btn btn-secondary" onclick="javascript:close_create_new_preset()">Cancel</button>
                                 </div>
                             </div>
@@ -100,7 +100,35 @@
                 </div>
                 <div class="tab-pane" id="Models-Tab" role="tabpanel">
                     <button id="model_list_refresh_button" class="refresh-button">Refresh</button> Current Model: <span class="current_model_view" id="current_model"></span>
+                    <div class="sui-popover sui_popover_model" id="popover_modelmenu">
+                        <div class="sui_popover_model_button" onclick="javascript:modelMenuDoLoadNow()">Load Now</div>
+                        <div class="sui_popover_model_button" onclick="javascript:modelMenuDoEdit()">Edit Metadata</div>
+                    </div>
                     <div class="model_list" id="model_list"></div>
+                    <div class="modal" tabindex="-1" role="dialog" id="edit_model_modal">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Model Metadata: <input type="text" class="modal_text_extra" id="edit_model_name" placeholder="Model Name" /></h5>
+                                </div>
+                                <div class="modal-body">
+                                    <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra" placeholder="Model Author" /></div>
+                                    <div>Type: <input type="text" id="edit_model_type" class="modal_text_extra" placeholder="Model Type" /></div>
+                                    <div>Standard Resolution: <input type="text" id="edit_model_resolution" class="modal_text_extra" placeholder="Resolution, eg 1024x1024" /></div>
+                                    <textarea class="auto-text" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
+                                    <span class="form-check form-switch display-inline-block">
+                                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_model_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('edit_model_image')"> Use Image
+                                    </span>
+                                    <div id="edit_model_image" class="new_preset_image"></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <span id="edit_model_modal_error" class="edit_model_modal_error"></span>
+                                    <button type="button" class="btn btn-primary basic-button" onclick="javascript:save_edit_model()">Save</button>
+                                    <button type="button" class="btn btn-secondary" onclick="javascript:close_edit_model()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="tab-pane" id="Tools-Tab" role="tabpanel">
                     <select class="tool-selector" id="tool_selector">

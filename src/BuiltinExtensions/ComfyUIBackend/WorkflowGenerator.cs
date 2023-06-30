@@ -85,8 +85,8 @@ public class WorkflowGenerator
                     ["steps"] = g.UserInput.Steps,
                     ["cfg"] = g.UserInput.CFGScale,
                     // TODO: proper sampler input, and intelligent default scheduler per sampler
-                    ["sampler_name"] = g.UserInput.OtherParams.GetValueOrDefault("comfy_sampler", "euler").ToString(),
-                    ["scheduler"] = g.UserInput.OtherParams.GetValueOrDefault("comfy_scheduler", "normal").ToString(),
+                    ["sampler_name"] = g.UserInput.OtherParams.GetValueOrDefault("comfyui_sampler", "euler").ToString(),
+                    ["scheduler"] = g.UserInput.OtherParams.GetValueOrDefault("comfyui_scheduler", "normal").ToString(),
                     ["positive"] = g.FinalPrompt,
                     ["negative"] = g.FinalNegativePrompt,
                     ["latent_image"] = g.FinalLatentImage,
