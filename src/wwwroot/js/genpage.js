@@ -282,6 +282,18 @@ function appendModel(container, prefix, model) {
     });
 }
 
+function sortModelName(a, b) {
+    let aName = a.name.toLowerCase();
+    let bName = b.name.toLowerCase();
+    if (aName.endsWith('.safetensors') && !bName.endsWith('.safetensors')) {
+        return -1;
+    }
+    if (!aName.endsWith('.safetensors') && bName.endsWith('.safetensors')) {
+        return 1;
+    }
+    return aName.localeCompare(bName);
+}
+
 function loadModelList(path, isRefresh = false) {
     let container = document.getElementById('model_list');
     lastModelDir = path;
@@ -298,7 +310,7 @@ function loadModelList(path, isRefresh = false) {
                 current_model.innerText = model.name;
             }
         }
-    }, (list) => list.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())));
+    }, (list) => list.sort(sortModelName));
     if (isRefresh) {
         genericRequest('TriggerRefresh', {}, data => {
             console.log(`got refresh data ${JSON.stringify(data)}`)
