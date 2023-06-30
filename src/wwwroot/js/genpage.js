@@ -281,11 +281,11 @@ function modelMenuDoEdit() {
         enableImage.checked = true;
         enableImage.disabled = false;
     }
-    document.getElementById('edit_model_name').value = model.title == null ? model.name : model.title;
-    document.getElementById('edit_model_author').value = model.author == null ? '' : model.author;
-    document.getElementById('edit_model_type').value = model.class == null ? '' : model.class;
+    document.getElementById('edit_model_name').value = model.title || model.name;
+    document.getElementById('edit_model_author').value = model.author || '';
+    document.getElementById('edit_model_type').value = model.class || '';
     document.getElementById('edit_model_resolution').value = `${model.standard_width}x${model.standard_height}`;
-    document.getElementById('edit_model_description').value = model.description == null ? '' : model.description;
+    document.getElementById('edit_model_description').value = model.description || '';
     $('#edit_model_modal').modal('show');
 }
 
@@ -385,29 +385,35 @@ function loadModelList(path, isRefresh = false) {
         }
     }, (list) => list.sort(sortModelName));
     if (isRefresh) {
-        genericRequest('TriggerRefresh', {}, data => {
-            for (let param of data.list) {
-                let origParam = gen_param_types.find(p => p.id == param.id);
-                if (origParam) {
-                    origParam.values = param.values;
-                    if (origParam.type == "dropdown") {
-                        let dropdown = document.getElementById(`input_${param.id}`);
-                        let val = dropdown.value;
-                        let html = '';
-                        for (let value of param.values) {
-                            let selected = value == val ? ' selected="true"' : '';
-                            html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
-                        }
-                        dropdown.innerHTML = html;
-                    }
-                }
-            }
-            call();
-        });
+        refreshParameterValues(call);
     }
     else {
         call();
     }
+}
+
+function refreshParameterValues(callback = null) {
+    genericRequest('TriggerRefresh', {}, data => {
+        for (let param of data.list) {
+            let origParam = gen_param_types.find(p => p.id == param.id);
+            if (origParam) {
+                origParam.values = param.values;
+                if (origParam.type == "dropdown") {
+                    let dropdown = document.getElementById(`input_${param.id}`);
+                    let val = dropdown.value;
+                    let html = '';
+                    for (let value of param.values) {
+                        let selected = value == val ? ' selected="true"' : '';
+                        html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
+                    }
+                    dropdown.innerHTML = html;
+                }
+            }
+        }
+        if (callback) {
+            callback();
+        }
+    });
 }
 
 function toggle_advanced() {
@@ -484,7 +490,8 @@ function doPopover(id) {
     else {
         pop.style.display = 'block';
         pop.dataset.visible = "true";
-        pop.style.left = `${mouseX}px`;
+        let x = Math.min(mouseX, window.innerWidth - pop.offsetWidth - 10);
+        pop.style.left = `${x}px`;
         pop.style.top = `${mouseY}px`;
         popHide.push(id);
     }
@@ -662,6 +669,22 @@ function setCurrentModel(callback) {
     }
 }
 
+let pageBarTop = -1;
+let pageBarTop2 = -1;
+let pageBarMid = -1;
+
+let setPageBarsFunc;
+
+function resetPageSizer() {
+    deleteCookie('pageBarTop');
+    deleteCookie('pageBarTop2');
+    deleteCookie('pageBarMid');
+    pageBarTop = -1;
+    pageBarTop2 = -1;
+    pageBarMid = -1;
+    setPageBarsFunc();
+}
+
 function pageSizer() {
     let topSplit = document.getElementById('t2i-top-split-bar');
     let topSplit2 = document.getElementById('t2i-top-2nd-split-bar');
@@ -676,6 +699,70 @@ function pageSizer() {
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
+    function setPageBars() {
+        setCookie('pageBarTop', pageBarTop, 365);
+        setCookie('pageBarTop2', pageBarTop2, 365);
+        setCookie('pageBarMid', pageBarMid, 365);
+        if (pageBarTop != -1) {
+            inputSidebar.style.width = `${pageBarTop}px`;
+            mainInputsAreaWrapper.style.width = `${pageBarTop}px`;
+            mainImageArea.style.width = `calc(100vw - ${pageBarTop}px)`;
+            currentImageBatch.style.width = `calc(100vw - ${pageBarTop}px - min(max(40vw, 28rem), 49vh))`;
+        }
+        else {
+            inputSidebar.style.width = '';
+            mainInputsAreaWrapper.style.width = '';
+            mainImageArea.style.width = '';
+            currentImageBatch.style.width = '';
+        }
+        if (pageBarTop2 != -1) {
+            let adaptedX = pageBarTop2 - inputSidebar.getBoundingClientRect().width - 17;
+            adaptedX = Math.min(Math.max(adaptedX, 100), window.innerWidth - 100);
+            currentImage.style.width = `${adaptedX}px`;
+            currentImageBatch.style.width = `calc(100vw - ${pageBarTop2}px)`;
+        }
+        else {
+            currentImage.style.width = '';
+            currentImageBatch.style.width = '';
+        }
+        if (pageBarMid != -1) {
+            topSplit.style.height = `${pageBarMid}vh`;
+            topSplit2.style.height = `${pageBarMid}vh`;
+            inputSidebar.style.height = `${pageBarMid}vh`;
+            mainInputsAreaWrapper.style.height = `calc(${pageBarMid}vh - 7rem)`;
+            mainImageArea.style.height = `${pageBarMid}vh`;
+            currentImage.style.height = `${pageBarMid}vh`;
+            currentImageBatch.style.height = `calc(${pageBarMid}vh - 2rem)`;
+            topBar.style.height = `${pageBarMid}vh`;
+            let invOff = 100 - pageBarMid;
+            bottomBarContent.style.height = `calc(${invOff}vh - 2rem)`;
+        }
+        else {
+            topSplit.style.height = '';
+            topSplit2.style.height = '';
+            inputSidebar.style.height = '';
+            mainInputsAreaWrapper.style.height = '';
+            mainImageArea.style.height = '';
+            currentImage.style.height = '';
+            currentImageBatch.style.height = '';
+            topBar.style.height = '';
+            bottomBarContent.style.height = '';
+        }
+    }
+    setPageBarsFunc = setPageBars;
+    let cookieA = getCookie('pageBarTop');
+    if (cookieA) {
+        pageBarTop = parseInt(cookieA);
+    }
+    let cookieB = getCookie('pageBarTop2');
+    if (cookieB) {
+        pageBarTop2 = parseInt(cookieB);
+    }
+    let cookieC = getCookie('pageBarMid');
+    if (cookieC) {
+        pageBarMid = parseInt(cookieC);
+    }
+    setPageBars();
     topSplit.addEventListener('mousedown', (e) => {
         topDrag = true;
         e.preventDefault();
@@ -692,31 +779,19 @@ function pageSizer() {
         let offX = e.pageX - 5;
         offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
         if (topDrag) {
-            inputSidebar.style.width = `${offX}px`;
-            mainInputsAreaWrapper.style.width = `${offX}px`;
-            mainImageArea.style.width = `calc(100vw - ${offX}px)`;
-            currentImageBatch.style.width = `calc(100vw - ${offX}px - min(max(40vw, 28rem), 49vh))`;
+            pageBarTop = offX;
+            setPageBars();
         }
         if (topDrag2) {
-            let adaptedX = offX - inputSidebar.getBoundingClientRect().width - 17;
-            adaptedX = Math.min(Math.max(adaptedX, 100), window.innerWidth - 100);
-            currentImage.style.width = `${adaptedX}px`;
-            currentImageBatch.style.width = `calc(100vw - ${offX}px)`;
+            pageBarTop2 = offX;
+            setPageBars();
         }
         if (midDrag) {
             let topY = currentImageBatch.getBoundingClientRect().top;
             let offY = (e.pageY - topY - 2) / window.innerHeight * 100;
             offY = Math.min(Math.max(offY, 5), 95);
-            topSplit.style.height = `${offY}vh`;
-            topSplit2.style.height = `${offY}vh`;
-            inputSidebar.style.height = `${offY}vh`;
-            mainInputsAreaWrapper.style.height = `calc(${offY}vh - 7rem)`;
-            mainImageArea.style.height = `${offY}vh`;
-            currentImage.style.height = `${offY}vh`;
-            currentImageBatch.style.height = `calc(${offY}vh - 2rem)`;
-            topBar.style.height = `${offY}vh`;
-            let invOff = 100 - offY;
-            bottomBarContent.style.height = `calc(${invOff}vh - 2rem)`;
+            pageBarMid = offY;
+            setPageBars();
         }
     });
     document.addEventListener('mouseup', (e) => {
@@ -726,6 +801,9 @@ function pageSizer() {
     });
 }
 
+function show_t2i_quicktools() {
+    doPopover('quicktools');
+}
 
 function loadUserData() {
     genericRequest('GetMyUserData', {}, data => {

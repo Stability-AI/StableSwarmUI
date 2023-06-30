@@ -312,3 +312,12 @@ body {
 .interrupt-line-part {
     display: inline-block;
 }
+.t2i-area-quicktools {
+    right: 3rem;
+    top: 1.5rem;
+    vertical-align: top;
+    background-color: var(--background-soft);
+    border: 1px solid var(--light-border);
+    border-radius: 0.5rem;
+    padding: 0.2rem;
+}
