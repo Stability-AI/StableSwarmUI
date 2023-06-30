@@ -6,10 +6,12 @@ let backends_loaded = {};
 let hasLoadedBackends = false;
 
 function addNewBackend(type_id) {
-    genericRequest('AddNewBackend', {'type_id': type_id}, data => {
-        backends_loaded[data.id] = data;
-        addBackendToHtml(data, false);
-    });
+    if (confirm(`Are you sure you want to add a new backend of type ${backend_types[type_id].name}?`)) {
+        genericRequest('AddNewBackend', {'type_id': type_id}, data => {
+            backends_loaded[data.id] = data;
+            addBackendToHtml(data, false);
+        });
+    }
 }
 
 function addBackendToHtml(backend, disable, spot = null) {
