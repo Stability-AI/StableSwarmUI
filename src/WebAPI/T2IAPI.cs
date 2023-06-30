@@ -90,6 +90,10 @@ public static class T2IAPI
         {
             user_input.Seed = Random.Shared.Next(int.MaxValue);
         }
+        if (user_input.BatchID == 0)
+        {
+            user_input.BatchID = Random.Shared.Next(int.MaxValue);
+        }
         void setError(string message)
         {
             output(new JObject() { ["error"] = message });
@@ -122,7 +126,7 @@ public static class T2IAPI
                             setError($"Server failed to save images.");
                             return;
                         }
-                        output(new JObject() { ["image"] = url });
+                        output(new JObject() { ["image"] = url, ["metadata"] = image.GetMetadata() });
                     }
                 })));
         }
@@ -191,11 +195,11 @@ public static class T2IAPI
                 outputs = await backend.Backend.Generate(user_input);
                 genTime = timer.ElapsedMilliseconds;
             }
-            Logs.Info($"Generated an image in {prepTime / 1000.0:0.00} (prep) and {(genTime - prepTime) / 1000.0:0.00} (gen) seconds");
+            string genTimeReport = $"{prepTime / 1000.0:0.00} (prep) and {(genTime - prepTime) / 1000.0:0.00} (gen) seconds";
+            Logs.Info($"Generated an image in {genTimeReport}");
             saveImages(outputs.Select(i => user_input.SourceSession.ApplyMetadata(i, user_input, new()
             {
-                ["generation_prep_time_ms"] = prepTime,
-                ["generation_time_ms"] = (genTime - prepTime)
+                ["generation_time"] = genTimeReport
             })).ToArray());
         }
         catch (InvalidDataException ex)
@@ -256,7 +260,11 @@ public static class T2IAPI
     public static async Task<JObject> ListImages(Session session, string path)
     {
         string root = $"{Environment.CurrentDirectory}/{Program.ServerSettings.OutputPath}/{session.User.UserID}";
-        return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject() { ["src"] = name, ["batch_id"] = name.EndsWith(".html") ? 1 : 0 });
+        return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject()
+        {
+            ["src"] = name,
+            ["metadata"] = ImageMetadataTracker.GetMetadataFor(file)
+        });
     }
 
     public static HashSet<string> ModelExtensions = new() { "safetensors", "ckpt" };

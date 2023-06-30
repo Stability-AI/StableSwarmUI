@@ -14,10 +14,10 @@ public class T2IParams : IDataHolder
     [NetData(Name = "prompt")]
     public string Prompt = "";
 
-    [NetData(Name = "negative_prompt")]
+    [NetData(Name = "negativeprompt")]
     public string NegativePrompt = "";
 
-    [NetData(Name = "cfg_scale")]
+    [NetData(Name = "cfgscale")]
     public float CFGScale = 7;
 
     [NetData(Name = "seed")]
@@ -32,17 +32,20 @@ public class T2IParams : IDataHolder
     [NetData(Name = "steps")]
     public int Steps = 20;
 
-    [NetData(Name = "var_seed")]
+    [NetData(Name = "variationseed")]
     public long VarSeed = -1;
 
-    [NetData(Name = "var_seed_strength")]
+    [NetData(Name = "variationseedstrength")]
     public float VarSeedStrength = 0;
 
-    [NetData(Name = "backend_type")]
+    [NetData(Name = "internalbackendtype")]
     public string BackendType = "any";
 
-    [NetData(Name = "image_init_strength")]
+    [NetData(Name = "imageinitcreativity")]
     public float ImageInitStrength = 0.6f;
+
+    /// <summary>Arbitrary ID to uniquely identify a batch of images.</summary>
+    public int BatchID;
 
     /// <summary>What model the user wants this image generated with.</summary>
     public T2IModel Model;
@@ -101,28 +104,33 @@ public class T2IParams : IDataHolder
         return true;
     }
 
-    public JObject ToJson()
+    public string GenMetadata(Dictionary<string, object> extraParams)
     {
-        return new JObject()
+        JObject data = new()
         {
             ["prompt"] = Prompt,
-            ["negative_prompt"] = NegativePrompt,
-            ["cfg_scale"] = CFGScale,
+            ["negativeprompt"] = NegativePrompt,
+            ["cfgscale"] = CFGScale,
             ["seed"] = Seed,
             ["width"] = Width,
             ["height"] = Height,
             ["steps"] = Steps,
-            ["var_seed"] = VarSeed,
-            ["var_seed_strength"] = VarSeedStrength,
-            ["image_init_strength"] = ImageInitStrength,
-            ["model"] = Model.Name,
-            ["other_params"] = JObject.FromObject(OtherParams)
+            ["variationseed"] = VarSeed,
+            ["variationseedstrength"] = VarSeedStrength,
+            ["imageinitcreativity"] = ImageInitStrength,
+            ["model"] = Model.Name
         };
-    }
-
-    public string GenMetadata(Dictionary<string, object> extraParams)
-    {
-        JObject data = ToJson();
+        if (BackendType != "any")
+        {
+            data["internalbackendtype"] = BackendType;
+        }
+        foreach ((string key, object val) in OtherParams)
+        {
+            if (val is not null)
+            {
+                data[key] = JToken.FromObject(val);
+            }
+        }
         if (extraParams is not null)
         {
             foreach ((string key, object val) in extraParams)

@@ -41,6 +41,16 @@ public class Image
         JPG75
     }
 
+    /// <summary>Returns the metadata from this image, or null if none.</summary>
+    public string GetMetadata()
+    {
+        if (ToIS.Metadata?.ExifProfile?.TryGetValue(ExifTag.Model, out var data) ?? false)
+        {
+            return data.Value;
+        }
+        return null;
+    }
+
     /// <summary>Converts an image to the specified format, and the specific metadata text.</summary>
     public Image ConvertTo(string format, string metadata = null, int dpi = 0)
     {

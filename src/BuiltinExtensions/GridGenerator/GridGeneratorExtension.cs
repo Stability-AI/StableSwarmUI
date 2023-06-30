@@ -141,7 +141,7 @@ public class GridGeneratorExtension : Extension
                         Directory.CreateDirectory(dir);
                     }
                     File.WriteAllBytes(targetPath, outputs[0].ImageData);
-                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}" });
+                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}", ["metadata"] = outputs[0].GetMetadata() });
                 }));
             lock (data.UpdateLock)
             {
@@ -221,7 +221,7 @@ public class GridGeneratorExtension : Extension
     public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
         using Session.GenClaim claim = session.Claim(gens: 1);
-        T2IParams baseParams = new(session);
+        T2IParams baseParams = new(session) { BatchID = Random.Shared.Next(int.MaxValue) };
         try
         {
             foreach ((string key, JToken val) in (raw["baseParams"] as JObject))

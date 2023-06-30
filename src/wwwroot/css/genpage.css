@@ -112,6 +112,11 @@ body {
     width: calc(min(max(40vw, 28rem), 49vh));
     height: 49vh;
     vertical-align: top;
+    overflow: scroll;
+}
+.current-image-data {
+    white-space: pre-wrap;
+    font-size: 80%;
 }
 .current_image img {
     max-width: 100%;
@@ -324,4 +329,13 @@ body {
     border: 1px solid var(--light-border);
     border-radius: 0.5rem;
     padding: 0.2rem;
+}
+.param_view_block {
+    border-radius: 0.3rem;
+    border: 1px solid var(--light-border);
+    display: inline-block;
+}
+.param_view {
+    border-radius: 0.3rem;
+    background-color: color-mix(in srgb, var(--emphasis) 25%, transparent);
 }

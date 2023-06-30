@@ -136,7 +136,7 @@ function gridGen_register() {
         data['gridAxes'] = axisData;
         makeWSRequestT2I('GridGenRun', data, data => {
             if (data.image) {
-                gotImageResult(data.image);
+                gotImageResult(data.image, data.metadata);
             }
             else if (data.success) {
                 outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="Output/${outputFolder.value}/index.html" target="_blank">Output/<code>${outputFolder.value}</code></a>`;

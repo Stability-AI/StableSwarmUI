@@ -17,17 +17,17 @@ let shouldApplyDefault = false;
 const time_started = Date.now();
 
 function clickImageInBatch(div) {
-    setCurrentImage(div.getElementsByTagName('img')[0].src);
+    setCurrentImage(div.getElementsByTagName('img')[0].src, div.dataset.metadata);
 }
 
 function selectImageInHistory(div) {
     let batchId = div.dataset.batch_id;
     document.getElementById('current_image_batch').innerHTML = '';
     for (let img of document.getElementById('image_history').querySelectorAll(`[data-batch_id="${batchId}"]`)) {
-        let batch_div = appendImage('current_image_batch', img.getElementsByTagName('img')[0].src, batchId, '(TODO)');
+        let batch_div = appendImage('current_image_batch', img.getElementsByTagName('img')[0].src, batchId, img.dataset.preview_text, img.dataset.metadata);
         batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
     }
-    setCurrentImage(div.getElementsByTagName('img')[0].src);
+    setCurrentImage(div.getElementsByTagName('img')[0].src, div.dataset.metadata);
 }
 
 function upscale_current_image() {
@@ -45,32 +45,85 @@ function star_current_image() {
     alert('Stars are TODO');
 }
 
+let currentMetadataVal = null;
+
 function copy_current_image_params() {
-    alert('TODO');
+    if (!currentMetadataVal) {
+        alert("No parameters to copy!");
+        return;
+    }
+    let metadata = JSON.parse(currentMetadataVal).stableui_image_params;
+    for (let param of gen_param_types) {
+        let elem = document.getElementById(`input_${param.id}`);
+        if (metadata[param.id]) {
+            if (param.type == "boolean") {
+                elem.checked = metadata[param.id] == "true";
+            }
+            else {
+                elem.value = metadata[param.id];
+            }
+            if (param.toggleable) {
+                let toggle = document.getElementById(`input_${param.id}_toggle`);
+                toggle.checked = true;
+                doToggleEnable(elem.id);
+            }
+        }
+        else if (param.toggleable) {
+            let toggle = document.getElementById(`input_${param.id}_toggle`);
+            toggle.checked = false;
+            doToggleEnable(elem.id);
+        }
+    }
 }
 
-function setCurrentImage(src) {
+function formatMetadata(metadata) {
+    if (!metadata) {
+        return '';
+    }
+    let data = JSON.parse(metadata).stableui_image_params;
+    let result = '';
+    function appendObject(obj) {
+        for (let key of Object.keys(obj)) {
+            let val = obj[key];
+            if (val) {
+                if (typeof val == 'object') {
+                    appendObject(val);
+                }
+                else {
+                    result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: <span class="param_view">${escapeHtml(`${val}`)}</span></span>, `;
+                }
+            }
+        }
+    };
+    appendObject(data);
+    return result;
+}
+
+function setCurrentImage(src, metadata = '') {
     let curImg = document.getElementById('current_image');
     curImg.innerHTML = '';
     let img = document.createElement('img');
     img.src = src;
     curImg.appendChild(img);
+    currentMetadataVal = metadata;
     let buttons = createDiv(null, 'current-image-buttons');
     buttons.innerHTML = `<button class="cur-img-button" onclick="javascript:upscale_current_image()">Upscale 2x</button>
     <button class="cur-img-button" onclick="javascript:star_current_image()">Star</button>
     <button class="cur-img-button" onclick="javascript:copy_current_image_params()">Copy Parameters</button>`;
     curImg.appendChild(buttons);
     let data = createDiv(null, 'current-image-data');
-    data.innerText = "TODO: Metadata";
+    data.innerHTML = formatMetadata(metadata);
     curImg.appendChild(data);
 }
 
-function appendImage(container, imageSrc, batchId, textPreview) {
+function appendImage(container, imageSrc, batchId, textPreview, metadata = '') {
     if (typeof container == 'string') {
         container = document.getElementById(container);
     }
     let div = createDiv(null, `image-block image-batch-${batchId == "folder" ? "folder" : (batchId % 2)}`);
     div.dataset.batch_id = batchId;
+    div.dataset.preview_text = textPreview;
+    div.dataset.metadata = metadata;
     let img = document.createElement('img');
     img.addEventListener('load', () => {
         let ratio = img.width / img.height;
@@ -87,14 +140,15 @@ function appendImage(container, imageSrc, batchId, textPreview) {
     return div;
 }
 
-function gotImageResult(image) {
+function gotImageResult(image, metadata) {
     updateGenCount();
     let src = image;
-    let batch_div = appendImage('current_image_batch', src, batches, '(TODO)');
+    let fname = src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
+    let batch_div = appendImage('current_image_batch', src, batches, fname, metadata);
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
-    let history_div = appendImage('image_history', src, batches, '(TODO)');
+    let history_div = appendImage('image_history', src, batches, fname, metadata);
     history_div.addEventListener('click', () => selectImageInHistory(history_div));
-    setCurrentImage(src);
+    setCurrentImage(src, metadata);
 }
 
 function getGenInput() {
@@ -192,7 +246,7 @@ function doGenerate() {
         document.getElementById('current_image_batch').innerHTML = '';
         batches++;
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(), data => {
-            gotImageResult(data.image);
+            gotImageResult(data.image, data.metadata);
         });
     });
 }
@@ -245,14 +299,21 @@ function loadHistory(path) {
     container.innerHTML = '';
     loadFileList('ListImages', path, container, loadHistory, (prefix, img) => {
         let fullSrc = `Output/${prefix}${img.src}`;
-        let div = appendImage('image_history', fullSrc, img.batch_id, img.src);
+        let batchId = 0;
+        if (img.metadata) {
+            batchId = parseInt(JSON.parse(img.metadata).stableui_image_params.batch_id);
+        }
+        else if (img.src.endsWith('.html')) {
+            batchId = 'folder';
+        }
+        let div = appendImage('image_history', fullSrc, batchId, img.src, img.metadata);
         if (img.src.endsWith('.html')) {
             div.addEventListener('click', () => window.open(fullSrc, '_blank'));
         }
         else {
             div.addEventListener('click', () => selectImageInHistory(div));
         }
-    }, null, (list) => list.sort((a, b) => b.src.toLowerCase().localeCompare(a.src.toLowerCase())).sort((a, b) => b.batch_id - a.batch_id));
+    }, null, (list) => list.sort((a, b) => a.src.toLowerCase().localeCompare(b.src.toLowerCase())));
 }
 
 let models = {};
