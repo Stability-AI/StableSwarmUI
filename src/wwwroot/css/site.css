@@ -197,6 +197,7 @@ body {
 }
 .auto-input-fade-lock {
     mask-image: linear-gradient(to right, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 70%, transparent 100%);
 }
 .auto-text {
     width: 100%;
