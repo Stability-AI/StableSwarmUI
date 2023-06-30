@@ -3,11 +3,17 @@
     margin-bottom: 0.5rem;
 }
 .grid-gen-run-button {
-    background-color: orange;
+    background-color: var(--button-background);
+    color: var(--button-text);
+    border: 1px solid var(--button-border);
     font-size: 200%;
     font-weight: bold;
     padding: 1rem;
     border-radius: 1rem;
+}
+.grid-gen-run-button:hover {
+    background-color: var(--button-background-hover);
+    color: var(--button-foreground-hover);
 }
 .grid-gen-axis-area {
     border-radius: 1rem;

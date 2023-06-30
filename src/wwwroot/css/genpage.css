@@ -7,7 +7,9 @@ body {
     border-radius: 0.5rem;
 }
 .generate-button {
-    background-color: orange;
+    background-color: var(--button-background);
+    color: var(--button-text);
+    border: 1px solid var(--button-border);
     font-size: 200%;
     font-weight: bold;
     padding: 1rem;
@@ -18,17 +20,21 @@ body {
     margin-bottom: 0.5rem;
 }
 .generate-button:hover {
-    background-color: color-mix(in srgb, orange 70%, black);
+    background-color: var(--button-background-hover);
+    color: var(--button-foreground-hover);
 }
 .interrupt-button {
-    background-color: #550000;
+    background-color: var(--danger-button-background);
+    color: var(--danger-button-foreground);
+    border: 1px solid var(--danger-button-border);
     font-weight: bold;
     padding: 0.2rem;
     border-radius: 0.7rem;
     margin-left: 2rem;
 }
 .interrupt-button:hover {
-    background-color: color-mix(in srgb, #550000 70%, black);
+    background-color: var(--danger-button-background-hover);
+    color: var(--danger-button-foreground-hover);
 }
 .splitter-bar {
     display: inline-block;
@@ -36,7 +42,7 @@ body {
     margin: 0px;
 }
 .splitter-bar:hover {
-    background-color: var(--shadow);
+    background-color: var(--emphasis);
 }
 .t2i-top-split-bar {
     height: 50vh;
@@ -139,13 +145,13 @@ body {
     display: block;
 }
 .image-block:hover {
-    background-color: var(--shadow);
+    background-color: var(--emphasis);
 }
 .image-batch-0 {
-    background-color: rgba(200, 200, 255, 0.3);
+    background-color: var(--batch-0);
 }
 .image-batch-1 {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: var(--batch-1);
 }
 .image-batch-folder {
     width: 6rem;
@@ -184,15 +190,16 @@ body {
     background-color: rgba(220, 255, 220, 0.3);
 }
 .model-block-hoverable:hover {
-    background-color: var(--shadow);
+    background-color: var(--emphasis);
 }
 .model-block-hoverable:hover img {
     border: 2px solid white;
 }
 .model-load-button {
     display: inline-block;
-    background-color: orange;
-    color: white;
+    background-color: var(--button-background);
+    color: var(--button-text);
+    border: 1px solid var(--button-border);
     font-weight: bold;
     border-radius: 0.5rem;
     margin-left: 0.2rem;
@@ -202,7 +209,8 @@ body {
     cursor: pointer;
 }
 .model-load-button:hover {
-    background-color: color-mix(in srgb, orange 70%, black);
+    background-color: var(--button-background-hover);
+    color: var(--button-foreground-hover);
 }
 .model-block img {
     max-height: 8rem;
@@ -222,14 +230,14 @@ body {
 }
 .refresh-button {
     margin: 0.5rem;
-    background-color: #55aa55;
-    color: #000000;
+    background-color: var(--button-background);
+    color: var(--button-text);
     border-radius: 0.5rem;
-    border: 1px solid #000000;
+    border: 1px solid var(--button-border);
 }
 .refresh-button:hover {
-    background-color: #005500;
-    color: #aaaaaa;
+    background-color: var(--button-background-hover);
+    color: var(--button-foreground-hover);
 }
 .tool-container .tool {
     display: none;

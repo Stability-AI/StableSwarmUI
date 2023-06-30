@@ -1,14 +1,29 @@
 :root {
-    --background: #0b0f20;
-    --background-soft: #203040;
-    --background-gray: #1f2336;
+    --background: #18181b;
+    --background-soft: #27272a;
+    --background-gray: #27272a;
     --background-gray-danger: #361f1f;
     --background-danger: #200b0b;
-    --shadow: #404080;
-    --light-border: #a0c0c0;
+    --shadow: #3f3f46;
+    --emphasis: #7855e1;
+    --light-border: #3f3f46;
     --red: #ff0000;
     --green: #00ff00;
     --qbutton: #00a0a0;
+    --popup-back: #000000;
+    --popup-front: #ffffff;
+    --button-background-hover: #005500;
+    --button-foreground-hover: #aaaaaa;
+    --button-border: #3f3f46;
+    --button-text: #ffffff;
+    --button-background: #7855e1;
+    --danger-button-background-hover: color-mix(in srgb, #550000 70%, black);
+    --danger-button-foreground-hover: #ffffff;
+    --danger-button-border: #3f3f46;
+    --danger-button-text: #ffffff;
+    --danger-button-background: #550000;
+    --batch-0: rgba(200, 200, 255, 0.3);
+    --batch-1: rgba(255, 255, 255, 0.3);
 }
 .modal-content {
     background-color: var(--background) !important;
@@ -242,8 +257,8 @@ textarea, input, select {
     color: #000000 !important;
 }
 .sui-popover {
-    background-color: black;
-    color: white;
+    background-color: var(--popup-back);
+    color: var(--popup-front);
     border: 1px solid gray;
     border-radius: 0.5rem;
     padding: 0.5rem;
