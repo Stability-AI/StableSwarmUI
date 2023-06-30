@@ -162,6 +162,7 @@ public class T2IModelHandler
             Logs.Debug($"Not loading metadata for {model.Name} as it is not safetensors.");
             return;
         }
+        Logs.Debug($"Trying to read metadata for {model.Name}");
         string folder = model.RawFilePath.Replace('\\', '/').BeforeAndAfterLast('/', out string fileName);
         long modified = ((DateTimeOffset)File.GetLastWriteTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds();
         ILiteCollection<ModelMetadataStore> cache = GetCacheForFolder(folder);
@@ -197,8 +198,8 @@ public class T2IModelHandler
                 Author = metaHeader?.Value<string>("author"),
                 Description = metaHeader?.Value<string>("description"),
                 PreviewImage = metaHeader?.Value<string>("preview_image"),
-                StandardWidth = metaHeader.ContainsKey("standard_width") ? metaHeader.Value<int>("standard_width") : (clazz?.StandardWidth ?? 0),
-                StandardHeight = metaHeader.ContainsKey("standard_height") ? metaHeader.Value<int>("standard_height") : (clazz?.StandardHeight ?? 0)
+                StandardWidth = (metaHeader?.ContainsKey("standard_width") ?? false) ? metaHeader.Value<int>("standard_width") : (clazz?.StandardWidth ?? 0),
+                StandardHeight = (metaHeader?.ContainsKey("standard_height") ?? false) ? metaHeader.Value<int>("standard_height") : (clazz?.StandardHeight ?? 0)
             };
             lock (MetadataLock)
             {
