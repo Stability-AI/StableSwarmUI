@@ -244,8 +244,14 @@ function loadHistory(path) {
     lastImageDir = path;
     container.innerHTML = '';
     loadFileList('ListImages', path, container, loadHistory, (prefix, img) => {
-        let div = appendImage('image_history', `Output/${prefix}${img.src}`, img.batch_id, img.src);
-        div.addEventListener('click', () => selectImageInHistory(div));
+        let fullSrc = `Output/${prefix}${img.src}`;
+        let div = appendImage('image_history', fullSrc, img.batch_id, img.src);
+        if (img.src.endsWith('.html')) {
+            div.addEventListener('click', () => window.open(fullSrc, '_blank'));
+        }
+        else {
+            div.addEventListener('click', () => selectImageInHistory(div));
+        }
     }, null, (list) => list.sort((a, b) => b.src.toLowerCase().localeCompare(a.src.toLowerCase())).sort((a, b) => b.batch_id - a.batch_id));
 }
 
