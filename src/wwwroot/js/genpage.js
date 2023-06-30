@@ -258,6 +258,7 @@ function modelMenuDoLoadNow() {
     }
     document.getElementById('input_model').value = curModelMenuModel.name;
     document.getElementById('current_model').innerText = curModelMenuModel.name;
+    setCookie('selected_model', curModelMenuModel.name);
     makeWSRequestT2I('SelectModelWS', {'model': curModelMenuModel.name}, data => {
         loadModelList(lastModelDir);
     });
@@ -351,6 +352,7 @@ function appendModel(container, prefix, model) {
     img.addEventListener('click', () => {
         document.getElementById('input_model').value = model.name;
         document.getElementById('current_model').innerText = model.name;
+        setCookie('selected_model', model.name);
         loadModelList(lastModelDir);
     });
 }
@@ -668,6 +670,11 @@ function genInputs() {
                 });
             }
         }
+    }
+    let modelCookie = getCookie('selected_model');
+    if (modelCookie) {
+        document.getElementById('input_model').value = modelCookie;
+        document.getElementById('current_model').innerText = modelCookie;
     }
 }
 
