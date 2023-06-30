@@ -1,7 +1,13 @@
 
+let allPresets = [];
 let currentPresets = [];
 
 let preset_to_edit = null;
+
+function getPresetByTitle(title) {
+    title = title.toLowerCase();
+    return allPresets.find(p => p.title.toLowerCase() == title);
+}
 
 function getPresetTypes() {
     return gen_param_types.filter(type => type.visible && (!type.toggleable || document.getElementById(`input_${type.id}_toggle`).checked));
@@ -165,23 +171,27 @@ function updatePresetList() {
     document.getElementById('preset_info_slot').innerText = ` (${currentPresets.length}, overriding ${overrideCount} params)`;
 }
 
-function apply_presets() {
-    for (let preset of currentPresets) {
-        for (let key of Object.keys(preset.param_map)) {
-            let param = gen_param_types.filter(p => p.id == key)[0];
-            if (param) {
-                let elem = document.getElementById(`input_${param.id}`);
-                if (param.type == "boolean") {
-                    elem.checked = preset.param_map[key];
-                }
-                else if (preset.param_map[key].includes("{value}")) {
-                    elem.value = preset.param_map[key].replace("{value}", elem.value);
-                }
-                else {
-                    elem.value = preset.param_map[key];
-                }
+function applyOnePreset(preset) {
+    for (let key of Object.keys(preset.param_map)) {
+        let param = gen_param_types.filter(p => p.id == key)[0];
+        if (param) {
+            let elem = document.getElementById(`input_${param.id}`);
+            if (param.type == "boolean") {
+                elem.checked = preset.param_map[key];
+            }
+            else if (preset.param_map[key].includes("{value}")) {
+                elem.value = preset.param_map[key].replace("{value}", elem.value);
+            }
+            else {
+                elem.value = preset.param_map[key];
             }
         }
+    }
+}
+
+function apply_presets() {
+    for (let preset of currentPresets) {
+        applyOnePreset(preset);
     }
     currentPresets = [];
     updatePresetList();
@@ -217,7 +227,28 @@ function editPreset(preset) {
     $('#add_preset_modal').modal('show');
 }
 
+let currPresetMenuPreset = null;
+
+function presetMenuEdit() {
+    if (currPresetMenuPreset == null) {
+        return;
+    }
+    editPreset(currPresetMenuPreset);
+}
+
+function presetMenuDelete() {
+    if (currPresetMenuPreset == null) {
+        return;
+    }
+    if (confirm("Are you sure want to delete that preset?")) {
+        genericRequest('DeletePreset', { preset: preset.title }, data => {
+            loadUserData();
+        });
+    }
+}
+
 function addPreset(preset) {
+    allPresets.push(preset);
     let div = createDiv(null, 'model-block preset-block');
     let img = document.createElement('img');
     img.src = preset.preview_image;
@@ -233,23 +264,20 @@ function addPreset(preset) {
         }
     });
     desc.appendChild(addButton);
-    let editButton = createDiv(null, 'basic-button');
-    editButton.innerText = ' Edit ';
-    editButton.addEventListener('click', () => {
-        editPreset(preset);
+    let applyButton = createDiv(null, 'basic-button');
+    applyButton.innerText = ' Direct Apply ';
+    applyButton.addEventListener('click', () => {
+        applyOnePreset(preset);
     });
-    desc.appendChild(editButton);
-    let deleteButton = createDiv(null, 'basic-button');
-    deleteButton.innerText = ' Delete ';
-    deleteButton.addEventListener('click', () => {
-        if (confirm("Are you sure want to delete that preset?")) {
-            genericRequest('DeletePreset', { preset: preset.title }, data => {
-                loadUserData();
-            });
-        }
-    });
-    desc.appendChild(deleteButton);
+    desc.appendChild(applyButton);
     div.appendChild(desc);
+    let menu = createDiv(null, 'model-block-menu-button');
+    menu.innerText = '⬤⬤⬤';
+    menu.addEventListener('click', () => {
+        currPresetMenuPreset = preset;
+        doPopover('presetmenu');
+    });
+    div.appendChild(menu);
     div.title = Object.keys(preset.param_map).map(key => `${key}: ${preset.param_map[key]}`).join('\n');
     document.getElementById('preset_list').appendChild(div);
 }

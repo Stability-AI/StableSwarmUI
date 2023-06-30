@@ -12,6 +12,8 @@ let input_overrides = {};
 
 let num_current_gens = 0, num_models_loading = 0, num_live_gens = 0, num_backends_waiting = 0;
 
+let shouldApplyDefault = false;
+
 const time_started = Date.now();
 
 function clickImageInBatch(div) {
@@ -258,7 +260,7 @@ function modelMenuDoLoadNow() {
     }
     document.getElementById('input_model').value = curModelMenuModel.name;
     document.getElementById('current_model').innerText = curModelMenuModel.name;
-    setCookie('selected_model', curModelMenuModel.name);
+    setCookie('selected_model', curModelMenuModel.name, 90);
     makeWSRequestT2I('SelectModelWS', {'model': curModelMenuModel.name}, data => {
         loadModelList(lastModelDir);
     });
@@ -352,7 +354,7 @@ function appendModel(container, prefix, model) {
     img.addEventListener('click', () => {
         document.getElementById('input_model').value = model.name;
         document.getElementById('current_model').innerText = model.name;
-        setCookie('selected_model', model.name);
+        setCookie('selected_model', model.name, 90);
         loadModelList(lastModelDir);
     });
 }
@@ -436,6 +438,11 @@ function resetParamsToDefault() {
                 doToggleEnable(id);
             }
         }
+    }
+    let defaultPreset = getPresetByTitle('default');
+    console.log(`Found default = ${defaultPreset}`)
+    if (defaultPreset) {
+        applyOnePreset(defaultPreset);
     }
 }
 
@@ -639,11 +646,13 @@ function genInputs() {
         target.addEventListener('input', resTrick);
     }
     resTrick();
+    shouldApplyDefault = true;
     for (let param of gen_param_types) {
         if (!param.hidden) {
             let elem = document.getElementById(`input_${param.id}`);
             let cookie = getCookie(`lastparam_input_${param.id}`);
             if (cookie) {
+                shouldApplyDefault = false;
                 if (param.type == "boolean") {
                     elem.checked = cookie == "true";
                 }
@@ -653,10 +662,10 @@ function genInputs() {
             }
             elem.addEventListener('input', () => {
                 if (param.type == "boolean") {
-                    setCookie(`lastparam_input_${param.id}`, elem.checked);
+                    setCookie(`lastparam_input_${param.id}`, elem.checked, 0.25);
                 }
                 else {
-                    setCookie(`lastparam_input_${param.id}`, elem.value);
+                    setCookie(`lastparam_input_${param.id}`, elem.value, 0.25);
                 }
             });
             if (param.toggleable) {
@@ -666,7 +675,7 @@ function genInputs() {
                     toggler.checked = cookie == "true";
                 }
                 toggler.addEventListener('change', () => {
-                    setCookie(`lastparam_input_${param.id}_toggle`, toggler.checked);
+                    setCookie(`lastparam_input_${param.id}_toggle`, toggler.checked, 0.25);
                 });
             }
         }
@@ -867,9 +876,17 @@ function show_t2i_quicktools() {
 
 function loadUserData() {
     genericRequest('GetMyUserData', {}, data => {
+        allPresets = [];
         document.getElementById('preset_list').innerHTML = '';
-        for (let preset of data.presets) {
+        for (let preset of data.presets.sort((a, b) => a.title.toLowerCase() == "default" ? -1 : (b.title.toLowerCase() == "default" ? 1 : 0))) {
             addPreset(preset);
+        }
+        if (shouldApplyDefault) {
+            shouldApplyDefault = false;
+            let defaultPreset = getPresetByTitle('default');
+            if (defaultPreset) {
+                applyOnePreset(defaultPreset);
+            }
         }
     });
 }

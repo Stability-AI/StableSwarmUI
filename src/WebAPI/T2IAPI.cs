@@ -209,7 +209,7 @@ public static class T2IAPI
         }
     }
 
-    public static HashSet<string> ImageExtensions = new() { "png", "jpg" };
+    public static HashSet<string> ImageExtensions = new() { "png", "jpg", "html" };
 
     /// <summary>API route to get a list of available history images.</summary>
     private static JObject GetListAPIInternal(Session session, string path, string root, HashSet<string> extensions, Func<string, bool> isAllowed, Func<string, string, JObject> valToObj)
@@ -245,7 +245,7 @@ public static class T2IAPI
     public static async Task<JObject> ListImages(Session session, string path)
     {
         string root = $"{Environment.CurrentDirectory}/{Program.ServerSettings.OutputPath}/{session.User.UserID}";
-        return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject() { ["src"] = name, ["batch_id"] = 0 });
+        return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject() { ["src"] = name, ["batch_id"] = name.EndsWith(".html") ? 1 : 0 });
     }
 
     public static HashSet<string> ModelExtensions = new() { "safetensors", "ckpt" };

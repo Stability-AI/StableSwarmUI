@@ -188,6 +188,7 @@ body {
     position: absolute;
     top: 0.1rem;
     right: 0.2rem;
+    border: 1px solid transparent;
 }
 .model-block-menu-button:hover {
     background-color: var(--emphasis);
