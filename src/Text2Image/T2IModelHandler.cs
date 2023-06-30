@@ -103,7 +103,7 @@ public class T2IModelHandler
         lock (ModificationLock)
         {
             Models.Clear();
-            AddAllFromFolder("");
+            _ = AddAllFromFolder(""); // Note: don't wait, would cause lock problems.
         }
     }
 
@@ -209,7 +209,7 @@ public class T2IModelHandler
     }
 
     /// <summary>Internal model adder route. Do not call.</summary>
-    public void AddAllFromFolder(string folder)
+    public async Task AddAllFromFolder(string folder)
     {
         if (IsShutdown)
         {
@@ -219,10 +219,11 @@ public class T2IModelHandler
         {
             return;
         }
+        List<Task> tasks = new();
         string prefix = folder == "" ? "" : $"{folder}/";
         foreach (string subfolder in Directory.EnumerateDirectories($"{Program.ServerSettings.SDModelFullPath}/{folder}"))
         {
-            AddAllFromFolder($"{prefix}{subfolder.AfterLast('/')}");
+            tasks.Add(AddAllFromFolder($"{prefix}{subfolder.AfterLast('/')}"));
         }
         foreach (string file in Directory.EnumerateFiles($"{Program.ServerSettings.SDModelFullPath}/{folder}"))
         {
@@ -238,7 +239,7 @@ public class T2IModelHandler
                     PreviewImage = "imgs/model_placeholder.jpg",
                 };
                 Models[fullFilename] = model;
-                Task.Run(() => LoadMetadata(model));
+                tasks.Add(Task.Run(() => LoadMetadata(model)));
             }
             else if (fn.EndsWith(".ckpt"))
             {
@@ -251,5 +252,6 @@ public class T2IModelHandler
                 };
             }
         }
+        await Task.WhenAll(tasks);
     }
 }
