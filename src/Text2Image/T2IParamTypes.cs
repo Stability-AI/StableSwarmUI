@@ -161,6 +161,9 @@ public class T2IParamTypes
         Register(new("Variation Seed Strength", "How strongly to apply the variation seed.\n0 = don't use, 1 = replace the base seed entirely. 0.5 is a good value.",
             T2IParamDataType.DECIMAL, "0", (s, p) => p.VarSeedStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, NumberView: NumberViewType.SLIDER, Group: "Variation Seed", GroupOpen: false
             ));
+        Register(new("Aspect Ratio", "Image aspect ratio. Some models can stretch better than others.",
+            T2IParamDataType.DROPDOWN, "1:1", (s, p) => p.OtherParams["aspectratio"] = s, GetValues: (_) => new() { "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom" }, OrderPriority: -10.1, Group: "Resolution"
+            ));
         Register(new("Width", "Image width, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
             T2IParamDataType.INTEGER, "512", (s, p) => p.Width = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
             ));

@@ -14,6 +14,8 @@ let num_current_gens = 0, num_models_loading = 0, num_live_gens = 0, num_backend
 
 let shouldApplyDefault = false;
 
+let curModelWidth = 0, curModelHeight = 0;
+
 const time_started = Date.now();
 
 function clickImageInBatch(div) {
@@ -325,9 +327,7 @@ function modelMenuDoLoadNow() {
     if (curModelMenuModel == null) {
         return;
     }
-    document.getElementById('input_model').value = curModelMenuModel.name;
-    document.getElementById('current_model').innerText = curModelMenuModel.name;
-    setCookie('selected_model', curModelMenuModel.name, 90);
+    directSetModel(curModelMenuModel);
     makeWSRequestT2I('SelectModelWS', {'model': curModelMenuModel.name}, data => {
         loadModelList(lastModelDir);
     });
@@ -419,9 +419,7 @@ function appendModel(container, prefix, model) {
     });
     div.appendChild(menu);
     img.addEventListener('click', () => {
-        document.getElementById('input_model').value = model.name;
-        document.getElementById('current_model').innerText = model.name;
-        setCookie('selected_model', model.name, 90);
+        directSetModel(model);
         loadModelList(lastModelDir);
     });
 }
@@ -450,8 +448,7 @@ function loadModelList(path, isRefresh = false) {
         if (current_model.innerText == '') {
             let model = Object.values(models).find(m => m.loaded);
             if (model) {
-                document.getElementById('input_model').value = model.name;
-                current_model.innerText = model.name;
+                directSetModel(model);
             }
         }
     }, (list) => list.sort(sortModelName));
@@ -701,17 +698,49 @@ function genInputs() {
             doToggleEnable(`input_${param.id}`);
         }
     }
+    let inputAspectRatio = document.getElementById('input_aspectratio');
     let inputWidth = document.getElementById('input_width');
+    let inputWidthParent = findParentOfClass(inputWidth, 'auto-input');
     let inputWidthSlider = document.getElementById('input_width_rangeslider');
     let inputHeight = document.getElementById('input_height');
+    let inputHeightParent = findParentOfClass(inputHeight, 'auto-input');
     let inputHeightSlider = document.getElementById('input_height_rangeslider');
     let resGroupLabel = findParentOfClass(inputWidth, 'input-group').getElementsByClassName('input-group-header')[0];
     let resTrick = () => {
+        if (inputAspectRatio.value == "Custom") {
+            inputWidthParent.style.display = 'block';
+            inputHeightParent.style.display = 'block';
+        }
+        else {
+            inputWidthParent.style.display = 'none';
+            inputHeightParent.style.display = 'none';
+        }
         resGroupLabel.innerText = resGroupLabel.innerText[0] + `Resolution: ${describeAspectRatio(inputWidth.value, inputHeight.value)} (${inputWidth.value}x${inputHeight.value})`;
     };
     for (let target of [inputWidth, inputWidthSlider, inputHeight, inputHeightSlider]) {
         target.addEventListener('input', resTrick);
     }
+    inputAspectRatio.addEventListener('change', () => {
+        if (inputAspectRatio.value != "Custom") {
+            let aspectRatio = inputAspectRatio.value;
+            let width, height;
+            // "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom"
+            if (aspectRatio == "1:1") { width = 512; height = 512; }
+            else if (aspectRatio == "4:3") { width = 576; height = 448; }
+            else if (aspectRatio == "3:2") { width = 608; height = 416; }
+            else if (aspectRatio == "8:5") { width = 608; height = 384; }
+            else if (aspectRatio == "16:9") { width = 672; height = 384; }
+            else if (aspectRatio == "21:9") { width = 768; height = 320; }
+            else if (aspectRatio == "3:4") { width = 448; height = 576; }
+            else if (aspectRatio == "2:3") { width = 416; height = 608; }
+            else if (aspectRatio == "5:8") { width = 384; height = 608; }
+            else if (aspectRatio == "9:16") { width = 384; height = 672; }
+            else if (aspectRatio == "9:21") { width = 320; height = 768; }
+            inputWidth.value = width * (curModelWidth == 0 ? 512 : curModelWidth) / 512;
+            inputHeight.value = height * (curModelHeight == 0 ? 512 : curModelHeight) / 512;
+        }
+        resTrick();
+    });
     resTrick();
     shouldApplyDefault = true;
     for (let param of gen_param_types) {
@@ -751,8 +780,7 @@ function genInputs() {
     }
     let modelCookie = getCookie('selected_model');
     if (modelCookie) {
-        document.getElementById('input_model').value = modelCookie;
-        document.getElementById('current_model').innerText = modelCookie;
+        directSetModel(modelCookie);
     }
 }
 
@@ -785,6 +813,28 @@ function registerNewTool(id, name) {
     return div;
 }
 
+function directSetModel(model) {
+    if (!model) {
+        return;
+    }
+    if (model.name) {
+        document.getElementById('input_model').value = model.name;
+        document.getElementById('current_model').innerText = model.name;
+        setCookie('selected_model', `${model.name},${model.standard_width},${model.standard_height}`, 90);
+        curModelWidth = model.standard_width;
+        curModelHeight = model.standard_height;
+    }
+    else if (model.includes(',')) {
+        let [name, width, height] = model.split(',');
+        document.getElementById('input_model').value = name;
+        document.getElementById('current_model').innerText = name;
+        setCookie('selected_model', `${name},${width},${height}`, 90);
+        curModelWidth = parseInt(width);
+        curModelHeight = parseInt(height);
+    }
+    document.getElementById('input_aspectratio').dispatchEvent(new Event('change'));
+}
+
 let sessionReadyCallbacks = [];
 
 function setCurrentModel(callback) {
@@ -792,8 +842,7 @@ function setCurrentModel(callback) {
     if (currentModel.innerText == '') {
         genericRequest('ListLoadedModels', {}, data => {
             if (data.models.length > 0) {
-                currentModel.innerText = data.models[0].name;
-                document.getElementById('input_model').value = data.models[0].name;
+                directSetModel(data.models[0]);
             }
             if (callback) {
                 callback();
