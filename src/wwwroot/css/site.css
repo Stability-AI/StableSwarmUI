@@ -83,6 +83,9 @@ body {
     height: 100%;
     overflow: scroll;
 }
+.backend-wrapper-spot {
+    display: inline-block;
+}
 .backend-card {
     max-width: 55rem;
     border-radius: 0.5rem;
