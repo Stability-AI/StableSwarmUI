@@ -426,11 +426,13 @@ function resetParamsToDefault() {
             }
             else {
                 paramElem.value = param.default;
-                }
-        }
-        if (param.toggleable) {
-            document.getElementById(`${id}_toggle`).checked = false;
-            doToggleEnable(id);
+            }
+            deleteCookie(`lastparam_input_${param.id}`);
+            if (param.toggleable) {
+                document.getElementById(`${id}_toggle`).checked = false;
+                deleteCookie(`lastparam_input_${param.id}_toggle`);
+                doToggleEnable(id);
+            }
         }
     }
 }
@@ -635,6 +637,38 @@ function genInputs() {
         target.addEventListener('input', resTrick);
     }
     resTrick();
+    for (let param of gen_param_types) {
+        if (!param.hidden) {
+            let elem = document.getElementById(`input_${param.id}`);
+            let cookie = getCookie(`lastparam_input_${param.id}`);
+            if (cookie) {
+                if (param.type == "boolean") {
+                    elem.checked = cookie == "true";
+                }
+                else {
+                    elem.value = cookie;
+                }
+            }
+            elem.addEventListener('input', () => {
+                if (param.type == "boolean") {
+                    setCookie(`lastparam_input_${param.id}`, elem.checked);
+                }
+                else {
+                    setCookie(`lastparam_input_${param.id}`, elem.value);
+                }
+            });
+            if (param.toggleable) {
+                let toggler = document.getElementById(`input_${param.id}_toggle`);
+                let cookie = getCookie(`lastparam_input_${param.id}_toggle`);
+                if (cookie) {
+                    toggler.checked = cookie == "true";
+                }
+                toggler.addEventListener('change', () => {
+                    setCookie(`lastparam_input_${param.id}_toggle`, toggler.checked);
+                });
+            }
+        }
+    }
 }
 
 let toolSelector = document.getElementById('tool_selector');
