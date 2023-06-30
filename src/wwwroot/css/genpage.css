@@ -294,6 +294,7 @@ body {
     margin-left: 0.2rem;
     padding-left: 0.2rem;
     padding-right: 0.2rem;
+    cursor: pointer;
 }
 .preset-remove-button:hover {
     background-color: color-mix(in srgb, red 70%, black);
