@@ -147,6 +147,11 @@ public class T2IModelHandler
     /// <summary>Force-load the metadata for a model.</summary>
     public void LoadMetadata(T2IModel model)
     {
+        if (model is null)
+        {
+            Logs.Warning($"Tried to load metadata for a null model?:\n{Environment.StackTrace}");
+            return;
+        }
         if (model.ModelClass is not null || model.Title is not null)
         {
             Logs.Debug($"Not loading metadata for {model.Name} as it is already loaded.");
@@ -175,6 +180,11 @@ public class T2IModelHandler
             }
             Logs.Debug($"Model {model.Name} has no valid cache, will rebuild.");
             JObject headerData = header.ParseToJson();
+            if (headerData is null)
+            {
+                Logs.Debug($"Not loading metadata for {model.Name} as the header is not JSON?");
+                return;
+            }
             JObject metaHeader = headerData["__metadata__"] as JObject;
             T2IModelClass clazz = ClassSorter.IdentifyClassFor(model, headerData);
             metadata = new()
