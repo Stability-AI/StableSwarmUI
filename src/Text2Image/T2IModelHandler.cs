@@ -103,7 +103,7 @@ public class T2IModelHandler
         lock (ModificationLock)
         {
             Models.Clear();
-            _ = AddAllFromFolder(""); // Note: don't wait, would cause lock problems.
+            AddAllFromFolder("");
         }
     }
 
@@ -201,7 +201,7 @@ public class T2IModelHandler
             model.Title = metadata.Title;
             model.Author = metadata.Author;
             model.Description = metadata.Description;
-            model.ModelClass = ClassSorter.ModelClasses.GetValueOrDefault(metadata.ModelClassType);
+            model.ModelClass = ClassSorter.ModelClasses.GetValueOrDefault(metadata.ModelClassType ?? "");
             model.PreviewImage = string.IsNullOrWhiteSpace(metadata.PreviewImage) ? "imgs/model_placeholder.jpg" : metadata.PreviewImage;
             model.StandardWidth = metadata.StandardWidth;
             model.StandardHeight = metadata.StandardHeight;
@@ -209,7 +209,7 @@ public class T2IModelHandler
     }
 
     /// <summary>Internal model adder route. Do not call.</summary>
-    public async Task AddAllFromFolder(string folder)
+    public void AddAllFromFolder(string folder)
     {
         if (IsShutdown)
         {
@@ -219,11 +219,10 @@ public class T2IModelHandler
         {
             return;
         }
-        List<Task> tasks = new();
         string prefix = folder == "" ? "" : $"{folder}/";
         foreach (string subfolder in Directory.EnumerateDirectories($"{Program.ServerSettings.SDModelFullPath}/{folder}"))
         {
-            tasks.Add(AddAllFromFolder($"{prefix}{subfolder.AfterLast('/')}"));
+            AddAllFromFolder($"{prefix}{subfolder.AfterLast('/')}");
         }
         foreach (string file in Directory.EnumerateFiles($"{Program.ServerSettings.SDModelFullPath}/{folder}"))
         {
@@ -239,7 +238,7 @@ public class T2IModelHandler
                     PreviewImage = "imgs/model_placeholder.jpg",
                 };
                 Models[fullFilename] = model;
-                tasks.Add(Task.Run(() => LoadMetadata(model)));
+                LoadMetadata(model);
             }
             else if (fn.EndsWith(".ckpt"))
             {
@@ -252,6 +251,5 @@ public class T2IModelHandler
                 };
             }
         }
-        await Task.WhenAll(tasks);
     }
 }
