@@ -120,8 +120,19 @@ public class T2IParams : IDataHolder
         };
     }
 
-    public string GenMetadata()
+    public string GenMetadata(Dictionary<string, object> extraParams)
     {
-        return new JObject() { ["stableui_image_params"] = ToJson() }.ToString();
+        JObject data = ToJson();
+        if (extraParams is not null)
+        {
+            foreach ((string key, object val) in extraParams)
+            {
+                if (val is not null)
+                {
+                    data[key] = JToken.FromObject(val);
+                }
+            }
+        }
+        return new JObject() { ["stableui_image_params"] = data }.ToString();
     }
 }

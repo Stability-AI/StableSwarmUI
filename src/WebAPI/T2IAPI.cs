@@ -6,6 +6,7 @@ using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
+using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text.RegularExpressions;
@@ -135,6 +136,7 @@ public static class T2IAPI
     /// <summary>Internal handler route to create an image based on a user request.</summary>
     public static async Task CreateImageTask(T2IParams user_input, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image[]> saveImages)
     {
+        Stopwatch timer = Stopwatch.StartNew();
         void sendStatus()
         {
             if (isWS && user_input.SourceSession is not null)
@@ -177,15 +179,24 @@ public static class T2IAPI
         {
             claim.Extend(liveGens: 1);
             sendStatus();
+            Image[] outputs;
+            long prepTime, genTime;
             using (backend)
             {
                 if (claim.ShouldCancel)
                 {
                     return;
                 }
-                Image[] outputs = await backend.Backend.Generate(user_input);
-                saveImages(outputs);
+                prepTime = timer.ElapsedMilliseconds;
+                outputs = await backend.Backend.Generate(user_input);
+                genTime = timer.ElapsedMilliseconds;
             }
+            Logs.Info($"Generated an image in {prepTime / 1000.0:0.00} (prep) and {(genTime - prepTime) / 1000.0:0.00} (gen) seconds");
+            saveImages(outputs.Select(i => user_input.SourceSession.ApplyMetadata(i, user_input, new()
+            {
+                ["generation_prep_time_ms"] = prepTime,
+                ["generation_time_ms"] = (genTime - prepTime)
+            })).ToArray());
         }
         catch (InvalidDataException ex)
         {

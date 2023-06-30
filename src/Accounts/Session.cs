@@ -99,11 +99,17 @@ public class Session : IEquatable<Session>
         }
     }
 
+    /// <summary>Applies metadata to an image and converts the filetype, following the user's preferences.</summary>
+    public Image ApplyMetadata(Image image, T2IParams user_input, Dictionary<string, object> extraParams)
+    {
+        string metadata = User.Settings.FileFormat.SaveMetadata ? user_input.GenMetadata(extraParams) : null;
+        image = image.ConvertTo(User.Settings.FileFormat.ImageFormat, metadata, User.Settings.FileFormat.DPI);
+        return image;
+    }
+
     /// <summary>Save an image as this user, and returns the new URL. If user has disabled saving, returns a data URL.</summary>
     public string SaveImage(Image image, T2IParams user_input)
     {
-        string metadata = User.Settings.FileFormat.SaveMetadata ? user_input.GenMetadata() : null;
-        image = image.ConvertTo(User.Settings.FileFormat.ImageFormat, metadata, User.Settings.FileFormat.DPI);
         if (!User.Settings.SaveFiles)
         {
             return "data:image/" + (User.Settings.FileFormat.ImageFormat == "png" ? "png" : "jpeg") + ";base64," + image.AsBase64;
