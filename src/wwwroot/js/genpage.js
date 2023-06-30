@@ -416,6 +416,25 @@ function refreshParameterValues(callback = null) {
     });
 }
 
+function resetParamsToDefault() {
+    for (let param of gen_param_types) {
+        let id = `input_${param.id}`;
+        let paramElem = document.getElementById(id);
+        if (!param.hidden) {
+            if (param.type == "boolean") {
+                paramElem.checked = param.default;
+            }
+            else {
+                paramElem.value = param.default;
+                }
+        }
+        if (param.toggleable) {
+            document.getElementById(`${id}_toggle`).checked = false;
+            doToggleEnable(id);
+        }
+    }
+}
+
 function toggle_advanced() {
     let advancedArea = document.getElementById('main_inputs_area_advanced');
     let toggler = document.getElementById('advanced_options_checkbox');

@@ -209,6 +209,8 @@ body {
     display: block;
     width: 100%;
     cursor: pointer;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 .sui_popover_model_button:hover {
     background-color: var(--emphasis);

@@ -37,7 +37,7 @@ function gridGen_addAxis() {
     let fillButton = document.createElement('button');
     fillButton.style.visibility = 'hidden';
     fillButton.innerText = 'Fill';
-    fillButton.className = 'grid-gen-axis-fill-button';
+    fillButton.className = 'basic-button grid-gen-axis-fill-button';
     fillButton.title = 'Fill with available values';
     fillButton.addEventListener('click', () => {
         let toFill = fillButton.dataset.values;
