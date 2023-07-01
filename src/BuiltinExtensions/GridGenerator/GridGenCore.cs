@@ -33,6 +33,11 @@ public partial class GridGenCore
 
     public static GridGeneratorExtension Extension;
 
+    public static string EscapeHtml(string text)
+    {
+        return text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+    }
+
     public static string CleanForWeb(string text)
     {
         return text?.Replace("\"", "&quot;");
@@ -462,7 +467,7 @@ public partial class GridGenCore
 
         public string RadioButtonHtml(string name, string id, string descrip, string label)
         {
-            return $"<input type=\"radio\" class=\"btn-check\" name=\"{name}\" id=\"{id.ToLowerFast()}\" autocomplete=\"off\" checked=\"\"><label class=\"btn btn-outline-primary\" for=\"{id.ToLowerFast()}\" title=\"{descrip}\">{label}</label>\n";
+            return $"<input type=\"radio\" class=\"btn-check\" name=\"{name}\" id=\"{id.ToLowerFast()}\" autocomplete=\"off\" checked=\"\"><label class=\"btn btn-outline-primary\" for=\"{id.ToLowerFast()}\" title=\"{descrip}\">{EscapeHtml(label)}</label>\n";
         }
 
         public string AxisBar(string label, string content)
@@ -486,7 +491,7 @@ public partial class GridGenCore
                 {
                     string axisDescrip = CleanForWeb(axis.Description ?? "");
                     string trClass = primary ? "primary" : "secondary";
-                    content += $"<tr class=\"{trClass}\">\n<td>\n<h4>{axis.Title}</h4>\n";
+                    content += $"<tr class=\"{trClass}\">\n<td>\n<h4>{EscapeHtml(axis.Title)}</h4>\n";
                     advancedSettings += $"\n<h4>{axis.Title}</h4><div class=\"timer_box\">Auto cycle every <input style=\"width:30em;\" autocomplete=\"off\" type=\"range\" min=\"0\" max=\"360\" value=\"0\" class=\"form-range timer_range\" id=\"range_tablist_{axis.ID}\"><label class=\"form-check-label\" for=\"range_tablist_{axis.ID}\" id=\"label_range_tablist_{axis.ID}\">0 seconds</label></div>\nShow value: ";
                     string axisClass = "axis_table_cell";
                     if (axisDescrip.Trim().Length == 0)
@@ -506,7 +511,7 @@ public partial class GridGenCore
                         string active = isFirst ? " active" : "";
                         isFirst = false;
                         string descrip = CleanForWeb(val.Description ?? "");
-                        content += $"<li class=\"nav-item\" role=\"presentation\"><a class=\"nav-link{active}\" data-bs-toggle=\"tab\" href=\"#tab_{axis.ID}__{val.Key}\" id=\"clicktab_{axis.ID}__{val.Key}\" aria-selected=\"{selected}\" role=\"tab\" title=\"{val.Title}: {descrip}\">{val.Title}</a></li>\n";
+                        content += $"<li class=\"nav-item\" role=\"presentation\"><a class=\"nav-link{active}\" data-bs-toggle=\"tab\" href=\"#tab_{axis.ID}__{val.Key}\" id=\"clicktab_{axis.ID}__{val.Key}\" aria-selected=\"{selected}\" role=\"tab\" title=\"{EscapeHtml(val.Title)}: {descrip}\">{EscapeHtml(val.Title)}</a></li>\n";
                         advancedSettings += $"&nbsp;<input class=\"form-check-input\" type=\"checkbox\" autocomplete=\"off\" id=\"showval_{axis.ID}__{val.Key}\" checked=\"true\" onchange=\"javascript:toggleShowVal('{axis.ID}', '{val.Key}')\"> <label class=\"form-check-label\" for=\"showval_{axis.ID}__{val.Key}\" title=\"Uncheck this to hide '{val.Title}' from the page.\">{val.Title}</label>";
                     }
                     advancedSettings += $"&nbsp;&nbsp;<button class=\"submit\" onclick=\"javascript:toggleShowAllAxis('{axis.ID}')\">Toggle All</button>";

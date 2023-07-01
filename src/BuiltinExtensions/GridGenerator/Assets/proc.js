@@ -250,7 +250,7 @@ function setImgPlaceholder(img) {
 }
 
 function optDescribe(isFirst, val) {
-    return isFirst && val != null ? '<span title="' + escapeHtml(val.description) + '"><b>' + val.title + '</b></span><br>' : (val != null ? '<br>' : '');
+    return isFirst && val != null ? '<span title="' + escapeHtml(val.description) + '"><b>' + escapeHtml(val.title) + '</b></span><br>' : (val != null ? '<br>' : '');
 }
 
 function fillTable() {
@@ -278,7 +278,7 @@ function fillTable() {
             if (!canShowVal(xAxis.id, val.key)) {
                 continue;
             }
-            newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, x2val)}<b>${val.title}</b></th>`;
+            newContent += `<th${(superFirst ? '' : ' class="superaxis_second"')} title="${val.description.replaceAll('"', '&quot;')}">${optDescribe(x2first, x2val)}<b>${escapeHtml(val.title)}</b></th>`;
             x2first = false;
         }
         superFirst = !superFirst;
@@ -294,7 +294,7 @@ function fillTable() {
             if (!canShowVal(yAxis.id, val.key)) {
                 continue;
             }
-            newContent += `<tr><td class="axis_label_td${(superFirst ? '' : ' superaxis_second')}" title="${escapeHtml(val.description)}">${optDescribe(y2first, y2val)}<b>${val.title}</b></td>`;
+            newContent += `<tr><td class="axis_label_td${(superFirst ? '' : ' superaxis_second')}" title="${escapeHtml(val.description)}">${optDescribe(y2first, y2val)}<b>${escapeHtml(val.title)}</b></td>`;
             y2first = false;
             for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
                 if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
@@ -786,6 +786,16 @@ function checkForUpdates() {
     if (!window.lastUpdated) {
         if (updatesWithoutData++ > 2) {
             console.log('Update-checker has no more updates.');
+            for (let img of document.querySelectorAll(`img[data-errored_src]`)) {
+                let target = img.dataset.errored_src;
+                delete img.dataset.errored_src;
+                img.removeAttribute('width');
+                img.removeAttribute('height');
+                img.addEventListener('error', function() {
+                    setImgPlaceholder(img);
+                });
+                img.src = target;
+            }
             return;
         }
     }
@@ -795,7 +805,7 @@ function checkForUpdates() {
             for (let img of document.querySelectorAll(`img[data-errored_src]`)) {
                 if (img.dataset.errored_src.endsWith(url)) {
                     let target = img.dataset.errored_src;
-                    img.dataset.errored_src = null;
+                    delete img.dataset.errored_src;
                     img.removeAttribute('width');
                     img.removeAttribute('height');
                     img.src = target;
