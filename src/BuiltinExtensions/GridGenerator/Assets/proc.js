@@ -796,6 +796,8 @@ function checkForUpdates() {
                 if (img.dataset.errored_src.endsWith(url)) {
                     let target = img.dataset.errored_src;
                     img.dataset.errored_src = null;
+                    img.removeAttribute('width');
+                    img.removeAttribute('height');
                     img.src = target;
                 }
             }

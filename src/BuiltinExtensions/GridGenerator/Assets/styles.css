@@ -43,16 +43,20 @@ th {
   text-align: center;
 }
 .popup_modal_img {
-  height: calc(min(100vw, 100vh - 8em));
+  height: 100%;
+  width: 100%;
+  max-height: calc(min(100vw, 100vh - 8em));
+  max-width: 90vw;
   position: relative;
   margin: auto;
+  object-fit: contain;
 }
 .popup_modal_undertext {
   background-color: #404060;
   overflow-wrap: break-word;
 }
 .modal_inner_div {
-  width: calc(min(100vw, 100vh - 8em));
+  width: 90vw;
   margin: auto;
 }
 .advanced_settings_section {
