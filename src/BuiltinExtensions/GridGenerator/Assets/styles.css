@@ -1,94 +1,94 @@
 .sel_table tr td {
-  border: 1px solid black;
-  padding-right: 16px;
-  padding-left: 16px;
+    border: 1px solid black;
+    padding-right: 16px;
+    padding-left: 16px;
 }
 .sel_table {
-  min-width: 60em;
-  width: 100%;
+    min-width: 60em;
+    width: 100%;
 }
 .secondary {
-  background-color: #202020;
+    background-color: #202020;
 }
 .emptytab {
-  width: 0px;
+    width: 0px;
 }
 .primary {
-  background-color: #303030;
+    background-color: #303030;
 }
 .axis_table_cell {
-  width: calc(min(40em, max(10em, 100vw - 40em)));
-  max-height: 8em;
-  overflow: auto;
+    width: calc(min(40em, max(10em, 100vw - 40em)));
+    max-height: 8em;
+    overflow: auto;
 }
 .tabval_subdiv {
-  min-width: calc(100vw - 5em - min(40em, max(10em, 100vw - 40em)));
-  max-height: 8em;
-  overflow: auto;
+    min-width: calc(100vw - 5em - min(40em, max(10em, 100vw - 40em)));
+    max-height: 8em;
+    overflow: auto;
 }
 table tr td,
 table tr th {
-  vertical-align: top;
-  border: 1px solid black;
+    vertical-align: top;
+    border: 1px solid black;
 }
 th {
-  position: sticky;
-  top: -1px;
-  background-color: #202020;
-  background-clip: padding-box;
+    position: sticky;
+    top: -1px;
+    background-color: #202020;
+    background-clip: padding-box;
 }
 .popup_modal_background {
-  font-family: monospace, monospace;
-  background-color: rgb(50, 50, 50, 0.7);
-  text-align: center;
+    font-family: monospace, monospace;
+    background-color: rgb(50, 50, 50, 0.7);
+    text-align: center;
 }
 .popup_modal_img {
-  height: 100%;
-  width: 100%;
-  max-height: calc(min(100vw, 100vh - 8em));
-  max-width: 90vw;
-  position: relative;
-  margin: auto;
-  object-fit: contain;
+    height: 100%;
+    width: 100%;
+    max-height: calc(min(100vw, 100vh - 8em));
+    max-width: 90vw;
+    position: relative;
+    margin: auto;
+    object-fit: contain;
 }
 .popup_modal_undertext {
-  background-color: #404060;
-  overflow-wrap: break-word;
+    background-color: #404060;
+    overflow-wrap: break-word;
 }
 .modal_inner_div {
-  width: 90vw;
-  margin: auto;
+    width: 90vw;
+    margin: auto;
 }
 .advanced_settings_section {
-  max-width: calc(max(1000px, 60em));
-  text-align: left;
+    max-width: calc(max(1000px, 60em));
+    text-align: left;
 }
 .timer_range {
-  vertical-align: bottom;
+    vertical-align: bottom;
 }
 .tab_hidden {
-  display: none;
+    display: none;
 }
 .nav-link:focus {
-  background-color: #909050 !important;
+    background-color: #909050 !important;
 }
 .axis_label_td {
-  left: 0px;
-  background-color: #202020;
-  background-clip: padding-box;
+    left: 0px;
+    background-color: #202020;
+    background-clip: padding-box;
 }
 .superaxis_second {
-  background-color: #303030;
+    background-color: #303030;
 }
 .axis_selectors {
-  text-align: right;
-  margin: auto;
-  width: fit-content;
+    text-align: right;
+    margin: auto;
+    width: fit-content;
 }
 .sticky_top {
-  position: sticky;
-  top: 0;
+    position: sticky;
+    top: 0;
 }
 .accordion-button {
-  padding: 0.5rem;
+    padding: 0.5rem;
 }
