@@ -126,7 +126,7 @@ public class GridGeneratorExtension : Extension
                 data.Signal.Set();
             }
             T2IParams thisParams = param.Clone();
-            Task t = Task.Run(() => T2IAPI.CreateImageTask(thisParams, data.Claim, data.AddOutput, setError, true, 10, // TODO: Max timespan configurable
+            Task t = Task.Run(() => T2IEngine.CreateImageTask(thisParams, data.Claim, data.AddOutput, setError, true, 10, // TODO: Max timespan configurable
                 (outputs) =>
                 {
                     if (outputs.Length != 1)
