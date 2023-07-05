@@ -181,7 +181,7 @@ body {
 .model-block {
     height: 10rem;
     width: 40rem;
-    margin: 0.5rem;
+    margin: 0.2rem;
     display: inline-block;
     overflow: hidden;
     white-space: nowrap;
