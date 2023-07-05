@@ -77,18 +77,24 @@ public static class NetworkBackendUtils
 
     public static int NextPort = 7820;
 
-    public static async Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput)
+    public static Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput)
+    {
+        return DoSelfStart(startScript, nameSimple, gpuId, extraArgs, status => backend.Status = status, async (b) => { await initInternal(b); return backend.Status == BackendStatus.RUNNING; }, takeOutput, () => backend.Status);
+    }
+
+    public static async Task DoSelfStart(string startScript, string nameSimple, int gpuId, string extraArgs, Action<BackendStatus> reviseStatus, Func<bool, Task<bool>> initInternal, Action<int, Process> takeOutput, Func<BackendStatus> getStatus)
     {
         if (string.IsNullOrWhiteSpace(startScript))
         {
-            backend.Status = BackendStatus.DISABLED;
+            reviseStatus(BackendStatus.DISABLED);
             return;
         }
+        Logs.Debug($"Requested generic launch of {startScript} on GPU {gpuId} from {nameSimple}");
         string path = startScript.Replace('\\', '/');
         string ext = path.AfterLast('.');
-        if (!IsValidStartPath(backend.HandlerTypeData.Name, path, ext))
+        if (!IsValidStartPath(nameSimple, path, ext))
         {
-            backend.Status = BackendStatus.ERRORED;
+            reviseStatus(BackendStatus.ERRORED);
             return;
         }
         int port = NextPort++;
@@ -99,7 +105,7 @@ public static class NetworkBackendUtils
         };
         start.ArgumentList.Add($"{gpuId}");
         start.ArgumentList.Add(Path.GetDirectoryName(path));
-        start.ArgumentList.Add(path);
+        start.ArgumentList.Add(path.AfterLast('/'));
         start.ArgumentList.Add(extraArgs.Replace("{PORT}", $"{port}"));
         if (startScript.EndsWith(".py"))
         {
@@ -109,7 +115,8 @@ public static class NetworkBackendUtils
         {
             start.ArgumentList.Add("shellexec");
         }
-        backend.Status = BackendStatus.LOADING;
+        BackendStatus status = BackendStatus.LOADING;
+        reviseStatus(status);
         Process runningProcess = new() { StartInfo = start };
         takeOutput(port, runningProcess);
         runningProcess.Start();
@@ -121,22 +128,25 @@ public static class NetworkBackendUtils
             {
                 Logs.Debug($"{nameSimple} launcher: {line}");
             }
-            if (backend.Status == BackendStatus.RUNNING || backend.Status == BackendStatus.LOADING)
+            status = getStatus();
+            if (status == BackendStatus.RUNNING || status == BackendStatus.LOADING)
             {
-                backend.Status = BackendStatus.ERRORED;
+                status = BackendStatus.ERRORED;
+                reviseStatus(status);
             }
             Logs.Info($"Self-Start {nameSimple} on port {port} exited.");
         }
         new Thread(MonitorLoop) { Name = $"SelfStart{nameSimple}_{port}_Monitor" }.Start();
-        while (backend.Status == BackendStatus.LOADING)
+        while (status == BackendStatus.LOADING)
         {
             await Task.Delay(TimeSpan.FromSeconds(1));
             Logs.Debug($"{nameSimple} port {port} checking for server...");
-            initInternal(true).Wait();
-            if (backend.Status == BackendStatus.RUNNING)
+            bool alive = await initInternal(true);
+            if (alive)
             {
                 Logs.Init($"Self-Start {nameSimple} on port {port} started.");
             }
+            status = getStatus();
         }
         Logs.Debug($"{nameSimple} self-start port {port} loop ending.");
     }

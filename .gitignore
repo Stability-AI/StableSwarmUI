@@ -1,12 +1,20 @@
+# C#
 bin/
 obj/
 .vs/
 .vscode/
 *.user
 *.suo
+Properties/
+
+# This project
 Output/
 Data/
 Models/
-Properties/
 tmp/
 Extensions/
+
+# Python
+__pycache__/
+venv/
+*.pth

@@ -34,4 +34,9 @@ public abstract class Extension
     public virtual void OnPreLaunch()
     {
     }
+
+    /// <summary>Called when the extension is shutting down (and/or the whole program is). Note that this is not strictly guaranteed to be called (eg if the process crashes).</summary>
+    public virtual void OnShutdown()
+    {
+    }
 }

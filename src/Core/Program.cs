@@ -124,6 +124,8 @@ public class Program
         Sessions?.Shutdown();
         Ngrok?.Stop();
         T2IModels?.Shutdown();
+        RunOnAllExtensions(e => e.OnShutdown());
+        Extensions.Clear();
         ImageMetadataTracker.Shutdown();
         Logs.Info("All core shutdowns complete.");
     }
