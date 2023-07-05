@@ -338,8 +338,9 @@ body {
     border-radius: 0.3rem;
     border: 1px solid var(--light-border);
     display: inline-block;
+    color: var(--text-soft);
 }
 .param_view {
     border-radius: 0.3rem;
-    background-color: color-mix(in srgb, var(--emphasis) 25%, transparent);
+    color: var(--text);
 }
