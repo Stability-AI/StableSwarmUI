@@ -394,6 +394,18 @@ function close_edit_model() {
     $('#edit_model_modal').modal('hide');
 }
 
+function cleanModelName(name) {
+    let index = name.indexOf('/');
+    if (index != -1) {
+        name = name.substring(index + 1);
+    }
+    index = name.indexOf('.');
+    if (index != -1) {
+        name = name.substring(0, index);
+    }
+    return name;
+}
+
 function appendModel(container, prefix, model) {
     models[`${prefix}${model.name}`] = model;
     let batch = document.getElementById('current_model').innerText == model.name ? 'model-selected' : (model.loaded ? 'model-loaded' : `image-batch-${Object.keys(models).length % 2}`);
@@ -404,10 +416,10 @@ function appendModel(container, prefix, model) {
     let textBlock = createDiv(null, 'model-descblock');
     if (model.is_safetensors) {
         let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
-        textBlock.innerHTML = `${escapeHtml(model.name)}<br>${getLine("Title", model.title)}${getLine("Author", model.author)}${getLine("Type", model.class)}${getLine("Resolution", `${model.standard_width}x${model.standard_height}`)}${getLine("Description", model.description)}`;
+        textBlock.innerHTML = `<span class="model_filename">${escapeHtml(cleanModelName(model.name))}</span><br>${getLine("Title", model.title)}${getLine("Author", model.author)}${getLine("Type", model.class)}${getLine("Resolution", `${model.standard_width}x${model.standard_height}`)}${getLine("Description", model.description)}`;
     }
     else {
-        textBlock.innerHTML = `${escapeHtml(model.name)}<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
+        textBlock.innerHTML = `${escapeHtml(cleanModelName(model.name)).ckpt}<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
     }
     div.appendChild(textBlock);
     container.appendChild(div);

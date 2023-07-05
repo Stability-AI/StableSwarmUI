@@ -241,6 +241,10 @@ body {
     white-space: pre-wrap;
     word-break: break-all;
 }
+.model_filename {
+    font-size: 80%;
+    color: var(--text-soft);
+}
 .refresh-button {
     margin: 0.5rem;
     background-color: var(--button-background);

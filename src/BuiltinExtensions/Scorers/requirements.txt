@@ -1,0 +1,7 @@
+torch
+pytorch-lightning
+numpy
+pillow
+transformers
+# CLIP is a mess, so, hack it via raw git ref
+https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip

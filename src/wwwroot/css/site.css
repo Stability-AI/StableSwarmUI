@@ -24,12 +24,15 @@
     --danger-button-background: #550000;
     --batch-0: rgba(200, 200, 255, 0.3);
     --batch-1: rgba(255, 255, 255, 0.3);
+    --text: #eeeeee;
+    --text-soft: #aaaaaa;
 }
 .modal-content {
     background-color: var(--background) !important;
 }
 body {
     background-color: var(--background);
+    color: var(--text);
 }
 @keyframes status_glow-warn {
     0% {background-color: #dddd55;}
