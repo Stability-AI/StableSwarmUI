@@ -144,10 +144,11 @@ public class WorkflowGenerator
     public int LastID = 100;
 
     /// <summary>Creates a new node with the given class type and configuration action.</summary>
-    public void CreateNode(string classType, Action<string, JObject> configure)
+    public int CreateNode(string classType, Action<string, JObject> configure)
     {
         int id = LastID++;
         CreateNode(classType, configure, $"{id}");
+        return id;
     }
 
     /// <summary>Creates a new node with the given class type and configuration action, and manual ID.</summary>
