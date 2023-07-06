@@ -2,6 +2,7 @@
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
+using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
 using StableUI.Utils;
@@ -244,6 +245,13 @@ public partial class GridGenCore
             GridCallInitHook?.Invoke(this);
         }
 
+        public void BuildBasePaths()
+        {
+            BaseFilepath = string.Join("/", Values.Select(v => T2IParamTypes.CleanNameGeneric(v.Key)).Reverse());
+            Data = string.Join(", ", Values.Select(v => $"{v.Axis.Title}={v.Title}"));
+            Skip = Skip || (!Grid.Runner.DoOverwrite && File.Exists($"{Grid.Runner.BasePath}/{BaseFilepath}.{Grid.Format}"));
+        }
+
         public void FlattenParams(Grid grid)
         {
             Params = new Dictionary<string, string>(grid.BaseParams);
@@ -337,10 +345,8 @@ public partial class GridGenCore
             Logs.Info($"Have {Sets.Count} unique value sets, will go into {BasePath}");
             foreach (SingleGridCall set in Sets)
             {
-                set.BaseFilepath = string.Join("/", set.Values.Select(v => T2IParamTypes.CleanNameGeneric(v.Key)).Reverse());
-                set.Data = string.Join(", ", set.Values.Select(v => $"{v.Axis.Title}={v.Title}"));
+                set.BuildBasePaths();
                 set.FlattenParams(Grid);
-                set.Skip = set.Skip || !DoOverwrite && File.Exists($"{BasePath}/{set.BaseFilepath}.{Grid.Format}");
                 if (set.Skip)
                 {
                     TotalSkip++;
@@ -475,7 +481,7 @@ public partial class GridGenCore
             return $"<br><div class=\"btn-group\" role=\"group\" aria-label=\"Basic radio toggle button group\">{label}:&nbsp;\n{content}</div>\n";
         }
 
-        public string BuildHtml()
+        public string BuildHtml(string footerExtra)
         {
             string html = File.ReadAllText($"{ASSETS_DIR}/page.html");
             string xSelect = "";
@@ -550,11 +556,11 @@ public partial class GridGenCore
             content += AxisBar("Y Super-Axis", y2Select);
             content += "</div></div>\n";
             html = html.Replace("{TITLE}", Grid.Title).Replace("{CLEAN_DESCRIPTION}", CleanForWeb(Grid.Description ?? "")).Replace("{DESCRIPTION}", Grid.Description ?? "")
-                .Replace("{CONTENT}", content).Replace("{ADVANCED_SETTINGS}", advancedSettings).Replace("{AUTHOR}", Grid.Author).Replace("{EXTRA_FOOTER}", EXTRA_FOOTER).Replace("{VERSION}", Utilities.Version);
+                .Replace("{CONTENT}", content).Replace("{ADVANCED_SETTINGS}", advancedSettings).Replace("{AUTHOR}", Grid.Author).Replace("{EXTRA_FOOTER}", EXTRA_FOOTER + footerExtra).Replace("{VERSION}", Utilities.Version);
             return html;
         }
 
-        public string EmitWebData(string path, bool publishGenMetadata, T2IParams input, bool dryRun)
+        public string EmitWebData(string path, bool publishGenMetadata, T2IParams input, bool dryRun, string footerExtra)
         {
             Logs.Info("Building final web data...");
             string json = BuildJson(publishGenMetadata, input, dryRun);
@@ -572,7 +578,7 @@ public partial class GridGenCore
                 }
                 File.Copy($"{ASSETS_DIR}/{f}", target);
             }
-            string html = BuildHtml();
+            string html = BuildHtml(footerExtra);
             File.WriteAllText(path + "/index.html", html);
             Logs.Info($"Web file is now at {path}/index.html");
             return json;
@@ -581,7 +587,7 @@ public partial class GridGenCore
 
     // TODO: Clever model logic switching so this doesn't spam-switch
 
-    public static void Run(T2IParams baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
+    public static Grid Run(T2IParams baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, string footerExtra = "")
     {
         Grid grid = new()
         {
@@ -644,7 +650,7 @@ public partial class GridGenCore
         string json = "";
         if (generatePage)
         {
-            json = runner.EmitWebData(folder, publishGenMetadata, baseParams, dryRun);
+            json = runner.EmitWebData(folder, publishGenMetadata, baseParams, dryRun, footerExtra);
         }
         runner.Run(dryRun);
         if (dryRun)
@@ -655,7 +661,18 @@ public partial class GridGenCore
         {
             json = json.Replace("\"will_run\": true, ", "");
             File.WriteAllText(folder + "/data.js", "rawData = " + json);
-            File.Delete(folder + "/last.js");
+            Task.Run(() =>
+            {
+                try
+                {
+                    Task.Delay(6000).Wait(Program.GlobalProgramCancel);
+                }
+                finally
+                {
+                    File.Delete(folder + "/last.js");
+                }
+            });
         }
+        return grid;
     }
 }

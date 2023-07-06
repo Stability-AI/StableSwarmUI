@@ -61,9 +61,9 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
     public async Task<Image[]> AwaitJob(string workflow, CancellationToken interrupt)
     {
         workflow = $"{{\"prompt\": {workflow}}}";
-        Logs.Debug($"Will use workflow: {workflow}");
+        //Logs.Debug($"Will use workflow: {workflow}");
         JObject result = await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/prompt", new StringContent(workflow, StringConversionHelper.UTF8Encoding, "application/json"), interrupt));
-        Logs.Debug($"ComfyUI prompt said: {result}");
+        //Logs.Debug($"ComfyUI prompt said: {result}");
         if (result.ContainsKey("error"))
         {
             Logs.Error($"ComfyUI error: {result}");

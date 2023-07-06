@@ -38,6 +38,7 @@ function loadData() {
     document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
     document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
+    document.getElementById('pickscore_display').addEventListener('click', fillTable);
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
@@ -208,16 +209,43 @@ function canShowVal(axis, val) {
     return document.getElementById(`showval_${axis}__${val}`).checked;
 }
 
-function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
-    var imgPath = [];
-    var index = 0;
-    for (var subAxis of rawData.axes) {
+function getAllScoresOnAxis(axisId, path) {
+    if (typeof all_pick_scores == 'undefined') {
+        return null;
+    }
+    let index = rawData.axes.findIndex((a) => a.id == axisId);
+    let axis = rawData.axes[index];
+    let allScores = [];
+    for (let val of axis.values) {
+        let path2 = path.slice();
+        path2[index] = val.key;
+        let score = all_pick_scores[path2.join('/')][index];
+        allScores.push(score);
+    }
+    return allScores;
+}
+
+function pickScorePercent(score, scores) {
+    let rank = scores.filter((s) => s < score).length + 1;
+    return rank / scores.length * 100;
+}
+
+function percentToRedGreen(percent) {
+    return `color-mix(in srgb, red, green ${percent}%)`;
+}
+
+function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
+    let imgPath = [];
+    let index = 0;
+    let yind = 0;
+    for (let subAxis of rawData.axes) {
         if (subAxis.id == x) {
             index = imgPath.length;
             imgPath.push(null);
         }
         else if (subAxis.id == y) {
-            imgPath.push(val.key);
+            imgPath.push(yval.key);
+            yind = subAxis.values.findIndex((v) => v.key == yval.key);
         }
         else if (x2Axis != null && subAxis.id == x2Axis.id) {
             imgPath.push(x2val.key);
@@ -229,14 +257,49 @@ function getXAxisContent(x, y, xAxis, val, x2Axis, x2val, y2Axis, y2val) {
             imgPath.push(getSelectedValKey(subAxis));
         }
     }
-    var newContent = '';
-    for (var xVal of xAxis.values) {
+    let newContent = '';
+    let xScores = getAllScoresOnAxis(xAxis.id, imgPath);
+    let subInd = 0;
+    let pickDisplay = document.getElementById('pickscore_display').value;
+    for (let xVal of xAxis.values) {
+        subInd++;
         if (!canShowVal(xAxis.id, xVal.key)) {
             continue;
         }
         imgPath[index] = xVal.key;
-        var actualUrl = imgPath.join('/') + '.' + rawData.ext;
-        newContent += `<td><img class="table_img" data-img-path="${imgPath.join('/')}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
+        let slashed = imgPath.join('/');
+        let actualUrl = slashed + '.' + rawData.ext;
+        let style = "";
+        let extra = "";
+        if (xScores) {
+            let yScores = getAllScoresOnAxis(y, imgPath);
+            let xScore = xScores[subInd - 1];
+            let yScore = yScores[yind];
+            let xPercent = pickScorePercent(xScore, xScores);
+            let yPercent = pickScorePercent(yScore, yScores);
+            let xColor = percentToRedGreen(xPercent);
+            let yColor = percentToRedGreen(yPercent);
+            if (pickDisplay == 'Side-Bars')
+            {
+                let xborder = `border-top: 2px solid ${xColor}; border-bottom: 2px solid ${xColor};`;
+                let yborder = `border-left: 2px solid ${yColor}; border-right: 2px solid ${yColor};`;
+                style = `${xborder} ${yborder}`;
+            }
+            else if (pickDisplay == 'Heatmap')
+            {
+                let xyPercent = xPercent * yPercent / 100;
+                let xyColor = percentToRedGreen(xyPercent);
+                style = `background-color: ${xyColor};`;
+                extra = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(xyPercent)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: color-mix(in srgb, ${xyColor} 50%, transparent)"></div></div>`;
+            }
+            else if (pickDisplay == 'Columns')
+            {
+                let xborder = `border-top: 10px solid ${xColor};`;
+                let yborder = `border-left: 10px solid ${yColor};`;
+                style = `${xborder} ${yborder}`;
+            }
+        }
+        newContent += `<td>${extra}<img class="table_img" style="${style}" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
     }
     return newContent;
 }
@@ -314,6 +377,7 @@ function fillTable() {
     }
     table.innerHTML = newContent;
     updateScaling();
+    document.getElementById('pickscore_setting').style.display = (typeof all_pick_scores != 'undefined') ? 'inline-block' : 'none';
 }
 
 function getCurrentSelectedAxis(axisPrefix) {
@@ -338,12 +402,21 @@ function getWantedScaling() {
 }
 
 function setImageScale(image, percent) {
+    let heatmapper = image.parentElement.getElementsByClassName('heatmapper')[0];
     if (percent == 0) {
         image.style.width = '';
         image.style.height = '';
+        if (heatmapper) {
+            heatmapper.style.width = `${image.clientWidth}px`;
+            heatmapper.style.height = `${image.clientWidth}px`;
+        }
     }
     else {
         image.style.width = percent + 'vw';
+        if (heatmapper) {
+            heatmapper.style.width = percent + 'vw';
+            heatmapper.style.height = percent * (parseFloat(image.clientWidth) / parseFloat(image.clientHeight)) + 'vw';
+        }
         let width = image.getAttribute('width');
         let height = image.getAttribute('height');
         if (width != null && height != null) { // Rescale placeholders cleanly

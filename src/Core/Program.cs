@@ -167,7 +167,6 @@ public class Program
             }
         }
         RunOnAllExtensions(e => e.OnFirstInit());
-
     }
 
     /// <summary>Runs an action on all extensions.</summary>
@@ -184,6 +183,12 @@ public class Program
                 Logs.Error($"Failed to run event on extension {ext.GetType().FullName}: {ex}");
             }
         }
+    }
+
+    /// <summary>Returns the extension instance of the given type.</summary>
+    public static T GetExtension<T>() where T : Extension
+    {
+        return Extensions.FirstOrDefault(e => e is T) as T;
     }
     #endregion
 

@@ -84,10 +84,11 @@ public class ScorersExtension : Extension
         return (await (await WebClient.PostAsync($"http://localhost:{Port}/{url}", Utilities.JSONContent(data))).Content.ReadAsStringAsync()).ParseToJson();
     }
 
-    public async Task<float> DoScoreSingle(Image image, string prompt, string scorer)
+    public async Task<float[]> DoScoreMultiple(Image[] images, string prompt, string scorer)
     {
         EnsureActive();
-        JObject result = await DoPost("API/DoScore", new() { ["prompt"] = prompt, ["images"] = new JArray(image.AsBase64), ["scorer"] = scorer });
+        Image[] noNulls = images.Where(i => i is not null).ToArray();
+        JObject result = await DoPost("API/DoScore", new() { ["prompt"] = prompt, ["images"] = new JArray(noNulls.Select(i => i.AsBase64).ToArray()), ["scorer"] = scorer });
         if (result.TryGetValue("log", out JToken ltext))
         {
             Logs.Debug($"ScorerExtension log: {ltext}");
@@ -96,7 +97,27 @@ public class ScorersExtension : Extension
         {
             Logs.Error($"ScorerExtension error: {etext}");
         }
-        return (float)result["result"][0];
+        float[] vals = result["result"].Select(jt => (float)jt).ToArray();
+        if (noNulls.Length < images.Length)
+        {
+            float[] outVals = new float[images.Length];
+            int img = 0;
+            for (int i = 0; i < vals.Length; i++)
+            {
+                while (images[img] is null)
+                {
+                    img++;
+                }
+                outVals[img++] = vals[i];
+            }
+            vals = outVals;
+        }
+        return vals;
+    }
+
+    public async Task<float> DoScoreSingle(Image image, string prompt, string scorer)
+    {
+        return (await DoScoreMultiple(new[] { image }, prompt, scorer))[0];
     }
 
     public void PostGenEvent(T2IEngine.PostGenerationEventParams p)
