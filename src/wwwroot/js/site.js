@@ -145,7 +145,7 @@ function doToggleEnable(id) {
 }
 
 function getToggleHtml(toggles, id, name) {
-    return toggles ? `<span class="form-check form-switch display-inline-block"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="javascript:doToggleEnable('${id}')"></span>` : '';
+    return toggles ? `<span class="form-check form-switch display-inline-block"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="javascript:doToggleEnable('${id}')" autocomplete="false"></span>` : '';
 }
 
 function load_image_file(e) {
@@ -170,9 +170,9 @@ function makeSliderInput(featureid, id, name, description, value, min, max, step
         <div class="auto-input-fade-lock auto-slider-fade-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
         </div>
-        <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}">
+        <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
         <br>
-        <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}">
+        <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
     </div>`;
 }
 
@@ -184,7 +184,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
         return `
         <div class="auto-input auto-number-box" title="${name}: ${description}"${featureid}>
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span>
-            <input class="auto-number-small" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}">
+            <input class="auto-number-small" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" autocomplete="false">
         </div>`;
     }
     else {
@@ -193,7 +193,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
             <div class="auto-input-fade-lock auto-fade-max-contain">
                 <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
             </div>
-            <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}">
+            <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
         </div>`
     }
 }
@@ -208,7 +208,7 @@ function makeTextInput(featureid, id, name, description, value, rows, placeholde
         <div class="auto-input-fade-lock auto-fade-max-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
         </div>
-        <textarea class="auto-text" id="${id}" rows="${rows}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}">${escapeHtml(value)}</textarea>
+        <textarea class="auto-text" id="${id}" rows="${rows}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
     </div>`;
 }
 
@@ -220,7 +220,7 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
     return `
     <div class="auto-input auto-checkbox-box" title="${name}: ${description}"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span>
-        <br><input class="auto-checkbox" type="checkbox" id="${id}"${checked}> <span class="auto-input-description">${description}</span>
+        <br><input class="auto-checkbox" type="checkbox" id="${id}"${checked}> <span class="auto-input-description" autocomplete="false">${description}</span>
     </div>`;
 }
 
@@ -233,7 +233,7 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
         <div class="auto-input-fade-lock auto-fade-max-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
         </div>
-        <select class="auto-dropdown" id="${id}">`;
+        <select class="auto-dropdown" id="${id}" autocomplete="false">`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
         html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
@@ -253,7 +253,7 @@ function makeImageInput(featureid, id, name, description, toggles = false) {
         <div class="auto-input-fade-lock auto-fade-max-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
         </div>
-        <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)">
+        <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" autocomplete="false">
     </div>`;
     return html;
 }

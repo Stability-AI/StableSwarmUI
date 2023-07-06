@@ -22,6 +22,8 @@
     --danger-button-border: #3f3f46;
     --danger-button-text: #ffffff;
     --danger-button-background: #550000;
+    --button-background-disabled: #3f3f46;
+    --button-foreground-disabled: #aaaaaa;
     --batch-0: rgba(200, 200, 255, 0.3);
     --batch-1: rgba(255, 255, 255, 0.3);
     --text: #eeeeee;

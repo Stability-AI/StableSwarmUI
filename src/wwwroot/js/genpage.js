@@ -91,7 +91,9 @@ function formatMetadata(metadata) {
             let val = obj[key];
             if (val) {
                 if (typeof val == 'object') {
+                    result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: `;
                     appendObject(val);
+                    result += `</span>, `;
                 }
                 else {
                     result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: <span class="param_view">${escapeHtml(`${val}`)}</span></span>, `;
@@ -243,25 +245,29 @@ class FileListCallHelper {
     }
 };
 
-function loadFileList(api, path, container, loadCaller, fileCallback, endCallback, sortFunc) {
+function loadFileList(api, upButton, path, container, loadCaller, fileCallback, endCallback, sortFunc) {
     genericRequest(api, {'path': path}, data => {
         let prefix;
+        upButton = document.getElementById(upButton);
         if (path == '') {
             prefix = '';
+            upButton.disabled = true;
         }
         else {
             prefix = path + '/';
+            upButton.disabled = false;
             let above = path.split('/').slice(0, -1).join('/');
-            let div = appendImage(container, '/imgs/folder_up.png', 'folder', `../`);
             let helper = new FileListCallHelper(above, loadCaller);
-            div.addEventListener('click', helper.call.bind(helper));
+            upButton.onclick = helper.call.bind(helper);
         }
         for (let folder of data.folders.sort()) {
             let div = appendImage(container, '/imgs/folder.png', 'folder', `${folder}/`);
             let helper = new FileListCallHelper(`${prefix}${folder}`, loadCaller);
             div.addEventListener('click', helper.call.bind(helper));
         }
-        container.appendChild(document.createElement('br'));
+        if (data.folders.length > 0) {
+            container.appendChild(document.createElement('br'));
+        }
         for (let file of sortFunc(data.files)) {
             fileCallback(prefix, file);
         }
@@ -275,7 +281,7 @@ function loadHistory(path) {
     let container = document.getElementById('image_history');
     lastImageDir = path;
     container.innerHTML = '';
-    loadFileList('ListImages', path, container, loadHistory, (prefix, img) => {
+    loadFileList('ListImages', 'image_history_up_button', path, container, loadHistory, (prefix, img) => {
         let fullSrc = `Output/${prefix}${img.src}`;
         let batchId = 0;
         if (img.metadata) {

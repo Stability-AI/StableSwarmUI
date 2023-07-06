@@ -180,6 +180,7 @@ function genInputs() {
                 if (cookie) {
                     toggler.checked = cookie == "true";
                 }
+                doToggleEnable(`input_${param.id}`);
                 toggler.addEventListener('change', () => {
                     setCookie(`lastparam_input_${param.id}_toggle`, toggler.checked, 0.25);
                 });

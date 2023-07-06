@@ -256,6 +256,10 @@ body {
     background-color: var(--button-background-hover);
     color: var(--button-foreground-hover);
 }
+.refresh-button:disabled {
+    background-color: var(--button-background-disabled);
+    color: var(--button-foreground-disabled);
+}
 .tool-container .tool {
     display: none;
 }
