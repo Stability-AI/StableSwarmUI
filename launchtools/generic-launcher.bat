@@ -6,6 +6,8 @@ set COMMANDLINE_ARGS="%4"
 
 cd %2
 
+set PYTHONUNBUFFERED=true
+
 set "argument=%~4"
 set "argument=!argument: =^ !"
 

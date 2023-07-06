@@ -5,6 +5,8 @@ export COMMANDLINE_ARGS=$4
 
 cd "$2"
 
+export PYTHONUNBUFFERED=true
+
 if [[ $5 == py ]]; then
     if test -f "$2/venv/bin/activate"; then
         source "$2/venv/bin/activate"
