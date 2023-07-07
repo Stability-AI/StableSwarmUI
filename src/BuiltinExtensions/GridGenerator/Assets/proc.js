@@ -1,8 +1,9 @@
-/**
+/*
  * This file is part of Infinity Grid Generator, view the README.md at https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script for more information.
- */
+*/
 
-let supressUpdate = true;
+let suppressUpdate = true;
+let all_metadata = {};
 
 function loadData() {
     let rawHash = window.location.hash;
@@ -38,14 +39,14 @@ function loadData() {
     document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
     document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
-    document.getElementById('pickscore_display').addEventListener('click', fillTable);
+    document.getElementById('score_display').addEventListener('click', fillTable);
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
         }
     }
     applyHash(rawHash);
-    supressUpdate = false;
+    suppressUpdate = false;
     fillTable();
     startAutoScroll();
     if (rawData.will_run) {
@@ -209,25 +210,8 @@ function canShowVal(axis, val) {
     return document.getElementById(`showval_${axis}__${val}`).checked;
 }
 
-function getAllScoresOnAxis(axisId, path) {
-    if (typeof all_pick_scores == 'undefined') {
-        return null;
-    }
-    let index = rawData.axes.findIndex((a) => a.id == axisId);
-    let axis = rawData.axes[index];
-    let allScores = [];
-    for (let val of axis.values) {
-        let path2 = path.slice();
-        path2[index] = val.key;
-        let score = all_pick_scores[path2.join('/')][index];
-        allScores.push(score);
-    }
-    return allScores;
-}
-
-function pickScorePercent(score, scores) {
-    let rank = scores.filter((s) => s < score).length + 1;
-    return rank / scores.length * 100;
+function getScoreFor(img) {
+    return (((all_metadata[img] || {})['stableui_image_params'] || {})['scoring'] || {})['average'] || null;
 }
 
 function percentToRedGreen(percent) {
@@ -235,9 +219,9 @@ function percentToRedGreen(percent) {
 }
 
 function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
+    let scriptDump = document.getElementById('image_script_dump');
     let imgPath = [];
     let index = 0;
-    let yind = 0;
     for (let subAxis of rawData.axes) {
         if (subAxis.id == x) {
             index = imgPath.length;
@@ -245,7 +229,6 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         }
         else if (subAxis.id == y) {
             imgPath.push(yval.key);
-            yind = subAxis.values.findIndex((v) => v.key == yval.key);
         }
         else if (x2Axis != null && subAxis.id == x2Axis.id) {
             imgPath.push(x2val.key);
@@ -258,9 +241,8 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         }
     }
     let newContent = '';
-    let xScores = getAllScoresOnAxis(xAxis.id, imgPath);
     let subInd = 0;
-    let pickDisplay = document.getElementById('pickscore_display').value;
+    let scoreDisplay = document.getElementById('score_display').value;
     for (let xVal of xAxis.values) {
         subInd++;
         if (!canShowVal(xAxis.id, xVal.key)) {
@@ -271,35 +253,29 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         let actualUrl = slashed + '.' + rawData.ext;
         let style = "";
         let extra = "";
-        if (xScores) {
-            let yScores = getAllScoresOnAxis(y, imgPath);
-            let xScore = xScores[subInd - 1];
-            let yScore = yScores[yind];
-            let xPercent = pickScorePercent(xScore, xScores);
-            let yPercent = pickScorePercent(yScore, yScores);
-            let xColor = percentToRedGreen(xPercent);
-            let yColor = percentToRedGreen(yPercent);
-            if (pickDisplay == 'Side-Bars')
-            {
-                let xborder = `border-top: 2px solid ${xColor}; border-bottom: 2px solid ${xColor};`;
-                let yborder = `border-left: 2px solid ${yColor}; border-right: 2px solid ${yColor};`;
-                style = `${xborder} ${yborder}`;
-            }
-            else if (pickDisplay == 'Heatmap')
-            {
-                let xyPercent = xPercent * yPercent / 100;
-                let xyColor = percentToRedGreen(xyPercent);
-                style = `background-color: ${xyColor};`;
-                extra = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(xyPercent)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: color-mix(in srgb, ${xyColor} 50%, transparent)"></div></div>`;
-            }
-            else if (pickDisplay == 'Columns')
-            {
-                let xborder = `border-top: 10px solid ${xColor};`;
-                let yborder = `border-left: 10px solid ${yColor};`;
-                style = `${xborder} ${yborder}`;
-                extra = ``;
+        if (scoreDisplay != 'None') {
+            let score = getScoreFor(slashed);
+            if (score) {
+                let color = percentToRedGreen(score * 100);
+                if (scoreDisplay == 'Thin Outline')
+                {
+                    let xborder = `border-top: 2px solid ${color}; border-bottom: 2px solid ${color};`;
+                    let yborder = `border-left: 2px solid ${color}; border-right: 2px solid ${color};`;
+                    style = `${xborder} ${yborder}`;
+                }
+                else if (scoreDisplay == 'Thick Bars')
+                {
+                    style = `border-top: 10px solid ${color}; border-left: 10px solid ${color};`;
+                }
+                else if (scoreDisplay == 'Heatmap')
+                {
+                    extra = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(score * 100)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: color-mix(in srgb, ${color} 50%, transparent)"></div></div>`;
+                }
             }
         }
+        let newScr = document.createElement('script');
+        newScr.src = `${slashed}.metadata.js`;
+        scriptDump.appendChild(newScr);
         newContent += `<td>${extra}<img class="table_img" style="${style}" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
     }
     return newContent;
@@ -321,7 +297,7 @@ function optDescribe(isFirst, val) {
 }
 
 function fillTable() {
-    if (supressUpdate) {
+    if (suppressUpdate) {
         return;
     }
     var x = getCurrentSelectedAxis('x');
@@ -336,6 +312,7 @@ function fillTable() {
     var table = document.getElementById('image_table');
     var newContent = '<tr id="image_table_header" class="sticky_top"><th></th>';
     var superFirst = true;
+    document.getElementById('image_script_dump').innerHTML = '';
     for (var x2val of (x2Axis == null ? [null] : x2Axis.values)) {
         if (x2val != null && !canShowVal(x2Axis.id, x2val.key)) {
             continue;
@@ -378,7 +355,6 @@ function fillTable() {
     }
     table.innerHTML = newContent;
     updateScaling();
-    document.getElementById('pickscore_setting').style.display = (typeof all_pick_scores != 'undefined') ? 'inline-block' : 'none';
 }
 
 function getCurrentSelectedAxis(axisPrefix) {

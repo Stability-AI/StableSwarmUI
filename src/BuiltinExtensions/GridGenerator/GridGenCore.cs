@@ -219,6 +219,8 @@ public partial class GridGenCore
         public GridRunner Runner;
 
         public volatile bool MustCancel;
+
+        public bool PublishMetadata;
     }
 
     public class SingleGridCall
@@ -411,7 +413,7 @@ public partial class GridGenCore
             }
         }
 
-        public string BuildJson(bool publishGenMetadata, T2IParams inputs, bool dryRun)
+        public string BuildJson(T2IParams inputs, bool dryRun)
         {
             JObject results = new()
             {
@@ -435,7 +437,7 @@ public partial class GridGenCore
             {
                 results["will_run"] = true;
             }
-            if (publishGenMetadata)
+            if (Grid.PublishMetadata)
             {
                 results["metadata"] = null; // TODO: webdata_get_base_param_data(p)
             }
@@ -458,7 +460,7 @@ public partial class GridGenCore
                         ["description"] = val.Description ?? "",
                         ["show"] = val.Show
                     };
-                    if (publishGenMetadata)
+                    if (Grid.PublishMetadata)
                     {
                         jVal["params"] = JToken.FromObject(val.Params);
                     }
@@ -560,10 +562,10 @@ public partial class GridGenCore
             return html;
         }
 
-        public string EmitWebData(string path, bool publishGenMetadata, T2IParams input, bool dryRun, string footerExtra)
+        public string EmitWebData(string path, T2IParams input, bool dryRun, string footerExtra)
         {
             Logs.Info("Building final web data...");
-            string json = BuildJson(publishGenMetadata, input, dryRun);
+            string json = BuildJson(input, dryRun);
             if (!dryRun)
             {
                 File.WriteAllText(path + "/last.js", "window.lastUpdated = []");
@@ -598,7 +600,8 @@ public partial class GridGenCore
             Axes = new(),
             BaseParams = new(),
             InitialParams = baseParams.Clone(),
-            LocalData = LocalData
+            LocalData = LocalData,
+            PublishMetadata = publishGenMetadata
         };
         foreach (JToken axis in axes)
         {
@@ -635,7 +638,7 @@ public partial class GridGenCore
         {
             outputFolderName = inputFile.Replace(".yml", "");
         }
-        string folder = outputFolderBase + "/" + outputFolderName;
+        string folder = $"{outputFolderBase}/{outputFolderName}";
         GridRunner runner = new()
         {
             Grid = grid,
@@ -650,7 +653,7 @@ public partial class GridGenCore
         string json = "";
         if (generatePage)
         {
-            json = runner.EmitWebData(folder, publishGenMetadata, baseParams, dryRun, footerExtra);
+            json = runner.EmitWebData(folder, baseParams, dryRun, footerExtra);
         }
         runner.Run(dryRun);
         if (dryRun)
@@ -661,18 +664,34 @@ public partial class GridGenCore
         {
             json = json.Replace("\"will_run\": true, ", "");
             File.WriteAllText(folder + "/data.js", "rawData = " + json);
-            Task.Run(() =>
+        }
+        return grid;
+    }
+
+    public static void PostClean(string outputFolderBase, string outputFolderName)
+    {
+        string folder = $"{outputFolderBase}/{outputFolderName}";
+        Task.Run(() =>
+        {
+            try
+            {
+                Task.Delay(6000).Wait(Program.GlobalProgramCancel);
+            }
+            catch (Exception ex)
+            {
+                Logs.Debug($"Error in GridGen wait-to-clear-last: {ex}");
+            }
+            finally
             {
                 try
                 {
-                    Task.Delay(6000).Wait(Program.GlobalProgramCancel);
-                }
-                finally
-                {
                     File.Delete(folder + "/last.js");
                 }
-            });
-        }
-        return grid;
+                catch (Exception ex)
+                {
+                    Logs.Debug($"Error in GridGen delete-last: {ex}");
+                }
+            }
+        });
     }
 }

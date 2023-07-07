@@ -47,7 +47,7 @@ public static class Utilities
     /// <summary>Send JSON data to a WebSocket.</summary>
     public static async Task SendJson(this WebSocket socket, JObject obj, TimeSpan maxDuration)
     {
-        await socket.SendAsync(StringConversionHelper.UTF8Encoding.GetBytes(obj.ToString(Formatting.None)), WebSocketMessageType.Text, true, TimedCancel(maxDuration));
+        await socket.SendAsync(obj.ToString(Formatting.None).EncodeUTF8(), WebSocketMessageType.Text, true, TimedCancel(maxDuration));
     }
 
     /// <summary>Equivalent to <see cref="Task.WhenAny(IEnumerable{Task})"/> but doesn't break on an empty list.</summary>
@@ -141,7 +141,7 @@ public static class Utilities
 
     public static ByteArrayContent JSONContent(JObject jobj)
     {
-        ByteArrayContent content = new(StringConversionHelper.UTF8Encoding.GetBytes(jobj.ToString(Formatting.None)));
+        ByteArrayContent content = new(jobj.ToString(Formatting.None).EncodeUTF8());
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
         return content;
     }

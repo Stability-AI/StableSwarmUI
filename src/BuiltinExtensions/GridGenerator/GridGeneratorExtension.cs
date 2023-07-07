@@ -2,7 +2,6 @@
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
-using StableUI.Builtin_ScorersExtension;
 using StableUI.Core;
 using StableUI.DataHolders;
 using StableUI.Text2Image;
@@ -137,13 +136,22 @@ public class GridGeneratorExtension : Extension
                         setError($"Server generated {outputs.Length} images when only expecting 1.");
                         return;
                     }
-                    string targetPath = $"{set.Grid.Runner.BasePath}/{set.BaseFilepath}.{set.Grid.Format}";
+                    string mainpath = $"{set.Grid.Runner.BasePath}/{set.BaseFilepath}";
+                    string targetPath = $"{mainpath}.{set.Grid.Format}";
                     string dir = targetPath.Replace('\\', '/').BeforeLast('/');
                     if (!Directory.Exists(dir))
                     {
                         Directory.CreateDirectory(dir);
                     }
                     File.WriteAllBytes(targetPath, outputs[0].ImageData);
+                    if (set.Grid.PublishMetadata)
+                    {
+                        string metadata = outputs[0].GetMetadata();
+                        if (metadata is not null)
+                        {
+                            File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata}".EncodeUTF8());
+                        }
+                    }
                     data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}", ["metadata"] = outputs[0].GetMetadata() });
                 }));
             lock (data.UpdateLock)
@@ -152,7 +160,7 @@ public class GridGeneratorExtension : Extension
             }
             return t;
         };
-        GridGenCore.PostPreprocessCallback = (grid) =>
+        PostPreprocessCallback = (grid) =>
         {
             StableUIGridData data = grid.Grid.LocalData as StableUIGridData;
             data.Claim.Extend(grid.TotalRun, 0, 0, 0);
@@ -221,87 +229,7 @@ public class GridGeneratorExtension : Extension
         }
     }
 
-    /// <summary>
-    /// This is combinatorics hell.
-    /// Do NOT use on large grids.
-    /// Non-transitive comparison calculation is evil.
-    /// </summary>
-    public async Task RunBulkPickScore(Grid grid)
-    {
-        ScorersExtension scorers = Program.GetExtension<ScorersExtension>();
-        string pathFor(SingleGridCall call, AxisValue val, int axisInd)
-        {
-            List<AxisValue> vals = call.Values.ToList();
-            vals.Insert(grid.Axes.Count - axisInd - 1, val);
-            string basePath = string.Join("/", vals.Select(v => T2IParamTypes.CleanNameGeneric(v.Key)).Reverse());
-            return $"{call.Grid.Runner.BasePath}/{basePath}.{call.Grid.Format}";
-        }
-        Dictionary<string, List<float>> scores = new();
-        for (int axisId = 0; axisId < grid.Axes.Count; axisId++)
-        {
-            Axis axis = grid.Axes[axisId];
-            Logs.Debug($"PickScore on axis {axisId + 1}/{grid.Axes.Count} ({axis.ID})...");
-            if (axis.Values.IsEmpty())
-            {
-                Logs.Debug("Skipping empty axis.");
-                continue;
-            }
-            if (axis.ModeName == "prompt" || axis.ModeName == "gridgenpromptreplace")
-            {
-                Logs.Debug("Skipping prompt axis.");
-                continue;
-            }
-            List<SingleGridCall> sets = grid.Runner.BuildValueSetList(grid.Axes.Except(new[] { axis }).ToList());
-            foreach (SingleGridCall call in sets)
-            {
-                call.BuildBasePaths();
-                if (call.Skip)
-                {
-                    Logs.Debug($"Skipping {call.BaseFilepath} due to being marked as Skip.");
-                    continue;
-                }
-                Image[] images = new Image[axis.Values.Count];
-                T2IParams input = grid.InitialParams.Clone();
-                call.FlattenParams(grid);
-                call.ApplyTo(input, true);
-                for (int i = 0; i < axis.Values.Count; i++)
-                {
-                    AxisValue val = axis.Values[i];
-                    if (val.Skip)
-                    {
-                        Logs.Debug($"Skipping {val.Key} due to being marked as Skip.");
-                        continue;
-                    }
-                    string path = pathFor(call, val, axisId);
-                    if (!File.Exists(path))
-                    {
-                        Logs.Debug($"Skipping {val.Key} due to no file existing at path '{path}'.");
-                        continue;
-                    }
-                    images[i] = new Image(File.ReadAllBytes(path));
-                }
-                if (images.All(i => i is null))
-                {
-                    Logs.Debug($"Skipping {call.BaseFilepath} due to no images being found.");
-                    continue;
-                }
-                float[] vals = await scorers.DoScoreMultiple(images, input.Prompt, "pickscore");
-                for (int i = 0; i < axis.Values.Count; i++)
-                {
-                    AxisValue val = axis.Values[i];
-                    if (val.Skip || images[i] is null)
-                    {
-                        continue;
-                    }
-                    string path = pathFor(call, val, axisId);
-                    scores.GetOrCreate(path.After(call.Grid.Runner.BasePath + "/").BeforeLast('.'), () => new List<float>()).Add(vals[i]);
-                }
-            }
-        }
-        File.WriteAllText($"{grid.Runner.BasePath}/pickscores.js", "all_pick_scores = " + JObject.FromObject(scores).ToString(Newtonsoft.Json.Formatting.None));
-    }
-
-    public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool pickScore)
+    public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
         using Session.GenClaim claim = session.Claim(gens: 1);
         T2IParams baseParams = new(session) { BatchID = Random.Shared.Next(int.MaxValue) };
@@ -352,8 +280,7 @@ public class GridGeneratorExtension : Extension
         Grid grid = null;
         try
         {
-            string footerExtra = pickScore ? "<script src=\"pickscores.js\"></script>" : "";
-            Task mainRun = Task.Run(() => grid = Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, "Output", outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun, footerExtra));
+            Task mainRun = Task.Run(() => grid = Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, "Output", outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun));
             while (!mainRun.IsCompleted || data.GetActive().Any() || data.Generated.Any())
             {
                 await data.Signal.WaitAsync(TimeSpan.FromSeconds(1));
@@ -375,6 +302,7 @@ public class GridGeneratorExtension : Extension
                 Volatile.Write(ref data.ErrorOut, ExToError(ex));
             }
         }
+        PostClean(session.User.OutputDirectory, outputFolderName);
         Task faulted = data.Rendering.FirstOrDefault(t => t.IsFaulted);
         JObject err = Volatile.Read(ref data.ErrorOut);
         if (faulted is not null && err is null)
@@ -386,11 +314,6 @@ public class GridGeneratorExtension : Extension
             Logs.Error($"GridGen stopped while running: {err}");
             await socket.SendJson(err, TimeSpan.FromMinutes(1));
             return null;
-        }
-        if (pickScore && !dryRun)
-        {
-            Logs.Info("Start PickScore...");
-            await RunBulkPickScore(grid);
         }
         Logs.Info("Grid Generator completed successfully");
         claim.Complete(gens: 1);

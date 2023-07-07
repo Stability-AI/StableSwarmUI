@@ -103,7 +103,6 @@ function gridGen_register() {
         + makeCheckboxInput(null, 'grid-gen-opt-generate-page', 'Generate Page', 'If unchecked, will prevent regenerating the page for the grid.', true)
         + makeCheckboxInput(null, 'grid-gen-opt-publish-metadata', 'Publish Generation Metadata', 'If unchecked, will hide the image generation metadata.', true)
         + makeCheckboxInput(null, 'grid-gen-opt-dry-run', 'Dry Run', 'If checked, will not actually generate any images - useful to validate your grid.', false)
-        + makeCheckboxInput(null, 'grid-gen-opt-pickscore', 'Pick Score All Axes', '(WARNING: Heavy) If checked, will run PickScore across all axes (other than prompt axes) to generate preference maps.', false)
         ;
     gridGen_mainDiv.appendChild(gridGen_settingsDiv);
     gridGen_mainDiv.appendChild(gridGen_axisDiv);
@@ -126,8 +125,7 @@ function gridGen_register() {
             'fastSkip': getOpt('fast-skip'),
             'generatePage': getOpt('generate-page'),
             'publishGenMetadata': getOpt('publish-metadata'),
-            'dryRun': getOpt('dry-run'),
-            'pickScore': getOpt('pickscore')
+            'dryRun': getOpt('dry-run')
         };
         let axisData = [];
         for (let axis of gridGen_axisDiv.getElementsByClassName('grid-gen-axis-wrapper')) {
