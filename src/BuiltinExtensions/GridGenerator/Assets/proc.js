@@ -268,6 +268,7 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                     score = (score - scoreMin) / (scoreMax - scoreMin);
                     let elem = document.getElementById(`td-img-${id}`);
                     let color = percentToRedGreen(score * 100);
+                    let blockColor = '';
                     if (scoreDisplay == 'Thin Outline')
                     {
                         let xborder = `border-top: 2px solid ${color}; border-bottom: 2px solid ${color};`;
@@ -280,8 +281,9 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                     }
                     else if (scoreDisplay == 'Heatmap')
                     {
-                        elem.firstChild.innerHTML = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(score * 100)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: color-mix(in srgb, ${color} 50%, transparent)"></div></div>`;
+                        blockColor = `color-mix(in srgb, ${color} 50%, transparent)`;
                     }
+                    elem.firstChild.innerHTML = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(score * 100)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: ${blockColor}"></div></div>`;
                 }
             });
             newScr.onload = () => {
