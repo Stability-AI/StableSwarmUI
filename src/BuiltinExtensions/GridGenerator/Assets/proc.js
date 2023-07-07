@@ -297,6 +297,7 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                 let xborder = `border-top: 10px solid ${xColor};`;
                 let yborder = `border-left: 10px solid ${yColor};`;
                 style = `${xborder} ${yborder}`;
+                extra = ``;
             }
         }
         newContent += `<td>${extra}<img class="table_img" style="${style}" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;

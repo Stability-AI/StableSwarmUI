@@ -113,9 +113,9 @@ function setCurrentImage(src, metadata = '') {
     curImg.appendChild(img);
     currentMetadataVal = metadata;
     let buttons = createDiv(null, 'current-image-buttons');
-    buttons.innerHTML = `<button class="cur-img-button" onclick="javascript:upscale_current_image()">Upscale 2x</button>
-    <button class="cur-img-button" onclick="javascript:star_current_image()">Star</button>
-    <button class="cur-img-button" onclick="javascript:copy_current_image_params()">Copy Parameters</button>`;
+    buttons.innerHTML = `<button class="basic-button" onclick="javascript:upscale_current_image()">Upscale 2x</button>
+    <button class="basic-button" onclick="javascript:star_current_image()">Star</button>
+    <button class="basic-button" onclick="javascript:copy_current_image_params()">Copy Parameters</button>`;
     curImg.appendChild(buttons);
     let data = createDiv(null, 'current-image-data');
     data.innerHTML = formatMetadata(metadata);
