@@ -59,6 +59,10 @@ class PickScore(Scorer):
             text_embs = text_embs / torch.norm(text_embs, dim=-1, keepdim=True)
             # score
             scores = (text_embs @ image_embs.T)[0]
+            print(f"PickScore raw value {scores.cpu().tolist()}")
+            calc = 0.3 / (scores + 0.18)
+            calc2 = 1 - calc * calc * calc
+            scores = (calc2 - 0.2) * 1.9
         return scores.cpu().tolist()
 
 
@@ -130,13 +134,13 @@ class Handler(BaseHTTPRequestHandler):
                 scorer = by_name(message['scorer'])
                 scorer.load()
                 t_before = time.time()
-                imgs = [Image.open(BytesIO(base64.b64decode(img))).convert('RGB') for img in message['images']]
-                scores = scorer.calculate(message['prompt'], imgs)
+                imgs = [Image.open(BytesIO(base64.b64decode(message['image']))).convert('RGB')]
+                score = max(0, min(1, scorer.calculate(message['prompt'], imgs)[0]))
                 t_after = time.time()
                 max_mem = torch.cuda.max_memory_allocated()
-                log(f"allocated max mem: {max_mem / 1024 / 1024 / 1024:.3f} GiB, took {t_after - t_before:.3f} seconds, yielded value {scores}")
+                log(f"allocated max mem: {max_mem / 1024 / 1024 / 1024:.3f} GiB, took {t_after - t_before:.3f} seconds, yielded value {score}")
                 torch.cuda.empty_cache()
-                self.good_response({'result': scores, 'log': LOG_TEXT})
+                self.good_response({'result': score, 'log': LOG_TEXT})
                 LOG_TEXT = ''
             except Exception as ex:
                 self.good_response({'error': f'failed: {ex}', 'log': f"{ex}\n{LOG_TEXT}"})

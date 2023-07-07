@@ -218,6 +218,12 @@ function percentToRedGreen(percent) {
     return `color-mix(in srgb, red, green ${percent}%)`;
 }
 
+let scoreTrackCounter = 0;
+let scoreUpdates = [];
+let lastScoreBump = Date.now();
+let scoreBumpTracker = null;
+let scoreMin = 0, scoreMax = 1;
+
 function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
     let scriptDump = document.getElementById('image_script_dump');
     let imgPath = [];
@@ -251,32 +257,62 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         imgPath[index] = xVal.key;
         let slashed = imgPath.join('/');
         let actualUrl = slashed + '.' + rawData.ext;
-        let style = "";
-        let extra = "";
-        if (scoreDisplay != 'None') {
-            let score = getScoreFor(slashed);
-            if (score) {
-                let color = percentToRedGreen(score * 100);
-                if (scoreDisplay == 'Thin Outline')
-                {
-                    let xborder = `border-top: 2px solid ${color}; border-bottom: 2px solid ${color};`;
-                    let yborder = `border-left: 2px solid ${color}; border-right: 2px solid ${color};`;
-                    style = `${xborder} ${yborder}`;
-                }
-                else if (scoreDisplay == 'Thick Bars')
-                {
-                    style = `border-top: 10px solid ${color}; border-left: 10px solid ${color};`;
-                }
-                else if (scoreDisplay == 'Heatmap')
-                {
-                    extra = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(score * 100)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: color-mix(in srgb, ${color} 50%, transparent)"></div></div>`;
-                }
-            }
-        }
+        let id = scoreTrackCounter++;
+        newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
         let newScr = document.createElement('script');
         newScr.src = `${slashed}.metadata.js`;
+        if (scoreDisplay != 'None') {
+            scoreUpdates.push(() => {
+                let score = getScoreFor(slashed);
+                if (score) {
+                    score = (score - scoreMin) / (scoreMax - scoreMin);
+                    let elem = document.getElementById(`td-img-${id}`);
+                    let color = percentToRedGreen(score * 100);
+                    if (scoreDisplay == 'Thin Outline')
+                    {
+                        let xborder = `border-top: 2px solid ${color}; border-bottom: 2px solid ${color};`;
+                        let yborder = `border-left: 2px solid ${color}; border-right: 2px solid ${color};`;
+                        elem.getElementsByTagName('img')[0].style = `${xborder} ${yborder}`;
+                    }
+                    else if (scoreDisplay == 'Thick Bars')
+                    {
+                        elem.getElementsByTagName('img')[0].style = `border-top: 10px solid ${color}; border-left: 10px solid ${color};`;
+                    }
+                    else if (scoreDisplay == 'Heatmap')
+                    {
+                        elem.firstChild.innerHTML = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(score * 100)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: color-mix(in srgb, ${color} 50%, transparent)"></div></div>`;
+                    }
+                }
+            });
+            newScr.onload = () => {
+                setTimeout(() => {
+                    lastScoreBump = Date.now();
+                }, 1);
+                if (scoreBumpTracker == null) {
+                    scoreBumpTracker = setInterval(() => {
+                        if (Date.now() - lastScoreBump > 300) {
+                            clearInterval(scoreBumpTracker);
+                            scoreBumpTracker = null;
+                            scoreMin = 1;
+                            scoreMax = 0;
+                            for (let image of document.getElementsByClassName('table_img')) {
+                                let score = getScoreFor(image.dataset.imgPath);
+                                if (score) {
+                                    scoreMin = Math.min(scoreMin, score);
+                                    scoreMax = Math.max(scoreMax, score);
+                                }
+                            }
+                            for (let update of scoreUpdates) {
+                                update();
+                            }
+                            scoreUpdates = [];
+                            updateScaling();
+                        }
+                    }, 100);
+                }
+            };
+        }
         scriptDump.appendChild(newScr);
-        newContent += `<td>${extra}<img class="table_img" style="${style}" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
     }
     return newContent;
 }
