@@ -304,10 +304,11 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                                     scoreMax = Math.max(scoreMax, score);
                                 }
                             }
-                            for (let update of scoreUpdates) {
+                            let upds = scoreUpdates;
+                            scoreUpdates = [];
+                            for (let update of upds) {
                                 update();
                             }
-                            scoreUpdates = [];
                             updateScaling();
                         }
                     }, 100);
