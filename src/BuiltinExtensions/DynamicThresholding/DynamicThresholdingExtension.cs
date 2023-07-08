@@ -40,7 +40,7 @@ public class DynamicThresholdingExtension : Extension
         T2IParamTypes.Register(new("[DT] Experiment Mode", "[Dynamic Thresholding]\nInternal experiment mode flag. '0' to disable.",
             T2IParamDataType.DECIMAL, "0", (s, p) => p.OtherParams["dt_experiment_mode"] = s, Toggleable: true, IsAdvanced: true, Group: "Dynamic Thresholding", FeatureFlag: "dynamic_thresholding"
             ));
-        ComfyUIBackendExtension.FeaturesSupported.Add("dynamic_thresholding");
         // TODO: Auto WebUI Converter (use DynThres ext on auto webui)
+        // TODO: ComfyUI support? Need a node for it
     }
 }

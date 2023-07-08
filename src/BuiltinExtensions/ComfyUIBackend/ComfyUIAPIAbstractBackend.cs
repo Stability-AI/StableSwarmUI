@@ -165,8 +165,5 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
         return true;
     }
 
-    public override bool DoesProvideFeature(string feature)
-    {
-        return ComfyUIBackendExtension.FeaturesSupported.Contains(feature);
-    }
+    public override IEnumerable<string> SupportedFeatures => ComfyUIBackendExtension.FeaturesSupported;
 }

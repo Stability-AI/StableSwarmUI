@@ -123,6 +123,7 @@ function loadBackendsList() {
             }
         }
         backends_loaded = data;
+        hideUnsupportableParams();
     });
 }
 

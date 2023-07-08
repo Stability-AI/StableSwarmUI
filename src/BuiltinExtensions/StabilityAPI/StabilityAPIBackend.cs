@@ -53,11 +53,6 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
         Status = BackendStatus.RUNNING;
     }
 
-    public override bool DoesProvideFeature(string feature)
-    {
-        return true;
-    }
-
     public override Task<bool> LoadModel(T2IModel model)
     {
         CurrentModelName = model.Name;
@@ -165,4 +160,6 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
         _ = Task.Run(() => UpdateBalance().Wait());
         return images.ToArray();
     }
+
+    public override IEnumerable<string> SupportedFeatures => StabilityAPIExtension.FeaturesSupported;
 }

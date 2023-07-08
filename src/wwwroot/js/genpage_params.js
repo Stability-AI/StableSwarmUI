@@ -50,6 +50,7 @@ function toggleGroupOpen(elem) {
 }
 
 function genInputs() {
+    let groupId = 0;
     for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !p.advanced],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && p.advanced],
             ['main_inputs_area_hidden', null, (p) => !p.visible]]) {
@@ -58,7 +59,6 @@ function genInputs() {
         let html = '', presetHtml = '';
         let lastGroup = null;
         let groupsClose = [];
-        let groupId = 0;
         for (let param of gen_param_types.filter(areaData[2])) {
             if (param.group != lastGroup) {
                 if (lastGroup) {
@@ -72,7 +72,7 @@ function genInputs() {
                     if (!param.group_open) {
                         groupsClose.push(groupId);
                     }
-                    html += `<div class="input-group"><span id="input_group_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
+                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
                     if (presetArea) {
                         presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
                     }
@@ -191,6 +191,7 @@ function genInputs() {
     if (modelCookie) {
         directSetModel(modelCookie);
     }
+    hideUnsupportableParams();
 }
 
 function toggle_advanced() {
@@ -211,7 +212,11 @@ function getGenInput() {
         if (type.toggleable && !document.getElementById(`input_${type.id}_toggle`).checked) {
             continue;
         }
-        let elem = document.getElementById('input_' + type.id);
+        let elem = document.getElementById(`input_${type.id}`);
+        let parent = findParentOfClass(elem, 'auto-input');
+        if (parent && parent.style.display == 'none') {
+            continue;
+        }
         if (type.type == "boolean") {
             input[type.id] = elem.checked;
         }
@@ -252,6 +257,7 @@ function refreshParameterValues(callback = null) {
         if (callback) {
             callback();
         }
+        hideUnsupportableParams();
     });
 }
 
@@ -278,5 +284,43 @@ function resetParamsToDefault() {
     console.log(`Found default = ${defaultPreset}`)
     if (defaultPreset) {
         applyOnePreset(defaultPreset);
+    }
+    hideUnsupportableParams();
+}
+
+function hideUnsupportableParams() {
+    let groups = {};
+    for (let param of gen_param_types) {
+        let elem = document.getElementById(`input_${param.id}`);
+        if (elem) {
+            let box = findParentOfClass(elem, 'auto-input');
+            let show = param.feature_flag == null || Object.values(backends_loaded).filter(b => b.features.includes(param.feature_flag)).length > 0;
+            if (show) {
+                box.style.display = 'block';
+            }
+            else {
+                box.style.display = 'none';
+            }
+            let group = findParentOfClass(elem, 'input-group');
+            console.log(`Param ${param.id} show = ${show} group = ${group == null ? 'none' : group.id}`)
+            if (group) {
+                let groupData = groups[group.id] || { visible: 0 };
+                groups[group.id] = groupData;
+                if (show) {
+                    groupData.visible++;
+                }
+            }
+        }
+    }
+    for (let group in groups) {
+        let groupData = groups[group];
+        let groupElem = document.getElementById(group);
+        console.log(`Group ${group} visible = ${groupData.visible}, elem = ${groupElem}`)
+        if (groupData.visible == 0) {
+            groupElem.style.display = 'none';
+        }
+        else {
+            groupElem.style.display = 'block';
+        }
     }
 }

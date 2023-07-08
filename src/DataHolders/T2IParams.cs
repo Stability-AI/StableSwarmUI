@@ -94,9 +94,10 @@ public class T2IParams : IDataHolder
         {
             return false;
         }
+        HashSet<string> features = backend.Backend.SupportedFeatures.ToHashSet();
         foreach (string flag in RequiredFlags)
         {
-            if (!backend.Backend.DoesProvideFeature(flag))
+            if (!features.Contains(flag))
             {
                 return false;
             }

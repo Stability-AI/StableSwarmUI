@@ -33,7 +33,8 @@ public class BackendAPI
             ["status"] = backend.Backend.Status.ToString().ToLowerFast(),
             ["id"] = backend.ID,
             ["settings"] = JToken.FromObject(backend.Backend.InternalSettingsAccess.Save(true).ToSimple()),
-            ["modcount"] = backend.ModCount
+            ["modcount"] = backend.ModCount,
+            ["features"] = new JArray(backend.Backend.SupportedFeatures.ToArray())
         };
     }
 

@@ -150,8 +150,5 @@ public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> whe
         return true;
     }
 
-    public override bool DoesProvideFeature(string feature)
-    {
-        return AutoWebUIBackendExtension.FeaturesSupported.Contains(feature);
-    }
+    public override IEnumerable<string> SupportedFeatures => AutoWebUIBackendExtension.FeaturesSupported;
 }
