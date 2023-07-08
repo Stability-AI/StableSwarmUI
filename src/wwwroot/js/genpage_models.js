@@ -80,7 +80,7 @@ function cleanModelName(name) {
     if (index != -1) {
         name = name.substring(index + 1);
     }
-    index = name.indexOf('.');
+    index = name.lastIndexOf('.');
     if (index != -1) {
         name = name.substring(0, index);
     }
