@@ -41,13 +41,15 @@ function toggleGroupOpen(elem) {
     let group = elem.parentElement.getElementsByClassName('input-group-content')[0];
     if (group.style.display == 'none') {
         group.style.display = 'block';
-        elem.parentElement.classList.remove('input-group-header-closed');
+        elem.parentElement.classList.remove('input-group-closed');
         elem.innerText = '⮟' + elem.innerText.replaceAll('⮞', '');
+        setCookie(`group_open_${elem.id}`, 'open', 365);
     }
     else {
         group.style.display = 'none';
-        elem.parentElement.classList.add('input-group-header-closed');
+        elem.parentElement.classList.add('input-group-closed');
         elem.innerText = '⮞' + elem.innerText.replaceAll('⮟', '');
+        setCookie(`group_open_${elem.id}`, 'closed', 365);
     }
 }
 
@@ -72,7 +74,8 @@ function genInputs() {
                 }
                 if (param.group) {
                     groupId++;
-                    if (!param.group.open) {
+                    let shouldOpen = getCookie(`group_open_input_group_${groupId}`) || (param.group.open ? 'open' : 'closed');
+                    if (shouldOpen == 'closed') {
                         groupsClose.push(groupId);
                     }
                     html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group.name)}</span><div class="input-group-content">`;

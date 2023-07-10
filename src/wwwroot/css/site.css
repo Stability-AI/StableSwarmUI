@@ -296,9 +296,9 @@ textarea, input, select {
     border-radius: 1rem;
     margin-top: 0.8rem;
     margin-bottom: 0.2rem;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0.1rem;
 }
-.input-group-header-closed {
+.input-group-closed {
     border: none;
 }
 .input-group-content {
