@@ -348,3 +348,17 @@ body {
     border-radius: 0.3rem;
     color: var(--text);
 }
+.bottom-info-bar-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    height: 2.1rem;
+    border-bottom: 1px solid var(--light-border);
+}
+.bottom-info-bar-component {
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+    border-left: 1px solid var(--light-border);
+    border-right: 1px solid var(--light-border);
+}

@@ -49,6 +49,10 @@
         </div>
         <div class="t2i-mid-split-bar splitter-bar" id="t2i-mid-split-bar"></div>
         <div class="t2i-bottom-bar" id="t2i_bottom_bar">
+            <div class="bottom-info-bar-container">
+                <span class="bottom-info-bar-component"><b>Model</b>: <span class="current_model_view" id="current_model"></span></span>
+                <span class="bottom-info-bar-component" style="display:none;" id="current_presets_wrapper"><span><b>Current presets</b><span id="preset_info_slot"></span>: </span> <span id="current_preset_list_view"></span></span>
+            </div>
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <a class="nav-link active" data-bs-toggle="tab" href="#Image-History-Tab" aria-selected="true" role="tab">Image History</a>
@@ -65,15 +69,14 @@
             </ul>
             <div class="tab-content" id="t2i_bottom_bar_content">
                 <div class="tab-pane show active" id="Image-History-Tab" role="tabpanel">
-                    <button id="image_history_refresh_button" class="image-history-refresh refresh-button">&#128472;Refresh</button>
+                    <button id="image_history_refresh_button" title="Refresh" class="image-history-refresh refresh-button">&#128472;</button>
                     <button id="image_history_up_button" class="refresh-button" disabled autocomplete="off"><img style="height: 1rem;" src="/imgs/folder_up.png" title="Go back up 1 folder" /></button>
                     <div class="image_history" id="image_history"></div>
                 </div>
                 <div class="tab-pane" id="Presets-Tab" role="tabpanel">
-                    <button id="preset_list_refresh_button" class="refresh-button" onclick="javascript:loadUserData()">&#128472;Refresh</button>
+                    <button id="preset_list_refresh_button" class="refresh-button" title="Refresh" onclick="javascript:loadUserData()">&#128472;</button>
                     <button id="preset_list_create_new_button" class="refresh-button" onclick="javascript:create_new_preset_button()">Create New Preset</button>
                     <button id="preset_list_apply_button" class="refresh-button" onclick="javascript:apply_presets()" title="Apply all current presets directly to your parameter list.">Apply Presets</button>
-                    <span>Current presets<span id="preset_info_slot"></span>: </span> <span id="current_preset_list_view"></span>
                     <div class="modal" tabindex="-1" role="dialog" id="add_preset_modal">
                         <div class="modal-dialog" role="document">
                             <div class="modal-content">
@@ -111,9 +114,8 @@
                     </div>
                 </div>
                 <div class="tab-pane" id="Models-Tab" role="tabpanel">
-                    <button id="model_list_refresh_button" class="refresh-button">&#128472;Refresh</button>
+                    <button id="model_list_refresh_button" title="Refresh" class="refresh-button">&#128472;</button>
                     <button id="model_list_up_button" class="refresh-button" disabled autocomplete="off"><img style="height: 1rem;" src="/imgs/folder_up.png" title="Go back up 1 folder" /></button>
-                    Current Model: <span class="current_model_view" id="current_model"></span>
                     <div class="sui-popover sui_popover_model" id="popover_modelmenu">
                         <div class="sui_popover_model_button" onclick="javascript:modelMenuDoLoadNow()">Load Now</div>
                         <div class="sui_popover_model_button" onclick="javascript:modelMenuDoEdit()">Edit Metadata</div>

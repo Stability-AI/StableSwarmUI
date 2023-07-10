@@ -176,6 +176,7 @@ function updatePresetList() {
             }
         }
     }
+    document.getElementById('current_presets_wrapper').style.display = currentPresets.length > 0 ? 'inline-block' : 'none';
     document.getElementById('preset_info_slot').innerText = ` (${currentPresets.length}, overriding ${overrideCount} params)`;
 }
 
