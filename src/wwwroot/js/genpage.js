@@ -563,7 +563,7 @@ function pageSizer() {
         if (midDrag) {
             let topY = currentImageBatch.getBoundingClientRect().top;
             let refY = Math.min(Math.max(e.pageY, 85), window.innerHeight - 85);
-            let offY = (refY - topY - 2) / window.innerHeight * 100;
+            let offY = (refY - topY - 5) / window.innerHeight * 100;
             offY = Math.min(Math.max(offY, 5), 95);
             pageBarMid = offY;
             setPageBars();

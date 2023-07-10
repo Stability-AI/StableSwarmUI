@@ -90,7 +90,7 @@ body {
 }
 .tab-pane-vw {
     height: 100%;
-    overflow: scroll;
+    overflow: auto;
 }
 .backend-wrapper-spot {
     display: inline-block;
