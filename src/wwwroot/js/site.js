@@ -138,11 +138,26 @@ function doToggleEnable(id) {
         console.log(`Tried to toggle ${id} but it doesn't exist.`);
         return;
     }
-    let toggler = document.getElementById(id + "_toggle");
+    let toggler = document.getElementById(id + '_toggle');
     if (!toggler) {
         console.log(`Tried to toggle ${id} but the toggler doesn't exist.`);
+        return;
     }
     elem.disabled = !toggler.checked;
+    let div = elem.parentElement.querySelector('.toggler-overlay-part');
+    if (div) {
+        div.remove();
+    }
+    if (elem.disabled) {
+        let overlay = elem.parentElement.querySelector('.toggler-overlay');
+        overlay.innerHTML = `<div class="toggler-overlay-part" style="width: ${elem.clientWidth}px; height: ${elem.clientHeight}px"></div>`;
+        overlay.firstChild.addEventListener('click', () => {
+            toggler.checked = true;
+            elem.disabled = false;
+            overlay.firstChild.remove();
+            elem.focus();
+        });
+    }
 }
 
 function getToggleHtml(toggles, id, name) {
@@ -174,6 +189,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, step
         </div>
         <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
         <br>
+        <div class="toggler-overlay"></div>
         <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
     </div></div>`;
 }
@@ -186,6 +202,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
         return `
         <div class="auto-input auto-number-box" title="${name}: ${description}"${featureid}>
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
+            <div class="toggler-overlay"></div>
             <input class="auto-number-small" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" autocomplete="false">
         </div>`;
     }
@@ -195,6 +212,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
             <div class="auto-input-fade-lock auto-fade-max-contain">
                 <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
             </div>
+            <div class="toggler-overlay"></div>
             <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
         </div>`
     }
@@ -210,6 +228,7 @@ function makeTextInput(featureid, id, name, description, value, rows, placeholde
         <div class="auto-input-fade-lock auto-fade-max-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
         </div>
+        <div class="toggler-overlay"></div>
         <textarea class="auto-text" id="${id}" rows="${rows}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
     </div>`;
 }
@@ -222,7 +241,9 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
     return `
     <div class="auto-input auto-checkbox-box" title="${name}: ${description}"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
-        <br><input class="auto-checkbox" type="checkbox" id="${id}"${checked}> <span class="auto-input-description" autocomplete="false">${description}</span>
+        <br>
+        <div class="toggler-overlay"></div>
+        <input class="auto-checkbox" type="checkbox" id="${id}"${checked}> <span class="auto-input-description" autocomplete="false">${description}</span>
     </div>`;
 }
 
@@ -235,6 +256,7 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
         <div class="auto-input-fade-lock auto-fade-max-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
         </div>
+        <div class="toggler-overlay"></div>
         <select class="auto-dropdown" id="${id}" autocomplete="false">`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
@@ -255,6 +277,7 @@ function makeImageInput(featureid, id, name, description, toggles = false) {
         <div class="auto-input-fade-lock auto-fade-max-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
         </div>
+        <div class="toggler-overlay"></div>
         <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" autocomplete="false">
     </div>`;
     return html;

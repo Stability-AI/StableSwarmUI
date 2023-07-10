@@ -4,6 +4,12 @@ let currentPresets = [];
 
 let preset_to_edit = null;
 
+function fixPresetParamClickables() {
+    for (let param of gen_param_types) {
+        doToggleEnable(`preset_input_${param.id}`);
+    }
+}
+
 function getPresetByTitle(title) {
     title = title.toLowerCase();
     return allPresets.find(p => p.title.toLowerCase() == title);
@@ -64,6 +70,7 @@ function create_new_preset_button() {
         }
     }
     $('#add_preset_modal').modal('show');
+    fixPresetParamClickables();
 }
 
 function close_create_new_preset() {
@@ -121,6 +128,7 @@ function preset_toggle_advanced() {
     let advancedArea = document.getElementById('new_preset_modal_advanced_inputs');
     let toggler = document.getElementById('preset_advanced_options_checkbox');
     advancedArea.style.display = toggler.checked ? 'block' : 'none';
+    fixPresetParamClickables();
 }
 
 function preset_toggle_advanced_checkbox_manual() {
@@ -213,7 +221,7 @@ function editPreset(preset) {
     for (let key of Object.keys(preset.param_map)) {
         let type = gen_param_types.filter(p => p.id == key)[0];
         if (type) {
-            let presetElem = document.getElementById('preset_input_' + type.id);
+            let presetElem = document.getElementById(`preset_input_${type.id}`);
             if (type.type == "boolean") {
                 presetElem.checked = preset.param_map[key] == "true";
             }
@@ -221,10 +229,11 @@ function editPreset(preset) {
                 presetElem.value = preset.param_map[key];
             }
             presetElem.disabled = false;
-            document.getElementById('preset_input_' + type.id + '_toggle').checked = true;
+            document.getElementById(`preset_input_${type.id}_toggle`).checked = true;
         }
     }
     $('#add_preset_modal').modal('show');
+    fixPresetParamClickables();
 }
 
 let currPresetMenuPreset = null;

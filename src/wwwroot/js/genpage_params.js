@@ -110,6 +110,7 @@ function genInputs() {
     for (let param of gen_param_types) {
         if (param.toggleable) {
             doToggleEnable(`input_${param.id}`);
+            doToggleEnable(`preset_input_${param.id}`);
         }
     }
     let inputAspectRatio = document.getElementById('input_aspectratio');
@@ -209,6 +210,11 @@ function toggle_advanced() {
     let advancedArea = document.getElementById('main_inputs_area_advanced');
     let toggler = document.getElementById('advanced_options_checkbox');
     advancedArea.style.display = toggler.checked ? 'block' : 'none';
+    for (let param of gen_param_types) {
+        if (param.toggleable) {
+            doToggleEnable(`input_${param.id}`);
+        }
+    }
 }
 
 function toggle_advanced_checkbox_manual() {
