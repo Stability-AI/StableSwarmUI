@@ -70,7 +70,8 @@
             <div class="tab-content" id="t2i_bottom_bar_content">
                 <div class="tab-pane show active" id="Image-History-Tab" role="tabpanel">
                     <button id="image_history_refresh_button" title="Refresh" class="image-history-refresh refresh-button">&#128472;</button>
-                    <button id="image_history_up_button" class="refresh-button" disabled autocomplete="off"><img style="height: 1rem;" src="/imgs/folder_up.png" title="Go back up 1 folder" /></button>
+                    <button id="image_history_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
+                    <span class="image_history_path" id="image_history_path"></span>
                     <div class="image_history" id="image_history"></div>
                 </div>
                 <div class="tab-pane" id="Presets-Tab" role="tabpanel">
@@ -115,7 +116,8 @@
                 </div>
                 <div class="tab-pane" id="Models-Tab" role="tabpanel">
                     <button id="model_list_refresh_button" title="Refresh" class="refresh-button">&#128472;</button>
-                    <button id="model_list_up_button" class="refresh-button" disabled autocomplete="off"><img style="height: 1rem;" src="/imgs/folder_up.png" title="Go back up 1 folder" /></button>
+                    <button id="model_list_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
+                    <span class="model_folder_path" id="model_folder_path"></span>
                     <div class="sui-popover sui_popover_model" id="popover_modelmenu">
                         <div class="sui_popover_model_button" onclick="javascript:modelMenuDoLoadNow()">Load Now</div>
                         <div class="sui_popover_model_button" onclick="javascript:modelMenuDoEdit()">Edit Metadata</div>

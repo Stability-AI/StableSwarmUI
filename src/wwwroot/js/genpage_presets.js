@@ -164,10 +164,7 @@ function updatePresetList() {
             if (param) {
                 if (param.type != "text" || !preset.param_map[key].includes("{value}")) {
                     let elem = document.getElementById(`input_${param.id}`);
-                    let toggler = document.getElementById(`input_${param.id}_toggle`);
-                    if (elem.disabled && (!param.toggleable || !toggler.checked)) {
-                        overrideCount += 1;
-                    }
+                    overrideCount += 1;
                     elem.disabled = true;
                     if (param.toggleable) {
                         document.getElementById(`input_${param.id}_toggle`).disabled = true;
@@ -267,12 +264,22 @@ function addPreset(preset) {
     desc.innerText = preset.title + ":\n" + preset.description + "\n";
     let addButton = createDiv(null, 'basic-button');
     addButton.innerText = ' Use ';
-    addButton.addEventListener('click', () => {
+    let useClick = () => {
         if (!currentPresets.some(p => p.title == preset.title)) {
             currentPresets.push(preset);
             updatePresetList();
+            div.classList.add('preset-block-selected');
+            addButton.innerText = ' Remove ';
         }
-    });
+        else {
+            currentPresets.splice(currentPresets.indexOf(preset), 1);
+            updatePresetList();
+            div.classList.remove('preset-block-selected');
+            addButton.innerText = ' Use ';
+        }
+    };
+    addButton.addEventListener('click', useClick);
+    img.addEventListener('click', useClick);
     desc.appendChild(addButton);
     let applyButton = createDiv(null, 'basic-button');
     applyButton.innerText = ' Direct Apply ';

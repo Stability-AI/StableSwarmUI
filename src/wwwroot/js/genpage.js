@@ -271,8 +271,10 @@ class FileListCallHelper {
     }
 };
 
-function loadFileList(api, upButton, path, container, loadCaller, fileCallback, endCallback, sortFunc) {
+function loadFileList(api, upButton, pather, path, container, loadCaller, fileCallback, endCallback, sortFunc) {
     genericRequest(api, {'path': path}, data => {
+        let pathGen = document.getElementById(pather);
+        pathGen.innerText = '';
         let prefix;
         upButton = document.getElementById(upButton);
         if (path == '') {
@@ -280,6 +282,21 @@ function loadFileList(api, upButton, path, container, loadCaller, fileCallback, 
             upButton.disabled = true;
         }
         else {
+            let partial = '';
+            for (let part of ("../" + path).split('/')) {
+                partial += part + '/';
+                let span = document.createElement('span');
+                span.className = 'path-list-part';
+                span.innerText = part;
+                let route = partial.substring(3, partial.length - 1);
+                if (route == '/') {
+                    route = '';
+                }
+                let helper = new FileListCallHelper(route, loadCaller);
+                span.onclick = helper.call.bind(helper);
+                pathGen.appendChild(span);
+                pathGen.appendChild(document.createTextNode('/'));
+            }
             prefix = path + '/';
             upButton.disabled = false;
             let above = path.split('/').slice(0, -1).join('/');
@@ -307,7 +324,7 @@ function loadHistory(path) {
     let container = document.getElementById('image_history');
     lastImageDir = path;
     container.innerHTML = '';
-    loadFileList('ListImages', 'image_history_up_button', path, container, loadHistory, (prefix, img) => {
+    loadFileList('ListImages', 'image_history_up_button', 'image_history_path', path, container, loadHistory, (prefix, img) => {
         let fullSrc = `Output/${prefix}${img.src}`;
         let batchId = 0;
         if (img.metadata) {

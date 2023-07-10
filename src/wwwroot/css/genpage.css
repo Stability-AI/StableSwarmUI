@@ -201,12 +201,12 @@ body {
     border: 1px solid black;
 }
 .model-selected {
-    border: 1px solid rgba(0, 255, 0, 1.0);
-    background-color: rgba(200, 255, 200, 0.3);
+    border: 1px solid var(--box-selected-border-stronger);
+    background-color: var(--box-selected-background-stronger);
 }
 .model-loaded {
-    border: 1px solid rgba(100, 255, 100, 0.5);
-    background-color: rgba(220, 255, 220, 0.3);
+    border: 1px solid var(--box-selected-border);
+    background-color: var(--box-selected-background);
 }
 .sui_popover_model {
     white-space: normal;
@@ -251,6 +251,7 @@ body {
     color: var(--button-text);
     border-radius: 0.5rem;
     border: 1px solid var(--button-border);
+    min-width: 2rem;
 }
 .refresh-button:hover {
     background-color: var(--button-background-hover);
@@ -285,6 +286,10 @@ body {
 .preset-block {
     border: 1px solid var(--light-border);
     width: 30rem;
+}
+.preset-block-selected {
+    border: 1px solid var(--box-selected-border);
+    background-color: var(--box-selected-background);
 }
 .preset-descblock {
     width: 20rem;
@@ -361,4 +366,10 @@ body {
     padding-right: 0.2rem;
     border-left: 1px solid var(--light-border);
     border-right: 1px solid var(--light-border);
+}
+.path-list-part {
+    border-bottom: 1px dotted var(--text);
+    cursor: pointer;
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
 }

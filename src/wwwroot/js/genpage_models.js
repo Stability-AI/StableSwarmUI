@@ -134,7 +134,7 @@ function loadModelList(path, isRefresh = false) {
     lastModelDir = path;
     container.innerHTML = '';
     models = {};
-    call = () => loadFileList('ListModels', 'model_list_up_button', path, container, loadModelList, (prefix, model) => {
+    call = () => loadFileList('ListModels', 'model_list_up_button', 'model_folder_path', path, container, loadModelList, (prefix, model) => {
         appendModel(container, prefix, model);
     }, () => {
         let current_model = document.getElementById('current_model');

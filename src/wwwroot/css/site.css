@@ -9,7 +9,7 @@
     --light-border: #3f3f46;
     --red: #ff0000;
     --green: #00ff00;
-    --qbutton: #00a0a0;
+    --qbutton: #7855e1;
     --popup-back: #000000;
     --popup-front: #ffffff;
     --button-background-hover: color-mix(in srgb, #7855e1 70%, black);
@@ -24,10 +24,14 @@
     --danger-button-background: #550000;
     --button-background-disabled: #3f3f46;
     --button-foreground-disabled: #aaaaaa;
-    --batch-0: rgba(200, 200, 255, 0.3);
-    --batch-1: rgba(255, 255, 255, 0.3);
+    --batch-0: rgba(200, 200, 200, 0.3);
+    --batch-1: rgba(200, 200, 200, 0.3);
     --text: #eeeeee;
     --text-soft: #aaaaaa;
+    --box-selected-border: rgba(120, 85, 225, 0.8);
+    --box-selected-background: rgba(120, 85, 225, 0.2);
+    --box-selected-border-stronger: rgba(120, 85, 225, 1.0);
+    --box-selected-background-stronger: rgba(120, 85, 225, 0.3);
 }
 .modal-content {
     background-color: var(--background) !important;
