@@ -18,6 +18,7 @@ def log(text):
 
 ################ Core ################
 DEVICE = "cuda"
+DTYPE = torch.float16
 
 class Scorer():
     def load(self):
@@ -36,7 +37,7 @@ class PickScore(Scorer):
     ################ Model loading & prep ################
     def load(self):
         if self.model:
-            self.model = self.model.to(DEVICE)
+            self.model = self.model.to(DEVICE).to(dtype=DTYPE)
             return
         processor_name_or_path = "laion/CLIP-ViT-H-14-laion2B-s32B-b79K"
         model_pretrained_name_or_path = "yuvalkirstain/PickScore_v1"
@@ -49,9 +50,9 @@ class PickScore(Scorer):
 
     ################ Actual PickScore handler ################
     def calculate(self, prompt, images):
-        image_inputs = self.processor(images=images, padding=True, truncation=True, max_length=77, return_tensors="pt").to(DEVICE)
-        text_inputs = self.processor(text=prompt, padding=True, truncation=True, max_length=77, return_tensors="pt").to(DEVICE)
-        with torch.no_grad():
+        image_inputs = self.processor(images=images, padding=True, truncation=True, max_length=77, return_tensors="pt").to(DEVICE).to(DTYPE)
+        text_inputs = self.processor(text=prompt, padding=True, truncation=True, max_length=77, return_tensors="pt").to(DEVICE).to(DTYPE)
+        with torch.no_grad(), torch.autocast(DEVICE, DTYPE):
             # embed
             image_embs = self.model.get_image_features(**image_inputs)
             image_embs = image_embs / torch.norm(image_embs, dim=-1, keepdim=True)
@@ -78,6 +79,7 @@ class aesth_scorer(Scorer):
     def load(self):
         if self.model:
             self.model.to(DEVICE)
+            self.model.to(DTYPE)
             return
         if not Path(self.model_id).exists():
             url = f"https://github.com/christophschuhmann/improved-aesthetic-predictor/blob/fe88a163f4661b4ddabba0751ff645e2e620746e/{self.model_id}?raw=true"
