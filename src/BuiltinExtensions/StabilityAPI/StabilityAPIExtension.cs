@@ -18,13 +18,14 @@ public class StabilityAPIExtension : Extension
 
     public override void OnInit()
     {
+        T2IParamGroup sapiGroup = new("StabilityAPI", Toggles: false, Open: true);
         Program.Backends.RegisterBackendType<StabilityAPIBackend>("stability_api", "StabilityAPI", "A backend powered by the Stability API.");
         T2IParamTypes.Register(new("[SAPI] Engine", "Engine for StabilityAPI to use.",
-            T2IParamDataType.DROPDOWN, "stable-diffusion-v1-5", (s, p) => p.OtherParams["sapi_engine"] = s, Toggleable: true, FeatureFlag: "sapi", Group: "SAPI",
+            T2IParamDataType.DROPDOWN, "stable-diffusion-v1-5", (s, p) => p.OtherParams["sapi_engine"] = s, Toggleable: true, FeatureFlag: "sapi", Group: sapiGroup,
             GetValues: (_) => Engines
             ));
         T2IParamTypes.Register(new("[SAPI] Sampler", "Sampler for StabilityAPI to use.",
-            T2IParamDataType.DROPDOWN, "K_EULER", (s, p) => p.OtherParams["sapi_sampler"] = s, Toggleable: true, FeatureFlag: "sapi", Group: "SAPI",
+            T2IParamDataType.DROPDOWN, "K_EULER", (s, p) => p.OtherParams["sapi_sampler"] = s, Toggleable: true, FeatureFlag: "sapi", Group: sapiGroup,
             GetValues: (_) => Samplers.ToList()
             ));
     }

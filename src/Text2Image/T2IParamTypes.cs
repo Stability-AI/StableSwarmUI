@@ -61,13 +61,12 @@ public enum NumberViewType
 /// <param name="Permission">If set, users must have the given permission flag to use this parameter.</param>
 /// <param name="Toggleable">If true, the setting's presence can be toggled on/off.</param>
 /// <param name="OrderPriority">Value to help sort parameter types appropriately.</param>
-/// <param name="Group">Optional grouping label.</param>
-/// <param name="GroupOpen">(When defining a new group), whether the group should be open by default.</param>
+/// <param name="Group">Optional grouping info.</param>
 /// <param name="NumberView">How to display a number input.</param>
 /// 
 public record class T2IParamType(string Name, string Description, T2IParamDataType Type, string Default, Action<string, T2IParams> Apply, double Min = 0, double Max = 0, double Step = 1,
     Func<string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
-    bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, string Group = null, bool GroupOpen = true,
+    bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null,
     NumberViewType NumberView = NumberViewType.SMALL)
 {
     public JObject ToNet(Session session)
@@ -89,9 +88,27 @@ public record class T2IParamType(string Name, string Description, T2IParamDataTy
             ["feature_flag"] = FeatureFlag,
             ["toggleable"] = Toggleable,
             ["priority"] = OrderPriority,
-            ["group"] = Group,
-            ["group_open"] = GroupOpen,
+            ["group"] = Group?.ToNet(session),
             ["number_view_type"] = NumberView.ToString().ToLowerFast()
+        };
+    }
+}
+
+/// <summary>Represents a group of parameters.</summary>
+/// <param name="Name">The name of the group.</param>
+/// <param name="Toggles">If true, the entire group toggles as one.</param>
+/// <param name="Open">If true, the group defaults open. If false, it defaults to closed.</param>
+/// <param name="OrderPriority">The priority order position to put this group in.</param>
+public record class T2IParamGroup(string Name, bool Toggles = false, bool Open = true, double OrderPriority = 10)
+{
+    public JObject ToNet(Session session)
+    {
+        return new JObject()
+        {
+            ["name"] = Name,
+            ["toggles"] = Toggles,
+            ["open"] = Open,
+            ["priority"] = OrderPriority
         };
     }
 }
@@ -143,38 +160,42 @@ public class T2IParamTypes
         Register(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.\nTell the AI things you don't want to see.",
             T2IParamDataType.TEXT, "", (s, p) => p.NegativePrompt = ApplyStringEdit(p.NegativePrompt, s), Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90
             ));
+        T2IParamGroup coreGroup = new("Core Parameters", Toggles: false, Open: true, OrderPriority: -50);
         Register(new("Images", "How many images to generate at once.",
-            T2IParamDataType.INTEGER, "1", (s, p) => { }, Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: "Core Parameters"
+            T2IParamDataType.INTEGER, "1", (s, p) => { }, Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: coreGroup
             ));
         Register(new("Steps", "How many times to run the model.\nMore steps = better quality, but more time.\n20 is a good baseline for speed, 40 is good for maximizing quality.\nYou can go much higher, but it quickly becomes pointless above 70 or so.",
-            T2IParamDataType.INTEGER, "20", (s, p) => p.Steps = int.Parse(s), Min: 1, Max: 200, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: "Core Parameters"
+            T2IParamDataType.INTEGER, "20", (s, p) => p.Steps = int.Parse(s), Min: 1, Max: 200, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: coreGroup
             ));
         Register(new("Seed", "Image seed.\n-1 = random.",
-            T2IParamDataType.INTEGER, "-1", (s, p) => p.Seed = int.Parse(s), Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -19, NumberView: NumberViewType.BIG, Group: "Core Parameters"
+            T2IParamDataType.INTEGER, "-1", (s, p) => p.Seed = int.Parse(s), Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -19, NumberView: NumberViewType.BIG, Group: coreGroup
             ));
         Register(new("CFG Scale", "How strongly to scale prompt input.\nToo-high values can cause corrupted/burnt images, too-low can cause nonsensical images.\n7 is a good baseline. Normal usages vary between 5 and 9.",
-            T2IParamDataType.DECIMAL, "7", (s, p) => p.CFGScale = float.Parse(s), Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER, Group: "Core Parameters"
+            T2IParamDataType.DECIMAL, "7", (s, p) => p.CFGScale = float.Parse(s), Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER, Group: coreGroup
             ));
+        T2IParamGroup variationGroup = new("Variation Seed", Toggles: false, Open: false, OrderPriority: -17);
         Register(new("Variation Seed", "Image-variation seed.\nCombined partially with the original seed to create a similar-but-different image for the same seed.\n-1 = random.",
-            T2IParamDataType.INTEGER, "-1", (s, p) => p.VarSeed = int.Parse(s), Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, NumberView: NumberViewType.BIG, Group: "Variation Seed", GroupOpen: false
+            T2IParamDataType.INTEGER, "-1", (s, p) => p.VarSeed = int.Parse(s), Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, NumberView: NumberViewType.BIG, Group: variationGroup
             ));
         Register(new("Variation Seed Strength", "How strongly to apply the variation seed.\n0 = don't use, 1 = replace the base seed entirely. 0.5 is a good value.",
-            T2IParamDataType.DECIMAL, "0", (s, p) => p.VarSeedStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, NumberView: NumberViewType.SLIDER, Group: "Variation Seed", GroupOpen: false
+            T2IParamDataType.DECIMAL, "0", (s, p) => p.VarSeedStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, NumberView: NumberViewType.SLIDER, Group: variationGroup
             ));
+        T2IParamGroup resolutionGroup = new("Resolution", Toggles: false, Open: false, OrderPriority: -11);
         Register(new("Aspect Ratio", "Image aspect ratio. Some models can stretch better than others.",
-            T2IParamDataType.DROPDOWN, "1:1", (s, p) => p.OtherParams["aspectratio"] = s, GetValues: (_) => new() { "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom" }, OrderPriority: -10.1, Group: "Resolution"
+            T2IParamDataType.DROPDOWN, "1:1", (s, p) => p.OtherParams["aspectratio"] = s, GetValues: (_) => new() { "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom" }, OrderPriority: -11, Group: resolutionGroup
             ));
         Register(new("Width", "Image width, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
-            T2IParamDataType.INTEGER, "512", (s, p) => p.Width = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
+            T2IParamDataType.INTEGER, "512", (s, p) => p.Width = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, NumberView: NumberViewType.POT_SLIDER, Group: resolutionGroup
             ));
         Register(new("Height", "Image height, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
-            T2IParamDataType.INTEGER, "512", (s, p) => p.Height = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -9, NumberView: NumberViewType.POT_SLIDER, Group: "Resolution"
+            T2IParamDataType.INTEGER, "512", (s, p) => p.Height = int.Parse(s), Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -9, NumberView: NumberViewType.POT_SLIDER, Group: resolutionGroup
             ));
+        T2IParamGroup initImageGroup = new("Init Image", Toggles: true, Open: false, OrderPriority: -5);
         Register(new("Init Image", "Init-image, to edit an image using diffusion.\nThis process is sometimes called 'img2img' or 'Image To Image'.",
-            T2IParamDataType.IMAGE, "", (s, p) => p.InitImage = string.IsNullOrWhiteSpace(s) ? null : new(s), OrderPriority: -5, Group: "Init Image", GroupOpen: false
+            T2IParamDataType.IMAGE, "", (s, p) => p.InitImage = string.IsNullOrWhiteSpace(s) ? null : new(s), OrderPriority: -5, Group: initImageGroup
             ));
         Register(new("Init Image Creativity", "Higher values make the generation more creative, lower values follow the init image closer.\nSometimes referred to as 'Denoising Strength' for 'img2img'.",
-            T2IParamDataType.DECIMAL, "0.6", (s, p) => p.ImageInitStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, NumberView: NumberViewType.SLIDER, Group: "Init Image", GroupOpen: false
+            T2IParamDataType.DECIMAL, "0.6", (s, p) => p.ImageInitStrength = float.Parse(s), Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, NumberView: NumberViewType.SLIDER, Group: initImageGroup
             ));
         Register(new("Model", "What main checkpoint model should be used.",
             T2IParamDataType.DROPDOWN, "", (s, p) => p.Model = Program.T2IModels.Models[s], GetValues: (session) => Program.T2IModels.ListModelsFor(session).Select(m => m.Name).Order().ToList(), Permission: "param_model", VisibleNormally: false

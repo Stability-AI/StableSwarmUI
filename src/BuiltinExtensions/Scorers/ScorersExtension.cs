@@ -21,16 +21,17 @@ public class ScorersExtension : Extension
     {
         T2IEngine.PostGenerateEvent += PostGenEvent;
         T2IEngine.PostBatchEvent += PostBatchEvent;
+        T2IParamGroup scoreGroup = new("Scoring", Toggles: true, Open: false);
         T2IParamTypes.Register(new("Automatic Scorer", "Scoring engine(s) to use when scoring this image. Multiple scorers can be used via comma-separated list, and will be averaged together. Scores are saved in image metadata.",
-                       T2IParamDataType.TEXT, "schuhmann_clip_plus_mlp", (s, p) => p.OtherParams["scoring_engines"] = s, Toggleable: true, Group: "Scoring", GetValues: (_) => ScoringEngines.ToList()
+                       T2IParamDataType.TEXT, "schuhmann_clip_plus_mlp", (s, p) => p.OtherParams["scoring_engines"] = s, Group: scoreGroup, GetValues: (_) => ScoringEngines.ToList()
                        // TODO: TYPE MULTISELECT
                        ));
         T2IParamTypes.Register(new("Score Must Exceed", "Only keep images with a generated score above this minimum.",
-                       T2IParamDataType.DECIMAL, "0.5", (s, p) => p.OtherParams["score_minimum"] = float.Parse(s), Min: 0, Max: 1, Step: 0.1, Toggleable: true, Group: "Scoring", Examples: new[] { "0.25", "0.5", "0.75", "0.9" }
+                       T2IParamDataType.DECIMAL, "0.5", (s, p) => p.OtherParams["score_minimum"] = float.Parse(s), Min: 0, Max: 1, Step: 0.1, Toggleable: true, Group: scoreGroup, Examples: new[] { "0.25", "0.5", "0.75", "0.9" }
                        ));
         T2IParamTypes.Register(new("Take Best N Score", "Only keep the best *this many* images in a batch based on scoring."
                         + "\n(For example, if batch size = 8, and this value = 2, then 8 images will generate and will be scored, and the 2 best will be kept and the other 6 discarded.)",
-                       T2IParamDataType.INTEGER, "1", (s, p) => p.OtherParams["score_take_best_n"] = int.Parse(s), Min: 1, Max: 100, Step: 1, Toggleable: true, Group: "Scoring", Examples: new[] { "1", "2", "3" }
+                       T2IParamDataType.INTEGER, "1", (s, p) => p.OtherParams["score_take_best_n"] = int.Parse(s), Min: 1, Max: 100, Step: 1, Toggleable: true, Group: scoreGroup, Examples: new[] { "1", "2", "3" }
                        ));
     }
 

@@ -586,7 +586,7 @@ function genpageLoad() {
         loadModelList('');
         loadBackendTypesMenu();
         genericRequest('ListT2IParams', {}, data => {
-            gen_param_types = data.list.sort((a, b) => a.priority - b.priority);
+            gen_param_types = data.list.sort(paramSorter);
             genInputs(data);
             genToolsList();
             reviseStatusBar();

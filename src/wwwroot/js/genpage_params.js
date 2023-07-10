@@ -41,10 +41,12 @@ function toggleGroupOpen(elem) {
     let group = elem.parentElement.getElementsByClassName('input-group-content')[0];
     if (group.style.display == 'none') {
         group.style.display = 'block';
+        elem.parentElement.classList.remove('input-group-header-closed');
         elem.innerText = '⮟' + elem.innerText.replaceAll('⮞', '');
     }
     else {
         group.style.display = 'none';
+        elem.parentElement.classList.add('input-group-header-closed');
         elem.innerText = '⮞' + elem.innerText.replaceAll('⮟', '');
     }
 }
@@ -60,7 +62,8 @@ function genInputs() {
         let lastGroup = null;
         let groupsClose = [];
         for (let param of gen_param_types.filter(areaData[2])) {
-            if (param.group != lastGroup) {
+            let groupName = param.group ? param.group.name : null;
+            if (groupName != lastGroup) {
                 if (lastGroup) {
                     html += '</div></div>';
                     if (presetArea) {
@@ -69,15 +72,15 @@ function genInputs() {
                 }
                 if (param.group) {
                     groupId++;
-                    if (!param.group_open) {
+                    if (!param.group.open) {
                         groupsClose.push(groupId);
                     }
-                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
+                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
                     if (presetArea) {
-                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group)}</span><div class="input-group-content">`;
+                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
                     }
                 }
-                lastGroup = param.group;
+                lastGroup = groupName;
             }
             html += getHtmlForParam(param, "input_");
             if (param.visible) { // Hidden excluded from presets.
@@ -108,22 +111,25 @@ function genInputs() {
     }
     let inputAspectRatio = document.getElementById('input_aspectratio');
     let inputWidth = document.getElementById('input_width');
-    let inputWidthParent = findParentOfClass(inputWidth, 'auto-input');
+    let inputWidthParent = findParentOfClass(inputWidth, 'slider-auto-container');
     let inputWidthSlider = document.getElementById('input_width_rangeslider');
     let inputHeight = document.getElementById('input_height');
-    let inputHeightParent = findParentOfClass(inputHeight, 'auto-input');
+    let inputHeightParent = findParentOfClass(inputHeight, 'slider-auto-container');
     let inputHeightSlider = document.getElementById('input_height_rangeslider');
     let resGroupLabel = findParentOfClass(inputWidth, 'input-group').getElementsByClassName('input-group-header')[0];
     let resTrick = () => {
+        let aspect;
         if (inputAspectRatio.value == "Custom") {
             inputWidthParent.style.display = 'block';
             inputHeightParent.style.display = 'block';
+            aspect = describeAspectRatio(inputWidth.value, inputHeight.value);
         }
         else {
             inputWidthParent.style.display = 'none';
             inputHeightParent.style.display = 'none';
+            aspect = inputAspectRatio.value;
         }
-        resGroupLabel.innerText = resGroupLabel.innerText[0] + `Resolution: ${describeAspectRatio(inputWidth.value, inputHeight.value)} (${inputWidth.value}x${inputHeight.value})`;
+        resGroupLabel.innerText = resGroupLabel.innerText[0] + `Resolution: ${aspect} (${inputWidth.value}x${inputHeight.value})`;
     };
     for (let target of [inputWidth, inputWidthSlider, inputHeight, inputHeightSlider]) {
         target.addEventListener('input', resTrick);
@@ -146,6 +152,8 @@ function genInputs() {
             else if (aspectRatio == "9:21") { width = 320; height = 768; }
             inputWidth.value = width * (curModelWidth == 0 ? 512 : curModelWidth) / 512;
             inputHeight.value = height * (curModelHeight == 0 ? 512 : curModelHeight) / 512;
+            inputWidth.dispatchEvent(new Event('input'));
+            inputHeight.dispatchEvent(new Event('input'));
         }
         resTrick();
     });
@@ -296,7 +304,7 @@ function hideUnsupportableParams() {
             let box = findParentOfClass(elem, 'auto-input');
             let show = param.feature_flag == null || Object.values(backends_loaded).filter(b => b.features.includes(param.feature_flag)).length > 0;
             if (show) {
-                box.style.display = 'block';
+                box.style.display = 'inline-block';
             }
             else {
                 box.style.display = 'none';
@@ -320,5 +328,20 @@ function hideUnsupportableParams() {
         else {
             groupElem.style.display = 'block';
         }
+    }
+}
+
+function paramSorter(a, b) {
+    if (a.group == b.group) {
+        return a.priority - b.priority;
+    }
+    else if (a.group && !b.group) {
+        return a.group.priority - b.priority;
+    }
+    else if (!a.group && b.group) {
+        return a.priority - b.group.priority;
+    }
+    else {
+        return a.group.priority - b.group.priority;
     }
 }

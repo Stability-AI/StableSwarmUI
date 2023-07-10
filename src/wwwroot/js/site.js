@@ -33,6 +33,7 @@ function enableSlidersIn(elem) {
             range.addEventListener('input', () => number.value = range.value);
             number.addEventListener('input', () => range.value = number.value);
         }
+        number.dispatchEvent(new Event('input'));
     }
 }
 
@@ -166,6 +167,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, step
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let rangeVal = isPot ? potToLinear(value, max, min, step) : value;
     return `
+    <div class="slider-auto-container">
     <div class="auto-input auto-slider-box" title="${name}: ${description}"${featureid}>
         <div class="auto-input-fade-lock auto-slider-fade-contain">
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
@@ -173,7 +175,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, step
         <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
         <br>
         <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
-    </div>`;
+    </div></div>`;
 }
 
 function makeNumberInput(featureid, id, name, description, value, min, max, step = 1, small = false, toggles = false) {

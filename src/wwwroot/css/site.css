@@ -298,6 +298,9 @@ textarea, input, select {
     margin-bottom: 0.2rem;
     padding-bottom: 0.5rem;
 }
+.input-group-header-closed {
+    border: none;
+}
 .input-group-content {
     max-width: calc(100% - 6px);
 }
