@@ -117,10 +117,23 @@ function genericRequest(url, in_data, callback, depth = 0) {
     }, genericServerError);
 }
 
+let lastServerVersion = null;
+let versionIsWrong = false;
+
 function getSession(callback) {
     genericRequest('GetNewSession', {}, data => {
         console.log("Session started.");
         session_id = data.session_id;
+        if (lastServerVersion == null) {
+            lastServerVersion = data.version;
+        }
+        else if (lastServerVersion != data.version) {
+            versionIsWrong = true;
+            showError(`The server has updated since you opened the page, please refresh.`);
+            if (typeof reviseStatusBar != 'undefined') {
+                reviseStatusBar();
+            }
+        }
         if (callback) {
             callback();
         }

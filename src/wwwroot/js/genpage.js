@@ -327,6 +327,9 @@ function loadHistory(path) {
 }
 
 function getCurrentStatus() {
+    if (versionIsWrong) {
+        return ['error', 'The server has updated since you opened the page, please refresh.'];
+    }
     if (!hasLoadedBackends) {
         return ['warn', 'Loading...'];
     }

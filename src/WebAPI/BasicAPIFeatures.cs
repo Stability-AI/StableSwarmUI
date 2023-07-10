@@ -29,7 +29,7 @@ public static class BasicAPIFeatures
     /// <summary>API Route to create a new session automatically.</summary>
     public static async Task<JObject> GetNewSession(HttpContext context)
     {
-        return new JObject() { ["session_id"] = Program.Sessions.CreateAdminSession(context.Connection.RemoteIpAddress?.ToString() ?? "unknown").ID };
+        return new JObject() { ["session_id"] = Program.Sessions.CreateAdminSession(context.Connection.RemoteIpAddress?.ToString() ?? "unknown").ID, ["version"] = Utilities.VaryID };
     }
 
     /// <summary>API Route to get the user's own base data.</summary>
