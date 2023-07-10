@@ -265,6 +265,9 @@ function getGenInput() {
         if (type.toggleable && !document.getElementById(`input_${type.id}_toggle`).checked) {
             continue;
         }
+        if (type.group && type.group.toggles && !document.getElementById(`input_group_content_${type.group.id}_toggle`).checked) {
+            continue;
+        }
         let elem = document.getElementById(`input_${type.id}`);
         let parent = findParentOfClass(elem, 'auto-input');
         if (parent && parent.style.display == 'none') {
