@@ -109,6 +109,7 @@ function setCurrentImage(src, metadata = '') {
     let curImg = document.getElementById('current_image');
     curImg.innerHTML = '';
     let img = document.createElement('img');
+    img.id = 'current_image_img';
     img.src = src;
     curImg.appendChild(img);
     currentMetadataVal = metadata;
@@ -155,6 +156,7 @@ function gotImageResult(image, metadata) {
     let history_div = appendImage('image_history', src, batches, fname, metadata);
     history_div.addEventListener('click', () => selectImageInHistory(history_div));
     setCurrentImage(src, metadata);
+    return [batch_div, history_div];
 }
 
 function updateCurrentStatusDirect(data) {
@@ -225,8 +227,32 @@ function doGenerate() {
         }
         document.getElementById('current_image_batch').innerHTML = '';
         batches++;
+        let images = {};
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(), data => {
-            gotImageResult(data.image, data.metadata);
+            if (data.image) {
+                let [batch_div, history_div] = gotImageResult(data.image, data.metadata);
+                images[data.index] = [batch_div, history_div, data.image, data.metadata];
+            }
+            if (data.discard_indices) {
+                console.log(`Discarding ${data.discard_indices} images`);
+                let needsNew = false;
+                for (let index of data.discard_indices) {
+                    let [batch_div, history_div, image, metadata] = images[index];
+                    batch_div.remove();
+                    history_div.remove();
+                    let curImgElem = document.getElementById('current_image_img');
+                    if (curImgElem.src == image) {
+                        needsNew = true;
+                        delete images[index];
+                    }
+                }
+                if (needsNew) {
+                    let img = Object.values(images);
+                    if (img.length > 0) {
+                        setCurrentImage(img[0][2], img[0][3]);
+                    }
+                }
+            }
         });
     });
 }

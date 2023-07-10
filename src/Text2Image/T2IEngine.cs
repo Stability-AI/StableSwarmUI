@@ -23,10 +23,22 @@ namespace StableUI.Text2Image
         /// <summary>Extension event, fired after images were generated, but before saving the result.
         /// Backend is already released, but the gen request is not marked completed.
         /// Ran before metadata is applied.
+        /// Use "RefuseImage" to mark an image as refused. Note that generation previews may have already been shown to a user, if that feature is enabled on the server.
         /// Use <see cref="InvalidDataException"/> for a user-readable hard-refusal message.</summary>
         public static Action<PostGenerationEventParams> PostGenerateEvent;
 
+        /// <summary>Paramters for <see cref="PostGenerateEvent"/>.</summary>
         public record class PostGenerationEventParams(Image Image, Dictionary<string, object> ExtraMetadata, T2IParams UserInput, Action RefuseImage);
+
+        /// <summary>Extension event, fired after a batch of images were generated.
+        /// Use "RefuseImage" to mark an image as removed. Note that it may have already been shown to a user, when the live result websocket API is in use.</summary>
+        public static Action<PostBatchEventParams> PostBatchEvent;
+
+        /// <summary>Parameters for <see cref="PostBatchEvent"/>.</summary>
+        public record class PostBatchEventParams(T2IParams UserInput, ImageInBatch[] Images);
+
+        /// <summary>Represents a single image within a batch of images, for <see cref="PostBatchEvent"/>.</summary>
+        public record class ImageInBatch(Image Image, Action RefuseImage);
 
         /// <summary>Internal handler route to create an image based on a user request.</summary>
         public static async Task CreateImageTask(T2IParams user_input, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image[]> saveImages)

@@ -108,11 +108,12 @@ public class Session : IEquatable<Session>
     }
 
     /// <summary>Save an image as this user, and returns the new URL. If user has disabled saving, returns a data URL.</summary>
-    public string SaveImage(Image image, T2IParams user_input)
+    /// <returns>(User-Visible-WebPath, Local-FilePath)</returns>
+    public (string, string) SaveImage(Image image, T2IParams user_input)
     {
         if (!User.Settings.SaveFiles)
         {
-            return "data:image/" + (User.Settings.FileFormat.ImageFormat == "png" ? "png" : "jpeg") + ";base64," + image.AsBase64;
+            return ("data:image/" + (User.Settings.FileFormat.ImageFormat == "png" ? "png" : "jpeg") + ";base64," + image.AsBase64, null);
         }
         string rawImagePath = User.BuildImageOutputPath(user_input);
         string imagePath = rawImagePath;
@@ -144,11 +145,11 @@ public class Session : IEquatable<Session>
                 catch (Exception ex)
                 {
                     Logs.Error($"Could not save user image: {ex.Message}");
-                    return "ERROR";
+                    return ("ERROR", null);
                 }
             }
         }
-        return $"Output/{imagePath}.{extension}";
+        return ($"Output/{imagePath}.{extension}", fullPath);
     }
 
     /// <summary>Gets a hash code for this session, for C# equality comparsion.</summary>

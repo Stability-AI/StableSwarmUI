@@ -1,5 +1,6 @@
 ﻿
 using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableUI.Backends;
 using StableUI.Core;
@@ -19,18 +20,24 @@ public class ScorersExtension : Extension
     public override void OnInit()
     {
         T2IEngine.PostGenerateEvent += PostGenEvent;
+        T2IEngine.PostBatchEvent += PostBatchEvent;
         T2IParamTypes.Register(new("Automatic Scorer", "Scoring engine(s) to use when scoring this image. Multiple scorers can be used via comma-separated list, and will be averaged together. Scores are saved in image metadata.",
                        T2IParamDataType.TEXT, "schuhmann_clip_plus_mlp", (s, p) => p.OtherParams["scoring_engines"] = s, Toggleable: true, Group: "Scoring", GetValues: (_) => ScoringEngines.ToList()
                        // TODO: TYPE MULTISELECT
                        ));
         T2IParamTypes.Register(new("Score Must Exceed", "Only keep images with a generated score above this minimum.",
-                       T2IParamDataType.DECIMAL, "0.5", (s, p) => p.OtherParams["score_minimum"] = float.Parse(s), Toggleable: true, Group: "Scoring", Examples: new[] { "0.25", "0.5", "0.75", "0.9" }
+                       T2IParamDataType.DECIMAL, "0.5", (s, p) => p.OtherParams["score_minimum"] = float.Parse(s), Min: 0, Max: 1, Step: 0.1, Toggleable: true, Group: "Scoring", Examples: new[] { "0.25", "0.5", "0.75", "0.9" }
+                       ));
+        T2IParamTypes.Register(new("Take Best N Score", "Only keep the best *this many* images in a batch based on scoring."
+                        + "\n(For example, if batch size = 8, and this value = 2, then 8 images will generate and will be scored, and the 2 best will be kept and the other 6 discarded.)",
+                       T2IParamDataType.INTEGER, "1", (s, p) => p.OtherParams["score_take_best_n"] = int.Parse(s), Min: 1, Max: 100, Step: 1, Toggleable: true, Group: "Scoring", Examples: new[] { "1", "2", "3" }
                        ));
     }
 
     public override void OnShutdown()
     {
         T2IEngine.PostGenerateEvent -= PostGenEvent;
+        T2IEngine.PostBatchEvent -= PostBatchEvent;
         if (RunningProcess is not null)
         {
             if (!RunningProcess.HasExited)
@@ -47,7 +54,9 @@ public class ScorersExtension : Extension
 
     public Process RunningProcess;
 
-    public BackendStatus Status = BackendStatus.DISABLED;
+    public volatile BackendStatus Status = BackendStatus.DISABLED;
+
+    public LockObject InitLocker = new();
 
     /// <summary>Does not return until the backend process is ready.</summary>
     public void EnsureActive()
@@ -56,27 +65,30 @@ public class ScorersExtension : Extension
         {
             Task.Delay(TimeSpan.FromSeconds(0.5)).Wait(Program.GlobalProgramCancel);
         }
-        if (Status == BackendStatus.RUNNING || Program.GlobalProgramCancel.IsCancellationRequested)
+        lock (InitLocker)
         {
-            return;
-        }
-        WebClient = NetworkBackendUtils.MakeHttpClient();
-        async Task<bool> Check(bool _)
-        {
-            try
+            if (Status == BackendStatus.RUNNING || Program.GlobalProgramCancel.IsCancellationRequested)
             {
-                if (await DoPost("API/Ping", new()) != null)
+                return;
+            }
+            WebClient = NetworkBackendUtils.MakeHttpClient();
+            async Task<bool> Check(bool _)
+            {
+                try
                 {
-                    Status = BackendStatus.RUNNING;
+                    if (await DoPost("API/Ping", new()) != null)
+                    {
+                        Status = BackendStatus.RUNNING;
+                    }
+                    return true;
                 }
-                return true;
+                catch (Exception)
+                {
+                    return false;
+                }
             }
-            catch (Exception)
-            {
-                return false;
-            }
+            NetworkBackendUtils.DoSelfStart(FilePath + "scorer_engine.py", "ScorersExtension", 0, "{PORT}", s => Status = s, Check, (p, r) => { Port = p; RunningProcess = r; }, () => Status).Wait();
         }
-        NetworkBackendUtils.DoSelfStart(FilePath + "scorer_engine.py", "ScorersExtension", 0, "{PORT}", s => Status = s, Check, (p, r) => { Port = p; RunningProcess = r; }, () => Status).Wait();
     }
 
     public async Task<JObject> DoPost(string url, JObject data)
@@ -126,6 +138,31 @@ public class ScorersExtension : Extension
             if (averageScore < scoreMinimum)
             {
                 p.RefuseImage();
+            }
+        }
+    }
+
+    public void PostBatchEvent(T2IEngine.PostBatchEventParams p)
+    {
+        if (!p.UserInput.OtherParams.TryGetValue("score_take_best_n", out object bestNObj) || bestNObj is not int bestN)
+        {
+            Logs.Debug($"Scorers: No best N specified or '{bestNObj}' is not an int, so not doing anything");
+            return;
+        }
+        if (p.Images.Length <= bestN)
+        {
+            Logs.Debug($"Scorers: Limited to {bestN} images but only found {p.Images.Length} to scan, so ignoring");
+            return;
+        }
+        float[] scores = p.Images.Select(i => i?.Image?.GetSUIMetadata()?["scoring"]?["average"]?.Value<float>() ?? 0).ToArray();
+        float[] sorted = scores.OrderDescending().ToArray();
+        float cutoff = sorted[bestN - 1];
+        Logs.Debug($"Scorers: will cutoff to {bestN} images with score {cutoff} or above");
+        for (int i = 0; i < p.Images.Length; i++)
+        {
+            if (scores[i] < cutoff)
+            {
+                p.Images[i].RefuseImage();
             }
         }
     }

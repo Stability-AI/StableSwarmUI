@@ -1,4 +1,5 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Backends;
@@ -42,19 +43,31 @@ public static class T2IAPI
     public static async Task<JObject> GenerateText2Image(Session session, int images, JObject rawInput)
     {
         List<JObject> outputs = await API.RunWebsocketHandlerCallDirect(GenT2I_Internal, session, (images, rawInput));
-        List<string> imageOutputs = new();
+        Dictionary<int, string> imageOutputs = new();
+        int[] discards = null;
         foreach (JObject obj in outputs)
         {
             if (obj.ContainsKey("error"))
             {
                 return obj;
             }
-            if (obj.ContainsKey("image"))
+            if (obj.TryGetValue("image", out JToken image) && obj.TryGetValue("index", out JToken index))
             {
-                imageOutputs.Add(obj["image"].ToString());
+                imageOutputs.Add((int)index, image.ToString());
+            }
+            if (obj.TryGetValue("discard_indices", out JToken discard))
+            {
+                discards = discard.Values<int>().ToArray();
             }
         }
-        return new JObject() { ["images"] = JToken.FromObject(imageOutputs) };
+        if (discards != null)
+        {
+            foreach (int x in discards)
+            {
+                imageOutputs.Remove(x);
+            }
+        }
+        return new JObject() { ["images"] = new JArray(imageOutputs.Values.ToArray()) };
     }
 
     /// <summary>Internal route for generating images.</summary>
@@ -99,6 +112,8 @@ public static class T2IAPI
             output(new JObject() { ["error"] = message });
             claim.LocalClaimInterrupt.Cancel();
         }
+        List<T2IEngine.ImageInBatch> imageSet = new();
+        T2IEngine.ImageInBatch[] imageOut = null;
         List<Task> tasks = new();
         int max_degrees = session.User.Settings.MaxT2ISimultaneous;
         for (int i = 0; i < images && !claim.ShouldCancel; i++)
@@ -120,13 +135,26 @@ public static class T2IAPI
                 {
                     foreach (Image image in outputs)
                     {
-                        string url = session.SaveImage(image, user_input);
+                        (string url, string filePath) = session.SaveImage(image, user_input);
                         if (url == "ERROR")
                         {
                             setError($"Server failed to save images.");
                             return;
                         }
-                        output(new JObject() { ["image"] = url, ["metadata"] = image.GetMetadata() });
+                        int index;
+                        lock (imageSet)
+                        {
+                            index = imageSet.Count;
+                            imageSet.Add(new(image, () =>
+                            {
+                                if (filePath is not null && File.Exists(filePath))
+                                {
+                                    File.Delete(filePath);
+                                }
+                                imageOut[index] = null;
+                            }));
+                        }
+                        output(new JObject() { ["image"] = url, ["index"] = index, ["metadata"] = image.GetMetadata() });
                     }
                 })));
         }
@@ -135,6 +163,9 @@ public static class T2IAPI
             await Task.WhenAny(tasks);
             tasks.RemoveAll(t => t.IsCompleted);
         }
+        imageOut = imageSet.ToArray();
+        T2IEngine.PostBatchEvent?.Invoke(new(user_input, imageOut));
+        output(new JObject() { ["discard_indices"] = JArray.FromObject(imageOut.FindAllIndicesOf(i => i is null).ToArray()) });
     }
 
     public static HashSet<string> ImageExtensions = new() { "png", "jpg", "html" };
