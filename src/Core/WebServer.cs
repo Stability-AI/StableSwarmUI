@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StableUI.Text2Image;
 using StableUI.Utils;
 using StableUI.WebAPI;
 using System.IO;
@@ -33,6 +34,12 @@ public class WebServer
 
     /// <summary>Extra content for the page footer. Automatically set based on extensions.</summary>
     public static HtmlString PageFooterExtra = new("");
+
+    /// <summary>Extra content for the Text2Image page's tab list. Automatically set based on extensions.</summary>
+    public static HtmlString T2ITabHeader = new("");
+
+    /// <summary>Extra content for the Text2Image page's tab bodies. Automatically set based on extensions.</summary>
+    public static HtmlString T2ITabBody = new("");
 
     /// <summary>Initial prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>
     public void Prep()
@@ -70,7 +77,14 @@ public class WebServer
             {
                 if (!context.Request.Path.Value.ToLowerFast().StartsWith("/error/"))
                 {
-                    context.Response.Redirect("/Error/404");
+                    try
+                    {
+                        context.Response.Redirect("/Error/404");
+                    }
+                    catch (Exception)
+                    {
+                        Logs.Debug($"Connection to {context.Request.Path} failed and cannot be repaired");
+                    }
                     await next();
                 }
             }
@@ -81,7 +95,7 @@ public class WebServer
 
     public void GatherExtensionPageAdditions()
     {
-        StringBuilder scripts = new(), stylesheets = new();
+        StringBuilder scripts = new(), stylesheets = new(), tabHeader = new(), tabFooter = new();
         Program.RunOnAllExtensions(e =>
         {
             foreach (string script in e.ScriptFiles)
@@ -96,9 +110,22 @@ public class WebServer
                 ExtensionSharedFiles.Add(fname, File.ReadAllText($"{e.FilePath}{css}"));
                 stylesheets.Append($"<link rel=\"stylesheet\" href=\"{fname}?vary={Utilities.VaryID}\" />");
             }
+            if (Directory.Exists($"{e.FilePath}/Tabs/Text2Image/"))
+            {
+                foreach (string file in Directory.EnumerateFiles($"{e.FilePath}/Tabs/Text2Image/", "*.html"))
+                {
+                    string simpleName = file.AfterLast('/').BeforeLast('.');
+                    string id = T2IParamTypes.CleanTypeName(simpleName);
+                    string content = File.ReadAllText(file);
+                    tabHeader.Append($"<li class=\"nav-item\" role=\"presentation\"><a class=\"nav-link\" id=\"maintab_{id}\" data-bs-toggle=\"tab\" href=\"#{id}\" aria-selected=\"false\" tabindex=\"-1\" role=\"tab\">{simpleName}</a></li>\n");
+                    tabFooter.Append($"<div class=\"tab-pane tab-pane-vw\" id=\"{id}\" role=\"tabpanel\">\n{content}\n<div style=\"height: 5rem\"></div></div>\n");
+                }
+            }
         });
         PageHeaderExtra = new(stylesheets.ToString());
         PageFooterExtra = new(scripts.ToString());
+        T2ITabHeader = new(tabHeader.ToString());
+        T2ITabBody = new(tabFooter.ToString());
     }
 
     /// <summary>Called by <see cref="Program"/>, generally should not be touched externally.</summary>
