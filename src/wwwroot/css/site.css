@@ -332,3 +332,6 @@ textarea, input, select {
     margin-bottom: 0.1rem;
     border-radius: 0.5rem;
 }
+.info-popover-button {
+    cursor: pointer;
+}

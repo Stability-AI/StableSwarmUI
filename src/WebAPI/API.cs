@@ -170,6 +170,10 @@ public class API
             }
             await signal.WaitAsync(TimeSpan.FromSeconds(2));
         }
+        if (t.IsFaulted)
+        {
+            Logs.Error($"Error in websocket handler: {t.Exception}");
+        }
     }
 
     /// <summary>Helper to run simple websocket-multiresult action API calls without a websocket.</summary>

@@ -76,7 +76,7 @@ function close_edit_model() {
 }
 
 function cleanModelName(name) {
-    let index = name.indexOf('/');
+    let index = name.lastIndexOf('/');
     if (index != -1) {
         name = name.substring(index + 1);
     }

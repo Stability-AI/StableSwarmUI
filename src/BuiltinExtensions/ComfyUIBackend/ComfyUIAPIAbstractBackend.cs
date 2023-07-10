@@ -90,7 +90,7 @@ public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where
             }
             Thread.Sleep(100);
         }
-        Logs.Debug($"ComfyUI history said: {output}");
+        //Logs.Debug($"ComfyUI history said: {output}");
         List<Image> outputs = new();
         foreach (JToken outData in output[promptId]["outputs"].Values())
         {

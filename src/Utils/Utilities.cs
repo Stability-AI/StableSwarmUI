@@ -225,6 +225,37 @@ public static class Utilities
         return result;
     }
 
+    public static Task RunCheckedTask(Action action)
+    {
+        return Task.Run(() =>
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Internal error in async task: {ex}");
+            }
+        });
+    }
+
+    public static Task RunCheckedTask(Func<Task> action)
+    {
+        return Task.Run(() =>
+        {
+            try
+            {
+                return action();
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Internal error in async task: {ex}");
+                return Task.CompletedTask;
+            }
+        });
+    }
+
     /// <summary>Kill system process..</summary>
     [DllImport("libc", SetLastError = true, EntryPoint = "kill")]
     public static extern int sys_kill(int pid, int signal);

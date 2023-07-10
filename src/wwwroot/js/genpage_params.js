@@ -302,7 +302,6 @@ function hideUnsupportableParams() {
                 box.style.display = 'none';
             }
             let group = findParentOfClass(elem, 'input-group');
-            console.log(`Param ${param.id} show = ${show} group = ${group == null ? 'none' : group.id}`)
             if (group) {
                 let groupData = groups[group.id] || { visible: 0 };
                 groups[group.id] = groupData;
@@ -315,7 +314,6 @@ function hideUnsupportableParams() {
     for (let group in groups) {
         let groupData = groups[group];
         let groupElem = document.getElementById(group);
-        console.log(`Group ${group} visible = ${groupData.visible}, elem = ${groupElem}`)
         if (groupData.visible == 0) {
             groupElem.style.display = 'none';
         }
