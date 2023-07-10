@@ -15,7 +15,7 @@ using System.Web;
 
 namespace StableUI.Builtin_ComfyUIBackend;
 
-public abstract class ComfyUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where T : AutoConfiguration
+public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 {
     public abstract string Address { get; }
 

@@ -14,7 +14,7 @@ using System.Net.Http;
 namespace StableUI.Builtin_AutoWebUIExtension;
 
 /// <summary>T2I Backend using the Automatic1111/Stable-Diffusion-WebUI API.</summary>
-public abstract class AutoWebUIAPIAbstractBackend<T> : AbstractT2IBackend<T> where T : AutoConfiguration
+public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
 {
     public abstract string Address { get; }
 

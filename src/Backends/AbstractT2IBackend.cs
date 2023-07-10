@@ -5,7 +5,7 @@ using StableUI.Utils;
 
 namespace StableUI.Backends;
 
-/// <summary>Represents a basic abstracted Text2Image backend provider. This is the internal low-level part, prefer <see cref="AbstractT2IBackend{T}"/> for normal usage.</summary>
+/// <summary>Represents a basic abstracted Text2Image backend provider.</summary>
 public abstract class AbstractT2IBackend
 {
     /// <summary>Load this backend and get it ready for usage. Do not return until ready. Throw an exception if not possible.</summary>
@@ -29,9 +29,6 @@ public abstract class AbstractT2IBackend
     /// <summary>Currently loaded model, or null if none.</summary>
     public string CurrentModelName;
 
-    /// <summary>Internal usage, settings accessor.</summary>
-    public abstract AutoConfiguration InternalSettingsAccess { get; set; }
-
     /// <summary>Backend type data for the internal handler.</summary>
     public BackendHandler.BackendType HandlerTypeData;
 
@@ -43,6 +40,9 @@ public abstract class AbstractT2IBackend
 
     /// <summary>A set of feature-IDs this backend supports.</summary>
     public abstract IEnumerable<string> SupportedFeatures { get; }
+
+    /// <summary>The backend's settings.</summary>
+    public AutoConfiguration SettingsRaw;
 }
 
 public enum BackendStatus
@@ -52,14 +52,4 @@ public enum BackendStatus
     WAITING,
     LOADING,
     RUNNING
-}
-
-/// <summary>Represents a basic abstracted Text2Image backend provider.</summary>
-public abstract class AbstractT2IBackend<T>: AbstractT2IBackend where T: AutoConfiguration
-{
-    /// <summary>The backend's settings.</summary>
-    public T Settings;
-
-    /// <summary>Internal usage, settings accessor.</summary>
-    public override AutoConfiguration InternalSettingsAccess { get => Settings; set => Settings = (T)value; }
 }

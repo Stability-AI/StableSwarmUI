@@ -4,7 +4,7 @@ using StableUI.Backends;
 
 namespace StableUI.Builtin_AutoWebUIExtension;
 
-public class AutoWebUIAPIBackend : AutoWebUIAPIAbstractBackend<AutoWebUIAPIBackend.AutoWebUIAPISettings>
+public class AutoWebUIAPIBackend : AutoWebUIAPIAbstractBackend
 {
     public class AutoWebUIAPISettings : AutoConfiguration
     {
@@ -14,7 +14,7 @@ public class AutoWebUIAPIBackend : AutoWebUIAPIAbstractBackend<AutoWebUIAPIBacke
         public string Address = "";
     }
 
-    public override string Address => Settings.Address;
+    public override string Address => (SettingsRaw as AutoWebUIAPISettings).Address;
 
     public override Task Init()
     {

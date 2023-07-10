@@ -56,7 +56,7 @@ public class BackendHandler
     /// <summary>Register a new backend-type by type ref.</summary>
     public void RegisterBackendType(Type type, string id, string name, string description)
     {
-        Type settingsType = type.GetField(nameof(AbstractT2IBackend<AutoConfiguration>.Settings)).FieldType;
+        Type settingsType = type.GetNestedTypes().First(t => t.IsSubclassOf(typeof(AutoConfiguration)));
         AutoConfiguration.Internal.AutoConfigData settingsInternal = (Activator.CreateInstance(settingsType) as AutoConfiguration).InternalData.SharedData;
         List<JObject> fields = settingsInternal.Fields.Values.Select(f =>
         {
@@ -117,7 +117,7 @@ public class BackendHandler
         {
             Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend
         };
-        data.Backend.InternalSettingsAccess = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
+        data.Backend.SettingsRaw = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
         data.Backend.HandlerTypeData = type;
         data.Backend.Handler = this;
         lock (CentralLock)
@@ -167,7 +167,7 @@ public class BackendHandler
             await Task.Delay(TimeSpan.FromSeconds(0.5));
         }
         await data.Backend.Shutdown();
-        data.Backend.InternalSettingsAccess.Load(newSettings);
+        data.Backend.SettingsRaw.Load(newSettings);
         data.ModCount++;
         data.Backend.Status = BackendStatus.WAITING;
         BackendsToInit.Enqueue(data);
@@ -215,8 +215,8 @@ public class BackendHandler
                 ID = int.Parse(idstr)
             };
             LastBackendID = Math.Max(LastBackendID, data.ID + 1);
-            data.Backend.InternalSettingsAccess = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
-            data.Backend.InternalSettingsAccess.Load(section.GetSection("settings"));
+            data.Backend.SettingsRaw = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
+            data.Backend.SettingsRaw.Load(section.GetSection("settings"));
             data.Backend.HandlerTypeData = type;
             data.Backend.Handler = this;
             data.Backend.Status = BackendStatus.WAITING;
@@ -300,7 +300,7 @@ public class BackendHandler
         {
             FDSSection data_section = new();
             data_section.Set("type", data.Backend.HandlerTypeData.ID);
-            data_section.Set("settings", data.Backend.InternalSettingsAccess.Save(true));
+            data_section.Set("settings", data.Backend.SettingsRaw.Save(true));
             saveFile.Set(data.ID.ToString(), data_section);
         }
         FDSUtility.SaveToFile(saveFile, SaveFilePath);

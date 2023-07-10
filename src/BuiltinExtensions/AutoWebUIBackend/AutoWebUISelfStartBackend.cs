@@ -8,7 +8,7 @@ using StableUI.Backends;
 
 namespace StableUI.Builtin_AutoWebUIExtension;
 
-public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISelfStartBackend.AutoWebUISelfStartSettings>
+public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend
 {
     public class AutoWebUISelfStartSettings : AutoConfiguration
     {
@@ -31,7 +31,8 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend<AutoWebUISe
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     public override async Task Init()
     {
-        await NetworkBackendUtils.DoSelfStart(Settings.StartScript, this, "AutoWebUI", Settings.GPU_ID, Settings.ExtraArgs + " --api --port={PORT}", InitInternal, (p, r) => { Port = p; RunningProcess = r; });
+        AutoWebUISelfStartSettings settings = SettingsRaw as AutoWebUISelfStartSettings;
+        await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "AutoWebUI", settings.GPU_ID, settings.ExtraArgs + " --api --port={PORT}", InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
 
     public override async Task Shutdown()

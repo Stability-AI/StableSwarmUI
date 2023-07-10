@@ -9,11 +9,10 @@ using StableUI.Text2Image;
 using StableUI.Utils;
 using System.IO;
 using System.Net.Http;
-using static StableUI.Builtin_StabilityAPIExtension.StabilityAPIBackend;
 
 namespace StableUI.Builtin_StabilityAPIExtension;
 
-public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSettings>
+public class StabilityAPIBackend : AbstractT2IBackend
 {
     public class StabilityAPIBackendSettings : AutoConfiguration
     {
@@ -29,6 +28,8 @@ public class StabilityAPIBackend : AbstractT2IBackend<StabilityAPIBackendSetting
     public static double Credits = -1;
 
     public HttpClient WebClient;
+
+    public StabilityAPIBackendSettings Settings => SettingsRaw as StabilityAPIBackendSettings;
 
     public override async Task Init()
     {

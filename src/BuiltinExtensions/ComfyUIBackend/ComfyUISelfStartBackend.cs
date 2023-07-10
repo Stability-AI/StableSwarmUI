@@ -8,7 +8,7 @@ using System.IO;
 
 namespace StableUI.Builtin_ComfyUIBackend;
 
-public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend<ComfyUISelfStartBackend.ComfyUISelfStartSettings>
+public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
 {
     public class ComfyUISelfStartSettings : AutoConfiguration
     {
@@ -31,7 +31,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend<ComfyUISelfStar
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     public override async Task Init()
     {
-        await NetworkBackendUtils.DoSelfStart(Settings.StartScript, this, "ComfyUI", Settings.GPU_ID, Settings.ExtraArgs + " --port {PORT}", InitInternal, (p, r) => { Port = p; RunningProcess = r; });
+        ComfyUISelfStartSettings settings = SettingsRaw as ComfyUISelfStartSettings;
+        await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs + " --port {PORT}", InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
 
     public override async Task Shutdown()
@@ -54,7 +55,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend<ComfyUISelfStar
 
     public override void PostResultCallback(string filename)
     {
-        string path = Settings.StartScript.Replace('\\', '/').BeforeLast('/') + "/output/" + filename;
+        string path = (SettingsRaw as ComfyUISelfStartSettings).StartScript.Replace('\\', '/').BeforeLast('/') + "/output/" + filename;
         Task.Run(() =>
         {
             if (File.Exists(path))

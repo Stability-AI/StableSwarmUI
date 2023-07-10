@@ -4,7 +4,7 @@ using StableUI.DataHolders;
 
 namespace StableUI.Builtin_ComfyUIBackend;
 
-public class ComfyUIAPIBackend : ComfyUIAPIAbstractBackend<ComfyUIAPIBackend.ComfyUIAPISettings>
+public class ComfyUIAPIBackend : ComfyUIAPIAbstractBackend
 {
     public class ComfyUIAPISettings : AutoConfiguration
     {
@@ -14,7 +14,7 @@ public class ComfyUIAPIBackend : ComfyUIAPIAbstractBackend<ComfyUIAPIBackend.Com
         public string Address = "";
     }
 
-    public override string Address => Settings.Address;
+    public override string Address => (SettingsRaw as ComfyUIAPISettings).Address;
 
     public override Task Init()
     {
