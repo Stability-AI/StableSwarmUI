@@ -38,31 +38,53 @@ function getHtmlForParam(param, prefix) {
 
 function toggleGroupOpen(elem) {
     // ⮟⮞
-    let group = elem.parentElement.getElementsByClassName('input-group-content')[0];
+    let parent = findParentOfClass(elem, 'input-group');
+    let group = parent.querySelector('.input-group-content');
     if (group.style.display == 'none') {
         group.style.display = 'block';
-        elem.parentElement.classList.remove('input-group-closed');
-        elem.innerText = '⮟' + elem.innerText.replaceAll('⮞', '');
-        setCookie(`group_open_${elem.id}`, 'open', 365);
+        parent.classList.remove('input-group-closed');
+        parent.querySelector('.auto-symbol').innerText = '⮟';
+        setCookie(`group_open_${parent.id}`, 'open', 365);
+        let toggler = document.getElementById(`${group.id}_toggle`);
+        if (toggler) {
+            toggler.checked = true;
+        }
     }
     else {
         group.style.display = 'none';
-        elem.parentElement.classList.add('input-group-closed');
-        elem.innerText = '⮞' + elem.innerText.replaceAll('⮟', '');
-        setCookie(`group_open_${elem.id}`, 'closed', 365);
+        parent.classList.add('input-group-closed');
+        parent.querySelector('.auto-symbol').innerText = '⮞';
+        setCookie(`group_open_${parent.id}`, 'closed', 365);
     }
 }
 
+function doToggleGroup(id) {
+    let elem = document.getElementById(`${id}_toggle`);
+    let parent = findParentOfClass(elem, 'input-group');
+    let header = parent.querySelector('.input-group-header');
+    let group = parent.querySelector('.input-group-content');
+    if (!elem.checked) {
+        if (group.style.display != 'none') {
+            toggleGroupOpen(header);
+        }
+    }
+    setCookie(`group_toggle_${parent.id}`, elem.checked ? 'yes' : 'no', 365);
+}
+
+function isParamAdvanced(p) {
+    return p.group ? p.group.advanced : p.advanced;
+}
+
 function genInputs() {
-    let groupId = 0;
-    for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !p.advanced],
-            ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && p.advanced],
+    for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !isParamAdvanced(p)],
+            ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p)],
             ['main_inputs_area_hidden', null, (p) => !p.visible]]) {
         let area = document.getElementById(areaData[0]);
         let presetArea = areaData[1] ? document.getElementById(areaData[1]) : null;
         let html = '', presetHtml = '';
         let lastGroup = null;
         let groupsClose = [];
+        let groupsEnable = [];
         for (let param of gen_param_types.filter(areaData[2])) {
             let groupName = param.group ? param.group.name : null;
             if (groupName != lastGroup) {
@@ -73,14 +95,21 @@ function genInputs() {
                     }
                 }
                 if (param.group) {
-                    groupId++;
-                    let shouldOpen = getCookie(`group_open_input_group_${groupId}`) || (param.group.open ? 'open' : 'closed');
+                    let groupId = param.group.id;
+                    let shouldOpen = getCookie(`group_open_auto-group-${groupId}`) || (param.group.open ? 'open' : 'closed');
                     if (shouldOpen == 'closed') {
                         groupsClose.push(groupId);
                     }
-                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
+                    if (param.group.toggles) {
+                        let shouldToggle = getCookie(`group_toggle_auto-group-${groupId}`) || 'no';
+                        if (shouldToggle == 'yes') {
+                            groupsEnable.push(groupId);
+                        }
+                    }
+                    let toggler = getToggleHtml(param.group.toggles, `input_group_content_${groupId}`, escapeHtml(param.group.name), ' group-toggler-switch', 'doToggleGroup');
+                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header"><span onclick="toggleGroupOpen(this)"><span class="auto-symbol">⮟</span><span class="header-label">${escapeHtml(param.group.name)}</span></span>${toggler}</span><div class="input-group-content" id="input_group_content_${groupId}">`;
                     if (presetArea) {
-                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header">⮟${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
+                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header"><span class="auto-symbol">⮟</span>${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
                     }
                 }
                 lastGroup = groupName;
@@ -106,9 +135,16 @@ function genInputs() {
                 toggleGroupOpen(pelem);
             }
         }
+        for (let group of groupsEnable) {
+            let elem = document.getElementById(`input_group_content_${group}_toggle`);
+            if (elem) {
+                elem.checked = true;
+                doToggleGroup(`input_group_content_${group}`);
+            }
+        }
     }
     for (let param of gen_param_types) {
-        if (param.toggleable) {
+        if (param.toggleable && param.visible) {
             doToggleEnable(`input_${param.id}`);
             doToggleEnable(`preset_input_${param.id}`);
         }
@@ -120,7 +156,7 @@ function genInputs() {
     let inputHeight = document.getElementById('input_height');
     let inputHeightParent = findParentOfClass(inputHeight, 'slider-auto-container');
     let inputHeightSlider = document.getElementById('input_height_rangeslider');
-    let resGroupLabel = findParentOfClass(inputWidth, 'input-group').getElementsByClassName('input-group-header')[0];
+    let resGroupLabel = findParentOfClass(inputWidth, 'input-group').querySelector('.header-label');
     let resTrick = () => {
         let aspect;
         if (inputAspectRatio.value == "Custom") {
@@ -133,7 +169,7 @@ function genInputs() {
             inputHeightParent.style.display = 'none';
             aspect = inputAspectRatio.value;
         }
-        resGroupLabel.innerText = resGroupLabel.innerText[0] + `Resolution: ${aspect} (${inputWidth.value}x${inputHeight.value})`;
+        resGroupLabel.innerText = `Resolution: ${aspect} (${inputWidth.value}x${inputHeight.value})`;
     };
     for (let target of [inputWidth, inputWidthSlider, inputHeight, inputHeightSlider]) {
         target.addEventListener('input', resTrick);
@@ -164,7 +200,7 @@ function genInputs() {
     resTrick();
     shouldApplyDefault = true;
     for (let param of gen_param_types) {
-        if (!param.hidden) {
+        if (param.visible) {
             let elem = document.getElementById(`input_${param.id}`);
             let cookie = getCookie(`lastparam_input_${param.id}`);
             if (cookie) {
@@ -211,7 +247,7 @@ function toggle_advanced() {
     let toggler = document.getElementById('advanced_options_checkbox');
     advancedArea.style.display = toggler.checked ? 'block' : 'none';
     for (let param of gen_param_types) {
-        if (param.toggleable) {
+        if (param.toggleable && param.visible) {
             doToggleEnable(`input_${param.id}`);
         }
     }
@@ -282,7 +318,7 @@ function resetParamsToDefault() {
     for (let param of gen_param_types) {
         let id = `input_${param.id}`;
         let paramElem = document.getElementById(id);
-        if (!param.hidden) {
+        if (param.visible) {
             if (param.type == "boolean") {
                 paramElem.checked = param.default;
             }
@@ -295,10 +331,16 @@ function resetParamsToDefault() {
                 deleteCookie(`lastparam_input_${param.id}_toggle`);
                 doToggleEnable(id);
             }
+            if (param.group && param.group.toggles) {
+                let toggler = document.getElementById(`input_group_content_${param.group.id}_toggle`);
+                if (toggler && toggler.checked) {
+                    toggler.checked = false;
+                    doToggleGroup(`input_group_content_${param.group.id}`);
+                }
+            }
         }
     }
     let defaultPreset = getPresetByTitle('default');
-    console.log(`Found default = ${defaultPreset}`)
     if (defaultPreset) {
         applyOnePreset(defaultPreset);
     }

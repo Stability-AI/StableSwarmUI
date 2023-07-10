@@ -53,7 +53,7 @@ let currentMetadataVal = null;
 
 function copy_current_image_params() {
     if (!currentMetadataVal) {
-        alert("No parameters to copy!");
+        alert('No parameters to copy!');
         return;
     }
     let metadata = JSON.parse(currentMetadataVal).stableui_image_params;
@@ -66,13 +66,13 @@ function copy_current_image_params() {
             else {
                 elem.value = metadata[param.id];
             }
-            if (param.toggleable) {
+            if (param.toggleable && param.visible) {
                 let toggle = document.getElementById(`input_${param.id}_toggle`);
                 toggle.checked = true;
                 doToggleEnable(elem.id);
             }
         }
-        else if (param.toggleable) {
+        else if (param.toggleable && param.visible) {
             let toggle = document.getElementById(`input_${param.id}_toggle`);
             toggle.checked = false;
             doToggleEnable(elem.id);

@@ -139,14 +139,14 @@ public class User
         {
             string data = part switch
             {
-                "year" => $"{time.Year}",
-                "month" => $"{time.Month}",
+                "year" => $"{time.Year:0000}",
+                "month" => $"{time.Month:00}",
                 "month_name" => $"{time:MMMM}",
-                "day" => $"{time.Day}",
+                "day" => $"{time.Day:00}",
                 "day_name" => $"{time:dddd}",
-                "hour" => $"{time.Hour}",
-                "minute" => $"{time.Minute}",
-                "second" => $"{time.Second}",
+                "hour" => $"{time.Hour:00}",
+                "minute" => $"{time.Minute:00}",
+                "second" => $"{time.Second:00}",
                 "prompt" => user_input.Prompt,
                 "negative_prompt" => user_input.NegativePrompt,
                 "seed" => $"{user_input.Seed}",

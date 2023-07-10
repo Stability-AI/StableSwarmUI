@@ -6,7 +6,9 @@ let preset_to_edit = null;
 
 function fixPresetParamClickables() {
     for (let param of gen_param_types) {
-        doToggleEnable(`preset_input_${param.id}`);
+        if (param.visible) {
+            doToggleEnable(`preset_input_${param.id}`);
+        }
     }
 }
 

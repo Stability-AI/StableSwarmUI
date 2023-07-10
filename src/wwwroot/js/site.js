@@ -173,8 +173,8 @@ function doToggleEnable(id) {
     }
 }
 
-function getToggleHtml(toggles, id, name) {
-    return toggles ? `<span class="form-check form-switch display-inline-block"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="javascript:doToggleEnable('${id}')" autocomplete="false"></span>` : '';
+function getToggleHtml(toggles, id, name, extraClass = '', func = 'doToggleEnable') {
+    return toggles ? `<span class="form-check form-switch display-inline-block${extraClass}"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="javascript:${func}('${id}')" autocomplete="false"></span>` : '';
 }
 
 function load_image_file(e) {

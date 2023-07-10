@@ -147,7 +147,6 @@ public class ScorersExtension : Extension
     {
         if (!p.UserInput.OtherParams.TryGetValue("score_take_best_n", out object bestNObj) || bestNObj is not int bestN)
         {
-            Logs.Debug($"Scorers: No best N specified or '{bestNObj}' is not an int, so not doing anything");
             return;
         }
         if (p.Images.Length <= bestN)

@@ -99,16 +99,19 @@ public record class T2IParamType(string Name, string Description, T2IParamDataTy
 /// <param name="Toggles">If true, the entire group toggles as one.</param>
 /// <param name="Open">If true, the group defaults open. If false, it defaults to closed.</param>
 /// <param name="OrderPriority">The priority order position to put this group in.</param>
-public record class T2IParamGroup(string Name, bool Toggles = false, bool Open = true, double OrderPriority = 10)
+/// <param name="IsAdvanced">If 'false', this is an advanced setting group that should be hidden by a dropdown.</param>
+public record class T2IParamGroup(string Name, bool Toggles = false, bool Open = true, double OrderPriority = 10, bool IsAdvanced = false)
 {
     public JObject ToNet(Session session)
     {
         return new JObject()
         {
             ["name"] = Name,
+            ["id"] = T2IParamTypes.CleanTypeName(Name),
             ["toggles"] = Toggles,
             ["open"] = Open,
-            ["priority"] = OrderPriority
+            ["priority"] = OrderPriority,
+            ["advanced"] = IsAdvanced
         };
     }
 }

@@ -103,7 +103,7 @@ function potToLinear(val, max, min, step) {
 
 function findParentOfClass(elem, className) {
     while (elem != null) {
-        if (elem.classList.contains(className)) {
+        if (elem.classList && elem.classList.contains(className)) {
             return elem;
         }
         elem = elem.parentElement;

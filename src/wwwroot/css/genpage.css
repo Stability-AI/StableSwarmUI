@@ -375,3 +375,7 @@ body {
     margin-left: 0.2rem;
     margin-right: 0.2rem;
 }
+.group-toggler-switch {
+    margin-left: 1rem;
+    display: inline-block;
+}
