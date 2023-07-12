@@ -78,37 +78,63 @@
                 <div class="tab-pane" id="Presets-Tab" role="tabpanel">
                     <button id="preset_list_refresh_button" class="refresh-button" title="Refresh" onclick="javascript:loadUserData()">&#128472;</button>
                     <button id="preset_list_create_new_button" class="refresh-button" onclick="javascript:create_new_preset_button()">Create New Preset</button>
+                    <button id="preset_list_import_button" class="refresh-button" onclick="javascript:importPresetsButton()">Import Presets</button>
+                    <button id="preset_list_export_button" class="refresh-button" onclick="javascript:exportPresetsButton()">Export All Presets</button>
                     <button id="preset_list_apply_button" class="refresh-button" onclick="javascript:apply_presets()" title="Apply all current presets directly to your parameter list.">Apply Presets</button>
-                    <div class="modal" tabindex="-1" role="dialog" id="add_preset_modal">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Create New Preset: <input type="text" id="new_preset_name" placeholder="Preset Name" /></h5>
-                                </div>
-                                <div class="modal-body">
-                                    <textarea class="auto-text" id="preset_description" rows="3" placeholder="Preset description text..."></textarea>
-                                    <span class="form-check form-switch display-inline-block">
-                                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('new_preset_image')"> Use Image
-                                    </span>
-                                    <div id="new_preset_image" class="new_preset_image"></div>
-                                    <hr>
-                                    <h5>Parameters in the Preset</h5>
-                                    <p>Select the checkbox next to inputs you want included in the preset.<br>Use <code>{value}</code> in text inputs for the preset to use the UI value.</p>
-                                    <div id="new_preset_modal_inputs"></div>
-                                    <div class="advanced_input_checkbox">
-                                        <input type="checkbox" id="preset_advanced_options_checkbox" onclick="javascript:preset_toggle_advanced()"/>
-                                        <span onclick="javascript:preset_toggle_advanced_checkbox_manual()">Display Advanced Options?</span>
-                                    </div>
-                                    <div id="new_preset_modal_advanced_inputs" style="display:none;"></div>
-                                </div>
-                                <div class="modal-footer">
-                                    <span id="new_preset_modal_error" class="new_preset_modal_error"></span>
-                                    <button type="button" class="btn btn-primary basic-button" onclick="javascript:save_new_preset()">Save</button>
-                                    <button type="button" class="btn btn-secondary" onclick="javascript:close_create_new_preset()">Cancel</button>
-                                </div>
+                    @WebUtil.ModalHeader("export_presets_modal", "Export Presets")
+                        <div class="modal-body">
+                            <h5>Format:</h5>
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="btnradio" id="export_preset_format_json" autocomplete="off" checked="" onchange="javascript:exportPresetsButton()">
+                                <label class="btn btn-outline-primary" for="export_preset_format_json">StableSwarmUI JSON</label>
+                                <input type="radio" class="btn-check" name="btnradio" id="export_preset_format_csv" autocomplete="off" onchange="javascript:exportPresetsButton()">
+                                <label class="btn btn-outline-primary" for="export_preset_format_csv">Prompt only CSV</label>
                             </div>
+                            <br><br>
+                            <textarea id="export_presets_textarea" style="width: 100%;" rows="10" disabled autocomplete="off"></textarea>
                         </div>
-                    </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary basic-button" onclick="javascript:exportPresetsDownload()">Download</button>
+                            <button type="button" class="btn btn-secondary" onclick="javascript:closeExportPresetViewer()">Close</button>
+                        </div>
+                    @WebUtil.ModalFooter()
+                    @WebUtil.ModalHeader("import_presets_modal", "Import Presets")
+                        <div class="modal-body">
+                            <div id="import_preset_upload_container">
+                                <input type="file" id="import_preset_uploader" /> <label for="import_preset_uploader" oninput="javascript:importPresetUpload()"></i>&nbsp; Upload Preset File (JSON or CSV)</label>
+                                <textarea id="import_presets_textarea" style="width: 100%;" rows="10" oninput="javascript:importPresetsCheck()"></textarea>
+                            </div>
+                            <input type="checkbox" class="form-check-input" id="import_presets_overwrite" onchange="javascript:importPresetsCheck()"> <label class="form-check-label" for="import_presets_overwrite">Overwrite existing presets</label>
+                        </div>
+                        <div class="modal-footer">
+                            <span id="import_preset_modal_error" class="modal_error_bottom"></span>
+                            <button type="button" class="btn btn-primary basic-button" id="import_presets_activate_button" onclick="javascript:importPresetsActivate()" disabled autocomplete="off">Import</button>
+                            <button type="button" class="btn btn-secondary" onclick="javascript:closeImportPresetViewer()">Cancel</button>
+                        </div>
+                    @WebUtil.ModalFooter()
+                    @WebUtil.ModalHeader("add_preset_modal", """Create New Preset: <input type="text" id="new_preset_name" placeholder="Preset Name" />""")
+                        <div class="modal-body">
+                            <textarea class="auto-text" id="preset_description" rows="3" placeholder="Preset description text..."></textarea>
+                            <span class="form-check form-switch display-inline-block">
+                                <input class="auto-slider-toggle form-check-input" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('new_preset_image')"> Use Image
+                            </span>
+                            <div id="new_preset_image" class="new_preset_image"></div>
+                            <hr>
+                            <h5>Parameters in the Preset</h5>
+                            <p>Select the checkbox next to inputs you want included in the preset.<br>Use <code>{value}</code> in text inputs for the preset to use the UI value.</p>
+                            <div id="new_preset_modal_inputs"></div>
+                            <div class="advanced_input_checkbox">
+                                <input type="checkbox" id="preset_advanced_options_checkbox" onclick="javascript:preset_toggle_advanced()"/>
+                                <span onclick="javascript:preset_toggle_advanced_checkbox_manual()">Display Advanced Options?</span>
+                            </div>
+                            <div id="new_preset_modal_advanced_inputs" style="display:none;"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <span id="new_preset_modal_error" class="modal_error_bottom"></span>
+                            <button type="button" class="btn btn-primary basic-button" onclick="javascript:save_new_preset()">Save</button>
+                            <button type="button" class="btn btn-secondary" onclick="javascript:close_create_new_preset()">Cancel</button>
+                        </div>
+                    @WebUtil.ModalFooter()
                     <div class="preset_list" id="preset_list"></div>
                     <div class="sui-popover sui_popover_model" id="popover_presetmenu">
                         <div class="sui_popover_model_button" onclick="javascript:presetMenuEdit()">Edit Preset</div>
@@ -124,30 +150,23 @@
                         <div class="sui_popover_model_button" onclick="javascript:modelMenuDoEdit()">Edit Metadata</div>
                     </div>
                     <div class="model_list" id="model_list"></div>
-                    <div class="modal" tabindex="-1" role="dialog" id="edit_model_modal">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Edit Model Metadata: <input type="text" class="modal_text_extra" id="edit_model_name" placeholder="Model Name" /></h5>
-                                </div>
-                                <div class="modal-body">
-                                    <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra" placeholder="Model Author" /></div>
-                                    <div>Type: <input type="text" id="edit_model_type" class="modal_text_extra" placeholder="Model Type" /></div>
-                                    <div>Standard Resolution: <input type="text" id="edit_model_resolution" class="modal_text_extra" placeholder="Resolution, eg 1024x1024" /></div>
-                                    <textarea class="auto-text" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
-                                    <span class="form-check form-switch display-inline-block">
-                                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_model_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('edit_model_image')"> Use Image
-                                    </span>
-                                    <div id="edit_model_image" class="new_preset_image"></div>
-                                </div>
-                                <div class="modal-footer">
-                                    <span id="edit_model_modal_error" class="edit_model_modal_error"></span>
-                                    <button type="button" class="btn btn-primary basic-button" onclick="javascript:save_edit_model()">Save</button>
-                                    <button type="button" class="btn btn-secondary" onclick="javascript:close_edit_model()">Cancel</button>
-                                </div>
-                            </div>
+                    @WebUtil.ModalHeader("edit_model_modal", """Edit Model Metadata: <input type="text" class="modal_text_extra" id="edit_model_name" placeholder="Model Name" />""")
+                        <div class="modal-body">
+                            <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra" placeholder="Model Author" /></div>
+                            <div>Type: <input type="text" id="edit_model_type" class="modal_text_extra" placeholder="Model Type" /></div>
+                            <div>Standard Resolution: <input type="text" id="edit_model_resolution" class="modal_text_extra" placeholder="Resolution, eg 1024x1024" /></div>
+                            <textarea class="auto-text" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
+                            <span class="form-check form-switch display-inline-block">
+                                <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_model_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('edit_model_image')"> Use Image
+                            </span>
+                            <div id="edit_model_image" class="new_preset_image"></div>
                         </div>
-                    </div>
+                        <div class="modal-footer">
+                            <span id="edit_model_modal_error" class="edit_model_modal_error"></span>
+                            <button type="button" class="btn btn-primary basic-button" onclick="javascript:save_edit_model()">Save</button>
+                            <button type="button" class="btn btn-secondary" onclick="javascript:close_edit_model()">Cancel</button>
+                        </div>
+                    @WebUtil.ModalFooter()
                 </div>
                 <div class="tab-pane" id="Tools-Tab" role="tabpanel">
                     <select class="tool-selector" id="tool_selector">

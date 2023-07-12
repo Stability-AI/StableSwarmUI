@@ -280,8 +280,11 @@ body {
     width: 90%;
     margin-left: 5%;
 }
-.new_preset_modal_error {
-    color: red;
+.modal_error_bottom {
+    color: #ff0000;
+}
+.modal_success_bottom {
+    color: #00ff00;
 }
 .preset-block {
     border: 1px solid var(--light-border);

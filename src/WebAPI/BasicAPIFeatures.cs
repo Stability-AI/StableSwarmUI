@@ -43,20 +43,20 @@ public static class BasicAPIFeatures
     }
 
     /// <summary>API Route to add a new user parameters preset.</summary>
-    public static async Task<JObject> AddNewPreset(Session session, string name, string description, JObject raw)
+    public static async Task<JObject> AddNewPreset(Session session, string title, string description, JObject raw, string preview_image = null, bool is_edit = false)
     {
-        JObject paramData = (JObject)raw["data"];
-        if (session.User.GetPreset(name) is not null && (paramData["is_edit"]?.ToString() ?? "") != "true")
+        JObject paramData = (JObject)raw["param_map"];
+        if (session.User.GetPreset(title) is not null && !is_edit)
         {
             return new JObject() { ["preset_fail"] = "A preset with that title already exists." };
         }
         T2IPreset preset = new()
         {
             Author = session.User.UserID,
-            Title = name,
+            Title = title,
             Description = description,
             ParamMap = paramData.Properties().Select(p => (p.Name, p.Value.ToString())).PairsToDictionary(),
-            PreviewImage = paramData.TryGetValue("image", out JToken imageVal) ? imageVal.ToString() : "imgs/model_placeholder.jpg"
+            PreviewImage = preview_image is not null ? preview_image : "imgs/model_placeholder.jpg"
         };
         if (preset.PreviewImage != "imgs/model_placeholder.jpg" && (!preset.PreviewImage.StartsWith("/Output") || preset.PreviewImage.Contains('?')))
         {

@@ -5,55 +5,6 @@ namespace StableSwarmUI.Utils;
 /// <summary>Helper utilities for web content generation.</summary>
 public static class WebUtil
 {
-    /// <summary>Generates a clean number slider input block.</summary>
-    public static HtmlString AutoSlider(string featureid, string name, string description, string id, double min, double max, double value, double step = 1)
-    {
-        string js = $"{JSStringEscape(name)}: {JSStringEscape(description)}";
-        name = HtmlEscape(name);
-        description = HtmlEscape(description);
-        return new HtmlString($"""
-<div class="auto-input auto-slider-box" title="{name}: {description}" data-feature-require="{featureid}">
-    <div class="auto-input-fade-lock auto-slider-fade-contain" onclick="alert('{js}')">
-        <span class="auto-input-name">{name}</span> <span class="auto-input-description">{description}</span>
-    </div>
-    <input class="auto-slider-number" type="number" value="{value}" min="{min}" max="{max}" step="{step}">
-    <br>
-    <input class="auto-slider-range" type="range" id="{id}" value="{value}" min="{min}" max="{max}" step="{step}">
-</div>
-"""
-            );
-    }
-
-    /// <summary>Generates a clean number input block.</summary>
-    public static HtmlString AutoNumber(string featureid, string name, string description, string id, double min, double max, double value, double step = 1)
-    {
-        string js = $"{JSStringEscape(name)}: {JSStringEscape(description)}";
-        name = HtmlEscape(name);
-        description = HtmlEscape(description);
-        return new HtmlString($"""
-<div class="auto-input auto-number-box" title="{name}: {description}" data-feature-require="{featureid}">
-    <div class="auto-input-fade-lock auto-fade-max-contain" onclick="alert('{js}')">
-        <span class="auto-input-name">{name}</span> <span class="auto-input-description">{description}</span>
-    </div>
-    <input class="auto-number" type="number" id="{id}" value="{value}" min="{min}" max="{max}" step="{step}">
-</div>
-""");
-    }
-
-    /// <summary>Generates a clean number input block.</summary>
-    public static HtmlString AutoNumberSmall(string featureid, string name, string description, string id, double min, double max, double value, double step = 1)
-    {
-        string js = $"{JSStringEscape(name)}: {JSStringEscape(description)}";
-        name = HtmlEscape(name);
-        description = HtmlEscape(description);
-        return new HtmlString($"""
-<div class="auto-input auto-number-box" title="{name}: {description}" data-feature-require="{featureid}">
-    <span class="auto-input-name" onclick="alert('{js}')">{name}</span>
-    <input class="auto-number-small" type="number" id="{id}" value="{value}" min="{min}" max="{max}" step="{step}">
-</div>
-""");
-    }
-
     public static HtmlString Toast(string box_id, string header, string small_side, string content_id, string content, bool show)
     {
         return new HtmlString($"""
@@ -71,6 +22,18 @@ public static class WebUtil
 </div>
 """);
     }
+
+    public static HtmlString ModalHeader(string id, string title)
+    {
+        return new($"""
+            <div class="modal" tabindex="-1" role="dialog" id="{id}">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5 class="modal-title">{title}</h5></div>
+            """);
+    }
+
+    public static HtmlString ModalFooter() => new("</div></div></div>");
 
     /// <summary>Escapes a string for safe usage inside HTML blocks.</summary>
     public static string HtmlEscape(string str)

@@ -104,9 +104,10 @@ function save_new_preset() {
         errorOut.innerText = "Must enable at least one parameter.";
         return;
     }
+    let toSend = { title: name, description: description, param_map: data };
     if (preset_to_edit) {
-        data['image'] = preset_to_edit.preview_image;
-        data['is_edit'] = 'true';
+        toSend['image'] = preset_to_edit.preview_image;
+        toSend['is_edit'] = true;
     }
     if (getRequiredElementById('new_preset_enable_image').checked) {
         let img = getRequiredElementById('new_preset_image').getElementsByTagName('img')[0].src;
@@ -114,9 +115,9 @@ function save_new_preset() {
         if (index != -1) {
             img = img.substring(index);
         }
-        data['image'] = img;
+        toSend['image'] = img;
     }
-    genericRequest('AddNewPreset', { name: name, description: description, data: data }, data => {
+    genericRequest('AddNewPreset', toSend, data => {
         if (Object.keys(data).includes("preset_fail")) {
             errorOut.innerText = data.preset_fail;
             return;
@@ -250,7 +251,7 @@ function presetMenuDelete() {
         return;
     }
     if (confirm("Are you sure want to delete that preset?")) {
-        genericRequest('DeletePreset', { preset: preset.title }, data => {
+        genericRequest('DeletePreset', { preset: currPresetMenuPreset.title }, data => {
             loadUserData();
         });
     }
@@ -299,4 +300,206 @@ function addPreset(preset) {
     div.appendChild(menu);
     div.title = Object.keys(preset.param_map).map(key => `${key}: ${preset.param_map[key]}`).join('\n');
     getRequiredElementById('preset_list').appendChild(div);
+}
+
+function importPresetsButton() {
+    getRequiredElementById('import_presets_textarea').value = '';
+    getRequiredElementById('import_presets_activate_button').disabled = true;
+    $('#import_presets_modal').modal('show');
+}
+
+function importPresetsToData(text) {
+    if (text.trim() == '') {
+        return null;
+    }
+    if (text.startsWith('{')) {
+        return JSON.parse(text);
+    }
+    if (text.startsWith('name,prompt,negative_prompt,')) {
+        data = {};
+        let lines = text.split('\n');
+        for (let line of lines.slice(1)) {
+            if (line.trim() == '') {
+                continue;
+            }
+            let parts = parseCsvLine(line);
+            if (parts.length < 3 || parts.length > 5) {
+                console.log(`Invalid CSV line: ${line}, splits=${parts.length}`);
+                return null;
+            }
+            let name = parts[0];
+            let prompt = parts[1];
+            let negativeprompt = parts[2];
+            if (!prompt && !negativeprompt) {
+                continue;
+            }
+            if (!prompt.includes('{value}')) {
+                prompt = '{value} ' + prompt;
+            }
+            if (!negativeprompt.includes('{value}')) {
+                negativeprompt = '{value} ' + negativeprompt;
+            }
+            data[parts[0].toLowerCase()] = {
+                title: name,
+                description: `Imported prompt preset '${name}'`,
+                preview_image: '',
+                param_map: {
+                    prompt: prompt,
+                    negativeprompt: negativeprompt,
+                }
+            };
+        }
+        return data;
+    }
+    if (text.includes(': ')) {
+        return microYamlParse(text);
+    }
+}
+
+function importPresetUpload() {
+    let file = getRequiredElementById('import_preset_uploader').files[0];
+    readFileText(file, text => {
+        getRequiredElementById('import_presets_textarea').value = text;
+        importPresetsCheck();
+    });
+}
+
+let importPresetUploadContainer = getRequiredElementById('import_preset_upload_container');
+
+importPresetUploadContainer.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.stopPropagation();
+}, false);
+importPresetUploadContainer.addEventListener('dragenter', e => {
+    e.preventDefault();
+    e.stopPropagation();
+}, false);
+importPresetUploadContainer.addEventListener('dragleave', e => {
+    e.preventDefault();
+    e.stopPropagation();
+}, false);
+importPresetUploadContainer.addEventListener('drop', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    readFileText(e.dataTransfer.files[0], text => {
+        getRequiredElementById('import_presets_textarea').value = text;
+        importPresetsCheck();
+    });
+}, false);
+
+function importPresetsCheck() {
+    let text = getRequiredElementById('import_presets_textarea').value;
+    let errorBox = getRequiredElementById('import_preset_modal_error');
+    let activateButton = getRequiredElementById('import_presets_activate_button');
+    activateButton.disabled = true;
+    errorBox.innerText = '';
+    errorBox.className = 'modal_error_bottom';
+    if (text.trim() == '') {
+        return;
+    }
+    let data;
+    try {
+        data = importPresetsToData(text);
+    }
+    catch (e) {
+        console.log(e);
+        errorBox.innerText = 'Error parsing data: ' + e;
+        return;
+    }
+    if (!data) {
+        errorBox.innerText = 'Data input looks invalid.';
+        return;
+    }
+    let willBreak = [];
+    for (let key of Object.keys(data)) {
+        if (allPresets.some(p => p.title == key)) {
+            willBreak.push(key);
+        }
+    }
+    if (willBreak.length > 0) {
+        let canOverwrite = getRequiredElementById('import_presets_overwrite').checked;
+        if (!canOverwrite) {
+            errorBox.innerText = `Would overwrite ${willBreak.length} preset(s): ${willBreak.join(', ')}.`;
+            activateButton.disabled = true;
+            return;
+        }
+        errorBox.className = 'modal_success_bottom';
+        errorBox.innerText = `Will import ${Object.keys(data).length}, overwriting ${willBreak} presets.`;
+    }
+    errorBox.className = 'modal_success_bottom';
+    errorBox.innerText = `Will import ${Object.keys(data).length} presets.`;
+    activateButton.disabled = false;
+}
+
+function importPresetsActivate() {
+    let data = importPresetsToData(getRequiredElementById('import_presets_textarea').value);
+    let expectedCount = Object.keys(data).length;
+    let overwrite = getRequiredElementById('import_presets_overwrite').checked;
+    let ranCount = 0;
+    let failedCount = 0;
+    let errorBox = getRequiredElementById('import_preset_modal_error');
+    getRequiredElementById('import_presets_activate_button').disabled = true;
+    errorBox.innerText = '';
+    errorBox.className = 'modal_success_bottom';
+    console.log(JSON.stringify(data));
+    for (let key of Object.keys(data)) {
+        let preset = data[key];
+        let toSend = { title: key, description: preset.description, preview_image: preset.preview_image, param_map: preset.param_map, is_edit: overwrite };
+        genericRequest('AddNewPreset', toSend, data => {
+            ranCount++;
+            if (Object.keys(data).includes("preset_fail")) {
+                failedCount++;
+            }
+            if (ranCount == expectedCount) {
+                loadUserData();
+            }
+            if (failedCount > 0) {
+                errorBox.className = 'modal_error_bottom';
+                errorBox.innerText = `Imported ${ranCount} presets, ${failedCount} failed.`;
+            }
+            else {
+                errorBox.innerText = `Imported ${ranCount} presets.`;
+            }
+        });
+    }
+}
+
+function exportPresetsButton() {
+    let text = '';
+    if (getRequiredElementById('export_preset_format_json').checked) {
+        let data = {};
+        for (let preset of allPresets) {
+            data[preset.title] = preset;
+        }
+        text = JSON.stringify(data, null, 4);
+    }
+    else { // CSV
+        text = 'name,prompt,negative_prompt,\n';
+        for (let preset of allPresets) {
+            if (preset.param_map.prompt || preset.param_map.negativeprompt) {
+                text += `"${preset.title.replace('"', '""')}","${(preset.param_map.prompt || '').replaceAll('"', '""')}","${(preset.param_map.negativeprompt || '').replaceAll('"', '""')}",\n`;
+            }
+        }
+    }
+    getRequiredElementById('export_presets_textarea').value = text;
+    $('#export_presets_modal').modal('show');
+}
+
+function exportPresetsDownload() {
+    let fname;
+    if (getRequiredElementById('export_preset_format_json').checked) {
+        fname = 'presets.json';
+    }
+    else {
+        fname = 'presets.csv';
+    }
+    downloadPlainText(fname, getRequiredElementById('export_presets_textarea').value);
+}
+
+function closeExportPresetViewer() {
+    $('#export_presets_modal').modal('hide');
+}
+
+function closeImportPresetViewer() {
+    $('#import_presets_modal').modal('hide');
 }
