@@ -418,28 +418,43 @@ let toolSelector = getRequiredElementById('tool_selector');
 let toolContainer = getRequiredElementById('tool_container');
 
 function genToolsList() {
+    let generateButton = getRequiredElementById('generate_button');
+    let generateButtonRawText = generateButton.innerText;
+    let generateButtonRawOnClick = generateButton.onclick;
     toolSelector.value = '';
     // TODO: Dynamic-from-server option list generation
     toolSelector.addEventListener('change', () => {
         for (let opened of toolContainer.getElementsByClassName('tool-open')) {
             opened.classList.remove('tool-open');
         }
+        generateButton.innerText = generateButtonRawText;
+        generateButton.onclick = generateButtonRawOnClick;
         let tool = toolSelector.value;
         if (tool == '') {
             return;
         }
         let div = getRequiredElementById(`tool_${tool}`);
         div.classList.add('tool-open');
+        let override = toolOverrides[tool];
+        if (override) {
+            generateButton.innerText = override.text;
+            generateButton.onclick = override.run;
+        }
     });
 }
 
-function registerNewTool(id, name) {
+let toolOverrides = {};
+
+function registerNewTool(id, name, genOverride = null, runOverride = null) {
     let option = document.createElement('option');
     option.value = id;
     option.innerText = name;
     toolSelector.appendChild(option);
     let div = createDiv(`tool_${id}`, 'tool');
     toolContainer.appendChild(div);
+    if (genOverride) {
+        toolOverrides[id] = { 'text': genOverride, 'run': runOverride };
+    }
     return div;
 }
 
@@ -615,7 +630,6 @@ function genpageLoad() {
             toggle_advanced();
             setCurrentModel();
             loadUserData();
-            getRequiredElementById('generate_button').addEventListener('click', doGenerate);
             getRequiredElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
             getRequiredElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir, true));
             for (let callback of sessionReadyCallbacks) {

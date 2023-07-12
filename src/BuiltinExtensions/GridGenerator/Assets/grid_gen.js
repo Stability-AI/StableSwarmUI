@@ -90,12 +90,53 @@ function gridGen_addAxis() {
 }
 
 function gridGen_register() {
-    gridGen_mainDiv = registerNewTool('grid_generator', 'Grid Generator');
+    let doGenerate = () => {
+        let getOpt = (o) => document.getElementById('grid-gen-opt-' + o).checked;
+        let data = {
+            'baseParams': getGenInput(),
+            'outputFolderName': document.getElementById('grid-gen-output-folder-name').value,
+            'doOverwrite': getOpt('do-overwrite'),
+            'fastSkip': getOpt('fast-skip'),
+            'generatePage': getOpt('generate-page'),
+            'publishGenMetadata': getOpt('publish-metadata'),
+            'dryRun': getOpt('dry-run')
+        };
+        let axisData = [];
+        for (let axis of gridGen_axisDiv.getElementsByClassName('grid-gen-axis-wrapper')) {
+            let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
+            let input = axis.getElementsByClassName('grid-gen-axis-input')[0].innerText;
+            if (type != '') {
+                axisData.push({ 'mode': type, 'vals': input });
+            }
+        }
+        if (axisData.length == 0) {
+            showError('No axes defined.');
+            return;
+        }
+        data['gridAxes'] = axisData;
+        makeWSRequestT2I('GridGenRun', data, data => {
+            if (data.image) {
+                gotImageResult(data.image, data.metadata);
+            }
+            else if (data.success) {
+                outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="Output/${outputFolder.value}/index.html" target="_blank">Output/<code>${outputFolder.value}</code></a>`;
+            }
+        });
+    };
+    let doGenWrapper = () => {
+        setCurrentModel(() => {
+            if (document.getElementById('current_model').innerText == '') {
+                showError("Cannot generate, no model selected.");
+                return;
+            }
+            doGenerate();
+        });
+    };
+    gridGen_mainDiv = registerNewTool('grid_generator', 'Grid Generator', 'Generate Grid', doGenWrapper);
     gridGen_axisDiv = createDiv('grid-gen-axis-area', 'grid-gen-axis-area');
     gridGen_settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
     gridGen_settingsDiv.innerHTML =
-        '<button class="grid-gen-run-button" id="grid-gen-run-button">Create Grid</button><br>'
-        + '<br><div id="grid-gen-info-box">...</div>'
+        '<br><div id="grid-gen-info-box">...</div>'
         + makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', '', '', 1, 'Output folder name...')
         + '<br>'
         + makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false)
@@ -115,43 +156,6 @@ function gridGen_register() {
     let today = new Date();
     outputFolder.value = `grid-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}-${today.getHours()}-${today.getMinutes()}-${today.getSeconds()}`;
     updateOutputInfo();
-    let runButton = document.getElementById('grid-gen-run-button');
-    let doGenerate = () => {
-        let getOpt = (o) => document.getElementById('grid-gen-opt-' + o).checked;
-        let data = {
-            'baseParams': getGenInput(),
-            'outputFolderName': document.getElementById('grid-gen-output-folder-name').value,
-            'doOverwrite': getOpt('do-overwrite'),
-            'fastSkip': getOpt('fast-skip'),
-            'generatePage': getOpt('generate-page'),
-            'publishGenMetadata': getOpt('publish-metadata'),
-            'dryRun': getOpt('dry-run')
-        };
-        let axisData = [];
-        for (let axis of gridGen_axisDiv.getElementsByClassName('grid-gen-axis-wrapper')) {
-            let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
-            let input = axis.getElementsByClassName('grid-gen-axis-input')[0].innerText;
-            axisData.push({ 'mode': type, 'vals': input });
-        }
-        data['gridAxes'] = axisData;
-        makeWSRequestT2I('GridGenRun', data, data => {
-            if (data.image) {
-                gotImageResult(data.image, data.metadata);
-            }
-            else if (data.success) {
-                outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="Output/${outputFolder.value}/index.html" target="_blank">Output/<code>${outputFolder.value}</code></a>`;
-            }
-        });
-    };
-    runButton.addEventListener('click', () => {
-        setCurrentModel(() => {
-            if (document.getElementById('current_model').innerText == '') {
-                showError("Cannot generate, no model selected.");
-                return;
-            }
-            doGenerate();
-        });
-    });
     gridGen_addAxis();
 }
 
