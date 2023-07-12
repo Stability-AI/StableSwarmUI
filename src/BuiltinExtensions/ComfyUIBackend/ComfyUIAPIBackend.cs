@@ -10,7 +10,7 @@ public class ComfyUIAPIBackend : ComfyUIAPIAbstractBackend
     {
         /// <summary>Base web address of the ComfyUI instance.</summary>
         [SuggestionPlaceholder(Text = "ComfyUI's address...")]
-        [ConfigComment("The address of the ComfyUI, eg 'http://localhost:8188'.")]
+        [ConfigComment("The address of the ComfyUI instance, eg 'http://localhost:8188'.")]
         public string Address = "";
     }
 
