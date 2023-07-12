@@ -75,7 +75,13 @@ public static class T2IAPI
     {
         (int images, JObject rawInput) = input;
         using Session.GenClaim claim = session.Claim(gens: images);
-        T2IParams user_input = new(session);
+        void setError(string message)
+        {
+            Logs.Debug($"Refused to generate image for {session.User.UserID}: {message}");
+            output(new JObject() { ["error"] = message });
+            claim.LocalClaimInterrupt.Cancel();
+        }
+        T2IParamInput user_input = new(session);
         try
         {
             foreach ((string key, JToken val) in rawInput)
@@ -94,24 +100,17 @@ public static class T2IAPI
                 }
             }
         }
-        catch (InvalidDataException ex)
+        catch (InvalidOperationException ex)
         {
-            output(new JObject() { ["error"] = ex.Message });
+            setError(ex.Message);
             return;
         }
-        if (user_input.Seed == -1)
+        catch (InvalidDataException ex)
         {
-            user_input.Seed = Random.Shared.Next(int.MaxValue);
+            setError(ex.Message);
+            return;
         }
-        if (user_input.BatchID == 0)
-        {
-            user_input.BatchID = Random.Shared.Next(int.MaxValue);
-        }
-        void setError(string message)
-        {
-            output(new JObject() { ["error"] = message });
-            claim.LocalClaimInterrupt.Cancel();
-        }
+        user_input.NormalizeSeeds();
         List<T2IEngine.ImageInBatch> imageSet = new();
         T2IEngine.ImageInBatch[] imageOut = null;
         List<Task> tasks = new();
@@ -128,8 +127,8 @@ public static class T2IAPI
                 break;
             }
             int index = i;
-            T2IParams thisParams = user_input.Clone();
-            thisParams.Seed += index;
+            T2IParamInput thisParams = user_input.Clone();
+            thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed));
             tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, claim, output, setError, isWS, 2, // TODO: Max timespan configurable
                 (outputs) =>
                 {
@@ -336,7 +335,8 @@ public static class T2IAPI
     {
         return new JObject()
         {
-            ["list"] = JToken.FromObject(T2IParamTypes.Types.Values.Select(v => v.ToNet(session)).ToList())
+            ["list"] = new JArray(T2IParamTypes.Types.Values.Select(v => v.ToNet(session)).ToList()),
+            ["models"] = new JArray(Program.T2IModels.ListModelsFor(session).Select(m => m.Name).ToArray())
         };
     }
 }

@@ -105,12 +105,12 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return outputs.ToArray();
     }
 
-    public override async Task<Image[]> Generate(T2IParams user_input)
+    public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
         string workflow;
-        if (user_input.OtherParams.TryGetValue("comfyui_workflow", out object workflowObj))
+        if (user_input.TryGet(ComfyUIBackendExtension.WorkflowParam, out string workflowName))
         {
-            if (workflowObj is not string workflowName || !ComfyUIBackendExtension.Workflows.TryGetValue(workflowName, out workflow))
+            if (!ComfyUIBackendExtension.Workflows.TryGetValue(workflowName, out workflow))
             {
                 throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
             }
@@ -118,23 +118,23 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 string tagName = tag.BeforeAndAfter(':', out string defVal);
                 string filled = tagName switch
                 {
-                    "prompt" => user_input.Prompt,
-                    "negative_prompt" => user_input.NegativePrompt,
-                    "seed" => $"{user_input.Seed}",
-                    "seed+1" => $"{user_input.Seed + 1}",
-                    "steps" => $"{user_input.Steps}",
-                    "width" => $"{user_input.Width}",
-                    "height" => $"{user_input.Height}",
-                    "cfg_scale" => $"{user_input.CFGScale}",
-                    "subseed" => $"{user_input.VarSeed}",
-                    "subseed_strength" => $"{user_input.VarSeedStrength}",
-                    "init_image" => user_input.InitImage.AsBase64,
-                    "init_image_strength" => $"{user_input.ImageInitStrength}",
-                    "comfy_sampler" => user_input.OtherParams.GetValueOrDefault("comfyui_sampler")?.ToString(),
-                    "comfy_scheduler" => user_input.OtherParams.GetValueOrDefault("comfyui_scheduler")?.ToString(),
-                    "model" => user_input.Model.Name.Replace('/', Path.DirectorySeparatorChar),
+                    "prompt" => user_input.Get(T2IParamTypes.Prompt),
+                    "negative_prompt" => user_input.Get(T2IParamTypes.NegativePrompt),
+                    "seed" => $"{user_input.Get(T2IParamTypes.Seed)}",
+                    "seed+1" => $"{user_input.Get(T2IParamTypes.Seed) + 1}",
+                    "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
+                    "width" => $"{user_input.Get(T2IParamTypes.Width)}",
+                    "height" => $"{user_input.Get(T2IParamTypes.Height)}",
+                    "cfg_scale" => $"{user_input.Get(T2IParamTypes.CFGScale)}",
+                    "subseed" => $"{user_input.Get(T2IParamTypes.VariationSeed)}",
+                    "subseed_strength" => user_input.GetString(T2IParamTypes.VariationSeedStrength),
+                    "init_image" => user_input.Get(T2IParamTypes.InitImage)?.AsBase64,
+                    "init_image_strength" => user_input.GetString(T2IParamTypes.InitImageCreativity),
+                    "comfy_sampler" => user_input.GetString(ComfyUIBackendExtension.SamplerParam),
+                    "comfy_scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam),
+                    "model" => user_input.Get(T2IParamTypes.Model).Name.Replace('/', Path.DirectorySeparatorChar),
                     "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
-                    _ => user_input.OtherParams.GetValueOrDefault(tagName)?.ToString()
+                    _ => user_input.GetRaw(T2IParamTypes.GetType(tagName))?.ToString()
                 };
                 filled ??= defVal;
                 return Utilities.EscapeJsonString(filled);

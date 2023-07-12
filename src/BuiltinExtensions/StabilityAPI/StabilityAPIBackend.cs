@@ -109,41 +109,41 @@ public class StabilityAPIBackend : AbstractT2IBackend
         Logs.Info($"SAPI balance: {Credits}");
     }
 
-    public override async Task<Image[]> Generate(T2IParams user_input)
+    public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
-        if (user_input.InitImage is not null)
+        if (user_input.TryGet(T2IParamTypes.InitImage, out Image initImg))
         {
             // TODO: img2img
         }
         JArray prompts = new();
-        if (!string.IsNullOrWhiteSpace(user_input.Prompt))
+        if (!string.IsNullOrWhiteSpace(user_input.Get(T2IParamTypes.Prompt)))
         {
             prompts.Add(new JObject()
             {
-                ["text"] = user_input.Prompt,
+                ["text"] = user_input.Get(T2IParamTypes.Prompt),
                 ["weight"] = 1
             });
         }
-        if (!string.IsNullOrWhiteSpace(user_input.NegativePrompt))
+        if (!string.IsNullOrWhiteSpace(user_input.Get(T2IParamTypes.NegativePrompt)))
         {
             prompts.Add(new JObject()
             {
-                ["text"] = user_input.NegativePrompt,
+                ["text"] = user_input.Get(T2IParamTypes.NegativePrompt),
                 ["weight"] = -1
             });
         }
         JObject obj = new()
         {
-            ["cfg_scale"] = user_input.CFGScale,
-            ["height"] = user_input.Height,
-            ["width"] = user_input.Width,
+            ["cfg_scale"] = user_input.Get(T2IParamTypes.CFGScale),
+            ["height"] = user_input.Get(T2IParamTypes.Height),
+            ["width"] = user_input.Get(T2IParamTypes.Width),
             ["samples"] = 1,
-            ["steps"] = user_input.Steps,
-            ["sampler"] = user_input.OtherParams.GetValueOrDefault("sapi_sampler", "K_EULER").ToString(),
+            ["steps"] = user_input.Get(T2IParamTypes.Steps),
+            ["sampler"] = user_input.Get(StabilityAPIExtension.SamplerParam) ?? "K_EULER",
             ["text_prompts"] = prompts,
-            ["seed"] = user_input.Seed
+            ["seed"] = user_input.Get(T2IParamTypes.Seed)
         };
-        string engine = user_input.OtherParams.GetValueOrDefault("sapi_engine", "stable-diffusion-v1-5").ToString();
+        string engine = user_input.Get(StabilityAPIExtension.EngineParam) ?? "stable-diffusion-v1-5";
         // TODO: Model tracking.
         JObject response = await Post($"generation/{engine}/text-to-image", obj);
         List<Image> images = new();

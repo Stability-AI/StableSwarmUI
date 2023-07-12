@@ -235,3 +235,11 @@ function getCookie(name) {
 function deleteCookie(name) {
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;SameSite=Lax`;
 }
+
+function getRequiredElementById(id) {
+    let elem = document.getElementById(id);
+    if (elem == null) {
+        throw new Error(`Required element '${id}' not found.`);
+    }
+    return elem;
+}

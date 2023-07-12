@@ -38,9 +38,9 @@ function enableSlidersIn(elem) {
 }
 
 function showError(message) {
-    let container = document.getElementById('center_toast');
-    let box = document.getElementById('error_toast_box');
-    document.getElementById('error_toast_content').innerText = message;
+    let container = getRequiredElementById('center_toast');
+    let box = getRequiredElementById('error_toast_box');
+    getRequiredElementById('error_toast_content').innerText = message;
     if (!box.classList.contains('show')) {
         box.classList.add('show');
         box.classList.remove('hide');

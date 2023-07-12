@@ -29,6 +29,8 @@ function getHtmlForParam(param, prefix) {
             return makeCheckboxInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.toggleable) + pop;
         case 'dropdown':
             return makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, param.toggleable) + pop;
+        case 'model':
+            return makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, allModels, param.default, param.toggleable) + pop;
         case 'image':
             return makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop;
     }
@@ -59,7 +61,7 @@ function toggleGroupOpen(elem) {
 }
 
 function doToggleGroup(id) {
-    let elem = document.getElementById(`${id}_toggle`);
+    let elem = getRequiredElementById(`${id}_toggle`);
     let parent = findParentOfClass(elem, 'input-group');
     let header = parent.querySelector('.input-group-header');
     let group = parent.querySelector('.input-group-content');
@@ -79,8 +81,8 @@ function genInputs() {
     for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !isParamAdvanced(p)],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p)],
             ['main_inputs_area_hidden', null, (p) => !p.visible]]) {
-        let area = document.getElementById(areaData[0]);
-        let presetArea = areaData[1] ? document.getElementById(areaData[1]) : null;
+        let area = getRequiredElementById(areaData[0]);
+        let presetArea = areaData[1] ? getRequiredElementById(areaData[1]) : null;
         let html = '', presetHtml = '';
         let lastGroup = null;
         let groupsClose = [];
@@ -128,7 +130,7 @@ function genInputs() {
             enableSlidersIn(presetArea);
         }
         for (let group of groupsClose) {
-            let elem = document.getElementById(`input_group_${group}`);
+            let elem = getRequiredElementById(`input_group_${group}`);
             toggleGroupOpen(elem);
             let pelem = document.getElementById(`input_group_preset_${group}`);
             if (pelem) {
@@ -149,13 +151,13 @@ function genInputs() {
             doToggleEnable(`preset_input_${param.id}`);
         }
     }
-    let inputAspectRatio = document.getElementById('input_aspectratio');
-    let inputWidth = document.getElementById('input_width');
+    let inputAspectRatio = getRequiredElementById('input_aspectratio');
+    let inputWidth = getRequiredElementById('input_width');
     let inputWidthParent = findParentOfClass(inputWidth, 'slider-auto-container');
-    let inputWidthSlider = document.getElementById('input_width_rangeslider');
-    let inputHeight = document.getElementById('input_height');
+    let inputWidthSlider = getRequiredElementById('input_width_rangeslider');
+    let inputHeight = getRequiredElementById('input_height');
     let inputHeightParent = findParentOfClass(inputHeight, 'slider-auto-container');
-    let inputHeightSlider = document.getElementById('input_height_rangeslider');
+    let inputHeightSlider = getRequiredElementById('input_height_rangeslider');
     let resGroupLabel = findParentOfClass(inputWidth, 'input-group').querySelector('.header-label');
     let resTrick = () => {
         let aspect;
@@ -201,7 +203,7 @@ function genInputs() {
     shouldApplyDefault = true;
     for (let param of gen_param_types) {
         if (param.visible) {
-            let elem = document.getElementById(`input_${param.id}`);
+            let elem = getRequiredElementById(`input_${param.id}`);
             let cookie = getCookie(`lastparam_input_${param.id}`);
             if (cookie) {
                 shouldApplyDefault = false;
@@ -223,7 +225,7 @@ function genInputs() {
                 }
             });
             if (param.toggleable) {
-                let toggler = document.getElementById(`input_${param.id}_toggle`);
+                let toggler = getRequiredElementById(`input_${param.id}_toggle`);
                 let cookie = getCookie(`lastparam_input_${param.id}_toggle`);
                 if (cookie) {
                     toggler.checked = cookie == "true";
@@ -243,8 +245,8 @@ function genInputs() {
 }
 
 function toggle_advanced() {
-    let advancedArea = document.getElementById('main_inputs_area_advanced');
-    let toggler = document.getElementById('advanced_options_checkbox');
+    let advancedArea = getRequiredElementById('main_inputs_area_advanced');
+    let toggler = getRequiredElementById('advanced_options_checkbox');
     advancedArea.style.display = toggler.checked ? 'block' : 'none';
     for (let param of gen_param_types) {
         if (param.toggleable && param.visible) {
@@ -254,7 +256,7 @@ function toggle_advanced() {
 }
 
 function toggle_advanced_checkbox_manual() {
-    let toggler = document.getElementById('advanced_options_checkbox');
+    let toggler = getRequiredElementById('advanced_options_checkbox');
     toggler.checked = !toggler.checked;
     toggle_advanced();
 }
@@ -262,13 +264,13 @@ function toggle_advanced_checkbox_manual() {
 function getGenInput() {
     let input = {};
     for (let type of gen_param_types) {
-        if (type.toggleable && !document.getElementById(`input_${type.id}_toggle`).checked) {
+        if (type.toggleable && !getRequiredElementById(`input_${type.id}_toggle`).checked) {
             continue;
         }
-        if (type.group && type.group.toggles && !document.getElementById(`input_group_content_${type.group.id}_toggle`).checked) {
+        if (type.group && type.group.toggles && !getRequiredElementById(`input_group_content_${type.group.id}_toggle`).checked) {
             continue;
         }
-        let elem = document.getElementById(`input_${type.id}`);
+        let elem = getRequiredElementById(`input_${type.id}`);
         let parent = findParentOfClass(elem, 'auto-input');
         if (parent && parent.style.display == 'none') {
             continue;
@@ -299,7 +301,7 @@ function refreshParameterValues(callback = null) {
             if (origParam) {
                 origParam.values = param.values;
                 if (origParam.type == "dropdown") {
-                    let dropdown = document.getElementById(`input_${param.id}`);
+                    let dropdown = getRequiredElementById(`input_${param.id}`);
                     let val = dropdown.value;
                     let html = '';
                     for (let value of param.values) {
@@ -320,7 +322,7 @@ function refreshParameterValues(callback = null) {
 function resetParamsToDefault() {
     for (let param of gen_param_types) {
         let id = `input_${param.id}`;
-        let paramElem = document.getElementById(id);
+        let paramElem = getRequiredElementById(id);
         if (param.visible) {
             if (param.type == "boolean") {
                 paramElem.checked = param.default;
@@ -330,7 +332,7 @@ function resetParamsToDefault() {
             }
             deleteCookie(`lastparam_input_${param.id}`);
             if (param.toggleable) {
-                document.getElementById(`${id}_toggle`).checked = false;
+                getRequiredElementById(`${id}_toggle`).checked = false;
                 deleteCookie(`lastparam_input_${param.id}_toggle`);
                 doToggleEnable(id);
             }
@@ -375,7 +377,7 @@ function hideUnsupportableParams() {
     }
     for (let group in groups) {
         let groupData = groups[group];
-        let groupElem = document.getElementById(group);
+        let groupElem = getRequiredElementById(group);
         if (groupData.visible == 0) {
             groupElem.style.display = 'none';
         }

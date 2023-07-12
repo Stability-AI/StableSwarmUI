@@ -20,23 +20,23 @@ function modelMenuDoEdit() {
         console.log("Model do edit: no model");
         return;
     }
-    let imageInput = document.getElementById('edit_model_image');
+    let imageInput = getRequiredElementById('edit_model_image');
     imageInput.innerHTML = '';
-    let enableImage = document.getElementById('edit_model_enable_image');
+    let enableImage = getRequiredElementById('edit_model_enable_image');
     enableImage.checked = false;
     enableImage.disabled = true;
-    let curImg = document.getElementById('current_image').getElementsByTagName('img')[0];
+    let curImg = document.getElementById('current_image_img');
     if (curImg) {
         let newImg = curImg.cloneNode(true);
         imageInput.appendChild(newImg);
         enableImage.checked = true;
         enableImage.disabled = false;
     }
-    document.getElementById('edit_model_name').value = model.title || model.name;
-    document.getElementById('edit_model_author').value = model.author || '';
-    document.getElementById('edit_model_type').value = model.class || '';
-    document.getElementById('edit_model_resolution').value = `${model.standard_width}x${model.standard_height}`;
-    document.getElementById('edit_model_description').value = model.description || '';
+    getRequiredElementById('edit_model_name').value = model.title || model.name;
+    getRequiredElementById('edit_model_author').value = model.author || '';
+    getRequiredElementById('edit_model_type').value = model.class || '';
+    getRequiredElementById('edit_model_resolution').value = `${model.standard_width}x${model.standard_height}`;
+    getRequiredElementById('edit_model_description').value = model.description || '';
     $('#edit_model_modal').modal('show');
 }
 
@@ -46,19 +46,19 @@ function save_edit_model() {
         console.log("Model do save: no model");
         return;
     }
-    let resolution = document.getElementById('edit_model_resolution').value.split('x');
+    let resolution = getRequiredElementById('edit_model_resolution').value.split('x');
     let data = {
         'model': model.name,
-        'title': document.getElementById('edit_model_name').value,
-        'author': document.getElementById('edit_model_author').value,
-        'type': document.getElementById('edit_model_type').value,
-        'description': document.getElementById('edit_model_description').value,
+        'title': getRequiredElementById('edit_model_name').value,
+        'author': getRequiredElementById('edit_model_author').value,
+        'type': getRequiredElementById('edit_model_type').value,
+        'description': getRequiredElementById('edit_model_description').value,
         'standard_width': parseInt(resolution[0]),
         'standard_height': parseInt(resolution[1]),
         'preview_image': ''
     };
-    if (document.getElementById('edit_model_enable_image').checked) {
-        let img = document.getElementById('edit_model_image').getElementsByTagName('img')[0].src;
+    if (getRequiredElementById('edit_model_enable_image').checked) {
+        let img = getRequiredElementById('edit_model_image').getElementsByTagName('img')[0].src;
         let index = img.indexOf('/Output/');
         if (index != -1) {
             img = img.substring(index);
@@ -89,7 +89,7 @@ function cleanModelName(name) {
 
 function appendModel(container, prefix, model) {
     models[`${prefix}${model.name}`] = model;
-    let batch = document.getElementById('current_model').innerText == model.name ? 'model-selected' : (model.loaded ? 'model-loaded' : `image-batch-${Object.keys(models).length % 2}`);
+    let batch = getRequiredElementById('current_model').innerText == model.name ? 'model-selected' : (model.loaded ? 'model-loaded' : `image-batch-${Object.keys(models).length % 2}`);
     let div = createDiv(null, `model-block model-block-hoverable ${batch}`);
     let img = document.createElement('img');
     img.src = model.preview_image;
@@ -130,14 +130,14 @@ function sortModelName(a, b) {
 }
 
 function loadModelList(path, isRefresh = false) {
-    let container = document.getElementById('model_list');
+    let container = getRequiredElementById('model_list');
     lastModelDir = path;
     container.innerHTML = '';
     models = {};
     call = () => loadFileList('ListModels', 'model_list_up_button', 'model_folder_path', path, container, loadModelList, (prefix, model) => {
         appendModel(container, prefix, model);
     }, () => {
-        let current_model = document.getElementById('current_model');
+        let current_model = getRequiredElementById('current_model');
         if (current_model.innerText == '') {
             let model = Object.values(models).find(m => m.loaded);
             if (model) {
@@ -158,25 +158,25 @@ function directSetModel(model) {
         return;
     }
     if (model.name) {
-        document.getElementById('input_model').value = model.name;
-        document.getElementById('current_model').innerText = model.name;
+        getRequiredElementById('input_model').value = model.name;
+        getRequiredElementById('current_model').innerText = model.name;
         setCookie('selected_model', `${model.name},${model.standard_width},${model.standard_height}`, 90);
         curModelWidth = model.standard_width;
         curModelHeight = model.standard_height;
     }
     else if (model.includes(',')) {
         let [name, width, height] = model.split(',');
-        document.getElementById('input_model').value = name;
-        document.getElementById('current_model').innerText = name;
+        getRequiredElementById('input_model').value = name;
+        getRequiredElementById('current_model').innerText = name;
         setCookie('selected_model', `${name},${width},${height}`, 90);
         curModelWidth = parseInt(width);
         curModelHeight = parseInt(height);
     }
-    document.getElementById('input_aspectratio').dispatchEvent(new Event('change'));
+    getRequiredElementById('input_aspectratio').dispatchEvent(new Event('change'));
 }
 
 function setCurrentModel(callback) {
-    let currentModel = document.getElementById('current_model');
+    let currentModel = getRequiredElementById('current_model');
     if (currentModel.innerText == '') {
         genericRequest('ListLoadedModels', {}, data => {
             if (data.models.length > 0) {

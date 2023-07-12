@@ -131,7 +131,7 @@ public class User
     }
 
     /// <summary>Converts the user's output path setting to a real path for the given parameters. Note that the path is partially cleaned, but not completely.</summary>
-    public string BuildImageOutputPath(T2IParams user_input)
+    public string BuildImageOutputPath(T2IParamInput user_input)
     {
         int maxLen = Settings.OutPathBuilder.MaxLenPerPart;
         DateTimeOffset time = DateTimeOffset.Now;
@@ -147,18 +147,18 @@ public class User
                 "hour" => $"{time.Hour:00}",
                 "minute" => $"{time.Minute:00}",
                 "second" => $"{time.Second:00}",
-                "prompt" => user_input.Prompt,
-                "negative_prompt" => user_input.NegativePrompt,
-                "seed" => $"{user_input.Seed}",
-                "cfg_scale" => $"{user_input.CFGScale}",
-                "width" => $"{user_input.Width}",
-                "height" => $"{user_input.Height}",
-                "steps" => $"{user_input.Steps}",
-                "var_seed" => $"{user_input.VarSeed}",
-                "var_strength" => $"{user_input.VarSeedStrength}",
-                "model" => user_input.Model?.Name ?? "unknown",
+                "prompt" => user_input.Get(T2IParamTypes.Prompt),
+                "negative_prompt" => user_input.Get(T2IParamTypes.NegativePrompt),
+                "seed" => $"{user_input.Get(T2IParamTypes.Seed)}",
+                "cfg_scale" => $"{user_input.Get(T2IParamTypes.CFGScale)}",
+                "width" => $"{user_input.Get(T2IParamTypes.Width)}",
+                "height" => $"{user_input.Get(T2IParamTypes.Height)}",
+                "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
+                "var_seed" => $"{user_input.Get(T2IParamTypes.VariationSeed)}",
+                "var_strength" => $"{user_input.Get(T2IParamTypes.VariationSeedStrength)}",
+                "model" => user_input.Get(T2IParamTypes.Model)?.Name ?? "unknown",
                 "user_name" => UserID,
-                string other => user_input.OtherParams.TryGetValue(other, out object val) ? val.ToString() : null
+                string other => user_input.TryGetRaw(T2IParamTypes.GetType(other), out object val) ? val.ToString() : null
             };
             if (data is null)
             {

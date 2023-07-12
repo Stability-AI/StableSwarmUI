@@ -1,6 +1,6 @@
 ﻿
 using Newtonsoft.Json.Linq;
-using StableUI.DataHolders;
+using StableUI.Text2Image;
 using System.IO;
 
 namespace StableUI.Builtin_ComfyUIBackend;
@@ -35,7 +35,7 @@ public class WorkflowGenerator
             {
                 n["inputs"] = new JObject()
                 {
-                    ["ckpt_name"] = g.UserInput.Model.Name.Replace('/', Path.DirectorySeparatorChar)
+                    ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).Name.Replace('/', Path.DirectorySeparatorChar)
                 };
             }, "4");
         }, -10);
@@ -46,8 +46,8 @@ public class WorkflowGenerator
                 n["inputs"] = new JObject()
                 {
                     ["batch_size"] = "1",
-                    ["height"] = g.UserInput.Height,
-                    ["width"] = g.UserInput.Width
+                    ["height"] = g.UserInput.Get(T2IParamTypes.Height),
+                    ["width"] = g.UserInput.Get(T2IParamTypes.Width)
                 };
             }, "5");
         }, -9);
@@ -58,7 +58,7 @@ public class WorkflowGenerator
                 n["inputs"] = new JObject()
                 {
                     ["clip"] = g.FinalClip,
-                    ["text"] = g.UserInput.Prompt
+                    ["text"] = g.UserInput.Get(T2IParamTypes.Prompt)
                 };
             }, "6");
         }, -8);
@@ -69,7 +69,7 @@ public class WorkflowGenerator
                 n["inputs"] = new JObject()
                 {
                     ["clip"] = g.FinalClip,
-                    ["text"] = g.UserInput.NegativePrompt
+                    ["text"] = g.UserInput.Get(T2IParamTypes.NegativePrompt)
                 };
             }, "7");
         }, -7);
@@ -81,12 +81,12 @@ public class WorkflowGenerator
                 {
                     ["model"] = g.FinalModel,
                     ["add_noise"] = "enable",
-                    ["noise_seed"] = g.UserInput.Seed,
-                    ["steps"] = g.UserInput.Steps,
-                    ["cfg"] = g.UserInput.CFGScale,
+                    ["noise_seed"] = g.UserInput.Get(T2IParamTypes.Seed),
+                    ["steps"] = g.UserInput.Get(T2IParamTypes.Steps),
+                    ["cfg"] = g.UserInput.Get(T2IParamTypes.CFGScale),
                     // TODO: proper sampler input, and intelligent default scheduler per sampler
-                    ["sampler_name"] = g.UserInput.OtherParams.GetValueOrDefault("comfyui_sampler", "euler").ToString(),
-                    ["scheduler"] = g.UserInput.OtherParams.GetValueOrDefault("comfyui_scheduler", "normal").ToString(),
+                    ["sampler_name"] = g.UserInput.Get(ComfyUIBackendExtension.SamplerParam)?.ToString() ?? "euler",
+                    ["scheduler"] = g.UserInput.Get(ComfyUIBackendExtension.SchedulerParam)?.ToString() ?? "normal",
                     ["positive"] = g.FinalPrompt,
                     ["negative"] = g.FinalNegativePrompt,
                     ["latent_image"] = g.FinalLatentImage,
@@ -122,7 +122,7 @@ public class WorkflowGenerator
     }
 
     /// <summary>The raw user input data.</summary>
-    public T2IParams UserInput;
+    public T2IParamInput UserInput;
 
     /// <summary>The output workflow object.</summary>
     public JObject Workflow;

@@ -162,7 +162,6 @@ public class T2IModelHandler
             Logs.Debug($"Not loading metadata for {model.Name} as it is not safetensors.");
             return;
         }
-        Logs.Debug($"Trying to read metadata for {model.Name}");
         string folder = model.RawFilePath.Replace('\\', '/').BeforeAndAfterLast('/', out string fileName);
         long modified = ((DateTimeOffset)File.GetLastWriteTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds();
         ILiteCollection<ModelMetadataStore> cache = GetCacheForFolder(folder);
@@ -179,7 +178,6 @@ public class T2IModelHandler
                 Logs.Debug($"Not loading metadata for {model.Name} as it lacks a proper header.");
                 return;
             }
-            Logs.Debug($"Model {model.Name} has no valid cache, will rebuild.");
             JObject headerData = header.ParseToJson();
             if (headerData is null)
             {
@@ -208,7 +206,6 @@ public class T2IModelHandler
         }
         lock (ModificationLock)
         {
-            Logs.Debug($"Model {model.Name} loaded metadata from cache with {metadata.PreviewImage?.Length ?? -1} preview-image len, type={metadata.ModelClassType}, title={metadata.Title}, author={metadata.Author}, width={metadata.StandardWidth}, height={metadata.StandardHeight}");
             model.Title = metadata.Title;
             model.Author = metadata.Author;
             model.Description = metadata.Description;

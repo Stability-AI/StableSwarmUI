@@ -1,12 +1,13 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using FreneticUtilities.FreneticExtensions;
+using Newtonsoft.Json.Linq;
 using StableUI.Accounts;
 using StableUI.Backends;
 using StableUI.Core;
-using StableUI.DataHolders;
 using StableUI.Utils;
 using StableUI.WebAPI;
 using System.Diagnostics;
 using System.IO;
+using static StableUI.Backends.BackendHandler;
 
 namespace StableUI.Text2Image
 {
@@ -18,7 +19,7 @@ namespace StableUI.Text2Image
         /// Use <see cref="InvalidOperationException"/> for a user-readable refusal message.</summary>
         public static Action<PreGenerationEventParams> PreGenerateEvent;
 
-        public record class PreGenerationEventParams(T2IParams UserInput);
+        public record class PreGenerationEventParams(T2IParamInput UserInput);
 
         /// <summary>Extension event, fired after images were generated, but before saving the result.
         /// Backend is already released, but the gen request is not marked completed.
@@ -28,20 +29,46 @@ namespace StableUI.Text2Image
         public static Action<PostGenerationEventParams> PostGenerateEvent;
 
         /// <summary>Paramters for <see cref="PostGenerateEvent"/>.</summary>
-        public record class PostGenerationEventParams(Image Image, Dictionary<string, object> ExtraMetadata, T2IParams UserInput, Action RefuseImage);
+        public record class PostGenerationEventParams(Image Image, Dictionary<string, object> ExtraMetadata, T2IParamInput UserInput, Action RefuseImage);
 
         /// <summary>Extension event, fired after a batch of images were generated.
         /// Use "RefuseImage" to mark an image as removed. Note that it may have already been shown to a user, when the live result websocket API is in use.</summary>
         public static Action<PostBatchEventParams> PostBatchEvent;
 
         /// <summary>Parameters for <see cref="PostBatchEvent"/>.</summary>
-        public record class PostBatchEventParams(T2IParams UserInput, ImageInBatch[] Images);
+        public record class PostBatchEventParams(T2IParamInput UserInput, ImageInBatch[] Images);
 
         /// <summary>Represents a single image within a batch of images, for <see cref="PostBatchEvent"/>.</summary>
         public record class ImageInBatch(Image Image, Action RefuseImage);
 
+        /// <summary>Helper to create a function to match a backend to a user input request.</summary>
+        public static Func<T2IBackendData, bool> BackendMatcherFor(T2IParamInput user_input)
+        {
+            if (!user_input.TryGet(T2IParamTypes.BackendType, out string type) || type == "any")
+            {
+                return _ => true;
+            }
+            string typeLow = type.ToLowerFast();
+            return backend =>
+            {
+                if (typeLow != "any" && typeLow != backend.Backend.HandlerTypeData.ID.ToLowerFast())
+                {
+                    return false;
+                }
+                HashSet<string> features = backend.Backend.SupportedFeatures.ToHashSet();
+                foreach (string flag in user_input.RequiredFlags)
+                {
+                    if (!features.Contains(flag))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            };
+        }
+
         /// <summary>Internal handler route to create an image based on a user request.</summary>
-        public static async Task CreateImageTask(T2IParams user_input, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image[]> saveImages)
+        public static async Task CreateImageTask(T2IParamInput user_input, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image[]> saveImages)
         {
             Stopwatch timer = Stopwatch.StartNew();
             void sendStatus()
@@ -61,7 +88,7 @@ namespace StableUI.Text2Image
                 PreGenerateEvent?.Invoke(new(user_input));
                 claim.Extend(backendWaits: 1);
                 sendStatus();
-                backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Model, filter: user_input.BackendMatcher, session: user_input.SourceSession, notifyWillLoad: sendStatus, cancel: claim.InterruptToken);
+                backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Get(T2IParamTypes.Model), filter: BackendMatcherFor(user_input), session: user_input.SourceSession, notifyWillLoad: sendStatus, cancel: claim.InterruptToken);
             }
             catch (InvalidOperationException ex)
             {

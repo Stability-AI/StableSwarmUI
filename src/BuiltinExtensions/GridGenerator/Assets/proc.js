@@ -211,7 +211,7 @@ function canShowVal(axis, val) {
 }
 
 function getScoreFor(img) {
-    return (((all_metadata[img] || {})['stableui_image_params'] || {})['scoring'] || {})['average'] || null;
+    return (((all_metadata[img] || {})['sui_image_params'] || {})['scoring'] || {})['average'] || null;
 }
 
 function percentToRedGreen(percent) {

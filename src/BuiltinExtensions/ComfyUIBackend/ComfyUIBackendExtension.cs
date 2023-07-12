@@ -44,19 +44,21 @@ public class ComfyUIBackendExtension : Extension
         }
     }
 
+    public static T2IRegisteredParam<string> WorkflowParam, SamplerParam, SchedulerParam;
+
     public override void OnInit()
     {
         T2IParamGroup comfyGroup = new("ComfyUI", Toggles: false, Open: false);
-        T2IParamTypes.Register(new("[ComfyUI] Workflow", "What workflow to use in ComfyUI (files in 'Workflows' folder within the ComfyUI extension)",
-            T2IParamDataType.DROPDOWN, "basic", (s, p) => p.OtherParams["comfyui_workflow"] = s, Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
+        WorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Workflow", "What workflow to use in ComfyUI (files in 'Workflows' folder within the ComfyUI extension)",
+            "basic", Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
             GetValues: (_) => Workflows.Keys.ToList()
             ));
-        T2IParamTypes.Register(new("[ComfyUI] Sampler", "Sampler type (for ComfyUI)",
-            T2IParamDataType.DROPDOWN, "euler", (s, p) => p.OtherParams["comfyui_sampler"] = s, Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
+        SamplerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Sampler", "Sampler type (for ComfyUI)",
+            "euler", Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
             GetValues: (_) => new() { "euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2" }
             ));
-        T2IParamTypes.Register(new("[ComfyUI] Scheduler", "Scheduler type (for ComfyUI)",
-            T2IParamDataType.DROPDOWN, "normal", (s, p) => p.OtherParams["comfyui_scheduler"] = s, Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
+        SchedulerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Scheduler", "Scheduler type (for ComfyUI)",
+            "normal", Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
             GetValues: (_) => new() { "normal", "karras", "exponential", "simple", "ddim_uniform" }
             ));
         Program.Backends.RegisterBackendType<ComfyUIAPIBackend>("comfyui_api", "ComfyUI API By URL", "A backend powered by a pre-existing installation of ComfyUI, referenced via API base URL.");

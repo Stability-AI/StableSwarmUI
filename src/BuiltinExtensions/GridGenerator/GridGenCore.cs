@@ -19,13 +19,13 @@ public partial class GridGenCore
 
     public static List<string> EXTRA_ASSETS = new();
 
-    public static Action<SingleGridCall, T2IParams, bool> GridCallApplyHook;
+    public static Action<SingleGridCall, T2IParamInput, bool> GridCallApplyHook;
 
     public static Func<SingleGridCall, string, string, bool> GridCallParamAddHook;
 
     public static Action<GridRunner> GridRunnerPreRunHook, GridRunnerPreDryHook;
 
-    public static Func<GridRunner, T2IParams, SingleGridCall, Task> GridRunnerPostDryHook;
+    public static Func<GridRunner, T2IParamInput, SingleGridCall, Task> GridRunnerPostDryHook;
 
     public static Action<SingleGridCall> GridCallInitHook;
 
@@ -212,7 +212,7 @@ public partial class GridGenCore
 
         public LockObject LastUpdatLock = new();
 
-        public T2IParams InitialParams;
+        public T2IParamInput InitialParams;
 
         public object LocalData;
 
@@ -269,12 +269,12 @@ public partial class GridGenCore
             }
         }
 
-        public void ApplyTo(T2IParams p, bool dry)
+        public void ApplyTo(T2IParamInput p, bool dry)
         {
             foreach (KeyValuePair<string, string> pair in Params)
             {
                 T2IParamType mode = T2IParamTypes.Types[T2IParamTypes.CleanTypeName(pair.Key)];
-                mode.Apply(pair.Value, p);
+                p.Set(mode, pair.Value);
             }
             GridCallApplyHook?.Invoke(this, p, dry);
         }
@@ -290,7 +290,7 @@ public partial class GridGenCore
 
         public string URLBase;
 
-        public T2IParams Params;
+        public T2IParamInput Params;
 
         public bool FastSkip;
 
@@ -356,7 +356,7 @@ public partial class GridGenCore
                 else
                 {
                     TotalRun++;
-                    int steps = Params.Steps;
+                    int steps = Params.Get(T2IParamTypes.Steps);
                     if (set.Params.TryGetValue("steps", out string stepStr) && int.TryParse(stepStr, out int stepInt))
                     {
                         steps = stepInt;
@@ -387,7 +387,7 @@ public partial class GridGenCore
                 {
                     Logs.Info($"On {iteration}/{TotalRun} ... Set: {set.Data}, file {set.BaseFilepath}");
                 }
-                T2IParams p = Params.Clone();
+                T2IParamInput p = Params.Clone();
                 GridRunnerPreDryHook?.Invoke(this);
                 set.ApplyTo(p, dry);
                 if (dry)
@@ -413,7 +413,7 @@ public partial class GridGenCore
             }
         }
 
-        public string BuildJson(T2IParams inputs, bool dryRun)
+        public string BuildJson(T2IParamInput inputs, bool dryRun)
         {
             JObject results = new()
             {
@@ -562,7 +562,7 @@ public partial class GridGenCore
             return html;
         }
 
-        public string EmitWebData(string path, T2IParams input, bool dryRun, string footerExtra)
+        public string EmitWebData(string path, T2IParamInput input, bool dryRun, string footerExtra)
         {
             Logs.Info("Building final web data...");
             string json = BuildJson(input, dryRun);
@@ -589,7 +589,7 @@ public partial class GridGenCore
 
     // TODO: Clever model logic switching so this doesn't spam-switch
 
-    public static Grid Run(T2IParams baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, string footerExtra = "")
+    public static Grid Run(T2IParamInput baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, string footerExtra = "")
     {
         Grid grid = new()
         {

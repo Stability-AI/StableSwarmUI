@@ -15,7 +15,7 @@ public abstract class AbstractT2IBackend
     public abstract Task Shutdown();
 
     /// <summary>Generate an image.</summary>
-    public abstract Task<Image[]> Generate(T2IParams user_input);
+    public abstract Task<Image[]> Generate(T2IParamInput user_input);
 
     /// <summary>Whether this backend has been configured validly.</summary>
     public volatile BackendStatus Status = BackendStatus.WAITING;

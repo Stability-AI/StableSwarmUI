@@ -1,6 +1,7 @@
 ﻿using FreneticUtilities.FreneticToolkit;
 using StableUI.Core;
 using StableUI.DataHolders;
+using StableUI.Text2Image;
 using StableUI.Utils;
 using System.IO;
 
@@ -100,16 +101,16 @@ public class Session : IEquatable<Session>
     }
 
     /// <summary>Applies metadata to an image and converts the filetype, following the user's preferences.</summary>
-    public Image ApplyMetadata(Image image, T2IParams user_input, Dictionary<string, object> extraParams)
+    public Image ApplyMetadata(Image image, T2IParamInput user_input, Dictionary<string, object> extraParams)
     {
-        string metadata = User.Settings.FileFormat.SaveMetadata ? user_input.GenMetadata(extraParams) : null;
+        string metadata = User.Settings.FileFormat.SaveMetadata ? user_input.GenRawMetadata(extraParams) : null;
         image = image.ConvertTo(User.Settings.FileFormat.ImageFormat, metadata, User.Settings.FileFormat.DPI);
         return image;
     }
 
     /// <summary>Save an image as this user, and returns the new URL. If user has disabled saving, returns a data URL.</summary>
     /// <returns>(User-Visible-WebPath, Local-FilePath)</returns>
-    public (string, string) SaveImage(Image image, T2IParams user_input)
+    public (string, string) SaveImage(Image image, T2IParamInput user_input)
     {
         if (!User.Settings.SaveFiles)
         {

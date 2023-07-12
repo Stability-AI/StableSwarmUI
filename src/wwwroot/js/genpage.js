@@ -16,9 +16,11 @@ let shouldApplyDefault = false;
 
 let sessionReadyCallbacks = [];
 
+let allModels = [];
+
 const time_started = Date.now();
 
-let statusBarElem = document.getElementById('top_status_bar');
+let statusBarElem = getRequiredElementById('top_status_bar');
 
 function clickImageInBatch(div) {
     setCurrentImage(div.getElementsByTagName('img')[0].src, div.dataset.metadata);
@@ -26,8 +28,8 @@ function clickImageInBatch(div) {
 
 function selectImageInHistory(div) {
     let batchId = div.dataset.batch_id;
-    document.getElementById('current_image_batch').innerHTML = '';
-    for (let img of document.getElementById('image_history').querySelectorAll(`[data-batch_id="${batchId}"]`)) {
+    getRequiredElementById('current_image_batch').innerHTML = '';
+    for (let img of getRequiredElementById('image_history').querySelectorAll(`[data-batch_id="${batchId}"]`)) {
         let batch_div = appendImage('current_image_batch', img.getElementsByTagName('img')[0].src, batchId, img.dataset.preview_text, img.dataset.metadata);
         batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
     }
@@ -35,8 +37,7 @@ function selectImageInHistory(div) {
 }
 
 function upscale_current_image() {
-    let currentImage = document.getElementById('current_image');
-    let actualImage = currentImage.getElementsByTagName('img')[0];
+    let actualImage = getRequiredElementById('current_image_img');
     toDataURL(actualImage.src, (url => {
         input_overrides['initimage'] = url;
         input_overrides['width'] = actualImage.width * 2;
@@ -56,10 +57,10 @@ function copy_current_image_params() {
         alert('No parameters to copy!');
         return;
     }
-    let metadata = JSON.parse(currentMetadataVal).stableui_image_params;
+    let metadata = JSON.parse(currentMetadataVal).sui_image_params;
     for (let param of gen_param_types) {
         let elem = document.getElementById(`input_${param.id}`);
-        if (metadata[param.id]) {
+        if (elem && metadata[param.id]) {
             if (param.type == "boolean") {
                 elem.checked = metadata[param.id] == "true";
             }
@@ -67,13 +68,13 @@ function copy_current_image_params() {
                 elem.value = metadata[param.id];
             }
             if (param.toggleable && param.visible) {
-                let toggle = document.getElementById(`input_${param.id}_toggle`);
+                let toggle = getRequiredElementById(`input_${param.id}_toggle`);
                 toggle.checked = true;
                 doToggleEnable(elem.id);
             }
         }
-        else if (param.toggleable && param.visible) {
-            let toggle = document.getElementById(`input_${param.id}_toggle`);
+        else if (elem && param.toggleable && param.visible) {
+            let toggle = getRequiredElementById(`input_${param.id}_toggle`);
             toggle.checked = false;
             doToggleEnable(elem.id);
         }
@@ -84,7 +85,7 @@ function formatMetadata(metadata) {
     if (!metadata) {
         return '';
     }
-    let data = JSON.parse(metadata).stableui_image_params;
+    let data = JSON.parse(metadata).sui_image_params;
     let result = '';
     function appendObject(obj) {
         for (let key of Object.keys(obj)) {
@@ -106,7 +107,7 @@ function formatMetadata(metadata) {
 }
 
 function setCurrentImage(src, metadata = '') {
-    let curImg = document.getElementById('current_image');
+    let curImg = getRequiredElementById('current_image');
     curImg.innerHTML = '';
     let img = document.createElement('img');
     img.id = 'current_image_img';
@@ -125,7 +126,7 @@ function setCurrentImage(src, metadata = '') {
 
 function appendImage(container, imageSrc, batchId, textPreview, metadata = '') {
     if (typeof container == 'string') {
-        container = document.getElementById(container);
+        container = getRequiredElementById(container);
     }
     let div = createDiv(null, `image-block image-batch-${batchId == "folder" ? "folder" : (batchId % 2)}`);
     div.dataset.batch_id = batchId;
@@ -166,7 +167,7 @@ function updateCurrentStatusDirect(data) {
         num_live_gens = data.live_gens;
         num_backends_waiting = data.waiting_backends;
     }
-    let elem = document.getElementById('num_jobs_span');
+    let elem = getRequiredElementById('num_jobs_span');
     function autoBlock(num, text) {
         if (num == 0) {
             return '';
@@ -219,13 +220,13 @@ function doGenerate() {
         }
         return;
     }
-    num_current_gens += parseInt(document.getElementById('input_images').value);
+    num_current_gens += parseInt(getRequiredElementById('input_images').value);
     setCurrentModel(() => {
-        if (document.getElementById('current_model').innerText == '') {
+        if (getRequiredElementById('current_model').innerText == '') {
             showError("Cannot generate, no model selected.");
             return;
         }
-        document.getElementById('current_image_batch').innerHTML = '';
+        getRequiredElementById('current_image_batch').innerHTML = '';
         batches++;
         let images = {};
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(), data => {
@@ -234,14 +235,13 @@ function doGenerate() {
                 images[data.index] = [batch_div, history_div, data.image, data.metadata];
             }
             if (data.discard_indices) {
-                console.log(`Discarding ${data.discard_indices} images`);
                 let needsNew = false;
                 for (let index of data.discard_indices) {
                     let [batch_div, history_div, image, metadata] = images[index];
                     batch_div.remove();
                     history_div.remove();
                     let curImgElem = document.getElementById('current_image_img');
-                    if (curImgElem.src == image) {
+                    if (curImgElem && curImgElem.src == image) {
                         needsNew = true;
                         delete images[index];
                     }
@@ -273,10 +273,10 @@ class FileListCallHelper {
 
 function loadFileList(api, upButton, pather, path, container, loadCaller, fileCallback, endCallback, sortFunc) {
     genericRequest(api, {'path': path}, data => {
-        let pathGen = document.getElementById(pather);
+        let pathGen = getRequiredElementById(pather);
         pathGen.innerText = '';
         let prefix;
-        upButton = document.getElementById(upButton);
+        upButton = getRequiredElementById(upButton);
         if (path == '') {
             prefix = '';
             upButton.disabled = true;
@@ -321,14 +321,14 @@ function loadFileList(api, upButton, pather, path, container, loadCaller, fileCa
 }
 
 function loadHistory(path) {
-    let container = document.getElementById('image_history');
+    let container = getRequiredElementById('image_history');
     lastImageDir = path;
     container.innerHTML = '';
     loadFileList('ListImages', 'image_history_up_button', 'image_history_path', path, container, loadHistory, (prefix, img) => {
         let fullSrc = `Output/${prefix}${img.src}`;
         let batchId = 0;
         if (img.metadata) {
-            batchId = parseInt(JSON.parse(img.metadata).stableui_image_params.batch_id);
+            batchId = parseInt(JSON.parse(img.metadata).sui_image_params.batch_id);
         }
         else if (img.src.endsWith('.html')) {
             batchId = 'folder';
@@ -390,7 +390,7 @@ document.addEventListener('click', (e) => {
     mouseX = e.pageX;
     mouseY = e.pageY;
     for (let id of popHide) {
-        let pop = document.getElementById(`popover_${id}`);
+        let pop = getRequiredElementById(`popover_${id}`);
         pop.style.display = 'none';
         pop.dataset.visible = "false";
     }
@@ -398,7 +398,7 @@ document.addEventListener('click', (e) => {
 }, true);
 
 function doPopover(id) {
-    let pop = document.getElementById(`popover_${id}`);
+    let pop = getRequiredElementById(`popover_${id}`);
     if (pop.dataset.visible == "true") {
         pop.style.display = 'none';
         pop.dataset.visible = "false";
@@ -414,8 +414,8 @@ function doPopover(id) {
     }
 }
 
-let toolSelector = document.getElementById('tool_selector');
-let toolContainer = document.getElementById('tool_container');
+let toolSelector = getRequiredElementById('tool_selector');
+let toolContainer = getRequiredElementById('tool_container');
 
 function genToolsList() {
     toolSelector.value = '';
@@ -428,7 +428,7 @@ function genToolsList() {
         if (tool == '') {
             return;
         }
-        let div = document.getElementById(`tool_${tool}`);
+        let div = getRequiredElementById(`tool_${tool}`);
         div.classList.add('tool-open');
     });
 }
@@ -460,16 +460,16 @@ function resetPageSizer() {
 }
 
 function pageSizer() {
-    let topSplit = document.getElementById('t2i-top-split-bar');
-    let topSplit2 = document.getElementById('t2i-top-2nd-split-bar');
-    let midSplit = document.getElementById('t2i-mid-split-bar');
-    let topBar = document.getElementById('t2i_top_bar');
-    let bottomBarContent = document.getElementById('t2i_bottom_bar_content');
-    let inputSidebar = document.getElementById('input_sidebar');
-    let mainInputsAreaWrapper = document.getElementById('main_inputs_area_wrapper');
-    let mainImageArea = document.getElementById('main_image_area');
-    let currentImage = document.getElementById('current_image');
-    let currentImageBatch = document.getElementById('current_image_batch');
+    let topSplit = getRequiredElementById('t2i-top-split-bar');
+    let topSplit2 = getRequiredElementById('t2i-top-2nd-split-bar');
+    let midSplit = getRequiredElementById('t2i-mid-split-bar');
+    let topBar = getRequiredElementById('t2i_top_bar');
+    let bottomBarContent = getRequiredElementById('t2i_bottom_bar_content');
+    let inputSidebar = getRequiredElementById('input_sidebar');
+    let mainInputsAreaWrapper = getRequiredElementById('main_inputs_area_wrapper');
+    let mainImageArea = getRequiredElementById('main_image_area');
+    let currentImage = getRequiredElementById('current_image');
+    let currentImageBatch = getRequiredElementById('current_image_batch');
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
@@ -583,7 +583,7 @@ function show_t2i_quicktools() {
 function loadUserData() {
     genericRequest('GetMyUserData', {}, data => {
         allPresets = [];
-        document.getElementById('preset_list').innerHTML = '';
+        getRequiredElementById('preset_list').innerHTML = '';
         for (let preset of data.presets.sort((a, b) => a.title.toLowerCase() == "default" ? -1 : (b.title.toLowerCase() == "default" ? 1 : 0))) {
             addPreset(preset);
         }
@@ -607,6 +607,7 @@ function genpageLoad() {
         loadModelList('');
         loadBackendTypesMenu();
         genericRequest('ListT2IParams', {}, data => {
+            allModels = data.models;
             gen_param_types = data.list.sort(paramSorter);
             genInputs(data);
             genToolsList();
@@ -614,9 +615,9 @@ function genpageLoad() {
             toggle_advanced();
             setCurrentModel();
             loadUserData();
-            document.getElementById('generate_button').addEventListener('click', doGenerate);
-            document.getElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
-            document.getElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir, true));
+            getRequiredElementById('generate_button').addEventListener('click', doGenerate);
+            getRequiredElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
+            getRequiredElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir, true));
             for (let callback of sessionReadyCallbacks) {
                 callback();
             }

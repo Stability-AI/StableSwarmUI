@@ -1,7 +1,6 @@
 ﻿using LiteDB;
 using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
-using StableUI.DataHolders;
+using StableUI.Utils;
 
 namespace StableUI.Text2Image;
 
@@ -40,13 +39,17 @@ public class T2IPreset
     }
 
     /// <summary>Automatically applies the entire preset over top of a <see cref="T2IParams"/> input.</summary>
-    public void ApplyTo(T2IParams user_input)
+    public void ApplyTo(T2IParamInput user_input)
     {
         foreach ((string key, string val) in ParamMap)
         {
             if (T2IParamTypes.Types.ContainsKey(T2IParamTypes.CleanTypeName(key)))
             {
                 T2IParamTypes.ApplyParameter(key, val, user_input);
+            }
+            else
+            {
+                Logs.Warning($"Invalid preset parameter: {key}, for preset '{ID}' created by '{Author}'");
             }
         }
     }

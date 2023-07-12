@@ -17,21 +17,27 @@ public class ScorersExtension : Extension
 {
     public static string[] ScoringEngines = new string[] { "pickscore", "schuhmann_clip_plus_mlp" };
 
+    public static T2IRegisteredParam<string> AutomaticScorer;
+
+    public static T2IRegisteredParam<double> ScoreMustExceed;
+
+    public static T2IRegisteredParam<int> TakeBestNScore;
+
     public override void OnInit()
     {
         T2IEngine.PostGenerateEvent += PostGenEvent;
         T2IEngine.PostBatchEvent += PostBatchEvent;
         T2IParamGroup scoreGroup = new("Scoring", Toggles: true, Open: false);
-        T2IParamTypes.Register(new("Automatic Scorer", "Scoring engine(s) to use when scoring this image. Multiple scorers can be used via comma-separated list, and will be averaged together. Scores are saved in image metadata.",
-                       T2IParamDataType.TEXT, "schuhmann_clip_plus_mlp", (s, p) => p.OtherParams["scoring_engines"] = s, Group: scoreGroup, GetValues: (_) => ScoringEngines.ToList()
+        AutomaticScorer = T2IParamTypes.Register<string>(new("Automatic Scorer", "Scoring engine(s) to use when scoring this image. Multiple scorers can be used via comma-separated list, and will be averaged together. Scores are saved in image metadata.",
+                       "schuhmann_clip_plus_mlp", Group: scoreGroup, GetValues: (_) => ScoringEngines.ToList()
                        // TODO: TYPE MULTISELECT
                        ));
-        T2IParamTypes.Register(new("Score Must Exceed", "Only keep images with a generated score above this minimum.",
-                       T2IParamDataType.DECIMAL, "0.5", (s, p) => p.OtherParams["score_minimum"] = float.Parse(s), Min: 0, Max: 1, Step: 0.1, Toggleable: true, Group: scoreGroup, Examples: new[] { "0.25", "0.5", "0.75", "0.9" }
+        ScoreMustExceed = T2IParamTypes.Register<double>(new("Score Must Exceed", "Only keep images with a generated score above this minimum.",
+                       "0.5", Min: 0, Max: 1, Step: 0.1, Toggleable: true, Group: scoreGroup, Examples: new[] { "0.25", "0.5", "0.75", "0.9" }
                        ));
-        T2IParamTypes.Register(new("Take Best N Score", "Only keep the best *this many* images in a batch based on scoring."
+        TakeBestNScore = T2IParamTypes.Register<int>(new("Take Best N Score", "Only keep the best *this many* images in a batch based on scoring."
                         + "\n(For example, if batch size = 8, and this value = 2, then 8 images will generate and will be scored, and the 2 best will be kept and the other 6 discarded.)",
-                       T2IParamDataType.INTEGER, "1", (s, p) => p.OtherParams["score_take_best_n"] = int.Parse(s), Min: 1, Max: 100, Step: 1, Toggleable: true, Group: scoreGroup, Examples: new[] { "1", "2", "3" }
+                       "1", Min: 1, Max: 100, Step: 1, Toggleable: true, Group: scoreGroup, Examples: new[] { "1", "2", "3" }
                        ));
     }
 
@@ -114,12 +120,12 @@ public class ScorersExtension : Extension
 
     public void PostGenEvent(T2IEngine.PostGenerationEventParams p)
     {
-        if (!p.UserInput.OtherParams.TryGetValue("scoring_engines", out object scorers))
+        if (!p.UserInput.TryGet(AutomaticScorer, out string scorers))
         {
             return;
         }
         float scoreAccum = 0;
-        string[] scorerNames = scorers.ToString().Split(',').Select(s => s.Trim().ToLowerFast()).ToArray();
+        string[] scorerNames = scorers.Split(',').Select(s => s.Trim().ToLowerFast()).ToArray();
         Dictionary<string, object> scores = new();
         foreach (string scorer in scorerNames)
         {
@@ -127,16 +133,16 @@ public class ScorersExtension : Extension
             {
                 throw new InvalidDataException($"Scorer {scorer} does not exist.");
             }
-            float score = DoScore(p.Image, p.UserInput.Prompt, scorer).Result;
+            float score = DoScore(p.Image, p.UserInput.Get(T2IParamTypes.Prompt), scorer).Result;
             scores[scorer] = score;
             scoreAccum += score;
         }
         float averageScore = scoreAccum / scorerNames.Length;
         scores["average"] = averageScore;
         p.ExtraMetadata["scoring"] = scores;
-        if (p.UserInput.OtherParams.TryGetValue("score_minimum", out object scoreMin) && float.TryParse(scoreMin.ToString(), out float scoreMinimum))
+        if (p.UserInput.TryGet(ScoreMustExceed, out double scoreMin))
         {
-            if (averageScore < scoreMinimum)
+            if (averageScore < scoreMin)
             {
                 p.RefuseImage();
             }
@@ -145,7 +151,7 @@ public class ScorersExtension : Extension
 
     public void PostBatchEvent(T2IEngine.PostBatchEventParams p)
     {
-        if (!p.UserInput.OtherParams.TryGetValue("score_take_best_n", out object bestNObj) || bestNObj is not int bestN)
+        if (!p.UserInput.TryGet(TakeBestNScore, out int bestN))
         {
             return;
         }

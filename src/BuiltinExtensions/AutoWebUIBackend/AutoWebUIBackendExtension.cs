@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using StableUI.Core;
 using StableUI.DataHolders;
+using StableUI.Text2Image;
 
 namespace StableUI.Builtin_AutoWebUIExtension;
 
@@ -9,7 +10,7 @@ public class AutoWebUIBackendExtension : Extension
 {
 
     /// <summary>List of actions to run when generating an image, primarily to alter the input data.</summary>
-    public static List<Action<JObject, T2IParams>> OtherGenHandlers = new();
+    public static List<Action<JObject, T2IParamInput>> OtherGenHandlers = new();
 
     /// <summary>Set of all feature-ids supported by Auto WebUI backends.</summary>
     public static HashSet<string> FeaturesSupported = new();

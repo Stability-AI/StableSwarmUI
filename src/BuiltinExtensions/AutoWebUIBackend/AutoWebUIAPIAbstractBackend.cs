@@ -68,32 +68,28 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
         return Task.CompletedTask;
     }
 
-    public override async Task<Image[]> Generate(T2IParams user_input)
+    public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
         JObject toSend = new()
         {
-            ["prompt"] = user_input.Prompt,
-            ["negative_prompt"] = user_input.NegativePrompt,
-            ["seed"] = user_input.Seed,
-            ["steps"] = user_input.Steps,
-            ["width"] = user_input.Width,
-            ["height"] = user_input.Height,
-            ["cfg_scale"] = user_input.CFGScale,
-            ["subseed"] = user_input.VarSeed,
-            ["subseed_strength"] = user_input.VarSeedStrength
+            ["prompt"] = user_input.Get(T2IParamTypes.Prompt),
+            ["negative_prompt"] = user_input.Get(T2IParamTypes.NegativePrompt),
+            ["seed"] = user_input.Get(T2IParamTypes.Seed),
+            ["steps"] = user_input.Get(T2IParamTypes.Steps),
+            ["width"] = user_input.Get(T2IParamTypes.Width),
+            ["height"] = user_input.Get(T2IParamTypes.Height),
+            ["cfg_scale"] = user_input.Get(T2IParamTypes.CFGScale),
+            ["subseed"] = user_input.Get(T2IParamTypes.VariationSeed),
+            ["subseed_strength"] = user_input.Get(T2IParamTypes.VariationSeedStrength)
         };
         string route = "txt2img";
-        if (user_input.InitImage is not null)
+        if (user_input.TryGet(T2IParamTypes.InitImage, out Image initImg))
         {
             route = "img2img";
-            toSend["init_images"] = new JArray(user_input.InitImage.AsBase64);
-            toSend["denoising_strength"] = user_input.ImageInitStrength;
+            toSend["init_images"] = new JArray(initImg.AsBase64);
+            toSend["denoising_strength"] = user_input.Get(T2IParamTypes.InitImageCreativity);
         }
-        foreach (KeyValuePair<string, object> pair in user_input.OtherParams)
-        {
-            toSend[pair.Key] = JToken.FromObject(pair.Value);
-        }
-        foreach (Action<JObject, T2IParams> handler in AutoWebUIBackendExtension.OtherGenHandlers)
+        foreach (Action<JObject, T2IParamInput> handler in AutoWebUIBackendExtension.OtherGenHandlers)
         {
             handler(toSend, user_input);
         }
