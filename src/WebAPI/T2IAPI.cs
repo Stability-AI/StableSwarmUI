@@ -336,7 +336,7 @@ public static class T2IAPI
         return new JObject()
         {
             ["list"] = new JArray(T2IParamTypes.Types.Values.Select(v => v.ToNet(session)).ToList()),
-            ["models"] = new JArray(Program.T2IModels.ListModelsFor(session).Select(m => m.Name).ToArray())
+            ["models"] = new JArray(Program.T2IModels.ListModelsFor(session).Select(m => m.Name).Order().ToArray())
         };
     }
 }
