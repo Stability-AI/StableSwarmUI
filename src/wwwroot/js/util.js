@@ -1,3 +1,6 @@
+/**
+ * Dirt-simple direct POST request sender.
+ */
 function sendJsonToServer(url, json_input, callback, error_callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
@@ -10,6 +13,9 @@ function sendJsonToServer(url, json_input, callback, error_callback) {
     xhr.send(JSON.stringify(json_input));
 };
 
+/**
+ * Gets the appropriate current WebSocket address for the server.
+ */
 function getWSAddress() {
     let url = document.URL;
     let wsPrefix = null;
@@ -32,6 +38,9 @@ function getWSAddress() {
     return wsPrefix + url;
 }
 
+/**
+ * Creates a new HTML div with the given ID and classnames.
+ */
 function createDiv(id, classes) {
     let div = document.createElement('div');
     if (id != null) {
@@ -41,10 +50,16 @@ function createDiv(id, classes) {
     return div;
 }
 
+/**
+ * Escapes a string for use in HTML.
+ */
 function escapeHtml(text) {
     return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }
 
+/**
+ * Escapes a string for use in a JavaScript string literal.
+ */
 function escapeJsString(text) {
     return text.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll("'", "\\'").replaceAll('\n', '\\n').replaceAll('\r', '\\r').replaceAll('\t', '\\t');
 }
@@ -93,6 +108,9 @@ function linearToPot(val, max, min, step) {
     return realLow + subStep * step;
 }
 
+/**
+ * Power-of-two to linear conversion. See linearToPot for more info.
+ */
 function potToLinear(val, max, min, step) {
     let norm = Math.log2(val);
     let increments = Math.log2(max);
@@ -101,6 +119,9 @@ function potToLinear(val, max, min, step) {
     return Math.round(normIncr * max);
 }
 
+/**
+ * Returns the first parent element of the given element that has the given class, or null if  none.
+ */
 function findParentOfClass(elem, className) {
     while (elem != null) {
         if (elem.classList && elem.classList.contains(className)) {
@@ -111,6 +132,9 @@ function findParentOfClass(elem, className) {
     return null;
 }
 
+/**
+ * Returns all of the text nodes within an element.
+ */
 function getTextNodesIn(node) {
     var textNodes = [];
     if (node.nodeType == 3) {
@@ -124,6 +148,10 @@ function getTextNodesIn(node) {
     return textNodes;
 }
 
+/**
+ * Sets the selection range of the given element to the given start and end character indices.
+ * This is for fixing contenteditable elements.
+ */
 function setSelectionRange(el, start, end) {
     let range = document.createRange();
     range.selectNodeContents(el);
@@ -148,6 +176,9 @@ function setSelectionRange(el, start, end) {
     sel.addRange(range);
 }
 
+/**
+ * Returns true if the given node is a child of the given parent.
+ */
 function isChildOf(node, parentId) {
     while (node != null) {
         if (node.id == parentId) {
@@ -158,6 +189,9 @@ function isChildOf(node, parentId) {
     return false;
 }
 
+/**
+ * Returns the current cursor position in the given contenteditable span, in a way that compensates for sub-spans.
+ */
 function getCurrentCursorPosition(parentId) {
     let selection = window.getSelection();
     let charCount = -1;
@@ -191,6 +225,9 @@ function getCurrentCursorPosition(parentId) {
     return charCount;
 }
 
+/**
+ * Downloads the data at the given URL and returns a 'data:whatever,base64:...' URL.
+ */
 function toDataURL(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.onload = function() {
@@ -205,20 +242,32 @@ function toDataURL(url, callback) {
     xhr.send();
 }
 
+/**
+ * Returns the given value rounded to the nearest multiple of the given step.
+ */
 function roundTo(val, step) {
     return Math.round(val / step) * step;
 }
 
+/**
+ * Mini-helper for English text gen, returns "s" if num is not 1, "" otherwise.
+ */
 function autoS(num) {
     return num == 1 ? "" : "s";
 }
 
+/**
+ * Sets a cookie with the given name and value, which will expire after the given number of days.
+ */
 function setCookie(name, value, expirationDays, sameSite = 'Lax') {
     const d = new Date();
     d.setTime(d.getTime() + (expirationDays * 24 * 60 * 60 * 1000));
     document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/;SameSite=${sameSite}`;
 }
 
+/**
+ * Returns the value of the cookie with the given name, or an empty string if it doesn't exist.
+ */
 function getCookie(name) {
     name = name + "=";
     let decodedCookie = decodeURIComponent(document.cookie);
@@ -232,14 +281,154 @@ function getCookie(name) {
     return "";
 }
 
+/**
+ * Deletes the cookie with the given name.
+ */
 function deleteCookie(name) {
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;SameSite=Lax`;
 }
 
+/**
+ * Returns the element with the given ID, or throws an error if it doesn't exist.
+ * Equivalent to document.getElementById(id), but with a more helpful error message.
+ */
 function getRequiredElementById(id) {
     let elem = document.getElementById(id);
     if (elem == null) {
         throw new Error(`Required element '${id}' not found.`);
     }
     return elem;
+}
+
+/**
+ * Gives the user a download for simple plaintext file content.
+ */
+function downloadPlainText(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+}
+
+/**
+ * Tiny parser for simple YAML files.
+ */
+function microYamlParse(text) {
+    text = text.replaceAll('\r', '\n');
+    let lines = text.split('\n');
+    return microYamlParseBlock(lines, 0, 0).result;
+}
+
+/**
+ * Internal function for parsing YAML files. Use microYamlParse instead.
+ */
+function microYamlParseBlock(lines, start, minSpace) {
+    let result = {};
+    let i;
+    let buildKey = null;
+    for (i = start; i < lines.length; i++) {
+        let line = lines[i];
+        let trimStart = line.trimStart();
+        let content = trimStart.trimEnd();
+        let commentIndex = content.indexOf('#');
+        if (commentIndex >= 0) {
+            content = content.substring(0, commentIndex).trim();
+        }
+        if (content.length == 0) {
+            continue;
+        }
+        let spaceCount = line.length - trimStart.length;
+        if (spaceCount < minSpace) {
+            break;
+        }
+        if (spaceCount > minSpace) {
+            if (buildKey) {
+                let subResult = microYamlParseBlock(lines, i, spaceCount);
+                result[content] = subResult.result;
+                i = subResult.i - 1;
+                continue;
+            }
+            else {
+                throw new Error(`Invalid micro yaml line: ${line}, expected key:value or sub block`);
+            }
+        }
+        buildKey = null;
+        let colon = content.indexOf(':');
+        if (colon < 0) {
+            throw new Error(`Invalid micro yaml line: ${line}`);
+        }
+        let key = content.substring(0, colon).trim();
+        let value = content.substring(colon + 1).trim();
+        if (value == '') {
+            buildKey = key;
+            result[key] = {};
+            continue;
+        }
+        if (value.startsWith('"') && value.endsWith('"')) {
+            value = value.substring(1, value.length - 1);
+        }
+        else if (value.startsWith("'") && value.endsWith("'")) {
+            value = value.substring(1, value.length - 1);
+        }
+        result[key] = value;
+    }
+    return { result, i };
+}
+
+/**
+ * Tiny CSV line parser.
+ */
+function parseCsvLine(text) {
+    let result = [];
+    let inQuotes = false;
+    let current = '';
+    for (let i = 0; i < text.length; i++) {
+        let c = text.charAt(i);
+        if (c == '"') {
+            if (inQuotes) {
+                if (i + 1 < text.length && text.charAt(i + 1) == '"') {
+                    current += '"';
+                    i++;
+                }
+                else {
+                    inQuotes = false;
+                }
+            }
+            else {
+                inQuotes = true;
+            }
+        }
+        else if (c == ',') {
+            if (inQuotes) {
+                current += ',';
+            }
+            else {
+                result.push(current);
+                current = '';
+            }
+        }
+        else {
+            current += c;
+        }
+    }
+    result.push(current);
+    return result;
+}
+
+/**
+ * Reads the given file as text and passes the result to the given handler.
+ * Ignores null file inputs.
+ */
+function readFileText(file, handler) {
+    if (!file) {
+        return;
+    }
+    let reader = new FileReader();
+    reader.onload = (e) => {
+        handler(e.target.result);
+    };
+    reader.readAsText(file);
 }
