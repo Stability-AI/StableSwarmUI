@@ -29,6 +29,8 @@ function getHtmlForParam(param, prefix) {
             return makeCheckboxInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.toggleable) + pop;
         case 'dropdown':
             return makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, param.toggleable) + pop;
+        case 'list':
+            return makeMultiselectInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, "Select...", param.toggleable) + pop;
         case 'model':
             return makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, allModels, param.default, param.toggleable) + pop;
         case 'image':
@@ -146,9 +148,14 @@ function genInputs() {
         }
     }
     for (let param of gen_param_types) {
-        if (param.toggleable && param.visible) {
-            doToggleEnable(`input_${param.id}`);
-            doToggleEnable(`preset_input_${param.id}`);
+        if (param.visible) {
+            if (param.type == 'list') {
+                $(`#input_${param.id}`).select2({ theme: "bootstrap-5", width: 'style', placeholder: $(this).data('placeholder'), closeOnSelect: false });
+            }
+            if (param.toggleable) {
+                doToggleEnable(`input_${param.id}`);
+                doToggleEnable(`preset_input_${param.id}`);
+            }
         }
     }
     let inputAspectRatio = getRequiredElementById('input_aspectratio');

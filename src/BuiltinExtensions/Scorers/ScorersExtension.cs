@@ -17,7 +17,7 @@ public class ScorersExtension : Extension
 {
     public static string[] ScoringEngines = new string[] { "pickscore", "schuhmann_clip_plus_mlp" };
 
-    public static T2IRegisteredParam<string> AutomaticScorer;
+    public static T2IRegisteredParam<List<string>> AutomaticScorer;
 
     public static T2IRegisteredParam<double> ScoreMustExceed;
 
@@ -28,9 +28,8 @@ public class ScorersExtension : Extension
         T2IEngine.PostGenerateEvent += PostGenEvent;
         T2IEngine.PostBatchEvent += PostBatchEvent;
         T2IParamGroup scoreGroup = new("Scoring", Toggles: true, Open: false);
-        AutomaticScorer = T2IParamTypes.Register<string>(new("Automatic Scorer", "Scoring engine(s) to use when scoring this image. Multiple scorers can be used via comma-separated list, and will be averaged together. Scores are saved in image metadata.",
+        AutomaticScorer = T2IParamTypes.Register<List<string>>(new("Automatic Scorer", "Scoring engine(s) to use when scoring this image. Multiple scorers can be used and will be averaged together. Scores are saved in image metadata.",
                        "schuhmann_clip_plus_mlp", Group: scoreGroup, GetValues: (_) => ScoringEngines.ToList()
-                       // TODO: TYPE MULTISELECT
                        ));
         ScoreMustExceed = T2IParamTypes.Register<double>(new("Score Must Exceed", "Only keep images with a generated score above this minimum.",
                        "0.5", Min: 0, Max: 1, Step: 0.1, Toggleable: true, Group: scoreGroup, Examples: new[] { "0.25", "0.5", "0.75", "0.9" }
@@ -120,14 +119,13 @@ public class ScorersExtension : Extension
 
     public void PostGenEvent(T2IEngine.PostGenerationEventParams p)
     {
-        if (!p.UserInput.TryGet(AutomaticScorer, out string scorers))
+        if (!p.UserInput.TryGet(AutomaticScorer, out List<string> scorers) || scorers.IsEmpty())
         {
             return;
         }
         float scoreAccum = 0;
-        string[] scorerNames = scorers.Split(',').Select(s => s.Trim().ToLowerFast()).ToArray();
         Dictionary<string, object> scores = new();
-        foreach (string scorer in scorerNames)
+        foreach (string scorer in scorers)
         {
             if (!ScoringEngines.Contains(scorer))
             {
@@ -137,7 +135,7 @@ public class ScorersExtension : Extension
             scores[scorer] = score;
             scoreAccum += score;
         }
-        float averageScore = scoreAccum / scorerNames.Length;
+        float averageScore = scoreAccum / scorers.Count;
         scores["average"] = averageScore;
         p.ExtraMetadata["scoring"] = scores;
         if (p.UserInput.TryGet(ScoreMustExceed, out double scoreMin))

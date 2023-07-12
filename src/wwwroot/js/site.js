@@ -281,6 +281,27 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
     return html;
 }
 
+function makeMultiselectInput(featureid, id, name, description, values, defaultVal, placeholder, toggles = false) {
+    name = escapeHtml(name);
+    description = escapeHtml(description);
+    featureid = featureid ? ` data-feature-require="${featureid}"` : '';
+    let html = `
+    <div class="auto-input auto-dropdown-box" title="${name}: ${description}"${featureid}>
+        <div class="auto-input-fade-lock auto-fade-max-contain">
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
+        </div>
+        <div class="toggler-overlay"></div>
+        <select class="form-select" id="${id}" autocomplete="false" data-placeholder="${escapeHtml(placeholder)}" multiple>`;
+    for (let value of values) {
+        let selected = value == defaultVal ? ' selected="true"' : '';
+        html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
+    }
+    html += `
+        </select>
+    </div>`;
+    return html;
+}
+
 function makeImageInput(featureid, id, name, description, toggles = false) {
     name = escapeHtml(name);
     description = escapeHtml(description);

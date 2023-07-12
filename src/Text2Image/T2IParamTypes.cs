@@ -27,7 +27,9 @@ public enum T2IParamDataType
     /// <summary>Image file input.</summary>
     IMAGE,
     /// <summary>Model reference input.</summary>
-    MODEL
+    MODEL,
+    /// <summary>Multi-select or comma-separated data list.</summary>
+    LIST
 }
 
 /// <summary>Which format to display a number in.</summary>
@@ -145,6 +147,7 @@ public class T2IParamTypes
         if (t == typeof(string)) return hasValues ? T2IParamDataType.DROPDOWN : T2IParamDataType.TEXT;
         if (t == typeof(Image)) return T2IParamDataType.IMAGE;
         if (t == typeof(T2IModel)) return T2IParamDataType.MODEL;
+        if (t == typeof(List<string>)) return T2IParamDataType.LIST;
         return T2IParamDataType.UNSET;
     }
 

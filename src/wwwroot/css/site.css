@@ -356,3 +356,23 @@ textarea, input, select {
     left: 0;
     z-index: 20;
 }
+.select2-container--bootstrap-5 .select2-selection {
+    background-color: var(--background-soft);
+    border-color: var(--shadow);
+    color: var(--text);
+}
+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered .select2-selection__choice {
+    color: var(--text);
+}
+.select2-container--bootstrap-5 .select2-dropdown {
+    background-color: var(--background-soft);
+    border-color: var(--shadow);
+    color: var(--text);
+}
+.select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--selected, .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option[aria-selected="true"]:not(.select2-results__option--highlighted) {
+    background-color: var(--emphasis);
+}
+.select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--highlighted {
+    background-color: var(--button-background-hover);
+    color: var(--button-foreground-hover);
+}

@@ -5,9 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - StableSwarmUI</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/select2.min.css" />
+    <link rel="stylesheet" href="/css/select2_bootstrap.min.css" />
     <link rel="stylesheet" href="/css/site.css?vary=@Utilities.VaryID" />
     @RenderSection("Header", required: false)
     @WebServer.PageHeaderExtra
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/select2.min.js"></script>
 </head>
 <body>
     <div class="top-status-bar" id="top_status_bar"></div>
@@ -15,8 +20,6 @@
         @WebUtil.Toast("error_toast_box", "Error", "", "error_toast_content", "", false)
     </div>
     @RenderBody()
-    <script src="/js/jquery.min.js"></script>
-    <script src="/js/bootstrap.bundle.min.js"></script>
     <script src="/js/util.js?vary=@Utilities.VaryID"></script>
     <script src="/js/site.js?vary=@Utilities.VaryID"></script>
     @RenderSection("Scripts", required: false)

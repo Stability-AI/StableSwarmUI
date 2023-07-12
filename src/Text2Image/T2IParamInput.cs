@@ -140,6 +140,7 @@ public class T2IParamInput
             T2IParamDataType.TEXT or T2IParamDataType.DROPDOWN => val,
             T2IParamDataType.IMAGE => new Image(val),
             T2IParamDataType.MODEL => Program.T2IModels.Models[val],
+            T2IParamDataType.LIST => val.Split(',').Select(x => x.Trim()).ToList(),
             _ => throw new NotImplementedException()
         };
         ValuesInput[param.ID] = obj;
