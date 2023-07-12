@@ -56,7 +56,7 @@ public static class BasicAPIFeatures
             Title = title,
             Description = description,
             ParamMap = paramData.Properties().Select(p => (p.Name, p.Value.ToString())).PairsToDictionary(),
-            PreviewImage = preview_image is not null ? preview_image : "imgs/model_placeholder.jpg"
+            PreviewImage = string.IsNullOrWhiteSpace(preview_image) ? "imgs/model_placeholder.jpg" : preview_image
         };
         if (preset.PreviewImage != "imgs/model_placeholder.jpg" && (!preset.PreviewImage.StartsWith("/Output") || preset.PreviewImage.Contains('?')))
         {

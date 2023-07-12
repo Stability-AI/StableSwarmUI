@@ -347,7 +347,7 @@ function microYamlParseBlock(lines, start, minSpace) {
         if (spaceCount > minSpace) {
             if (buildKey) {
                 let subResult = microYamlParseBlock(lines, i, spaceCount);
-                result[content] = subResult.result;
+                result[buildKey] = subResult.result;
                 i = subResult.i - 1;
                 continue;
             }

@@ -345,15 +345,53 @@ function importPresetsToData(text) {
                 preview_image: '',
                 param_map: {
                     prompt: prompt,
-                    negativeprompt: negativeprompt,
+                    negativeprompt: negativeprompt
                 }
             };
         }
         return data;
     }
     if (text.includes(': ')) {
-        return microYamlParse(text);
+        let data = microYamlParse(text);
+        console.log(JSON.stringify(data));
+        if (!data) {
+            return "Data doesn't look valid";
+        }
+        let result = {};
+        for (let key of Object.keys(data)) {
+            let val = data[key];
+            let prompt = val.prompt;
+            let negativeprompt = val.negativeprompt;
+            if (!prompt && val.prompt_prefix) {
+                prompt = val.prompt_prefix + ' {value} ' + val.prompt_suffix;
+            }
+            if (!negativeprompt && val.uc_prompt) {
+                negativeprompt = val.uc_prompt;
+            }
+            if (!prompt && !negativeprompt) {
+                continue;
+            }
+            prompt = prompt || '';
+            negativeprompt = negativeprompt || '';
+            if (!prompt.includes('{value}')) {
+                prompt = '{value} ' + prompt;
+            }
+            if (!negativeprompt.includes('{value}')) {
+                negativeprompt = '{value} ' + negativeprompt;
+            }
+            result[key] = {
+                title: key,
+                description: `Imported prompt preset '${key}'`,
+                preview_image: '',
+                param_map: {
+                    prompt: prompt,
+                    negativeprompt: negativeprompt
+                }
+            };
+        }
+        return result;
     }
+    return "data had no recognizable format";
 }
 
 function importPresetUpload() {
@@ -404,6 +442,10 @@ function importPresetsCheck() {
     catch (e) {
         console.log(e);
         errorBox.innerText = 'Error parsing data: ' + e;
+        return;
+    }
+    if (typeof data == 'string') {
+        errorBox.innerText = data;
         return;
     }
     if (!data) {
