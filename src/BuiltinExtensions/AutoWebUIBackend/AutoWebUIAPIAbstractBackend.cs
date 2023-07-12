@@ -3,15 +3,15 @@ using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using StableUI.Core;
-using StableUI.DataHolders;
-using StableUI.Text2Image;
-using StableUI.Utils;
-using StableUI.Backends;
+using StableSwarmUI.Core;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
+using StableSwarmUI.Backends;
 using System;
 using System.Net.Http;
 
-namespace StableUI.Builtin_AutoWebUIExtension;
+namespace StableSwarmUI.Builtin_AutoWebUIExtension;
 
 /// <summary>T2I Backend using the Automatic1111/Stable-Diffusion-WebUI API.</summary>
 public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend

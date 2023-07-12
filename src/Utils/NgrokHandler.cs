@@ -1,8 +1,8 @@
 ﻿using FreneticUtilities.FreneticExtensions;
-using StableUI.Core;
+using StableSwarmUI.Core;
 using System.Diagnostics;
 
-namespace StableUI.Utils;
+namespace StableSwarmUI.Utils;
 
 /// <summary>Helper class to handle ngrok forwarding.</summary>
 public class NgrokHandler

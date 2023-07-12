@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
-using StableUI.Core;
-using StableUI.Utils;
+using StableSwarmUI.Accounts;
+using StableSwarmUI.Core;
+using StableSwarmUI.Utils;
 
-namespace StableUI.Text2Image;
+namespace StableSwarmUI.Text2Image;
 
 /// <summary>Represents user-input for a Text2Image request.</summary>
 public class T2IParamInput

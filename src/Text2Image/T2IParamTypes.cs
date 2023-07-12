@@ -1,13 +1,13 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
-using StableUI.Core;
-using StableUI.DataHolders;
-using StableUI.Utils;
+using StableSwarmUI.Accounts;
+using StableSwarmUI.Core;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Utils;
 using System.IO;
 
-namespace StableUI.Text2Image;
+namespace StableSwarmUI.Text2Image;
 
 /// <summary>Represents the data-type of a Text2Image parameter type.</summary>
 public enum T2IParamDataType
@@ -234,7 +234,7 @@ public class T2IParamTypes
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false
             ));
-        BackendType = Register<string>(new("[Internal] Backend Type", "Which StableUI backend type should be used for this request.",
+        BackendType = Register<string>(new("[Internal] Backend Type", "Which StableSwarmUI backend type should be used for this request.",
             "Any", GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true
             ));
     }

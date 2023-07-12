@@ -1,14 +1,14 @@
 ﻿using FreneticUtilities.FreneticToolkit;
 using FreneticUtilities.FreneticDataSyntax;
 using LiteDB;
-using StableUI.Core;
-using StableUI.DataHolders;
-using StableUI.Utils;
-using StableUI.Text2Image;
+using StableSwarmUI.Core;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Utils;
+using StableSwarmUI.Text2Image;
 using FreneticUtilities.FreneticExtensions;
 using System.Xml.Linq;
 
-namespace StableUI.Accounts;
+namespace StableSwarmUI.Accounts;
 
 /// <summary>Represents a single user account.</summary>
 public class User

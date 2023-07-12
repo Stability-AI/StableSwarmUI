@@ -2,15 +2,15 @@
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
-using StableUI.Core;
-using StableUI.DataHolders;
-using StableUI.Text2Image;
-using StableUI.Utils;
+using StableSwarmUI.Accounts;
+using StableSwarmUI.Core;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
 using System.IO;
 using System.Reflection;
 
-namespace StableUI.Backends;
+namespace StableSwarmUI.Backends;
 
 /// <summary>Central manager for available backends.</summary>
 public class BackendHandler

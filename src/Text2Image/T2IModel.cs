@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.IO;
 
-namespace StableUI.Text2Image;
+namespace StableSwarmUI.Text2Image;
 
 /// <summary>Represents the basic data around an (unloaded) Text2Image model.</summary>
 public class T2IModel

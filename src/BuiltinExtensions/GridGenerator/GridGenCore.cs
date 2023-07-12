@@ -1,14 +1,14 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
-using StableUI.Core;
-using StableUI.DataHolders;
-using StableUI.Text2Image;
-using StableUI.Utils;
+using StableSwarmUI.Accounts;
+using StableSwarmUI.Core;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
 using System.IO;
 
-namespace StableUI.Builtin_GridGeneratorExtension;
+namespace StableSwarmUI.Builtin_GridGeneratorExtension;
 
 public partial class GridGenCore
 {

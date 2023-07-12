@@ -1,16 +1,16 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
-using StableUI.Core;
-using StableUI.Text2Image;
-using StableUI.Utils;
-using StableUI.WebAPI;
+using StableSwarmUI.Accounts;
+using StableSwarmUI.Core;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
+using StableSwarmUI.WebAPI;
 using System.IO;
 using System.Net.WebSockets;
-using static StableUI.Builtin_GridGeneratorExtension.GridGenCore;
+using static StableSwarmUI.Builtin_GridGeneratorExtension.GridGenCore;
 
-namespace StableUI.Builtin_GridGeneratorExtension;
+namespace StableSwarmUI.Builtin_GridGeneratorExtension;
 
 /// <summary>Extension that adds a tool to generate grids of images.</summary>
 public class GridGeneratorExtension : Extension
@@ -90,7 +90,7 @@ public class GridGeneratorExtension : Extension
         GridRunnerPostDryHook = (runner, param, set) =>
         {
             param.NormalizeSeeds();
-            StableUIGridData data = runner.Grid.LocalData as StableUIGridData;
+            StableSwarmUIGridData data = runner.Grid.LocalData as StableSwarmUIGridData;
             if (data.Claim.ShouldCancel)
             {
                 Logs.Debug("Grid gen hook cancelling per user interrupt request.");
@@ -147,7 +147,7 @@ public class GridGeneratorExtension : Extension
         };
         PostPreprocessCallback = (grid) =>
         {
-            StableUIGridData data = grid.Grid.LocalData as StableUIGridData;
+            StableSwarmUIGridData data = grid.Grid.LocalData as StableSwarmUIGridData;
             data.Claim.Extend(grid.TotalRun, 0, 0, 0);
             data.AddOutput(BasicAPIFeatures.GetCurrentStatusRaw(data.Session));
         };
@@ -163,7 +163,7 @@ public class GridGeneratorExtension : Extension
         public List<string> Replacements = new();
     }
 
-    public class StableUIGridData
+    public class StableSwarmUIGridData
     {
         public List<Task> Rendering = new();
 
@@ -254,7 +254,7 @@ public class GridGeneratorExtension : Extension
             await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot be empty." }, API.WebsocketTimeout);
             return null;
         }
-        StableUIGridData data = new() { Session = session, Claim = claim };
+        StableSwarmUIGridData data = new() { Session = session, Claim = claim };
         Grid grid = null;
         try
         {

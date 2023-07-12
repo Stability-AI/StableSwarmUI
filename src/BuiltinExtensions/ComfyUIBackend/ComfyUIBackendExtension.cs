@@ -2,16 +2,16 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
-using StableUI.Backends;
-using StableUI.Core;
-using StableUI.Text2Image;
-using StableUI.Utils;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Core;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
 using System.IO;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 
-namespace StableUI.Builtin_ComfyUIBackend;
+namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
 /// <summary>Main class for the ComfyUI Backend extension.</summary>
 public class ComfyUIBackendExtension : Extension

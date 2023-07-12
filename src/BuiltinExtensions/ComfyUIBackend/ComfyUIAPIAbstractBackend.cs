@@ -3,17 +3,17 @@ using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
-using StableUI.Backends;
-using StableUI.Core;
-using StableUI.DataHolders;
-using StableUI.Text2Image;
-using StableUI.Utils;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Core;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
 using System;
 using System.IO;
 using System.Net.Http;
 using System.Web;
 
-namespace StableUI.Builtin_ComfyUIBackend;
+namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
 public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 {
@@ -133,7 +133,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "comfy_sampler" => user_input.GetString(ComfyUIBackendExtension.SamplerParam),
                     "comfy_scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam),
                     "model" => user_input.Get(T2IParamTypes.Model).Name.Replace('/', Path.DirectorySeparatorChar),
-                    "prefix" => $"StableUI_{Random.Shared.Next():X4}_",
+                    "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
                     _ => user_input.GetRaw(T2IParamTypes.GetType(tagName))?.ToString()
                 };
                 filled ??= defVal;

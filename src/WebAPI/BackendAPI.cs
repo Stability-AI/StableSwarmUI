@@ -1,11 +1,11 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
-using StableUI.Backends;
-using StableUI.Core;
-using StableUI.Utils;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Core;
+using StableSwarmUI.Utils;
 
-namespace StableUI.WebAPI;
+namespace StableSwarmUI.WebAPI;
 
 public class BackendAPI
 {

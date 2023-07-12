@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Html;
 
-namespace StableUI.Utils;
+namespace StableSwarmUI.Utils;
 
 /// <summary>Helper utilities for web content generation.</summary>
 public static class WebUtil

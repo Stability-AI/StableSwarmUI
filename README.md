@@ -1,4 +1,4 @@
-# StableUI
+# StableSwarmUI
 
 A Modular Stable Diffusion Web-User-Interface.
 

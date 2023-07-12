@@ -1,4 +1,4 @@
-﻿namespace StableUI.Utils;
+﻿namespace StableSwarmUI.Utils;
 
 using SixLabors.ImageSharp;
 using System.IO;

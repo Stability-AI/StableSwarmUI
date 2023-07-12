@@ -1,11 +1,11 @@
 ﻿using FreneticUtilities.FreneticToolkit;
-using StableUI.Core;
-using StableUI.DataHolders;
-using StableUI.Text2Image;
-using StableUI.Utils;
+using StableSwarmUI.Core;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
 using System.IO;
 
-namespace StableUI.Accounts;
+namespace StableSwarmUI.Accounts;
 
 /// <summary>Container for information related to an active session.</summary>
 public class Session : IEquatable<Session>

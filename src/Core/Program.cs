@@ -3,16 +3,16 @@ using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using LiteDB;
 using Microsoft.Extensions.Logging;
-using StableUI.Accounts;
-using StableUI.Backends;
-using StableUI.Text2Image;
-using StableUI.Utils;
-using StableUI.WebAPI;
+using StableSwarmUI.Accounts;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
+using StableSwarmUI.WebAPI;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.Loader;
 
-namespace StableUI.Core;
+namespace StableSwarmUI.Core;
 
 /// <summary>Class that handles the core entry-point access to the program, and initialization of program layers.</summary>
 public class Program
@@ -57,7 +57,7 @@ public class Program
     {
         SpecialTools.Internationalize(); // Fix for MS's broken localization
         BsonMapper.Global.EmptyStringToNull = false; // Fix for LiteDB's broken handling of empty strings
-        Logs.Init("=== StableUI Starting ===");
+        Logs.Init("=== StableSwarmUI Starting ===");
         AssemblyLoadContext.Default.Unloading += (_) => Shutdown();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Shutdown();
         PrepExtensions();
@@ -144,7 +144,7 @@ public class Program
                 Extension extension = Activator.CreateInstance(extType) as Extension;
                 extension.ExtensionName = extType.Name;
                 Extensions.Add(extension);
-                string[] possible = extType.Namespace.StartsWith("StableUI.") ? builtins : extras;
+                string[] possible = extType.Namespace.StartsWith("StableSwarmUI.") ? builtins : extras;
                 foreach (string path in possible)
                 {
                     if (File.Exists($"src/{path}/{extType.Name}.cs"))

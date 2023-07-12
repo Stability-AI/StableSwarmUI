@@ -1,21 +1,21 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using StableUI.Core;
-using StableUI.Utils;
+using StableSwarmUI.Core;
+using StableSwarmUI.Utils;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 
-namespace StableUI.Backends;
+namespace StableSwarmUI.Backends;
 
 public static class NetworkBackendUtils
 {
     public static HttpClient MakeHttpClient()
     {
         HttpClient client = new();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd($"StableUI/{Utilities.Version}");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd($"StableSwarmUI/{Utilities.Version}");
         client.Timeout = TimeSpan.FromMinutes(10);
         return client;
     }

@@ -3,7 +3,7 @@ using FreneticUtilities.FreneticToolkit;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using StableUI.Core;
+using StableSwarmUI.Core;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -14,12 +14,12 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace StableUI.Utils;
+namespace StableSwarmUI.Utils;
 
 /// <summary>General utilities holder.</summary>
 public static class Utilities
 {
-    /// <summary>StableUI's current version.</summary>
+    /// <summary>StableSwarmUI's current version.</summary>
     public static readonly string Version = Assembly.GetEntryAssembly()?.GetName().Version.ToString();
 
     /// <summary>Used by linked pages to prevent cache errors when data changes.</summary>

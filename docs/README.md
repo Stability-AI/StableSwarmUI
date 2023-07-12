@@ -1,4 +1,4 @@
-# StableUI Documentation
+# StableSwarmUI Documentation
 
 - TODO: Basic usage (Intro to using the UI and all)
 - TODO: Advanced usage (advanced features and all)

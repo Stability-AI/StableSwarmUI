@@ -1,14 +1,14 @@
 ﻿using Newtonsoft.Json.Linq;
-using StableUI.Core;
-using StableUI.Backends;
-using StableUI.Utils;
-using StableUI.Accounts;
+using StableSwarmUI.Core;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Utils;
+using StableSwarmUI.Accounts;
 using System.Runtime.ConstrainedExecution;
-using StableUI.Text2Image;
+using StableSwarmUI.Text2Image;
 using FreneticUtilities.FreneticExtensions;
 using Microsoft.AspNetCore.Http;
 
-namespace StableUI.WebAPI;
+namespace StableSwarmUI.WebAPI;
 
 /// <summary>Internal helper for all the basic API routes.</summary>
 public static class BasicAPIFeatures

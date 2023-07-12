@@ -1,9 +1,9 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
-using StableUI.DataHolders;
-using StableUI.Text2Image;
-using StableUI.Utils;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
 
-namespace StableUI.Backends;
+namespace StableSwarmUI.Backends;
 
 /// <summary>Represents a basic abstracted Text2Image backend provider.</summary>
 public abstract class AbstractT2IBackend

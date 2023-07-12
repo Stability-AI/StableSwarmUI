@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
+using StableSwarmUI.Accounts;
 using System.Net.WebSockets;
 
-namespace StableUI.WebAPI;
+namespace StableSwarmUI.WebAPI;
 
 
 /// <summary>Represents an API Call route and associated core data (permissions, etc).</summary>

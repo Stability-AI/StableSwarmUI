@@ -1,8 +1,8 @@
-# ComfyUI Backend Extension For StableUI
+# ComfyUI Backend Extension For StableSwarmUI
 
-This extension enables the use of [ComfyUI](https://github.com/comfyanonymous/ComfyUI) as a backend provider for StableUI.
+This extension enables the use of [ComfyUI](https://github.com/comfyanonymous/ComfyUI) as a backend provider for StableSwarmUI.
 
-Among other benefits, this enables you to use custom ComfyUI-API workflow files within StableUI.
+Among other benefits, this enables you to use custom ComfyUI-API workflow files within StableSwarmUI.
 
 ### API vs Self-Start
 
@@ -16,7 +16,7 @@ Among other benefits, this enables you to use custom ComfyUI-API workflow files 
 
 (TODO)
 
-### Basic Usage Within StableUI
+### Basic Usage Within StableSwarmUI
 
 (TODO)
 

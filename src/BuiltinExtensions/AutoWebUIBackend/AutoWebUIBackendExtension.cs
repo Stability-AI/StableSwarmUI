@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json.Linq;
-using StableUI.Core;
-using StableUI.DataHolders;
-using StableUI.Text2Image;
+using StableSwarmUI.Core;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Text2Image;
 
-namespace StableUI.Builtin_AutoWebUIExtension;
+namespace StableSwarmUI.Builtin_AutoWebUIExtension;
 
 /// <summary>Main class for the Automatic1111 Stable-Diffusion-WebUI Backend extension.</summary>
 public class AutoWebUIBackendExtension : Extension

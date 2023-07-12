@@ -1,9 +1,9 @@
 ﻿
 using Newtonsoft.Json.Linq;
-using StableUI.Text2Image;
+using StableSwarmUI.Text2Image;
 using System.IO;
 
-namespace StableUI.Builtin_ComfyUIBackend;
+namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
 /// <summary>Helper class for generating ComfyUI workflows from input parameters.</summary>
 public class WorkflowGenerator
@@ -114,7 +114,7 @@ public class WorkflowGenerator
             {
                 n["inputs"] = new JObject()
                 {
-                    ["filename_prefix"] = $"StableUI_{Random.Shared.Next():X4}_",
+                    ["filename_prefix"] = $"StableSwarmUI_{Random.Shared.Next():X4}_",
                     ["images"] = g.FinalImageOut
                 };
             }, "9");

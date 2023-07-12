@@ -1,11 +1,11 @@
-﻿using StableUI.Utils;
-using StableUI.Core;
+﻿using StableSwarmUI.Utils;
+using StableSwarmUI.Core;
 using System.Collections.Concurrent;
 using LiteDB;
-using StableUI.Text2Image;
+using StableSwarmUI.Text2Image;
 using FreneticUtilities.FreneticToolkit;
 
-namespace StableUI.Accounts;
+namespace StableSwarmUI.Accounts;
 
 /// <summary>Core manager for sessions.</summary>
 public class SessionHandler

@@ -1,7 +1,7 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
 using System.Text.RegularExpressions;
 
-namespace StableUI.Core;
+namespace StableSwarmUI.Core;
 
 /// <summary>Central default settings list.</summary>
 public class Settings : AutoConfiguration

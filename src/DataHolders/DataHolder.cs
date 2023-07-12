@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace StableUI.DataHolders;
+namespace StableSwarmUI.DataHolders;
 
 public interface IDataHolder
 {

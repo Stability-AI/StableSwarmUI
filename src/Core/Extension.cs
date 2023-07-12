@@ -1,4 +1,4 @@
-﻿namespace StableUI.Core;
+﻿namespace StableSwarmUI.Core;
 
 /// <summary>Abstract representation of an extension. Extensions should have a 'main' class that derives from this one.</summary>
 public abstract class Extension

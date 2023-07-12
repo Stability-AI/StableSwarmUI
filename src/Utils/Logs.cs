@@ -1,6 +1,6 @@
 ﻿using FreneticUtilities.FreneticToolkit;
 
-namespace StableUI.Utils;
+namespace StableSwarmUI.Utils;
 
 /// <summary>Central internal logging handler.</summary>
 public static class Logs

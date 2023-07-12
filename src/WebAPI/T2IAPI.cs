@@ -1,18 +1,18 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
-using StableUI.Backends;
-using StableUI.Core;
-using StableUI.DataHolders;
-using StableUI.Text2Image;
-using StableUI.Utils;
+using StableSwarmUI.Accounts;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Core;
+using StableSwarmUI.DataHolders;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
 using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text.RegularExpressions;
 
-namespace StableUI.WebAPI;
+namespace StableSwarmUI.WebAPI;
 
 /// <summary>Text-to-Image API routes</summary>
 public static class T2IAPI

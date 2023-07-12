@@ -1,9 +1,9 @@
 ﻿
-using StableUI.Builtin_ComfyUIBackend;
-using StableUI.Core;
-using StableUI.Text2Image;
+using StableSwarmUI.Builtin_ComfyUIBackend;
+using StableSwarmUI.Core;
+using StableSwarmUI.Text2Image;
 
-namespace StableUI.Builtin_DynamicThresholding;
+namespace StableSwarmUI.Builtin_DynamicThresholding;
 
 public class DynamicThresholdingExtension : Extension
 {

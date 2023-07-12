@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
-using StableUI.Utils;
+using StableSwarmUI.Utils;
 using System.IO;
 
-namespace StableUI.Text2Image;
+namespace StableSwarmUI.Text2Image;
 
 /// <summary>Helper to determine what classification a model should receive.</summary>
 public class T2IModelClassSorter

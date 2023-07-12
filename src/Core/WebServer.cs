@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using StableUI.Text2Image;
-using StableUI.Utils;
-using StableUI.WebAPI;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
+using StableSwarmUI.WebAPI;
 using System.IO;
 using System.Text;
 using System.Web;
 
-namespace StableUI.Core;
+namespace StableSwarmUI.Core;
 
 /// <summary>Core handler for the web-server (mid-layer & front-end).</summary>
 public class WebServer

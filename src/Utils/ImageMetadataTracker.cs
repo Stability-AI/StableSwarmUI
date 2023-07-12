@@ -3,7 +3,7 @@ using FreneticUtilities.FreneticToolkit;
 using LiteDB;
 using System.IO;
 
-namespace StableUI.Utils;
+namespace StableSwarmUI.Utils;
 
 /// <summary>Helper class to track image file metadata.</summary>
 public static class ImageMetadataTracker

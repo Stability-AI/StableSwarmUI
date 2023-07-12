@@ -1,15 +1,15 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
-using StableUI.Backends;
-using StableUI.Core;
-using StableUI.Utils;
-using StableUI.WebAPI;
+using StableSwarmUI.Accounts;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Core;
+using StableSwarmUI.Utils;
+using StableSwarmUI.WebAPI;
 using System.Diagnostics;
 using System.IO;
-using static StableUI.Backends.BackendHandler;
+using static StableSwarmUI.Backends.BackendHandler;
 
-namespace StableUI.Text2Image
+namespace StableSwarmUI.Text2Image
 {
     /// <summary>Central core handler for text-to-image processing.</summary>
     public static class T2IEngine

@@ -2,13 +2,13 @@
 using FreneticUtilities.FreneticToolkit;
 using LiteDB;
 using Newtonsoft.Json.Linq;
-using StableUI.Accounts;
-using StableUI.Core;
-using StableUI.Utils;
+using StableSwarmUI.Accounts;
+using StableSwarmUI.Core;
+using StableSwarmUI.Utils;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace StableUI.Text2Image;
+namespace StableSwarmUI.Text2Image;
 
 /// <summary>Central manager for Text2Image models.</summary>
 public class T2IModelHandler

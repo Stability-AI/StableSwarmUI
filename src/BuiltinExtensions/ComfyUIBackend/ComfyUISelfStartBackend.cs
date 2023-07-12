@@ -1,12 +1,12 @@
 ﻿
 using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
-using StableUI.Backends;
-using StableUI.Utils;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Utils;
 using System.Diagnostics;
 using System.IO;
 
-namespace StableUI.Builtin_ComfyUIBackend;
+namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
 public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
 {

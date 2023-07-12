@@ -1,4 +1,4 @@
-﻿namespace StableUI.DataHolders;
+﻿namespace StableSwarmUI.DataHolders;
 
 [AttributeUsage(AttributeTargets.Field)]
 public class SuggestionPlaceholder : Attribute

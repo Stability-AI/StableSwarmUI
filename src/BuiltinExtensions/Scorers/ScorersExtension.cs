@@ -2,16 +2,16 @@
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
-using StableUI.Backends;
-using StableUI.Core;
-using StableUI.Text2Image;
-using StableUI.Utils;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Core;
+using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 
-namespace StableUI.Builtin_ScorersExtension;
+namespace StableSwarmUI.Builtin_ScorersExtension;
 
 public class ScorersExtension : Extension
 {
