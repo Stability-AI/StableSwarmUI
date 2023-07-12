@@ -58,10 +58,10 @@ function gridGen_addAxis() {
     });
     axisTypeSelector.addEventListener('change', () => {
         let mode = gen_param_types.find(e => e.name == axisTypeSelector.value);
-        if (mode && mode.values) {
+        if (mode && (mode.values || mode.type == 'model')) {
             fillButton.innerText = 'Fill';
             fillButton.style.visibility = 'visible';
-            fillButton.dataset.values = mode.values.join(' || ');
+            fillButton.dataset.values = mode.type == 'model' ? allModels.join(' || ') : mode.values.join(' || ');
             fillButton.title = 'Fill with available values';
         }
         else if (mode && mode.type == 'boolean') {
