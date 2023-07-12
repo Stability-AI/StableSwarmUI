@@ -1,43 +1,55 @@
 
-function getHtmlForParam(param, prefix) {
-    // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
-    let example = param.examples ? `<br><br>Examples: <code>${param.examples.map(escapeHtml).join("</code>,&emsp;<code>")}</code>` : '';
-    let pop = `<div class="sui-popover" id="popover_${prefix}${param.id}"><b>${escapeHtml(param.name)}</b> (${param.type}):<br>&emsp;${escapeHtml(param.description)}${example}</div>`;
-    switch (param.type) {
-        case 'text':
-            return makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, 2, param.description, param.toggleable) + pop;
-        case 'decimal':
-        case 'integer':
-            let min = param.min;
-            let max = param.max;
-            if (min == 0 && max == 0) {
-                min = -9999999;
-                max = 9999999;
-            }
-            switch (param.number_view_type) {
-                case 'small':
-                    return makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
-                case 'big':
-                    return makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop;
-                case 'slider':
-                    let val = makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop;
-                    return val;
-                case 'pot_slider':
-                    return makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop;
-            }
-        case 'boolean':
-            return makeCheckboxInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.toggleable) + pop;
-        case 'dropdown':
-            return makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, param.toggleable) + pop;
-        case 'list':
-            return makeMultiselectInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, "Select...", param.toggleable) + pop;
-        case 'model':
-            return makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, allModels, param.default, param.toggleable) + pop;
-        case 'image':
-            return makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop;
+function getHtmlForParam(param, prefix, textRows = 2) {
+    try {
+        // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
+        let example = param.examples ? `<br><br>Examples: <code>${param.examples.map(escapeHtml).join("</code>,&emsp;<code>")}</code>` : '';
+        let pop = `<div class="sui-popover" id="popover_${prefix}${param.id}"><b>${escapeHtml(param.name)}</b> (${param.type}):<br>&emsp;${escapeHtml(param.description)}${example}</div>`;
+        switch (param.type) {
+            case 'text':
+                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, textRows, param.description, param.toggleable) + pop};
+            case 'decimal':
+            case 'integer':
+                let min = param.min;
+                let max = param.max;
+                if (min == 0 && max == 0) {
+                    min = -9999999;
+                    max = 9999999;
+                }
+                switch (param.number_view_type) {
+                    case 'small':
+                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop};
+                    case 'big':
+                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop};
+                    case 'slider':
+                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop,
+                            runnable: () => enableSliderForBox(findParentOfClass(getRequiredElementById(`${prefix}${param.id}`), 'auto-slider-box'))};
+                    case 'pot_slider':
+                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop,
+                            runnable: () => enableSliderForBox(findParentOfClass(getRequiredElementById(`${prefix}${param.id}`), 'auto-slider-box'))};
+                }
+                break;
+            case 'boolean':
+                return {html: makeCheckboxInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.toggleable) + pop};
+            case 'dropdown':
+                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, param.toggleable) + pop};
+            case 'list':
+                if (param.values) {
+                    return {html: makeMultiselectInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, "Select...", param.toggleable) + pop,
+                        runnable: () => $(`${prefix}${param.id}`).select2({ theme: "bootstrap-5", width: 'style', placeholder: $(this).data('placeholder'), closeOnSelect: false }) };
+                }
+                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, textRows, param.description, param.toggleable) + pop};
+            case 'model':
+                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, allModels, param.default, param.toggleable) + pop};
+            case 'image':
+                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop};
+        }
+        console.log(`Cannot generate input for param ${param.id} of type ${param.type} - unknown type`);
+        return null;
     }
-    console.log(`Cannot generate input for param ${param.id} of type ${param.type} - unknown type`);
-    return null;
+    catch (e) {
+        console.log(e);
+        throw new Error(`Error generating input for param '${param.id}' (${JSON.stringify(param)}): ${e}`);
+    }
 }
 
 function toggleGroupOpen(elem) {
@@ -89,6 +101,7 @@ function genInputs() {
         let lastGroup = null;
         let groupsClose = [];
         let groupsEnable = [];
+        let runnables = [];
         for (let param of gen_param_types.filter(areaData[2])) {
             let groupName = param.group ? param.group.name : null;
             if (groupName != lastGroup) {
@@ -118,18 +131,27 @@ function genInputs() {
                 }
                 lastGroup = groupName;
             }
-            html += getHtmlForParam(param, "input_");
+            let newData = getHtmlForParam(param, "input_");;
+            html += newData.html;
+            if (newData.runnable) {
+                runnables.push(newData.runnable);
+            }
             if (param.visible) { // Hidden excluded from presets.
                 let presetParam = JSON.parse(JSON.stringify(param));
                 presetParam.toggleable = true;
-                presetHtml += getHtmlForParam(presetParam, "preset_input_");
+                let presetData = getHtmlForParam(presetParam, "preset_input_");
+                presetHtml += presetData.html;
+                if (presetData.runnable) {
+                    runnables.push(presetData.runnable);
+                }
             }
         }
         area.innerHTML = html;
-        enableSlidersIn(area);
         if (presetArea) {
             presetArea.innerHTML = presetHtml;
-            enableSlidersIn(presetArea);
+        }
+        for (let runnable of runnables) {
+            runnable();
         }
         for (let group of groupsClose) {
             let elem = getRequiredElementById(`input_group_${group}`);
@@ -149,9 +171,6 @@ function genInputs() {
     }
     for (let param of gen_param_types) {
         if (param.visible) {
-            if (param.type == 'list') {
-                $(`#input_${param.id}`).select2({ theme: "bootstrap-5", width: 'style', placeholder: $(this).data('placeholder'), closeOnSelect: false });
-            }
             if (param.toggleable) {
                 doToggleEnable(`input_${param.id}`);
                 doToggleEnable(`preset_input_${param.id}`);

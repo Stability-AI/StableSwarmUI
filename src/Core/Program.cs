@@ -244,8 +244,8 @@ public class Program
             var mode => throw new InvalidDataException($"aspweb_mode value of '{mode}' is not valid")
         };
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", environment);
-        string host = GetCommandLineFlag("host", ServerSettings.Host);
-        string port = GetCommandLineFlag("port", $"{ServerSettings.Port}");
+        string host = GetCommandLineFlag("host", ServerSettings.Network.Host);
+        string port = GetCommandLineFlag("port", $"{ServerSettings.Network.Port}");
         WebServer.HostURL = $"http://{host}:{port}";
         Environment.SetEnvironmentVariable("ASPNETCORE_URLS", WebServer.HostURL);
         WebServer.LogLevel = Enum.Parse<LogLevel>(GetCommandLineFlag("asp_loglevel", "warning"), true);

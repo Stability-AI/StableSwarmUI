@@ -98,7 +98,7 @@ public class GridGeneratorExtension : Extension
                 return Task.CompletedTask;
             }
             Task[] waitOn = data.GetActive();
-            if (waitOn.Length > data.Session.User.Settings.MaxT2ISimultaneous)
+            if (waitOn.Length > data.Session.User.Restrictions.MaxT2ISimultaneous)
             {
                 Task.WaitAny(waitOn);
             }

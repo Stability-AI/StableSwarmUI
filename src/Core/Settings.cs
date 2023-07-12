@@ -1,34 +1,15 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
-using System.Text.RegularExpressions;
 
 namespace StableSwarmUI.Core;
 
 /// <summary>Central default settings list.</summary>
 public class Settings : AutoConfiguration
 {
-    [ConfigComment("Root path for model files. Defaults to 'Models'")]
-    public string ModelRoot = "Models";
+    [ConfigComment("Settings related to file paths.")]
+    public PathsData Paths = new();
 
-    [ConfigComment("The model folder to use within 'ModelRoot'. Use a full-formed path (starting with '/' or a Windows drive like 'C:') to use an absolute path. Defaults to 'Stable-Diffusion'.")]
-    public string SDModelFolder = "Stable-Diffusion";
-
-    /// <summary>(Getter) Path for Stable Diffusion models.</summary>
-    public string SDModelFullPath => SDModelFolder.StartsWith('/') || (SDModelFolder.Length > 2 && SDModelFolder[1] == ':') ? SDModelFolder : $"{Environment.CurrentDirectory}/{ModelRoot}/{SDModelFolder}";
-
-    [ConfigComment("Root path for data (user configs, etc). Defaults to 'Data'")]
-    public string DataPath = "Data";
-
-    [ConfigComment("Root path for output files (images, etc). Defaults to 'Output'")]
-    public string OutputPath = "Output";
-
-    [ConfigComment("What web host address to use. `localhost` means your PC only."
-        + " Linux users may use `0.0.0.0` to mean accessible to anyone that can connect to your PC (ie LAN users, or the public if your firewall is open)."
-        + " Windows users may use `*` for that, though it may require additional Windows firewall configuration."
-        + " Advanced server users may wish to manually specify a host bind address here.")]
-    public string Host = "localhost";
-
-    [ConfigComment("What web port to use. Default is '7801'.")]
-    public int Port = 7801;
+    [ConfigComment("Settings related to networking and the webserver.")]
+    public NetworkData Network = new();
 
     [ConfigComment("Restrictions to apply to default users.")]
     public UserRestriction DefaultUserRestriction = new();
@@ -36,8 +17,48 @@ public class Settings : AutoConfiguration
     [ConfigComment("Default settings for users (unless the user modifies them, if so permitted).")]
     public User DefaultUser = new();
 
-    [ConfigComment("How many times to retry initializing a backend before giving up. Default is 3.")]
-    public int MaxBackendInitAttempts = 3;
+    [ConfigComment("Settings related to backends.")]
+    public BackendData Backends = new();
+
+    /// <summary>Settings related to backends.</summary>
+    public class BackendData : AutoConfiguration
+    {
+
+        [ConfigComment("How many times to retry initializing a backend before giving up. Default is 3.")]
+        public int MaxBackendInitAttempts = 3;
+    }
+
+    /// <summary>Settings related to networking and the webserver.</summary>
+    public class NetworkData : AutoConfiguration
+    {
+        [ConfigComment("What web host address to use. `localhost` means your PC only."
+            + " Linux users may use `0.0.0.0` to mean accessible to anyone that can connect to your PC (ie LAN users, or the public if your firewall is open)."
+            + " Windows users may use `*` for that, though it may require additional Windows firewall configuration."
+            + " Advanced server users may wish to manually specify a host bind address here.")]
+        public string Host = "localhost";
+
+        [ConfigComment("What web port to use. Default is '7801'.")]
+        public int Port = 7801;
+    }
+
+    /// <summary>Settings related to file paths.</summary>
+    public class PathsData : AutoConfiguration
+    {
+        [ConfigComment("Root path for model files. Defaults to 'Models'")]
+        public string ModelRoot = "Models";
+
+        [ConfigComment("The model folder to use within 'ModelRoot'. Use a full-formed path (starting with '/' or a Windows drive like 'C:') to use an absolute path. Defaults to 'Stable-Diffusion'.")]
+        public string SDModelFolder = "Stable-Diffusion";
+
+        /// <summary>(Getter) Path for Stable Diffusion models.</summary>
+        public string SDModelFullPath => SDModelFolder.StartsWith('/') || (SDModelFolder.Length > 2 && SDModelFolder[1] == ':') ? SDModelFolder : $"{Environment.CurrentDirectory}/{ModelRoot}/{SDModelFolder}";
+
+        [ConfigComment("Root path for data (user configs, etc). Defaults to 'Data'")]
+        public string DataPath = "Data";
+
+        [ConfigComment("Root path for output files (images, etc). Defaults to 'Output'")]
+        public string OutputPath = "Output";
+    }
 
     /// <summary>Settings to control restrictions on users.</summary>
     public class UserRestriction : AutoConfiguration
@@ -59,6 +80,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("Generic permission flags. '*' means all. Default is all.")]
         public List<string> PermissionFlags = new() { "*" };
+
+        [ConfigComment("How many images can try to be generating at the same time on this user.")]
+        public int MaxT2ISimultaneous = 32;
     }
 
     /// <summary>Settings per-user.</summary>
@@ -94,8 +118,5 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("Whether your files save to server data drive or not.")]
         public bool SaveFiles = true;
-
-        [ConfigComment("How many images can try to be generating at the same time on the default user.")]
-        public int MaxT2ISimultaneous = 8;
     }
 }

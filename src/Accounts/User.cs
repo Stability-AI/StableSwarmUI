@@ -38,7 +38,7 @@ public class User
         Settings.Load(new FDSSection(data.RawSettings));
     }
 
-    /// <summary>Save this user's data to the backend handler.</summary>
+    /// <summary>Save this user's data to the internal user database.</summary>
     public void Save()
     {
         Data.RawSettings = Settings.Save(false).ToString();
@@ -120,7 +120,7 @@ public class User
     public Settings.User Settings = new();
 
     /// <summary>Path to the output directory appropriate to this session.</summary>
-    public string OutputDirectory => $"{Program.ServerSettings.OutputPath}/{UserID}";
+    public string OutputDirectory => $"{Program.ServerSettings.Paths.OutputPath}/{UserID}";
 
     public LockObject UserLock = new();
 

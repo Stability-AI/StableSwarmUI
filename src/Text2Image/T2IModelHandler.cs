@@ -228,11 +228,11 @@ public class T2IModelHandler
             return;
         }
         string prefix = folder == "" ? "" : $"{folder}/";
-        foreach (string subfolder in Directory.EnumerateDirectories($"{Program.ServerSettings.SDModelFullPath}/{folder}"))
+        foreach (string subfolder in Directory.EnumerateDirectories($"{Program.ServerSettings.Paths.SDModelFullPath}/{folder}"))
         {
             AddAllFromFolder($"{prefix}{subfolder.AfterLast('/')}");
         }
-        foreach (string file in Directory.EnumerateFiles($"{Program.ServerSettings.SDModelFullPath}/{folder}"))
+        foreach (string file in Directory.EnumerateFiles($"{Program.ServerSettings.Paths.SDModelFullPath}/{folder}"))
         {
             string fn = file.Replace('\\', '/').AfterLast('/');
             string fullFilename = $"{prefix}{fn}";

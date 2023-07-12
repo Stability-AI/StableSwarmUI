@@ -344,7 +344,7 @@ textarea, input, select {
 }
 .toggler-overlay {
     position: relative;
-    display: inline-block;
+    display: inline;
     width: 0;
     height: 0;
     vertical-align: top;
@@ -375,4 +375,22 @@ textarea, input, select {
 .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--highlighted {
     background-color: var(--button-background-hover);
     color: var(--button-foreground-hover);
+}
+.settings_submit_confirmer {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    width: 100vw;
+    height: 6rem;
+    background-color: var(--background-soft);
+    text-align: right;
+    top: calc(100vh - 6rem);
+    font-size: 200%;
+    padding-top: 0.5rem;
+    padding-right: 1rem;
+}
+.settings_submit_confirmer button {
+    font-size: 120%;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }

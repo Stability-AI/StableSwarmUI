@@ -114,7 +114,7 @@ public static class T2IAPI
         List<T2IEngine.ImageInBatch> imageSet = new();
         T2IEngine.ImageInBatch[] imageOut = null;
         List<Task> tasks = new();
-        int max_degrees = session.User.Settings.MaxT2ISimultaneous;
+        int max_degrees = session.User.Restrictions.MaxT2ISimultaneous;
         for (int i = 0; i < images && !claim.ShouldCancel; i++)
         {
             tasks.RemoveAll(t => t.IsCompleted);
@@ -202,7 +202,7 @@ public static class T2IAPI
     /// <summary>API route to get a list of available history images.</summary>
     public static async Task<JObject> ListImages(Session session, string path)
     {
-        string root = $"{Environment.CurrentDirectory}/{Program.ServerSettings.OutputPath}/{session.User.UserID}";
+        string root = $"{Environment.CurrentDirectory}/{Program.ServerSettings.Paths.OutputPath}/{session.User.UserID}";
         return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject()
         {
             ["src"] = name,

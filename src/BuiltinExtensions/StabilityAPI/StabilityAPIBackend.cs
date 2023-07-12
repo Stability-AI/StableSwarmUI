@@ -33,7 +33,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
 
     public override async Task Init()
     {
-        string fn = $"{Program.ServerSettings.DataPath}/{Settings.KeyFile}";
+        string fn = $"{Program.ServerSettings.Paths.DataPath}/{Settings.KeyFile}";
         if (string.IsNullOrWhiteSpace(fn) || fn.Contains("..") || !File.Exists(fn))
         {
             Logs.Warning($"Refusing to initialize SAPI backend because {fn} does not exist or is invalid.");

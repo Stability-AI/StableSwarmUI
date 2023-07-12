@@ -1,40 +1,44 @@
 function enableSlidersIn(elem) {
     for (let div of elem.getElementsByClassName('auto-slider-box')) {
-        let range = div.querySelector('input[type="range"]');
-        let number = div.querySelector('input[type="number"]');
-        number.addEventListener('input', (event) => {
-            let newVal = number.value;
-            if (!shiftMonitor) {
-                number.dataset.old_value = newVal;
-                return;
-            }
-            let oldVal = parseInt(number.dataset.old_value || number.getAttribute('value'));
-            if (newVal > oldVal) {
-                number.value = Math.min(parseInt(number.getAttribute('max')), oldVal + 1);
-            }
-            else if (newVal < oldVal) {
-                number.value = Math.max(parseInt(number.getAttribute('min')), oldVal - 1);
-            }
-            number.dataset.old_value = number.value;
-        });
-        if (range.dataset.ispot == "true") {
-            let max = parseInt(range.getAttribute('max')), min = parseInt(range.getAttribute('min')), step = parseInt(range.getAttribute('step'));
-            range.addEventListener('input', () => {
-                number.value = linearToPot(range.value, max, min, step);
-                number.dispatchEvent(new Event('change'));
-            });
-            number.addEventListener('input', () => {
-                range.value = potToLinear(number.value, max, min, step);
-                range.dispatchEvent(new Event('change'));
-            });
-            range.step = 1;
-        }
-        else {
-            range.addEventListener('input', () => number.value = range.value);
-            number.addEventListener('input', () => range.value = number.value);
-        }
-        number.dispatchEvent(new Event('input'));
+        enableSliderForBox(div);
     }
+}
+
+function enableSliderForBox(div) {
+    let range = div.querySelector('input[type="range"]');
+    let number = div.querySelector('input[type="number"]');
+    number.addEventListener('input', (event) => {
+        let newVal = number.value;
+        if (!shiftMonitor) {
+            number.dataset.old_value = newVal;
+            return;
+        }
+        let oldVal = parseInt(number.dataset.old_value || number.getAttribute('value'));
+        if (newVal > oldVal) {
+            number.value = Math.min(parseInt(number.getAttribute('max')), oldVal + 1);
+        }
+        else if (newVal < oldVal) {
+            number.value = Math.max(parseInt(number.getAttribute('min')), oldVal - 1);
+        }
+        number.dataset.old_value = number.value;
+    });
+    if (range.dataset.ispot == "true") {
+        let max = parseInt(range.getAttribute('max')), min = parseInt(range.getAttribute('min')), step = parseInt(range.getAttribute('step'));
+        range.addEventListener('input', () => {
+            number.value = linearToPot(range.value, max, min, step);
+            number.dispatchEvent(new Event('change'));
+        });
+        number.addEventListener('input', () => {
+            range.value = potToLinear(number.value, max, min, step);
+            range.dispatchEvent(new Event('change'));
+        });
+        range.step = 1;
+    }
+    else {
+        range.addEventListener('input', () => number.value = range.value);
+        number.addEventListener('input', () => range.value = number.value);
+    }
+    number.dispatchEvent(new Event('input'));
 }
 
 function showError(message) {

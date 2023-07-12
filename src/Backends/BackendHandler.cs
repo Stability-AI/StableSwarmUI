@@ -247,7 +247,7 @@ public class BackendHandler
                 }
                 catch (Exception ex)
                 {
-                    if (data.InitAttempts <= Program.ServerSettings.MaxBackendInitAttempts)
+                    if (data.InitAttempts <= Program.ServerSettings.Backends.MaxBackendInitAttempts)
                     {
                         data.Backend.Status = BackendStatus.WAITING;
                         Logs.Error($"Error #{data.InitAttempts} while initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name} - will retry");

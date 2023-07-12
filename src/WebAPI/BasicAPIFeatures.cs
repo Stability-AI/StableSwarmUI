@@ -1,12 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
 using StableSwarmUI.Core;
-using StableSwarmUI.Backends;
 using StableSwarmUI.Utils;
 using StableSwarmUI.Accounts;
-using System.Runtime.ConstrainedExecution;
 using StableSwarmUI.Text2Image;
 using FreneticUtilities.FreneticExtensions;
 using Microsoft.AspNetCore.Http;
+using FreneticUtilities.FreneticDataSyntax;
 
 namespace StableSwarmUI.WebAPI;
 
@@ -22,8 +21,11 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(DeletePreset);
         API.RegisterAPICall(GetCurrentStatus);
         API.RegisterAPICall(InterruptAll);
+        API.RegisterAPICall(GetUserSettings);
+        API.RegisterAPICall(ChangeUserSettings);
         T2IAPI.Register();
         BackendAPI.Register();
+        AdminAPI.Register();
     }
 
     /// <summary>API Route to create a new session automatically.</summary>
@@ -102,6 +104,34 @@ public static class BasicAPIFeatures
     {
         session.SessInterrupt.Cancel();
         session.SessInterrupt = new();
+        return new JObject() { ["success"] = true };
+    }
+
+    public static async Task<JObject> GetUserSettings(Session session)
+    {
+        return new JObject() { ["settings"] = AdminAPI.AutoConfigToParamData(session.User.Settings) };
+    }
+
+    public static async Task<JObject> ChangeUserSettings(Session session, JObject rawData)
+    {
+        JObject settings = (JObject)rawData["settings"];
+        foreach ((string key, JToken val) in settings)
+        {
+            AutoConfiguration.Internal.SingleFieldData field = session.User.Settings.TryGetFieldInternalData(key, out _);
+            if (field is null)
+            {
+                Logs.Error($"User '{session.User.UserID}' tried to set unknown setting '{key}' to '{val}'.");
+                continue;
+            }
+            object obj = AdminAPI.DataToType(val, field.Field.FieldType);
+            if (obj is null)
+            {
+                Logs.Error($"User '{session.User.UserID}' tried to set setting '{key}' of type '{field.Field.FieldType.Name}' to '{val}', but type-conversion failed.");
+                continue;
+            }
+            session.User.Settings.TrySetFieldValue(key, obj);
+        }
+        session.User.Save();
         return new JObject() { ["success"] = true };
     }
 }
