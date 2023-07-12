@@ -35,7 +35,7 @@ function getHtmlForParam(param, prefix, textRows = 2) {
             case 'list':
                 if (param.values) {
                     return {html: makeMultiselectInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, "Select...", param.toggleable) + pop,
-                        runnable: () => $(`${prefix}${param.id}`).select2({ theme: "bootstrap-5", width: 'style', placeholder: $(this).data('placeholder'), closeOnSelect: false }) };
+                        runnable: () => $(`#${prefix}${param.id}`).select2({ theme: "bootstrap-5", width: 'style', placeholder: $(this).data('placeholder'), closeOnSelect: false }) };
                 }
                 return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, textRows, param.description, param.toggleable) + pop};
             case 'model':
@@ -92,6 +92,7 @@ function isParamAdvanced(p) {
 }
 
 function genInputs() {
+    let runnables = [];
     for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !isParamAdvanced(p)],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p)],
             ['main_inputs_area_hidden', null, (p) => !p.visible]]) {
@@ -101,7 +102,6 @@ function genInputs() {
         let lastGroup = null;
         let groupsClose = [];
         let groupsEnable = [];
-        let runnables = [];
         for (let param of gen_param_types.filter(areaData[2])) {
             let groupName = param.group ? param.group.name : null;
             if (groupName != lastGroup) {
