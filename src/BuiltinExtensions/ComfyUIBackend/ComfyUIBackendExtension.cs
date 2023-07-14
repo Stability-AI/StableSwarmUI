@@ -29,6 +29,7 @@ public class ComfyUIBackendExtension : Extension
         Refresh();
         Program.ModelRefreshEvent += Refresh;
         ScriptFiles.Add("Assets/comfy_workflow_editor_helper.js");
+        StyleSheetFiles.Add("Assets/comfy_workflow_editor.css");
     }
 
     public void Refresh()
