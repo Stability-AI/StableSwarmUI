@@ -169,12 +169,14 @@ function comfyBuildParams(callback) {
                 let inputLabel = labelAlterations[`${nodeId}.${inputId}`] || inputId;
                 let inputIdDirect = cleanParamName(`${inputPrefix}${groupLabel}${inputId}`);
                 if (typeof val == 'number') {
+                    let asSeed = false;
                     if (inputId == 'batch_size') {
                         node.inputs[inputId] = 1;
                         continue;
                     }
                     if (inputId == 'seed') {
                         type = 'integer';
+                        asSeed = true;
                     }
                     else if (['width', 'height'].includes(inputId)) {
                         type = 'integer';
@@ -205,7 +207,7 @@ function comfyBuildParams(callback) {
                     else {
                         type = 'decimal';
                     }
-                    node.inputs[inputId] = "%%_COMFYFIXME_${" + inputIdDirect + ":" + val + "}_ENDFIXME_%%";
+                    node.inputs[inputId] = "%%_COMFYFIXME_${" + inputIdDirect + (asSeed ? "+seed" : "") + ":" + val + "}_ENDFIXME_%%";
                 }
                 else if (typeof val == 'string') {
                     if (node.class_type == 'SaveImage' && inputId == 'filename_prefix') {

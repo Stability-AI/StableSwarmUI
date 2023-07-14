@@ -125,12 +125,12 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         {
             workflow = StringConversionHelper.QuickSimpleTagFiller(workflow, "${", "}", (tag) => {
                 string tagName = tag.BeforeAndAfter(':', out string defVal);
-                string filled = tagName switch
+                string tagBasic = tagName.BeforeAndAfter('+', out string tagExtra);
+                string filled = tagBasic switch
                 {
                     "prompt" => user_input.Get(T2IParamTypes.Prompt),
                     "negative_prompt" => user_input.Get(T2IParamTypes.NegativePrompt),
-                    "seed" => $"{user_input.Get(T2IParamTypes.Seed)}",
-                    "seed+1" => $"{user_input.Get(T2IParamTypes.Seed) + 1}",
+                    "seed" => $"{user_input.Get(T2IParamTypes.Seed) + (int.TryParse(tagExtra, out int add) ? add : 0)}",
                     "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
                     "width" => $"{user_input.Get(T2IParamTypes.Width)}",
                     "height" => $"{user_input.Get(T2IParamTypes.Height)}",
@@ -146,6 +146,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     _ => user_input.GetRaw(T2IParamTypes.GetType(tagName, user_input))?.ToString()
                 };
                 filled ??= defVal;
+                if (tagExtra == "seed" && filled == "-1")
+                {
+                    filled = $"{Random.Shared.Next()}";
+                }
                 return Utilities.EscapeJsonString(filled);
             });
         }
