@@ -112,11 +112,18 @@ public class T2IModelHandler
     {
         lock (MetadataLock)
         {
-            return ModelMetadataCachePerFolder.GetOrCreate(folder, () =>
+            try
             {
-                LiteDatabase ldb = new(folder + "/model_metadata.ldb");
-                return (ldb, ldb.GetCollection<ModelMetadataStore>("models"));
-            }).Item2;
+                return ModelMetadataCachePerFolder.GetOrCreate(folder, () =>
+                {
+                    LiteDatabase ldb = new(folder + "/model_metadata.ldb");
+                    return (ldb, ldb.GetCollection<ModelMetadataStore>("models"));
+                }).Item2;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
     }
 
@@ -126,6 +133,10 @@ public class T2IModelHandler
         long modified = ((DateTimeOffset)File.GetLastWriteTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds();
         string folder = model.RawFilePath.Replace('\\', '/').BeforeAndAfterLast('/', out string fileName);
         ILiteCollection<ModelMetadataStore> cache = GetCacheForFolder(folder);
+        if (cache is null)
+        {
+            return;
+        }
         ModelMetadataStore metadata = new()
         {
             ModelFileVersion = modified,
@@ -165,6 +176,10 @@ public class T2IModelHandler
         string folder = model.RawFilePath.Replace('\\', '/').BeforeAndAfterLast('/', out string fileName);
         long modified = ((DateTimeOffset)File.GetLastWriteTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds();
         ILiteCollection<ModelMetadataStore> cache = GetCacheForFolder(folder);
+        if (cache is null)
+        {
+            return;
+        }
         ModelMetadataStore metadata;
         lock (MetadataLock)
         {
