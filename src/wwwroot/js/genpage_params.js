@@ -1,4 +1,6 @@
 
+let postParamBuildSteps = [];
+
 function getHtmlForParam(param, prefix, textRows = 2) {
     try {
         // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
@@ -60,7 +62,9 @@ function toggleGroupOpen(elem) {
         group.style.display = 'block';
         parent.classList.remove('input-group-closed');
         parent.querySelector('.auto-symbol').innerText = '⮟';
-        setCookie(`group_open_${parent.id}`, 'open', 365);
+        if (!group.dataset.do_not_save) {
+            setCookie(`group_open_${parent.id}`, 'open', 365);
+        }
         let toggler = document.getElementById(`${group.id}_toggle`);
         if (toggler) {
             toggler.checked = true;
@@ -70,7 +74,9 @@ function toggleGroupOpen(elem) {
         group.style.display = 'none';
         parent.classList.add('input-group-closed');
         parent.querySelector('.auto-symbol').innerText = '⮞';
-        setCookie(`group_open_${parent.id}`, 'closed', 365);
+        if (!group.dataset.do_not_save) {
+            setCookie(`group_open_${parent.id}`, 'closed', 365);
+        }
     }
 }
 
@@ -84,7 +90,9 @@ function doToggleGroup(id) {
             toggleGroupOpen(header);
         }
     }
-    setCookie(`group_toggle_${parent.id}`, elem.checked ? 'yes' : 'no', 365);
+    if (!group.dataset.do_not_save) {
+        setCookie(`group_toggle_${parent.id}`, elem.checked ? 'yes' : 'no', 365);
+    }
 }
 
 function isParamAdvanced(p) {
@@ -97,6 +105,7 @@ function genInputs() {
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p)],
             ['main_inputs_area_hidden', null, (p) => !p.visible]]) {
         let area = getRequiredElementById(areaData[0]);
+        area.innerHTML = '';
         let presetArea = areaData[1] ? getRequiredElementById(areaData[1]) : null;
         let html = '', presetHtml = '';
         let lastGroup = null;
@@ -177,97 +186,108 @@ function genInputs() {
             }
         }
     }
-    let inputAspectRatio = getRequiredElementById('input_aspectratio');
-    let inputWidth = getRequiredElementById('input_width');
-    let inputWidthParent = findParentOfClass(inputWidth, 'slider-auto-container');
-    let inputWidthSlider = getRequiredElementById('input_width_rangeslider');
-    let inputHeight = getRequiredElementById('input_height');
-    let inputHeightParent = findParentOfClass(inputHeight, 'slider-auto-container');
-    let inputHeightSlider = getRequiredElementById('input_height_rangeslider');
-    let resGroupLabel = findParentOfClass(inputWidth, 'input-group').querySelector('.header-label');
-    let resTrick = () => {
-        let aspect;
-        if (inputAspectRatio.value == "Custom") {
-            inputWidthParent.style.display = 'block';
-            inputHeightParent.style.display = 'block';
-            aspect = describeAspectRatio(inputWidth.value, inputHeight.value);
+    let inputAspectRatio = document.getElementById('input_aspectratio');
+    if (inputAspectRatio) {
+        let inputWidth = getRequiredElementById('input_width');
+        let inputWidthParent = findParentOfClass(inputWidth, 'slider-auto-container');
+        let inputWidthSlider = getRequiredElementById('input_width_rangeslider');
+        let inputHeight = getRequiredElementById('input_height');
+        let inputHeightParent = findParentOfClass(inputHeight, 'slider-auto-container');
+        let inputHeightSlider = getRequiredElementById('input_height_rangeslider');
+        let resGroupLabel = findParentOfClass(inputWidth, 'input-group').querySelector('.header-label');
+        let resTrick = () => {
+            let aspect;
+            if (inputAspectRatio.value == "Custom") {
+                inputWidthParent.style.display = 'block';
+                inputHeightParent.style.display = 'block';
+                aspect = describeAspectRatio(inputWidth.value, inputHeight.value);
+            }
+            else {
+                inputWidthParent.style.display = 'none';
+                inputHeightParent.style.display = 'none';
+                aspect = inputAspectRatio.value;
+            }
+            resGroupLabel.innerText = `Resolution: ${aspect} (${inputWidth.value}x${inputHeight.value})`;
+        };
+        for (let target of [inputWidth, inputWidthSlider, inputHeight, inputHeightSlider]) {
+            target.addEventListener('input', resTrick);
         }
-        else {
-            inputWidthParent.style.display = 'none';
-            inputHeightParent.style.display = 'none';
-            aspect = inputAspectRatio.value;
-        }
-        resGroupLabel.innerText = `Resolution: ${aspect} (${inputWidth.value}x${inputHeight.value})`;
-    };
-    for (let target of [inputWidth, inputWidthSlider, inputHeight, inputHeightSlider]) {
-        target.addEventListener('input', resTrick);
-    }
-    inputAspectRatio.addEventListener('change', () => {
-        if (inputAspectRatio.value != "Custom") {
-            let aspectRatio = inputAspectRatio.value;
-            let width, height;
-            // "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom"
-            if (aspectRatio == "1:1") { width = 512; height = 512; }
-            else if (aspectRatio == "4:3") { width = 576; height = 448; }
-            else if (aspectRatio == "3:2") { width = 608; height = 416; }
-            else if (aspectRatio == "8:5") { width = 608; height = 384; }
-            else if (aspectRatio == "16:9") { width = 672; height = 384; }
-            else if (aspectRatio == "21:9") { width = 768; height = 320; }
-            else if (aspectRatio == "3:4") { width = 448; height = 576; }
-            else if (aspectRatio == "2:3") { width = 416; height = 608; }
-            else if (aspectRatio == "5:8") { width = 384; height = 608; }
-            else if (aspectRatio == "9:16") { width = 384; height = 672; }
-            else if (aspectRatio == "9:21") { width = 320; height = 768; }
-            inputWidth.value = width * (curModelWidth == 0 ? 512 : curModelWidth) / 512;
-            inputHeight.value = height * (curModelHeight == 0 ? 512 : curModelHeight) / 512;
-            inputWidth.dispatchEvent(new Event('input'));
-            inputHeight.dispatchEvent(new Event('input'));
-        }
+        inputAspectRatio.addEventListener('change', () => {
+            if (inputAspectRatio.value != "Custom") {
+                let aspectRatio = inputAspectRatio.value;
+                let width, height;
+                // "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom"
+                if (aspectRatio == "1:1") { width = 512; height = 512; }
+                else if (aspectRatio == "4:3") { width = 576; height = 448; }
+                else if (aspectRatio == "3:2") { width = 608; height = 416; }
+                else if (aspectRatio == "8:5") { width = 608; height = 384; }
+                else if (aspectRatio == "16:9") { width = 672; height = 384; }
+                else if (aspectRatio == "21:9") { width = 768; height = 320; }
+                else if (aspectRatio == "3:4") { width = 448; height = 576; }
+                else if (aspectRatio == "2:3") { width = 416; height = 608; }
+                else if (aspectRatio == "5:8") { width = 384; height = 608; }
+                else if (aspectRatio == "9:16") { width = 384; height = 672; }
+                else if (aspectRatio == "9:21") { width = 320; height = 768; }
+                inputWidth.value = width * (curModelWidth == 0 ? 512 : curModelWidth) / 512;
+                inputHeight.value = height * (curModelHeight == 0 ? 512 : curModelHeight) / 512;
+                inputWidth.dispatchEvent(new Event('input'));
+                inputHeight.dispatchEvent(new Event('input'));
+            }
+            resTrick();
+        });
         resTrick();
-    });
-    resTrick();
+    }
     shouldApplyDefault = true;
-    for (let param of gen_param_types) {
-        if (param.visible) {
-            let elem = getRequiredElementById(`input_${param.id}`);
-            let cookie = getCookie(`lastparam_input_${param.id}`);
-            if (cookie) {
-                shouldApplyDefault = false;
-                if (param.type == "boolean") {
-                    elem.checked = cookie == "true";
-                }
-                else {
-                    elem.value = cookie;
-                }
-                elem.dispatchEvent(new Event('input'));
-                elem.dispatchEvent(new Event('change'));
-            }
-            elem.addEventListener('change', () => {
-                if (param.type == "boolean") {
-                    setCookie(`lastparam_input_${param.id}`, elem.checked, 0.25);
-                }
-                else {
-                    setCookie(`lastparam_input_${param.id}`, elem.value, 0.25);
-                }
-            });
-            if (param.toggleable) {
-                let toggler = getRequiredElementById(`input_${param.id}_toggle`);
-                let cookie = getCookie(`lastparam_input_${param.id}_toggle`);
+    setTimeout(() => {
+        for (let param of gen_param_types) {
+            if (param.visible) {
+                let elem = getRequiredElementById(`input_${param.id}`);
+                let cookie = getCookie(`lastparam_input_${param.id}`);
                 if (cookie) {
-                    toggler.checked = cookie == "true";
+                    shouldApplyDefault = false;
+                    if (param.type == "boolean") {
+                        elem.checked = cookie == "true";
+                    }
+                    else {
+                        elem.value = cookie;
+                    }
+                    elem.dispatchEvent(new Event('input'));
+                    elem.dispatchEvent(new Event('change'));
                 }
-                doToggleEnable(`input_${param.id}`);
-                toggler.addEventListener('change', () => {
-                    setCookie(`lastparam_input_${param.id}_toggle`, toggler.checked, 0.25);
-                });
+                if (!param.do_not_save) {
+                    elem.addEventListener('change', () => {
+                        if (param.type == "boolean") {
+                            setCookie(`lastparam_input_${param.id}`, elem.checked, 0.25);
+                        }
+                        else {
+                            setCookie(`lastparam_input_${param.id}`, elem.value, 0.25);
+                        }
+                    });
+                }
+                if (param.toggleable) {
+                    let toggler = getRequiredElementById(`input_${param.id}_toggle`);
+                    let cookie = getCookie(`lastparam_input_${param.id}_toggle`);
+                    if (cookie) {
+                        toggler.checked = cookie == "true";
+                    }
+                    doToggleEnable(`input_${param.id}`);
+                    if (!param.do_not_save) {
+                        toggler.addEventListener('change', () => {
+                            setCookie(`lastparam_input_${param.id}_toggle`, toggler.checked, 0.25);
+                        });
+                    }
+                }
             }
         }
-    }
-    let modelCookie = getCookie('selected_model');
-    if (modelCookie) {
-        directSetModel(modelCookie);
-    }
-    hideUnsupportableParams();
+        let modelCookie = getCookie('selected_model');
+        if (modelCookie) {
+            directSetModel(modelCookie);
+        }
+        hideUnsupportableParams();
+        for (let runnable of postParamBuildSteps) {
+            runnable();
+        }
+    }, 1);
 }
 
 function toggle_advanced() {
@@ -426,4 +446,11 @@ function paramSorter(a, b) {
     else {
         return a.group.priority - b.group.priority;
     }
+}
+
+/**
+ * Returns a copy of the parameter name, cleaned for ID format input.
+ */
+function cleanParamName(name) {
+    return name.toLowerCase().replaceAll(/[^a-z]/g, '');
 }

@@ -1,4 +1,4 @@
-let gen_param_types = null;
+let gen_param_types = null, rawGenParamTypesFromServer = null;
 
 let session_id = null;
 
@@ -623,8 +623,9 @@ function genpageLoad() {
         loadBackendTypesMenu();
         genericRequest('ListT2IParams', {}, data => {
             allModels = data.models;
-            gen_param_types = data.list.sort(paramSorter);
-            genInputs(data);
+            rawGenParamTypesFromServer = data.list.sort(paramSorter);
+            gen_param_types = rawGenParamTypesFromServer;
+            genInputs();
             genToolsList();
             reviseStatusBar();
             toggle_advanced();

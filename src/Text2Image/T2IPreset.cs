@@ -43,7 +43,7 @@ public class T2IPreset
     {
         foreach ((string key, string val) in ParamMap)
         {
-            if (T2IParamTypes.Types.ContainsKey(T2IParamTypes.CleanTypeName(key)))
+            if (T2IParamTypes.TryGetType(key, out _, user_input))
             {
                 T2IParamTypes.ApplyParameter(key, val, user_input);
             }

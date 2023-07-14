@@ -3,6 +3,27 @@ let gridGen_axisDiv = null;
 let gridGen_settingsDiv = null;
 let gridGrid_lastAxisId = 0;
 
+function gridGen_fillSelectorOptions(selector) {
+    selector.add(new Option('', '', true, true));
+    for (let option of gen_param_types) {
+        if (!option.extra_hidden && option.id != 'images') {
+            selector.add(new Option(option.name, option.id));
+        }
+    }
+}
+
+function gridGen_rebuildAxes() {
+    if (!gridGen_axisDiv) {
+        return;
+    }
+    for (let selector of gridGen_axisDiv.getElementsByClassName('grid-gen-selector')) {
+        let curVal = selector.value;
+        selector.innerHTML = '';
+        gridGen_fillSelectorOptions(selector);
+        selector.value = curVal;
+    }
+}
+
 function gridGen_addAxis() {
     let id = gridGrid_lastAxisId++;
     let wrapper = createDiv(null, 'grid-gen-axis-wrapper');
@@ -10,9 +31,7 @@ function gridGen_addAxis() {
     axisTypeSelector.className = 'grid-gen-selector';
     axisTypeSelector.id = `grid-gen-axis-type-${id}`;
     axisTypeSelector.add(new Option('', '', true, true));
-    for (let option of gen_param_types) {
-        axisTypeSelector.add(new Option(option.name, option.name));
-    }
+    gridGen_fillSelectorOptions(axisTypeSelector);
     let inputBox = document.createElement('div');
     inputBox.className = 'grid-gen-axis-input';
     inputBox.id = `grid-gen-axis-input-${id}`;
@@ -57,7 +76,7 @@ function gridGen_addAxis() {
         updateInput();
     });
     axisTypeSelector.addEventListener('change', () => {
-        let mode = gen_param_types.find(e => e.name == axisTypeSelector.value);
+        let mode = gen_param_types.find(e => e.id == axisTypeSelector.value);
         if (mode && (mode.values || mode.type == 'model')) {
             fillButton.innerText = 'Fill';
             fillButton.style.visibility = 'visible';
@@ -160,6 +179,7 @@ function gridGen_register() {
 }
 
 if (registerNewTool) {
+    postParamBuildSteps.push(gridGen_rebuildAxes);
     sessionReadyCallbacks.push(() => {
         gridGen_register();
     });

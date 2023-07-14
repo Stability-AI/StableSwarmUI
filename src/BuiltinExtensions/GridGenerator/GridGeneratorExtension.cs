@@ -222,7 +222,7 @@ public class GridGeneratorExtension : Extension
         {
             foreach ((string key, JToken val) in (raw["baseParams"] as JObject))
             {
-                if (T2IParamTypes.Types.ContainsKey(T2IParamTypes.CleanTypeName(key)))
+                if (T2IParamTypes.TryGetType(key, out _, baseParams))
                 {
                     T2IParamTypes.ApplyParameter(key, val.ToString(), baseParams);
                 }

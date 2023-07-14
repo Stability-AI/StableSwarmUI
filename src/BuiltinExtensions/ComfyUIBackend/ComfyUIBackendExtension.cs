@@ -30,6 +30,27 @@ public class ComfyUIBackendExtension : Extension
         Program.ModelRefreshEvent += Refresh;
         ScriptFiles.Add("Assets/comfy_workflow_editor_helper.js");
         StyleSheetFiles.Add("Assets/comfy_workflow_editor.css");
+        T2IParamTypes.FakeTypeProviders.Add(DynamicParamGenerator);
+    }
+
+    public override void OnShutdown()
+    {
+        T2IParamTypes.FakeTypeProviders.Remove(DynamicParamGenerator);
+    }
+
+    public static T2IParamType FakeRawInputType = new("comfyworkflowraw", "", "", Type: T2IParamDataType.TEXT, ID: "comfyworkflowraw", HideFromMetadata: true); // TODO: Setting to toggle metadata
+
+    public T2IParamType DynamicParamGenerator(string name, T2IParamInput context)
+    {
+        if (name == "comfyworkflowraw")
+        {
+            return FakeRawInputType;
+        }
+        else if (name.StartsWith("comfyrawworkflowinput") && context.ValuesInput.ContainsKey("comfyworkflowraw"))
+        {
+            return FakeRawInputType with { Name = name, ID = name, HideFromMetadata = false };
+        }
+        return null;
     }
 
     public void Refresh()
@@ -80,9 +101,9 @@ public class ComfyUIBackendExtension : Extension
             .FirstOrDefault(b => b is not null);
         if (backend is null)
         {
-            context.Response.ContentType = "text/plain";
+            context.Response.ContentType = "text/html";
             context.Response.StatusCode = 400;
-            await context.Response.WriteAsync("No ComfyUI backend available, loading failed.");
+            await context.Response.WriteAsync("<!DOCTYPE html><html><head><stylesheet>body{background-color:#101010;color:#eeeeee;}</stylesheet></head><body><span class=\"comfy-failed-to-load\">No ComfyUI backend available, loading failed.</span></body></html>");
             await context.Response.CompleteAsync();
             return;
         }
@@ -100,6 +121,7 @@ public class ComfyUIBackendExtension : Extension
         {
             WebSocket socket = await context.WebSockets.AcceptWebSocketAsync();
             ClientWebSocket outSocket = new();
+            outSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
             string scheme = backend.Address.BeforeAndAfter("://", out string addr);
             scheme = scheme == "http" ? "ws" : "wss";
             await outSocket.ConnectAsync(new Uri($"{scheme}://{addr}/{path}"), Program.GlobalProgramCancel);
@@ -109,8 +131,12 @@ public class ComfyUIBackendExtension : Extension
                 {
                     while (true)
                     {
-                        JObject input = await socket.ReceiveJson(TimeSpan.FromMinutes(2), 10 * 1024 * 1024); // TODO: Configurable limits
-                        await outSocket.SendJson(input, TimeSpan.FromMinutes(1));
+                        // TODO: Should this input be allowed to remain open forever? Need a timeout, but the ComfyUI websocket doesn't seem to keepalive properly.
+                        JObject input = await socket.ReceiveJson(10 * 1024 * 1024, true); // TODO: Configurable limits
+                        if (input is not null)
+                        {
+                            await outSocket.SendJson(input, TimeSpan.FromMinutes(2));
+                        }
                         if (socket.CloseStatus.HasValue)
                         {
                             await outSocket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, Program.GlobalProgramCancel);
@@ -129,8 +155,11 @@ public class ComfyUIBackendExtension : Extension
                 {
                     while (true)
                     {
-                        JObject output = await outSocket.ReceiveJson(TimeSpan.FromMinutes(2), 10 * 1024 * 1024);
-                        await socket.SendJson(output, TimeSpan.FromMinutes(1));
+                        JObject output = await outSocket.ReceiveJson(10 * 1024 * 1024, true);
+                        if (output is not null)
+                        {
+                            await socket.SendJson(output, TimeSpan.FromMinutes(2));
+                        }
                         if (socket.CloseStatus.HasValue)
                         {
                             await socket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, Program.GlobalProgramCancel);

@@ -148,7 +148,7 @@ public partial class GridGenCore
             bool isSplitByDoublePipe = listStr.Contains("||");
             List<string> valuesList = listStr.Split(isSplitByDoublePipe ? "||" : ",").ToList();
             ModeName = T2IParamTypes.CleanNameGeneric(id);
-            if (!T2IParamTypes.Types.TryGetValue(T2IParamTypes.CleanTypeName(ModeName), out Mode))
+            if (!T2IParamTypes.TryGetType(T2IParamTypes.CleanTypeName(ModeName), out Mode, grid.InitialParams))
             {
                 throw new Exception($"Invalid axis mode '{Mode}' from '{id}': unknown mode");
             }
@@ -273,7 +273,7 @@ public partial class GridGenCore
         {
             foreach (KeyValuePair<string, string> pair in Params)
             {
-                T2IParamType mode = T2IParamTypes.Types[T2IParamTypes.CleanTypeName(pair.Key)];
+                T2IParamType mode = T2IParamTypes.GetType(pair.Key, p);
                 p.Set(mode, pair.Value);
             }
             GridCallApplyHook?.Invoke(this, p, dry);

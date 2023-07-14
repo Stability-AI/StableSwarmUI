@@ -86,7 +86,7 @@ public static class T2IAPI
         {
             foreach ((string key, JToken val) in rawInput)
             {
-                if (T2IParamTypes.Types.ContainsKey(T2IParamTypes.CleanTypeName(key)))
+                if (T2IParamTypes.TryGetType(key, out _, user_input))
                 {
                     T2IParamTypes.ApplyParameter(key, val.ToString(), user_input);
                 }

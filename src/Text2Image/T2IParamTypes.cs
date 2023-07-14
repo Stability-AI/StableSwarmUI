@@ -3,7 +3,6 @@ using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
-using StableSwarmUI.DataHolders;
 using StableSwarmUI.Utils;
 using System.IO;
 
@@ -67,13 +66,14 @@ public enum NumberViewType
 /// <param name="OrderPriority">Value to help sort parameter types appropriately.</param>
 /// <param name="Group">Optional grouping info.</param>
 /// <param name="NumberView">How to display a number input.</param>
+/// <param name="HideFromMetadata">Whether to hide this parameter from image metadata.</param>
 /// <param name="Type">The type of the type - text vs integer vs etc (will be set when registering).</param>
 /// <param name="ID">The raw ID of this parameter (will be set when registering).</param>
 /// 
 public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null,
-    NumberViewType NumberView = NumberViewType.SMALL, T2IParamDataType Type = T2IParamDataType.UNSET, string ID = null)
+    NumberViewType NumberView = NumberViewType.SMALL, bool HideFromMetadata = false, T2IParamDataType Type = T2IParamDataType.UNSET, string ID = null)
 {
     public JObject ToNet(Session session)
     {
@@ -187,6 +187,9 @@ public class T2IParamTypes
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity;
     public static T2IRegisteredParam<Image> InitImage;
     public static T2IRegisteredParam<T2IModel> Model;
+
+    /// <summary>(For extensions) list of functions that provide fake types for given type names.</summary>
+    public static List<Func<string, T2IParamInput, T2IParamType>> FakeTypeProviders = new();
 
     /// <summary>(Called by <see cref="Program"/> during startup) registers all default parameter types.</summary>
     public static void RegisterDefaults()
@@ -351,7 +354,7 @@ public class T2IParamTypes
     /// <summary>Takes user input of a parameter and applies it to the parameter tracking data object.</summary>
     public static void ApplyParameter(string paramTypeName, string value, T2IParamInput data)
     {
-        if (!Types.TryGetValue(CleanTypeName(paramTypeName), out T2IParamType type))
+        if (!TryGetType(paramTypeName, out T2IParamType type, data))
         {
             throw new InvalidDataException("Unrecognized parameter type name.");
         }
@@ -371,9 +374,30 @@ public class T2IParamTypes
     }
 
     /// <summary>Gets the type data for a given type name.</summary>
-    public static T2IParamType GetType(string name)
+    public static T2IParamType GetType(string name, T2IParamInput context)
     {
         name = CleanTypeName(name);
-        return Types.GetValueOrDefault(name);
+        T2IParamType result = Types.GetValueOrDefault(name);
+        if (result is not null)
+        {
+            return result;
+        }
+        foreach (Func<string, T2IParamInput, T2IParamType> provider in FakeTypeProviders)
+        {
+            result = provider(name, context);
+            if (result is not null)
+            {
+                return result;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>Tries to get the type data for a given type name, returning whether it was found, and outputting the type if it was found.</summary>
+    public static bool TryGetType(string name, out T2IParamType type, T2IParamInput context)
+    {
+        name = CleanTypeName(name);
+        type = GetType(name, context);
+        return type is not null;
     }
 }

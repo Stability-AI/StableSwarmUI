@@ -432,3 +432,15 @@ function readFileText(file, handler) {
     };
     reader.readAsText(file);
 }
+
+/**
+ * Converts a number to a string of letters, where 1=a, 2=b, 3=c, ..., 26=aa, 27=ab, etc.
+ */
+function numberToLetters(id) {
+    if (id > 26) {
+        let rem = id % 26;
+        id /= 26;
+        return inputIdToName(id) + inputIdToName(rem);
+    }
+    return String.fromCharCode(id + 'a'.charCodeAt(0));
+}

@@ -66,6 +66,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         //Logs.Debug($"ComfyUI prompt said: {result}");
         if (result.ContainsKey("error"))
         {
+            Logs.Debug($"Error came from prompt: {workflow}");
             Logs.Error($"ComfyUI error: {result}");
             throw new Exception("ComfyUI errored");
         }
@@ -107,13 +108,21 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
-        string workflow;
-        if (user_input.TryGet(ComfyUIBackendExtension.WorkflowParam, out string workflowName))
+        string workflow = null;
+        if (user_input.TryGetRaw(ComfyUIBackendExtension.FakeRawInputType, out object workflowRaw))
+        {
+            workflow = (string)workflowRaw;
+            workflow = workflow.Replace("\"%%_COMFYFIXME_${", "${").Replace("}_ENDFIXME_%%\"", "}");
+        }
+        else if (user_input.TryGet(ComfyUIBackendExtension.WorkflowParam, out string workflowName))
         {
             if (!ComfyUIBackendExtension.Workflows.TryGetValue(workflowName, out workflow))
             {
                 throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
             }
+        }
+        if (workflow is not null)
+        {
             workflow = StringConversionHelper.QuickSimpleTagFiller(workflow, "${", "}", (tag) => {
                 string tagName = tag.BeforeAndAfter(':', out string defVal);
                 string filled = tagName switch
@@ -134,7 +143,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "comfy_scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam),
                     "model" => user_input.Get(T2IParamTypes.Model).Name.Replace('/', Path.DirectorySeparatorChar),
                     "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
-                    _ => user_input.GetRaw(T2IParamTypes.GetType(tagName))?.ToString()
+                    _ => user_input.GetRaw(T2IParamTypes.GetType(tagName, user_input))?.ToString()
                 };
                 filled ??= defVal;
                 return Utilities.EscapeJsonString(filled);

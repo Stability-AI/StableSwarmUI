@@ -1,8 +1,23 @@
 .comfy_workflow_frame {
     width: 100%;
-    height: 100%;
+    height: calc(100% - 3rem);
 }
 .comfy_workflow_frameholder {
     width: 100%;
     height: 100%;
+}
+.comfy_workflow_buttons {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+.comfy_workflow_buttons_actual {
+    position: relative;
+    top: 1rem;
+    width: fit-content;
+    height: fit-content;
+    padding: 1rem;
+    border: 1px solid var(--shadow);
+    border-radius: 1rem;
+    background-color: var(--background-soft);
 }

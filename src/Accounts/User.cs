@@ -158,7 +158,7 @@ public class User
                 "var_strength" => $"{user_input.Get(T2IParamTypes.VariationSeedStrength)}",
                 "model" => user_input.Get(T2IParamTypes.Model)?.Name ?? "unknown",
                 "user_name" => UserID,
-                string other => user_input.TryGetRaw(T2IParamTypes.GetType(other), out object val) ? val.ToString() : null
+                string other => user_input.TryGetRaw(T2IParamTypes.GetType(other, user_input), out object val) ? val.ToString() : null
             };
             if (data is null)
             {

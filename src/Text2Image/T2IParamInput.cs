@@ -44,6 +44,10 @@ public class T2IParamInput
         JObject output = new();
         foreach ((string key, object val) in ValuesInput.Union(extraParams))
         {
+            if (!T2IParamTypes.TryGetType(key, out T2IParamType type, this) || type.HideFromMetadata)
+            {
+                continue;
+            }
             if (val is Image)
             {
                 continue;

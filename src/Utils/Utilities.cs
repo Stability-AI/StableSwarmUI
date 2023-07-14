@@ -71,9 +71,8 @@ public static class Utilities
     }
 
     /// <summary>Receive raw binary data from a WebSocket.</summary>
-    public static async Task<byte[]> ReceiveData(this WebSocket socket, TimeSpan maxDuration, int maxBytes)
+    public static async Task<byte[]> ReceiveData(this WebSocket socket, int maxBytes, CancellationToken limit)
     {
-        CancellationToken limit = TimedCancel(maxDuration);
         byte[] buffer = new byte[8192];
         using MemoryStream ms = new();
         WebSocketReceiveResult result;
@@ -86,11 +85,32 @@ public static class Utilities
         return ms.ToArray();
     }
 
+    /// <summary>Receive raw binary data from a WebSocket.</summary>
+    public static async Task<byte[]> ReceiveData(this WebSocket socket, TimeSpan maxDuration, int maxBytes)
+    {
+        return await ReceiveData(socket, maxBytes, TimedCancel(maxDuration));
+    }
+
     /// <summary>Receive JSON data from a WebSocket.</summary>
-    public static async Task<JObject> ReceiveJson(this WebSocket socket, TimeSpan maxDuration, int maxBytes)
+    public static async Task<JObject> ReceiveJson(this WebSocket socket, int maxBytes, bool nullOnEmpty = false)
+    {
+        string raw = Encoding.UTF8.GetString(await ReceiveData(socket, maxBytes, Program.GlobalProgramCancel));
+        if (nullOnEmpty && string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+        return raw.ParseToJson();
+    }
+
+    /// <summary>Receive JSON data from a WebSocket.</summary>
+    public static async Task<JObject> ReceiveJson(this WebSocket socket, TimeSpan maxDuration, int maxBytes, bool nullOnEmpty = false)
     {
         string raw = Encoding.UTF8.GetString(await ReceiveData(socket, maxDuration, maxBytes));
-        return JObject.Parse(raw);
+        if (nullOnEmpty && string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+        return raw.ParseToJson();
     }
 
     /// <summary>Converts the JSON data to predictable basic data.</summary>
