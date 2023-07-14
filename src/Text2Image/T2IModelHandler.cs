@@ -120,10 +120,8 @@ public class T2IModelHandler
                     return (ldb, ldb.GetCollection<ModelMetadataStore>("models"));
                 }).Item2;
             }
-            catch (Exception ex)
-            {
-                return null;
-            }
+            catch (UnauthorizedAccessException) { return null; }
+            catch (IOException) { return null; }
         }
     }
 
