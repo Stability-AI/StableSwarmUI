@@ -143,13 +143,13 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "comfy_scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam),
                     "model" => user_input.Get(T2IParamTypes.Model).Name.Replace('/', Path.DirectorySeparatorChar),
                     "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
-                    _ => user_input.GetRaw(T2IParamTypes.GetType(tagName, user_input))?.ToString()
+                    _ => user_input.GetRaw(T2IParamTypes.GetType(tagBasic, user_input))?.ToString()
                 };
-                filled ??= defVal;
                 if (tagExtra == "seed" && filled == "-1")
                 {
                     filled = $"{Random.Shared.Next()}";
                 }
+                filled ??= defVal;
                 return Utilities.EscapeJsonString(filled);
             });
         }
