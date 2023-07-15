@@ -52,6 +52,7 @@ public enum NumberViewType
 /// <param name="Default">A default value for this parameter.</param>
 /// <param name="Min">(For numeric types) the minimum value.</param>
 /// <param name="Max">(For numeric types) the maximum value.</param>
+/// <param name="ViewMax">(For numeric types) the *visual* maximum value (allowed to exceed).</param>
 /// <param name="Step">(For numeric types) the step rate for UI usage.</param>
 /// <param name="Clean">An optional special method to clean up text input (input = prior,new). Prior can be null.</param>
 /// <param name="GetValues">A method that returns a list of valid values, for input validation.</param>
@@ -70,7 +71,7 @@ public enum NumberViewType
 /// <param name="Type">The type of the type - text vs integer vs etc (will be set when registering).</param>
 /// <param name="ID">The raw ID of this parameter (will be set when registering).</param>
 /// 
-public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1,
+public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMax = 0,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null,
     NumberViewType NumberView = NumberViewType.SMALL, bool HideFromMetadata = false, T2IParamDataType Type = T2IParamDataType.UNSET, string ID = null)
@@ -86,6 +87,7 @@ public record class T2IParamType(string Name, string Description, string Default
             ["default"] = Default,
             ["min"] = Min,
             ["max"] = Max,
+            ["view_max"] = ViewMax,
             ["step"] = Step,
             ["values"] = GetValues == null ? null : JToken.FromObject(GetValues(session)),
             ["examples"] = Examples == null ? null : JToken.FromObject(Examples),
@@ -204,11 +206,11 @@ public class T2IParamTypes
         Images = Register<int>(new("Images", "How many images to generate at once.",
             "1", Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: coreGroup
             ));
-        Steps = Register<int>(new("Steps", "How many times to run the model.\nMore steps = better quality, but more time.\n20 is a good baseline for speed, 40 is good for maximizing quality.\nYou can go much higher, but it quickly becomes pointless above 70 or so.",
-            "20", Min: 1, Max: 200, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: coreGroup
-            ));
         Seed = Register<long>(new("Seed", "Image seed.\n-1 = random.",
-            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -19, NumberView: NumberViewType.BIG, Group: coreGroup
+            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -30, NumberView: NumberViewType.BIG, Group: coreGroup
+            ));
+        Steps = Register<int>(new("Steps", "How many times to run the model.\nMore steps = better quality, but more time.\n20 is a good baseline for speed, 40 is good for maximizing quality.\nYou can go much higher, but it quickly becomes pointless above 70 or so.",
+            "20", Min: 1, Max: 200, ViewMax: 100, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: coreGroup, NumberView: NumberViewType.SLIDER
             ));
         CFGScale = Register<double>(new("CFG Scale", "How strongly to scale prompt input.\nToo-high values can cause corrupted/burnt images, too-low can cause nonsensical images.\n7 is a good baseline. Normal usages vary between 5 and 9.",
             "7", Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER, Group: coreGroup

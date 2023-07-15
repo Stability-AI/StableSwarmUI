@@ -193,7 +193,7 @@ function load_image_file(e) {
     }
 }
 
-function makeSliderInput(featureid, id, name, description, value, min, max, step = 1, isPot = false, toggles = false) {
+function makeSliderInput(featureid, id, name, description, value, min, max, view_max = 0, step = 1, isPot = false, toggles = false) {
     name = escapeHtml(name);
     description = escapeHtml(description);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
@@ -207,7 +207,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, step
         <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
         <br>
         <div class="toggler-overlay"></div>
-        <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
+        <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
     </div></div>`;
 }
 

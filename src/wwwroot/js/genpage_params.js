@@ -23,10 +23,10 @@ function getHtmlForParam(param, prefix, textRows = 2) {
                     case 'big':
                         return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop};
                     case 'slider':
-                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop,
+                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.view_max || param.max, param.step, false, param.toggleable) + pop,
                             runnable: () => enableSliderForBox(findParentOfClass(getRequiredElementById(`${prefix}${param.id}`), 'auto-slider-box'))};
                     case 'pot_slider':
-                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop,
+                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.view_max || param.max, param.step, true, param.toggleable) + pop,
                             runnable: () => enableSliderForBox(findParentOfClass(getRequiredElementById(`${prefix}${param.id}`), 'auto-slider-box'))};
                 }
                 break;
@@ -99,8 +99,10 @@ function isParamAdvanced(p) {
     return p.group ? p.group.advanced : p.advanced;
 }
 
-function genInputs() {
+function genInputs(delay_final = false) {
     let runnables = [];
+    let groupsClose = [];
+    let groupsEnable = [];
     for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !isParamAdvanced(p)],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p)],
             ['main_inputs_area_hidden', null, (p) => !p.visible]]) {
@@ -109,8 +111,6 @@ function genInputs() {
         let presetArea = areaData[1] ? getRequiredElementById(areaData[1]) : null;
         let html = '', presetHtml = '';
         let lastGroup = null;
-        let groupsClose = [];
-        let groupsEnable = [];
         for (let param of gen_param_types.filter(areaData[2])) {
             let groupName = param.group ? param.group.name : null;
             if (groupName != lastGroup) {
@@ -159,6 +159,8 @@ function genInputs() {
         if (presetArea) {
             presetArea.innerHTML = presetHtml;
         }
+    }
+    let final = () => {
         for (let runnable of runnables) {
             runnable();
         }
@@ -177,68 +179,66 @@ function genInputs() {
                 doToggleGroup(`input_group_content_${group}`);
             }
         }
-    }
-    for (let param of gen_param_types) {
-        if (param.visible) {
-            if (param.toggleable) {
-                doToggleEnable(`input_${param.id}`);
-                doToggleEnable(`preset_input_${param.id}`);
+        for (let param of gen_param_types) {
+            if (param.visible) {
+                if (param.toggleable) {
+                    doToggleEnable(`input_${param.id}`);
+                    doToggleEnable(`preset_input_${param.id}`);
+                }
             }
         }
-    }
-    let inputAspectRatio = document.getElementById('input_aspectratio');
-    if (inputAspectRatio) {
-        let inputWidth = getRequiredElementById('input_width');
-        let inputWidthParent = findParentOfClass(inputWidth, 'slider-auto-container');
-        let inputWidthSlider = getRequiredElementById('input_width_rangeslider');
-        let inputHeight = getRequiredElementById('input_height');
-        let inputHeightParent = findParentOfClass(inputHeight, 'slider-auto-container');
-        let inputHeightSlider = getRequiredElementById('input_height_rangeslider');
-        let resGroupLabel = findParentOfClass(inputWidth, 'input-group').querySelector('.header-label');
-        let resTrick = () => {
-            let aspect;
-            if (inputAspectRatio.value == "Custom") {
-                inputWidthParent.style.display = 'block';
-                inputHeightParent.style.display = 'block';
-                aspect = describeAspectRatio(inputWidth.value, inputHeight.value);
+        let inputAspectRatio = document.getElementById('input_aspectratio');
+        if (inputAspectRatio) {
+            let inputWidth = getRequiredElementById('input_width');
+            let inputWidthParent = findParentOfClass(inputWidth, 'slider-auto-container');
+            let inputWidthSlider = getRequiredElementById('input_width_rangeslider');
+            let inputHeight = getRequiredElementById('input_height');
+            let inputHeightParent = findParentOfClass(inputHeight, 'slider-auto-container');
+            let inputHeightSlider = getRequiredElementById('input_height_rangeslider');
+            let resGroupLabel = findParentOfClass(inputWidth, 'input-group').querySelector('.header-label');
+            let resTrick = () => {
+                let aspect;
+                if (inputAspectRatio.value == "Custom") {
+                    inputWidthParent.style.display = 'block';
+                    inputHeightParent.style.display = 'block';
+                    aspect = describeAspectRatio(inputWidth.value, inputHeight.value);
+                }
+                else {
+                    inputWidthParent.style.display = 'none';
+                    inputHeightParent.style.display = 'none';
+                    aspect = inputAspectRatio.value;
+                }
+                resGroupLabel.innerText = `Resolution: ${aspect} (${inputWidth.value}x${inputHeight.value})`;
+            };
+            for (let target of [inputWidth, inputWidthSlider, inputHeight, inputHeightSlider]) {
+                target.addEventListener('input', resTrick);
             }
-            else {
-                inputWidthParent.style.display = 'none';
-                inputHeightParent.style.display = 'none';
-                aspect = inputAspectRatio.value;
-            }
-            resGroupLabel.innerText = `Resolution: ${aspect} (${inputWidth.value}x${inputHeight.value})`;
-        };
-        for (let target of [inputWidth, inputWidthSlider, inputHeight, inputHeightSlider]) {
-            target.addEventListener('input', resTrick);
-        }
-        inputAspectRatio.addEventListener('change', () => {
-            if (inputAspectRatio.value != "Custom") {
-                let aspectRatio = inputAspectRatio.value;
-                let width, height;
-                // "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom"
-                if (aspectRatio == "1:1") { width = 512; height = 512; }
-                else if (aspectRatio == "4:3") { width = 576; height = 448; }
-                else if (aspectRatio == "3:2") { width = 608; height = 416; }
-                else if (aspectRatio == "8:5") { width = 608; height = 384; }
-                else if (aspectRatio == "16:9") { width = 672; height = 384; }
-                else if (aspectRatio == "21:9") { width = 768; height = 320; }
-                else if (aspectRatio == "3:4") { width = 448; height = 576; }
-                else if (aspectRatio == "2:3") { width = 416; height = 608; }
-                else if (aspectRatio == "5:8") { width = 384; height = 608; }
-                else if (aspectRatio == "9:16") { width = 384; height = 672; }
-                else if (aspectRatio == "9:21") { width = 320; height = 768; }
-                inputWidth.value = width * (curModelWidth == 0 ? 512 : curModelWidth) / 512;
-                inputHeight.value = height * (curModelHeight == 0 ? 512 : curModelHeight) / 512;
-                inputWidth.dispatchEvent(new Event('input'));
-                inputHeight.dispatchEvent(new Event('input'));
-            }
+            inputAspectRatio.addEventListener('change', () => {
+                if (inputAspectRatio.value != "Custom") {
+                    let aspectRatio = inputAspectRatio.value;
+                    let width, height;
+                    // "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom"
+                    if (aspectRatio == "1:1") { width = 512; height = 512; }
+                    else if (aspectRatio == "4:3") { width = 576; height = 448; }
+                    else if (aspectRatio == "3:2") { width = 608; height = 416; }
+                    else if (aspectRatio == "8:5") { width = 608; height = 384; }
+                    else if (aspectRatio == "16:9") { width = 672; height = 384; }
+                    else if (aspectRatio == "21:9") { width = 768; height = 320; }
+                    else if (aspectRatio == "3:4") { width = 448; height = 576; }
+                    else if (aspectRatio == "2:3") { width = 416; height = 608; }
+                    else if (aspectRatio == "5:8") { width = 384; height = 608; }
+                    else if (aspectRatio == "9:16") { width = 384; height = 672; }
+                    else if (aspectRatio == "9:21") { width = 320; height = 768; }
+                    inputWidth.value = width * (curModelWidth == 0 ? 512 : curModelWidth) / 512;
+                    inputHeight.value = height * (curModelHeight == 0 ? 512 : curModelHeight) / 512;
+                    inputWidth.dispatchEvent(new Event('input'));
+                    inputHeight.dispatchEvent(new Event('input'));
+                }
+                resTrick();
+            });
             resTrick();
-        });
-        resTrick();
-    }
-    shouldApplyDefault = true;
-    setTimeout(() => {
+        }
+        shouldApplyDefault = true;
         for (let param of gen_param_types) {
             if (param.visible) {
                 let elem = getRequiredElementById(`input_${param.id}`);
@@ -287,7 +287,15 @@ function genInputs() {
         for (let runnable of postParamBuildSteps) {
             runnable();
         }
-    }, 1);
+    };
+    if (delay_final) {
+        setTimeout(() => {
+            final();
+        }, 1);
+    }
+    else {
+        final();
+    }
 }
 
 function toggle_advanced() {

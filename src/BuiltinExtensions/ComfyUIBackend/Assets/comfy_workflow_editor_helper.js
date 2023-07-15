@@ -163,8 +163,23 @@ function comfyBuildParams(callback) {
                 node.inputs.text = "${negativeprompt}";
                 continue;
             }
+            else if (['KSampler', 'KSamplerAdvanced'].includes(node.class_type) && !defaultParamsRetain.includes('seed')) {
+                defaultParamsRetain.push('seed', 'steps', 'comfyuisampler', 'comfyuischeduler', 'cfgscale');
+                node.inputs.seed = "%%_COMFYFIXME_${seed:" + node.inputs.seed + "}_ENDFIXME_%%";
+                node.inputs.steps = "%%_COMFYFIXME_${steps:" + node.inputs.steps + "}_ENDFIXME_%%";
+                node.inputs.sampler_name = "${comfy_sampler:" + node.inputs.sampler_name + "}";
+                node.inputs.scheduler = "${comfy_scheduler:" + node.inputs.scheduler + "}";
+                node.inputs.cfg = "%%_COMFYFIXME_${cfg_scale:" + node.inputs.cfg + "}_ENDFIXME_%%";
+                // No continue, other params exist
+            }
             for (let inputId of Object.keys(node.inputs)) {
                 let val = node.inputs[inputId];
+                if (`${val}`.startsWith('${') || `${val}`.startsWith('%%_COMFYFIXME_${')) {
+                    continue;
+                }
+                if (['KSampler', 'KSamplerAdvanced'].includes(node.class_type) && inputId == 'control_after_generate') {
+                    continue;
+                }
                 let type, values = null, min = -9999999999, max = 9999999999, number_view_type = 'big', step = 1;
                 let inputLabel = labelAlterations[`${nodeId}.${inputId}`] || inputId;
                 let inputIdDirect = cleanParamName(`${inputPrefix}${groupLabel}${inputId}`);
@@ -260,7 +275,7 @@ function replaceParamsToComfy() {
             actualParams.push(param);
         }
         gen_param_types = actualParams;
-        genInputs();
+        genInputs(true);
         let area = getRequiredElementById('main_inputs_area');
         area.innerHTML = '<button class="basic-button" onclick="comfyParamsDisable()">Disable Custom ComfyUI Workflow</button>\n' + area.innerHTML;
     });
@@ -271,7 +286,7 @@ function replaceParamsToComfy() {
  */
 function comfyParamsDisable() {
     gen_param_types = rawGenParamTypesFromServer;
-    genInputs();
+    genInputs(true);
 }
 
 /**
