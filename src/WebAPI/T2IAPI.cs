@@ -128,7 +128,7 @@ public static class T2IAPI
             }
             int index = i;
             T2IParamInput thisParams = user_input.Clone();
-            thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed));
+            thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed) + index);
             tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, claim, output, setError, isWS, 2, // TODO: Max timespan configurable
                 (outputs) =>
                 {
