@@ -37,6 +37,10 @@ th {
     background-color: #202020;
     background-clip: padding-box;
 }
+table tr td:first-child {
+    position: sticky;
+    left: -1px;
+}
 .popup_modal_background {
     font-family: monospace, monospace;
     background-color: rgb(50, 50, 50, 0.7);

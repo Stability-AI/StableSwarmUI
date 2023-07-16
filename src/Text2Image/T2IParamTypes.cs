@@ -206,7 +206,7 @@ public class T2IParamTypes
         Images = Register<int>(new("Images", "How many images to generate at once.",
             "1", Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: coreGroup
             ));
-        Seed = Register<long>(new("Seed", "Image seed.\n-1 = random.",
+        Seed = Register<long>(new("Seed", "Image seed.\n-1 = random.\nDifferent seeds produce different results for the same prompt.",
             "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -30, NumberView: NumberViewType.BIG, Group: coreGroup
             ));
         Steps = Register<int>(new("Steps", "How many times to run the model.\nMore steps = better quality, but more time.\n20 is a good baseline for speed, 40 is good for maximizing quality.\nYou can go much higher, but it quickly becomes pointless above 70 or so.",
