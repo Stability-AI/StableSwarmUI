@@ -210,10 +210,6 @@ function canShowVal(axis, val) {
     return document.getElementById(`showval_${axis}__${val}`).checked;
 }
 
-function getScoreFor(img) {
-    return (((all_metadata[img] || {})['sui_image_params'] || {})['scoring'] || {})['average'] || null;
-}
-
 function percentToRedGreen(percent) {
     return `color-mix(in srgb, red, green ${percent}%)`;
 }
@@ -259,9 +255,12 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         let actualUrl = slashed + '.' + rawData.ext;
         let id = scoreTrackCounter++;
         newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
-        let newScr = document.createElement('script');
-        newScr.src = `${slashed}.metadata.js`;
-        if (scoreDisplay != 'None') {
+        let newScr = null;
+        if (getMetadataScriptFor) {
+            let newScr = document.createElement('script');
+            newScr.src = getMetadataScriptFor(slashed);
+        }
+        if (scoreDisplay != 'None' && getScoreFor) {
             scoreUpdates.push(() => {
                 let score = getScoreFor(slashed);
                 if (score) {
@@ -286,34 +285,36 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                     elem.firstChild.innerHTML = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(score * 100)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: ${blockColor}"></div></div>`;
                 }
             });
-            newScr.onload = () => {
-                setTimeout(() => {
-                    lastScoreBump = Date.now();
-                }, 1);
-                if (scoreBumpTracker == null) {
-                    scoreBumpTracker = setInterval(() => {
-                        if (Date.now() - lastScoreBump > 300) {
-                            clearInterval(scoreBumpTracker);
-                            scoreBumpTracker = null;
-                            scoreMin = 1;
-                            scoreMax = 0;
-                            for (let image of document.getElementsByClassName('table_img')) {
-                                let score = getScoreFor(image.dataset.imgPath);
-                                if (score) {
-                                    scoreMin = Math.min(scoreMin, score);
-                                    scoreMax = Math.max(scoreMax, score);
+            if (newScr && getScoreFor) {
+                newScr.onload = () => {
+                    setTimeout(() => {
+                        lastScoreBump = Date.now();
+                    }, 1);
+                    if (scoreBumpTracker == null) {
+                        scoreBumpTracker = setInterval(() => {
+                            if (Date.now() - lastScoreBump > 300) {
+                                clearInterval(scoreBumpTracker);
+                                scoreBumpTracker = null;
+                                scoreMin = 1;
+                                scoreMax = 0;
+                                for (let image of document.getElementsByClassName('table_img')) {
+                                    let score = getScoreFor(image.dataset.imgPath);
+                                    if (score) {
+                                        scoreMin = Math.min(scoreMin, score);
+                                        scoreMax = Math.max(scoreMax, score);
+                                    }
                                 }
+                                let upds = scoreUpdates;
+                                scoreUpdates = [];
+                                for (let update of upds) {
+                                    update();
+                                }
+                                updateScaling();
                             }
-                            let upds = scoreUpdates;
-                            scoreUpdates = [];
-                            for (let update of upds) {
-                                update();
-                            }
-                            updateScaling();
-                        }
-                    }, 100);
-                }
-            };
+                        }, 100);
+                    }
+                };
+            }
         }
         scriptDump.appendChild(newScr);
     }
