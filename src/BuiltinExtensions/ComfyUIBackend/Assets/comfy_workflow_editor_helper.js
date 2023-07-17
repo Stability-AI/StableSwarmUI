@@ -246,7 +246,7 @@ function comfyBuildParams(callback) {
                     else {
                         type = 'text';
                     }
-                    node.inputs[inputId] = "${" + inputIdDirect + ":" + val.replaceAll('${', '${STARTBRACE}').replaceAll('}', '${ENDBRACE}') + "}";
+                    node.inputs[inputId] = "${" + inputIdDirect + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
                 }
                 else {
                     continue;

@@ -3,7 +3,6 @@
 */
 
 let suppressUpdate = true;
-let all_metadata = {};
 
 function loadData() {
     let rawHash = window.location.hash;
@@ -40,6 +39,7 @@ function loadData() {
     document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
     document.getElementById('score_display').addEventListener('click', fillTable);
+    document.getElementById('score_setting').style.display = typeof getScoreFor == 'undefined' ? 'none' : 'inline-block';
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
@@ -256,11 +256,11 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         let id = scoreTrackCounter++;
         newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
         let newScr = null;
-        if (getMetadataScriptFor) {
+        if (typeof getMetadataScriptFor != 'undefined') {
             let newScr = document.createElement('script');
             newScr.src = getMetadataScriptFor(slashed);
         }
-        if (scoreDisplay != 'None' && getScoreFor) {
+        if (scoreDisplay != 'None' && typeof getScoreFor != 'undefined') {
             scoreUpdates.push(() => {
                 let score = getScoreFor(slashed);
                 if (score) {
@@ -285,7 +285,7 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                     elem.firstChild.innerHTML = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(score * 100)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: ${blockColor}"></div></div>`;
                 }
             });
-            if (newScr && getScoreFor) {
+            if (newScr && typeof getScoreFor != 'undefined') {
                 newScr.onload = () => {
                     setTimeout(() => {
                         lastScoreBump = Date.now();
@@ -316,7 +316,9 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                 };
             }
         }
-        scriptDump.appendChild(newScr);
+        if (newScr) {
+            scriptDump.appendChild(newScr);
+        }
     }
     return newContent;
 }
@@ -918,9 +920,9 @@ function checkForUpdates() {
                 }
             }
         }
+        updateScaling();
         window.lastUpdated = null;
     }
-    updateScaling();
     if (lastUpdateObj != null) {
         lastUpdateObj.remove();
     }
