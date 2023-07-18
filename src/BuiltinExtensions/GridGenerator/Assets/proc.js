@@ -257,7 +257,7 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
         let newScr = null;
         if (typeof getMetadataScriptFor != 'undefined') {
-            let newScr = document.createElement('script');
+            newScr = document.createElement('script');
             newScr.src = getMetadataScriptFor(slashed);
         }
         if (scoreDisplay != 'None' && typeof getScoreFor != 'undefined') {
@@ -577,12 +577,18 @@ function crunchMetadata(parts) {
 
 function doPopupFor(img) {
     popoverLastImg = img;
-    var imgPath = img.dataset.imgPath.split('/');
-    var modalElem = document.getElementById('image_info_modal');
-    var metaData = crunchMetadata(imgPath);
-    var metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaData) : formatMetadata(metaData);
-    var params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
-    var text = 'Image: ' + img.alt + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
+    let modalElem = document.getElementById('image_info_modal');
+    let metaText;
+    if (typeof getMetadataForImage != 'undefined') {
+        metaText = getMetadataForImage(img);
+    }
+    else {
+        let imgPath = img.dataset.imgPath.split('/');
+        let metaData = crunchMetadata(imgPath);
+        metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaData) : formatMetadata(metaData);
+    }
+    let params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
+    let text = 'Image: ' + img.alt + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
     modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${img.src}"><br><div class="popup_modal_undertext">${text}</div>`;
     $('#image_info_modal').modal('toggle');
 }
