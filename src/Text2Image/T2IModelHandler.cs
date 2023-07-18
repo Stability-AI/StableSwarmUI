@@ -259,7 +259,18 @@ public class T2IModelHandler
                     PreviewImage = "imgs/model_placeholder.jpg",
                 };
                 Models[fullFilename] = model;
-                LoadMetadata(model);
+                try
+                {
+                    LoadMetadata(model);
+                }
+                catch (Exception ex)
+                {
+                    if (Program.GlobalProgramCancel.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    Logs.Warning($"Failed to load metadata for {fullFilename}:\n{ex}");
+                }
             }
             else if (fn.EndsWith(".ckpt"))
             {
