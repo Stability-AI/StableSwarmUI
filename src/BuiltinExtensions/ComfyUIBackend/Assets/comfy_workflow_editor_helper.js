@@ -59,6 +59,7 @@ function comfyBuildParams(callback) {
     comfyGetPromptAndWorkflow((workflow, prompt) => {
         let params = {};
         let inputPrefix = 'comfyrawworkflowinput';
+        let idsUsed = [];
         function addSimpleParam(name, defVal, type, groupName, values, number_view_type, min, max, step, inputIdDirect, groupId, priority, visible = true, toggles = true) {
             let inputId = inputIdDirect;
             let counter = 0;
@@ -94,14 +95,33 @@ function comfyBuildParams(callback) {
             };
         }
         let labelAlterations = {};
+        let nodeStatics = {};
+        let nodeStaticUnique = [];
+        let nodeLabelPaths = {};
         for (let node of workflow.nodes) {
             if (node.title) {
                 labelAlterations[`${node.id}`] = node.title;
             }
+            if (node.type == 'PrimitiveNode' && node.title) {
+                let cleaned = inputPrefix + cleanParamName(node.title);
+                let id = cleaned;
+                let x = 0;
+                while (nodeStaticUnique.includes(node.title)) {
+                    id = `${cleaned}${numberToLetters(x++)}`;
+                }
+                nodeStaticUnique.push(id);
+                for (let links of workflow.links) {
+                    if (links[1] == node.id) {
+                        nodeStatics[`${links[3]}.${links[4]}`] = id;
+                    }
+                }
+            }
         }
         for (let node of workflow.nodes) {
             if (node.inputs) {
+                let x = 0;
                 for (let input of node.inputs) {
+                    nodeLabelPaths[`${node.id}.${input.name}`] = `${node.id}.${x++}`;
                     let link = `${node.id}`;
                     if (link in labelAlterations) {
                         labelAlterations[`${node.id}.${input.name}`] = labelAlterations[link];
@@ -144,52 +164,15 @@ function comfyBuildParams(callback) {
             else if (groupLabel.includes('KSampler')) {
                 priority = -5;
             }
-            if (node.class_type == 'EmptyLatentImage' && !defaultParamsRetain.includes('width') && typeof node.inputs.width == 'number' && typeof node.inputs.height == 'number') {
-                defaultParamsRetain.push('width');
-                defaultParamsRetain.push('height');
-                defaultParamsRetain.push('aspectratio');
-                node.inputs.batch_size = 1;
-                node.inputs.width = "%%_COMFYFIXME_${width:" + node.inputs.width + "}_ENDFIXME_%%";
-                node.inputs.width = "%%_COMFYFIXME_${height:" + node.inputs.height + "}_ENDFIXME_%%";
-                continue;
-            }
-            else if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Positive Prompt") && !defaultParamsRetain.includes('prompt') && typeof node.inputs.text == 'string') {
-                defaultParamsRetain.push('prompt');
-                node.inputs.text = "${prompt}";
-                continue;
-            }
-            else if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Negative Prompt") && !defaultParamsRetain.includes('negativeprompt') && typeof node.inputs.text == 'string') {
-                defaultParamsRetain.push('negativeprompt');
-                node.inputs.text = "${negativeprompt}";
-                continue;
-            }
-            else if (['KSampler', 'KSamplerAdvanced'].includes(node.class_type) && !defaultParamsRetain.includes('seed')) {
-                defaultParamsRetain.push('seed', 'steps', 'comfyuisampler', 'comfyuischeduler', 'cfgscale');
-                node.inputs.seed = "%%_COMFYFIXME_${seed:" + node.inputs.seed + "}_ENDFIXME_%%";
-                node.inputs.steps = "%%_COMFYFIXME_${steps:" + node.inputs.steps + "}_ENDFIXME_%%";
-                node.inputs.sampler_name = "${comfy_sampler:" + node.inputs.sampler_name + "}";
-                node.inputs.scheduler = "${comfy_scheduler:" + node.inputs.scheduler + "}";
-                node.inputs.cfg = "%%_COMFYFIXME_${cfg_scale:" + node.inputs.cfg + "}_ENDFIXME_%%";
-                // No continue, other params exist
-            }
-            for (let inputId of Object.keys(node.inputs)) {
-                let val = node.inputs[inputId];
-                if (`${val}`.startsWith('${') || `${val}`.startsWith('%%_COMFYFIXME_${')) {
-                    continue;
-                }
-                if (['KSampler', 'KSamplerAdvanced'].includes(node.class_type) && inputId == 'control_after_generate') {
-                    continue;
-                }
+            function addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel) {
                 let type, values = null, min = -9999999999, max = 9999999999, number_view_type = 'big', step = 1;
-                let inputLabel = labelAlterations[`${nodeId}.${inputId}`] || inputId;
-                let inputIdDirect = cleanParamName(`${inputPrefix}${groupLabel}${inputId}`);
                 if (typeof val == 'number') {
                     let asSeed = false;
                     if (inputId == 'batch_size') {
                         node.inputs[inputId] = 1;
-                        continue;
+                        return;
                     }
-                    if (inputId == 'seed') {
+                    if (['seed', 'noise_seed'].includes(inputId)) {
                         type = 'integer';
                         asSeed = true;
                     }
@@ -227,12 +210,12 @@ function comfyBuildParams(callback) {
                 else if (typeof val == 'string') {
                     if (node.class_type == 'SaveImage' && inputId == 'filename_prefix') {
                         node.inputs[inputId] = "${prefix:}";
-                        continue;
+                        return;
                     }
                     else if (node.class_type == 'CheckpointLoaderSimple' && inputId == 'ckpt_name') {
                         if (nodeId == '4') {
                             node.inputs[inputId] = "${model:error_missing_model}";
-                            continue;
+                            return;
                         }
                         type = 'model';
                         values = allModels;
@@ -249,9 +232,73 @@ function comfyBuildParams(callback) {
                     node.inputs[inputId] = "${" + inputIdDirect + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
                 }
                 else {
+                    return;
+                }
+                if (!idsUsed.includes(inputIdDirect)) {
+                    idsUsed.push(inputIdDirect);
+                    addSimpleParam(inputLabel, val, type, groupLabel, values, number_view_type, min, max, step, inputIdDirect, groupId, priority);
+                }
+            }
+            function claimOnce(classType, paramName, fieldName, numeric) {
+                if (node.class_type != classType) {
+                    return false;
+                }
+                let val = node.inputs[fieldName];
+                if (typeof val == (numeric ? 'number' : 'string')) {
+                    let redirId = nodeStatics[nodeLabelPaths[`${nodeId}.${fieldName}`]];
+                    let useParamName = paramName;
+                    let paramNameClean = cleanParamName(paramName);
+                    if (redirId) {
+                        useParamName = redirId;
+                        addParam(fieldName, useParamName, useParamName.substring(inputPrefix.length), val, 'primitives', 'Primitives');
+                    }
+                    else if (defaultParamsRetain.includes(paramNameClean)) {
+                        return false;
+                    }
+                    else {
+                        defaultParamsRetain.push(paramNameClean);
+                    }
+                    node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + useParamName + ":" + val + "}_ENDFIXME_%%" : "${" + useParamName + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
+                    return true;
+                }
+                return false;
+            }
+            if (claimOnce('EmptyLatentImage', 'width', 'width', true) && claimOnce('EmptyLatentImage', 'height', 'height', true)) {
+                defaultParamsRetain.push('aspectratio');
+                node.inputs.batch_size = 1;
+                continue;
+            }
+            claimOnce('KSampler', 'seed', 'seed', true);
+            claimOnce('KSampler', 'steps', 'steps', true);
+            claimOnce('KSampler', 'comfy_sampler', 'sampler_name', false);
+            claimOnce('KSampler', 'comfy_scheduler', 'scheduler', false);
+            claimOnce('KSampler', 'cfg_scale', 'cfg', true);
+            claimOnce('KSamplerAdvanced', 'seed', 'noise_seed', true);
+            claimOnce('KSamplerAdvanced', 'steps', 'steps', true);
+            claimOnce('KSamplerAdvanced', 'comfy_sampler', 'sampler_name', false);
+            claimOnce('KSamplerAdvanced', 'comfy_scheduler', 'scheduler', false);
+            claimOnce('KSamplerAdvanced', 'cfg_scale', 'cfg', true);
+            if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Positive Prompt") && !defaultParamsRetain.includes('prompt') && typeof node.inputs.text == 'string') {
+                defaultParamsRetain.push('prompt');
+                node.inputs.text = "${prompt}";
+                continue;
+            }
+            else if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Negative Prompt") && !defaultParamsRetain.includes('negativeprompt') && typeof node.inputs.text == 'string') {
+                defaultParamsRetain.push('negativeprompt');
+                node.inputs.text = "${negativeprompt}";
+                continue;
+            }
+            for (let inputId of Object.keys(node.inputs)) {
+                let val = node.inputs[inputId];
+                if (`${val}`.startsWith('${') || `${val}`.startsWith('%%_COMFYFIXME_${')) {
                     continue;
                 }
-                addSimpleParam(inputLabel, val, type, groupLabel, values, number_view_type, min, max, step, inputIdDirect, groupId, priority);
+                if (['KSampler', 'KSamplerAdvanced'].includes(node.class_type) && inputId == 'control_after_generate') {
+                    continue;
+                }
+                let inputLabel = labelAlterations[`${nodeId}.${inputId}`] || inputId;
+                let inputIdDirect = nodeStatics[nodeLabelPaths[`${nodeId}.${inputId}`]] || cleanParamName(`${inputPrefix}${groupLabel}${inputId}`);
+                addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel);
             }
         }
         addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false);

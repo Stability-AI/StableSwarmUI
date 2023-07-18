@@ -172,7 +172,10 @@ function directSetModel(model) {
         curModelWidth = parseInt(width);
         curModelHeight = parseInt(height);
     }
-    getRequiredElementById('input_aspectratio').dispatchEvent(new Event('change'));
+    let aspect = document.getElementById('input_aspectratio');
+    if (aspect) {
+        aspect.dispatchEvent(new Event('change'));
+    }
 }
 
 function setCurrentModel(callback) {
