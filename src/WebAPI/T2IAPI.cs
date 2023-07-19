@@ -114,7 +114,7 @@ public static class T2IAPI
         List<T2IEngine.ImageInBatch> imageSet = new();
         T2IEngine.ImageInBatch[] imageOut = null;
         List<Task> tasks = new();
-        int max_degrees = session.User.Restrictions.MaxT2ISimultaneous;
+        int max_degrees = session.User.Restrictions.CalcMaxT2ISimultaneous;
         for (int i = 0; i < images && !claim.ShouldCancel; i++)
         {
             tasks.RemoveAll(t => t.IsCompleted);
@@ -129,7 +129,7 @@ public static class T2IAPI
             int index = i;
             T2IParamInput thisParams = user_input.Clone();
             thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed) + index);
-            tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, claim, output, setError, isWS, 2, // TODO: Max timespan configurable
+            tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, claim, output, setError, isWS, Program.ServerSettings.Backends.MaxTimeoutMinutes,
                 (outputs) =>
                 {
                     foreach (Image image in outputs)
@@ -156,6 +156,7 @@ public static class T2IAPI
                         output(new JObject() { ["image"] = url, ["index"] = index, ["metadata"] = image.GetMetadata() });
                     }
                 })));
+            Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
         }
         while (tasks.Any())
         {

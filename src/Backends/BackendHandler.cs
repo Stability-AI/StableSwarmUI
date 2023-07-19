@@ -39,6 +39,9 @@ public class BackendHandler
     /// <summary>Signal for when a new backend is added to <see cref="BackendsToInit"/>.</summary>
     public AsyncAutoResetEvent NewBackendInitSignal = new(false);
 
+    /// <summary>The number of currently loaded backends.</summary>
+    public int Count => T2IBackends.Count;
+
     /// <summary>Metadata about backend types.</summary>
     public record class BackendType(string ID, string Name, string Description, Type SettingsClass, AutoConfiguration.Internal.AutoConfigData SettingsInternal, Type BackendClass, JObject NetDescription);
 

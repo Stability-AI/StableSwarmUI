@@ -98,7 +98,7 @@ public class GridGeneratorExtension : Extension
                 return Task.CompletedTask;
             }
             Task[] waitOn = data.GetActive();
-            if (waitOn.Length > data.Session.User.Restrictions.MaxT2ISimultaneous)
+            if (waitOn.Length > data.Session.User.Restrictions.CalcMaxT2ISimultaneous)
             {
                 Task.WaitAny(waitOn);
             }
@@ -113,9 +113,11 @@ public class GridGeneratorExtension : Extension
                 data.Signal.Set();
             }
             T2IParamInput thisParams = param.Clone();
-            Task t = Task.Run(() => T2IEngine.CreateImageTask(thisParams, data.Claim, data.AddOutput, setError, true, 10, // TODO: Max timespan configurable
+            int iteration = runner.Iteration;
+            Task t = Task.Run(() => T2IEngine.CreateImageTask(thisParams, data.Claim, data.AddOutput, setError, true, Program.ServerSettings.Backends.MaxTimeoutMinutes,
                 (outputs) =>
                 {
+                    Logs.Info($"Completed {iteration}/{runner.TotalRun} ... Set: {set.Data}, file {set.BaseFilepath}");
                     if (outputs.Length != 1)
                     {
                         setError($"Server generated {outputs.Length} images when only expecting 1.");
@@ -143,6 +145,7 @@ public class GridGeneratorExtension : Extension
             {
                 data.Rendering.Add(t);
             }
+            Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
             return t;
         };
         PostPreprocessCallback = (grid) =>

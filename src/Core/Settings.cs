@@ -26,6 +26,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("How many times to retry initializing a backend before giving up. Default is 3.")]
         public int MaxBackendInitAttempts = 3;
+
+        [ConfigComment("The maximum duration a request can be waiting on a backend to be available before giving up.")]
+        public int MaxTimeoutMinutes = 20;
     }
 
     /// <summary>Settings related to networking and the webserver.</summary>
@@ -83,6 +86,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("How many images can try to be generating at the same time on this user.")]
         public int MaxT2ISimultaneous = 32;
+
+        /// <summary>Returns the maximum simultaneous text-2-image requests appropriate to this user's restrictions and the available backends.</summary>
+        public int CalcMaxT2ISimultaneous => Math.Max(1, Math.Min(MaxT2ISimultaneous, Program.Backends.Count * 2));
     }
 
     /// <summary>Settings per-user.</summary>

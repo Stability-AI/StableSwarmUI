@@ -298,6 +298,8 @@ public partial class GridGenCore
 
         public List<SingleGridCall> Sets;
 
+        public int Iteration = 0;
+
         public void UpdateLiveFile(string newFile)
         {
             lock (Grid.LastUpdatLock)
@@ -371,7 +373,7 @@ public partial class GridGenCore
         public void Run(bool dry)
         {
             GridRunnerPreRunHook?.Invoke(this);
-            int iteration = 0;
+            Iteration = 0;
             foreach (SingleGridCall set in Sets)
             {
                 if (set.Skip)
@@ -382,10 +384,10 @@ public partial class GridGenCore
                 {
                     return;
                 }
-                iteration++;
+                Iteration++;
                 if (!dry)
                 {
-                    Logs.Info($"On {iteration}/{TotalRun} ... Set: {set.Data}, file {set.BaseFilepath}");
+                    Logs.Debug($"Pre-prepping {Iteration}/{TotalRun} ... Set: {set.Data}, file {set.BaseFilepath}");
                 }
                 T2IParamInput p = Params.Clone();
                 GridRunnerPreDryHook?.Invoke(this);
