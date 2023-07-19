@@ -117,7 +117,7 @@ public class GridGeneratorExtension : Extension
             Task t = Task.Run(() => T2IEngine.CreateImageTask(thisParams, data.Claim, data.AddOutput, setError, true, Program.ServerSettings.Backends.MaxTimeoutMinutes,
                 (outputs) =>
                 {
-                    Logs.Info($"Completed {iteration}/{runner.TotalRun} ... Set: {set.Data}, file {set.BaseFilepath}");
+                    Logs.Info($"Completed gen #{iteration} (of {runner.TotalRun}) ... Set: '{set.Data}', file '{set.BaseFilepath}'");
                     if (outputs.Length != 1)
                     {
                         setError($"Server generated {outputs.Length} images when only expecting 1.");
@@ -189,9 +189,10 @@ public class GridGeneratorExtension : Extension
                 return Rendering.Where(x => !x.IsCompleted).ToArray();
             }
         }
+
         public void AddOutput(JObject obj)
         {
-            Generated.Append(obj);
+            Generated.Enqueue(obj);
             Signal.Set();
         }
     }
