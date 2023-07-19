@@ -444,3 +444,10 @@ function numberToLetters(id) {
     }
     return String.fromCharCode(id + 'a'.charCodeAt(0));
 }
+
+/**
+ * Converts eg the 1 in '1rem' for a CSS style to pixels (eg 16px).
+ */
+function convertRemToPixels(rem) {
+    return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+}

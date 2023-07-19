@@ -63,7 +63,7 @@ body {
 }
 .input-sidebar {
     display: inline-block;
-    width: calc(max(28rem, 20vw) - 5px);
+    width: calc(28rem - 5px);
     height: 50vh;
     top: 0px;
 }
@@ -81,7 +81,7 @@ body {
     white-space: normal;
     padding: 0.5rem;
     padding-right: 1rem;
-    width: calc(max(28rem, 20vw) - 5px);
+    width: calc(28rem - 5px);
     height: calc(50vh - 7rem);
 }
 .main_inputs_area_hidden {
@@ -92,7 +92,7 @@ body {
     display: inline-block;
     padding: 0.5rem;
     overflow: hidden;
-    width: calc(100vw - max(28rem, 20vw));
+    width: calc(100vw - 28rem);
     height: 50vh;
     white-space: nowrap;
     vertical-align: top;
@@ -109,7 +109,7 @@ body {
     display: inline-block;
     padding: 0.5rem;
     border: 1px solid var(--light-border);
-    width: calc(100vw - (max(28rem, 20vw) - 5px) - 22rem);
+    width: calc(100vw - (28rem - 5px) - 22rem);
     height: 49vh;
     vertical-align: top;
     overflow: auto;

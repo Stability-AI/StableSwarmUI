@@ -405,10 +405,12 @@ function doPopover(id) {
     }
     else {
         pop.style.display = 'block';
+        pop.style.width = '200px';
         pop.dataset.visible = "true";
         let x = Math.min(mouseX, window.innerWidth - pop.offsetWidth - 10);
         pop.style.left = `${x}px`;
         pop.style.top = `${mouseY}px`;
+        pop.style.width = '';
         popHide.push(id);
     }
 }
@@ -491,28 +493,13 @@ function pageSizer() {
         setCookie('pageBarTop', pageBarTop, 365);
         setCookie('pageBarTop2', pageBarTop2, 365);
         setCookie('pageBarMidPx', pageBarMid, 365);
-        if (pageBarTop != -1) {
-            inputSidebar.style.width = `${pageBarTop}px`;
-            mainInputsAreaWrapper.style.width = `${pageBarTop}px`;
-            mainImageArea.style.width = `calc(100vw - ${pageBarTop}px)`;
-            currentImageBatch.style.width = `calc(100vw - ${pageBarTop}px - min(max(40vw, 28rem), 49vh))`;
-        }
-        else {
-            inputSidebar.style.width = '';
-            mainInputsAreaWrapper.style.width = '';
-            mainImageArea.style.width = '';
-            currentImageBatch.style.width = '';
-        }
-        if (pageBarTop2 != -1) {
-            let adaptedX = pageBarTop2 - inputSidebar.getBoundingClientRect().width - 17;
-            adaptedX = Math.min(Math.max(adaptedX, 100), window.innerWidth - 100);
-            currentImage.style.width = `${adaptedX}px`;
-            currentImageBatch.style.width = `calc(100vw - ${pageBarTop2}px)`;
-        }
-        else {
-            currentImage.style.width = '';
-            currentImageBatch.style.width = '';
-        }
+        let barTopLeft = pageBarTop == -1 ? `28rem` : `${pageBarTop}px`;
+        let barTopRight = pageBarTop2 == -1 ? `21rem` : `${pageBarTop2}px`;
+        inputSidebar.style.width = `${barTopLeft}`;
+        mainInputsAreaWrapper.style.width = `${barTopLeft}`;
+        mainImageArea.style.width = `calc(100vw - ${barTopLeft})`;
+        currentImage.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
+        currentImageBatch.style.width = `${barTopRight}`;
         if (pageBarMid != -1) {
             let fixed = `${pageBarMid}px`;
             topSplit.style.height = `calc(100vh - ${fixed})`;
@@ -564,14 +551,14 @@ function pageSizer() {
         e.preventDefault();
     }, true);
     document.addEventListener('mousemove', (e) => {
-        let offX = e.pageX - 5;
+        let offX = e.pageX;
         offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
         if (topDrag) {
-            pageBarTop = offX;
+            pageBarTop = offX - 5;
             setPageBars();
         }
         if (topDrag2) {
-            pageBarTop2 = offX;
+            pageBarTop2 = window.innerWidth - offX + 15;
             setPageBars();
         }
         if (midDrag) {
