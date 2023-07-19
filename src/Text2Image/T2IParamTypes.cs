@@ -215,12 +215,12 @@ public class T2IParamTypes
         CFGScale = Register<double>(new("CFG Scale", "How strongly to scale prompt input.\nToo-high values can cause corrupted/burnt images, too-low can cause nonsensical images.\n7 is a good baseline. Normal usages vary between 5 and 9.",
             "7", Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER, Group: coreGroup
             ));
-        T2IParamGroup variationGroup = new("Variation Seed", Toggles: false, Open: false, OrderPriority: -17);
+        T2IParamGroup variationGroup = new("Variation Seed", Toggles: true, Open: false, OrderPriority: -17);
         VariationSeed = Register<long>(new("Variation Seed", "Image-variation seed.\nCombined partially with the original seed to create a similar-but-different image for the same seed.\n-1 = random.",
-            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, NumberView: NumberViewType.BIG, Group: variationGroup
+            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, NumberView: NumberViewType.BIG, Group: variationGroup, FeatureFlag: "variation_seed"
             ));
         VariationSeedStrength = Register<double>(new("Variation Seed Strength", "How strongly to apply the variation seed.\n0 = don't use, 1 = replace the base seed entirely. 0.5 is a good value.",
-            "0", Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, NumberView: NumberViewType.SLIDER, Group: variationGroup
+            "0", Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, NumberView: NumberViewType.SLIDER, Group: variationGroup, FeatureFlag: "variation_seed"
             ));
         T2IParamGroup resolutionGroup = new("Resolution", Toggles: false, Open: false, OrderPriority: -11);
         AspectRatio = Register<string>(new("Aspect Ratio", "Image aspect ratio. Some models can stretch better than others.",

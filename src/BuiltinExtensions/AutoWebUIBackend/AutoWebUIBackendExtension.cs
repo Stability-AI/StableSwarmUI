@@ -13,7 +13,7 @@ public class AutoWebUIBackendExtension : Extension
     public static List<Action<JObject, T2IParamInput>> OtherGenHandlers = new();
 
     /// <summary>Set of all feature-ids supported by Auto WebUI backends.</summary>
-    public static HashSet<string> FeaturesSupported = new();
+    public static HashSet<string> FeaturesSupported = new() { "variation_seed" };
 
     public override void OnInit()
     {
