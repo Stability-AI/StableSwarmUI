@@ -114,12 +114,27 @@ public static class T2IAPI
         List<T2IEngine.ImageInBatch> imageSet = new();
         T2IEngine.ImageInBatch[] imageOut = null;
         List<Task> tasks = new();
+        void removeDoneTasks()
+        {
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                if (tasks[i].IsCompleted)
+                {
+                    if (tasks[i].IsFaulted)
+                    {
+                        Logs.Error($"Image generation failed: {tasks[i].Exception}");
+                    }
+                    tasks.RemoveAt(i--);
+                }
+            }
+        }
         int max_degrees = session.User.Restrictions.CalcMaxT2ISimultaneous;
         for (int i = 0; i < images && !claim.ShouldCancel; i++)
         {
-            tasks.RemoveAll(t => t.IsCompleted);
+            removeDoneTasks();
             while (tasks.Count > max_degrees)
             {
+                removeDoneTasks();
                 await Task.WhenAny(tasks);
             }
             if (claim.ShouldCancel)
@@ -161,7 +176,7 @@ public static class T2IAPI
         while (tasks.Any())
         {
             await Task.WhenAny(tasks);
-            tasks.RemoveAll(t => t.IsCompleted);
+            removeDoneTasks();
         }
         imageOut = imageSet.ToArray();
         T2IEngine.PostBatchEvent?.Invoke(new(user_input, imageOut));
