@@ -141,7 +141,7 @@ class GridGenClass {
                     gotImageResult(data.image, data.metadata);
                 }
                 else if (data.success) {
-                    outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="Output/${outputFolder.value}/index.html" target="_blank">Output/<code>${outputFolder.value}</code></a>`;
+                    outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="Output/Grids/${outputFolder.value}/index.html" target="_blank">Output/Grids/<code>${outputFolder.value}</code></a>`;
                 }
             });
         };
