@@ -124,11 +124,11 @@ function setCurrentImage(src, metadata = '') {
     curImg.appendChild(data);
 }
 
-function appendImage(container, imageSrc, batchId, textPreview, metadata = '') {
+function appendImage(container, imageSrc, batchId, textPreview, metadata = '', type = 'legacy') {
     if (typeof container == 'string') {
         container = getRequiredElementById(container);
     }
-    let div = createDiv(null, `image-block image-batch-${batchId == "folder" ? "folder" : (batchId % 2)}`);
+    let div = createDiv(null, `image-block image-block-${type} image-batch-${batchId == "folder" ? "folder" : (batchId % 2)}`);
     div.dataset.batch_id = batchId;
     div.dataset.preview_text = textPreview;
     div.dataset.metadata = metadata;
@@ -141,9 +141,11 @@ function appendImage(container, imageSrc, batchId, textPreview, metadata = '') {
     });
     img.src = imageSrc;
     div.appendChild(img);
-    let textBlock = createDiv(null, 'image-preview-text');
-    textBlock.innerText = textPreview;
-    div.appendChild(textBlock);
+    if (type == 'legacy') {
+        let textBlock = createDiv(null, 'image-preview-text');
+        textBlock.innerText = textPreview;
+        div.appendChild(textBlock);
+    }
     container.appendChild(div);
     return div;
 }
@@ -152,10 +154,8 @@ function gotImageResult(image, metadata) {
     updateGenCount();
     let src = image;
     let fname = src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
-    let batch_div = appendImage('current_image_batch', src, batches, fname, metadata);
+    let batch_div = appendImage('current_image_batch', src, batches, fname, metadata, 'batch');
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
-    let history_div = appendImage('image_history', src, batches, fname, metadata);
-    history_div.addEventListener('click', () => selectImageInHistory(history_div));
     setCurrentImage(src, metadata);
     return [batch_div, history_div];
 }

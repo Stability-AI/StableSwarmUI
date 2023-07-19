@@ -120,7 +120,7 @@ body {
 }
 .current_image img {
     max-width: 100%;
-    max-height: calc(100% - 2rem);
+    max-height: calc(100% - 5rem);
 }
 .current_image_batch {
     display: inline-block;
@@ -135,20 +135,35 @@ body {
     overflow-y: auto;
 }
 .image-block {
+    display: inline-block;
+    cursor: pointer;
+}
+.image-block img {
+    display: block;
+}
+.image-block-legacy {
     height: 11.5rem;
     width: 10rem;
     padding-top: 0.25rem;
     padding-left: 0.5rem;
     padding-right: 0.25rem;
-    display: inline-block;
     overflow: hidden;
     white-space: pre-wrap;
     word-break: break-all;
-    cursor: pointer;
 }
-.image-block img {
+.image-block-legacy img {
     height: 8rem;
-    display: block;
+}
+.image-block-batch {
+    height: calc(10rem + 2px);
+    width: calc(10rem + 2px);
+    padding: 1px;
+    display: inline-block;
+    overflow: hidden;
+}
+.image-block-batch img {
+    max-height: 100%;
+    max-width: 100%;
 }
 .image-block:hover {
     background-color: var(--emphasis);
