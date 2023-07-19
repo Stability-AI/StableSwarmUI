@@ -109,7 +109,7 @@ body {
     display: inline-block;
     padding: 0.5rem;
     border: 1px solid var(--light-border);
-    width: calc(min(max(40vw, 28rem), 49vh));
+    width: calc(100vw - (max(28rem, 20vw) - 5px) - 22rem);
     height: 49vh;
     vertical-align: top;
     overflow: auto;
@@ -125,7 +125,7 @@ body {
 .current_image_batch {
     display: inline-block;
     overflow-y: auto;
-    width: calc(100vw - max(28rem, 20vw) - min(max(40vw, 28rem), 49vh));
+    width: 21rem;
     height: 50vh;
     vertical-align: top;
     white-space: normal;
@@ -155,7 +155,7 @@ body {
     height: 8rem;
 }
 .image-block-batch {
-    height: calc(10rem + 2px);
+    max-height: calc(10rem + 2px);
     width: calc(10rem + 2px);
     padding: 1px;
     display: inline-block;

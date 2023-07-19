@@ -384,6 +384,8 @@ function resetParamsToDefault() {
             else {
                 paramElem.value = param.default;
             }
+            paramElem.dispatchEvent(new Event('input'));
+            paramElem.dispatchEvent(new Event('change'));
             deleteCookie(`lastparam_input_${param.id}`);
             if (param.toggleable) {
                 getRequiredElementById(`${id}_toggle`).checked = false;

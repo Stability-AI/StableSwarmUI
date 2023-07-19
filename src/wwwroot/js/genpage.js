@@ -157,7 +157,7 @@ function gotImageResult(image, metadata) {
     let batch_div = appendImage('current_image_batch', src, batches, fname, metadata, 'batch');
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
     setCurrentImage(src, metadata);
-    return [batch_div, history_div];
+    return batch_div;
 }
 
 function updateCurrentStatusDirect(data) {
@@ -231,15 +231,14 @@ function doGenerate() {
         let images = {};
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(), data => {
             if (data.image) {
-                let [batch_div, history_div] = gotImageResult(data.image, data.metadata);
-                images[data.index] = [batch_div, history_div, data.image, data.metadata];
+                let batch_div = gotImageResult(data.image, data.metadata);
+                images[data.index] = [batch_div, data.image, data.metadata];
             }
             if (data.discard_indices) {
                 let needsNew = false;
                 for (let index of data.discard_indices) {
-                    let [batch_div, history_div, image, metadata] = images[index];
+                    let [batch_div, image, metadata] = images[index];
                     batch_div.remove();
-                    history_div.remove();
                     let curImgElem = document.getElementById('current_image_img');
                     if (curImgElem && curImgElem.src == image) {
                         needsNew = true;
@@ -467,7 +466,7 @@ let setPageBarsFunc;
 function resetPageSizer() {
     deleteCookie('pageBarTop');
     deleteCookie('pageBarTop2');
-    deleteCookie('pageBarMid');
+    deleteCookie('pageBarMidPx');
     pageBarTop = -1;
     pageBarTop2 = -1;
     pageBarMid = -1;
@@ -491,7 +490,7 @@ function pageSizer() {
     function setPageBars() {
         setCookie('pageBarTop', pageBarTop, 365);
         setCookie('pageBarTop2', pageBarTop2, 365);
-        setCookie('pageBarMid', pageBarMid, 365);
+        setCookie('pageBarMidPx', pageBarMid, 365);
         if (pageBarTop != -1) {
             inputSidebar.style.width = `${pageBarTop}px`;
             mainInputsAreaWrapper.style.width = `${pageBarTop}px`;
@@ -515,16 +514,16 @@ function pageSizer() {
             currentImageBatch.style.width = '';
         }
         if (pageBarMid != -1) {
-            topSplit.style.height = `${pageBarMid}vh`;
-            topSplit2.style.height = `${pageBarMid}vh`;
-            inputSidebar.style.height = `${pageBarMid}vh`;
-            mainInputsAreaWrapper.style.height = `calc(${pageBarMid}vh - 7rem)`;
-            mainImageArea.style.height = `${pageBarMid}vh`;
-            currentImage.style.height = `${pageBarMid}vh`;
-            currentImageBatch.style.height = `calc(${pageBarMid}vh - 2rem)`;
-            topBar.style.height = `${pageBarMid}vh`;
-            let invOff = 100 - pageBarMid;
-            bottomBarContent.style.height = `calc(${invOff}vh - 2rem)`;
+            let fixed = `${pageBarMid}px`;
+            topSplit.style.height = `calc(100vh - ${fixed})`;
+            topSplit2.style.height = `calc(100vh - ${fixed})`;
+            inputSidebar.style.height = `calc(100vh - ${fixed})`;
+            mainInputsAreaWrapper.style.height = `calc(100vh - ${fixed} - 7rem)`;
+            mainImageArea.style.height = `calc(100vh - ${fixed})`;
+            currentImage.style.height = `calc(100vh - ${fixed})`;
+            currentImageBatch.style.height = `calc(100vh - ${fixed} - 2rem)`;
+            topBar.style.height = `calc(100vh - ${fixed})`;
+            bottomBarContent.style.height = `calc(${fixed} - 2rem)`;
         }
         else {
             topSplit.style.height = '';
@@ -547,7 +546,7 @@ function pageSizer() {
     if (cookieB) {
         pageBarTop2 = parseInt(cookieB);
     }
-    let cookieC = getCookie('pageBarMid');
+    let cookieC = getCookie('pageBarMidPx');
     if (cookieC) {
         pageBarMid = parseInt(cookieC);
     }
@@ -576,11 +575,8 @@ function pageSizer() {
             setPageBars();
         }
         if (midDrag) {
-            let topY = currentImageBatch.getBoundingClientRect().top;
             let refY = Math.min(Math.max(e.pageY, 85), window.innerHeight - 85);
-            let offY = (refY - topY - 5) / window.innerHeight * 100;
-            offY = Math.min(Math.max(offY, 5), 95);
-            pageBarMid = offY;
+            pageBarMid = window.innerHeight - refY + topBar.getBoundingClientRect().top + 15;
             setPageBars();
         }
     });
