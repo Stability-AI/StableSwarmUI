@@ -52,3 +52,7 @@
     border-radius: 0.2rem;
     font-weight: bold;
 }
+.gridgen_warn {
+    color: red;
+    font-weight: bold;
+}

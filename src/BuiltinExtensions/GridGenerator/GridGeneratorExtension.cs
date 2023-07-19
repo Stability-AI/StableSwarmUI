@@ -7,6 +7,7 @@ using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
 using System.IO;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using static StableSwarmUI.Builtin_GridGeneratorExtension.GridGenCore;
 
@@ -159,6 +160,7 @@ public class GridGeneratorExtension : Extension
     public override void OnInit()
     {
         API.RegisterAPICall(GridGenRun);
+        API.RegisterAPICall(GridGenDoesExist);
     }
 
     public class GridCallData
@@ -218,6 +220,31 @@ public class GridGeneratorExtension : Extension
         }
     }
 
+    public string CleanFolderName(string name)
+    {
+        name = Utilities.FilePathForbidden.TrimToNonMatches(name);
+        if (name.Contains('.'))
+        {
+            throw new InvalidDataException("Output folder name cannot contain dots.");
+        }
+        while (name.Contains("//"))
+        {
+            name = name.Replace("//", "/");
+        }
+        if (name.Trim() == "")
+        {
+            throw new InvalidDataException("Output folder name cannot be empty.");
+        }
+        return $"Grids/{name}";
+    }
+
+    public async Task<JObject> GridGenDoesExist(Session session, string folderName)
+    {
+        folderName = CleanFolderName(folderName);
+        bool exists = File.Exists($"{session.User.OutputDirectory}/{folderName}/index.html");
+        return new JObject() { ["exists"] = exists };
+    }
+
     public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
         using Session.GenClaim claim = session.Claim(gens: 1);
@@ -231,33 +258,19 @@ public class GridGeneratorExtension : Extension
                     T2IParamTypes.ApplyParameter(key, val.ToString(), baseParams);
                 }
             }
+            outputFolderName = CleanFolderName(outputFolderName);
+            baseParams.NormalizeSeeds();
         }
         catch (InvalidDataException ex)
         {
             await socket.SendJson(new JObject() { ["error"] = ex.Message }, API.WebsocketTimeout);
             return null;
         }
-        baseParams.NormalizeSeeds();
         async Task sendStatus()
         {
             await socket.SendJson(BasicAPIFeatures.GetCurrentStatusRaw(session), API.WebsocketTimeout);
         }
         await sendStatus();
-        outputFolderName = Utilities.FilePathForbidden.TrimToNonMatches(outputFolderName);
-        if (outputFolderName.Contains('.'))
-        {
-            await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot contain dots." }, API.WebsocketTimeout);
-            return null;
-        }
-        while (outputFolderName.Contains("//"))
-        {
-            outputFolderName = outputFolderName.Replace("//", "/");
-        }
-        if (outputFolderName.Trim() == "")
-        {
-            await socket.SendJson(new JObject() { ["error"] = "Output folder name cannot be empty." }, API.WebsocketTimeout);
-            return null;
-        }
         StableSwarmUIGridData data = new() { Session = session, Claim = claim };
         Grid grid = null;
         try

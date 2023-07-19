@@ -172,7 +172,10 @@ class GridGenClass {
         let outInfoBox = document.getElementById('grid-gen-info-box');
         let outputFolder = document.getElementById('grid-gen-output-folder-name');
         let updateOutputInfo = () => {
-            outInfoBox.innerHTML = `Output will be saved to <a href="Output/${outputFolder.value}/index.html" target="_blank">Output/<code>${outputFolder.value}</code></a>`;
+            genericRequest('GridGenDoesExist', { 'folderName': outputFolder.value }, data => {
+                let prefix = data.exists ? '<span class="gridgen_warn">Output WILL OVERRIDE existing folder</span>' : 'Output will be saved to';
+                outInfoBox.innerHTML = `${prefix} <a href="Output/Grids/${outputFolder.value}/index.html" target="_blank">Output/Grids/<code>${outputFolder.value}</code></a>`;
+            });
         };
         outputFolder.addEventListener('input', updateOutputInfo);
         let today = new Date();
