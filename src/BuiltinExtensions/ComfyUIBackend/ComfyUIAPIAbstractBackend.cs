@@ -89,7 +89,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 await HttpClient.PostAsync($"{Address}/interrupt", new StringContent(""), interrupt);
                 break;
             }
-            Thread.Sleep(100);
+            Thread.Sleep(50);
         }
         //Logs.Debug($"ComfyUI history said: {output}");
         List<Image> outputs = new();

@@ -312,6 +312,7 @@ public class GridGeneratorExtension : Extension
         }
         Logs.Info("Grid Generator completed successfully");
         claim.Complete(gens: 1);
+        claim.Dispose();
         await sendStatus();
         await socket.SendJson(new JObject() { ["success"] = "complete" }, API.WebsocketTimeout);
         return null;
