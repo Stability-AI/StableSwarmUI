@@ -275,7 +275,7 @@ function describeImage(image) {
     let buttons = []; // TODO: Delete button, download, etc.
     let description = image.data.name + "\n" + formatMetadata(image.data.metadata);
     let name = image.data.name;
-    let imageSrc = image.data.src.endsWith('.html') ? 'imgs/html.png' : image.data.src;
+    let imageSrc = image.data.src.endsWith('.html') ? 'imgs/html.jpg' : image.data.src;
     return { name, description, buttons, 'image': imageSrc, className: '' };
 }
 
