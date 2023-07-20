@@ -57,6 +57,12 @@ public class WebServer
         RegisteredThemes.Add(theme.ID, theme);
     }
 
+    /// <summary>Register a theme from an extension.</summary>
+    public void RegisterTheme(string id, string name, string extFile, Extension extension, bool isDark)
+    {
+        RegisterTheme(new(id, name, $"/ExtensionFile/{extension.ExtensionName}/{extFile}", isDark));
+    }
+
     /// <summary>Initial prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>
     public void PreInit()
     {
