@@ -139,6 +139,7 @@ body {
     margin: auto;
 }
 .image-block-legacy {
+    position: relative;
     height: 11.5rem;
     width: 10rem;
     padding-top: 0.25rem;
@@ -512,16 +513,19 @@ body {
     text-overflow: ellipsis;
     overflow: hidden;
     margin: 0.3rem;
+    position: relative;
 }
 .browser-list-entry-text {
-    max-width: 18.1rem;
+    display: inline-block;
+    max-width: 17rem;
+    padding-right: 2.5rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     cursor: pointer;
     vertical-align: top;
 }
-.browser-list-entry:hover {
+.browser-list-entry-text:hover {
     color: var(--emphasis);
     text-decoration: underline;
 }
