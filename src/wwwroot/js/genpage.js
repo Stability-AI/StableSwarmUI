@@ -106,12 +106,18 @@ function formatMetadata(metadata) {
     return result;
 }
 
+function expandCurrentImage(src, metadata) {
+    getRequiredElementById('image_fullview_modal').innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="imageview_modal_inner_div"><img class="imageview_popup_modal_img" src="${src}"><br><div class="imageview_popup_modal_undertext">${formatMetadata(metadata)}</div>`;
+    $('#image_fullview_modal').modal('toggle');
+}
+
 function setCurrentImage(src, metadata = '') {
     let curImg = getRequiredElementById('current_image');
     curImg.innerHTML = '';
     let img = document.createElement('img');
     img.id = 'current_image_img';
     img.src = src;
+    img.onclick = () => expandCurrentImage(src, metadata);
     curImg.appendChild(img);
     currentMetadataVal = metadata;
     let buttons = createDiv(null, 'current-image-buttons');
