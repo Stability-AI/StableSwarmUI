@@ -518,7 +518,7 @@ body {
 .browser-list-entry-text {
     display: inline-block;
     max-width: 17rem;
-    padding-right: 2.5rem;
+    padding-right: 3rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
