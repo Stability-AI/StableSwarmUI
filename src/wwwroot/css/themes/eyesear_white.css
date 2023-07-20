@@ -1,0 +1,35 @@
+:root {
+    --background: #f0f0f0;
+    --background-soft: #c0c0c0;
+    --background-gray: #8799f1;
+    --background-gray-danger: #e08585;
+    --background-danger: #200b0b;
+    --shadow: #cbcbfd;
+    --emphasis: #c7966b;
+    --light-border: #728787;
+    --red: #ff0000;
+    --green: #00ff00;
+    --qbutton: #8b6445;
+    --popup-back: #aaaaaa;
+    --popup-front: #101010;
+    --button-background-hover: color-mix(in srgb, orange 70%, #a1a1a1);
+    --button-foreground-hover: #101010;
+    --button-border: #3f3f46;
+    --button-text: #101010;
+    --button-background: #a1a1a1;
+    --danger-button-background-hover: color-mix(in srgb, #550000 70%, #a1a1a1);
+    --danger-button-foreground-hover: #aaaaaa;
+    --danger-button-border: #3f3f46;
+    --danger-button-foreground: #ffffff;
+    --danger-button-background: #550000;
+    --button-background-disabled: #3f3f46;
+    --button-foreground-disabled: #101010;
+    --batch-0: rgba(200, 200, 200, 0.3);
+    --batch-1: rgba(200, 200, 200, 0.3);
+    --text: #101010;
+    --text-soft: #303030;
+    --box-selected-border: rgba(225, 162, 85, 0.8);
+    --box-selected-background: rgba(255, 162, 85, 0.2);
+    --box-selected-border-stronger: rgba(255, 162, 85, 1.0);
+    --box-selected-background-stronger: rgba(255, 162, 85, 0.3);
+}

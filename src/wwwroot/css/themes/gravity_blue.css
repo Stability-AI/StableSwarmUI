@@ -1,0 +1,35 @@
+:root {
+    --background: #0b0f20;
+    --background-soft: #203040;
+    --background-gray: #1f2336;
+    --background-gray-danger: #361f1f;
+    --background-danger: #200b0b;
+    --shadow: #404080;
+    --emphasis: #c7966b;
+    --light-border: #728787;
+    --red: #ff0000;
+    --green: #00ff00;
+    --qbutton: #8b6445;
+    --popup-back: #000000;
+    --popup-front: #ffffff;
+    --button-background-hover: color-mix(in srgb, orange 70%, black);
+    --button-foreground-hover: #aaaaaa;
+    --button-border: #3f3f46;
+    --button-text: #101010;
+    --button-background: orange;
+    --danger-button-background-hover: color-mix(in srgb, #550000 70%, black);
+    --danger-button-foreground-hover: #aaaaaa;
+    --danger-button-border: #3f3f46;
+    --danger-button-foreground: #ffffff;
+    --danger-button-background: #550000;
+    --button-background-disabled: #3f3f46;
+    --button-foreground-disabled: #aaaaaa;
+    --batch-0: rgba(200, 200, 200, 0.3);
+    --batch-1: rgba(200, 200, 200, 0.3);
+    --text: #eeeeee;
+    --text-soft: #aaaaaa;
+    --box-selected-border: rgba(225, 162, 85, 0.8);
+    --box-selected-background: rgba(255, 162, 85, 0.2);
+    --box-selected-border-stronger: rgba(255, 162, 85, 1.0);
+    --box-selected-background-stronger: rgba(255, 162, 85, 0.3);
+}

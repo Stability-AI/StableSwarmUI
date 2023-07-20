@@ -89,6 +89,7 @@ public class Program
         Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);
         Sessions = new();
         Web = new();
+        Web.PreInit();
         RunOnAllExtensions(e => e.OnInit());
         Logs.Init("Loading models list...");
         T2IModels.Refresh();

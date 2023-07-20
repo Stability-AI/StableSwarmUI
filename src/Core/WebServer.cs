@@ -41,7 +41,32 @@ public class WebServer
     /// <summary>Extra content for the Text2Image page's tab bodies. Automatically set based on extensions.</summary>
     public static HtmlString T2ITabBody = new("");
 
+    /// <summary>Set of registered Theme IDs.</summary>
+    public Dictionary<string, ThemeData> RegisteredThemes = new();
+
+    /// <summary>Data about a theme.</summary>
+    /// <param name="ID">The registered theme ID.</param>
+    /// <param name="Name">The clear name to display to users.</param>
+    /// <param name="Path">The web request path for the theme.</param>
+    /// <param name="IsDark">True if the theme is dark, false if light.</param>
+    public record class ThemeData(string ID, string Name, string Path, bool IsDark) { }
+
+    /// <summary>Register a theme.</summary>
+    public void RegisterTheme(ThemeData theme)
+    {
+        RegisteredThemes.Add(theme.ID, theme);
+    }
+
     /// <summary>Initial prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>
+    public void PreInit()
+    {
+        RegisteredThemes.Clear();
+        RegisterTheme(new("dark_dreams", "Dark Dreams", "/css/themes/dark_dreams.css", true));
+        RegisterTheme(new("gravity_blue", "Gravity Blue", "/css/themes/gravity_blue.css", true));
+        RegisterTheme(new("eyesear_white", "Eyesear White", "/css/themes/eyesear_white.css", false));
+    }
+
+    /// <summary>Main prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>
     public void Prep()
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "src/wwwroot" });

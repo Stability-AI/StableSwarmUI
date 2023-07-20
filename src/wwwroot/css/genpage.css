@@ -324,7 +324,7 @@ body {
 }
 .preset-remove-button {
     display: inline-block;
-    color: white;
+    color: var(--text);
     font-weight: bold;
     border: 1px solid red;
     border-radius: 0.5rem;
@@ -404,7 +404,7 @@ body {
     margin-bottom: 2rem;
     padding-bottom: 0.2rem;
     padding-left: 2rem;
-    border: 1px solid var(--light-border);
+    border: 1px solid var(--shadow);
     border-radius: 1rem;
     padding-top: 0.5rem;
 }

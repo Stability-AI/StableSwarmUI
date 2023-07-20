@@ -159,6 +159,8 @@ function updatePresetList() {
         removeButton.addEventListener('click', () => {
             currentPresets.splice(currentPresets.indexOf(preset), 1);
             updatePresetList();
+            preset.div.classList.remove('preset-block-selected');
+            preset.addButton.innerText = ' Use ';
         });
         div.appendChild(removeButton);
         view.appendChild(div);
@@ -260,6 +262,7 @@ function presetMenuDelete() {
 function addPreset(preset) {
     allPresets.push(preset);
     let div = createDiv(null, 'model-block preset-block');
+    preset.div = div;
     let img = document.createElement('img');
     img.src = preset.preview_image;
     div.appendChild(img);
@@ -267,6 +270,7 @@ function addPreset(preset) {
     desc.innerText = preset.title + ":\n" + preset.description + "\n";
     let addButton = createDiv(null, 'basic-button');
     addButton.innerText = ' Use ';
+    preset.addButton = addButton;
     let useClick = () => {
         if (!currentPresets.some(p => p.title == preset.title)) {
             currentPresets.push(preset);

@@ -12,7 +12,7 @@
     </li>
     @WebServer.T2ITabHeader
     <li class="nav-item" role="presentation">
-        <a class="nav-link" data-bs-toggle="tab" href="#User-Settings" id="usersettingstabbutton" aria-selected="false" tabindex="-1" role="tab">User Settings</a>
+        <a class="nav-link" data-bs-toggle="tab" href="#User-Settings" id="usersettingstabbutton" aria-selected="false" tabindex="-1" role="tab">User</a>
     </li>
     <li class="nav-item" role="presentation">
         <a class="nav-link" data-bs-toggle="tab" href="#Settings" aria-selected="false" tabindex="-1" role="tab">Server</a>
@@ -181,12 +181,37 @@
     </div>
     @WebServer.T2ITabBody
     <div class="tab-pane tab-pane-vw" id="User-Settings" role="tabpanel">
-        <div id="user_settings_container"></div>
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" data-bs-toggle="tab" href="#user-info" aria-selected="true" role="tab">User Info</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#Settings-User" id="userconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">User Settings</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane show active" id="user-info" role="tabpanel">
+                (TODO: info n stuff here)
+                <br>
+                Theme:
+                <select id="user_theme_selector">
+                    @{
+                        foreach (WebServer.ThemeData theme in Program.Web.RegisteredThemes.Values)
+                        {
+                            <option value="@theme.ID" data-path="@theme.Path" data-isdark="@theme.IsDark">@theme.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="tab-pane" id="Settings-User" role="tabpanel">
+                <div id="user_settings_container"></div>
                 <div class="settings_submit_confirmer" id="usersettings_confirmer">
                     <span class="settings_submit_confirmer_text">Save <span id="usersettings_edit_count">0</span> edited setting(s)?</span>
                     <button type="button" class="btn btn-primary basic-button" onclick="javascript:save_user_settings()">Save</button>
                     <button type="button" class="btn btn-secondary" onclick="javascript:cancel_user_settings_edit()">Cancel</button>
                 </div>
+            </div>
+        </div>
         <div style="height: 10rem"></div> <!-- Spacer -->
     </div>
     <div class="tab-pane tab-pane-vw" id="Settings" role="tabpanel">

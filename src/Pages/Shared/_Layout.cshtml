@@ -4,7 +4,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - StableSwarmUI</title>
-    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    @{
+        string themeId = "dark_dreams";
+        // TODO: Identify user by auth header and use their settings to determine theme
+        if (ViewContext.HttpContext.Request.Cookies.TryGetValue("sui_theme_id", out string themeCookie) && Program.Web.RegisteredThemes.ContainsKey(themeCookie)) {
+            themeId = themeCookie;
+        }
+        WebServer.ThemeData theme = Program.Web.RegisteredThemes[themeId];
+        string themeUrl = $"/css/themes/{themeId}.css?vary={Utilities.VaryID}";
+        string bsUrl = theme.IsDark ? "/css/bootstrap.min.css" : "/css/bootstrap_light.min.css";
+        <link rel="stylesheet" id="bs_theme_header" href="@bsUrl" />
+        <link rel="stylesheet" id="theme_sheet_header" href="@themeUrl" />
+    }
     <link rel="stylesheet" href="/css/select2.min.css" />
     <link rel="stylesheet" href="/css/select2_bootstrap.min.css" />
     <link rel="stylesheet" href="/css/site.css?vary=@Utilities.VaryID" />
