@@ -39,14 +39,32 @@ function getWSAddress() {
 }
 
 /**
+ * Creates a new HTML span with the given ID and classnames.
+ */
+function createSpan(id, classes, html = null) {
+    let span = document.createElement('span');
+    if (id != null) {
+        span.id = id;
+    }
+    span.className = classes;
+    if (html) {
+        span.innerHTML = html;
+    }
+    return span;
+}
+
+/**
  * Creates a new HTML div with the given ID and classnames.
  */
-function createDiv(id, classes) {
+function createDiv(id, classes, html = null) {
     let div = document.createElement('div');
     if (id != null) {
         div.id = id;
     }
     div.className = classes;
+    if (html) {
+        div.innerHTML = html;
+    }
     return div;
 }
 
@@ -273,12 +291,30 @@ function getCookie(name) {
     let decodedCookie = decodeURIComponent(document.cookie);
     let ca = decodedCookie.split(';');
     for(let i = 0; i < ca.length; i++) {
-      let c = ca[i].trim();
-      if (c.indexOf(name) == 0) {
-        return c.substring(name.length, c.length);
-      }
+        let c = ca[i].trim();
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
     }
     return "";
+}
+
+/**
+ * Lists all cookies that start with the given prefix.
+ */
+function listCookies(prefix) {
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let ca = decodedCookie.split(';');
+    let result = [];
+    for(let i = 0; i < ca.length; i++) {
+        let c = ca[i].trim();
+        let equal = c.indexOf('=');
+        let name = c.substring(0, equal);
+        if (name.startsWith(prefix)) {
+            result.push(name);
+        }
+    }
+    return result;
 }
 
 /**

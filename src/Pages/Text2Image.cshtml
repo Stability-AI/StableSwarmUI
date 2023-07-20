@@ -69,15 +69,11 @@
                 </li>
             </ul>
             <div class="tab-content" id="t2i_bottom_bar_content">
-                <div class="tab-pane show active" id="Image-History-Tab" role="tabpanel">
-                    <button id="image_history_refresh_button" title="Refresh" class="image-history-refresh refresh-button">&#128472;</button>
-                    <button id="image_history_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
-                    <span class="image_history_path" id="image_history_path"></span>
-                    <div class="image_history" id="image_history"></div>
+                <div class="tab-pane show active genpage-bottom-tab" id="Image-History-Tab" role="tabpanel">
+                    <div class="browser_container" id="image_history"></div>
                 </div>
                 <div class="modal modal-fullscreen imageview_popup_modal_background" id="image_fullview_modal"></div>
-                <div class="tab-pane" id="Presets-Tab" role="tabpanel">
-                    <button id="preset_list_refresh_button" class="refresh-button" title="Refresh" onclick="javascript:loadUserData()">&#128472;</button>
+                <div class="tab-pane genpage-bottom-tab" id="Presets-Tab" role="tabpanel">
                     <button id="preset_list_create_new_button" class="refresh-button" onclick="javascript:create_new_preset_button()">Create New Preset</button>
                     <button id="preset_list_import_button" class="refresh-button" onclick="javascript:importPresetsButton()">Import Presets</button>
                     <button id="preset_list_export_button" class="refresh-button" onclick="javascript:exportPresetsButton()">Export All Presets</button>
@@ -136,21 +132,14 @@
                             <button type="button" class="btn btn-secondary" onclick="javascript:close_create_new_preset()">Cancel</button>
                         </div>
                     @WebUtil.ModalFooter()
-                    <div class="preset_list" id="preset_list"></div>
+                    <div class="browser_container preset_list_container" id="preset_list"></div>
                     <div class="sui-popover sui_popover_model" id="popover_presetmenu">
                         <div class="sui_popover_model_button" onclick="javascript:presetMenuEdit()">Edit Preset</div>
                         <div class="sui_popover_model_button" onclick="javascript:presetMenuDelete()">Delete Preset</div>
                     </div>
                 </div>
-                <div class="tab-pane" id="Models-Tab" role="tabpanel">
-                    <button id="model_list_refresh_button" title="Refresh" class="refresh-button">&#128472;</button>
-                    <button id="model_list_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
-                    <span class="model_folder_path" id="model_folder_path"></span>
-                    <div class="sui-popover sui_popover_model" id="popover_modelmenu">
-                        <div class="sui_popover_model_button" onclick="javascript:modelMenuDoLoadNow()">Load Now</div>
-                        <div class="sui_popover_model_button" onclick="javascript:modelMenuDoEdit()">Edit Metadata</div>
-                    </div>
-                    <div class="model_list" id="model_list"></div>
+                <div class="tab-pane genpage-bottom-tab" id="Models-Tab" role="tabpanel">
+                    <div class="browser_container" id="model_list"></div>
                     @WebUtil.ModalHeader("edit_model_modal", """Edit Model Metadata: <input type="text" class="modal_text_extra" id="edit_model_name" placeholder="Model Name" />""")
                         <div class="modal-body">
                             <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra" placeholder="Model Author" /></div>
@@ -169,14 +158,14 @@
                         </div>
                     @WebUtil.ModalFooter()
                 </div>
-                <div class="tab-pane" id="Tools-Tab" role="tabpanel">
+                <div class="tab-pane genpage-bottom-tab" id="Tools-Tab" role="tabpanel">
                     <select class="tool-selector" id="tool_selector">
                         <option value="" selected></option>
                     </select>
                     <div class="tool-container" id="tool_container">
                     </div>
+                    <div style="height: 10rem"></div> <!-- Spacer -->
                 </div>
-                <div style="height: 10rem"></div> <!-- Spacer -->
             </div>
         </div>
     </div>
@@ -247,6 +236,7 @@
 
 @section Scripts {
     <script src="/js/backends.js?vary=@Utilities.VaryID"></script>
+    <script src="/js/genpage_browsers.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage_presets.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage_models.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage_params.js?vary=@Utilities.VaryID"></script>

@@ -239,72 +239,81 @@ function editPreset(preset) {
     fixPresetParamClickables();
 }
 
-let currPresetMenuPreset = null;
-
-function presetMenuEdit() {
-    if (currPresetMenuPreset == null) {
-        return;
-    }
-    editPreset(currPresetMenuPreset);
+function sortPresets() {
+    allPresets = allPresets.sort((a, b) => a.title.toLowerCase() == "default" ? -1 : (b.title.toLowerCase() == "default" ? 1 : 0));
 }
 
-function presetMenuDelete() {
-    if (currPresetMenuPreset == null) {
-        return;
-    }
-    if (confirm("Are you sure want to delete that preset?")) {
-        genericRequest('DeletePreset', { preset: currPresetMenuPreset.title }, data => {
-            loadUserData();
+function listPresetFolderAndFiles(path, isRefresh, callback) {
+    let proc = () => {
+        let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
+        let folders = [];
+        let files = [];
+        for (let preset of allPresets) {
+            if (preset.title.startsWith(prefix)) {
+                let subPart = preset.title.substring(prefix.length);
+                let index = subPart.indexOf('/');
+                if (index != -1) {
+                    let folder = subPart.substring(0, index);
+                    if (!folders.includes(folder)) {
+                        folders.push(folder);
+                    }
+                }
+                files.push({ name: preset.title, data: preset });
+            }
+        }
+        callback(folders, files);
+    };
+    if (isRefresh) {
+        genericRequest('GetMyUserData', {}, data => {
+            allPresets = data.presets;
+            sortPresets();
+            proc();
         });
     }
+    else {
+        proc();
+    }
 }
 
-function addPreset(preset) {
-    allPresets.push(preset);
-    let div = createDiv(null, 'model-block preset-block');
-    preset.div = div;
-    let img = document.createElement('img');
-    img.src = preset.preview_image;
-    div.appendChild(img);
-    let desc = createDiv(null, 'model-descblock preset-descblock');
-    desc.innerText = preset.title + ":\n" + preset.description + "\n";
-    let addButton = createDiv(null, 'basic-button');
-    addButton.innerText = ' Use ';
-    preset.addButton = addButton;
-    let useClick = () => {
-        if (!currentPresets.some(p => p.title == preset.title)) {
-            currentPresets.push(preset);
-            updatePresetList();
-            div.classList.add('preset-block-selected');
-            addButton.innerText = ' Remove ';
-        }
-        else {
-            currentPresets.splice(currentPresets.indexOf(preset), 1);
-            updatePresetList();
-            div.classList.remove('preset-block-selected');
-            addButton.innerText = ' Use ';
-        }
-    };
-    addButton.addEventListener('click', useClick);
-    img.addEventListener('click', useClick);
-    desc.appendChild(addButton);
-    let applyButton = createDiv(null, 'basic-button');
-    applyButton.innerText = ' Direct Apply ';
-    applyButton.addEventListener('click', () => {
-        applyOnePreset(preset);
-    });
-    desc.appendChild(applyButton);
-    div.appendChild(desc);
-    let menu = createDiv(null, 'model-block-menu-button');
-    menu.innerText = '⬤⬤⬤';
-    menu.addEventListener('click', () => {
-        currPresetMenuPreset = preset;
-        doPopover('presetmenu');
-    });
-    div.appendChild(menu);
-    div.title = Object.keys(preset.param_map).map(key => `${key}: ${preset.param_map[key]}`).join('\n');
-    getRequiredElementById('preset_list').appendChild(div);
+function searchPresets() {
+    // TODO
 }
+
+function describePreset(preset) {
+    let buttons = [
+        { label: 'Toggle', onclick: () => selectPreset(preset) },
+        { label: 'Direct Apply', onclick: () => applyOnePreset(preset.data) },
+        { label: 'Edit Preset', onclick: () => editPreset(preset.data) },
+        { label: 'Delete Preset', onclick: () => {
+            if (confirm("Are you sure want to delete that preset?")) {
+                genericRequest('DeletePreset', { preset: preset.data.title }, data => {
+                    loadUserData();
+                });
+            }
+        } }
+    ];
+    let description = `${preset.data.title}:\n${preset.data.description}\n\n${Object.keys(preset.data.param_map).map(key => `${key}: ${preset.data.param_map[key]}`).join('\n')}`;
+    let className = currentPresets.some(p => p.title == preset.data.title) ? 'preset-block-selected preset-block' : 'preset-block';
+    let name = preset.data.title;
+    let index = name.lastIndexOf('/');
+    if (index != -1) {
+        name = name.substring(index + 1);
+    }
+    return { name, description, buttons, 'image': preset.data.preview_image, className };
+}
+
+function selectPreset(preset) {
+    if (!currentPresets.some(p => p.title == preset.data.title)) {
+        currentPresets.push(preset.data);
+    }
+    else {
+        currentPresets.splice(currentPresets.indexOf(preset.data), 1);
+    }
+    updatePresetList();
+    presetBrowser.update();
+}
+
+let presetBrowser = new GenPageBrowserClass('preset_list', listPresetFolderAndFiles, searchPresets, 'presetbrowser', 'Cards', describePreset, selectPreset);
 
 function importPresetsButton() {
     getRequiredElementById('import_presets_textarea').value = '';

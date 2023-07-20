@@ -26,16 +26,6 @@ function clickImageInBatch(div) {
     setCurrentImage(div.getElementsByTagName('img')[0].src, div.dataset.metadata);
 }
 
-function selectImageInHistory(div) {
-    let batchId = div.dataset.batch_id;
-    getRequiredElementById('current_image_batch').innerHTML = '';
-    for (let img of getRequiredElementById('image_history').querySelectorAll(`[data-batch_id="${batchId}"]`)) {
-        let batch_div = appendImage('current_image_batch', img.getElementsByTagName('img')[0].src, batchId, img.dataset.preview_text, img.dataset.metadata);
-        batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
-    }
-    setCurrentImage(div.getElementsByTagName('img')[0].src, div.dataset.metadata);
-}
-
 function upscale_current_image() {
     let actualImage = getRequiredElementById('current_image_img');
     toDataURL(actualImage.src, (url => {
@@ -88,16 +78,18 @@ function formatMetadata(metadata) {
     let data = JSON.parse(metadata).sui_image_params;
     let result = '';
     function appendObject(obj) {
-        for (let key of Object.keys(obj)) {
-            let val = obj[key];
-            if (val) {
-                if (typeof val == 'object') {
-                    result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: `;
-                    appendObject(val);
-                    result += `</span>, `;
-                }
-                else {
-                    result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: <span class="param_view">${escapeHtml(`${val}`)}</span></span>, `;
+        if (obj) {
+            for (let key of Object.keys(obj)) {
+                let val = obj[key];
+                if (val) {
+                    if (typeof val == 'object') {
+                        result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: `;
+                        appendObject(val);
+                        result += `</span>, `;
+                    }
+                    else {
+                        result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: <span class="param_view">${escapeHtml(`${val}`)}</span></span>, `;
+                    }
                 }
             }
         }
@@ -262,91 +254,41 @@ function doGenerate() {
     });
 }
 
-class FileListCallHelper {
-    // Attempt to prevent callback recursion.
-    // In practice this seems to not work.
-    // Either JavaScript itself or Firefox seems to really love tracking the stack and refusing to let go.
-    // TODO: Guarantee it actually works so we can't stack overflow from file browsing ffs.
-    constructor(path, loadCaller) {
-        this.path = path;
-        this.loadCaller = loadCaller;
-    }
-    call() {
-        this.loadCaller(this.path);
-    }
-};
-
-function loadFileList(api, upButton, pather, path, container, loadCaller, fileCallback, endCallback, sortFunc) {
-    genericRequest(api, {'path': path}, data => {
-        let pathGen = getRequiredElementById(pather);
-        pathGen.innerText = '';
-        let prefix;
-        upButton = getRequiredElementById(upButton);
-        if (path == '') {
-            prefix = '';
-            upButton.disabled = true;
-        }
-        else {
-            let partial = '';
-            for (let part of ("../" + path).split('/')) {
-                partial += part + '/';
-                let span = document.createElement('span');
-                span.className = 'path-list-part';
-                span.innerText = part;
-                let route = partial.substring(3, partial.length - 1);
-                if (route == '/') {
-                    route = '';
-                }
-                let helper = new FileListCallHelper(route, loadCaller);
-                span.onclick = helper.call.bind(helper);
-                pathGen.appendChild(span);
-                pathGen.appendChild(document.createTextNode('/'));
-            }
-            prefix = path + '/';
-            upButton.disabled = false;
-            let above = path.split('/').slice(0, -1).join('/');
-            let helper = new FileListCallHelper(above, loadCaller);
-            upButton.onclick = helper.call.bind(helper);
-        }
-        for (let folder of data.folders.sort()) {
-            let div = appendImage(container, '/imgs/folder.png', 'folder', `${folder}/`);
-            let helper = new FileListCallHelper(`${prefix}${folder}`, loadCaller);
-            div.addEventListener('click', helper.call.bind(helper));
-        }
-        if (data.folders.length > 0) {
-            container.appendChild(document.createElement('br'));
-        }
-        for (let file of sortFunc(data.files)) {
-            fileCallback(prefix, file);
-        }
-        if (endCallback) {
-            endCallback();
-        }
+function listImageHistoryFolderAndFiles(path, isRefresh, callback) {
+    let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
+    genericRequest('ListImages', {'path': path}, data => {
+        data.files = data.files.sort((a, b) => a.src.toLowerCase().localeCompare(b.src.toLowerCase()));
+        let folders = data.folders.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        let mapped = data.files.map(f => {
+            let fullSrc = `${prefix}${f.src}`;
+            return { 'name': fullSrc, 'data': { 'src': `Output/${fullSrc}`, 'name': f.src, 'metadata': f.metadata } };
+        });
+        callback(folders, mapped);
     });
 }
 
-function loadHistory(path) {
-    let container = getRequiredElementById('image_history');
-    lastImageDir = path;
-    container.innerHTML = '';
-    loadFileList('ListImages', 'image_history_up_button', 'image_history_path', path, container, loadHistory, (prefix, img) => {
-        let fullSrc = `Output/${prefix}${img.src}`;
-        let batchId = 0;
-        if (img.metadata) {
-            batchId = parseInt(JSON.parse(img.metadata).sui_image_params.batch_id);
-        }
-        else if (img.src.endsWith('.html')) {
-            batchId = 'folder';
-        }
-        let div = appendImage('image_history', fullSrc, batchId, img.src, img.metadata);
-        if (img.src.endsWith('.html')) {
-            div.addEventListener('click', () => window.open(fullSrc, '_blank'));
-        }
-        else {
-            div.addEventListener('click', () => selectImageInHistory(div));
-        }
-    }, null, (list) => list.sort((a, b) => a.src.toLowerCase().localeCompare(b.src.toLowerCase())));
+function searchImageHistory() {
+    // TODO
 }
+
+function describeImage(image) {
+    let buttons = []; // TODO: Delete button, download, etc.
+    let description = image.data.name + "\n" + formatMetadata(image.data.metadata);
+    let name = image.data.name;
+    let imageSrc = image.data.src.endsWith('.html') ? 'imgs/html.png' : image.data.src;
+    return { name, description, buttons, 'image': imageSrc, className: '' };
+}
+
+function selectImageInHistory(image) {
+    if (image.data.name.endsWith('.html')) {
+        window.open(image.data.src, '_blank');
+    }
+    else {
+        setCurrentImage(image.data.src, image.data.metadata);
+    }
+}
+
+let imageHistoryBrowser = new GenPageBrowserClass('image_history', listImageHistoryFolderAndFiles, searchImageHistory, 'imagehistorybrowser', 'Thumbnails', describeImage, selectImageInHistory);
 
 function getCurrentStatus() {
     if (versionIsWrong) {
@@ -471,14 +413,19 @@ let pageBarMid = -1;
 
 let setPageBarsFunc;
 
+let layoutResets = [];
+
 function resetPageSizer() {
-    deleteCookie('pageBarTop');
-    deleteCookie('pageBarTop2');
-    deleteCookie('pageBarMidPx');
+    for (let cookie of listCookies('barspot_')) {
+        deleteCookie(cookie);
+    }
     pageBarTop = -1;
     pageBarTop2 = -1;
     pageBarMid = -1;
     setPageBarsFunc();
+    for (let runnable of layoutResets) {
+        runnable();
+    }
 }
 
 function pageSizer() {
@@ -496,9 +443,9 @@ function pageSizer() {
     let topDrag2 = false;
     let midDrag = false;
     function setPageBars() {
-        setCookie('pageBarTop', pageBarTop, 365);
-        setCookie('pageBarTop2', pageBarTop2, 365);
-        setCookie('pageBarMidPx', pageBarMid, 365);
+        setCookie('barspot_pageBarTop', pageBarTop, 365);
+        setCookie('barspot_pageBarTop2', pageBarTop2, 365);
+        setCookie('barspot_pageBarMidPx', pageBarMid, 365);
         let barTopLeft = pageBarTop == -1 ? `28rem` : `${pageBarTop}px`;
         let barTopRight = pageBarTop2 == -1 ? `21rem` : `${pageBarTop2}px`;
         inputSidebar.style.width = `${barTopLeft}`;
@@ -531,15 +478,15 @@ function pageSizer() {
         }
     }
     setPageBarsFunc = setPageBars;
-    let cookieA = getCookie('pageBarTop');
+    let cookieA = getCookie('barspot_pageBarTop');
     if (cookieA) {
         pageBarTop = parseInt(cookieA);
     }
-    let cookieB = getCookie('pageBarTop2');
+    let cookieB = getCookie('barspot_pageBarTop2');
     if (cookieB) {
         pageBarTop2 = parseInt(cookieB);
     }
-    let cookieC = getCookie('pageBarMidPx');
+    let cookieC = getCookie('barspot_pageBarMidPx');
     if (cookieC) {
         pageBarMid = parseInt(cookieC);
     }
@@ -598,11 +545,9 @@ themeSelectorElement.addEventListener('change', (e) => {
 
 function loadUserData() {
     genericRequest('GetMyUserData', {}, data => {
-        allPresets = [];
-        getRequiredElementById('preset_list').innerHTML = '';
-        for (let preset of data.presets.sort((a, b) => a.title.toLowerCase() == "default" ? -1 : (b.title.toLowerCase() == "default" ? 1 : 0))) {
-            addPreset(preset);
-        }
+        allPresets = data.presets;
+        sortPresets();
+        presetBrowser.update();
         if (shouldApplyDefault) {
             shouldApplyDefault = false;
             let defaultPreset = getPresetByTitle('default');
@@ -619,7 +564,7 @@ function genpageLoad() {
     reviseStatusBar();
     getSession(() => {
         console.log('First session loaded - prepping page.');
-        loadHistory('');
+        imageHistoryBrowser.navigate('');
         loadModelList('');
         loadBackendTypesMenu();
         genericRequest('ListT2IParams', {}, data => {
@@ -632,8 +577,6 @@ function genpageLoad() {
             toggle_advanced();
             setCurrentModel();
             loadUserData();
-            getRequiredElementById('image_history_refresh_button').addEventListener('click', () => loadHistory(lastImageDir));
-            getRequiredElementById('model_list_refresh_button').addEventListener('click', () => loadModelList(lastModelDir, true));
             for (let callback of sessionReadyCallbacks) {
                 callback();
             }

@@ -4,22 +4,11 @@ let cur_model = null;
 let curModelWidth = 0, curModelHeight = 0;
 let curModelMenuModel = null;
 
-function modelMenuDoLoadNow() {
-    if (curModelMenuModel == null) {
-        return;
-    }
-    directSetModel(curModelMenuModel);
-    makeWSRequestT2I('SelectModelWS', {'model': curModelMenuModel.name}, data => {
-        loadModelList(lastModelDir);
-    });
-}
-
-function modelMenuDoEdit() {
-    let model = curModelMenuModel;
+function editModel(model) {
     if (model == null) {
-        console.log("Model do edit: no model");
         return;
     }
+    curModelMenuModel = model;
     let imageInput = getRequiredElementById('edit_model_image');
     imageInput.innerHTML = '';
     let enableImage = getRequiredElementById('edit_model_enable_image');
@@ -87,36 +76,6 @@ function cleanModelName(name) {
     return name;
 }
 
-function appendModel(container, prefix, model) {
-    models[`${prefix}${model.name}`] = model;
-    let batch = getRequiredElementById('current_model').innerText == model.name ? 'model-selected' : (model.loaded ? 'model-loaded' : `image-batch-${Object.keys(models).length % 2}`);
-    let div = createDiv(null, `model-block model-block-hoverable ${batch}`);
-    let img = document.createElement('img');
-    img.src = model.preview_image;
-    div.appendChild(img);
-    let textBlock = createDiv(null, 'model-descblock');
-    if (model.is_safetensors) {
-        let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
-        textBlock.innerHTML = `<span class="model_filename">${escapeHtml(cleanModelName(model.name))}</span><br>${getLine("Title", model.title)}${getLine("Author", model.author)}${getLine("Type", model.class)}${getLine("Resolution", `${model.standard_width}x${model.standard_height}`)}${getLine("Description", model.description)}`;
-    }
-    else {
-        textBlock.innerHTML = `${escapeHtml(cleanModelName(model.name))}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
-    }
-    div.appendChild(textBlock);
-    container.appendChild(div);
-    let menu = createDiv(null, 'model-block-menu-button');
-    menu.innerText = '⬤⬤⬤';
-    menu.addEventListener('click', () => {
-        curModelMenuModel = model;
-        doPopover('modelmenu');
-    });
-    div.appendChild(menu);
-    img.addEventListener('click', () => {
-        directSetModel(model);
-        loadModelList(lastModelDir);
-    });
-}
-
 function sortModelName(a, b) {
     let aName = a.name.toLowerCase();
     let bName = b.name.toLowerCase();
@@ -129,28 +88,50 @@ function sortModelName(a, b) {
     return aName.localeCompare(bName);
 }
 
-function loadModelList(path, isRefresh = false) {
-    let container = getRequiredElementById('model_list');
-    lastModelDir = path;
-    container.innerHTML = '';
-    models = {};
-    call = () => loadFileList('ListModels', 'model_list_up_button', 'model_folder_path', path, container, loadModelList, (prefix, model) => {
-        appendModel(container, prefix, model);
-    }, () => {
-        let current_model = getRequiredElementById('current_model');
-        if (current_model.innerText == '') {
-            let model = Object.values(models).find(m => m.loaded);
-            if (model) {
-                directSetModel(model);
-            }
-        }
-    }, (list) => list.sort(sortModelName));
-    if (isRefresh) {
-        refreshParameterValues(call);
+function listModelFolderAndFiles(path, isRefresh, callback) {
+    let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
+    genericRequest('ListModels', {'path': path}, data => {
+        callback(data.folders.sort((a, b) => a.localeCompare(b)), data.files.sort(sortModelName).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; }));
+    });
+}
+
+function modelsSearch() {
+    // TODO
+}
+
+function describeModel(model) {
+    let description = '';
+    let buttonLoad = () => {
+        directSetModel(model.data);
+        makeWSRequestT2I('SelectModelWS', {'model': model.data.name}, data => {
+            loadModelList(lastModelDir);
+        });
+    }
+    let buttons = [
+        { label: 'Load Now', onclick: buttonLoad }
+    ];
+    let name = cleanModelName(model.data.name);
+    if (model.data.is_safetensors) {
+        let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
+        description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}${getLine("Description", model.data.description)}`;
+        buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data) });
     }
     else {
-        call();
+        description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
     }
+    let className = getRequiredElementById('current_model').innerText == model.data.name ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
+    return { name, description, buttons, 'image': model.data.preview_image, className };
+}
+
+function selectModel(model) {
+    directSetModel(model.data);
+    modelBrowser.update();
+}
+
+let modelBrowser = new GenPageBrowserClass('model_list', listModelFolderAndFiles, modelsSearch, 'modelbrowser', 'Cards', describeModel, selectModel);
+
+function loadModelList(path) {
+    modelBrowser.navigate(path);
 }
 
 function directSetModel(model) {

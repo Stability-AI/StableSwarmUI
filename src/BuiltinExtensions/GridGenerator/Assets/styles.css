@@ -60,7 +60,7 @@ table tr td:first-child {
     overflow-wrap: break-word;
 }
 .modal_inner_div {
-    width: 90vw;
+    width: calc(min(90vw, 100vh - 5em));
     margin: auto;
 }
 .advanced_settings_section {

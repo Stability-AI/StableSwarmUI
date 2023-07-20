@@ -231,9 +231,14 @@ public static class T2IAPI
     /// <summary>API route to get a list of available models.</summary>
     public static async Task<JObject> ListModels(Session session, string path)
     {
+        path = path.Replace('\\', '/');
         if (path != "")
         {
             path += '/';
+        }
+        while (path.Contains("//"))
+        {
+            path = path.Replace("//", "/");
         }
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
