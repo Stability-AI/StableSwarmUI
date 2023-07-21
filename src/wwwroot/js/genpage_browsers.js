@@ -147,7 +147,6 @@ class GenPageBrowserClass {
         span.innerHTML = `<span class="browser-folder-tree-part-symbol"></span> ${escapeHtml(tree.name || '..')}`;
         span.dataset.path = path;
         container.appendChild(span);
-        console.log(`view ${path}: ${tree.name}, ${tree.isOpen} ${tree.hasOpened}, ${Object.keys(tree.children).length}`);
         if (Object.keys(tree.children).length == 0 && tree.hasOpened) {
             // Default: no class
         }

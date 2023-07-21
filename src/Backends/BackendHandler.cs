@@ -120,6 +120,7 @@ public class BackendHandler
         {
             Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend
         };
+        data.Backend.BackendData = data;
         data.Backend.SettingsRaw = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
         data.Backend.HandlerTypeData = type;
         data.Backend.Handler = this;
@@ -217,6 +218,7 @@ public class BackendHandler
                 Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend,
                 ID = int.Parse(idstr)
             };
+            data.Backend.BackendData = data;
             LastBackendID = Math.Max(LastBackendID, data.ID + 1);
             data.Backend.SettingsRaw = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
             data.Backend.SettingsRaw.Load(section.GetSection("settings"));

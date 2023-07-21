@@ -330,7 +330,7 @@ function deleteCookie(name) {
  */
 function getRequiredElementById(id) {
     let elem = document.getElementById(id);
-    if (elem == null) {
+    if (!elem) {
         throw new Error(`Required element '${id}' not found.`);
     }
     return elem;

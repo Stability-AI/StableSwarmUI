@@ -248,7 +248,7 @@ function genInputs(delay_final = false) {
                     if (param.type == "boolean") {
                         elem.checked = cookie == "true";
                     }
-                    else {
+                    else if (param.type != "image") {
                         elem.value = cookie;
                     }
                     elem.dispatchEvent(new Event('input'));
@@ -259,7 +259,7 @@ function genInputs(delay_final = false) {
                         if (param.type == "boolean") {
                             setCookie(`lastparam_input_${param.id}`, elem.checked, 0.25);
                         }
-                        else {
+                        else if (param.type != "image") {
                             setCookie(`lastparam_input_${param.id}`, elem.value, 0.25);
                         }
                     });

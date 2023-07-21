@@ -43,6 +43,9 @@ public abstract class AbstractT2IBackend
 
     /// <summary>The backend's settings.</summary>
     public AutoConfiguration SettingsRaw;
+
+    /// <summary>Handler-internal data for this backend.</summary>
+    public BackendHandler.T2IBackendData BackendData;
 }
 
 public enum BackendStatus

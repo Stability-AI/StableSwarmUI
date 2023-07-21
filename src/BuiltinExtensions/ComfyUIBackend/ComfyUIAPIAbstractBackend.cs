@@ -58,11 +58,16 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     {
     }
 
+    public async Task<JObject> PostJSONString(string route, string input, CancellationToken interrupt)
+    {
+        return await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/{route}", new StringContent(input, StringConversionHelper.UTF8Encoding, "application/json"), interrupt));
+    }
+
     public async Task<Image[]> AwaitJob(string workflow, CancellationToken interrupt)
     {
         workflow = $"{{\"prompt\": {workflow}}}";
         //Logs.Debug($"Will use workflow: {workflow}");
-        JObject result = await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/prompt", new StringContent(workflow, StringConversionHelper.UTF8Encoding, "application/json"), interrupt));
+        JObject result = await PostJSONString("prompt", workflow, interrupt);
         //Logs.Debug($"ComfyUI prompt said: {result}");
         if (result.ContainsKey("error"))
         {
@@ -106,6 +111,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return outputs.ToArray();
     }
 
+    public volatile int ImageIDDedup = 0;
+
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
         string workflow = null;
@@ -121,9 +128,35 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
             }
         }
+        List<Action> completeSteps = new();
+        string initImageFixer(string flow) // TODO: This is hack.
+        {
+            return StringConversionHelper.QuickSimpleTagFiller(workflow, "${", "}", (tag) =>
+            {
+                if (tag == "init_image" && user_input.TryGet(T2IParamTypes.InitImage, out Image img))
+                {
+                    int id = Interlocked.Increment(ref ImageIDDedup);
+                    string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
+                    Image fixedImage = img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height));
+                    MultipartFormDataContent content = new()
+                    {
+                        { new ByteArrayContent(fixedImage.ImageData), "image", fname },
+                        { new StringContent("true"), "overwrite" }
+                    };
+                    HttpClient.PostAsync($"{Address}/upload/image", content).Wait();
+                    completeSteps.Add(() =>
+                    {
+                        Interlocked.Decrement(ref ImageIDDedup);
+                    });
+                    // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
+                    return fname;
+                }
+                return tag;
+            });
+        }
         if (workflow is not null)
         {
-            workflow = StringConversionHelper.QuickSimpleTagFiller(workflow, "${", "}", (tag) => {
+            workflow = StringConversionHelper.QuickSimpleTagFiller(initImageFixer(workflow), "${", "}", (tag) => {
                 string tagName = tag.BeforeAndAfter(':', out string defVal);
                 string tagBasic = tagName.BeforeAndAfter('+', out string tagExtra);
                 string filled = tagBasic switch
@@ -156,8 +189,19 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         else
         {
             workflow = new WorkflowGenerator() { UserInput = user_input }.Generate().ToString();
+            workflow = initImageFixer(workflow);
         }
-        return await AwaitJob(workflow, user_input.InterruptToken);
+        try
+        {
+            return await AwaitJob(workflow, user_input.InterruptToken);
+        }
+        finally
+        {
+            foreach (Action step in completeSteps)
+            {
+                step();
+            }
+        }
     }
 
     public async Task<JType> SendGet<JType>(string url) where JType : class

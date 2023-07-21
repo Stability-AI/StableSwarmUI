@@ -1,6 +1,7 @@
 ﻿
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Text2Image;
+using StableSwarmUI.Utils;
 using System.IO;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
@@ -41,15 +42,36 @@ public class WorkflowGenerator
         }, -10);
         AddStep(g =>
         {
-            g.CreateNode("EmptyLatentImage", (_, n) =>
+            if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image img))
             {
-                n["inputs"] = new JObject()
+                g.CreateNode("LoadImage", (_, n) =>
                 {
-                    ["batch_size"] = "1",
-                    ["height"] = g.UserInput.Get(T2IParamTypes.Height),
-                    ["width"] = g.UserInput.Get(T2IParamTypes.Width)
-                };
-            }, "5");
+                    n["inputs"] = new JObject()
+                    {
+                        ["image"] = "${init_image}"
+                    };
+                }, "15");
+                g.CreateNode("VAEEncode", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["pixels"] = new JArray() { "15", 0 },
+                        ["vae"] = g.FinalVae
+                    };
+                }, "5");
+            }
+            else
+            {
+                g.CreateNode("EmptyLatentImage", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["batch_size"] = "1",
+                        ["height"] = g.UserInput.Get(T2IParamTypes.Height),
+                        ["width"] = g.UserInput.Get(T2IParamTypes.Width)
+                    };
+                }, "5");
+            }
         }, -9);
         AddStep(g =>
         {
@@ -77,6 +99,11 @@ public class WorkflowGenerator
         {
             g.CreateNode("KSamplerAdvanced", (_, n) =>
             {
+                int startStep = 0;
+                if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image _) && g.UserInput.TryGet(T2IParamTypes.InitImageCreativity, out double creativity))
+                {
+                    startStep = (int)(g.UserInput.Get(T2IParamTypes.Steps) * (1 - creativity));
+                }
                 n["inputs"] = new JObject()
                 {
                     ["model"] = g.FinalModel,
@@ -91,7 +118,7 @@ public class WorkflowGenerator
                     ["negative"] = g.FinalNegativePrompt,
                     ["latent_image"] = g.FinalLatentImage,
                     // TODO: Configurable
-                    ["start_at_step"] = 0,
+                    ["start_at_step"] = startStep,
                     ["end_at_step"] = 10000,
                     ["return_with_leftover_noise"] = "disable"
                 };

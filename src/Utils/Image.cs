@@ -5,6 +5,7 @@ using System.IO;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using ISImage = SixLabors.ImageSharp.Image;
 using Newtonsoft.Json.Linq;
+using SixLabors.ImageSharp.Processing;
 
 /// <summary>Helper to represent an image file cleanly and quickly.</summary>
 public class Image
@@ -28,6 +29,28 @@ public class Image
 
     /// <summary>Gets an ImageSharp <see cref="ISImage"/> for this image.</summary>
     public ISImage ToIS => ISImage.Load(ImageData);
+
+    /// <summary>Helper to convert an ImageSharp image to png bytes.</summary>
+    public static byte[] ISImgToPngBytes(ISImage img)
+    {
+        using MemoryStream stream = new();
+        img.SaveAsPng(stream);
+        return stream.ToArray();
+    }
+
+    /// <summary>Resizes the given image directly and returns a png formatted copy of it.</summary>
+    public Image Resize(int width, int height)
+    {
+        ISImage img = ToIS;
+        img.Mutate(i => i.Resize(width, height));
+        return new(ISImgToPngBytes(img));
+    }
+
+    /// <summary>Returns a copy of this image that's definitely in '.png' format.</summary>
+    public Image ForceToPng()
+    {
+        return new(ISImgToPngBytes(ToIS));
+    }
 
     /// <summary>Image formats that are possible to save as.</summary>
     public enum ImageFormat
