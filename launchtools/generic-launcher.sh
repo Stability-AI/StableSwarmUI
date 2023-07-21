@@ -13,5 +13,5 @@ if [[ $5 == py ]]; then
     fi
     python3 "$3" $4
 else
-    "$3" $4
+    "./$3" $4
 fi
