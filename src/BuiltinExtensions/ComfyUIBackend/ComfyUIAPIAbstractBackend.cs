@@ -129,30 +129,27 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
         }
         List<Action> completeSteps = new();
-        string initImageFixer(string flow) // TODO: This is hack.
+        string initImageFixer(string flow) // TODO: This is a hack.
         {
-            return StringConversionHelper.QuickSimpleTagFiller(workflow, "${", "}", (tag) =>
+            if (workflow.Contains("${init_image}") && user_input.TryGet(T2IParamTypes.InitImage, out Image img))
             {
-                if (tag == "init_image" && user_input.TryGet(T2IParamTypes.InitImage, out Image img))
-                {
-                    int id = Interlocked.Increment(ref ImageIDDedup);
-                    string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
-                    Image fixedImage = img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height));
-                    MultipartFormDataContent content = new()
+                int id = Interlocked.Increment(ref ImageIDDedup);
+                string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
+                Image fixedImage = img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height));
+                MultipartFormDataContent content = new()
                     {
                         { new ByteArrayContent(fixedImage.ImageData), "image", fname },
                         { new StringContent("true"), "overwrite" }
                     };
-                    HttpClient.PostAsync($"{Address}/upload/image", content).Wait();
-                    completeSteps.Add(() =>
-                    {
-                        Interlocked.Decrement(ref ImageIDDedup);
-                    });
-                    // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
-                    return fname;
-                }
-                return tag;
-            });
+                HttpClient.PostAsync($"{Address}/upload/image", content).Wait();
+                completeSteps.Add(() =>
+                {
+                    Interlocked.Decrement(ref ImageIDDedup);
+                });
+                // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
+                workflow = workflow.Replace("${init_image}", fname);
+            }
+            return workflow;
         }
         if (workflow is not null)
         {
@@ -176,7 +173,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "comfy_scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam) ?? "normal",
                     "model" => user_input.Get(T2IParamTypes.Model).Name.Replace('/', Path.DirectorySeparatorChar),
                     "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
-                    _ => user_input.GetRaw(T2IParamTypes.GetType(tagBasic, user_input))?.ToString()
+                    _ => user_input.TryGetRaw(T2IParamTypes.GetType(tagBasic, user_input), out object val) ? val?.ToString() : null
                 };
                 if (tagExtra == "seed" && filled == "-1")
                 {
@@ -194,6 +191,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         try
         {
             return await AwaitJob(workflow, user_input.InterruptToken);
+        }
+        catch (Exception)
+        {
+            Logs.Debug($"Failed to process comfy workflow: {workflow} for inputs {user_input}");
+            throw;
         }
         finally
         {

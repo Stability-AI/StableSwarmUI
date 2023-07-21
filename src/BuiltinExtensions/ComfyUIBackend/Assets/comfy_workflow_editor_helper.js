@@ -164,13 +164,19 @@ function comfyBuildParams(callback) {
             else if (groupLabel.includes('KSampler')) {
                 priority = -5;
             }
+            function injectType(id, type) {
+                if (id.startsWith(inputPrefix)) {
+                    id = inputPrefix + type + id.substring(inputPrefix.length);
+                }
+                return id;
+            }
             function addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel) {
                 let type, values = null, min = -9999999999, max = 9999999999, number_view_type = 'big', step = 1;
                 if (typeof val == 'number') {
                     let asSeed = false;
                     if (inputId == 'batch_size') {
                         node.inputs[inputId] = 1;
-                        return;
+                        return inputIdDirect;
                     }
                     if (['seed', 'noise_seed'].includes(inputId)) {
                         type = 'integer';
@@ -197,7 +203,7 @@ function comfyBuildParams(callback) {
                         step = 0.5;
                     }
                     else if (['steps', 'start_at_step', 'end_at_step'].includes(inputId)) {
-                        type = 'decimal';
+                        type = 'integer';
                         min = 1;
                         max = 50;
                         step = 1;
@@ -205,17 +211,18 @@ function comfyBuildParams(callback) {
                     else {
                         type = 'decimal';
                     }
+                    inputIdDirect = injectType(inputIdDirect, type);
                     node.inputs[inputId] = "%%_COMFYFIXME_${" + inputIdDirect + (asSeed ? "+seed" : "") + ":" + val + "}_ENDFIXME_%%";
                 }
                 else if (typeof val == 'string') {
                     if (node.class_type == 'SaveImage' && inputId == 'filename_prefix') {
                         node.inputs[inputId] = "${prefix:}";
-                        return;
+                        return inputIdDirect;
                     }
                     else if (node.class_type == 'CheckpointLoaderSimple' && inputId == 'ckpt_name') {
                         if (nodeId == '4') {
                             node.inputs[inputId] = "${model:error_missing_model}";
-                            return;
+                            return inputIdDirect;
                         }
                         type = 'model';
                         values = allModels;
@@ -229,15 +236,17 @@ function comfyBuildParams(callback) {
                     else {
                         type = 'text';
                     }
+                    inputIdDirect = injectType(inputIdDirect, type);
                     node.inputs[inputId] = "${" + inputIdDirect + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
                 }
                 else {
-                    return;
+                    return inputIdDirect;
                 }
                 if (!idsUsed.includes(inputIdDirect)) {
                     idsUsed.push(inputIdDirect);
                     addSimpleParam(inputLabel, val, type, groupLabel, values, number_view_type, min, max, step, inputIdDirect, groupId, priority);
                 }
+                return inputIdDirect;
             }
             function claimOnce(classType, paramName, fieldName, numeric) {
                 if (node.class_type != classType) {
@@ -248,9 +257,11 @@ function comfyBuildParams(callback) {
                     let redirId = nodeStatics[nodeLabelPaths[`${nodeId}.${fieldName}`]];
                     let useParamName = paramName;
                     let paramNameClean = cleanParamName(paramName);
+                    let actualId = useParamName;
                     if (redirId) {
                         useParamName = redirId;
-                        addParam(fieldName, useParamName, useParamName.substring(inputPrefix.length), val, 'primitives', 'Primitives');
+                        actualId = redirId;
+                        actualId = addParam(fieldName, actualId, useParamName.substring(inputPrefix.length), val, 'primitives', 'Primitives');
                     }
                     else if (defaultParamsRetain.includes(paramNameClean)) {
                         return false;
@@ -258,7 +269,7 @@ function comfyBuildParams(callback) {
                     else {
                         defaultParamsRetain.push(paramNameClean);
                     }
-                    node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + useParamName + ":" + val + "}_ENDFIXME_%%" : "${" + useParamName + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
+                    node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + actualId + ":" + val + "}_ENDFIXME_%%" : "${" + actualId + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
                     return true;
                 }
                 return false;

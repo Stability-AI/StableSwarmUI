@@ -168,4 +168,9 @@ public class T2IParamInput
             Set(T2IParamTypes.VariationSeed, Random.Shared.Next());
         }
     }
+
+    public override string ToString()
+    {
+        return $"T2IParamInput({string.Join(", ", ValuesInput.Select(x => $"{x.Key}: {x.Value}"))})";
+    }
 }

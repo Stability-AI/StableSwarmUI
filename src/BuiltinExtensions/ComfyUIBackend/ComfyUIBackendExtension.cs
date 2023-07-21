@@ -48,7 +48,19 @@ public class ComfyUIBackendExtension : Extension
         }
         else if (name.StartsWith("comfyrawworkflowinput") && context.ValuesInput.ContainsKey("comfyworkflowraw"))
         {
-            return FakeRawInputType with { Name = name, ID = name, HideFromMetadata = false };
+            string nameNoPrefix = name.After("comfyrawworkflowinput");
+            T2IParamDataType type = FakeRawInputType.Type;
+            foreach (T2IParamDataType possible in Enum.GetValues<T2IParamDataType>())
+            {
+                string typeId = possible.ToString().ToLowerFast();
+                if (nameNoPrefix.StartsWith(typeId))
+                {
+                    nameNoPrefix = nameNoPrefix.After(typeId);
+                    type = possible;
+                    break;
+                }
+            }
+            return FakeRawInputType with { Name = nameNoPrefix, ID = name, HideFromMetadata = false, Type = type };
         }
         return null;
     }
