@@ -54,6 +54,18 @@ public class T2IModelHandler
         public int StandardWidth { get; set; }
 
         public int StandardHeight { get; set; }
+
+        public string License { get; set; }
+
+        public string UsageHint { get; set; }
+
+        public string TriggerPhrase { get; set; }
+
+        public string[] Tags { get; set; }
+
+        public string MergedFrom { get; set; }
+
+        public string Date { get; set; }
     }
 
     public T2IModelHandler()
@@ -135,17 +147,14 @@ public class T2IModelHandler
         {
             return;
         }
-        ModelMetadataStore metadata = new()
+        ModelMetadataStore metadata = model.Metadata ?? new()
         {
             ModelFileVersion = modified,
             ModelName = fileName,
             Title = model.Title,
             ModelClassType = model.ModelClass?.Name,
-            Author = model.Author,
-            Description = model.Description,
-            PreviewImage = model.PreviewImage,
             StandardHeight = model.ModelClass.StandardHeight,
-            StandardWidth = model.ModelClass.StandardWidth,
+            StandardWidth = model.ModelClass.StandardWidth
         };
         lock (MetadataLock)
         {
@@ -199,18 +208,42 @@ public class T2IModelHandler
             }
             JObject metaHeader = headerData["__metadata__"] as JObject;
             T2IModelClass clazz = ClassSorter.IdentifyClassFor(model, headerData);
+            string img = metaHeader?.Value<string>("modelspec.thumbnail") ?? metaHeader?.Value<string>("preview_image");
+            if (img is not null && !(img.StartsWith("/Output/") || img.StartsWith("data:image/")))
+            {
+                Logs.Warning($"Ignoring image in metadata of {model.Name} '{img}'");
+                img = null;
+            }
+            int width, height;
+            string res = metaHeader?.Value<string>("modelspec.resolution");
+            if (res is not null)
+            {
+                width = int.Parse(res.BeforeAndAfter('x', out string h));
+                height = int.Parse(h);
+            }
+            else
+            {
+                width = (metaHeader?.ContainsKey("standard_width") ?? false) ? metaHeader.Value<int>("standard_width") : (clazz?.StandardWidth ?? 0);
+                height = (metaHeader?.ContainsKey("standard_height") ?? false) ? metaHeader.Value<int>("standard_height") : (clazz?.StandardHeight ?? 0);
+            }
             metadata = new()
             {
                 ModelFileVersion = modified,
                 ModelName = fileName,
                 ModelClassType = clazz?.Name,
                 ModelMetadataRaw = header,
-                Title = metaHeader?.Value<string>("title") ?? fileName.BeforeLast('.'),
-                Author = metaHeader?.Value<string>("author"),
-                Description = metaHeader?.Value<string>("description"),
-                PreviewImage = metaHeader?.Value<string>("preview_image"),
-                StandardWidth = (metaHeader?.ContainsKey("standard_width") ?? false) ? metaHeader.Value<int>("standard_width") : (clazz?.StandardWidth ?? 0),
-                StandardHeight = (metaHeader?.ContainsKey("standard_height") ?? false) ? metaHeader.Value<int>("standard_height") : (clazz?.StandardHeight ?? 0)
+                Title = metaHeader?.Value<string>("modelspec.title") ?? metaHeader?.Value<string>("title") ?? fileName.BeforeLast('.'),
+                Author = metaHeader?.Value<string>("modelspec.author") ?? metaHeader?.Value<string>("author"),
+                Description = metaHeader?.Value<string>("modelspec.description") ?? metaHeader?.Value<string>("description"),
+                PreviewImage = img,
+                StandardWidth = width,
+                StandardHeight = height,
+                UsageHint = metaHeader?.Value<string>("modelspec.usage_hint"),
+                MergedFrom = metaHeader?.Value<string>("modelspec.merged_from"),
+                TriggerPhrase = metaHeader?.Value<string>("modelspec.trigger_phrase"),
+                License = metaHeader?.Value<string>("modelspec.license"),
+                Date = metaHeader?.Value<string>("modelspec.date"),
+                Tags = metaHeader?.Value<string>("modelspec.tags")?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
             };
             lock (MetadataLock)
             {
@@ -220,12 +253,11 @@ public class T2IModelHandler
         lock (ModificationLock)
         {
             model.Title = metadata.Title;
-            model.Author = metadata.Author;
-            model.Description = metadata.Description;
             model.ModelClass = ClassSorter.ModelClasses.GetValueOrDefault(metadata.ModelClassType ?? "");
             model.PreviewImage = string.IsNullOrWhiteSpace(metadata.PreviewImage) ? "imgs/model_placeholder.jpg" : metadata.PreviewImage;
             model.StandardWidth = metadata.StandardWidth;
             model.StandardHeight = metadata.StandardHeight;
+            model.Metadata = metadata;
         }
     }
 

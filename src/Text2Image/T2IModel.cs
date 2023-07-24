@@ -15,12 +15,6 @@ public class T2IModel
     /// <summary>Proper title of the model, if identified.</summary>
     public string Title;
 
-    /// <summary>Author of the model, if identified.</summary>
-    public string Author;
-
-    /// <summary>Description text, if any, of the model.</summary>
-    public string Description;
-
     /// <summary>URL or data blob of a preview image for this model.</summary>
     public string PreviewImage;
 
@@ -33,21 +27,30 @@ public class T2IModel
     /// <summary>What class this model is, if known.</summary>
     public T2IModelClass ModelClass;
 
+    /// <summary>Metadata about this model.</summary>
+    public T2IModelHandler.ModelMetadataStore Metadata;
+
     /// <summary>Gets a networkable copy of this model's data.</summary>
     public JObject ToNetObject()
     {
         return new JObject()
         {
             ["name"] = Name,
-            ["title"] = Title,
-            ["author"] = Author,
-            ["description"] = Description,
+            ["title"] = Metadata?.Title,
+            ["author"] = Metadata?.Author,
+            ["description"] = Metadata?.Description,
             ["model_class"] = ModelClass?.Name,
             ["preview_image"] = PreviewImage,
             ["loaded"] = AnyBackendsHaveLoaded,
             ["class"] = ModelClass?.Name,
             ["standard_width"] = StandardWidth,
             ["standard_height"] = StandardHeight,
+            ["license"] = Metadata?.License,
+            ["date"] = Metadata?.Date,
+            ["usage_hint"] = Metadata?.UsageHint,
+            ["trigger_phrase"] = Metadata?.TriggerPhrase,
+            ["merged_from"] = Metadata?.MergedFrom,
+            ["tags"] = Metadata?.Tags is null ? null : new JArray(Metadata.Tags),
             ["is_safetensors"] = RawFilePath.EndsWith(".safetensors")
         };
     }
