@@ -66,9 +66,9 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     public async Task<Image[]> AwaitJob(string workflow, CancellationToken interrupt)
     {
         workflow = $"{{\"prompt\": {workflow}}}";
-        //Logs.Debug($"Will use workflow: {workflow}");
+        Logs.Verbose($"Will use workflow: {workflow}");
         JObject result = await PostJSONString("prompt", workflow, interrupt);
-        //Logs.Debug($"ComfyUI prompt said: {result}");
+        Logs.Verbose($"ComfyUI prompt said: {result}");
         if (result.ContainsKey("error"))
         {
             Logs.Debug($"Error came from prompt: {workflow}");
@@ -96,7 +96,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             Thread.Sleep(50);
         }
-        //Logs.Debug($"ComfyUI history said: {output}");
+        Logs.Verbose($"ComfyUI history said: {output}");
         List<Image> outputs = new();
         foreach (JToken outData in output[promptId]["outputs"].Values())
         {

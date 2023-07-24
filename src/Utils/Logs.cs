@@ -10,11 +10,20 @@ public static class Logs
 
     public enum LogLevel: int
     {
-        Debug, Info, Init, Warning, Error, None
+        Verbose, Debug, Info, Init, Warning, Error, None
     }
 
     /// <summary>Minimum primary logger log level.</summary>
     public static LogLevel MinimumLevel = LogLevel.Info;
+
+    /// <summary>Log a verbose debug message, only in development mode.</summary>
+    public static void Verbose(string message)
+    {
+        if (MinimumLevel <= LogLevel.Verbose)
+        {
+            LogWithColor(ConsoleColor.Black, ConsoleColor.Gray, "Verbose", ConsoleColor.Black, ConsoleColor.Gray, message);
+        }
+    }
 
     /// <summary>Log a debug message, only in development mode.</summary>
     public static void Debug(string message)
