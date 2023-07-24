@@ -487,3 +487,18 @@ function numberToLetters(id) {
 function convertRemToPixels(rem) {
     return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 }
+
+/**
+ * Gets the value of the radio button that is selected in the given fieldset.
+ */
+function getRadioSelectionInFieldset(fieldset) {
+    if (typeof fieldset == 'string') {
+        fieldset = getRequiredElementById(fieldset);
+    }
+    for (let radio of fieldset.getElementsByTagName('input')) {
+        if (radio.getAttribute('type') == 'radio' && radio.checked) {
+            return radio.value;
+        }
+    }
+    return null;
+}
