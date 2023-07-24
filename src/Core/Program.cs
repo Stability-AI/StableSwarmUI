@@ -52,6 +52,9 @@ public class Program
     /// <summary>Event triggered when a user wants to refresh the models list.</summary>
     public static Action ModelRefreshEvent;
 
+    /// <summary>User-requested launch mode (web, electron, none).</summary>
+    public static string LaunchMode;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -106,7 +109,7 @@ public class Program
         Logs.Init("Readying extensions for launch...");
         RunOnAllExtensions(e => e.OnPreLaunch());
         Logs.Init("Launching server...");
-        if (ServerSettings.LaunchMode == "web")
+        if (LaunchMode == "web")
         {
             Task.Run(() =>
             {
@@ -285,6 +288,7 @@ public class Program
                 BasicAuth = GetCommandLineFlag("ngrok-basic-auth", null)
             };
         }
+        LaunchMode = GetCommandLineFlag("launch_mode", ServerSettings.LaunchMode);
     }
     #endregion
 
