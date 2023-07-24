@@ -53,7 +53,7 @@ public class Settings : AutoConfiguration
         public int Port = 7801;
 
         [ConfigComment("If true, if the port is already in use, the server will try to find another port to use instead. If false, the server will fail to start if the port is already in use.")]
-        public bool PortCanChange = false;
+        public bool PortCanChange = true;
     }
 
     /// <summary>Settings related to file paths.</summary>

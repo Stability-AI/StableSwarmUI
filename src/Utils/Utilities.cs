@@ -6,8 +6,10 @@ using Newtonsoft.Json.Linq;
 using StableSwarmUI.Core;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -274,6 +276,12 @@ public static class Utilities
                 return Task.CompletedTask;
             }
         });
+    }
+
+    /// <summary>Returns whether a given port number is taken (there is already a program listening on that port).</summary>
+    public static bool IsPortTaken(int port)
+    {
+        return IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(e => e.Port == port);
     }
 
     /// <summary>Kill system process..</summary>

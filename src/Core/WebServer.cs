@@ -20,8 +20,22 @@ public class WebServer
     /// <summary>Primary core ASP.NET <see cref="WebApplication"/> reference.</summary>
     public static WebApplication WebApp;
 
+    /// <summary>The internal web host url base this webserver is using.</summary>
+    public static string Host;
+
+    /// <summary>The internal web host port this webserver is using.</summary>
+    public static int Port;
+
+    /// <summary>Changes the server host:port path.</summary>
+    public static void SetHost(string host, int port)
+    {
+        Host = host;
+        Port = port;
+        Environment.SetEnvironmentVariable("ASPNETCORE_URLS", HostURL);
+    }
+
     /// <summary>The internal web host url this webserver is using.</summary>
-    public static string HostURL;
+    public static string HostURL => $"http://{Host}:{Port}";
 
     /// <summary>Minimum ASP.NET Log Level.</summary>
     public static LogLevel LogLevel;

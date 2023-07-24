@@ -8,8 +8,8 @@ using StableSwarmUI.Backends;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
+using System.Diagnostics;
 using System.IO;
-using System.Net.Sockets;
 using System.Runtime.Loader;
 
 namespace StableSwarmUI.Core;
@@ -106,7 +106,19 @@ public class Program
         Logs.Init("Readying extensions for launch...");
         RunOnAllExtensions(e => e.OnPreLaunch());
         Logs.Init("Launching server...");
+        if (ServerSettings.LaunchMode == "web")
+        {
+            Task.Run(() =>
+            {
+                Thread.Sleep(2000);
+                if (!GlobalProgramCancel.IsCancellationRequested)
+                {
+                    Process.Start(new ProcessStartInfo(WebServer.HostURL) { UseShellExecute = true });
+                }
+            });
+        }
         Web.Launch();
+        Shutdown();
     }
 
     private volatile static bool HasShutdown = false;
@@ -246,9 +258,20 @@ public class Program
         };
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", environment);
         string host = GetCommandLineFlag("host", ServerSettings.Network.Host);
-        string port = GetCommandLineFlag("port", $"{ServerSettings.Network.Port}");
-        WebServer.HostURL = $"http://{host}:{port}";
-        Environment.SetEnvironmentVariable("ASPNETCORE_URLS", WebServer.HostURL);
+        int port = int.Parse(GetCommandLineFlag("port", $"{ServerSettings.Network.Port}"));
+        if (ServerSettings.Network.PortCanChange)
+        {
+            int origPort = port;
+            while (Utilities.IsPortTaken(port))
+            {
+                port++;
+            }
+            if (origPort != port)
+            {
+                Logs.Init($"Port {origPort} was taken, using {port} instead.");
+            }
+        }
+        WebServer.SetHost(host, port);
         WebServer.LogLevel = Enum.Parse<LogLevel>(GetCommandLineFlag("asp_loglevel", "warning"), true);
         Logs.MinimumLevel = Enum.Parse<Logs.LogLevel>(GetCommandLineFlag("loglevel", "info"), true);
         SessionHandler.LocalUserID = GetCommandLineFlag("user_id", SessionHandler.LocalUserID);
