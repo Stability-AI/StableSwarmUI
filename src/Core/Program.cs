@@ -85,6 +85,7 @@ public class Program
             Logs.Error($"Command line arguments given are invalid: {ex.Message}");
             return;
         }
+        Directory.CreateDirectory(ServerSettings.Paths.SDModelFullPath);
         RunOnAllExtensions(e => e.OnPreInit());
         Logs.Init("Prepping options...");
         T2IModels = new();
@@ -115,6 +116,11 @@ public class Program
         {
             Logs.Init("Launch web browser...");
             Process.Start(new ProcessStartInfo(WebServer.HostURL) { UseShellExecute = true });
+        }
+        else if (LaunchMode == "webinstall")
+        {
+            Logs.Init("Launch web browser to install page...");
+            Process.Start(new ProcessStartInfo(WebServer.HostURL + "/Install") { UseShellExecute = true });
         }
         else if (LaunchMode == "electron")
         {

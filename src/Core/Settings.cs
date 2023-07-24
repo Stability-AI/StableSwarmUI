@@ -26,8 +26,8 @@ public class Settings : AutoConfiguration
     [ConfigComment("Ratelimit, in milliseconds, between Nvidia GPU status queries. Default is 1000 ms (1 second).")]
     public long NvidiaQueryRateLimitMS = 1000;
 
-    [ConfigComment("How to launch the UI. If 'none', just quietly launch. If 'web', launch your web-browser to the page. If 'electron', launch the UI in an electron window.")]
-    public string LaunchMode = "none";
+    [ConfigComment("How to launch the UI. If 'none', just quietly launch. If 'web', launch your web-browser to the page. If 'webinstall', launch web-browser to the install page. If 'electron', launch the UI in an electron window.")]
+    public string LaunchMode = "webinstall";
 
     /// <summary>Settings related to backends.</summary>
     public class BackendData : AutoConfiguration

@@ -171,6 +171,10 @@ public static class BasicAPIFeatures
             }
         }
         Program.ServerSettings.IsInstalled = true;
+        if (Program.ServerSettings.LaunchMode == "webinstall")
+        {
+            Program.ServerSettings.LaunchMode = "web";
+        }
         Program.SaveSettingsFile();
         await output("Installed!");
         return null;
