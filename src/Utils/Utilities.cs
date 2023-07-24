@@ -302,8 +302,8 @@ public static class Utilities
         char[] res = new char[raw.Length * 2];
         for (int i = 0; i < raw.Length; i++)
         {
-            res[i << 1] = getHexChar(raw[i] & 0x0F);
-            res[(i << 1) + 1] = getHexChar((raw[i] & 0xF0) >> 4);
+            res[i << 1] = getHexChar((raw[i] & 0xF0) >> 4);
+            res[(i << 1) + 1] = getHexChar(raw[i] & 0x0F);
         }
         return new string(res);
     }
