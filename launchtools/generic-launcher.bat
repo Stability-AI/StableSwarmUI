@@ -14,5 +14,5 @@ set "argument=!argument: =^ !"
 if "%5" neq "py" (
     call %3 %argument%
 ) ELSE (
-    call python %3 %argument%
+    call %6 %3 %argument%
 )

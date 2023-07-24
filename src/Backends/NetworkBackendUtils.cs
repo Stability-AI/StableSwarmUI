@@ -104,12 +104,28 @@ public static class NetworkBackendUtils
             RedirectStandardOutput = true,
         };
         start.ArgumentList.Add($"{gpuId}");
-        start.ArgumentList.Add(Path.GetDirectoryName(path));
+        string dir = Path.GetDirectoryName(path);
+        start.ArgumentList.Add(dir);
         start.ArgumentList.Add(path.AfterLast('/'));
         start.ArgumentList.Add(extraArgs.Replace("{PORT}", $"{port}"));
         if (startScript.EndsWith(".py"))
         {
             start.ArgumentList.Add("py");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                if (File.Exists($"{dir}/venv/Scripts/python.exe"))
+                {
+                    start.ArgumentList.Add($"{dir}/venv/Scripts/python.exe");
+                }
+                else if (File.Exists($"{dir}/../python_embedded/python.exe"))
+                {
+                    start.ArgumentList.Add($"{dir}/../python_embedded/python.exe");
+                }
+                else
+                {
+                    start.ArgumentList.Add("python");
+                }
+            }
         }
         else
         {
