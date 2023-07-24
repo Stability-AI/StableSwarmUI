@@ -143,9 +143,15 @@
                     @WebUtil.ModalHeader("edit_model_modal", """Edit Model Metadata: <input type="text" class="modal_text_extra" id="edit_model_name" placeholder="Model Name" />""")
                         <div class="modal-body">
                             <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra" placeholder="Model Author" /></div>
-                            <div>Type: <input type="text" id="edit_model_type" class="modal_text_extra" placeholder="Model Type" /></div>
+                            <div>Architecture: <input type="text" id="edit_model_type" class="modal_text_extra" placeholder="Model Type" /></div>
                             <div>Standard Resolution: <input type="text" id="edit_model_resolution" class="modal_text_extra" placeholder="Resolution, eg 1024x1024" /></div>
-                            <textarea class="auto-text" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
+                            <div>License: <input type="text" id="edit_model_license" class="modal_text_extra" placeholder="Model License" /></div>
+                            <div>Date: <input type="text" id="edit_model_date" class="modal_text_extra" placeholder="Model Date" /></div>
+                            <div>Merged From: <input type="text" id="edit_model_merged_from" class="modal_text_extra" placeholder="Model Merged From" /></div>
+                            <div>Tags: <input type="text" id="edit_model_tags" class="modal_text_extra" placeholder="Model Tags" /></div>
+                            <div>Usage Hint: <input type="text" id="edit_model_usage_hint" class="modal_text_extra" placeholder="Model Usage Hint" /></div>
+                            <div>Trigger Phrase: <input type="text" id="edit_model_trigger_phrase" class="modal_text_extra" placeholder="Model Trigger Phrase" /></div>
+                            Description: <textarea class="auto-text" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
                             <span class="form-check form-switch display-inline-block">
                                 <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_model_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('edit_model_image')"> Use Image
                             </span>

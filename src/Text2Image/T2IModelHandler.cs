@@ -6,6 +6,7 @@ using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace StableSwarmUI.Text2Image;
@@ -147,18 +148,85 @@ public class T2IModelHandler
         {
             return;
         }
-        ModelMetadataStore metadata = model.Metadata ?? new()
-        {
-            ModelFileVersion = modified,
-            ModelName = fileName,
-            Title = model.Title,
-            ModelClassType = model.ModelClass?.Name,
-            StandardHeight = model.ModelClass.StandardHeight,
-            StandardWidth = model.ModelClass.StandardWidth
-        };
+        ModelMetadataStore metadata = model.Metadata ?? new();
+        metadata.ModelFileVersion = modified;
+        metadata.ModelName = fileName;
+        metadata.Title = model.Title;
+        metadata.Description = model.Description;
+        metadata.ModelClassType = model.ModelClass?.ID;
+        metadata.StandardWidth = model.StandardWidth;
+        metadata.StandardHeight = model.StandardHeight;
         lock (MetadataLock)
         {
             cache.Upsert(metadata);
+        }
+    }
+
+    public void ApplyNewMetadataDirectly(T2IModel model)
+    {
+        lock (ModificationLock)
+        {
+            if (model.Metadata is null || !model.RawFilePath.EndsWith(".safetensors"))
+            {
+                return;
+            }
+            using FileStream reader = File.OpenRead(model.RawFilePath);
+            byte[] headerLen = new byte[8];
+            reader.ReadExactly(headerLen, 0, 8);
+            long len = BitConverter.ToInt64(headerLen, 0);
+            if (len < 0 || len > 100 * 1024 * 1024)
+            {
+                Logs.Warning($"Model {model.Name} has invalid metadata length {len}.");
+                return;
+            }
+            byte[] header = new byte[len];
+            reader.ReadExactly(header, 0, (int)len);
+            string headerStr = Encoding.UTF8.GetString(header);
+            JObject json = JObject.Parse(headerStr);
+            long pos = reader.Position;
+            JObject metaHeader = (json["__metadata__"] as JObject) ?? new();
+            if (!(metaHeader?.ContainsKey("modelspec.hash_sha256") ?? false))
+            {
+                metaHeader["modelspec.hash_sha256"] = "0x" + Utilities.BytesToHex(SHA256.HashData(reader));
+            }
+            void specSet(string key, string val)
+            {
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    metaHeader[$"modelspec.{key}"] = val;
+                }
+                else
+                {
+                    metaHeader.Remove($"modelspec.{key}");
+                }
+            }
+            specSet("sai_model_spec", "1.0.0");
+            specSet("title", model.Metadata.Title);
+            specSet("architecture", model.Metadata.ModelClassType);
+            specSet("author", model.Metadata.Author);
+            specSet("description", model.Metadata.Description);
+            specSet("thumbnail", model.Metadata.PreviewImage);
+            specSet("license", model.Metadata.License);
+            specSet("usage_hint", model.Metadata.UsageHint);
+            specSet("trigger_phrase", model.Metadata.TriggerPhrase);
+            specSet("tags", string.Join(",", model.Metadata.Tags ?? Array.Empty<string>()));
+            specSet("merged_from", model.Metadata.MergedFrom);
+            specSet("date", model.Metadata.Date);
+            specSet("resolution", $"{model.Metadata.StandardWidth}x{model.Metadata.StandardHeight}");
+            json["__metadata__"] = metaHeader;
+            {
+                using FileStream writer = File.OpenWrite(model.RawFilePath + ".tmp");
+                byte[] headerBytes = Encoding.UTF8.GetBytes(json.ToString(Newtonsoft.Json.Formatting.None));
+                writer.Write(BitConverter.GetBytes(headerBytes.LongLength));
+                writer.Write(headerBytes);
+                reader.Seek(pos, SeekOrigin.Begin);
+                reader.CopyTo(writer);
+                reader.Dispose();
+            }
+            // Journalling replace to prevent data loss in event of a crash.
+            File.Move(model.RawFilePath, model.RawFilePath + ".tmp2");
+            File.Move(model.RawFilePath + ".tmp", model.RawFilePath);
+            File.Delete(model.RawFilePath + ".tmp2");
         }
     }
 
@@ -209,7 +277,7 @@ public class T2IModelHandler
             JObject metaHeader = headerData["__metadata__"] as JObject;
             T2IModelClass clazz = ClassSorter.IdentifyClassFor(model, headerData);
             string img = metaHeader?.Value<string>("modelspec.thumbnail") ?? metaHeader?.Value<string>("preview_image");
-            if (img is not null && !(img.StartsWith("/Output/") || img.StartsWith("data:image/")))
+            if (img is not null && !img.StartsWith("data:image/"))
             {
                 Logs.Warning($"Ignoring image in metadata of {model.Name} '{img}'");
                 img = null;
@@ -230,7 +298,7 @@ public class T2IModelHandler
             {
                 ModelFileVersion = modified,
                 ModelName = fileName,
-                ModelClassType = clazz?.Name,
+                ModelClassType = clazz?.ID,
                 ModelMetadataRaw = header,
                 Title = metaHeader?.Value<string>("modelspec.title") ?? metaHeader?.Value<string>("title") ?? fileName.BeforeLast('.'),
                 Author = metaHeader?.Value<string>("modelspec.author") ?? metaHeader?.Value<string>("author"),
@@ -253,6 +321,7 @@ public class T2IModelHandler
         lock (ModificationLock)
         {
             model.Title = metadata.Title;
+            model.Description = metadata.Description;
             model.ModelClass = ClassSorter.ModelClasses.GetValueOrDefault(metadata.ModelClassType ?? "");
             model.PreviewImage = string.IsNullOrWhiteSpace(metadata.PreviewImage) ? "imgs/model_placeholder.jpg" : metadata.PreviewImage;
             model.StandardWidth = metadata.StandardWidth;

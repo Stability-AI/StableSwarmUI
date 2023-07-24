@@ -5,9 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
-using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
@@ -295,5 +293,24 @@ public static class Utilities
         using FileStream writer = File.OpenWrite(filepath);
         using Stream dlStream = await NetworkBackendUtils.MakeHttpClient().GetStreamAsync(url, Program.GlobalProgramCancel);
         await dlStream.CopyToAsync(writer, Program.GlobalProgramCancel);
+    }
+
+    /// <summary>Converts a byte array to a hexadecimal string.</summary>
+    public static string BytesToHex(byte[] raw)
+    {
+        static char getHexChar(int val) => (char)((val < 10) ? ('0' + val) : ('a' + (val - 10)));
+        char[] res = new char[raw.Length * 2];
+        for (int i = 0; i < raw.Length; i++)
+        {
+            res[i << 1] = getHexChar(raw[i] & 0x0F);
+            res[(i << 1) + 1] = getHexChar((raw[i] & 0xF0) >> 4);
+        }
+        return new string(res);
+    }
+
+    /// <summary>Computes the SHA 256 hash of a byte array and returns it as plaintext.</summary>
+    public static string HashSHA256(byte[] raw)
+    {
+        return BytesToHex(SHA256.HashData(raw));
     }
 }

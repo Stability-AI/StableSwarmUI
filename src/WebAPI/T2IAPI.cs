@@ -1,13 +1,9 @@
 ﻿using FreneticUtilities.FreneticExtensions;
-using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
-using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
-using StableSwarmUI.DataHolders;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
-using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text.RegularExpressions;
@@ -320,7 +316,8 @@ public static class T2IAPI
     }
 
     /// <summary>API route to modify the metadata of a model.</summary>
-    public static async Task<JObject> EditModelMetadata(Session session, string model, string title, string author, string type, string description, int standard_width, int standard_height, string preview_image)
+    public static async Task<JObject> EditModelMetadata(Session session, string model, string title, string author, string type, string description,
+        int standard_width, int standard_height, string preview_image, string usage_hint, string date, string license, string trigger_phrase, string tags)
     {
         if (!session.User.Restrictions.CanChangeModels)
         {
@@ -336,12 +333,11 @@ public static class T2IAPI
         lock (Program.T2IModels.ModificationLock)
         {
             actualModel.Title = string.IsNullOrWhiteSpace(title) ? null : title;
-            actualModel.Author = string.IsNullOrWhiteSpace(author) ? null : author;
+            actualModel.Description = description;
             if (!string.IsNullOrWhiteSpace(type))
             {
                 actualModel.ModelClass = Program.T2IModels.ClassSorter.ModelClasses.GetValueOrDefault(type);
             }
-            actualModel.Description = description;
             if (standard_width > 0)
             {
                 actualModel.StandardWidth = standard_width;
@@ -353,9 +349,21 @@ public static class T2IAPI
             if (!string.IsNullOrWhiteSpace(preview_image))
             {
                 actualModel.PreviewImage = preview_image;
+                actualModel.Metadata.PreviewImage = preview_image;
             }
+            if (actualModel.Metadata is null)
+            {
+                actualModel.Metadata = new();
+            }
+            actualModel.Metadata.Author = string.IsNullOrWhiteSpace(author) ? null : author;
+            actualModel.Metadata.UsageHint = string.IsNullOrWhiteSpace(usage_hint) ? null : usage_hint;
+            actualModel.Metadata.Date = string.IsNullOrWhiteSpace(date) ? null : date;
+            actualModel.Metadata.License = string.IsNullOrWhiteSpace(license) ? null : license;
+            actualModel.Metadata.TriggerPhrase = string.IsNullOrWhiteSpace(trigger_phrase) ? null : trigger_phrase;
+            actualModel.Metadata.Tags = string.IsNullOrWhiteSpace(tags) ? null : tags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         }
         Program.T2IModels.ResetMetadataFrom(actualModel);
+        _ = Task.Run(() => Program.T2IModels.ApplyNewMetadataDirectly(actualModel));
         return new JObject() { ["success"] = true };
     }
 

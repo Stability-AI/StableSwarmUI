@@ -22,10 +22,11 @@ function editModel(model) {
         enableImage.disabled = false;
     }
     getRequiredElementById('edit_model_name').value = model.title || model.name;
-    getRequiredElementById('edit_model_author').value = model.author || '';
-    getRequiredElementById('edit_model_type').value = model.class || '';
+    getRequiredElementById('edit_model_type').value = model.architecture || '';
     getRequiredElementById('edit_model_resolution').value = `${model.standard_width}x${model.standard_height}`;
-    getRequiredElementById('edit_model_description').value = model.description || '';
+    for (let val of ['description', 'author', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags']) {
+        getRequiredElementById(`edit_model_${val}`).value = model[val] || '';
+    }
     $('#edit_model_modal').modal('show');
 }
 
@@ -39,25 +40,37 @@ function save_edit_model() {
     let data = {
         'model': model.name,
         'title': getRequiredElementById('edit_model_name').value,
-        'author': getRequiredElementById('edit_model_author').value,
-        'type': getRequiredElementById('edit_model_type').value,
-        'description': getRequiredElementById('edit_model_description').value,
         'standard_width': parseInt(resolution[0]),
         'standard_height': parseInt(resolution[1]),
         'preview_image': ''
     };
-    if (getRequiredElementById('edit_model_enable_image').checked) {
-        let img = getRequiredElementById('edit_model_image').getElementsByTagName('img')[0].src;
-        let index = img.indexOf('/Output/');
-        if (index != -1) {
-            img = img.substring(index);
-        }
-        data['preview_image'] = img;
+    for (let val of ['author', 'type', 'description', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags']) {
+        data[val] = getRequiredElementById(`edit_model_${val}`).value;
     }
-    genericRequest('EditModelMetadata', data, data => {
-        loadModelList(lastModelDir);
-    });
-    $('#edit_model_modal').modal('hide');
+    function complete() {
+        genericRequest('EditModelMetadata', data, data => {
+            modelBrowser.update();
+        });
+        $('#edit_model_modal').modal('hide');
+    }
+    if (getRequiredElementById('edit_model_enable_image').checked) {
+        var image = new Image();
+        image.crossOrigin = 'Anonymous';
+        image.onload = () => {
+            let canvas = document.createElement('canvas');
+            let context = canvas.getContext('2d');
+            canvas.height = 256;
+            canvas.width = 256;
+            context.drawImage(image, 0, 0, 256, 256);
+            let dataURL = canvas.toDataURL('image/jpeg');
+            data['preview_image'] = dataURL;
+            complete();
+        };
+        image.src = getRequiredElementById('edit_model_image').getElementsByTagName('img')[0].src;
+    }
+    else {
+        complete();
+    }
 }
 
 function close_edit_model() {

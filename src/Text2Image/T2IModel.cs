@@ -15,6 +15,9 @@ public class T2IModel
     /// <summary>Proper title of the model, if identified.</summary>
     public string Title;
 
+    /// <summary>Description text, if any, of the model.</summary>
+    public string Description;
+
     /// <summary>URL or data blob of a preview image for this model.</summary>
     public string PreviewImage;
 
@@ -38,10 +41,11 @@ public class T2IModel
             ["name"] = Name,
             ["title"] = Metadata?.Title,
             ["author"] = Metadata?.Author,
-            ["description"] = Metadata?.Description,
+            ["description"] = Description,
             ["model_class"] = ModelClass?.Name,
             ["preview_image"] = PreviewImage,
             ["loaded"] = AnyBackendsHaveLoaded,
+            ["architecture"] = ModelClass?.ID,
             ["class"] = ModelClass?.Name,
             ["standard_width"] = StandardWidth,
             ["standard_height"] = StandardHeight,

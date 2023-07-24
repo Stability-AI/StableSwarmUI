@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using FreneticUtilities.FreneticExtensions;
+using Newtonsoft.Json.Linq;
 using StableSwarmUI.Utils;
 using System.IO;
 
@@ -27,35 +28,35 @@ public class T2IModelClassSorter
         bool isXL09Base(JObject h) => h.ContainsKey("conditioner.embedders.0.transformer.text_model.embeddings.position_embedding.weight");
         bool isXL09Refiner(JObject h) => h.ContainsKey("conditioner.embedders.0.model.ln_final.bias");
         bool isv2512name(string name) => name.Contains("512-") || name.Contains("-inpaint") || name.Contains("base-"); // keywords that identify the 512 vs the 768. Unfortunately no good proper detection here, other than execution-based hacks (see Auto WebUI ref)
-        Register(new() { Name = "Alt-Diffusion", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
+        Register(new() { ID = "alt_diffusion_v1_512_placeholder", Name = "Alt-Diffusion", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
         {
             return IsAlt(h);
         }});
-        Register(new() { Name = "Stable Diffusion v1", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
+        Register(new() { ID = "stable-diffusion-v1", Name = "Stable Diffusion v1", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
         {
             return isV1(h) && !IsAlt(h) && !isV2(h);
         }});
-        Register(new() { Name = "Stable Diffusion v2-512", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
+        Register(new() { ID = "stable-diffusion-v2-512", Name = "Stable Diffusion v2-512", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
         {
             return isV2(h) && !isV2Unclip(h) && isv2512name(m.Name);
         }});
-        Register(new() { Name = "Stable Diffusion v2-768v", StandardWidth = 768, StandardHeight = 768, IsThisModelOfClass = (m, h) =>
+        Register(new() { ID = "stable-diffusion-v2-768-v", Name = "Stable Diffusion v2-768v", StandardWidth = 768, StandardHeight = 768, IsThisModelOfClass = (m, h) =>
         {
             return isV2(h) && !isV2Unclip(h) && !isv2512name(m.Name);
         }});
-        Register(new() { Name = "Stable Diffusion v2 (Depth)", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
+        Register(new() { ID = "stable-diffusion-v2-depth", Name = "Stable Diffusion v2 (Depth)", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
         {
             return isV2Depth(h);
         }});
-        Register(new() { Name = "Stable Diffusion v2 (Unclip)", StandardWidth = 768, StandardHeight = 768, IsThisModelOfClass = (m, h) =>
+        Register(new() { ID = "stable-diffusion-v2-unclip", Name = "Stable Diffusion v2 (Unclip)", StandardWidth = 768, StandardHeight = 768, IsThisModelOfClass = (m, h) =>
         {
             return isV2Unclip(h);
         }});
-        Register(new() { Name = "Stable Diffusion XL 0.9-Base", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
+        Register(new() { ID = "stable-diffusion-xl-v0_9-base", Name = "Stable Diffusion XL 0.9-Base", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
         {
             return isXL09Base(h);
         }});
-        Register(new() { Name = "Stable Diffusion XL 0.9-Refiner", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
+        Register(new() { ID = "stable-diffusion-xl-v0_9-refiner", Name = "Stable Diffusion XL 0.9-Refiner", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
         {
             return isXL09Refiner(h);
         }});
@@ -67,6 +68,28 @@ public class T2IModelClassSorter
         if (model.ModelClass is not null)
         {
             return model.ModelClass;
+        }
+        string arch = header?["__metadata__"]?.Value<string>("modelspec.architecture");
+        if (arch is not null)
+        {
+            string res = header["__metadata__"].Value<string>("modelspec.resolution");
+            int width = int.Parse(res.BeforeAndAfter('x', out string h));
+            int height = int.Parse(h);
+            if (ModelClasses.TryGetValue(arch, out T2IModelClass clazz))
+            {
+                if (width == clazz.StandardWidth && height == clazz.StandardHeight)
+                {
+                    Logs.Debug($"Model {model.Name} matches {clazz.Name} by architecture ID");
+                    return clazz;
+                }
+                else
+                {
+                    Logs.Debug($"Model {model.Name} matches {clazz.Name} by architecture ID, but resolution is different ({width}x{height} vs {clazz.StandardWidth}x{clazz.StandardHeight})");
+                    return clazz with { StandardWidth = width, StandardHeight = height, IsThisModelOfClass = (m, h) => false };
+                }
+            }
+            Logs.Debug($"Model {model.Name} has unknown architecture ID {arch}");
+            return new() { ID = arch, Name = arch, StandardWidth = width, StandardHeight = height, IsThisModelOfClass = (m, h) => false };
         }
         if (!model.RawFilePath.EndsWith(".safetensors") || header is null)
         {

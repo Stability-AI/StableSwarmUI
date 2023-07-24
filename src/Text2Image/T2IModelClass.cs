@@ -3,10 +3,13 @@
 namespace StableSwarmUI.Text2Image;
 
 /// <summary>Represents a class of models (eg SDv1).</summary>
-public class T2IModelClass
+public record class T2IModelClass
 {
     /// <summary>Standard resolution for this model class.</summary>
     public int StandardWidth, StandardHeight;
+
+    /// <summary>ID of this model type.</summary>
+    public string ID;
 
     /// <summary>A clean name for this model class.</summary>
     public string Name;
