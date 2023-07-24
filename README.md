@@ -30,6 +30,14 @@ A completely custom HTML/JS frontend was built with the goal of allowing detaile
 
 # Legal
 
-This software embeds a copy of [7-zip](https://7-zip.org/download.html) (LGPL) and has the ability to auto-install [ComfyUI](https://github.com/comfyanonymous/ComfyUI) (GPL).
+This project:
+- embeds a copy of [7-zip](https://7-zip.org/download.html) (LGPL).
+- has the ability to auto-install [ComfyUI](https://github.com/comfyanonymous/ComfyUI) (GPL).
+- has the option to use as a backend [Automatic1111/Stable-Diffusion-WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) (AGPL).
+- can automatically install [christophschuhmann/improved-aesthetic-predictor](https://github.com/christophschuhmann/improved-aesthetic-predictor) (Apache2).
+- can automatically install [yuvalkirstain/PickScore](https://github.com/yuvalkirstain/PickScore) (MIT).
+- embeds copies of web assets from [BootStrap](https://getbootstrap.com/) (MIT), [Select2](https://select2.org/) (MIT), [JQuery](https://jquery.com/) (MIT).
+- has the option to connect to remote servers to use [the Stability.ai API](https://dreamstudio.com/api/start/) as a backend.
+- supports user-built extensions which may have their own licenses or legal conditions.
 
 Created by Alex Goodwin for StabilityAI.
