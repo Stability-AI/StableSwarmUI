@@ -8,7 +8,17 @@ A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powert
 
 # Installing on Linux
 
-(TODO): git clone and etc. Maybe outlink a dedicated document with per-distro details and whatever.
+- Install `git`, `python3` via your OS package manager if they are not already installed.
+- Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0
+- Open a shell terminal and `cd` to a directory you want to install into
+- Run shell commands:
+    - `git clone https://github.com/Stability-AI/StableSwarmUI`
+    - cd `StableSwarmUI`
+    - `./launch-linux.sh`
+- open `http://localhost:7801/Install`
+- Follow the install instructions on-page.
+
+(TODO): Maybe outlink a dedicated document with per-distro details and whatever. Maybe also make a one-click installer for Linux?
 
 # Installing on Mac
 

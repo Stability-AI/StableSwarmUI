@@ -196,6 +196,14 @@ public static class T2IAPI
         }
         try
         {
+            if (!Directory.Exists(path))
+            {
+                return new JObject()
+                {
+                    ["folders"] = new JArray(),
+                    ["files"] = new JArray()
+                };
+            }
             return new JObject()
             {
                 ["folders"] = JToken.FromObject(Directory.EnumerateDirectories(path).Select(Path.GetFileName).Where(isAllowed).ToList()),

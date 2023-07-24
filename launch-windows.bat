@@ -1,4 +1,6 @@
+@echo off
 
+cd "%~dp0"
 
 dotnet build src/StableSwarmUI.csproj --configuration Release -o src/bin/live_release
 
