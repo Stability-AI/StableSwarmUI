@@ -1,5 +1,6 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -92,6 +93,7 @@ public class WebServer
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "src/wwwroot" });
         builder.Services.AddRazorPages();
         builder.Logging.SetMinimumLevel(LogLevel);
+        builder.WebHost.UseUrls(HostURL);
         WebApp = builder.Build();
         if (WebApp.Environment.IsDevelopment())
         {
@@ -177,7 +179,7 @@ public class WebServer
     public void Launch()
     {
         Logs.Init($"Starting webserver on {HostURL}");
-        WebApp.Run();
+        WebApp.Start();
     }
 
     /// <summary>Test the validity of a user-given file path. Returns (path, consoleError, userError).</summary>

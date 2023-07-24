@@ -2,6 +2,7 @@ using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using LiteDB;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Backends;
@@ -109,18 +110,19 @@ public class Program
         Logs.Init("Readying extensions for launch...");
         RunOnAllExtensions(e => e.OnPreLaunch());
         Logs.Init("Launching server...");
+        Web.Launch();
         if (LaunchMode == "web")
         {
-            Task.Run(() =>
-            {
-                Thread.Sleep(2000);
-                if (!GlobalProgramCancel.IsCancellationRequested)
-                {
-                    Process.Start(new ProcessStartInfo(WebServer.HostURL) { UseShellExecute = true });
-                }
-            });
+            Logs.Init("Launch web browser...");
+            Process.Start(new ProcessStartInfo(WebServer.HostURL) { UseShellExecute = true });
         }
-        Web.Launch();
+        else if (LaunchMode == "electron")
+        {
+            Logs.Init("Electron launch not yet implemented.");
+            // TODO: Electron.NET seems not to function properly, need to get it working.
+        }
+        Logs.Init("Program is running.");
+        WebServer.WebApp.WaitForShutdown();
         Shutdown();
     }
 
