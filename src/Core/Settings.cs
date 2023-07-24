@@ -23,6 +23,12 @@ public class Settings : AutoConfiguration
     [ConfigComment("If this is set to 'true', hides the installer page. If 'false', the installer page will be shown.")]
     public bool IsInstalled = false;
 
+    [ConfigComment("Ratelimit, in milliseconds, between Nvidia GPU status queries. Default is 1000 ms (1 second).")]
+    public long NvidiaQueryRateLimitMS = 1000;
+
+    [ConfigComment("How to launch the UI. If 'none', just quietly launch. If 'web', launch your web-browser to the page. If 'electron', launch the UI in an electron window.")]
+    public string LaunchMode = "none";
+
     /// <summary>Settings related to backends.</summary>
     public class BackendData : AutoConfiguration
     {
@@ -45,6 +51,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("What web port to use. Default is '7801'.")]
         public int Port = 7801;
+
+        [ConfigComment("If true, if the port is already in use, the server will try to find another port to use instead. If false, the server will fail to start if the port is already in use.")]
+        public bool PortCanChange = false;
     }
 
     /// <summary>Settings related to file paths.</summary>
@@ -127,5 +136,8 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("Whether your files save to server data drive or not.")]
         public bool SaveFiles = true;
+
+        [ConfigComment("What theme to use. Default is 'dark_dreams'.")]
+        public string Theme = "dark_dreams";
     }
 }

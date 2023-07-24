@@ -1,3 +1,6 @@
+
+let session_id = null;
+
 function enableSlidersIn(elem) {
     for (let div of elem.getElementsByClassName('auto-slider-box')) {
         enableSliderForBox(div);
@@ -57,11 +60,19 @@ function genericServerError() {
     showError('Failed to send request to server. Did the server crash?');
 }
 
-function makeWSRequest(url, in_data, callback, depth = 0) {
+function makeWSRequest(url, in_data, callback, depth = 0, errorHandle = null) {
+    function fail(e) {
+        if (errorHandle) {
+            errorHandle(e);
+            return;
+        }
+        console.log(e);
+        showError(e);
+    }
     let ws_address = getWSAddress();
     if (ws_address == null) {
         console.log(`Tried making WS request ${url} but failed.`);
-        showError('Failed to get WebSocket address. You may be connecting to the server in an unexpected way. Please use "http" or "https" URLs.');
+        fail('Failed to get WebSocket address. You may be connecting to the server in an unexpected way. Please use "http" or "https" URLs.');
         return;
     }
     let socket = new WebSocket(`${ws_address}/API/${url}`);
@@ -73,7 +84,7 @@ function makeWSRequest(url, in_data, callback, depth = 0) {
         let data = JSON.parse(event.data);
         if (data.error_id && data.error_id == 'invalid_session_id') {
             if (depth > 3) {
-                showError('Failed to get session ID after 3 tries. Your account may have been invalidated. Try refreshing the page, or contact the site owner.');
+                fail('Failed to get session ID after 3 tries. Your account may have been invalidated. Try refreshing the page, or contact the site owner.');
                 return;
             }
             console.log('Session refused, will get new one and try again.');
@@ -85,25 +96,33 @@ function makeWSRequest(url, in_data, callback, depth = 0) {
         if (data.error) {
             let error = JSON.stringify(data.error);
             console.log(`Tried making WS request ${url} but failed with error: ${error}`);
-            showError(error);
+            fail(error);
             return;
         }
         callback(data);
     }
-    socket.onerror = genericServerError;
+    socket.onerror = errorHandle || genericServerError;
 }
 
-function genericRequest(url, in_data, callback, depth = 0) {
+function genericRequest(url, in_data, callback, depth = 0, errorHandle = null) {
     in_data['session_id'] = session_id;
+    function fail(e) {
+        if (errorHandle) {
+            errorHandle(e);
+            return;
+        }
+        console.log(e);
+        showError(e);
+    }
     sendJsonToServer(`/API/${url}`, in_data, (status, data) => {
         if (!data) {
             console.log(`Tried making generic request ${url} but failed.`);
-            showError('Failed to send request to server. Did the server crash?');
+            fail('Failed to send request to server. Did the server crash?');
             return;
         }
         if (data.error_id && data.error_id == 'invalid_session_id') {
             if (depth > 3) {
-                showError('Failed to get session ID after 3 tries. Your account may have been invalidated. Try refreshing the page, or contact the site owner.');
+                fail('Failed to get session ID after 3 tries. Your account may have been invalidated. Try refreshing the page, or contact the site owner.');
                 return;
             }
             console.log('Session refused, will get new one and try again.');
@@ -114,11 +133,11 @@ function genericRequest(url, in_data, callback, depth = 0) {
         }
         if (data.error) {
             console.log(`Tried making generic request ${url} but failed with error: ${data.error}`);
-            showError(data.error);
+            fail(data.error);
             return;
         }
         callback(data);
-    }, genericServerError);
+    }, errorHandle || genericServerError);
 }
 
 let lastServerVersion = null;

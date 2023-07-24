@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Html;
+﻿using FreneticUtilities.FreneticExtensions;
+using Microsoft.AspNetCore.Html;
 
 namespace StableSwarmUI.Utils;
 
@@ -50,25 +51,30 @@ public static class WebUtil
     /// <summary>Returns a short string identifying whether the user's GPU is good enough.</summary>
     public static HtmlString CheckGPUIsSufficient()
     {
-        NvidiaUtil.NvidiaInfo nv = NvidiaUtil.QueryNvidia();
-        if (nv is null)
+        NvidiaUtil.NvidiaInfo[] nv = NvidiaUtil.QueryNvidia();
+        if (nv is null || nv.IsEmpty())
         {
             return new("Unknown GPU.");
         }
-        string basic = $"GPU: <b>{nv.GPUName}</b>, <b>{nv.TotalMemory}</b> VRAM";
-        if (nv.TotalMemory.GiB > 15)
+        NvidiaUtil.NvidiaInfo bestGpu = nv.OrderByDescending(x => x.TotalMemory).First();
+        string basic = $"GPU {bestGpu.ID}: <b>{bestGpu.GPUName}</b>, <b>{bestGpu.TotalMemory}</b> VRAM";
+        if (nv.Length > 1)
+        {
+            basic += $" ({nv.Length} total GPUs)";
+        }
+        if (bestGpu.TotalMemory.GiB > 15)
         {
             return new($"{basic} - able to run locally for almost anything.");
         }
-        if (nv.TotalMemory.GiB > 11)
+        if (bestGpu.TotalMemory.GiB > 11)
         {
             return new($"{basic} - sufficient to run most usages locally.");
         }
-        if (nv.TotalMemory.GiB > 7)
+        if (bestGpu.TotalMemory.GiB > 7)
         {
             return new($"{basic} - sufficient to run basic usage locally. May be limited on large generations.");
         }
-        if (nv.TotalMemory.GiB > 3)
+        if (bestGpu.TotalMemory.GiB > 3)
         {
             return new($"{basic} - limited, may need to configure settings for LowVRAM usage to work reliably.");
         }

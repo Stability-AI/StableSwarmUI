@@ -21,6 +21,8 @@ class InstallerClass {
             elem.addEventListener('change', this.check.bind(this));
         }
         getRequiredElementById('stability_api_key').addEventListener('input', this.check.bind(this));
+        getRequiredElementById('installer_button_confirm').addEventListener('click', this.submit.bind(this));
+        getSession();
     }
 
     themeChanged() {
@@ -29,6 +31,16 @@ class InstallerClass {
         let isDark = theme != 'eyesear_white';
         getRequiredElementById('theme_sheet_header').href = path;
         getRequiredElementById('bs_theme_header').href = isDark ? '/css/bootstrap.min.css' : '/css/bootstrap_light.min.css';
+    }
+
+    modelsToDownload() {
+        let models = [];
+        for (let elem of getRequiredElementById('models_fieldset').getElementsByTagName('input')) {
+            if (elem.checked && elem.id.startsWith('downloadmodel_')) {
+                models.push(elem.id.substring('downloadmodel_'.length));
+            }
+        }
+        return models;
     }
 
     getPageElem() {
@@ -59,7 +71,7 @@ class InstallerClass {
                 }
                 return true;
             case 'models':
-                return true; // TODO
+                return true;
             case 'end':
                 return true;
         }
@@ -80,6 +92,40 @@ class InstallerClass {
         if (!isComplete) {
             this.bottomInfo.innerText += ' (Must choose an option)';
         }
+        let data = this.getSubmittable();
+        getRequiredElementById('theme_val_info').innerText = data.theme;
+        getRequiredElementById('installed_for_val_info').innerText = data.installed_for;
+        getRequiredElementById('backend_val_info').innerText = data.backend;
+        getRequiredElementById('model_val_info').innerText = data.models;
+    }
+
+    getSubmittable() {
+        let models = this.modelsToDownload();
+        return {
+            theme: getRadioSelectionInFieldset('theme_selection_field'),
+            installed_for: getRadioSelectionInFieldset('installed_for_selection_field'),
+            backend: getRadioSelectionInFieldset('backend_selection_field'),
+            stability_api_key: getRequiredElementById('stability_api_key').value,
+            models: models.length == 0 ? 'none' : this.modelsToDownload().join(', ')
+        };
+    }
+
+    submit() {
+        let output = getRequiredElementById('install_output');
+        output.innerText = 'Sending...\n';
+        let data = this.getSubmittable();
+        getRequiredElementById('installer_button_confirm').disabled = true;
+        makeWSRequest('InstallConfirmWS', data, (response) => {
+            if (response.info) {
+                output.innerText += response.info + "\n";
+            }
+            else if (response.success) {
+                window.location.href = '/Text2Image';
+            }
+        }, 0, (e) => {
+            getRequiredElementById('installer_button_confirm').disabled = false;
+            showError(e);
+        });
     }
 }
 

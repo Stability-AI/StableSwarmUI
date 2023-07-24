@@ -61,14 +61,14 @@
                 <div class="install_hint">Enables LAN access (so you can eg open from your phone), sets you as always a full administrator of the installation.</div>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="installed_for_radio" id="installed_for_radio_friendsfamily" value="friends_family" disabled="">
+                <input class="form-check-input" type="radio" name="installed_for_radio" id="installed_for_radio_friendsfamily" value="friends_and_family" disabled="">
                 <label class="form-check-label" for="installed_for_radio_friendsfamily">(COMING SOON): Friends & Family</label>
-                <div class="install_hint">Makes it possible to access the UI from other accounts, generally trusted with access.</div>
+                <div class="install_hint">Enables external access, makes it possible to register multiple accounts for the UI, generally trusted with access.</div>
             </div>
             <div class="form-check disabled">
                 <input class="form-check-input" type="radio" name="installed_for_radio" id="installed_for_radio_public" value="public" disabled="">
                 <label class="form-check-label" for="installed_for_radio_public">(COMING SOON): Public Access or Untrusted Users</label>
-                <div class="install_hint">Requires a verified account to use the UI, heavily restricts access.</div>
+                <div class="install_hint">Requires registering an account to use the UI, heavily restricts access.</div>
             </div>
         </fieldset>
     </div>
@@ -79,11 +79,12 @@
         <br>
         @WebUtil.ModalHeader("gpu_check_modal", "GPU Check")
         <div class="modal-body">
-            Generally, you want a GPU with at least 8 GiB of VRAM to run properly. More is better.
+            Generally, you want a GPU with at least 8 GiB of VRAM to run properly. More is better. If you have at least 4, you'll be able to run SDv1 with lowered settings, but SDXL may be out of reach.
             <br>&bullet; An Nvidia RTX 20-series or newer is recommended, though some older cards can still work.
             <br>&bullet; AMD GPUs should work, but are not currently correctly scanned by StableSwarmUI.
             <br>&bullet; Intel or Mac GPUs may work, but will require special configuration that this installer does not yet perform for you.
             <br>&bullet; CPU execution is possible, but is extremely slow and not recommended.
+            <br>&bullet; If you have multiple GPUs, StableSwarmUI can use all of them. You will have to configure this manually in the Server Backends settings page later.
             <hr>
             You have: @WebUtil.CheckGPUIsSufficient()
         </div>
@@ -93,14 +94,14 @@
                 <input class="form-check-input" type="radio" name="backend_radio" id="backend_radio_comfy" value="comfyui">
                 <label class="form-check-label" for="backend_radio_comfy">ComfyUI (Local)</label>
                 <div class="install_hint">ComfyUI is a powerful node-based Stable Diffusion engine that runs entirely on your local PC. This option is best if you have a powerful GPU.
-                    <a href="#" onclick="javascript:$('#gpu_check_modal').modal('show')">Do I?</a>
+                    <a href="#" onclick="javascript:$('#gpu_check_modal').modal('show')">Do I?</a> You can learn more about <a href="https://github.com/comfyanonymous/ComfyUI">ComfyUI here</a>.
                 </div>
             </div>
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="backend_radio" id="backend_radio_stabilityapi" value="stabilityapi">
                 <label class="form-check-label" for="backend_radio_stabilityapi">Stability API (Remote)</label>
                 <div class="install_hint">The Stability API powers DreamStudio and services like it. If you don't have a powerful local PC, you can use the Stability API to power your generations.
-                    You must have a valid API key to use this. <a href="https://dreamstudio.com/api/start/">Click Here for info about the Stability API and how to get an API key.</a>
+                    You must have a valid API key to use this. <a href="https://platform.stability.ai/docs/getting-started/authentication" target="_blank" rel="noopener noreferrer">Click Here for info about the Stability API and how to get an API key.</a>
                 </div>
                 <input type="password" id="stability_api_key" name="Stability API Key" placeholder="Stability API Key">
             </div>
@@ -113,11 +114,41 @@
     </div>
 
     <div id="installer_section_models" style="display: none;">
-        (TODO: model downloads)
+        <div class="install_q_head">Download Models</div>
+        <div class="install_hint">You can select models to automatically download for local running here. If you selected 'Stability API' on the previous page, you can skip this page.</div>
+        Note: by downloading Stable Diffusion models, you agree to the terms of <a href="https://huggingface.co/spaces/CompVis/stable-diffusion-license" target="_blank" rel="noopener noreferrer">The CreativeML Open RAIL-M License</a>.
+        <br>
+        <fieldset class="form-group" id="models_fieldset">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="downloadmodel_sd15">
+                <label class="form-check-label" for="downloadmodel_sd15">Stable Diffusion v1.5</label>
+                <div class="install_hint">The original SD version from 2022, uses 4 GiB of drive space, generates 512x512 images, able to run on low-end GPUs.</div>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="downloadmodel_sd21">
+                <label class="form-check-label" for="downloadmodel_sd21">Stable Diffusion v2.1</label>
+                <div class="install_hint">The second release of SD, v2.1 has the same requirements as 1.5 but is able to generate 768x768 images, with higher quality results.</div>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="downloadmodel_sdxl1">
+                <label class="form-check-label" for="downloadmodel_sdxl1">Stable Diffusion XL 1.0</label>
+                <div class="install_hint">SDXL is the latest-and-greatest SD version (from July 2023), requiring 6.5 GiB of drive space and a more powerful GPU, but able to generate at 1024x1024, with noticably much higher quality results than past versions.</div>
+            </div>
+        </fieldset>
+        <label>Or community models!</label>
+        <div class="install_hint">You can download an endless variety of community-made models from online sites such as <a href="https://huggingface.co/spaces/huggingface-projects/diffusers-gallery" target="_blank" rel="noopener noreferrer">HuggingFace</a> or <a href="https://civitai.com/" target="_blank" rel="noopener noreferrer">Civitai</a>. (NOTICE: These are examples of third-party websites featuring user-submitted models, Stability.AI offers no guarantees about what content may exist there, browse with caution.) Remember to only download '.safetensors' files, never '.ckpt' ones.</div>
     </div>
 
     <div id="installer_section_end" style="display: none;">
-        (TODO: Finalize, and notice that more settings are available on the actual page)
+        You have selected:
+        <br>&bullet; Theme: <span class="final_confirm_info" id="theme_val_info"></span>
+        <br>&bullet; UI Is For: <span class="final_confirm_info" id="installed_for_val_info"></span>
+        <br>&bullet; Backend: <span class="final_confirm_info" id="backend_val_info"></span>
+        <br>&bullet; Model: <span class="final_confirm_info" id="model_val_info"></span>
+        <br>Are you sure this is all correct?
+        <div class="install_hint">This is your last chance to go back and change before installing. If you want to change your choices later, there's a settings menu available within StableSwarmUI, and models can be downloaded any time you wish and put in the models folder.</div>
+        <br><button id="installer_button_confirm" class="btn btn-primary basic-button" autocomplete="off">Yes, I'm sure (Install Now)</button>
+        <div class="install_output" id="install_output"></div>
     </div>
     <hr>
     <div class="section_buttons">

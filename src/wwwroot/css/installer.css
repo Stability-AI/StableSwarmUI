@@ -73,3 +73,19 @@
     background-color: #a1a1a1;
     color: #101010;
 }
+label {
+    font-size: 120%;
+    vertical-align: top;
+    margin-top: -0.3rem;
+}
+.final_confirm_info {
+    font-weight: bold;
+}
+.install_output {
+    white-space: pre-wrap;
+    border: 1px solid var(--light-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    width: 100%;
+    min-height: 2rem;
+}

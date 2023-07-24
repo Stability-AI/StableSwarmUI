@@ -30,4 +30,6 @@ A completely custom HTML/JS frontend was built with the goal of allowing detaile
 
 # Legal
 
+This software embeds a copy of [7-zip](https://7-zip.org/download.html) (LGPL) and has the ability to auto-install [ComfyUI](https://github.com/comfyanonymous/ComfyUI) (GPL).
+
 Created by Alex Goodwin for StabilityAI.

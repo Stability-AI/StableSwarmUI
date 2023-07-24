@@ -6,6 +6,13 @@ using StableSwarmUI.Text2Image;
 using FreneticUtilities.FreneticExtensions;
 using Microsoft.AspNetCore.Http;
 using FreneticUtilities.FreneticDataSyntax;
+using System.Net.WebSockets;
+using System.Runtime.InteropServices;
+using System.IO;
+using StableSwarmUI.Builtin_ComfyUIBackend;
+using StableSwarmUI.Backends;
+using System.Diagnostics;
+using System.Net.Http;
 
 namespace StableSwarmUI.WebAPI;
 
@@ -16,6 +23,7 @@ public static class BasicAPIFeatures
     public static void Register()
     {
         API.RegisterAPICall(GetNewSession);
+        API.RegisterAPICall(InstallConfirmWS);
         API.RegisterAPICall(GetMyUserData);
         API.RegisterAPICall(AddNewPreset);
         API.RegisterAPICall(DeletePreset);
@@ -32,6 +40,140 @@ public static class BasicAPIFeatures
     public static async Task<JObject> GetNewSession(HttpContext context)
     {
         return new JObject() { ["session_id"] = Program.Sessions.CreateAdminSession(context.Connection.RemoteIpAddress?.ToString() ?? "unknown").ID, ["version"] = Utilities.VaryID };
+    }
+
+    public static async Task<JObject> InstallConfirmWS(Session session, WebSocket socket, string theme, string installed_for, string backend, string stability_api_key, string models)
+    {
+        if (Program.ServerSettings.IsInstalled)
+        {
+            await socket.SendJson(new JObject() { ["error"] = $"Server is already installed!" }, API.WebsocketTimeout);
+            return null;
+        }
+        if (!session.User.Restrictions.Admin)
+        {
+            await socket.SendJson(new JObject() { ["error"] = $"You are not an admin of this server, install request refused." }, API.WebsocketTimeout);
+            return null;
+        }
+        async Task output(string str) => await socket.SendJson(new JObject() { ["info"] = str }, API.WebsocketTimeout);
+        await output("Installation request received, processing...");
+        if (Program.Web.RegisteredThemes.ContainsKey(theme))
+        {
+            await output($"Setting theme to {theme}.");
+            Program.ServerSettings.DefaultUser.Theme = theme;
+        }
+        else
+        {
+            await output($"Theme {theme} is not valid!");
+            await socket.SendJson(new JObject() { ["error"] = $"Invalid theme input!" }, API.WebsocketTimeout);
+            return null;
+        }
+        switch (installed_for)
+        {
+            case "just_self":
+                await output("Configuring settings as 'just yourself' install.");
+                Program.ServerSettings.Network.Host = "localhost";
+                Program.ServerSettings.Network.Port = 7801;
+                Program.ServerSettings.Network.PortCanChange = true;
+                Program.ServerSettings.LaunchMode = "electron";
+                break;
+            case "just_self_lan":
+                await output("Configuring settings as 'just yourself (LAN)' install.");
+                Program.ServerSettings.Network.Host = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "*" : "0.0.0.0";
+                Program.ServerSettings.Network.Port = 7801;
+                Program.ServerSettings.Network.PortCanChange = true;
+                Program.ServerSettings.LaunchMode = "web";
+                break;
+            default:
+                await output($"Invalid install type {installed_for}!");
+                await socket.SendJson(new JObject() { ["error"] = $"Invalid install type!" }, API.WebsocketTimeout);
+                return null;
+        }
+        HttpClient client = NetworkBackendUtils.MakeHttpClient();
+        switch (backend)
+        {
+            case "comfyui":
+                {
+                    await output("Downloading ComfyUI backend... please wait...");
+                    Directory.CreateDirectory("dlbackend/");
+                    string path;
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        {
+                            using FileStream writer = File.OpenWrite("dlbackend/comfyui_dl.7z");
+                            using Stream dlStream = await client.GetStreamAsync("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_or_cpu_nightly_pytorch.7z", Program.GlobalProgramCancel);
+                            await dlStream.CopyToAsync(writer, Program.GlobalProgramCancel);
+                        }
+                        await output("Downloaded! Extracting...");
+                        Directory.CreateDirectory("dlbackend/tmpcomfy/");
+                        await Process.Start("launchtools/7z/win/7za.exe", $"x dlbackend/comfyui_dl.7z -o\"dlbackend/tmpcomfy/\" -y").WaitForExitAsync(Program.GlobalProgramCancel);
+                        Directory.Move("dlbackend/tmpcomfy/ComfyUI_windows_portable_nightly_pytorch", "dlbackend/comfy");
+                        path = "dlbackend/comfy/ComfyUI/main.py";
+                    }
+                    else
+                    {
+                        await Process.Start("/bin/bash", "launchtools/comfy-install-linux.sh").WaitForExitAsync(Program.GlobalProgramCancel);
+                        path = "dlbackend/ComfyUI/main.py";
+                    }
+                    NvidiaUtil.NvidiaInfo[] nv = NvidiaUtil.QueryNvidia();
+                    int gpu = 0;
+                    if (nv is not null && nv.Length > 0)
+                    {
+                        NvidiaUtil.NvidiaInfo mostVRAM = nv.OrderByDescending(n => n.TotalMemory).First();
+                        gpu = mostVRAM.ID;
+                    }
+                    await output("Enabling ComfyUI...");
+                    Program.Backends.AddNewOfType(Program.Backends.BackendTypes["comfyui_selfstart"], new ComfyUISelfStartBackend.ComfyUISelfStartSettings() { StartScript = path, GPU_ID = gpu });
+                    break;
+                }
+            case "stabilityapi":
+                if (string.IsNullOrWhiteSpace(stability_api_key))
+                {
+                    await output($"Invalid stability API key!");
+                    await socket.SendJson(new JObject() { ["error"] = $"Invalid stability API key!" }, API.WebsocketTimeout);
+                    return null;
+                }
+                File.WriteAllText("Data/sapi_key.dat", stability_api_key);
+                Program.Backends.AddNewOfType(Program.Backends.BackendTypes["stabilityapi"]);
+                break;
+            case "none":
+                await output("Not installing any backend.");
+                break;
+            default:
+                await output($"Invalid backend type {backend}!");
+                await socket.SendJson(new JObject() { ["error"] = $"Invalid backend type!" }, API.WebsocketTimeout);
+                return null;
+        }
+        if (models != "none")
+        {
+            foreach (string model in models.Split(','))
+            {
+                string file = model.Trim() switch
+                {
+                    "sd15" => "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors",
+                    "sd21" => "https://huggingface.co/stabilityai/stable-diffusion-2-1/resolve/main/v2-1_768-ema-pruned.safetensors",
+                    "sdxl1" => throw new Exception("SDXL is not yet available to download"),
+                    _ => null
+                };
+                if (file is null)
+                {
+                    await output($"Invalid model {model}!");
+                    await socket.SendJson(new JObject() { ["error"] = $"Invalid model!" }, API.WebsocketTimeout);
+                    return null;
+                }
+                await output($"Downloading model from '{file}'... please wait...");
+                string folder = Program.ServerSettings.Paths.SDModelFullPath + "/OfficialStableDiffusion";
+                Directory.CreateDirectory(folder);
+                string filename = file.AfterLast('/');
+                using FileStream writer = File.OpenWrite($"{folder}/{filename}");
+                using Stream dlStream = await client.GetStreamAsync(file);
+                await dlStream.CopyToAsync(writer);
+                await output("Model download complete.");
+            }
+        }
+        Program.ServerSettings.IsInstalled = true;
+        Program.SaveSettingsFile();
+        await output("Installed!");
+        return null;
     }
 
     /// <summary>API Route to get the user's own base data.</summary>

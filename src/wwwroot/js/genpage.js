@@ -1,7 +1,5 @@
 let gen_param_types = null, rawGenParamTypesFromServer = null;
 
-let session_id = null;
-
 let batches = 0;
 
 let lastImageDir = '';

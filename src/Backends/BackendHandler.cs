@@ -114,14 +114,14 @@ public class BackendHandler
     }
 
     /// <summary>Adds a new backend of the given type, and returns its data. Note that the backend will not be initialized at first.</summary>
-    public T2IBackendData AddNewOfType(BackendType type)
+    public T2IBackendData AddNewOfType(BackendType type, AutoConfiguration config = null)
     {
         T2IBackendData data = new()
         {
             Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend
         };
         data.Backend.BackendData = data;
-        data.Backend.SettingsRaw = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
+        data.Backend.SettingsRaw = config ?? (Activator.CreateInstance(type.SettingsClass) as AutoConfiguration);
         data.Backend.HandlerTypeData = type;
         data.Backend.Handler = this;
         lock (CentralLock)
