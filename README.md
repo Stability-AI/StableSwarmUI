@@ -8,7 +8,7 @@ A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powert
 
 # Installing on Linux
 
-- Install `git`, `python3` via your OS package manager if they are not already installed.
+- Install `git`, `python3`, `7zip` via your OS package manager if they are not already installed.
 - Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0
 - Open a shell terminal and `cd` to a directory you want to install into
 - Run shell commands:
@@ -46,6 +46,7 @@ This project:
 - has the option to use as a backend [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) (AGPL).
 - can automatically install [christophschuhmann/improved-aesthetic-predictor](https://github.com/christophschuhmann/improved-aesthetic-predictor) (Apache2).
 - can automatically install [yuvalkirstain/PickScore](https://github.com/yuvalkirstain/PickScore) (MIT).
+- can automatically install [git-for-windows](https://git-scm.com/download/win) (GPLv2).
 - embeds copies of web assets from [BootStrap](https://getbootstrap.com/) (MIT), [Select2](https://select2.org/) (MIT), [JQuery](https://jquery.com/) (MIT).
 - has the option to connect to remote servers to use [the Stability.ai API](https://dreamstudio.com/api/start/) as a backend.
 - supports user-built extensions which may have their own licenses or legal conditions.

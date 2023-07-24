@@ -105,8 +105,7 @@ public static class BasicAPIFeatures
                         Directory.Move("dlbackend/tmpcomfy/ComfyUI_windows_portable_nightly_pytorch", "dlbackend/comfy");
                         await output("Installing prereqs...");
                         await Utilities.DownloadFile("https://aka.ms/vs/16/release/vc_redist.x64.exe", "dlbackend/vc_redist.x64.exe");
-                        Process.Start(new ProcessStartInfo("dlbackend/vc_redist.x64.exe", "/quiet /install /passive /norestart") { UseShellExecute = true }).WaitForExit();
-
+                        Process.Start(new ProcessStartInfo(Path.GetFullPath("dlbackend/vc_redist.x64.exe"), "/quiet /install /passive /norestart") { UseShellExecute = true }).WaitForExit();
                         path = "dlbackend/comfy/ComfyUI/main.py";
                     }
                     else
