@@ -177,6 +177,7 @@ public static class BasicAPIFeatures
         }
         Program.SaveSettingsFile();
         await output("Installed!");
+        await socket.SendJson(new JObject() { ["success"] = true }, API.WebsocketTimeout);
         return null;
     }
 
