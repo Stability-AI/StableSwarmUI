@@ -117,9 +117,9 @@ public static class NetworkBackendUtils
                 {
                     start.ArgumentList.Add($"{dir}/venv/Scripts/python.exe");
                 }
-                else if (File.Exists($"{dir}/../python_embedded/python.exe"))
+                else if (File.Exists($"{dir}/../python_embeded/python.exe"))
                 {
-                    start.ArgumentList.Add($"{dir}/../python_embedded/python.exe");
+                    start.ArgumentList.Add($"{dir}/../python_embeded/python.exe");
                 }
                 else
                 {

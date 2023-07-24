@@ -12,7 +12,7 @@ set "argument=%~4"
 set "argument=!argument: =^ !"
 
 if "%5" neq "py" (
-    call %3 %argument%
+    call "%3" %argument%
 ) ELSE (
-    call %6 %3 %argument%
+    call "%6" "%3" %argument%
 )
