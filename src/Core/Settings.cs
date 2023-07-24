@@ -20,6 +20,9 @@ public class Settings : AutoConfiguration
     [ConfigComment("Settings related to backends.")]
     public BackendData Backends = new();
 
+    [ConfigComment("If this is set to 'true', hides the installer page. If 'false', the installer page will be shown.")]
+    public bool IsInstalled = false;
+
     /// <summary>Settings related to backends.</summary>
     public class BackendData : AutoConfiguration
     {

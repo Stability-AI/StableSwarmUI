@@ -1,0 +1,75 @@
+.headline {
+    text-align: center;
+}
+.section_wrapper {
+    margin: auto;
+    width: calc(min(90vw, 50rem));
+    border: 1px solid var(--light-border);
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 1rem;
+}
+.section_buttons {
+    text-align: right;
+}
+.install_hint {
+    opacity: 0.8;
+    font-style: italic;
+}
+.install_q_head {
+    font-size: 1.6rem;
+    font-weight: bold;
+    border-bottom: 1px solid var(--light-border);
+    margin-bottom: 0.5rem;
+}
+.form-check {
+    margin-bottom: 0.5rem;
+}
+.theme_preview .form-check {
+    display: inline-block;
+    width: 30%;
+    height: 10rem;
+    border: 1px solid var(--light-border);
+    border-radius: 0.5rem;
+}
+.theme_preview .form-check .button_example {
+    display: block;
+    height: 2rem;
+    font-weight: bold;
+    border: 1px solid;
+    border-radius: 1rem;
+    text-align: center;
+    width: fit-content;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-top: 2rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+.theme_preview_dark_dreams {
+    background-color: #18181b;
+    color: #eeeeee;
+}
+.theme_preview_dark_dreams .button_example {
+    border-color: #3f3f46;
+    background-color: #7855e1;
+    color: #ffffff;
+}
+.theme_preview_gravity_blue {
+    background-color: #0b0f20;
+    color: #eeeeee;
+}
+.theme_preview_gravity_blue .button_example {
+    border-color: #3f3f46;
+    background-color: orange;
+    color: #101010;
+}
+.theme_preview_eyesear_white {
+    background-color: #f0f0f0;
+    color: #101010;
+}
+.theme_preview_eyesear_white .button_example {
+    border-color: #3f3f46;
+    background-color: #a1a1a1;
+    color: #101010;
+}

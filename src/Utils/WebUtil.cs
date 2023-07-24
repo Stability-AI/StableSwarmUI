@@ -46,4 +46,32 @@ public static class WebUtil
     {
         return str.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("'", "\\'").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t");
     }
+
+    /// <summary>Returns a short string identifying whether the user's GPU is good enough.</summary>
+    public static HtmlString CheckGPUIsSufficient()
+    {
+        NvidiaUtil.NvidiaInfo nv = NvidiaUtil.QueryNvidia();
+        if (nv is null)
+        {
+            return new("Unknown GPU.");
+        }
+        string basic = $"GPU: <b>{nv.GPUName}</b>, <b>{nv.TotalMemory}</b> VRAM";
+        if (nv.TotalMemory.GiB > 15)
+        {
+            return new($"{basic} - able to run locally for almost anything.");
+        }
+        if (nv.TotalMemory.GiB > 11)
+        {
+            return new($"{basic} - sufficient to run most usages locally.");
+        }
+        if (nv.TotalMemory.GiB > 7)
+        {
+            return new($"{basic} - sufficient to run basic usage locally. May be limited on large generations.");
+        }
+        if (nv.TotalMemory.GiB > 3)
+        {
+            return new($"{basic} - limited, may need to configure settings for LowVRAM usage to work reliably.");
+        }
+        return new($"{basic} - insufficient, may work with LowVRAM or CPU mode, but otherwise will need remote cloud process.");
+    }
 }

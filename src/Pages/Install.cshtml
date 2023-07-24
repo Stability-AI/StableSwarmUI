@@ -1,0 +1,132 @@
+@page
+@{
+    ViewData["Title"] = "StableSwarmUI Installer";
+}
+@section Header {
+    <link rel="stylesheet" href="/css/installer.css?vary=@Utilities.VaryID" />
+}
+
+@{
+    if (Program.ServerSettings.IsInstalled)
+    {
+        <script>
+            window.location.href = "/Text2Image";
+        </script>
+        return;
+    }
+}
+
+<div class="headline">
+    <h1>StableSwarmUI Installer</h1>
+</div>
+<hr>
+
+<div id="section_wrapper" class="section_wrapper">
+    <div id="installer_section_themes">
+        <div class="install_q_head">Choose a theme:</div>
+        <div class="install_hint">You can always change this later in the User Settings page.</div>
+        <br>
+        <fieldset class="form-group theme_preview" id="theme_selection_field">
+            <div class="form-check theme_preview_dark_dreams" id="theme_input_dark_dreams">
+                <input class="form-check-input" type="radio" name="theme_radio" id="theme_darkdreams" value="dark_dreams" checked="">
+                <label class="form-check-label" for="theme_darkdreams">Dark Dreams</label>
+                <span class="button_example">Example</span>
+            </div>
+            <div class="form-check theme_preview_gravity_blue" id="theme_input_gravity_blue">
+                <input class="form-check-input" type="radio" name="theme_radio" id="theme_gravityblue" value="gravity_blue">
+                <label class="form-check-label" for="theme_gravityblue">Gravity Blue</label>
+                <span class="button_example">Example</span>
+            </div>
+            <div class="form-check theme_preview_eyesear_white" id="theme_input_eyesear_white">
+                <input class="form-check-input" type="radio" name="theme_radio" id="theme_eyesearwhite" value="eyesear_white">
+                <label class="form-check-label" for="theme_eyesearwhite">Eyesear White</label>
+                <span class="button_example">Example</span>
+            </div>
+        </fieldset>
+    </div>
+
+    <div id="installer_section_installed_for" style="display: none;">
+        <div class="install_q_head">Who is this StableSwarmUI installation going to be used by?</div>
+        <div class="install_hint">This is to determine a preset of core settings. You can always change this later.</div>
+        <br>
+        <fieldset class="form-group" id="installed_for_selection_field">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="installed_for_radio" id="installed_for_radio_yourself" value="just_self">
+                <label class="form-check-label" for="installed_for_radio_yourself">Just Yourself On This PC</label>
+                <div class="install_hint">Disables external access entirely, sets you as always a full administrator of the installation.</div>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="installed_for_radio" id="installed_for_radio_yourselflocal" value="just_self_lan">
+                <label class="form-check-label" for="installed_for_radio_yourselflocal">Just Yourself, with LAN access</label>
+                <div class="install_hint">Enables LAN access (so you can eg open from your phone), sets you as always a full administrator of the installation.</div>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="installed_for_radio" id="installed_for_radio_friendsfamily" value="friends_family" disabled="">
+                <label class="form-check-label" for="installed_for_radio_friendsfamily">(COMING SOON): Friends & Family</label>
+                <div class="install_hint">Makes it possible to access the UI from other accounts, generally trusted with access.</div>
+            </div>
+            <div class="form-check disabled">
+                <input class="form-check-input" type="radio" name="installed_for_radio" id="installed_for_radio_public" value="public" disabled="">
+                <label class="form-check-label" for="installed_for_radio_public">(COMING SOON): Public Access or Untrusted Users</label>
+                <div class="install_hint">Requires a verified account to use the UI, heavily restricts access.</div>
+            </div>
+        </fieldset>
+    </div>
+
+    <div id="installer_section_backends" style="display: none;">
+        <div class="install_q_head">What backend would you like to use?</div>
+        <div class="install_hint">The backend is the internal engine that actually runs Stable Diffusion on the inside. You can change backends later.</div>
+        <br>
+        @WebUtil.ModalHeader("gpu_check_modal", "GPU Check")
+        <div class="modal-body">
+            Generally, you want a GPU with at least 8 GiB of VRAM to run properly. More is better.
+            <br>&bullet; An Nvidia RTX 20-series or newer is recommended, though some older cards can still work.
+            <br>&bullet; AMD GPUs should work, but are not currently correctly scanned by StableSwarmUI.
+            <br>&bullet; Intel or Mac GPUs may work, but will require special configuration that this installer does not yet perform for you.
+            <br>&bullet; CPU execution is possible, but is extremely slow and not recommended.
+            <hr>
+            You have: @WebUtil.CheckGPUIsSufficient()
+        </div>
+        @WebUtil.ModalFooter()
+        <fieldset class="form-group" id="backend_selection_field">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="backend_radio" id="backend_radio_comfy" value="comfyui">
+                <label class="form-check-label" for="backend_radio_comfy">ComfyUI (Local)</label>
+                <div class="install_hint">ComfyUI is a powerful node-based Stable Diffusion engine that runs entirely on your local PC. This option is best if you have a powerful GPU.
+                    <a href="#" onclick="javascript:$('#gpu_check_modal').modal('show')">Do I?</a>
+                </div>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="backend_radio" id="backend_radio_stabilityapi" value="stabilityapi">
+                <label class="form-check-label" for="backend_radio_stabilityapi">Stability API (Remote)</label>
+                <div class="install_hint">The Stability API powers DreamStudio and services like it. If you don't have a powerful local PC, you can use the Stability API to power your generations.
+                    You must have a valid API key to use this. <a href="https://dreamstudio.com/api/start/">Click Here for info about the Stability API and how to get an API key.</a>
+                </div>
+                <input type="password" id="stability_api_key" name="Stability API Key" placeholder="Stability API Key">
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="backend_radio" id="backend_radio_none" value="none">
+                <label class="form-check-label" for="backend_radio_none">None / Custom / Choose Later</label>
+                <div class="install_hint">If you have a pre-existing backend installation (eg ComfyUI, Auto WebUI, etc) or want to deal with it later, click here. You can configure backends under the Server tab of the main interface.</div>
+            </div>
+        </fieldset>
+    </div>
+
+    <div id="installer_section_models" style="display: none;">
+        (TODO: model downloads)
+    </div>
+
+    <div id="installer_section_end" style="display: none;">
+        (TODO: Finalize, and notice that more settings are available on the actual page)
+    </div>
+    <hr>
+    <div class="section_buttons">
+        <span id="bottom_info"></span>
+        <button id="installer_button_back" class="btn btn-primary basic-button" disabled autocomplete="off">Back</button>
+        <button id="installer_button_next" class="btn btn-primary basic-button" autocomplete="off">Next</button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/js/installer.js?vary=@Utilities.VaryID"></script>
+}
