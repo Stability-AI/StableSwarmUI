@@ -299,6 +299,10 @@ textarea, input, select {
     background-color: var(--button-background-hover);
     color: var(--button-foreground-hover);
 }
+.basic-button:disabled {
+    background-color: color-mix(in srgb, var(--button-background) 40%, rgba(100, 0, 0, 0.5));
+    color: color-mix(in srgb, var(--button-text) 60%, transparent);
+}
 .modal_text_extra {
     width: 100%;
     margin-bottom: 0.1rem;
