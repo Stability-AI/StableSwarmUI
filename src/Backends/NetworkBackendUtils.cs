@@ -119,7 +119,7 @@ public static class NetworkBackendUtils
                 }
                 else if (File.Exists($"{dir}/../python_embeded/python.exe"))
                 {
-                    start.ArgumentList.Add($"{dir}/../python_embeded/python.exe");
+                    start.ArgumentList.Add(Path.GetFullPath($"{dir}/../python_embeded/python.exe"));
                 }
                 else
                 {

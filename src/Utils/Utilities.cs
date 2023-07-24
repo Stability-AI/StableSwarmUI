@@ -3,6 +3,7 @@ using FreneticUtilities.FreneticToolkit;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
 using System.Diagnostics;
 using System.IO;
@@ -287,4 +288,12 @@ public static class Utilities
     /// <summary>Kill system process..</summary>
     [DllImport("libc", SetLastError = true, EntryPoint = "kill")]
     public static extern int sys_kill(int pid, int signal);
+
+    /// <summary>Downloads a file from a given URL and saves it to a given filepath.</summary>
+    public static async Task DownloadFile(string url, string filepath)
+    {
+        using FileStream writer = File.OpenWrite(filepath);
+        using Stream dlStream = await NetworkBackendUtils.MakeHttpClient().GetStreamAsync(url, Program.GlobalProgramCancel);
+        await dlStream.CopyToAsync(writer, Program.GlobalProgramCancel);
+    }
 }

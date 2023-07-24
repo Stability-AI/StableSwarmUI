@@ -98,15 +98,15 @@ public static class BasicAPIFeatures
                     string path;
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
-                        {
-                            using FileStream writer = File.OpenWrite("dlbackend/comfyui_dl.7z");
-                            using Stream dlStream = await client.GetStreamAsync("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_or_cpu_nightly_pytorch.7z", Program.GlobalProgramCancel);
-                            await dlStream.CopyToAsync(writer, Program.GlobalProgramCancel);
-                        }
+                        await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_or_cpu_nightly_pytorch.7z", "dlbackend/comfyui_dl.7z");
                         await output("Downloaded! Extracting...");
                         Directory.CreateDirectory("dlbackend/tmpcomfy/");
                         await Process.Start("launchtools/7z/win/7za.exe", $"x dlbackend/comfyui_dl.7z -o\"dlbackend/tmpcomfy/\" -y").WaitForExitAsync(Program.GlobalProgramCancel);
                         Directory.Move("dlbackend/tmpcomfy/ComfyUI_windows_portable_nightly_pytorch", "dlbackend/comfy");
+                        await output("Installing prereqs...");
+                        await Utilities.DownloadFile("https://aka.ms/vs/16/release/vc_redist.x64.exe", "dlbackend/vc_redist.x64.exe");
+                        Process.Start(new ProcessStartInfo("dlbackend/vc_redist.x64.exe", "/quiet /install /passive /norestart") { UseShellExecute = true }).WaitForExit();
+
                         path = "dlbackend/comfy/ComfyUI/main.py";
                     }
                     else
@@ -164,9 +164,7 @@ public static class BasicAPIFeatures
                 string folder = Program.ServerSettings.Paths.SDModelFullPath + "/OfficialStableDiffusion";
                 Directory.CreateDirectory(folder);
                 string filename = file.AfterLast('/');
-                using FileStream writer = File.OpenWrite($"{folder}/{filename}");
-                using Stream dlStream = await client.GetStreamAsync(file);
-                await dlStream.CopyToAsync(writer);
+                await Utilities.DownloadFile(file, $"{folder}/{filename}");
                 await output("Model download complete.");
             }
         }
