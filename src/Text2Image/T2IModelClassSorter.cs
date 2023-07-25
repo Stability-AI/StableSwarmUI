@@ -36,6 +36,10 @@ public class T2IModelClassSorter
         {
             return isV1(h) && !IsAlt(h) && !isV2(h);
         }});
+        Register(new() { ID = "stable-diffusion-v1-inpainting", Name = "Stable Diffusion v1 (Inpainting)", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
+        {
+            return false; // TODO: How to detect accurately?
+        }});
         Register(new() { ID = "stable-diffusion-v2-512", Name = "Stable Diffusion v2-512", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
         {
             return isV2(h) && !isV2Unclip(h) && isv2512name(m.Name);
@@ -43,6 +47,10 @@ public class T2IModelClassSorter
         Register(new() { ID = "stable-diffusion-v2-768-v", Name = "Stable Diffusion v2-768v", StandardWidth = 768, StandardHeight = 768, IsThisModelOfClass = (m, h) =>
         {
             return isV2(h) && !isV2Unclip(h) && !isv2512name(m.Name);
+        }});
+        Register(new() { ID = "stable-diffusion-v2-inpainting", Name = "Stable Diffusion v2 (Inpainting)", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
+        {
+            return false; // TODO: How to detect accurately?
         }});
         Register(new() { ID = "stable-diffusion-v2-depth", Name = "Stable Diffusion v2 (Depth)", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
         {
