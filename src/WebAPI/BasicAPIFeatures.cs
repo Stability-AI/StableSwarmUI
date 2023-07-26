@@ -117,7 +117,7 @@ public static class BasicAPIFeatures
                     int gpu = 0;
                     if (nv is not null && nv.Length > 0)
                     {
-                        NvidiaUtil.NvidiaInfo mostVRAM = nv.OrderByDescending(n => n.TotalMemory).First();
+                        NvidiaUtil.NvidiaInfo mostVRAM = nv.OrderByDescending(n => n.TotalMemory.InBytes).First();
                         gpu = mostVRAM.ID;
                     }
                     await output("Enabling ComfyUI...");
