@@ -1,8 +1,14 @@
 # StableSwarmUI
 
-StableSwarmUI 0.4.0 Alpha.
+StableSwarmUI 0.5.0 Alpha.
 
 A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powertools easily accessible, high performance, and extensibility.
+
+# Status
+
+This project is in **ALPHA** status. That means all the basic features work, but there's a wide range of core features not yet implemented, and there are many bugs and not-too-great-quality-of-life issues throughout.
+
+Powerusers and developers are encouraged to try it out and help build it, but general/beginner users are advised caution.
 
 # Installing on Windows
 
@@ -53,4 +59,10 @@ This project:
 - has the option to connect to remote servers to use [the Stability.ai API](https://dreamstudio.com/api/start/) as a backend.
 - supports user-built extensions which may have their own licenses or legal conditions.
 
-Created by Alex Goodwin for StabilityAI.
+Copyright (C) 2023 Stability.AI
+
+Licensed under the PolyForm Noncommercial License 1.0.0, view [LICENSE.txt](/LICENSE.txt) for details.
+
+(In short: personal usage is free, commercial usage is not)
+
+This license is an initial selection, particularly for the Alpha stage of the project, that is subject to change in the future.
