@@ -47,7 +47,7 @@ Key feature targets not yet implemented:
 # Installing on Linux
 
 - Install `git`, `python3` via your OS package manager if they are not already installed.
-- Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0
+- Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0 (you need `dotnet-sdk-7.0`, as that includes all relevant sub-packages)
 - Open a shell terminal and `cd` to a directory you want to install into
 - Run shell commands:
     - `git clone https://github.com/Stability-AI/StableSwarmUI`
