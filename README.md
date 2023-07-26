@@ -34,6 +34,7 @@ Key feature targets not yet implemented:
 
 (TODO): Make the .bat link actually be a download link not a view link.
 
+- Install [Dotnet SDK 7 from Microsoft](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
 - Download [The Install-Windows.bat file](https://raw.githubusercontent.com/Stability-AI/StableSwarmUI/master/install-windows.bat), store it somewhere you want to install at (not `Program Files`), and run it.
     - It should open a command prompt and install itself.
     - If it closes without going further, try running it again, it sometimes needs to run twice. (TODO: Fix that)
