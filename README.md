@@ -48,6 +48,7 @@ Key feature targets not yet implemented:
 
 - Install `git`, `python3` via your OS package manager if they are not already installed.
 - Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0
+- Be sure to install the `AspNetCore runtime` package as well at https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#install-the-runtime
 - Open a shell terminal and `cd` to a directory you want to install into
 - Run shell commands:
     - `git clone https://github.com/Stability-AI/StableSwarmUI`
