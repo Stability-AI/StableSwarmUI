@@ -44,12 +44,12 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             {
                 return;
             }
-            Logs.Info($"Shutting down self-start Auto WebUI (port={Port}) process #{RunningProcess.Id}...");
+            Logs.Info($"Shutting down self-start ComfyUI (port={Port}) process #{RunningProcess.Id}...");
             RunningProcess.Kill();
         }
         catch (Exception ex)
         {
-            Logs.Error($"Error stopping Auto WebUI process: {ex}");
+            Logs.Error($"Error stopping ComfyUI process: {ex}");
         }
     }
 

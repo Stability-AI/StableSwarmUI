@@ -74,7 +74,7 @@ public static class BasicAPIFeatures
                 Program.ServerSettings.Network.Host = "localhost";
                 Program.ServerSettings.Network.Port = 7801;
                 Program.ServerSettings.Network.PortCanChange = true;
-                Program.ServerSettings.LaunchMode = "electron";
+                Program.ServerSettings.LaunchMode = "web"; // TODO: Electron?
                 break;
             case "just_self_lan":
                 await output("Configuring settings as 'just yourself (LAN)' install.");

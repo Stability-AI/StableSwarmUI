@@ -115,12 +115,12 @@ public class Program
         if (LaunchMode == "web")
         {
             Logs.Init("Launch web browser...");
-            Process.Start(new ProcessStartInfo(WebServer.HostURL) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(WebServer.PageURL) { UseShellExecute = true });
         }
         else if (LaunchMode == "webinstall")
         {
             Logs.Init("Launch web browser to install page...");
-            Process.Start(new ProcessStartInfo(WebServer.HostURL + "/Install") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(WebServer.PageURL + "/Install") { UseShellExecute = true });
         }
         else if (LaunchMode == "electron")
         {

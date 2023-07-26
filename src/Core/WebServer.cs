@@ -38,6 +38,9 @@ public class WebServer
     /// <summary>The internal web host url this webserver is using.</summary>
     public static string HostURL => $"http://{Host}:{Port}";
 
+    /// <summary>A browsable page to this server.</summary>
+    public static string PageURL => $"http://{(Host == "*" || Host == "0.0.0.0" ? "localhost" : Host)}:{Port}";
+
     /// <summary>Minimum ASP.NET Log Level.</summary>
     public static LogLevel LogLevel;
 
