@@ -6,6 +6,8 @@ A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powert
 
 You can take it for a test-drive on [Google Colab](https://colab.research.google.com/github/Stability-AI/StableSwarmUI/blob/master/colab/colab-notebook.ipynb)
 
+![ui-screenshot](.github/images/stableswarmui.jpg)
+
 # Status
 
 This project is in **ALPHA** status. That means all the basic features work, but there's a wide range of core features not yet implemented, and there are many bugs and not-too-great-quality-of-life issues throughout.
