@@ -10,9 +10,32 @@ This project is in **ALPHA** status. That means all the basic features work, but
 
 Powerusers and developers are encouraged to try it out and help build it, but general/beginner users are advised caution.
 
+Those interested in helping push from Alpha to Beta to Full Release are welcome to submit PRs (read the [Contributing](/CONTRIBUTING.md) document first), and you can contact us here on GitHub or on [Discord](https://discord.gg/stablediffusion). I highly recommended reaching out to ask about plans for a feature before PRing it. There may already be specific plans or even a work in progress.
+
+Key feature targets not yet implemented:
+- Image editing tools
+- LoRAs, ControlNets
+- Internal TIs (already supported indirectly as all compatible backends specify these via text anyway, but a listing and handler for them should be present)
+- Text prompt tools (CLIP token counter, wildcards, etc) (some tools like prompt weighting already implicitly supported via backends)
+- Localization / automatic translation
+- LAN usage reliability
+- Mobile browser formatting
+- Self-contained internal mini-backend for simple usages
+- Simple box grids for batches (eg 2x2 squares of images when you generate a batch of 4)
+
 # Installing on Windows
 
-(TODO): provide an easy installer link here
+(TODO): Make the .bat link actually be a download link not a view link.
+
+- Download [The Install-Windows.bat file](https://raw.githubusercontent.com/Stability-AI/StableSwarmUI/master/install-windows.bat), store it somewhere you want to install at (not `Program Files`), and run it.
+    - It should open a command prompt and install itself.
+    - If it closes without going further, try running it again, it sometimes needs to run twice. (TODO: Fix that)
+    - It will place an icon on your desktop that you can use to re-launch the server at any time.
+    - When the installer completes, it will automatically launch the StableSwarmUI server, and open a browser window to the install page.
+    - Follow the install instructions on the page.
+    - After you submit, be patient, some of the install processing take a few minutes (downloading models and etc).
+
+(TODO): Even easier self-contained pre-installer, a `.msi` or `.exe` that provides a general install screen and lets you pick folder and all.
 
 # Installing on Linux
 
