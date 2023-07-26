@@ -1,5 +1,7 @@
 # Contributing to StableSwarmUI
 
+Please open an Issue or Discussion, or ask on Discord before opening a pull request, to make sure your work doesn't overlap with others.
+
 (TODO)
 
 # Legal

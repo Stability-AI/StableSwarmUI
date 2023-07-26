@@ -1,7 +1,9 @@
 ﻿
 using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using StableSwarmUI.Backends;
+using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
 using System.Diagnostics;
 using System.IO;
@@ -28,11 +30,30 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
 
     public override string Address => $"http://localhost:{Port}";
 
+    public static LockObject ComfyModelFileHelperLock = new();
+
+    public static bool IsComfyModelFileEmitted = false;
+
+    public static void EnsureComfyFile()
+    {
+        lock (ComfyModelFileHelperLock)
+        {
+            if (IsComfyModelFileEmitted)
+            {
+                return;
+            }
+            File.WriteAllText("Data/comfy-auto-model.yaml", $"stableswarmui:\n    base_path: {Program.ServerSettings.Paths.SDModelFullPath}\n    checkpoints: ./\n");
+            IsComfyModelFileEmitted = true;
+        }
+    }
+
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     public override async Task Init()
     {
+        EnsureComfyFile();
         ComfyUISelfStartSettings settings = SettingsRaw as ComfyUISelfStartSettings;
-        await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs + " --port {PORT}", InitInternal, (p, r) => { Port = p; RunningProcess = r; });
+        string modelPath = $"--extra-model-paths-config {Environment.CurrentDirectory}/Data/comfy-auto-model.yaml";
+        await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs + " --port {PORT} " + modelPath, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
 
     public override async Task Shutdown()
