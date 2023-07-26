@@ -14,7 +14,7 @@ public class T2IModelClassSorter
     /// <summary>Register a new model class to the sorter.</summary>
     public void Register(T2IModelClass clazz)
     {
-        ModelClasses.Add(clazz.Name, clazz);
+        ModelClasses.Add(clazz.ID, clazz);
     }
 
     public T2IModelClassSorter()
@@ -67,6 +67,14 @@ public class T2IModelClassSorter
         Register(new() { ID = "stable-diffusion-xl-v0_9-refiner", Name = "Stable Diffusion XL 0.9-Refiner", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
         {
             return isXL09Refiner(h);
+        }});
+        Register(new() { ID = "stable-diffusion-xl-v1-base", Name = "Stable Diffusion XL 1.0-Base", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
+        {
+            return false;
+        }});
+        Register(new() { ID = "stable-diffusion-xl-v1-refiner", Name = "Stable Diffusion XL 1.0-Refiner", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
+        {
+            return false;
         }});
     }
 
