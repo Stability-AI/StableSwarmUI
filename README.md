@@ -26,6 +26,7 @@ Key feature targets not yet implemented:
 - Simple box grids for batches (eg 2x2 squares of images when you generate a batch of 4)
 - Properly display ModelSpec usage-hint/trigger-phrase/etc. (need full detail "Current Model" display in UI, separate from the model selector - probably as a tab within the batch sidebar?)
 - Backends should be self-expanding (that is: one ComfyUI backend in the interface should be able to expand to several)
+- In-UI Comfy workflow Save&Load, and metadata edit (ie to reconfigure which parameters to send over or not)
 
 # Installing on Windows
 
