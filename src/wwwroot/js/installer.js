@@ -1,6 +1,6 @@
 
 class InstallerClass {
-    parts = ['themes', 'installed_for', 'backends', 'models', 'end'];
+    parts = ['license', 'themes', 'installed_for', 'backends', 'models', 'end'];
     backButton = getRequiredElementById('installer_button_back');
     nextButton = getRequiredElementById('installer_button_next');
     bottomInfo = getRequiredElementById('bottom_info');
@@ -57,6 +57,8 @@ class InstallerClass {
 
     isPageComplete() {
         switch (this.parts[this.cur_part]) {
+            case 'license':
+                return true;
             case 'themes':
                 return getRadioSelectionInFieldset('theme_selection_field') != null;
             case 'installed_for':
@@ -87,6 +89,7 @@ class InstallerClass {
     check() {
         let isComplete = this.isPageComplete();
         this.backButton.disabled = this.cur_part == 0;
+        this.nextButton.innerText = this.cur_part == 0 ? "Agree" : "Next";
         this.nextButton.disabled = this.cur_part == this.parts.length - 1 || !isComplete;
         this.bottomInfo.innerText = `Step ${this.cur_part + 1} of ${this.parts.length}`;
         if (!isComplete) {
