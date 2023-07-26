@@ -45,7 +45,7 @@ public class Program
     public static string SettingsFilePath;
 
     /// <summary>Ngrok instance, if loaded at all.</summary>
-    public static NgrokHandler Ngrok;
+    public static PublicProxyHandler ProxyHandler;
 
     /// <summary>Central web server core.</summary>
     public static WebServer Web;
@@ -146,7 +146,7 @@ public class Program
         GlobalCancelSource.Cancel();
         Backends?.Shutdown();
         Sessions?.Shutdown();
-        Ngrok?.Stop();
+        ProxyHandler?.Stop();
         T2IModels?.Shutdown();
         RunOnAllExtensions(e => e.OnShutdown());
         Extensions.Clear();
@@ -289,11 +289,21 @@ public class Program
         LockSettings = GetCommandLineFlagAsBool("lock_settings", false);
         if (CommandLineFlags.ContainsKey("ngrok-path"))
         {
-            Ngrok = new()
+            ProxyHandler = new()
             {
+                Name = "Ngrok",
                 Path = GetCommandLineFlag("ngrok-path", null),
-                Region = GetCommandLineFlag("ngrok-region", null),
+                Region = GetCommandLineFlag("proxy-region", null),
                 BasicAuth = GetCommandLineFlag("ngrok-basic-auth", null)
+            };
+        }
+        if (CommandLineFlags.ContainsKey("cloudflared-path"))
+        {
+            ProxyHandler = new()
+            {
+                Name = "Cloudflare",
+                Path = GetCommandLineFlag("cloudflared-path", null),
+                Region = GetCommandLineFlag("proxy-region", null)
             };
         }
         LaunchMode = GetCommandLineFlag("launch_mode", ServerSettings.LaunchMode);

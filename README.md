@@ -22,6 +22,8 @@ Key feature targets not yet implemented:
 - Mobile browser formatting
 - Self-contained internal mini-backend for simple usages
 - Simple box grids for batches (eg 2x2 squares of images when you generate a batch of 4)
+- Properly display ModelSpec usage-hint/trigger-phrase/etc. (need full detail "Current Model" display in UI, separate from the model selector - probably as a tab within the batch sidebar?)
+- Backends should be self-expanding (that is: one ComfyUI backend in the interface should be able to expand to several)
 
 # Installing on Windows
 
@@ -39,7 +41,7 @@ Key feature targets not yet implemented:
 
 # Installing on Linux
 
-- Install `git`, `python3`, `7zip` via your OS package manager if they are not already installed.
+- Install `git`, `python3` via your OS package manager if they are not already installed.
 - Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0
 - Open a shell terminal and `cd` to a directory you want to install into
 - Run shell commands:

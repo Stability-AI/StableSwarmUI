@@ -22,6 +22,7 @@ Argument | Default | Description
 `--user_id` | `local` | Set the local user's default UserID (for running in single-user mode, not useful in shared mode).
 `--lock_settings` | `false` | If enabled, blocks in-UI editing of server settings by admins. Settings cannot be modified in this mode without editing the settings file and restarting the server.
 `--ngrok-path` | (None) | If specified, will be used as the path to an `ngrok` executable, and will automatically load and configure ngrok when launching, to share your UI instance on a publicly accessible URL.
-`--ngrok-region` | (None) | If specified, sets the ngrok region. If unspecified, defaults to closest.
+`--cloudflared-path` | (None) | If specified, will be used as the path to an `cloudflared` executable, and will automatically load and configure TryCloudflare when launching, to share your UI instance on a publicly accessible URL.
+`--proxy-region` | (None) | If specified, sets the proxy (ngrok/cloudflared) region. If unspecified, defaults to closest.
 `--ngrok-basic-auth` | (None) | If specified, sets an ngrok basic-auth requirement to access.
 `--launch_mode` | `none` | Can be used to override the 'LaunchMode' server setting.
