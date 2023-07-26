@@ -1,0 +1,4 @@
+
+stableswarmui:
+    base_path: /content/StableSwarmUI
+    checkpoints: Models/Stable-Diffusion
