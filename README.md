@@ -4,7 +4,7 @@ StableSwarmUI 0.5.0 Alpha.
 
 A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powertools easily accessible, high performance, and extensibility.
 
-You can take it for a test-drive on [Google Colab](https://colab.research.google.com/github/Stability-AI/StableSwarmUI/blob/main/colab/colab-notebook.ipynb)
+You can take it for a test-drive on [Google Colab](https://colab.research.google.com/github/Stability-AI/StableSwarmUI/blob/master/colab/colab-notebook.ipynb)
 
 # Status
 
