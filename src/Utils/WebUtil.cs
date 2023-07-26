@@ -56,7 +56,7 @@ public static class WebUtil
         {
             return new("Unknown GPU.");
         }
-        NvidiaUtil.NvidiaInfo bestGpu = nv.OrderByDescending(x => x.TotalMemory).First();
+        NvidiaUtil.NvidiaInfo bestGpu = nv.OrderByDescending(x => x.TotalMemory.InBytes).First();
         string basic = $"GPU {bestGpu.ID}: <b>{bestGpu.GPUName}</b>, <b>{bestGpu.TotalMemory}</b> VRAM";
         if (nv.Length > 1)
         {
