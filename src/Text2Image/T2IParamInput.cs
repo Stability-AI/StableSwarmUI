@@ -132,9 +132,9 @@ public class T2IParamInput
     /// <summary>Sets the value of an input parameter to a given plaintext input. Will run the 'Clean' call if needed.</summary>
     public void Set(T2IParamType param, string val)
     {
-        if (param.Clean is not null && ValuesInput.TryGetValue(param.ID, out object valObj))
+        if (param.Clean is not null)
         {
-            val = param.Clean(valObj.ToString(), val);
+            val = param.Clean(ValuesInput.TryGetValue(param.ID, out object valObj) ? valObj.ToString() : null, val);
         }
         object obj = param.Type switch
         {
@@ -153,6 +153,11 @@ public class T2IParamInput
     /// <summary>Sets the direct raw value of a given parameter, without processing.</summary>
     public void Set<T>(T2IRegisteredParam<T> param, T val)
     {
+        if (param.Type.Clean is not null)
+        {
+            Set(param.Type, val.ToString());
+            return;
+        }
         ValuesInput[param.Type.ID] = val;
     }
 

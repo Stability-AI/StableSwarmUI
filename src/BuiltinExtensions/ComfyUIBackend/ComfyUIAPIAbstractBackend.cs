@@ -154,7 +154,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         if (workflow is not null)
         {
             workflow = StringConversionHelper.QuickSimpleTagFiller(initImageFixer(workflow), "${", "}", (tag) => {
-                string tagName = tag.BeforeAndAfter(':', out string defVal);
+                string fixedTag = Utilities.UnescapeJsonString(tag);
+                string tagName = fixedTag.BeforeAndAfter(':', out string defVal);
                 string tagBasic = tagName.BeforeAndAfter('+', out string tagExtra);
                 string filled = tagBasic switch
                 {

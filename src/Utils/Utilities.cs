@@ -167,6 +167,13 @@ public static class Utilities
         return content;
     }
 
+    /// <summary>Takes an escaped JSON string, and returns the plaintext unescaped form of it.</summary>
+    public static string UnescapeJsonString(string input)
+    {
+        return JObject.Parse("{ \"value\": \"" + input + "\" }")["value"].ToString();
+    }
+
+    /// <summary>Takes a string that may contain unpredictable content, and escapes it to fit safely within a JSON string section.</summary>
     public static string EscapeJsonString(string input)
     {
         string cleaned = input.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\b", "\\b").Replace("\t", "\\t").Replace("\f", "\\f").Replace("/", "\\/");

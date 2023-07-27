@@ -60,7 +60,22 @@ public class ComfyUIBackendExtension : Extension
                     break;
                 }
             }
-            return FakeRawInputType with { Name = nameNoPrefix, ID = name, HideFromMetadata = false, Type = type };
+            T2IParamType resType = FakeRawInputType with { Name = nameNoPrefix, ID = name, HideFromMetadata = false, Type = type };
+            if (type == T2IParamDataType.MODEL)
+            {
+                static string cleanup(string _, string val)
+                {
+                    val = val.Replace('\\', '/');
+                    while (val.Contains("//"))
+                    {
+                        val = val.Replace("//", "/");
+                    }
+                    val = val.Replace('/', Path.DirectorySeparatorChar);
+                    return val;
+                }
+                resType = resType with { Clean = cleanup };
+            }
+            return resType;
         }
         return null;
     }
