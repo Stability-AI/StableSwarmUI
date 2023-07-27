@@ -14,7 +14,7 @@ public class AutoWebUIAPIBackend : AutoWebUIAPIAbstractBackend
         public string Address = "";
     }
 
-    public override string Address => (SettingsRaw as AutoWebUIAPISettings).Address;
+    public override string Address => (SettingsRaw as AutoWebUIAPISettings).Address.TrimEnd('/');
 
     public override Task Init()
     {

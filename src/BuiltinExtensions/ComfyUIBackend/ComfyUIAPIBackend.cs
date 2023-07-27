@@ -14,7 +14,7 @@ public class ComfyUIAPIBackend : ComfyUIAPIAbstractBackend
         public string Address = "";
     }
 
-    public override string Address => (SettingsRaw as ComfyUIAPISettings).Address;
+    public override string Address => (SettingsRaw as ComfyUIAPISettings).Address.TrimEnd('/');
 
     public override Task Init()
     {
