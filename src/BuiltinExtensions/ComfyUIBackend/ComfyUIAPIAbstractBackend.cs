@@ -171,7 +171,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "init_image_strength" => user_input.GetString(T2IParamTypes.InitImageCreativity),
                     "comfy_sampler" => user_input.GetString(ComfyUIBackendExtension.SamplerParam) ?? "euler",
                     "comfy_scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam) ?? "normal",
-                    "model" => user_input.Get(T2IParamTypes.Model).Name.Replace('/', Path.DirectorySeparatorChar),
+                    "model" => user_input.Get(T2IParamTypes.Model).ToString(),
                     "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
                     _ => user_input.TryGetRaw(T2IParamTypes.GetType(tagBasic, user_input), out object val) ? val?.ToString() : null
                 };
@@ -218,7 +218,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public override async Task<bool> LoadModel(T2IModel model)
     {
-        string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model:error_missing_model}", Utilities.EscapeJsonString(model.Name.Replace('/', Path.DirectorySeparatorChar)));
+        string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model:error_missing_model}", Utilities.EscapeJsonString(model.ToString()));
         await AwaitJob(workflow, CancellationToken.None);
         CurrentModelName = model.Name;
         return true;

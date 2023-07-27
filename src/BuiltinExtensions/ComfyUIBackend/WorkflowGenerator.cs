@@ -36,7 +36,7 @@ public class WorkflowGenerator
             {
                 n["inputs"] = new JObject()
                 {
-                    ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).Name.Replace('/', Path.DirectorySeparatorChar)
+                    ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).ToString()
                 };
             }, "4");
         }, -10);

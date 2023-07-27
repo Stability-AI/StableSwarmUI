@@ -78,6 +78,6 @@ public class T2IModel
     /// <summary>Returns the name of the model.</summary>
     public override string ToString()
     {
-        return Name;
+        return Name.Replace('/', Path.DirectorySeparatorChar);
     }
 }
