@@ -74,4 +74,10 @@ public class T2IModel
         file.ReadExactly(dataBuf, 0, (int)len);
         return Encoding.UTF8.GetString(dataBuf);
     }
+
+    /// <summary>Returns the name of the model.</summary>
+    public override string ToString()
+    {
+        return Name;
+    }
 }
