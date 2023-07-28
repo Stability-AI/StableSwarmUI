@@ -19,7 +19,6 @@ Powerusers and developers are encouraged to try it out and help build it, but ge
 Those interested in helping push from Alpha to Beta to Full Release are welcome to submit PRs (read the [Contributing](/CONTRIBUTING.md) document first), and you can contact us here on GitHub or on [Discord](https://discord.gg/stablediffusion). I highly recommended reaching out to ask about plans for a feature before PRing it. There may already be specific plans or even a work in progress.
 
 Key feature targets not yet implemented:
-- Automatic proper usage of the SDXL Refiner (A model selector for which refiner to use, and what mode to use it in, and how many steps to give it)
 - Image editing tools
 - LoRAs, ControlNets
 - Internal TIs (already supported indirectly as all compatible backends specify these via text anyway, but a listing and handler for them should be present)
