@@ -228,7 +228,7 @@ function doGenerate() {
     }
     num_current_gens += parseInt(getRequiredElementById('input_images').value);
     setCurrentModel(() => {
-        if (getRequiredElementById('current_model').innerText == '') {
+        if (getRequiredElementById('current_model').value == '') {
             showError("Cannot generate, no model selected.");
             return;
         }
@@ -566,6 +566,22 @@ function loadUserData() {
     });
 }
 
+function updateAllModels(models) {
+    allModels = models;
+    let selector = getRequiredElementById('current_model');
+    selector.innerHTML = '';
+    let emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.innerText = '';
+    selector.appendChild(emptyOption);
+    for (let model of models) {
+        let option = document.createElement('option');
+        option.value = model;
+        option.innerText = model;
+        selector.appendChild(option);
+    }
+}
+
 function genpageLoad() {
     console.log('Load page...');
     pageSizer();
@@ -576,7 +592,7 @@ function genpageLoad() {
         loadModelList('');
         loadBackendTypesMenu();
         genericRequest('ListT2IParams', {}, data => {
-            allModels = data.models;
+            updateAllModels(data.models);
             rawGenParamTypesFromServer = data.list.sort(paramSorter);
             gen_param_types = rawGenParamTypesFromServer;
             genInputs();

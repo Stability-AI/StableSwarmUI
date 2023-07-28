@@ -132,7 +132,7 @@ function describeModel(model) {
     else {
         description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
     }
-    let className = getRequiredElementById('current_model').innerText == model.data.name ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
+    let className = getRequiredElementById('current_model').value == model.data.name ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
     return { name, description, buttons, 'image': model.data.preview_image, className };
 }
 
@@ -153,7 +153,7 @@ function directSetModel(model) {
     }
     if (model.name) {
         getRequiredElementById('input_model').value = model.name;
-        getRequiredElementById('current_model').innerText = model.name;
+        getRequiredElementById('current_model').value = model.name;
         setCookie('selected_model', `${model.name},${model.standard_width},${model.standard_height}`, 90);
         curModelWidth = model.standard_width;
         curModelHeight = model.standard_height;
@@ -161,7 +161,7 @@ function directSetModel(model) {
     else if (model.includes(',')) {
         let [name, width, height] = model.split(',');
         getRequiredElementById('input_model').value = name;
-        getRequiredElementById('current_model').innerText = name;
+        getRequiredElementById('current_model').value = name;
         setCookie('selected_model', `${name},${width},${height}`, 90);
         curModelWidth = parseInt(width);
         curModelHeight = parseInt(height);
@@ -174,7 +174,7 @@ function directSetModel(model) {
 
 function setCurrentModel(callback) {
     let currentModel = getRequiredElementById('current_model');
-    if (currentModel.innerText == '') {
+    if (currentModel.value == '') {
         genericRequest('ListLoadedModels', {}, data => {
             if (data.models.length > 0) {
                 directSetModel(data.models[0]);
@@ -190,3 +190,20 @@ function setCurrentModel(callback) {
         }
     }
 }
+
+let noDup = false;
+
+getRequiredElementById('current_model').addEventListener('change', () => {
+    if (noDup) {
+        return;
+    }
+    let name = getRequiredElementById('current_model').value;
+    if (name == '') {
+        return;
+    }
+    genericRequest('DescribeModel', {'modelName': name}, data => {
+        noDup = true;
+        directSetModel(data.model);
+        noDup = false;
+    });
+});

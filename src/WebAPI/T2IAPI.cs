@@ -19,6 +19,7 @@ public static class T2IAPI
         API.RegisterAPICall(GenerateText2ImageWS);
         API.RegisterAPICall(ListImages);
         API.RegisterAPICall(ListModels);
+        API.RegisterAPICall(DescribeModel);
         API.RegisterAPICall(ListLoadedModels);
         API.RegisterAPICall(TriggerRefresh);
         API.RegisterAPICall(SelectModel);
@@ -231,6 +232,24 @@ public static class T2IAPI
     }
 
     public static HashSet<string> ModelExtensions = new() { "safetensors", "ckpt" };
+
+    /// <summary>API route to describe a single model.</summary>
+    public static async Task<JObject> DescribeModel(Session session, string modelName)
+    {
+        modelName = modelName.Replace('\\', '/');
+        while (modelName.Contains("//"))
+        {
+            modelName = modelName.Replace("//", "/");
+        }
+        string allowedStr = session.User.Restrictions.AllowedModels;
+        Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        if ((allowed is null || allowed.IsMatch(modelName)) && Program.T2IModels.Models.TryGetValue(modelName, out T2IModel model))
+        {
+            return new JObject() { ["model"] = model.ToNetObject() };
+        }
+        Logs.Debug($"Request for model {modelName} rejected as not found.");
+        return new JObject() { ["error"] = "Model not found." };
+    }
 
     /// <summary>API route to get a list of available models.</summary>
     public static async Task<JObject> ListModels(Session session, string path)
