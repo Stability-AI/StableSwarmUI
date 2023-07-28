@@ -24,20 +24,6 @@ function clickImageInBatch(div) {
     setCurrentImage(div.getElementsByTagName('img')[0].src, div.dataset.metadata);
 }
 
-function upscale_current_image() {
-    let actualImage = getRequiredElementById('current_image_img');
-    toDataURL(actualImage.src, (url => {
-        input_overrides['initimage'] = url;
-        input_overrides['width'] = actualImage.width * 2;
-        input_overrides['height'] = actualImage.height * 2;
-        doGenerate();
-    }));
-}
-
-function star_current_image() {
-    alert('Stars are TODO');
-}
-
 let currentMetadataVal = null;
 
 function copy_current_image_params() {
@@ -111,9 +97,33 @@ function setCurrentImage(src, metadata = '') {
     curImg.appendChild(img);
     currentMetadataVal = metadata;
     let buttons = createDiv(null, 'current-image-buttons');
-    buttons.innerHTML = `<button class="basic-button" onclick="javascript:upscale_current_image()">Upscale 2x</button>
-    <button class="basic-button" onclick="javascript:star_current_image()">Star</button>
-    <button class="basic-button" onclick="javascript:copy_current_image_params()">Copy Parameters</button>`;
+    quickAppendButton(buttons, 'Upscale 2x', () => {
+        toDataURL(img.src, (url => {
+            input_overrides['initimage'] = url;
+            input_overrides['width'] = img.naturalWidth * 2;
+            input_overrides['height'] = img.naturalHeight * 2;
+            doGenerate();
+        }));
+    });
+    quickAppendButton(buttons, 'Star', () => {
+        alert('Stars are TODO');
+    });
+    quickAppendButton(buttons, 'Reuse Parameters', copy_current_image_params);
+    quickAppendButton(buttons, 'View In History', () => {
+        let folder = src;
+        if (folder.startsWith('/')) {
+            folder = folder.substring(1);
+        }
+        if (folder.startsWith('Output/')) {
+            folder = folder.substring('Output/'.length);
+        }
+        let lastSlash = folder.lastIndexOf('/');
+        if (lastSlash != -1) {
+            folder = folder.substring(0, lastSlash);
+        }
+        getRequiredElementById('imagehistorytabclickable').click();
+        imageHistoryBrowser.navigate(folder);
+    });
     curImg.appendChild(buttons);
     let data = createDiv(null, 'current-image-data');
     data.innerHTML = formatMetadata(metadata);
