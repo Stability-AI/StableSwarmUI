@@ -316,7 +316,7 @@ function toggle_advanced_checkbox_manual() {
     toggle_advanced();
 }
 
-function getGenInput() {
+function getGenInput(input_overrides = {}) {
     let input = {};
     for (let type of gen_param_types) {
         if (type.toggleable && !getRequiredElementById(`input_${type.id}_toggle`).checked) {

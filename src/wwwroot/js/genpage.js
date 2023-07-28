@@ -6,8 +6,6 @@ let lastImageDir = '';
 
 let lastModelDir = '';
 
-let input_overrides = {};
-
 let num_current_gens = 0, num_models_loading = 0, num_live_gens = 0, num_backends_waiting = 0;
 
 let shouldApplyDefault = false;
@@ -99,10 +97,12 @@ function setCurrentImage(src, metadata = '') {
     let buttons = createDiv(null, 'current-image-buttons');
     quickAppendButton(buttons, 'Upscale 2x', () => {
         toDataURL(img.src, (url => {
-            input_overrides['initimage'] = url;
-            input_overrides['width'] = img.naturalWidth * 2;
-            input_overrides['height'] = img.naturalHeight * 2;
-            doGenerate();
+            let input_overrides = {
+                'initimage': url,
+                'width': img.naturalWidth * 2,
+                'height': img.naturalHeight * 2
+            };
+            doGenerate(input_overrides);
         }));
     });
     quickAppendButton(buttons, 'Star', () => {
@@ -216,7 +216,7 @@ function doInterrupt() {
     });
 }
 
-function doGenerate() {
+function doGenerate(input_overrides = {}) {
     if (session_id == null) {
         if (Date.now() - time_started > 1000 * 60) {
             showError("Cannot generate, session not started. Did the server crash?");
@@ -235,7 +235,7 @@ function doGenerate() {
         getRequiredElementById('current_image_batch').innerHTML = '';
         batches++;
         let images = {};
-        makeWSRequestT2I('GenerateText2ImageWS', getGenInput(), data => {
+        makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides), data => {
             if (data.image) {
                 let batch_div = gotImageResult(data.image, data.metadata);
                 images[data.index] = [batch_div, data.image, data.metadata];
