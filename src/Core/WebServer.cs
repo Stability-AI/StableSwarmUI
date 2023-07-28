@@ -96,7 +96,6 @@ public class WebServer
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "src/wwwroot" });
         builder.Services.AddRazorPages();
         builder.Logging.SetMinimumLevel(LogLevel);
-        builder.WebHost.UseUrls(HostURL);
         WebApp = builder.Build();
         if (WebApp.Environment.IsDevelopment())
         {
