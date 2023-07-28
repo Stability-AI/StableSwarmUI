@@ -8,6 +8,7 @@ using StableSwarmUI.DataHolders;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
 
 namespace StableSwarmUI.Backends;
@@ -257,11 +258,21 @@ public class BackendHandler
                         data.Backend.Status = BackendStatus.WAITING;
                         Logs.Error($"Error #{data.InitAttempts} while initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name} - will retry");
                         BackendsToInit.Enqueue(data);
+                        Thread.Sleep(TimeSpan.FromSeconds(1)); // Intentionally pause a second to give a chance for external issue to self-resolve.
                     }
                     else
                     {
                         data.Backend.Status = BackendStatus.ERRORED;
-                        Logs.Error($"Final error ({data.InitAttempts}) while initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name}, giving up: {ex}");
+                        if (ex is AggregateException aex)
+                        {
+                            ex = aex.InnerException;
+                        }
+                        string errorMessage = $"{ex}";
+                        if (ex is HttpRequestException hrex && hrex.Message.StartsWith("No connection could be made because the target machine actively refused it"))
+                        {
+                            errorMessage = $"Connection refused - is the backend running, or is the address correct? (HttpRequestException: {ex.Message})";
+                        }
+                        Logs.Error($"Final error ({data.InitAttempts}) while initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name}, giving up: {errorMessage}");
                     }
                 }
             }
