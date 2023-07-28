@@ -8,3 +8,5 @@ set ASPNETCORE_ENVIRONMENT="Production"
 set ASPNETCORE_URLS="http://*:7801"
 
 dotnet src\bin\live_release\StableSwarmUI.dll %*
+
+IF %ERRORLEVEL% NEQ 0 ( pause )
