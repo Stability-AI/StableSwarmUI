@@ -6,7 +6,7 @@ For the most part, just download the installer and follow the instructions on sc
 
 Nonetheless, here's a step-by-step you can follow:
 
-### Installing
+## Installing
 
 Step one: [Install StableSwarmUI](/README.md#installing-on-windows).
 
@@ -22,7 +22,7 @@ Once this is done, it should automatically redirect you to the main interface.
 
 (You can close the server at any time by just closing that console window it pulls up, and you can start it again via the desktop icon, or the `launch` script in the folder).
 
-### Configuring
+## Configuring
 
 If you have pre-existing Stable Diffusion files, you'll want to configure settings a bit. If not, the defaults are probably fine.
 - If you have an Auto WebUI or ComfyUI folder with models in it, go to the `Server` tab then `Server Configuration` and set `ModelRoot` to your UI's `models` dir, and `SDModelPath` to `Stable-diffusion` for Auto WebUI or `checkpoints` for ComfyUI.
@@ -30,7 +30,7 @@ If you have pre-existing Stable Diffusion files, you'll want to configure settin
 
 ![img](/docs/images/servermodelpath.png)
 
-### Your First Image
+## Your First Image
 
 - Open the `Generate` tab at the top
 - At the bottom, there's a `Models` tab, click that
@@ -50,7 +50,7 @@ If you have pre-existing Stable Diffusion files, you'll want to configure settin
 
 If it didn't go well, ... well it's alpha software, hopefully there's an error message telling you what went wrong. If you can't figure it out, open an [issue here](https://github.com/Stability-AI/StableSwarmUI/issues) or ask on [discord](https://discord.gg/stablediffusion) in the `stableswarmui` channel.
 
-### Using The SDXL Refiner
+## Using The SDXL Refiner
 
 So, you want *refined* images, huh? Well, if the base isn't enough, and you downloaded the refiner, you can put it to use!
 
@@ -62,14 +62,14 @@ So, you want *refined* images, huh? Well, if the base isn't enough, and you down
 
 ![img](/docs/images/refiners.png)
 
-### Getting Advanced: Playing With Parameters
+## Getting Advanced: Playing With Parameters
 
 StableSwarmUI is designed on the principle of exposing all the parameters to you, but making them approachable. To that end:
 - All the parameters are grouped. You can toggle groups open/closed, and where relevant there's sliders to toggle groups on/off.
 - All the parameters have a lil purple `?` icon next to them. Clicking this will open a popup with an explanation of the parameter and some examples.
 - When in doubt, with most parameters, just play with them and see what happens. Lock in your `Seed` to a constant one before trying to avoid unrelated changes.
 
-### We Gotta Go Faster: Add More Backends
+## We Gotta Go Faster: Add More Backends
 
 You want more images more faster right now hurry up and tell me how quick quick quick? The Backends tab holds the key to your speedy needs.
 - First, find some GPUs you can use.
@@ -87,7 +87,7 @@ You want more images more faster right now hurry up and tell me how quick quick 
 - You can of course edit or delete backends at will from that page. They will persist across restarts automatically.
 - If you use custom comfy workflows, note that that comfy workflow tab only uses your first comfy instance - you'll only use all available backends once you use the `Use This Workflow` button and go back to the main `Generate` tab.
 
-### Testing Like A Pro: The Grid Generator
+## Testing Like A Pro: The Grid Generator
 
 What's the fun in testing changes one by one, when you can unleash your machine to test all of them and lay it out clearly for you? This is where the Grid Generator comes in!
 - Go to the `Tools` tab at the bottom
@@ -102,7 +102,7 @@ What's the fun in testing changes one by one, when you can unleash your machine 
 
 ![img](/docs/images/grids.png)
 
-### Getting REALLY Advanced: Custom Workflows
+## Getting REALLY Advanced: Custom Workflows
 
 So, all those parameters aren't enough, you want MORE control? Don't worry, we got you covered, with the power of raw ComfyUI node graphs!
 
