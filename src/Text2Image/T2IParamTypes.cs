@@ -183,12 +183,12 @@ public class T2IParamTypes
         return update;
     }
 
-    public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType;
+    public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod;
     public static T2IRegisteredParam<int> Images, Steps, Width, Height;
     public static T2IRegisteredParam<long> Seed, VariationSeed;
-    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity;
+    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale;
     public static T2IRegisteredParam<Image> InitImage;
-    public static T2IRegisteredParam<T2IModel> Model;
+    public static T2IRegisteredParam<T2IModel> Model, RefinerModel;
 
     /// <summary>(For extensions) list of functions that provide fake types for given type names.</summary>
     public static List<Func<string, T2IParamInput, T2IParamType>> FakeTypeProviders = new();
@@ -238,6 +238,30 @@ public class T2IParamTypes
             ));
         InitImageCreativity = Register<double>(new("Init Image Creativity", "Higher values make the generation more creative, lower values follow the init image closer.\nSometimes referred to as 'Denoising Strength' for 'img2img'.",
             "0.6", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, NumberView: NumberViewType.SLIDER, Group: initImageGroup
+            ));
+        T2IParamGroup refinerGroup = new("Refiner", Toggles: true, Open: false, OrderPriority: -3);
+        static List<string> listRefinerModels(Session s)
+        {
+            List<T2IModel> baseList = Program.T2IModels.ListModelsFor(s);
+            List<T2IModel> refinerList = baseList.Where(m => m.ModelClass is not null && m.ModelClass.Name.Contains("Refiner")).ToList();
+            List<string> bases = baseList.Select(m => m.Name).ToList();
+            if (refinerList.IsEmpty())
+            {
+                return bases;
+            }
+            return refinerList.Select(m => m.Name).Append("-----").Concat(bases).ToList();
+        }
+        RefinerModel = Register<T2IModel>(new("Refiner Model", "The model to use for refinement. This should be a model that's good at small-details, and use a structural model as your base model.\nSDXL 1.0 released with an official refiner model.",
+            "", GetValues: listRefinerModels, OrderPriority: -5, Group: refinerGroup, FeatureFlag: "refiners"
+            ));
+        RefinerControl = Register<double>(new("Refine Control Percentage", "Higher values give the refiner more control, lower values give the base more control.\nThis is similar to 'Init Image Creativity', but for the refiner. This controls how many steps the refiner takes.",
+            "0.3", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, NumberView: NumberViewType.SLIDER, Group: refinerGroup, FeatureFlag: "refiners"
+            ));
+        RefinerMethod = Register<string>(new("Refiner Method", "How to apply the refiner. Different methods create different results.\n'StepSwap' swaps the model after x steps during generation. 'PostApply' runs the base in full, then runs the refiner with an Init Image.",
+            "StepSwap", GetValues: (_) => new() { "StepSwap", "PostApply" }, OrderPriority: -3, Group: refinerGroup, FeatureFlag: "refiners"
+            ));
+        RefinerUpscale = Register<double>(new("Refiner Upscale", "Optional upscale of the image between the base and refiner stage.\nSometimes referred to as 'high-res fix'.\nSetting to '1' disables the upscale.",
+            "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, NumberView: NumberViewType.SLIDER, Group: refinerGroup, FeatureFlag: "refiners"
             ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false

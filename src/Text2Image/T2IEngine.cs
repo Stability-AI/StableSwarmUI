@@ -107,10 +107,7 @@ namespace StableSwarmUI.Text2Image
             }
             if (claim.ShouldCancel)
             {
-                if (backend is not null)
-                {
-                    backend.Dispose();
-                }
+                backend?.Dispose();
                 return;
             }
             try

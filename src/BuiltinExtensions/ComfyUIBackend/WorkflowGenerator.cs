@@ -30,6 +30,7 @@ public class WorkflowGenerator
 
     static WorkflowGenerator()
     {
+        #region Model
         AddStep(g =>
         {
             g.CreateNode("CheckpointLoaderSimple", (_, n) =>
@@ -40,6 +41,8 @@ public class WorkflowGenerator
                 };
             }, "4");
         }, -10);
+        #endregion
+        #region Base Image
         AddStep(g =>
         {
             if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image img))
@@ -73,6 +76,8 @@ public class WorkflowGenerator
                 }, "5");
             }
         }, -9);
+        #endregion
+        #region Positive Prompt
         AddStep(g =>
         {
             g.CreateNode("CLIPTextEncode", (_, n) =>
@@ -84,6 +89,8 @@ public class WorkflowGenerator
                 };
             }, "6");
         }, -8);
+        #endregion
+        #region Negative Prompt
         AddStep(g =>
         {
             g.CreateNode("CLIPTextEncode", (_, n) =>
@@ -95,21 +102,29 @@ public class WorkflowGenerator
                 };
             }, "7");
         }, -7);
+        #endregion
+        #region Sampler
         AddStep(g =>
         {
+            int steps = g.UserInput.Get(T2IParamTypes.Steps);
+            int startStep = 0;
+            int endStep = 10000;
+            if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image _) && g.UserInput.TryGet(T2IParamTypes.InitImageCreativity, out double creativity))
+            {
+                startStep = (int)Math.Round(steps * (1 - creativity));
+            }
+            if (g.UserInput.TryGet(T2IParamTypes.RefinerMethod, out string method) && method == "StepSwap" && g.UserInput.TryGet(T2IParamTypes.RefinerControl, out double refinerControl))
+            {
+                endStep = (int)Math.Round(steps * (1 - refinerControl));
+            }
             g.CreateNode("KSamplerAdvanced", (_, n) =>
             {
-                int startStep = 0;
-                if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image _) && g.UserInput.TryGet(T2IParamTypes.InitImageCreativity, out double creativity))
-                {
-                    startStep = (int)(g.UserInput.Get(T2IParamTypes.Steps) * (1 - creativity));
-                }
                 n["inputs"] = new JObject()
                 {
                     ["model"] = g.FinalModel,
                     ["add_noise"] = "enable",
                     ["noise_seed"] = g.UserInput.Get(T2IParamTypes.Seed),
-                    ["steps"] = g.UserInput.Get(T2IParamTypes.Steps),
+                    ["steps"] = steps,
                     ["cfg"] = g.UserInput.Get(T2IParamTypes.CFGScale),
                     // TODO: proper sampler input, and intelligent default scheduler per sampler
                     ["sampler_name"] = g.UserInput.Get(ComfyUIBackendExtension.SamplerParam)?.ToString() ?? "euler",
@@ -117,13 +132,97 @@ public class WorkflowGenerator
                     ["positive"] = g.FinalPrompt,
                     ["negative"] = g.FinalNegativePrompt,
                     ["latent_image"] = g.FinalLatentImage,
-                    // TODO: Configurable
                     ["start_at_step"] = startStep,
-                    ["end_at_step"] = 10000,
+                    ["end_at_step"] = endStep,
                     ["return_with_leftover_noise"] = "disable"
                 };
             }, "10");
-        }, -1);
+        }, -5);
+        #endregion
+        #region Refiner
+        AddStep(g =>
+        {
+            if (g.UserInput.TryGet(T2IParamTypes.RefinerModel, out T2IModel refineModel) && refineModel is not null
+                && g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale)
+                && g.UserInput.TryGet(T2IParamTypes.RefinerMethod, out string method)
+                && g.UserInput.TryGet(T2IParamTypes.RefinerControl, out double refinerControl))
+            {
+                g.CreateNode("CheckpointLoaderSimple", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["ckpt_name"] = refineModel.ToString()
+                    };
+                }, "20");
+                g.FinalVae = new() { "20", 2 };
+                g.CreateNode("CLIPTextEncode", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["clip"] = new JArray() { "20", 1 },
+                        ["text"] = g.UserInput.Get(T2IParamTypes.Prompt)
+                    };
+                }, "21");
+                g.CreateNode("CLIPTextEncode", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["clip"] = new JArray() { "20", 1 },
+                        ["text"] = g.UserInput.Get(T2IParamTypes.NegativePrompt)
+                    };
+                }, "22");
+                // TODO: Better same-VAE check
+                if (refineModel.ModelClass?.ID != "stable-diffusion-xl-v1-refiner" || g.UserInput.Get(T2IParamTypes.Model).ModelClass?.ID != "stable-diffusion-xl-v1-base")
+                {
+                    g.CreateNode("VAEDecode", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["samples"] = g.FinalSamples,
+                            ["vae"] = g.FinalVae
+                        };
+                    }, "24");
+                    g.CreateNode("VAEEncode", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["pixels"] = new JArray() { "24", 0 },
+                            ["vae"] = new JArray() { "20", 2 }
+                        };
+                    }, "25");
+                    g.FinalSamples = new() { "25", 0 };
+                }
+                if (refineUpscale > 1)
+                {
+                    // TODO: Upscale
+                }
+                int steps = g.UserInput.Get(T2IParamTypes.Steps);
+                g.CreateNode("KSamplerAdvanced", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["model"] = new JArray() { "20", 0 },
+                        ["add_noise"] = "enable",
+                        ["noise_seed"] = g.UserInput.Get(T2IParamTypes.Seed) + 1,
+                        ["steps"] = steps,
+                        ["cfg"] = g.UserInput.Get(T2IParamTypes.CFGScale),
+                        // TODO: proper sampler input, and intelligent default scheduler per sampler
+                        ["sampler_name"] = g.UserInput.Get(ComfyUIBackendExtension.SamplerParam)?.ToString() ?? "euler",
+                        ["scheduler"] = g.UserInput.Get(ComfyUIBackendExtension.SchedulerParam)?.ToString() ?? "normal",
+                        ["positive"] = new JArray() { "21", 0 },
+                        ["negative"] = new JArray() { "22", 0 },
+                        ["latent_image"] = g.FinalSamples,
+                        ["start_at_step"] = (int)Math.Round(steps * (1 - refinerControl)),
+                        ["end_at_step"] = 10000,
+                        ["return_with_leftover_noise"] = "disable"
+                    };
+                }, "23");
+                g.FinalSamples = new() { "23", 0 };
+            }
+            // TODO: Refiner
+        }, -4);
+        #endregion
+        #region VAEDecode
         AddStep(g =>
         {
             g.CreateNode("VAEDecode", (_, n) =>
@@ -135,6 +234,8 @@ public class WorkflowGenerator
                 };
             }, "8");
         }, 9);
+        #endregion
+        #region SaveImage
         AddStep(g =>
         {
             g.CreateNode("SaveImage", (_, n) =>
@@ -146,6 +247,7 @@ public class WorkflowGenerator
                 };
             }, "9");
         }, 10);
+        #endregion
     }
 
     /// <summary>The raw user input data.</summary>

@@ -41,7 +41,8 @@ function getHtmlForParam(param, prefix, textRows = 2) {
                 }
                 return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, textRows, param.description, param.toggleable) + pop};
             case 'model':
-                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, allModels, param.default, param.toggleable) + pop};
+                let modelList = param.values && param.values.length > 0 ? param.values : allModels;
+                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, modelList, param.default, param.toggleable) + pop};
             case 'image':
                 return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop};
         }
