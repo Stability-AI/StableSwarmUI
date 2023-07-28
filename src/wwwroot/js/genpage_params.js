@@ -321,6 +321,9 @@ function getGenInput() {
         if (type.toggleable && !getRequiredElementById(`input_${type.id}_toggle`).checked) {
             continue;
         }
+        if (type.feature_missing) {
+            continue;
+        }
         if (type.group && type.group.toggles && !getRequiredElementById(`input_group_content_${type.group.id}_toggle`).checked) {
             continue;
         }
@@ -415,6 +418,7 @@ function hideUnsupportableParams() {
         if (elem) {
             let box = findParentOfClass(elem, 'auto-input');
             let show = param.feature_flag == null || Object.values(backends_loaded).filter(b => b.features.includes(param.feature_flag)).length > 0;
+            param.feature_missing = !show;
             if (show) {
                 box.style.display = 'inline-block';
             }

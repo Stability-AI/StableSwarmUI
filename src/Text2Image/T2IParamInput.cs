@@ -168,7 +168,7 @@ public class T2IParamInput
         {
             Set(T2IParamTypes.Seed, Random.Shared.Next());
         }
-        if (!TryGet(T2IParamTypes.VariationSeed, out long vseed) || vseed == -1)
+        if (TryGet(T2IParamTypes.VariationSeed, out long vseed) && vseed == -1)
         {
             Set(T2IParamTypes.VariationSeed, Random.Shared.Next());
         }
