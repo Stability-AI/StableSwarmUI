@@ -132,7 +132,7 @@ public static class BasicAPIFeatures
                     return null;
                 }
                 File.WriteAllText("Data/sapi_key.dat", stability_api_key);
-                Program.Backends.AddNewOfType(Program.Backends.BackendTypes["stabilityapi"]);
+                Program.Backends.AddNewOfType(Program.Backends.BackendTypes["stability_api"]);
                 break;
             case "none":
                 await output("Not installing any backend.");
