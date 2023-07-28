@@ -22,6 +22,7 @@ For the goal of maximizing capabilities, a 'main' backend needed to be chosen to
 - It is itself an extremely modular and extensible system.
 - It is highly performant and compatible.
 - The code inside is extremely clean and well written.
+- It provides bonus features that other UIs can't match (ie: the workflow node editor).
 - The lead developer of Comfy was hired to Stability, and was able to directly help in ensuring the StableSwarmUI-ComfyUI integration works as best it can.
 
 ## Web Frontend
