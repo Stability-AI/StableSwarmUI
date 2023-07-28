@@ -306,7 +306,7 @@ function getCurrentStatus() {
         return ['warn', 'Loading...'];
     }
     if (Object.values(backends_loaded).length == 0) {
-        return ['warn', 'No backends present. You must configure backends on the Settings page before you can continue.'];
+        return ['warn', 'No backends present. You must configure backends in the Backends section of the Server tab before you can continue.'];
     }
     let loading = countBackendsByStatus('waiting') + countBackendsByStatus('loading');
     if (countBackendsByStatus('running') == 0) {
@@ -319,7 +319,7 @@ function getCurrentStatus() {
         if (countBackendsByStatus('disabled') > 0) {
             return ['warn', 'Some backends are disabled. Please configure them to continue.'];
         }
-        return ['error', 'Something is wrong with your backends. Please check the Backends Settings page or the server logs.'];
+        return ['error', 'Something is wrong with your backends. Please check the Backends section of the Server tab, or the server logs.'];
     }
     if (loading > 0) {
         return ['soft', 'Some backends are ready, but others are still loading...'];
