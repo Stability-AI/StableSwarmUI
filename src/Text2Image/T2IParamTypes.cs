@@ -285,7 +285,7 @@ public class T2IParamTypes
         switch (type.Type)
         {
             case T2IParamDataType.INTEGER:
-                if (!int.TryParse(val, out int valInt))
+                if (!long.TryParse(val, out long valInt))
                 {
                     throw new InvalidDataException($"Invalid integer value for param {type.Name} - must be a valid integer (eg '0', '3', '-5', etc)");
                 }
