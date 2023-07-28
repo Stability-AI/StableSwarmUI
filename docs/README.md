@@ -1,6 +1,6 @@
 # StableSwarmUI Documentation
 
-- TODO: Basic usage (Intro to using the UI and all)
+- [Basic Usage](/docs/Basic%20Usage.md) to learn how to get started.
 - TODO: Advanced usage (advanced features and all)
 - TODO: Settings
 - TODO: Account system

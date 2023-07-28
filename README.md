@@ -16,7 +16,7 @@ This project is in **ALPHA** status. That means all the basic features work, but
 
 Powerusers and developers are encouraged to try it out and help build it, but general/beginner users are advised caution.
 
-Those interested in helping push from Alpha to Beta to Full Release are welcome to submit PRs (read the [Contributing](/CONTRIBUTING.md) document first), and you can contact us here on GitHub or on [Discord](https://discord.gg/stablediffusion). I highly recommended reaching out to ask about plans for a feature before PRing it. There may already be specific plans or even a work in progress.
+Those interested in helping push from Alpha to Beta to Full Release are welcome to submit PRs (read the [Contributing](/CONTRIBUTING.md) document first), and you can contact us here on GitHub or on [Discord](https://discord.gg/stablediffusion) in the `stableswarmui` channel. I highly recommended reaching out to ask about plans for a feature before PRing it. There may already be specific plans or even a work in progress.
 
 Key feature targets not yet implemented:
 - Image editing tools
