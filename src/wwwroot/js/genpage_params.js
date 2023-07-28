@@ -141,7 +141,7 @@ function genInputs(delay_final = false) {
                 }
                 lastGroup = groupName;
             }
-            let newData = getHtmlForParam(param, "input_");;
+            let newData = getHtmlForParam(param, "input_");
             html += newData.html;
             if (newData.runnable) {
                 runnables.push(newData.runnable);

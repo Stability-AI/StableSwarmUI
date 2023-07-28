@@ -146,6 +146,7 @@ function comfyBuildParams(callback) {
             }
         }
         let defaultParamsRetain = ['images', 'model'];
+        let defaultParamValue = {};
         let groups = [];
         for (let nodeId of Object.keys(prompt)) {
             let node = prompt[nodeId];
@@ -268,6 +269,7 @@ function comfyBuildParams(callback) {
                     }
                     else {
                         defaultParamsRetain.push(paramNameClean);
+                        defaultParamValue[paramNameClean] = val;
                     }
                     node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + actualId + ":" + val + "}_ENDFIXME_%%" : "${" + actualId + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
                     return true;
@@ -276,6 +278,7 @@ function comfyBuildParams(callback) {
             }
             if (claimOnce('EmptyLatentImage', 'width', 'width', true) && claimOnce('EmptyLatentImage', 'height', 'height', true)) {
                 defaultParamsRetain.push('aspectratio');
+                defaultParamValue['aspectratio'] = 'Custom';
                 node.inputs.batch_size = 1;
                 continue;
             }
@@ -313,7 +316,7 @@ function comfyBuildParams(callback) {
             }
         }
         addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false);
-        callback(params, prompt, defaultParamsRetain);
+        callback(params, prompt, defaultParamsRetain, defaultParamValue);
     });
 }
 
@@ -321,13 +324,17 @@ function comfyBuildParams(callback) {
  * Updates the parameter list to match the currently ComfyUI workflow.
  */
 function replaceParamsToComfy() {
-    comfyBuildParams((params, prompt, retained) => {
+    comfyBuildParams((params, prompt, retained, paramVal) => {
         let actualParams = [];
         params['comfyworkflowraw'].extra_hidden = true;
         actualParams.push(params['comfyworkflowraw']); // must be first
         delete params['comfyworkflowraw'];
         for (let param of rawGenParamTypesFromServer.filter(p => retained.includes(p.id))) {
             actualParams.push(param);
+            let val = paramVal[param.id];
+            if (val) {
+                setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
+            }
         }
         for (let param of Object.values(params)) {
             actualParams.push(param);
