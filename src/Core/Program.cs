@@ -114,25 +114,25 @@ public class Program
         Web.Launch();
         try
         {
-            if (LaunchMode == "web")
+            switch (LaunchMode.Trim().ToLowerFast())
             {
-                Logs.Init("Launch web browser...");
-                Process.Start(new ProcessStartInfo(WebServer.PageURL) { UseShellExecute = true });
-            }
-            else if (LaunchMode == "webinstall")
-            {
-                Logs.Init("Launch web browser to install page...");
-                Process.Start(new ProcessStartInfo(WebServer.PageURL + "/Install") { UseShellExecute = true });
-            }
-            else if (LaunchMode == "electron")
-            {
-                Logs.Init("Electron launch not yet implemented.");
-                // TODO: Electron.NET seems not to function properly, need to get it working.
+                case "web":
+                    Logs.Init("Launch web browser...");
+                    Process.Start(new ProcessStartInfo(WebServer.PageURL) { UseShellExecute = true });
+                    break;
+                case "webinstall":
+                    Logs.Init("Launch web browser to install page...");
+                    Process.Start(new ProcessStartInfo(WebServer.PageURL + "/Install") { UseShellExecute = true });
+                    break;
+                case "electron":
+                    Logs.Init("Electron launch not yet implemented.");
+                    // TODO: Electron.NET seems not to function properly, need to get it working.
+                    break;
             }
         }
         catch (Exception ex)
         {
-            Logs.Error($"Failed to launch mode '{LaunchMode}': {ex}");
+            Logs.Error($"Failed to launch mode '{LaunchMode}' (If this is a headless/server install, change 'LaunchMode' to 'none' in settings): {ex}");
         }
         Logs.Init("Program is running.");
         WebServer.WebApp.WaitForShutdown();
