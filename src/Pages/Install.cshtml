@@ -181,10 +181,12 @@ You agree not to use the Model or Derivatives of the Model:
         @WebUtil.ModalFooter()
         @if (Program.Backends.Count > 0)
         {
-            <h3>You already have backends installed, you should probably select 'None' below.</h3>
+            <h4>You already have backends installed, you should probably select 'None' below.</h4>
             <br>
         }
         <fieldset class="form-group" id="backend_selection_field">
+            <h3>For New Users: Install One Now</h3>
+            <br>
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="backend_radio" id="backend_radio_comfy" value="comfyui">
                 <label class="form-check-label" for="backend_radio_comfy">ComfyUI (Local)</label>
@@ -200,6 +202,10 @@ You agree not to use the Model or Derivatives of the Model:
                 </div>
                 <input type="password" id="stability_api_key" name="Stability API Key" placeholder="Stability API Key">
             </div>
+            <hr>
+            <h3>For Experienced Users: Skip Backend Install</h3>
+            <div class="install_hint">You can configure custom backends post-install.</div>
+            <br>
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="backend_radio" id="backend_radio_none" value="none">
                 <label class="form-check-label" for="backend_radio_none">None / Custom / Choose Later</label>
