@@ -140,6 +140,11 @@ namespace StableSwarmUI.Text2Image
                 Logs.Info($"Generated {label} in {genTimeReport}");
                 saveImages(outputs);
             }
+            catch (InvalidOperationException ex)
+            {
+                setError($"Invalid operation: {ex.Message}");
+                return;
+            }
             catch (InvalidDataException ex)
             {
                 setError($"Invalid data: {ex.Message}");

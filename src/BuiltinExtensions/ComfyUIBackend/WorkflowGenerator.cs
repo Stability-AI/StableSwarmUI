@@ -1,4 +1,5 @@
 ﻿
+using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
@@ -142,66 +143,97 @@ public class WorkflowGenerator
         #region Refiner
         AddStep(g =>
         {
-            if (g.UserInput.TryGet(T2IParamTypes.RefinerModel, out T2IModel refineModel) && refineModel is not null
-                && g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale)
-                && g.UserInput.TryGet(T2IParamTypes.RefinerMethod, out string method)
-                && g.UserInput.TryGet(T2IParamTypes.RefinerControl, out double refinerControl))
+            if (g.UserInput.TryGet(T2IParamTypes.RefinerMethod, out string method)
+                && g.UserInput.TryGet(T2IParamTypes.RefinerControl, out double refinerControl)
+                && g.UserInput.TryGet(ComfyUIBackendExtension.RefinerUpscaleMethod, out string upscaleMethod))
             {
-                g.CreateNode("CheckpointLoaderSimple", (_, n) =>
+                JArray origVae = g.FinalVae, refinedModel = g.FinalModel, prompt = g.FinalPrompt, negPrompt = g.FinalNegativePrompt;
+                if (g.UserInput.TryGet(T2IParamTypes.RefinerModel, out T2IModel refineModel) && refineModel is not null)
                 {
-                    n["inputs"] = new JObject()
+                    g.CreateNode("CheckpointLoaderSimple", (_, n) =>
                     {
-                        ["ckpt_name"] = refineModel.ToString()
-                    };
-                }, "20");
-                g.FinalVae = new() { "20", 2 };
-                g.CreateNode("CLIPTextEncode", (_, n) =>
-                {
-                    n["inputs"] = new JObject()
+                        n["inputs"] = new JObject()
+                        {
+                            ["ckpt_name"] = refineModel.ToString()
+                        };
+                    }, "20");
+                    refinedModel = new() { "20", 0 };
+                    g.FinalVae = new() { "20", 2 };
+                    g.CreateNode("CLIPTextEncode", (_, n) =>
                     {
-                        ["clip"] = new JArray() { "20", 1 },
-                        ["text"] = g.UserInput.Get(T2IParamTypes.Prompt)
-                    };
-                }, "21");
-                g.CreateNode("CLIPTextEncode", (_, n) =>
-                {
-                    n["inputs"] = new JObject()
+                        n["inputs"] = new JObject()
+                        {
+                            ["clip"] = new JArray() { "20", 1 },
+                            ["text"] = g.UserInput.Get(T2IParamTypes.Prompt)
+                        };
+                    }, "21");
+                    prompt = new() { "21", 0 };
+                    g.CreateNode("CLIPTextEncode", (_, n) =>
                     {
-                        ["clip"] = new JArray() { "20", 1 },
-                        ["text"] = g.UserInput.Get(T2IParamTypes.NegativePrompt)
-                    };
-                }, "22");
+                        n["inputs"] = new JObject()
+                        {
+                            ["clip"] = new JArray() { "20", 1 },
+                            ["text"] = g.UserInput.Get(T2IParamTypes.NegativePrompt)
+                        };
+                    }, "22");
+                    negPrompt = new() { "22", 0 };
+                }
+                bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale > 1;
                 // TODO: Better same-VAE check
-                if (refineModel.ModelClass?.ID != "stable-diffusion-xl-v1-refiner" || g.UserInput.Get(T2IParamTypes.Model).ModelClass?.ID != "stable-diffusion-xl-v1-base")
+                bool modelMustReencode = refineModel != null && (refineModel?.ModelClass?.ID != "stable-diffusion-xl-v1-refiner" || g.UserInput.Get(T2IParamTypes.Model).ModelClass?.ID != "stable-diffusion-xl-v1-base");
+                if (modelMustReencode || (doUspcale && upscaleMethod.StartsWith("pixel-")))
                 {
                     g.CreateNode("VAEDecode", (_, n) =>
                     {
                         n["inputs"] = new JObject()
                         {
                             ["samples"] = g.FinalSamples,
-                            ["vae"] = g.FinalVae
+                            ["vae"] = origVae
                         };
                     }, "24");
+                    string pixelsNode = "24";
+                    if (doUspcale && upscaleMethod.StartsWith("pixel-"))
+                    {
+                        g.CreateNode("ImageScaleBy", (_, n) =>
+                        {
+                            n["inputs"] = new JObject()
+                            {
+                                ["image"] = new JArray() { "24", 0 },
+                                ["upscale_method"] = upscaleMethod.After("pixel-"),
+                                ["scale_by"] = refineUpscale
+                            };
+                        }, "26");
+                        pixelsNode = "26";
+                    }
                     g.CreateNode("VAEEncode", (_, n) =>
                     {
                         n["inputs"] = new JObject()
                         {
-                            ["pixels"] = new JArray() { "24", 0 },
-                            ["vae"] = new JArray() { "20", 2 }
+                            ["pixels"] = new JArray() { pixelsNode, 0 },
+                            ["vae"] = g.FinalVae
                         };
                     }, "25");
                     g.FinalSamples = new() { "25", 0 };
                 }
-                if (refineUpscale > 1)
+                if (doUspcale && upscaleMethod.StartsWith("latent-"))
                 {
-                    // TODO: Upscale
+                    g.CreateNode("LatentUpscaleBy", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["samples"] = g.FinalSamples,
+                            ["upscale_method"] = upscaleMethod.After("latent-"),
+                            ["scale_by"] = refineUpscale
+                        };
+                    }, "26");
+                    g.FinalSamples = new() { "26", 0 };
                 }
                 int steps = g.UserInput.Get(T2IParamTypes.Steps);
                 g.CreateNode("KSamplerAdvanced", (_, n) =>
                 {
                     n["inputs"] = new JObject()
                     {
-                        ["model"] = new JArray() { "20", 0 },
+                        ["model"] = refinedModel,
                         ["add_noise"] = "enable",
                         ["noise_seed"] = g.UserInput.Get(T2IParamTypes.Seed) + 1,
                         ["steps"] = steps,
@@ -209,8 +241,8 @@ public class WorkflowGenerator
                         // TODO: proper sampler input, and intelligent default scheduler per sampler
                         ["sampler_name"] = g.UserInput.Get(ComfyUIBackendExtension.SamplerParam)?.ToString() ?? "euler",
                         ["scheduler"] = g.UserInput.Get(ComfyUIBackendExtension.SchedulerParam)?.ToString() ?? "normal",
-                        ["positive"] = new JArray() { "21", 0 },
-                        ["negative"] = new JArray() { "22", 0 },
+                        ["positive"] = prompt,
+                        ["negative"] = negPrompt,
                         ["latent_image"] = g.FinalSamples,
                         ["start_at_step"] = (int)Math.Round(steps * (1 - refinerControl)),
                         ["end_at_step"] = 10000,

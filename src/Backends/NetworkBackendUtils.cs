@@ -53,6 +53,10 @@ public static class NetworkBackendUtils
     public static async Task<JType> Parse<JType>(HttpResponseMessage message) where JType : class
     {
         string content = await message.Content.ReadAsStringAsync();
+        if (content.StartsWith("500 Internal Server Error"))
+        {
+            throw new InvalidOperationException($"Server turned 500 Internal Server Error, something went wrong: {content}");
+        }
         try
         {
             if (typeof(JType) == typeof(JObject)) // TODO: Surely C# has syntax for this?

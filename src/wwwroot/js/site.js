@@ -94,7 +94,7 @@ function makeWSRequest(url, in_data, callback, depth = 0, errorHandle = null) {
             return;
         }
         if (data.error) {
-            let error = JSON.stringify(data.error);
+            let error = typeof data.error == 'string' ? data.error : JSON.stringify(data.error);
             console.log(`Tried making WS request ${url} but failed with error: ${error}`);
             fail(error);
             return;
