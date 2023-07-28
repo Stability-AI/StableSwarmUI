@@ -62,7 +62,7 @@ Key feature targets not yet implemented:
 
 - Install dotnet: `brew install dotnet`
 
-(TODO): somebody with Mac experience needs to fill this in. Probably similar to Linux.
+(TODO): somebody with Mac experience needs to fill this in. Probably similar to Linux. See also [issue #7](https://github.com/Stability-AI/StableSwarmUI/issues/7).
 
 # Documentation
 
