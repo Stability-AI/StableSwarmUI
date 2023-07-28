@@ -8,6 +8,8 @@ You can take it for a test-drive on [Google Colab](https://colab.research.google
 
 ![ui-screenshot](.github/images/stableswarmui.jpg)
 
+Follow the [Feature Announcements Thread](https://github.com/Stability-AI/StableSwarmUI/discussions/11) for updates on new features.
+
 # Status
 
 This project is in **ALPHA** status. That means all the basic features work, but there's a wide range of core features not yet implemented, and there are many bugs and not-too-great-quality-of-life issues throughout.
