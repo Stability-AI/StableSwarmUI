@@ -229,6 +229,11 @@ You agree not to use the Model or Derivatives of the Model:
                 <label class="form-check-label" for="downloadmodel_sdxl1">Stable Diffusion XL 1.0 (Base)</label>
                 <div class="install_hint">SDXL is the latest-and-greatest SD version (from July 2023), requiring 6.5 GiB of drive space and a more powerful GPU, but able to generate at 1024x1024, with noticably much higher quality results than past versions.</div>
             </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="downloadmodel_sdxl1refiner">
+                <label class="form-check-label" for="downloadmodel_sdxl1refiner">Stable Diffusion XL 1.0 (Refiner)</label>
+                <div class="install_hint">Bonus model, can be added onto SDXL 1.0 Base to refine the small details of your output image to truly top-tier quality, at the cost of requiring more VRAM and time to generate. (Note: does not work well on its own, expects to be used as a Refiner over outputs from the Base).</div>
+            </div>
         </fieldset>
         <label>Or community models!</label>
         <div class="install_hint">You can download an endless variety of community-made models from online sites such as <a href="https://huggingface.co/spaces/huggingface-projects/diffusers-gallery" target="_blank" rel="noopener noreferrer">HuggingFace</a> or <a href="https://civitai.com/" target="_blank" rel="noopener noreferrer">Civitai</a>. (NOTICE: These are examples of third-party websites featuring user-submitted models, Stability.AI offers no guarantees about what content may exist there, browse with caution.) Remember to only download '.safetensors' files, never '.ckpt' ones.</div>
