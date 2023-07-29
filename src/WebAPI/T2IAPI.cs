@@ -138,15 +138,15 @@ public static class T2IAPI
             {
                 break;
             }
-            int index = i;
+            int imageIndex = i;
             T2IParamInput thisParams = user_input.Clone();
-            thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed) + index);
+            thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed) + imageIndex);
             tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, claim, output, setError, isWS, Program.ServerSettings.Backends.MaxTimeoutMinutes,
                 (outputs) =>
                 {
                     foreach (Image image in outputs)
                     {
-                        (string url, string filePath) = session.SaveImage(image, index, user_input);
+                        (string url, string filePath) = session.SaveImage(image, imageIndex, user_input);
                         if (url == "ERROR")
                         {
                             setError($"Server failed to save images.");

@@ -111,7 +111,7 @@ public class ComfyUIBackendExtension : Extension
             GetValues: (_) => new() { "normal", "karras", "exponential", "simple", "ddim_uniform" }
             ));
         RefinerUpscaleMethod = T2IParamTypes.Register<string>(new("Refiner Upscale Method", "How to upscale the image, if upscaling is used.",
-            "pixel-nearest", Group: T2IParamTypes.GroupRefiners, OrderPriority: 1,
+            "pixel-bilinear", Group: T2IParamTypes.GroupRefiners, OrderPriority: 1,
             GetValues: (_) => new() { "latent-nearest-exact", "latent-bilinear", "latent-area", "latent-cubic", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic", "pixel-bislerp" }
             ));
         Program.Backends.RegisterBackendType<ComfyUIAPIBackend>("comfyui_api", "ComfyUI API By URL", "A backend powered by a pre-existing installation of ComfyUI, referenced via API base URL.");
