@@ -370,10 +370,7 @@ public static class T2IAPI
                 actualModel.PreviewImage = preview_image;
                 actualModel.Metadata.PreviewImage = preview_image;
             }
-            if (actualModel.Metadata is null)
-            {
-                actualModel.Metadata = new();
-            }
+            actualModel.Metadata ??= new();
             actualModel.Metadata.Author = string.IsNullOrWhiteSpace(author) ? null : author;
             actualModel.Metadata.UsageHint = string.IsNullOrWhiteSpace(usage_hint) ? null : usage_hint;
             actualModel.Metadata.Date = string.IsNullOrWhiteSpace(date) ? null : date;

@@ -27,7 +27,7 @@ public abstract class AbstractT2IBackend
     }
 
     /// <summary>Currently loaded model, or null if none.</summary>
-    public string CurrentModelName;
+    public volatile string CurrentModelName;
 
     /// <summary>Backend type data for the internal handler.</summary>
     public BackendHandler.BackendType HandlerTypeData;
