@@ -114,6 +114,20 @@ public class GridGeneratorExtension : Extension
                 data.Signal.Set();
             }
             T2IParamInput thisParams = param.Clone();
+            if (thisParams.TryGet(PresetsParameter, out string presets))
+            {
+                List<T2IPreset> userPresets = data.Session.User.GetAllPresets();
+                foreach (string preset in presets.ToLowerFast().Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    T2IPreset match = userPresets.FirstOrDefault(p => p.Title.ToLowerFast() == preset);
+                    if (match is null)
+                    {
+                        setError($"Could not find preset '{preset}'");
+                        return Task.CompletedTask;
+                    }
+                    match.ApplyTo(thisParams);
+                }
+            }
             int iteration = runner.Iteration;
             Task t = Task.Run(() => T2IEngine.CreateImageTask(thisParams, data.Claim, data.AddOutput, setError, true, Program.ServerSettings.Backends.MaxTimeoutMinutes,
                 (outputs) =>
