@@ -41,7 +41,9 @@ public enum NumberViewType
     /// <summary>Ordinary range slider.</summary>
     SLIDER,
     /// <summary>Power-of-Two slider, used especially for Width/Height of an image.</summary>
-    POT_SLIDER
+    POT_SLIDER,
+    /// <summary>Random-seed input.</summary>
+    SEED
 }
 
 /// <summary>
@@ -209,7 +211,7 @@ public class T2IParamTypes
             "1", Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: GroupCore
             ));
         Seed = Register<long>(new("Seed", "Image seed.\n-1 = random.\nDifferent seeds produce different results for the same prompt.",
-            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -30, NumberView: NumberViewType.BIG, Group: GroupCore
+            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -30, NumberView: NumberViewType.SEED, Group: GroupCore
             ));
         Steps = Register<int>(new("Steps", "How many times to run the model.\nMore steps = better quality, but more time.\n20 is a good baseline for speed, 40 is good for maximizing quality.\nYou can go much higher, but it quickly becomes pointless above 70 or so.",
             "20", Min: 1, Max: 200, ViewMax: 100, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: GroupCore, NumberView: NumberViewType.SLIDER
@@ -219,7 +221,7 @@ public class T2IParamTypes
             ));
         GroupVariation = new("Variation Seed", Toggles: true, Open: false, OrderPriority: -17);
         VariationSeed = Register<long>(new("Variation Seed", "Image-variation seed.\nCombined partially with the original seed to create a similar-but-different image for the same seed.\n-1 = random.",
-            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, NumberView: NumberViewType.BIG, Group: GroupVariation, FeatureFlag: "variation_seed"
+            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, NumberView: NumberViewType.SEED, Group: GroupVariation, FeatureFlag: "variation_seed"
             ));
         VariationSeedStrength = Register<double>(new("Variation Seed Strength", "How strongly to apply the variation seed.\n0 = don't use, 1 = replace the base seed entirely. 0.5 is a good value.",
             "0", Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, NumberView: NumberViewType.SLIDER, Group: GroupVariation, FeatureFlag: "variation_seed"

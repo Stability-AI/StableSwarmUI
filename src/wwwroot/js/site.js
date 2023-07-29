@@ -234,6 +234,18 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
     name = escapeHtml(name);
     description = escapeHtml(description);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
+    if (small == 'seed') {
+        return `
+            <div class="auto-input auto-number-box" title="${name}: ${description}"${featureid}>
+                <div class="auto-input-fade-lock auto-fade-max-contain">
+                    <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span> <span class="auto-input-description">${description}</span>
+                </div>
+                <div class="toggler-overlay"></div>
+                <input class="auto-number auto-number-seedbox" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
+                <button class="basic-button" title="Random" onclick="javascript:getRequiredElementById('${id}').value = -1;">&#x1F3B2;</button>
+                <button class="basic-button" title="Random" onclick="javascript:reuseLastParamVal('${id}');">&#128257;</button>
+            </div>`
+    }
     if (small) {
         return `
         <div class="auto-input auto-number-box" title="${name}: ${description}"${featureid}>

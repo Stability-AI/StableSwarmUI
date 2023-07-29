@@ -188,9 +188,12 @@ body {
     margin-bottom: 0px;
 }
 .auto-number {
-    width: max(10rem, 100%);
+    width: calc(max(10rem, 100%));
     border-radius: 0.5rem;
     margin-bottom: 0px;
+}
+.auto-number-seedbox {
+    width: calc(max(10rem, 100%) - 5rem);
 }
 .auto-number-small {
     width: 5rem;
@@ -289,8 +292,8 @@ textarea, input, select {
     border: 1px solid var(--button-border);
     font-weight: bold;
     border-radius: 0.5rem;
-    margin-left: 0.2rem;
-    margin-right: 0.2rem;
+    margin-left: 0.1rem;
+    margin-right: 0.1rem;
     padding-left: 0.2rem;
     padding-right: 0.2rem;
     cursor: pointer;

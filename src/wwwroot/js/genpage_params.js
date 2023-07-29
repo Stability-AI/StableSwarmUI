@@ -22,6 +22,8 @@ function getHtmlForParam(param, prefix, textRows = 2) {
                         return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop};
                     case 'big':
                         return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop};
+                    case 'seed':
+                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, 'seed', param.toggleable) + pop};
                     case 'slider':
                         return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.view_max || param.max, param.step, false, param.toggleable) + pop,
                             runnable: () => enableSliderForBox(findParentOfClass(getRequiredElementById(`${prefix}${param.id}`), 'auto-slider-box'))};
@@ -468,4 +470,27 @@ function paramSorter(a, b) {
  */
 function cleanParamName(name) {
     return name.toLowerCase().replaceAll(/[^a-z]/g, '');
+}
+
+/**
+ * Sets the value of a parameter to the value used in the currently selected image, if any.
+ */
+function reuseLastParamVal(paramId) {
+    if (!currentMetadataVal) {
+        return;
+    }
+    let pid;
+    if (paramId.startsWith("input_")) {
+        pid = paramId.substring("input_".length);
+    }
+    else if (paramId.startsWith("preset_input_")) {
+        pid = paramId.substring("preset_input_".length);
+    }
+    else {
+        return;
+    }
+    let params = JSON.parse(currentMetadataVal).sui_image_params;
+    if (pid in params) {
+        getRequiredElementById(paramId).value = params[pid];
+    }
 }
