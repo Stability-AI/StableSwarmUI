@@ -70,25 +70,15 @@ public class Settings : AutoConfiguration
         {
             get
             {
-                bool modelRootIsAbsolute = (ModelRoot.StartsWith('/') || (ModelRoot.Length > 2 && ModelRoot[1] == ':'));
-                bool sdFolderIsAbsolute = (SDModelFolder.StartsWith('/') || (SDModelFolder.Length > 2 && SDModelFolder[1] == ':'));
-
-                if (modelRootIsAbsolute && sdFolderIsAbsolute)
+                if (SDModelFolder.StartsWith('/') || (SDModelFolder.Length > 2 && SDModelFolder[1] == ':'))
                 {
-                    return $"{SDModelFolder}";
+                    return SDModelFolder;
                 }
-                else if (!modelRootIsAbsolute && sdFolderIsAbsolute)
-                {
-                    return $"{SDModelFolder}";
-                }
-                else if (modelRootIsAbsolute && !sdFolderIsAbsolute)
+                if (ModelRoot.StartsWith('/') || (ModelRoot.Length > 2 && ModelRoot[1] == ':'))
                 {
                     return $"{ModelRoot}/{SDModelFolder}";
                 }
-                else
-                {
-                    return $"{Environment.CurrentDirectory}/{ModelRoot}/{SDModelFolder}";
-                }
+                return $"{Environment.CurrentDirectory}/{ModelRoot}/{SDModelFolder}";
             }
         }
 
