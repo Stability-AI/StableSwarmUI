@@ -25,7 +25,7 @@ Once this is done, it should automatically redirect you to the main interface.
 ## Configuring
 
 If you have pre-existing Stable Diffusion files, you'll want to configure settings a bit. If not, the defaults are probably fine.
-- If you have an Auto WebUI or ComfyUI folder with models in it, go to the `Server` tab then `Server Configuration` and set `ModelRoot` to your UI's `models` dir, and `SDModelPath` to `Stable-diffusion` for Auto WebUI or `checkpoints` for ComfyUI.
+- If you have an Auto WebUI or ComfyUI folder with models in it, go to the `Server` tab then `Server Configuration` and set `ModelRoot` to the path to your UI's `models` dir, and set `SDModelFolder` to `Stable-diffusion` for Auto WebUI or `checkpoints` for ComfyUI.
 - Be sure to click the 'Save' button at the bottom when you're done (only visible if you've edited any settings)
 
 ![img](/docs/images/servermodelpath.png)

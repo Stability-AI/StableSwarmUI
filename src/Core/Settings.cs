@@ -59,14 +59,38 @@ public class Settings : AutoConfiguration
     /// <summary>Settings related to file paths.</summary>
     public class PathsData : AutoConfiguration
     {
-        [ConfigComment("Root path for model files. Defaults to 'Models'")]
+        [ConfigComment("Root path for model files. Use a full-formed path (starting with '/' or a Windows drive like 'C:') to use an absolute path. Defaults to 'Models'.")]
         public string ModelRoot = "Models";
 
-        [ConfigComment("The model folder to use within 'ModelRoot'. Use a full-formed path (starting with '/' or a Windows drive like 'C:') to use an absolute path. Defaults to 'Stable-Diffusion'.")]
+        [ConfigComment("The model folder to use within 'ModelRoot'. Defaults to 'Stable-Diffusion'.")]
         public string SDModelFolder = "Stable-Diffusion";
 
         /// <summary>(Getter) Path for Stable Diffusion models.</summary>
-        public string SDModelFullPath => SDModelFolder.StartsWith('/') || (SDModelFolder.Length > 2 && SDModelFolder[1] == ':') ? SDModelFolder : $"{Environment.CurrentDirectory}/{ModelRoot}/{SDModelFolder}";
+        public string SDModelFullPath
+        {
+            get
+            {
+                bool modelRootIsAbsolute = (ModelRoot.StartsWith('/') || (ModelRoot.Length > 2 && ModelRoot[1] == ':'));
+                bool sdFolderIsAbsolute = (SDModelFolder.StartsWith('/') || (SDModelFolder.Length > 2 && SDModelFolder[1] == ':'));
+
+                if (modelRootIsAbsolute && sdFolderIsAbsolute)
+                {
+                    return $"{SDModelFolder}";
+                }
+                else if (!modelRootIsAbsolute && sdFolderIsAbsolute)
+                {
+                    return $"{SDModelFolder}";
+                }
+                else if (modelRootIsAbsolute && !sdFolderIsAbsolute)
+                {
+                    return $"{ModelRoot}/{SDModelFolder}";
+                }
+                else
+                {
+                    return $"{Environment.CurrentDirectory}/{ModelRoot}/{SDModelFolder}";
+                }
+            }
+        }
 
         [ConfigComment("Root path for data (user configs, etc). Defaults to 'Data'")]
         public string DataPath = "Data";
