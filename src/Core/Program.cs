@@ -85,7 +85,15 @@ public class Program
             Logs.Error($"Command line arguments given are invalid: {ex.Message}");
             return;
         }
-        Directory.CreateDirectory(ServerSettings.Paths.SDModelFullPath);
+        try
+        {
+            Directory.CreateDirectory(ServerSettings.Paths.SDModelFullPath);
+        }
+        catch (IOException ex)
+        {
+            Logs.Error($"Failed to create directory for SD models. You may need to check your ModelRoot and SDModelFolder settings. {ex.Message}");
+            return;
+        }
         RunOnAllExtensions(e => e.OnPreInit());
         Logs.Init("Prepping options...");
         T2IModels = new();
