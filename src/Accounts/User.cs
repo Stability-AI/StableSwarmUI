@@ -131,7 +131,7 @@ public class User
     }
 
     /// <summary>Converts the user's output path setting to a real path for the given parameters. Note that the path is partially cleaned, but not completely.</summary>
-    public string BuildImageOutputPath(T2IParamInput user_input)
+    public string BuildImageOutputPath(T2IParamInput user_input, int batchIndex)
     {
         int maxLen = Settings.OutPathBuilder.MaxLenPerPart;
         DateTimeOffset time = DateTimeOffset.Now;
@@ -154,9 +154,8 @@ public class User
                 "width" => $"{user_input.Get(T2IParamTypes.Width)}",
                 "height" => $"{user_input.Get(T2IParamTypes.Height)}",
                 "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
-                "var_seed" => $"{user_input.Get(T2IParamTypes.VariationSeed)}",
-                "var_strength" => $"{user_input.Get(T2IParamTypes.VariationSeedStrength)}",
                 "model" => user_input.Get(T2IParamTypes.Model)?.Name ?? "unknown",
+                "batch_id" => $"{batchIndex}",
                 "user_name" => UserID,
                 string other => user_input.TryGetRaw(T2IParamTypes.GetType(other, user_input), out object val) ? val.ToString() : null
             };

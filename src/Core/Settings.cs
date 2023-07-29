@@ -122,7 +122,8 @@ public class Settings : AutoConfiguration
     {
         public class OutPath : AutoConfiguration
         {
-            [ConfigComment("Builder for output file paths. Can use auto-filling placeholders like '[model]' for the model name, '[prompt]' for a snippet of prompt text, etc.")]
+            [ConfigComment("Builder for output file paths. Can use auto-filling placeholders like '[model]' for the model name, '[prompt]' for a snippet of prompt text, etc.\n"
+                + "Full details in the docs: https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/User%20Settings.md#path-format")]
             // TODO: Docs link that documents full set of options here.
             public string Format = "raw/[year]-[month]-[day]/[prompt]-[model]-[seed]";
 
