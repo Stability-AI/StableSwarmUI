@@ -502,3 +502,17 @@ function getRadioSelectionInFieldset(fieldset) {
     }
     return null;
 }
+
+/**
+ * Creates a small data URL for the given image.
+ */
+function imageToSmallPreviewData(img) {
+    let canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    let ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, 256, 256);
+    let result = canvas.toDataURL('image/jpeg');
+    canvas.remove();
+    return result;
+}

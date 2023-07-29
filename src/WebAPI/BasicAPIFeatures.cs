@@ -205,7 +205,7 @@ public static class BasicAPIFeatures
             ParamMap = paramData.Properties().Select(p => (p.Name, p.Value.ToString())).PairsToDictionary(),
             PreviewImage = string.IsNullOrWhiteSpace(preview_image) ? "imgs/model_placeholder.jpg" : preview_image
         };
-        if (preset.PreviewImage != "imgs/model_placeholder.jpg" && (!preset.PreviewImage.StartsWith("/Output") || preset.PreviewImage.Contains('?')))
+        if ((preset.PreviewImage != "imgs/model_placeholder.jpg" && !preset.PreviewImage.StartsWith("data:image/jpeg;base64,") && !preset.PreviewImage.StartsWith("/Output")) || preset.PreviewImage.Contains('?'))
         {
             Logs.Info($"User {session.User.UserID} tried to set a preset preview image to forbidden path: {preset.PreviewImage}");
             return new JObject() { ["preset_fail"] = "Forbidden preview-image path." };

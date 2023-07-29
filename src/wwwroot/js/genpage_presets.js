@@ -106,16 +106,11 @@ function save_new_preset() {
     }
     let toSend = { title: name, description: description, param_map: data };
     if (preset_to_edit) {
-        toSend['image'] = preset_to_edit.preview_image;
+        toSend['preview_image'] = preset_to_edit.preview_image;
         toSend['is_edit'] = true;
     }
     if (getRequiredElementById('new_preset_enable_image').checked) {
-        let img = getRequiredElementById('new_preset_image').getElementsByTagName('img')[0].src;
-        let index = img.indexOf('/Output/');
-        if (index != -1) {
-            img = img.substring(index);
-        }
-        toSend['image'] = img;
+        toSend['preview_image'] = imageToSmallPreviewData(getRequiredElementById('new_preset_image').getElementsByTagName('img')[0]);
     }
     genericRequest('AddNewPreset', toSend, data => {
         if (Object.keys(data).includes("preset_fail")) {
