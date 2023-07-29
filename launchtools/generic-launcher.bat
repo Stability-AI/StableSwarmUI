@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 set CUDA_VISIBLE_DEVICES=%1
 set COMMANDLINE_ARGS="%4"
 
-cd "%2"
+cd /D "%2"
 
 set PYTHONUNBUFFERED=true
 
