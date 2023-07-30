@@ -42,7 +42,21 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             {
                 return;
             }
-            File.WriteAllText("Data/comfy-auto-model.yaml", $"stableswarmui:\n    base_path: {Program.ServerSettings.Paths.SDModelFullPath}\n    checkpoints: ./\n");
+            string extra = """
+                vae: ../VAE
+                loras: |
+                    ../Lora
+                    ../LyCORIS
+                upscale_models: |
+                    ../ESRGAN
+                    ../RealESRGAN
+                    ../SwinIR
+                embeddings: ../embeddings
+                hypernetworks: ../hypernetworks
+                controlnet: ../ControlNet
+            """;
+            Logs.Info($"adding:\n{extra}");
+            File.WriteAllText("Data/comfy-auto-model.yaml", $"stableswarmui:\n    base_path: {Program.ServerSettings.Paths.SDModelFullPath}\n    checkpoints: ./\n{extra}");
             IsComfyModelFileEmitted = true;
         }
     }
