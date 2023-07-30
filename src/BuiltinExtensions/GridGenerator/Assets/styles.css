@@ -30,6 +30,7 @@ table tr td,
 table tr th {
     vertical-align: top;
     border: 1px solid black;
+    word-break: break-all;
 }
 th {
     position: sticky;
@@ -80,6 +81,7 @@ table tr td:first-child {
     left: 0px;
     background-color: #202020;
     background-clip: padding-box;
+    word-break: break-all;
 }
 .superaxis_second {
     background-color: #303030;
