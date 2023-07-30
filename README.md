@@ -61,9 +61,19 @@ Key feature targets not yet implemented:
 
 # Installing on Mac
 
-- Install dotnet: `brew install dotnet`
+> **Note**: You can only run StableSwarmUI on Mac computers with M1 or M2 (Mx) Apple silicon processors.
 
-(TODO): somebody with Mac experience needs to fill this in. Probably similar to Linux. See also [issue #7](https://github.com/Stability-AI/StableSwarmUI/issues/7).
+1. Open Terminal.
+2. Ensure your `brew` packages are updated with `brew update`.
+3. Verify your `brew` installation with `brew doctor`. You should not see any error in the command output.
+4. Install .NET for macOS: `brew install dotnet`.
+5. Change the directory (`cd`) to the folder where you want to install StableSwarmUI.
+6. Clone the StableSwarmUI GitHub repository: `git clone https://github.com/Stability-AI/StableSwarmUI`.
+7. `cd StableSwarmUI` and run the installation script: `./launch-macos.sh`.
+
+The installation starts now and downloads the Stable Diffusion models from the internet. Depending on your internet connection, this may take several minutes. Wait for your web browser to open the StableSwarmUI window.
+
+> **Important**: During the StableSwarmUI installation, you are prompted for the type of backend you want to use. For Mac computers with M1 or M2, you can safely choose the ComfyUI backend and choose the Stable Diffusion XLD Base and Refiner models in the Download Models screen.
 
 # Documentation
 
