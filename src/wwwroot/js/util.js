@@ -14,6 +14,21 @@ function sendJsonToServer(url, json_input, callback, error_callback) {
 };
 
 /**
+ * Dirt-simple direct GET request sender.
+ */
+function getJsonDirect(url, callback, error_callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+        callback(xhr.status, xhr.response);
+    };
+    xhr.onerror = error_callback;
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send();
+};
+
+/**
  * Gets the appropriate current WebSocket address for the server.
  */
 function getWSAddress() {

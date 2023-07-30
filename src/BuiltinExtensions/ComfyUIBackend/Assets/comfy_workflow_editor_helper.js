@@ -6,6 +6,8 @@ let hasComfyLoaded = false;
 
 let comfyButtonsArea = getRequiredElementById('comfy_workflow_buttons');
 
+let comfyObjectData = {};
+
 /**
  * Tries to load the ComfyUI workflow frame.
  */
@@ -35,6 +37,11 @@ function comfyOnLoadCallback() {
         comfyButtonsArea.style.display = 'none';
         comfyFrame().remove();
         getRequiredElementById('comfy_workflow_frameholder').innerHTML = `<h2>Failed to load ComfyUI workflow editor. <button onclick="comfyTryToLoad()">Try Again?</button></h2>`;
+    }
+    else {
+        getJsonDirect('/ComfyBackendDirect/object_info', (_, data) => {
+            comfyObjectData = data;
+        });
     }
 }
 
@@ -172,6 +179,13 @@ function comfyBuildParams(callback) {
                 return id;
             }
             function addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel) {
+                let paramDataRaw;
+                if (node.class_type in comfyObjectData) {
+                    let possible = comfyObjectData[node.class_type].input;
+                    if ('required' in possible && inputId in possible.required) {
+                        paramDataRaw = possible.required[inputId];
+                    }
+                }
                 let type, values = null, min = -9999999999, max = 9999999999, number_view_type = 'big', step = 1;
                 if (typeof val == 'number') {
                     let asSeed = false;
@@ -210,7 +224,23 @@ function comfyBuildParams(callback) {
                         step = 1;
                     }
                     else {
-                        type = 'decimal';
+                        if (paramDataRaw && paramDataRaw[0] == 'INT' && paramDataRaw.length == 2) {
+                            type = 'integer';
+                            number_view_type = 'big';
+                            min = paramDataRaw[1].min;
+                            max = paramDataRaw[1].max;
+                            step = 1;
+                        }
+                        else if (paramDataRaw && paramDataRaw[0] == 'FLOAT' && paramDataRaw.length == 2) {
+                            type = 'decimal';
+                            number_view_type = 'slider';
+                            min = paramDataRaw[1].min;
+                            max = paramDataRaw[1].max;
+                            step = (max - min) * 0.01;
+                        }
+                        else {
+                            type = 'decimal';
+                        }
                     }
                     inputIdDirect = injectType(inputIdDirect, type);
                     node.inputs[inputId] = "%%_COMFYFIXME_${" + inputIdDirect + (asSeed ? "+seed" : "") + ":" + val + "}_ENDFIXME_%%";
@@ -235,7 +265,13 @@ function comfyBuildParams(callback) {
                     }
                     // TODO: Can we interrogate ComfyUI to ask what values are valid? For eg LoRA inputs, sampler, etc.
                     else {
-                        type = 'text';
+                        if (paramDataRaw && paramDataRaw.length == 1 && paramDataRaw[0].length > 1) {
+                            type = 'dropdown';
+                            values = paramDataRaw[0];
+                        }
+                        else {
+                            type = 'text';
+                        }
                     }
                     inputIdDirect = injectType(inputIdDirect, type);
                     node.inputs[inputId] = "${" + inputIdDirect + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
@@ -333,6 +369,10 @@ function replaceParamsToComfy() {
             actualParams.push(param);
             let val = paramVal[param.id];
             if (val) {
+                // Comfy for some reason generates impossibly high seeds, so discard those
+                if (param.type == 'integer' && param.number_view_type == 'seed' && val > 4294967295) {
+                    val = -1;
+                }
                 setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
             }
         }
