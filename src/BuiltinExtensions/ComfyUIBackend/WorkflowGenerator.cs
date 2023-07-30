@@ -181,7 +181,8 @@ public class WorkflowGenerator
                 bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale > 1;
                 // TODO: Better same-VAE check
                 bool modelMustReencode = refineModel != null && (refineModel?.ModelClass?.ID != "stable-diffusion-xl-v1-refiner" || g.UserInput.Get(T2IParamTypes.Model).ModelClass?.ID != "stable-diffusion-xl-v1-base");
-                if (modelMustReencode || (doUspcale && upscaleMethod.StartsWith("pixel-")))
+                bool doPixelUpscale = doUspcale && (upscaleMethod.StartsWith("pixel-") || upscaleMethod.StartsWith("model-"));
+                if (modelMustReencode || doPixelUpscale)
                 {
                     g.CreateNode("VAEDecode", (_, n) =>
                     {
@@ -192,17 +193,49 @@ public class WorkflowGenerator
                         };
                     }, "24");
                     string pixelsNode = "24";
-                    if (doUspcale && upscaleMethod.StartsWith("pixel-"))
+                    if (doPixelUpscale)
                     {
-                        g.CreateNode("ImageScaleBy", (_, n) =>
+                        if (upscaleMethod.StartsWith("pixel-"))
                         {
-                            n["inputs"] = new JObject()
+                            g.CreateNode("ImageScaleBy", (_, n) =>
                             {
-                                ["image"] = new JArray() { "24", 0 },
-                                ["upscale_method"] = upscaleMethod.After("pixel-"),
-                                ["scale_by"] = refineUpscale
-                            };
-                        }, "26");
+                                n["inputs"] = new JObject()
+                                {
+                                    ["image"] = new JArray() { "24", 0 },
+                                    ["upscale_method"] = upscaleMethod.After("pixel-"),
+                                    ["scale_by"] = refineUpscale
+                                };
+                            }, "26");
+                        }
+                        else
+                        {
+                            g.CreateNode("UpscaleModelLoader", (_, n) =>
+                            {
+                                n["inputs"] = new JObject()
+                                {
+                                    ["model_name"] = upscaleMethod.After("model-")
+                                };
+                            }, "27");
+                            g.CreateNode("ImageUpscaleWithModel", (_, n) =>
+                            {
+                                n["inputs"] = new JObject()
+                                {
+                                    ["upscale_model"] = new JArray() { "27", 0 },
+                                    ["image"] = new JArray() { "24", 0 }
+                                };
+                            }, "28");
+                            g.CreateNode("ImageScale", (_, n) =>
+                            {
+                                n["inputs"] = new JObject()
+                                {
+                                    ["image"] = new JArray() { "28", 0 },
+                                    ["width"] = (int)Math.Round(g.UserInput.Get(T2IParamTypes.Width) * refineUpscale),
+                                    ["height"] = (int)Math.Round(g.UserInput.Get(T2IParamTypes.Height) * refineUpscale),
+                                    ["upscale_method"] = "bilinear",
+                                    ["crop"] = "disabled"
+                                };
+                            }, "26");
+                        }
                         pixelsNode = "26";
                     }
                     g.CreateNode("VAEEncode", (_, n) =>

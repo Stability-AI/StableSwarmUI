@@ -22,6 +22,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     /// <summary>Internal HTTP handler.</summary>
     public HttpClient HttpClient = NetworkBackendUtils.MakeHttpClient();
 
+    public JObject RawObjectInfo;
+
     public async Task InitInternal(bool ignoreWebError)
     {
         if (string.IsNullOrWhiteSpace(Address))
@@ -31,10 +33,16 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         try
         {
-            JObject result = await SendGet<JObject>("system_stats");
+            JObject result = await SendGet<JObject>("object_info");
             if (result.TryGetValue("error", out JToken errorToken))
             {
                 throw new Exception($"Remote error: {errorToken}");
+            }
+            RawObjectInfo = result;
+            if (RawObjectInfo.TryGetValue("UpscaleModelLoader", out JToken modelLoader))
+            {
+                ComfyUIBackendExtension.UpscalerModels = ComfyUIBackendExtension.UpscalerModels.Concat(
+                    modelLoader["input"]["required"]["model_name"][0].Select(u => $"model-{u}")).Distinct().ToList();
             }
             Status = BackendStatus.RUNNING;
         }

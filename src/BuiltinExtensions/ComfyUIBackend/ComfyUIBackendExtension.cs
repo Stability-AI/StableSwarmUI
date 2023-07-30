@@ -95,6 +95,8 @@ public class ComfyUIBackendExtension : Extension
 
     public static T2IRegisteredParam<string> WorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod;
 
+    public static List<string> UpscalerModels = new() { "latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic" };
+
     public override void OnInit()
     {
         T2IParamGroup comfyGroup = new("ComfyUI", Toggles: false, Open: false);
@@ -112,7 +114,7 @@ public class ComfyUIBackendExtension : Extension
             ));
         RefinerUpscaleMethod = T2IParamTypes.Register<string>(new("Refiner Upscale Method", "How to upscale the image, if upscaling is used.",
             "pixel-bilinear", Group: T2IParamTypes.GroupRefiners, OrderPriority: 1,
-            GetValues: (_) => new() { "latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic" }
+            GetValues: (_) => UpscalerModels
             ));
         Program.Backends.RegisterBackendType<ComfyUIAPIBackend>("comfyui_api", "ComfyUI API By URL", "A backend powered by a pre-existing installation of ComfyUI, referenced via API base URL.");
         Program.Backends.RegisterBackendType<ComfyUISelfStartBackend>("comfyui_selfstart", "ComfyUI Self-Starting", "A backend powered by a pre-existing installation of the ComfyUI, automatically launched and managed by this UI server.");
