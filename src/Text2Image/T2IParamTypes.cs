@@ -211,7 +211,7 @@ public class T2IParamTypes
             "1", Min: 1, Max: 100, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: GroupCore
             ));
         Seed = Register<long>(new("Seed", "Image seed.\n-1 = random.\nDifferent seeds produce different results for the same prompt.",
-            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -30, NumberView: NumberViewType.SEED, Group: GroupCore
+            "-1", Min: -1, Max: long.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -30, NumberView: NumberViewType.SEED, Group: GroupCore
             ));
         Steps = Register<int>(new("Steps", "How many times to run the model.\nMore steps = better quality, but more time.\n20 is a good baseline for speed, 40 is good for maximizing quality.\nYou can go much higher, but it quickly becomes pointless above 70 or so.",
             "20", Min: 1, Max: 200, ViewMax: 100, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: GroupCore, NumberView: NumberViewType.SLIDER

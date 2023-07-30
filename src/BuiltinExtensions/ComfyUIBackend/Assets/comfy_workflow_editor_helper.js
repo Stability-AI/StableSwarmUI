@@ -369,8 +369,8 @@ function replaceParamsToComfy() {
             actualParams.push(param);
             let val = paramVal[param.id];
             if (val) {
-                // Comfy for some reason generates impossibly high seeds, so discard those
-                if (param.type == 'integer' && param.number_view_type == 'seed' && val > 4294967295) {
+                // Comfy can do full 2^64 but that causes backend issues (can't have 2^64 *and* -1 as options, so...) so cap to 2^63
+                if (param.type == 'integer' && param.number_view_type == 'seed' && val > 2**63) {
                     val = -1;
                 }
                 setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
