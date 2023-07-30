@@ -1,4 +1,5 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
@@ -93,9 +94,29 @@ public class ComfyUIBackendExtension : Extension
         }
     }
 
+    public static void AssignValuesFromRaw(JObject rawObjectInfo)
+    {
+        lock (ValueAssignmentLocker)
+        {
+            if (rawObjectInfo.TryGetValue("UpscaleModelLoader", out JToken modelLoader))
+            {
+                UpscalerModels = UpscalerModels.Concat(modelLoader["input"]["required"]["model_name"][0].Select(u => $"model-{u}")).Distinct().ToList();
+            }
+            if (rawObjectInfo.TryGetValue("KSampler", out JToken ksampler))
+            {
+                Samplers = Samplers.Concat(ksampler["input"]["required"]["sampler_name"][0].Select(u => $"{u}")).Distinct().ToList();
+                Schedulers = Schedulers.Concat(ksampler["input"]["required"]["scheduler"][0].Select(u => $"{u}")).Distinct().ToList();
+            }
+        }
+    }
+
+    public static LockObject ValueAssignmentLocker = new();
+
     public static T2IRegisteredParam<string> WorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod;
 
-    public static List<string> UpscalerModels = new() { "latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic" };
+    public static List<string> UpscalerModels = new() { "latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic" },
+        Samplers = new() { "euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2" },
+        Schedulers = new() { "normal", "karras", "exponential", "simple", "ddim_uniform" };
 
     public override void OnInit()
     {
@@ -106,11 +127,11 @@ public class ComfyUIBackendExtension : Extension
             ));
         SamplerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Sampler", "Sampler type (for ComfyUI)",
             "euler", Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
-            GetValues: (_) => new() { "euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2" }
+            GetValues: (_) => Samplers
             ));
         SchedulerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Scheduler", "Scheduler type (for ComfyUI)",
             "normal", Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
-            GetValues: (_) => new() { "normal", "karras", "exponential", "simple", "ddim_uniform" }
+            GetValues: (_) => Schedulers
             ));
         RefinerUpscaleMethod = T2IParamTypes.Register<string>(new("Refiner Upscale Method", "How to upscale the image, if upscaling is used.",
             "pixel-bilinear", Group: T2IParamTypes.GroupRefiners, OrderPriority: 1,

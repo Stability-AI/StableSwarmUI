@@ -39,11 +39,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 throw new Exception($"Remote error: {errorToken}");
             }
             RawObjectInfo = result;
-            if (RawObjectInfo.TryGetValue("UpscaleModelLoader", out JToken modelLoader))
-            {
-                ComfyUIBackendExtension.UpscalerModels = ComfyUIBackendExtension.UpscalerModels.Concat(
-                    modelLoader["input"]["required"]["model_name"][0].Select(u => $"model-{u}")).Distinct().ToList();
-            }
+            ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
             Status = BackendStatus.RUNNING;
         }
         catch (Exception)
