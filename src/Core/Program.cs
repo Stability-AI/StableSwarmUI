@@ -122,7 +122,7 @@ public class Program
         Web.Launch();
         Task.Run(() =>
         {
-            Thread.Sleep(2000);
+            Thread.Sleep(500);
             try
             {
                 switch (LaunchMode.Trim().ToLowerFast())

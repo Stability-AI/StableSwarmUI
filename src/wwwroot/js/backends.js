@@ -152,6 +152,7 @@ function loadBackendTypesMenu() {
 
 let backendsListView = document.getElementById('backends_list');
 let backendsCheckRateCounter = 0;
+let hasAppliedFirstRun = false;
 
 function backendLoopUpdate() {
     let loading = countBackendsByStatus('loading') + countBackendsByStatus('waiting');
@@ -161,6 +162,10 @@ function backendLoopUpdate() {
         }
     }
     else {
+        if (!hasAppliedFirstRun) {
+            hasAppliedFirstRun = true;
+            refreshParameterValues();
+        }
         backendsCheckRateCounter = 0;
     }
 }
