@@ -17,3 +17,5 @@ cd StableSwarmUI
 .\make-shortcut.bat
 
 .\launch-windows.bat --launch_mode webinstall
+
+IF %ERRORLEVEL% NEQ 0 ( pause )
