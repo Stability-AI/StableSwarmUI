@@ -38,8 +38,14 @@ function enableSliderForBox(div) {
         range.step = 1;
     }
     else {
-        range.addEventListener('input', () => number.value = range.value);
-        number.addEventListener('input', () => range.value = number.value);
+        range.addEventListener('input', () => {
+            number.value = range.value;
+            number.dispatchEvent(new Event('change'));
+        });
+        number.addEventListener('input', () => {
+            range.value = number.value;
+            range.dispatchEvent(new Event('change'));
+        });
     }
     number.dispatchEvent(new Event('input'));
 }
