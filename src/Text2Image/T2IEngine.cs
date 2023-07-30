@@ -129,10 +129,13 @@ namespace StableSwarmUI.Text2Image
                 string genTimeReport = $"{prepTime / 1000.0:0.00} (prep) and {(genTime - prepTime) / 1000.0:0.00} (gen) seconds";
                 for (int i = 0; i < outputs.Length; i++)
                 {
-                    Dictionary<string, object> extras = new() { ["generation_time"] = genTimeReport };
-                    bool refuse = false;
-                    PostGenerateEvent?.Invoke(new(outputs[i], extras, user_input, () => refuse = true));
-                    outputs[i] = refuse ? null : user_input.SourceSession.ApplyMetadata(outputs[i], user_input, extras);
+                    if (outputs[i] is not null)
+                    {
+                        Dictionary<string, object> extras = new() { ["generation_time"] = genTimeReport };
+                        bool refuse = false;
+                        PostGenerateEvent?.Invoke(new(outputs[i], extras, user_input, () => refuse = true));
+                        outputs[i] = refuse ? null : user_input.SourceSession.ApplyMetadata(outputs[i], user_input, extras);
+                    }
                 }
                 int nullCount = outputs.Count(i => i is null);
                 outputs = outputs.Where(i => i is not null).ToArray();
