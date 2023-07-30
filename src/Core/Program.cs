@@ -120,28 +120,32 @@ public class Program
         RunOnAllExtensions(e => e.OnPreLaunch());
         Logs.Init("Launching server...");
         Web.Launch();
-        try
+        Task.Run(() =>
         {
-            switch (LaunchMode.Trim().ToLowerFast())
+            Thread.Sleep(2000);
+            try
             {
-                case "web":
-                    Logs.Init("Launch web browser...");
-                    Process.Start(new ProcessStartInfo(WebServer.PageURL) { UseShellExecute = true });
-                    break;
-                case "webinstall":
-                    Logs.Init("Launch web browser to install page...");
-                    Process.Start(new ProcessStartInfo(WebServer.PageURL + "/Install") { UseShellExecute = true });
-                    break;
-                case "electron":
-                    Logs.Init("Electron launch not yet implemented.");
-                    // TODO: Electron.NET seems not to function properly, need to get it working.
-                    break;
+                switch (LaunchMode.Trim().ToLowerFast())
+                {
+                    case "web":
+                        Logs.Init("Launch web browser...");
+                        Process.Start(new ProcessStartInfo(WebServer.PageURL) { UseShellExecute = true });
+                        break;
+                    case "webinstall":
+                        Logs.Init("Launch web browser to install page...");
+                        Process.Start(new ProcessStartInfo(WebServer.PageURL + "/Install") { UseShellExecute = true });
+                        break;
+                    case "electron":
+                        Logs.Init("Electron launch not yet implemented.");
+                        // TODO: Electron.NET seems not to function properly, need to get it working.
+                        break;
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            Logs.Error($"Failed to launch mode '{LaunchMode}' (If this is a headless/server install, change 'LaunchMode' to 'none' in settings): {ex}");
-        }
+            catch (Exception ex)
+            {
+                Logs.Error($"Failed to launch mode '{LaunchMode}' (If this is a headless/server install, change 'LaunchMode' to 'none' in settings): {ex}");
+            }
+        });
         Logs.Init("Program is running.");
         WebServer.WebApp.WaitForShutdown();
         Shutdown();
