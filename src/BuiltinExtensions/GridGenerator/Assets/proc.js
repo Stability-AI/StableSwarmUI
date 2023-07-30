@@ -163,20 +163,20 @@ window.addEventListener('keydown', function(kbevent) {
         var tabPage = document.getElementById('tablist_' + axis.id);
         var tabs = tabPage.getElementsByClassName('nav-link');
         var newTab = clickTabAfterActiveTab(Array.from(tabs).reverse());
-        newTab.focus();
+        newTab.focus({ preventScroll: true });
     }
     else if (kbevent.key == 'ArrowRight') {
         var tabPage = document.getElementById('tablist_' + axis.id);
         var tabs = tabPage.getElementsByClassName('nav-link');
         var newTab = clickTabAfterActiveTab(tabs);
-        newTab.focus();
+        newTab.focus({ preventScroll: true });
     }
     else if (kbevent.key == 'ArrowUp') {
         var next = getNextAxis(Array.from(rawData.axes).reverse(), axisId);
         if (next != null) {
             var selectedKey = getSelectedValKey(next);
             var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
-            swapToTab.focus();
+            swapToTab.focus({ preventScroll: true });
         }
     }
     else if (kbevent.key == 'ArrowDown') {
@@ -184,7 +184,7 @@ window.addEventListener('keydown', function(kbevent) {
         if (next != null) {
             var selectedKey = getSelectedValKey(next);
             var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
-            swapToTab.focus();
+            swapToTab.focus({ preventScroll: true });
         }
     }
     else {
