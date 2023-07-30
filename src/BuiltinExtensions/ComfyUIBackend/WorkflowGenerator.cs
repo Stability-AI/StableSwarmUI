@@ -237,6 +237,11 @@ public class WorkflowGenerator
                             }, "26");
                         }
                         pixelsNode = "26";
+                        if (refinerControl <= 0)
+                        {
+                            g.FinalImageOut = new() { "26", 0 };
+                            return;
+                        }
                     }
                     g.CreateNode("VAEEncode", (_, n) =>
                     {
