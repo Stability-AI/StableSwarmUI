@@ -386,7 +386,8 @@ function replaceParamsToComfy() {
                 setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
             }
         }
-        for (let param of Object.values(params)) {
+        let gn = (p) => p.group.id == "primitives" ? "!primitives" : p.group.id; // Bias primitives to the top
+        for (let param of Object.values(params).sort((a, b) => gn(a).localeCompare(gn(b)))) {
             actualParams.push(param);
         }
         gen_param_types = actualParams;
