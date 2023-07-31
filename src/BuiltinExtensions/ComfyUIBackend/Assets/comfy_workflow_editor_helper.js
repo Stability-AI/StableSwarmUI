@@ -103,6 +103,7 @@ function comfyBuildParams(callback) {
         }
         let labelAlterations = {};
         let nodeStatics = {};
+        let nodeIdToClean = {};
         let nodeStaticUnique = [];
         let nodeLabelPaths = {};
         for (let node of workflow.nodes) {
@@ -120,6 +121,7 @@ function comfyBuildParams(callback) {
                 for (let links of workflow.links) {
                     if (links[1] == node.id) {
                         nodeStatics[`${links[3]}.${links[4]}`] = id;
+                        nodeIdToClean[id] = node.title;
                     }
                 }
             }
@@ -298,7 +300,8 @@ function comfyBuildParams(callback) {
                     if (redirId) {
                         useParamName = redirId;
                         actualId = redirId;
-                        actualId = addParam(fieldName, actualId, useParamName.substring(inputPrefix.length), val, 'primitives', 'Primitives');
+                        let title = nodeIdToClean[redirId] || redirId.substring(inputPrefix.length);
+                        actualId = addParam(fieldName, actualId, title, val, 'primitives', 'Primitives');
                     }
                     else if (defaultParamsRetain.includes(paramNameClean)) {
                         return false;
@@ -346,9 +349,16 @@ function comfyBuildParams(callback) {
                 if (['KSampler', 'KSamplerAdvanced'].includes(node.class_type) && inputId == 'control_after_generate') {
                     continue;
                 }
-                let inputLabel = labelAlterations[`${nodeId}.${inputId}`] || inputId;
-                let inputIdDirect = nodeStatics[nodeLabelPaths[`${nodeId}.${inputId}`]] || cleanParamName(`${inputPrefix}${groupLabel}${inputId}`);
-                addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel);
+                let redirId = nodeStatics[nodeLabelPaths[`${nodeId}.${inputId}`]];
+                if (redirId) {
+                    let title = nodeIdToClean[redirId] || redirId.substring(inputPrefix.length);
+                    addParam(inputId, redirId, title, val, 'primitives', 'Primitives');
+                }
+                else {
+                    let inputLabel = labelAlterations[`${nodeId}.${inputId}`] || inputId;
+                    let inputIdDirect = cleanParamName(`${inputPrefix}${groupLabel}${inputId}`);
+                    addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel);
+                }
             }
         }
         addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false);
