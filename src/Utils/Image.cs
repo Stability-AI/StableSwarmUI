@@ -21,6 +21,14 @@ public class Image
     /// <summary>Construct an image from raw binary data.</summary>
     public Image(byte[] data)
     {
+        if (data is null)
+        {
+            throw new ArgumentNullException(nameof(data));
+        }
+        else if (data.Length == 0)
+        {
+              throw new ArgumentException("Data is empty!", nameof(data));
+        }
         ImageData = data;
     }
 
@@ -68,9 +76,17 @@ public class Image
     /// <summary>Returns the metadata from this image, or null if none.</summary>
     public string GetMetadata()
     {
-        if (ToIS.Metadata?.ExifProfile?.TryGetValue(ExifTag.Model, out var data) ?? false)
+        try
         {
-            return data.Value;
+            if (ToIS.Metadata?.ExifProfile?.TryGetValue(ExifTag.Model, out var data) ?? false)
+            {
+                return data.Value;
+            }
+        }
+        catch (ArgumentNullException ex)
+        {
+            Logs.Verbose("Failed image content: " + AsBase64);
+            Logs.Error($"Metadata read for image failed: {ex.Message}");
         }
         return null;
     }
@@ -103,16 +119,16 @@ public class Image
         img.Metadata.ExifProfile = prof;
         switch (format)
         {
-            case "png":
+            case "PNG":
                 img.SaveAsPng(ms);
                 break;
-            case "jpg":
+            case "JPG":
                 img.SaveAsJpeg(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder() { Quality = 100 });
                 break;
-            case "jpg90":
+            case "JPG90":
                 img.SaveAsJpeg(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder() { Quality = 90 });
                 break;
-            case "jpg75":
+            case "JPG75":
                 img.SaveAsJpeg(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder() { Quality = 75 });
                 break;
                 // TODO: webp, etc. with appropriate quality handlers

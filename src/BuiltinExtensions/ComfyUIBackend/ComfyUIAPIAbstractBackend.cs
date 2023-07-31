@@ -108,6 +108,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             {
                 string fname = outImage["filename"].ToString();
                 byte[] image = await (await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
+                if (image == null || image.Length == 0)
+                {
+                    Logs.Error($"Invalid/null/empty image data from ComfyUI server for '{fname}', under {outData}");
+                    continue;
+                }
                 outputs.Add(new Image(image));
                 PostResultCallback(fname);
             }
