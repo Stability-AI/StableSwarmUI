@@ -403,3 +403,8 @@ function comfyUseWorkflowNow() {
 }
 
 getRequiredElementById('maintab_comfyworkfloweditor').addEventListener('click', comfyTryToLoad);
+
+backendsRevisedCallbacks.push(() => {
+    let hasAny = Object.values(backends_loaded).filter(x => x.type.startsWith('comfyui_')).length > 0;
+    getRequiredElementById('maintab_comfyworkfloweditor').style.display = hasAny ? 'block' : 'none';
+});

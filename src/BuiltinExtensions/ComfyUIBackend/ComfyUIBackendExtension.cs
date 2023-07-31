@@ -151,7 +151,7 @@ public class ComfyUIBackendExtension : Extension
     {
         ComfyUIAPIAbstractBackend backend = Program.Backends.T2IBackends.Values
             .Select(b => b.Backend as ComfyUIAPIAbstractBackend)
-            .Where(b => b.Status == BackendStatus.RUNNING)
+            .Where(b => b is not null && b.Status == BackendStatus.RUNNING)
             .FirstOrDefault(b => b is not null);
         if (backend is null)
         {

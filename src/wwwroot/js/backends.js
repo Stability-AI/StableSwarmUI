@@ -3,6 +3,8 @@ let backend_types = {};
 
 let backends_loaded = {};
 
+let backendsRevisedCallbacks = [];
+
 let hasLoadedBackends = false;
 
 function addNewBackend(type_id) {
@@ -125,6 +127,9 @@ function loadBackendsList() {
         }
         backends_loaded = data;
         hideUnsupportableParams();
+        for (let callback of backendsRevisedCallbacks) {
+            callback();
+        }
     });
 }
 
