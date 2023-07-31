@@ -124,7 +124,8 @@ public class Settings : AutoConfiguration
         public class FileFormatData : AutoConfiguration
         {
             [ConfigComment("What format to save images in. Default is '.jpg' (at 100% quality).")]
-            public string ImageFormat = "jpg"; // TODO: Use enum
+            [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<Image.ImageFormat>))]
+            public string ImageFormat = "JPG";
 
             [ConfigComment("Whether to store metadata on saved images. Defaults enabled.")]
             public bool SaveMetadata = true;
@@ -139,7 +140,31 @@ public class Settings : AutoConfiguration
         [ConfigComment("Whether your files save to server data drive or not.")]
         public bool SaveFiles = true;
 
+        public class ThemesImpl : SettingsOptionsAttribute.AbstractImpl
+        {
+            public override string[] GetOptions => Program.Web.RegisteredThemes.Keys.ToArray();
+        }
+
         [ConfigComment("What theme to use. Default is 'dark_dreams'.")]
+        [SettingsOptions(Impl = typeof(ThemesImpl))]
         public string Theme = "dark_dreams";
     }
+}
+
+[AttributeUsage(AttributeTargets.Field)]
+public class SettingsOptionsAttribute : Attribute
+{
+    public abstract class AbstractImpl
+    {
+        public abstract string[] GetOptions { get; }
+    }
+
+    public class ForEnum<T> : AbstractImpl where T : Enum
+    {
+        public override string[] GetOptions => Enum.GetNames(typeof(T));
+    }
+
+    public Type Impl;
+
+    public string[] Options => (Activator.CreateInstance(Impl) as AbstractImpl).GetOptions;
 }

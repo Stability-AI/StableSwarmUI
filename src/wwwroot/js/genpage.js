@@ -539,18 +539,6 @@ function show_t2i_quicktools() {
     doPopover('quicktools');
 }
 
-let themeSelectorElement = getRequiredElementById('user_theme_selector');
-themeSelectorElement.value = getCookie('sui_theme_id') || themeSelectorElement.value;
-themeSelectorElement.addEventListener('change', (e) => {
-    let theme = e.target.value;
-    let elem = e.target.options[e.target.selectedIndex];
-    let path = elem.dataset.path;
-    let isDark = elem.dataset.isdark == 'True';
-    setCookie('sui_theme_id', theme, 365);
-    getRequiredElementById('theme_sheet_header').href = path;
-    getRequiredElementById('bs_theme_header').href = isDark ? '/css/bootstrap.min.css' : '/css/bootstrap_light.min.css';
-});
-
 function loadUserData() {
     genericRequest('GetMyUserData', {}, data => {
         allPresets = data.presets;

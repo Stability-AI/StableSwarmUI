@@ -32,12 +32,18 @@ public static class AdminAPI
             {
                 val = AutoConfigToParamData(subConf);
             }
+            string[] vals = data.Field.GetCustomAttribute<SettingsOptionsAttribute>()?.Options ?? null;
+            if (vals is not null)
+            {
+                typeName = "dropdown";
+            }
             output[key] = new JObject()
             {
                 ["type"] = typeName.ToLowerFast(),
                 ["name"] = data.Name,
                 ["value"] = JToken.FromObject(val is List<string> list ? list.JoinString(" || ") : val),
-                ["description"] = data.Field.GetCustomAttribute<AutoConfiguration.ConfigComment>()?.Comments ?? ""
+                ["description"] = data.Field.GetCustomAttribute<AutoConfiguration.ConfigComment>()?.Comments ?? "",
+                ["values"] = vals == null ? null : new JArray(vals)
             };
         }
         return output;

@@ -254,7 +254,17 @@ public static class BasicAPIFeatures
 
     public static async Task<JObject> GetUserSettings(Session session)
     {
-        return new JObject() { ["settings"] = AdminAPI.AutoConfigToParamData(session.User.Settings) };
+        JObject themes = new();
+        foreach (WebServer.ThemeData theme in Program.Web.RegisteredThemes.Values)
+        {
+            themes[theme.ID] = new JObject()
+            {
+                ["name"] = theme.Name,
+                ["is_dark"] = theme.IsDark,
+                ["path"] = theme.Path
+            };
+        }
+        return new JObject() { ["themes"] = themes, ["settings"] = AdminAPI.AutoConfigToParamData(session.User.Settings) };
     }
 
     public static async Task<JObject> ChangeUserSettings(Session session, JObject rawData)

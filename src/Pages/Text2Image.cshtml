@@ -197,15 +197,6 @@
             <div class="tab-pane show active" id="user-info" role="tabpanel">
                 (TODO: info n stuff here)
                 <br>
-                Theme:
-                <select id="user_theme_selector">
-                    @{
-                        foreach (WebServer.ThemeData theme in Program.Web.RegisteredThemes.Values)
-                        {
-                            <option value="@theme.ID" data-path="@theme.Path" data-isdark="@theme.IsDark">@theme.Name</option>
-                        }
-                    }
-                </select>
             </div>
             <div class="tab-pane" id="Settings-User" role="tabpanel">
                 <div id="user_settings_container"></div>

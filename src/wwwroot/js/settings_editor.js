@@ -26,7 +26,7 @@ function buildSettingsMenu(container, data, prefix, tracker) {
                 content += '</div></div>';
             }
             else {
-                let fakeParam = { feature_flag: null, type: data.type, id: settingFull, name: data.name, description: data.description, default: data.value, min: null, max: null, step: null, toggleable: false, number_view_type: 'big' };
+                let fakeParam = { feature_flag: null, type: data.type, id: settingFull, name: data.name, description: data.description, default: data.value, min: null, max: null, step: null, toggleable: false, number_view_type: 'big', values: data.values };
                 let result = getHtmlForParam(fakeParam, prefix, 1);
                 content += result.html + '<br>';
                 keys.push(settingFull);
@@ -66,9 +66,25 @@ function buildSettingsMenu(container, data, prefix, tracker) {
     }
 }
 
+function applyThemeSetting(theme_info) {
+    setTimeout(() => {
+        let themeSelectorElement = getRequiredElementById('usersettings_theme');
+        function setTheme() {
+            let theme_id = themeSelectorElement.value;
+            let theme = theme_info[theme_id];
+            setCookie('sui_theme_id', theme_id, 365);
+            getRequiredElementById('theme_sheet_header').href = theme.path;
+            getRequiredElementById('bs_theme_header').href = theme.is_dark ? '/css/bootstrap.min.css' : '/css/bootstrap_light.min.css';
+        }
+        themeSelectorElement.addEventListener('change', setTheme);
+        setTheme();
+    }, 1);
+}
+
 function loadUserSettings() {
     genericRequest('GetUserSettings', {}, data => {
         buildSettingsMenu(userSettingsContainer, data.settings, 'usersettings_', userSettingsData);
+        applyThemeSetting(data.themes);
     });
 }
 

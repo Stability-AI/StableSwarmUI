@@ -415,6 +415,9 @@ function resetParamsToDefault() {
 }
 
 function hideUnsupportableParams() {
+    if (!gen_param_types) {
+        return;
+    }
     let groups = {};
     for (let param of gen_param_types) {
         let elem = document.getElementById(`input_${param.id}`);

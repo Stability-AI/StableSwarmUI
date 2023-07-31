@@ -72,6 +72,11 @@ public class Program
             Logs.Init("Loading settings file...");
             SettingsFilePath = CommandLineFlags.GetValueOrDefault("settings_file", "Data/Settings.fds");
             LoadSettingsFile();
+            // TODO: Legacy format patch from Alpha 0.5! Remove this before 1.0.
+            if (ServerSettings.DefaultUser.FileFormat.ImageFormat == "jpg")
+            {
+                  ServerSettings.DefaultUser.FileFormat.ImageFormat = "JPG";
+            }
             if (!LockSettings)
             {
                 Logs.Init("Re-saving settings file...");
