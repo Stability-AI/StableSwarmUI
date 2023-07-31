@@ -146,7 +146,7 @@ public static class T2IAPI
                 {
                     foreach (Image image in outputs)
                     {
-                        (string url, string filePath) = session.SaveImage(image, imageIndex, user_input);
+                        (string url, string filePath) = session.SaveImage(image, imageIndex, thisParams);
                         if (url == "ERROR")
                         {
                             setError($"Server failed to save images.");
