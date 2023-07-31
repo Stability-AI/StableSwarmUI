@@ -134,7 +134,7 @@ public class ComfyUIBackendExtension : Extension
             GetValues: (_) => Schedulers
             ));
         RefinerUpscaleMethod = T2IParamTypes.Register<string>(new("Refiner Upscale Method", "How to upscale the image, if upscaling is used.",
-            "pixel-bilinear", Group: T2IParamTypes.GroupRefiners, OrderPriority: 1,
+            "pixel-bilinear", Group: T2IParamTypes.GroupRefiners, OrderPriority: 1, FeatureFlag: "comfyui",
             GetValues: (_) => UpscalerModels
             ));
         Program.Backends.RegisterBackendType<ComfyUIAPIBackend>("comfyui_api", "ComfyUI API By URL", "A backend powered by a pre-existing installation of ComfyUI, referenced via API base URL.");

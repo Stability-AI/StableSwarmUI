@@ -1,10 +1,8 @@
 ﻿
 using FreneticUtilities.FreneticDataSyntax;
-using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
-using StableSwarmUI.DataHolders;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using System.IO;
