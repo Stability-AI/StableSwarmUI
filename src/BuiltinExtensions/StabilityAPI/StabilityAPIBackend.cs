@@ -86,7 +86,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
     {
         JObject engines = await Get("engines/list");
         List<string> engineIds = engines["data"].Select(o => o["id"].ToString()).ToList();
-        Logs.Info($"Engines: {engines}");
+        Logs.Debug($"Engines: {engines}");
         lock (StabilityAPIExtension.TrackerLock)
         {
             foreach (string eng in engineIds)
@@ -101,7 +101,13 @@ public class StabilityAPIBackend : AbstractT2IBackend
 
     public async Task UpdateBalance()
     {
-        double _cred = (double)(await Get("user/balance"))["credits"];
+        JObject response = await Get("user/balance");
+        if (!response.TryGetValue("credits", out JToken creditTok))
+        {
+            Logs.Error($"StabilityAPI gave unexpected response to balance check: {response}");
+            return;
+        }
+        double _cred = (double)creditTok;
         lock (StabilityAPIExtension.TrackerLock)
         {
             Credits = _cred;
