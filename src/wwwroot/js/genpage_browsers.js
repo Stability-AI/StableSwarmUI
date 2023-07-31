@@ -229,7 +229,7 @@ class GenPageBrowserClass {
                 });
                 div.appendChild(menu);
             }
-            div.title = desc.description;
+            div.title = stripHtmlToText(desc.description);
             img.src = desc.image;
             container.appendChild(div);
         }

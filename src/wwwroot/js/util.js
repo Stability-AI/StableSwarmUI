@@ -531,3 +531,12 @@ function imageToSmallPreviewData(img) {
     canvas.remove();
     return result;
 }
+
+/**
+ * Takes raw html input and strips all tags, leaving only the text.
+ */
+function stripHtmlToText(raw) {
+    let div = document.createElement('div');
+    div.innerHTML = raw;
+    return div.textContent || div.innerText || '';
+}
