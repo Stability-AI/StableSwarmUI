@@ -89,11 +89,12 @@ public class T2IModelClassSorter
         if (arch is not null)
         {
             string res = header["__metadata__"].Value<string>("modelspec.resolution");
-            int width = int.Parse(res.BeforeAndAfter('x', out string h));
-            int height = int.Parse(h);
+            string h = null;
+            int width = string.IsNullOrWhiteSpace(res) ? 0 : int.Parse(res.BeforeAndAfter('x', out h));
+            int height = string.IsNullOrWhiteSpace(h) ? 0 : int.Parse(h);
             if (ModelClasses.TryGetValue(arch, out T2IModelClass clazz))
             {
-                if (width == clazz.StandardWidth && height == clazz.StandardHeight)
+                if ((width == clazz.StandardWidth && height == clazz.StandardHeight) || (width <= 0 && height <= 0))
                 {
                     Logs.Debug($"Model {model.Name} matches {clazz.Name} by architecture ID");
                     return clazz;
