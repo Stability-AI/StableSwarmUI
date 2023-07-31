@@ -14,7 +14,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
 {
     public class ComfyUISelfStartSettings : AutoConfiguration
     {
-        [ConfigComment("The location of the 'main.py' file.")]
+        [ConfigComment("The location of the 'main.py' file. Can be an absolute or relative path, but must end with 'main.py'.")]
         public string StartScript = "";
 
         [ConfigComment("Any arguments to include in the launch script.")]
@@ -67,6 +67,10 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         EnsureComfyFile();
         ComfyUISelfStartSettings settings = SettingsRaw as ComfyUISelfStartSettings;
         string modelPath = $"--extra-model-paths-config {Environment.CurrentDirectory}/Data/comfy-auto-model.yaml";
+        if (!settings.StartScript.EndsWith("main.py"))
+        {
+            Logs.Warning($"ComfyUI start script is '{settings.StartScript}', which looks wrong - did you forget to append 'main.py' on the end?");
+        }
         await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs + " --port {PORT} " + modelPath, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
 

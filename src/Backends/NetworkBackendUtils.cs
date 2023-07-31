@@ -28,7 +28,7 @@ public static class NetworkBackendUtils
         }
         if (ext != "sh" && ext != "bat" && ext != "py")
         {
-            Logs.Error($"Refusing init of {backendLabel} with non-script target. Please verify your start script location.");
+            Logs.Error($"Refusing init of {backendLabel} with non-script target. Please verify your start script location. Path was '{path}', which does not end in the expected 'py', 'bat', or 'sh'.");
             return false;
         }
         if (path.AfterLast('/').BeforeLast('.') == "webui-user")
