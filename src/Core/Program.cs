@@ -289,6 +289,10 @@ public class Program
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", environment);
         string host = GetCommandLineFlag("host", ServerSettings.Network.Host);
         int port = int.Parse(GetCommandLineFlag("port", $"{ServerSettings.Network.Port}"));
+        if (new int[] { 21, 22, 80, 8080, 7860, 8188 }.Contains(port))
+        {
+            Logs.Warning($"Port {port} looks like a port commonly used by other programs. You may want to change it.");
+        }
         if (ServerSettings.Network.PortCanChange)
         {
             int origPort = port;
