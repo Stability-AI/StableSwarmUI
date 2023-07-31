@@ -320,4 +320,23 @@ public static class Utilities
     {
         return BytesToHex(SHA256.HashData(raw));
     }
+
+    /// <summary>Smart clean combination of two paths in a way that allows B or C to be an absolute path.</summary>
+    public static string CombinePathWithAbsolute(string a, string b, string c) => CombinePathWithAbsolute(CombinePathWithAbsolute(a, b), c);
+
+    /// <summary>Smart clean combination of two paths in a way that allows B to be an absolute path.</summary>
+    public static string CombinePathWithAbsolute(string a, string b)
+    {
+        if (b.StartsWith("/") || (b.Length > 2 && b[1] == ':'))
+        {
+            return b;
+        }
+        // Usage of '/' is always standard, but if we're exclusively using '\' windows backslashes in input, preserve them for the purposes of this method.
+        char separator = (a.Contains('/') || b.Contains('/')) ? '/' : Path.DirectorySeparatorChar;
+        if (a.EndsWith(separator))
+        {
+            return $"{a}{b}";
+        }
+        return $"{a}{separator}{b}";
+    }
 }

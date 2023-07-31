@@ -1,4 +1,5 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
+using StableSwarmUI.Utils;
 
 namespace StableSwarmUI.Core;
 
@@ -66,21 +67,7 @@ public class Settings : AutoConfiguration
         public string SDModelFolder = "Stable-Diffusion";
 
         /// <summary>(Getter) Path for Stable Diffusion models.</summary>
-        public string SDModelFullPath
-        {
-            get
-            {
-                if (SDModelFolder.StartsWith('/') || (SDModelFolder.Length > 2 && SDModelFolder[1] == ':'))
-                {
-                    return SDModelFolder;
-                }
-                if (ModelRoot.StartsWith('/') || (ModelRoot.Length > 2 && ModelRoot[1] == ':'))
-                {
-                    return $"{ModelRoot}/{SDModelFolder}";
-                }
-                return $"{Environment.CurrentDirectory}/{ModelRoot}/{SDModelFolder}";
-            }
-        }
+        public string SDModelFullPath => Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, ModelRoot, SDModelFolder);
 
         [ConfigComment("Root path for data (user configs, etc). Defaults to 'Data'")]
         public string DataPath = "Data";
