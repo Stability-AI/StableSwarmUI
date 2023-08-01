@@ -152,16 +152,16 @@ function directSetModel(model) {
         return;
     }
     if (model.name) {
-        getRequiredElementById('input_model').value = model.name;
-        getRequiredElementById('current_model').value = model.name;
+        forceSetDropdownValue('input_model', model.name);
+        forceSetDropdownValue('current_model', model.name);
         setCookie('selected_model', `${model.name},${model.standard_width},${model.standard_height}`, 90);
         curModelWidth = model.standard_width;
         curModelHeight = model.standard_height;
     }
     else if (model.includes(',')) {
         let [name, width, height] = model.split(',');
-        getRequiredElementById('input_model').value = name;
-        getRequiredElementById('current_model').value = name;
+        forceSetDropdownValue('input_model', name);
+        forceSetDropdownValue('current_model', name);
         setCookie('selected_model', `${name},${width},${height}`, 90);
         curModelWidth = parseInt(width);
         curModelHeight = parseInt(height);

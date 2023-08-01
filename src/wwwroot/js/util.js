@@ -540,3 +540,21 @@ function stripHtmlToText(raw) {
     div.innerHTML = raw;
     return div.textContent || div.innerText || '';
 }
+
+/**
+ * Forcibly guarantees a dropdown is updated to a given server, adding a new option if needed.
+ */
+function forceSetDropdownValue(elem, val) {
+    if (typeof elem == 'string') {
+        elem = getRequiredElementById(elem);
+    }
+    elem.value = val;
+    if (elem.value != val) {
+        let option = document.createElement('option');
+        option.value = val;
+        option.innerHTML = val;
+        elem.appendChild(option);
+        elem.value = val;
+    }
+    elem.dispatchEvent(new Event('change'));
+}
