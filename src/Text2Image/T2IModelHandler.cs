@@ -294,6 +294,18 @@ public class T2IModelHandler
                 width = (metaHeader?.ContainsKey("standard_width") ?? false) ? metaHeader.Value<int>("standard_width") : (clazz?.StandardWidth ?? 0);
                 height = (metaHeader?.ContainsKey("standard_height") ?? false) ? metaHeader.Value<int>("standard_height") : (clazz?.StandardHeight ?? 0);
             }
+            if (img is null)
+            {
+                string prefix = Program.ServerSettings.Paths.SDModelFullPath + "/";
+                if (File.Exists(prefix + model.Name.Replace(".safetensors", ".jpg")))
+                {
+                    img = new Image(File.ReadAllBytes(prefix + model.Name.Replace(".safetensors", ".jpg"))).ToMetadataFormat();
+                }
+                else if (File.Exists(prefix + model.Name.Replace(".safetensors", ".png")))
+                {
+                    img = new Image(File.ReadAllBytes(prefix + model.Name.Replace(".safetensors", ".png"))).ToMetadataFormat();
+                }
+            }
             metadata = new()
             {
                 ModelFileVersion = modified,

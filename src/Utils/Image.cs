@@ -46,6 +46,22 @@ public class Image
         return stream.ToArray();
     }
 
+    /// <summary>Helper to convert an ImageSharp image to jpg bytes.</summary>
+    public static byte[] ISImgToJpgBytes(ISImage img)
+    {
+        using MemoryStream stream = new();
+        img.SaveAsJpeg(stream);
+        return stream.ToArray();
+    }
+
+    /// <summary>Returns a metadata-format of the image.</summary>
+    public string ToMetadataFormat()
+    {
+        ISImage img = ToIS;
+        img.Mutate(i => i.Resize(256, 256));
+        return "data:image/jpeg;base64," + new Image(ISImgToJpgBytes(img)).AsBase64;
+    }
+
     /// <summary>Resizes the given image directly and returns a png formatted copy of it.</summary>
     public Image Resize(int width, int height)
     {
