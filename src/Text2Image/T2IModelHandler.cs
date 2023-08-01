@@ -349,6 +349,7 @@ public class T2IModelHandler
         {
             return;
         }
+        Logs.Verbose($"[Model Scan] Add all from folder {folder}");
         if (folder.StartsWith('.'))
         {
             return;
@@ -357,11 +358,12 @@ public class T2IModelHandler
         string actualFolder = $"{Program.ServerSettings.Paths.SDModelFullPath}/{folder}";
         if (!Directory.Exists(actualFolder))
         {
+            Logs.Verbose($"[Model Scan] Skipping folder {actualFolder}");
             return;
         }
         foreach (string subfolder in Directory.EnumerateDirectories(actualFolder))
         {
-            AddAllFromFolder($"{prefix}{subfolder.AfterLast('/')}");
+            AddAllFromFolder($"{prefix}{subfolder.Replace('\\', '/').AfterLast('/')}");
         }
         foreach (string file in Directory.EnumerateFiles(actualFolder))
         {
