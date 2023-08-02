@@ -68,7 +68,7 @@ public class T2IParamInput
     public string GenRawMetadata(Dictionary<string, object> extraParams)
     {
         JObject obj = GenMetadataObject(extraParams);
-        return new JObject() { ["sui_image_params"] = obj }.ToString();
+        return new JObject() { ["sui_image_params"] = obj }.ToString(Newtonsoft.Json.Formatting.Indented);
     }
 
     /// <summary>Gets the raw value of the parameter, if it is present, or null if not.</summary>

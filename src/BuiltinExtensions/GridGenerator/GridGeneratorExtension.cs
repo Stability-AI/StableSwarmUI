@@ -130,7 +130,7 @@ public class GridGeneratorExtension : Extension
             }
             int iteration = runner.Iteration;
             Task t = Task.Run(() => T2IEngine.CreateImageTask(thisParams, data.Claim, data.AddOutput, setError, true, Program.ServerSettings.Backends.MaxTimeoutMinutes,
-                (outputs) =>
+                (outputs, metadata) =>
                 {
                     Logs.Info($"Completed gen #{iteration} (of {runner.TotalRun}) ... Set: '{set.Data}', file '{set.BaseFilepath}'");
                     if (outputs.Length != 1)
@@ -148,13 +148,12 @@ public class GridGeneratorExtension : Extension
                     File.WriteAllBytes(targetPath, outputs[0].ImageData);
                     if (set.Grid.PublishMetadata)
                     {
-                        string metadata = outputs[0].GetMetadata();
-                        if (metadata is not null)
+                        if (!string.IsNullOrWhiteSpace(metadata[0]))
                         {
-                            File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata}".EncodeUTF8());
+                            File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata[0]}".EncodeUTF8());
                         }
                     }
-                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}", ["metadata"] = outputs[0].GetMetadata() });
+                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}", ["metadata"] = metadata[0] });
                 }));
             lock (data.UpdateLock)
             {

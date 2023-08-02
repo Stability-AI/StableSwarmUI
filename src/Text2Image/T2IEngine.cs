@@ -68,7 +68,7 @@ namespace StableSwarmUI.Text2Image
         }
 
         /// <summary>Internal handler route to create an image based on a user request.</summary>
-        public static async Task CreateImageTask(T2IParamInput user_input, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image[]> saveImages)
+        public static async Task CreateImageTask(T2IParamInput user_input, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image[], string[]> saveImages)
         {
             Stopwatch timer = Stopwatch.StartNew();
             void sendStatus()
@@ -126,6 +126,7 @@ namespace StableSwarmUI.Text2Image
                     outputs = await backend.Backend.Generate(user_input);
                     genTime = timer.ElapsedMilliseconds;
                 }
+                string[] metadata = new string[outputs.Length];
                 string genTimeReport = $"{prepTime / 1000.0:0.00} (prep) and {(genTime - prepTime) / 1000.0:0.00} (gen) seconds";
                 for (int i = 0; i < outputs.Length; i++)
                 {
@@ -134,14 +135,15 @@ namespace StableSwarmUI.Text2Image
                         Dictionary<string, object> extras = new() { ["generation_time"] = genTimeReport };
                         bool refuse = false;
                         PostGenerateEvent?.Invoke(new(outputs[i], extras, user_input, () => refuse = true));
-                        outputs[i] = refuse ? null : user_input.SourceSession.ApplyMetadata(outputs[i], user_input, extras);
+                        (outputs[i], metadata[i]) = refuse ? (null, null) : user_input.SourceSession.ApplyMetadata(outputs[i], user_input, extras);
                     }
                 }
                 int nullCount = outputs.Count(i => i is null);
                 outputs = outputs.Where(i => i is not null).ToArray();
+                metadata = metadata.Where(i => i is not null).ToArray();
                 string label = outputs.Length == 1 ? "an image" : $"{outputs.Length} images" + (nullCount > 0 ? $" (and removed {nullCount})" : "");
                 Logs.Info($"Generated {label} in {genTimeReport}");
-                saveImages(outputs);
+                saveImages(outputs, metadata);
             }
             catch (InvalidOperationException ex)
             {

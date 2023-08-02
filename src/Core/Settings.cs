@@ -127,11 +127,14 @@ public class Settings : AutoConfiguration
             [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<Image.ImageFormat>))]
             public string ImageFormat = "JPG";
 
-            [ConfigComment("Whether to store metadata on saved images. Defaults enabled.")]
+            [ConfigComment("Whether to store metadata into saved images. Defaults enabled.")]
             public bool SaveMetadata = true;
 
             [ConfigComment("If set to non-0, adds DPI metadata to saved images. '72' is a good value for compatibility with some external software.")]
             public int DPI = 0;
+
+            [ConfigComment("If set to true, a '.txt' file will be saved alongside images with the image metadata easily viewable. This can work even if saving in the image is disabled. Defaults disabled.")]
+            public bool SaveTextFileMetadata = false;
         }
 
         [ConfigComment("Settings related to saved file format.")]

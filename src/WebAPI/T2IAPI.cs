@@ -142,11 +142,11 @@ public static class T2IAPI
             T2IParamInput thisParams = user_input.Clone();
             thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed) + imageIndex);
             tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, claim, output, setError, isWS, Program.ServerSettings.Backends.MaxTimeoutMinutes,
-                (outputs) =>
+                (outputs, metadata) =>
                 {
-                    foreach (Image image in outputs)
+                    for (int i = 0; i < outputs.Length; i++)
                     {
-                        (string url, string filePath) = session.SaveImage(image, imageIndex, thisParams);
+                        (string url, string filePath) = session.SaveImage(outputs[i], imageIndex, thisParams, metadata[i]);
                         if (url == "ERROR")
                         {
                             setError($"Server failed to save images.");
@@ -156,7 +156,7 @@ public static class T2IAPI
                         lock (imageSet)
                         {
                             index = imageSet.Count;
-                            imageSet.Add(new(image, () =>
+                            imageSet.Add(new(outputs[i], () =>
                             {
                                 if (filePath is not null && File.Exists(filePath))
                                 {
@@ -165,7 +165,7 @@ public static class T2IAPI
                                 imageOut[index] = null;
                             }));
                         }
-                        output(new JObject() { ["image"] = url, ["index"] = index, ["metadata"] = image.GetMetadata() });
+                        output(new JObject() { ["image"] = url, ["index"] = index, ["metadata"] = string.IsNullOrWhiteSpace(metadata[i]) ? null : metadata[i] });
                     }
                 })));
             Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
