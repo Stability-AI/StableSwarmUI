@@ -33,6 +33,10 @@ body {
     border-radius: 0.7rem;
     margin-left: 2rem;
 }
+.interrupt-button-none {
+    background-color: color-mix(in srgb, transparent 80%, var(--danger-button-background));
+    opacity: 0.2;
+}
 .interrupt-button:hover {
     background-color: var(--danger-button-background-hover);
     color: var(--danger-button-foreground-hover);

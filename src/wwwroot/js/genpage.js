@@ -173,6 +173,8 @@ function updateCurrentStatusDirect(data) {
         num_live_gens = data.live_gens;
         num_backends_waiting = data.waiting_backends;
     }
+    let total = num_current_gens + num_models_loading + num_live_gens + num_backends_waiting;
+    getRequiredElementById('interrupt_button').classList.toggle('interrupt-button-none', total == 0);
     let elem = getRequiredElementById('num_jobs_span');
     function autoBlock(num, text) {
         if (num == 0) {
