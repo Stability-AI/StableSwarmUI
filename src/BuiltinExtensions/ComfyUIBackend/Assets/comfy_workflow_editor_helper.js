@@ -111,7 +111,8 @@ function comfyBuildParams(callback) {
                 labelAlterations[`${node.id}`] = node.title;
             }
             if (node.type == 'PrimitiveNode' && node.title) {
-                let cleaned = inputPrefix + cleanParamName(node.title);
+                let cleanTitle = cleanParamName(node.title);
+                let cleaned = inputPrefix + cleanTitle;
                 let id = cleaned;
                 let x = 0;
                 while (nodeStaticUnique.includes(node.title)) {
@@ -352,6 +353,18 @@ function comfyBuildParams(callback) {
                 let redirId = nodeStatics[nodeLabelPaths[`${nodeId}.${inputId}`]];
                 if (redirId) {
                     let title = nodeIdToClean[redirId] || redirId.substring(inputPrefix.length);
+                    let colon = title.indexOf(':');
+                    if (colon > 0 && cleanParamName(title.substring(0, colon)) == 'swarmui') {
+                        let reuseParam = cleanParamName(title.substring(colon + 1));
+                        if (rawGenParamTypesFromServer.filter(x => x.id == reuseParam).length > 0) {
+                            if (!defaultParamsRetain.includes(reuseParam)) {
+                                defaultParamsRetain.push(reuseParam);
+                                defaultParamValue[reuseParam] = val;
+                            }
+                            node.inputs[fieldName] = typeof val != 'string' ? "%%_COMFYFIXME_${" + reuseParam + ":" + val + "}_ENDFIXME_%%" : "${" + reuseParam + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
+                            continue;
+                        }
+                    }
                     addParam(inputId, redirId, title, val, 'primitives', 'Primitives');
                 }
                 else {
