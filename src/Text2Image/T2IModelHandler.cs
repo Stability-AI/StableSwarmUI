@@ -229,6 +229,19 @@ public class T2IModelHandler
             File.Delete(model.RawFilePath + ".tmp2");
         }
     }
+    public string GetAutoFormatImage(T2IModel model)
+    {
+        string prefix = Program.ServerSettings.Paths.SDModelFullPath + "/" + model.Name.BeforeLast('.');
+        if (File.Exists(prefix + ".jpg"))
+        {
+            return new Image(File.ReadAllBytes(prefix + ".jpg")).ToMetadataFormat();
+        }
+        else if (File.Exists(prefix + ".png"))
+        {
+            return new Image(File.ReadAllBytes(prefix + ".png")).ToMetadataFormat();
+        }
+        return null;
+    }
 
     /// <summary>Force-load the metadata for a model.</summary>
     public void LoadMetadata(T2IModel model)
@@ -245,6 +258,11 @@ public class T2IModelHandler
         }
         if (!model.Name.EndsWith(".safetensors"))
         {
+            string autoImg = GetAutoFormatImage(model);
+            if (autoImg is not null)
+            {
+                model.PreviewImage = autoImg;
+            }
             Logs.Debug($"Not loading metadata for {model.Name} as it is not safetensors.");
             return;
         }
@@ -294,18 +312,7 @@ public class T2IModelHandler
                 width = (metaHeader?.ContainsKey("standard_width") ?? false) ? metaHeader.Value<int>("standard_width") : (clazz?.StandardWidth ?? 0);
                 height = (metaHeader?.ContainsKey("standard_height") ?? false) ? metaHeader.Value<int>("standard_height") : (clazz?.StandardHeight ?? 0);
             }
-            if (img is null)
-            {
-                string prefix = Program.ServerSettings.Paths.SDModelFullPath + "/";
-                if (File.Exists(prefix + model.Name.Replace(".safetensors", ".jpg")))
-                {
-                    img = new Image(File.ReadAllBytes(prefix + model.Name.Replace(".safetensors", ".jpg"))).ToMetadataFormat();
-                }
-                else if (File.Exists(prefix + model.Name.Replace(".safetensors", ".png")))
-                {
-                    img = new Image(File.ReadAllBytes(prefix + model.Name.Replace(".safetensors", ".png"))).ToMetadataFormat();
-                }
-            }
+            img ??= GetAutoFormatImage(model);
             metadata = new()
             {
                 ModelFileVersion = modified,
@@ -394,13 +401,15 @@ public class T2IModelHandler
             }
             else if (fn.EndsWith(".ckpt"))
             {
-                Models[fullFilename] = new T2IModel()
+                T2IModel model = new()
                 {
                     Name = fullFilename,
                     RawFilePath = file,
                     Description = "(None, use '.safetensors' to enable metadata descriptions)",
                     PreviewImage = "imgs/legacy_ckpt.jpg",
                 };
+                model.PreviewImage = GetAutoFormatImage(model) ?? model.PreviewImage;
+                Models[fullFilename] = model;
             }
         }
     }
