@@ -323,13 +323,13 @@ function comfyBuildParams(callback) {
             }
             claimOnce('KSampler', 'seed', 'seed', true);
             claimOnce('KSampler', 'steps', 'steps', true);
-            claimOnce('KSampler', 'comfy_sampler', 'sampler_name', false);
-            claimOnce('KSampler', 'comfy_scheduler', 'scheduler', false);
+            claimOnce('KSampler', 'comfyui_sampler', 'sampler_name', false);
+            claimOnce('KSampler', 'comfyui_scheduler', 'scheduler', false);
             claimOnce('KSampler', 'cfg_scale', 'cfg', true);
             claimOnce('KSamplerAdvanced', 'seed', 'noise_seed', true);
             claimOnce('KSamplerAdvanced', 'steps', 'steps', true);
-            claimOnce('KSamplerAdvanced', 'comfy_sampler', 'sampler_name', false);
-            claimOnce('KSamplerAdvanced', 'comfy_scheduler', 'scheduler', false);
+            claimOnce('KSamplerAdvanced', 'comfyui_sampler', 'sampler_name', false);
+            claimOnce('KSamplerAdvanced', 'comfyui_scheduler', 'scheduler', false);
             claimOnce('KSamplerAdvanced', 'cfg_scale', 'cfg', true);
             if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Positive Prompt") && !defaultParamsRetain.includes('prompt') && typeof node.inputs.text == 'string') {
                 defaultParamsRetain.push('prompt');
