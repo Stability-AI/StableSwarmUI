@@ -375,7 +375,7 @@ function replaceParamsToComfy() {
         params['comfyworkflowraw'].extra_hidden = true;
         actualParams.push(params['comfyworkflowraw']); // must be first
         delete params['comfyworkflowraw'];
-        for (let param of rawGenParamTypesFromServer.filter(p => retained.includes(p.id))) {
+        for (let param of rawGenParamTypesFromServer.filter(p => retained.includes(p.id) || p.always_retain)) {
             actualParams.push(param);
             let val = paramVal[param.id];
             if (val) {
