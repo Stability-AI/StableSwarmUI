@@ -261,7 +261,7 @@ public class T2IParamTypes
             "", GetValues: listRefinerModels, OrderPriority: -5, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true
             ));
         RefinerControl = Register<double>(new("Refine Control Percentage", "Higher values give the refiner more control, lower values give the base more control.\nThis is similar to 'Init Image Creativity', but for the refiner. This controls how many steps the refiner takes.",
-            "0.3", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, NumberView: NumberViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
+            "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, NumberView: NumberViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
             ));
         RefinerMethod = Register<string>(new("Refiner Method", "How to apply the refiner. Different methods create different results.\n'StepSwap' swaps the model after x steps during generation. 'PostApply' runs the base in full, then runs the refiner with an Init Image.",
             "StepSwap", GetValues: (_) => new() { "StepSwap", "PostApply" }, OrderPriority: -3, Group: GroupRefiners, FeatureFlag: "refiners"
