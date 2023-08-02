@@ -89,7 +89,7 @@ function comfyBuildParams(callback) {
                 priority: 5,
                 advanced: false,
                 feature_flag: null,
-                do_not_save: true,
+                do_not_save: false,
                 group: {
                     name: groupName,
                     id: groupId,
@@ -97,7 +97,7 @@ function comfyBuildParams(callback) {
                     priority: priority,
                     advanced: false,
                     toggles: false,
-                    do_not_save: true
+                    do_not_save: false
                 }
             };
         }
@@ -384,36 +384,44 @@ function comfyBuildParams(callback) {
  */
 function replaceParamsToComfy() {
     comfyBuildParams((params, prompt, retained, paramVal) => {
-        let actualParams = [];
-        params['comfyworkflowraw'].extra_hidden = true;
-        actualParams.push(params['comfyworkflowraw']); // must be first
-        delete params['comfyworkflowraw'];
-        for (let param of rawGenParamTypesFromServer.filter(p => retained.includes(p.id) || p.always_retain)) {
-            actualParams.push(param);
-            let val = paramVal[param.id];
-            if (val) {
-                // Comfy can do full 2^64 but that causes backend issues (can't have 2^64 *and* -1 as options, so...) so cap to 2^63
-                if (param.type == 'integer' && param.number_view_type == 'seed' && val > 2**63) {
-                    val = -1;
-                }
+        setComfyWorkflowInput(params, retained, paramVal, true);
+    });
+}
+
+function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
+    localStorage.setItem('last_comfy_workflow_input', JSON.stringify({params, retained, paramVal}));
+    let actualParams = [];
+    params['comfyworkflowraw'].extra_hidden = true;
+    actualParams.push(params['comfyworkflowraw']); // must be first
+    delete params['comfyworkflowraw'];
+    for (let param of rawGenParamTypesFromServer.filter(p => retained.includes(p.id) || p.always_retain)) {
+        actualParams.push(param);
+        let val = paramVal[param.id];
+        if (val) {
+            // Comfy can do full 2^64 but that causes backend issues (can't have 2^64 *and* -1 as options, so...) so cap to 2^63
+            if (param.type == 'integer' && param.number_view_type == 'seed' && val > 2**63) {
+                val = -1;
+            }
+            if (applyValues) {
                 setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
             }
         }
-        let gn = (p) => p.group.id == "primitives" ? "!primitives" : p.group.id; // Bias primitives to the top
-        for (let param of Object.values(params).sort((a, b) => gn(a).localeCompare(gn(b)))) {
-            actualParams.push(param);
-        }
-        gen_param_types = actualParams;
-        genInputs(true);
-        let area = getRequiredElementById('main_inputs_area');
-        area.innerHTML = '<button class="basic-button" onclick="comfyParamsDisable()">Disable Custom ComfyUI Workflow</button>\n' + area.innerHTML;
-    });
+    }
+    let gn = (p) => p.group.id == "primitives" ? "!primitives" : p.group.id; // Bias primitives to the top
+    for (let param of Object.values(params).sort((a, b) => gn(a).localeCompare(gn(b)))) {
+        actualParams.push(param);
+    }
+    gen_param_types = actualParams;
+    genInputs(true);
+    let area = getRequiredElementById('main_inputs_area');
+    area.innerHTML = '<button class="basic-button" onclick="comfyParamsDisable()">Disable Custom ComfyUI Workflow</button>\n' + area.innerHTML;
 }
 
 /**
  * Called to forced the parameter list back to default (instead of comfy-workflow-specific).
  */
 function comfyParamsDisable() {
+    localStorage.removeItem('last_comfy_workflow_input');
     gen_param_types = rawGenParamTypesFromServer;
     genInputs(true);
 }
@@ -432,3 +440,17 @@ backendsRevisedCallbacks.push(() => {
     let hasAny = Object.values(backends_loaded).filter(x => x.type.startsWith('comfyui_')).length > 0;
     getRequiredElementById('maintab_comfyworkfloweditor').style.display = hasAny ? 'block' : 'none';
 });
+
+/**
+ * Prep-callback that can restore the last comfy workflow input you had.
+ */
+function comfyCheckPrep() {
+    let lastComfyWorkflowInput = localStorage.getItem('last_comfy_workflow_input');
+    if (lastComfyWorkflowInput) {
+        let {params, retained, paramVal} = JSON.parse(lastComfyWorkflowInput);
+        setComfyWorkflowInput(params, retained, paramVal, false);
+    }
+}
+
+sessionReadyCallbacks.push(comfyCheckPrep);
+
