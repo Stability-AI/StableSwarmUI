@@ -288,6 +288,7 @@ public static class T2IAPI
     /// <summary>API route to trigger a reload of the model list.</summary>
     public static async Task<JObject> TriggerRefresh(Session session)
     {
+        Logs.Verbose($"User {session.User.UserID} triggered a data refresh");
         Program.ModelRefreshEvent?.Invoke();
         return await ListT2IParams(session);
     }
