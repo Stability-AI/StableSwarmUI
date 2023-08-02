@@ -361,7 +361,7 @@ function comfyBuildParams(callback) {
                                 defaultParamsRetain.push(reuseParam);
                                 defaultParamValue[reuseParam] = val;
                             }
-                            node.inputs[fieldName] = typeof val != 'string' ? "%%_COMFYFIXME_${" + reuseParam + ":" + val + "}_ENDFIXME_%%" : "${" + reuseParam + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
+                            node.inputs[inputId] = typeof val != 'string' ? "%%_COMFYFIXME_${" + reuseParam + ":" + val + "}_ENDFIXME_%%" : "${" + reuseParam + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
                             continue;
                         }
                     }
