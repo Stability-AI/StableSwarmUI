@@ -241,7 +241,7 @@ class GenPageBrowserClass {
             }
             if (desc.buttons.length > 0) {
                 let menu = createDiv(null, 'model-block-menu-button');
-                menu.innerText = '⬤⬤⬤';
+                menu.innerHTML = '&#x2630;';
                 menu.addEventListener('click', () => {
                     doPopover(popoverId);
                 });
