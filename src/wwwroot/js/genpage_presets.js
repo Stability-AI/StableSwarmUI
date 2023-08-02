@@ -238,7 +238,7 @@ function sortPresets() {
     allPresets = allPresets.sort((a, b) => a.title.toLowerCase() == "default" ? -1 : (b.title.toLowerCase() == "default" ? 1 : 0));
 }
 
-function listPresetFolderAndFiles(path, isRefresh, callback) {
+function listPresetFolderAndFiles(path, isRefresh, callback, depth) {
     let proc = () => {
         let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
         let folders = [];
@@ -246,14 +246,20 @@ function listPresetFolderAndFiles(path, isRefresh, callback) {
         for (let preset of allPresets) {
             if (preset.title.startsWith(prefix)) {
                 let subPart = preset.title.substring(prefix.length);
-                let index = subPart.indexOf('/');
-                if (index != -1) {
-                    let folder = subPart.substring(0, index);
-                    if (!folders.includes(folder)) {
-                        folders.push(folder);
+                let slashes = subPart.split('/').length - 1;
+                if (slashes > 0) {
+                    let folderPart = subPart.substring(0, subPart.lastIndexOf('/'));
+                    let subfolders = folderPart.split('/');
+                    for (let i = 1; i <= subfolders.length && i <= depth; i++) {
+                        let folder = subfolders.slice(0, i).join('/');
+                        if (!folders.includes(folder)) {
+                            folders.push(folder);
+                        }
                     }
                 }
-                files.push({ name: preset.title, data: preset });
+                if (slashes < depth) {
+                    files.push({ name: preset.title, data: preset });
+                }
             }
         }
         callback(folders, files);
@@ -268,10 +274,6 @@ function listPresetFolderAndFiles(path, isRefresh, callback) {
     else {
         proc();
     }
-}
-
-function searchPresets() {
-    // TODO
 }
 
 function describePreset(preset) {
@@ -294,7 +296,8 @@ function describePreset(preset) {
     if (index != -1) {
         name = name.substring(index + 1);
     }
-    return { name, description, buttons, 'image': preset.data.preview_image, className };
+    let searchable = description;
+    return { name, description, buttons, 'image': preset.data.preview_image, className, searchable };
 }
 
 function selectPreset(preset) {
@@ -308,7 +311,7 @@ function selectPreset(preset) {
     presetBrowser.update();
 }
 
-let presetBrowser = new GenPageBrowserClass('preset_list', listPresetFolderAndFiles, searchPresets, 'presetbrowser', 'Cards', describePreset, selectPreset);
+let presetBrowser = new GenPageBrowserClass('preset_list', listPresetFolderAndFiles, 'presetbrowser', 'Cards', describePreset, selectPreset);
 
 function importPresetsButton() {
     getRequiredElementById('import_presets_textarea').value = '';

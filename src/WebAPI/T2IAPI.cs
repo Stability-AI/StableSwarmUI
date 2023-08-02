@@ -182,8 +182,9 @@ public static class T2IAPI
 
     public static HashSet<string> ImageExtensions = new() { "png", "jpg", "html" };
 
+    // TODO: Configurable limit
     /// <summary>API route to get a list of available history images.</summary>
-    private static JObject GetListAPIInternal(Session session, string path, string root, HashSet<string> extensions, Func<string, bool> isAllowed, Func<string, string, JObject> valToObj)
+    private static JObject GetListAPIInternal(Session session, string path, string root, HashSet<string> extensions, Func<string, bool> isAllowed, Func<string, string, JObject> valToObj, int depth, int limit = 1000)
     {
         (path, string consoleError, string userError) = WebServer.CheckFilePath(root, path);
         if (consoleError is not null)
@@ -201,10 +202,43 @@ public static class T2IAPI
                     ["files"] = new JArray()
                 };
             }
+            List<string> dirs = new();
+            List<string> finalDirs = new();
+            void addDirs(string dir, int subDepth)
+            {
+                if (dir != "")
+                {
+                    (subDepth == 0 ? finalDirs : dirs).Add(dir);
+                }
+                if (subDepth > 0)
+                {
+                    foreach (string subDir in Directory.EnumerateDirectories(path + "/" + dir).Select(Path.GetFileName))
+                    {
+                        string subPath = dir == "" ? subDir : dir + "/" + subDir;
+                        if (isAllowed(subPath))
+                        {
+                            addDirs(subPath, subDepth - 1);
+                        }
+                    }
+                }
+            }
+            addDirs("", depth);
+            List<JObject> files = new();
+            foreach (string folder in dirs.Append(""))
+            {
+                string prefix = folder == "" ? "" : folder + "/";
+                List<string> subFiles = Directory.EnumerateFiles($"{path}/{prefix}").Take(limit).ToList();
+                files.AddRange(subFiles.Where(isAllowed).Where(f => extensions.Contains(f.AfterLast('.'))).Select(f => f.Replace('\\', '/')).Select(f => valToObj(f, prefix + f.AfterLast('/'))).ToList());
+                limit -= subFiles.Count;
+                if (limit <= 0)
+                {
+                    break;
+                }
+            }
             return new JObject()
             {
-                ["folders"] = JToken.FromObject(Directory.EnumerateDirectories(path).Select(Path.GetFileName).Where(isAllowed).ToList()),
-                ["files"] = JToken.FromObject(Directory.EnumerateFiles(path).Where(isAllowed).Where(f => extensions.Contains(f.AfterLast('.'))).Select(f => f.Replace('\\', '/')).Select(f => valToObj(f, f.AfterLast('/'))).ToList())
+                ["folders"] = JToken.FromObject(dirs.Union(finalDirs).ToList()),
+                ["files"] = JToken.FromObject(files)
             };
         }
         catch (Exception ex)
@@ -215,20 +249,21 @@ public static class T2IAPI
             }
             else
             {
+                Logs.Error($"Error reading file list: {ex}");
                 return new JObject() { ["error"] = "Error reading file list." };
             }
         }
     }
 
     /// <summary>API route to get a list of available history images.</summary>
-    public static async Task<JObject> ListImages(Session session, string path)
+    public static async Task<JObject> ListImages(Session session, string path, int depth)
     {
         string root = $"{Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.OutputPath)}/{session.User.UserID}";
         return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject()
         {
             ["src"] = name,
             ["metadata"] = ImageMetadataTracker.GetMetadataFor(file)
-        });
+        }, depth);
     }
 
     public static HashSet<string> ModelExtensions = new() { "safetensors", "ckpt" };
@@ -252,8 +287,9 @@ public static class T2IAPI
     }
 
     /// <summary>API route to get a list of available models.</summary>
-    public static async Task<JObject> ListModels(Session session, string path)
+    public static async Task<JObject> ListModels(Session session, string path, int depth)
     {
+        depth = Math.Clamp(depth, 1, 10);
         path = path.Replace('\\', '/');
         if (path != "")
         {
@@ -266,10 +302,30 @@ public static class T2IAPI
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         List<T2IModel> matches = Program.T2IModels.Models.Values.Where(m => m.Name.StartsWith(path) && m.Name.Length > path.Length && (allowed is null || allowed.IsMatch(m.Name))).ToList();
+        HashSet<string> folders = new();
+        List<JObject> files = new();
+        foreach (T2IModel possible in matches)
+        {
+            string part = possible.Name[path.Length..];
+            int slashes = part.CountCharacter('/');
+            if (slashes > 0)
+            {
+                string folderPart = part.BeforeLast('/');
+                string[] subfolders = folderPart.Split('/');
+                for (int i = 1; i <= depth && i <= subfolders.Length; i++)
+                {
+                    folders.Add(string.Join('/', subfolders[..i]));
+                }
+            }
+            if (slashes < depth)
+            {
+                files.Add(possible.ToNetObject());
+            }
+        }
         return new JObject()
         {
-            ["folders"] = JToken.FromObject(matches.Where(m => m.Name[path.Length..].Contains('/')).Select(m => m.Name[path.Length..].Before('/')).Distinct().ToList()),
-            ["files"] = JToken.FromObject(matches.Where(m => !m.Name[path.Length..].Contains('/')).Select(m => m.ToNetObject()).ToList())
+            ["folders"] = JToken.FromObject(folders.ToList()),
+            ["files"] = JToken.FromObject(files)
         };
     }
 

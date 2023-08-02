@@ -57,7 +57,14 @@ function formatMetadata(metadata) {
     if (!metadata) {
         return '';
     }
-    let data = JSON.parse(metadata).sui_image_params;
+    let data;
+    try {
+        data = JSON.parse(metadata).sui_image_params;
+    }
+    catch (e) {
+        console.log(`Error parsing metadata '${metadata}': ${e}`);
+        return `Broken metadata: ${escapeHtml(metadata)}`;
+    }
     let result = '';
     function appendObject(obj) {
         if (obj) {
@@ -264,9 +271,9 @@ function doGenerate(input_overrides = {}) {
     });
 }
 
-function listImageHistoryFolderAndFiles(path, isRefresh, callback) {
+function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
     let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
-    genericRequest('ListImages', {'path': path}, data => {
+    genericRequest('ListImages', {'path': path, 'depth': depth}, data => {
         data.files = data.files.sort((a, b) => a.src.toLowerCase().localeCompare(b.src.toLowerCase()));
         let folders = data.folders.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
         let mapped = data.files.map(f => {
@@ -277,16 +284,13 @@ function listImageHistoryFolderAndFiles(path, isRefresh, callback) {
     });
 }
 
-function searchImageHistory() {
-    // TODO
-}
-
 function describeImage(image) {
     let buttons = []; // TODO: Delete button, download, etc.
     let description = image.data.name + "\n" + formatMetadata(image.data.metadata);
     let name = image.data.name;
     let imageSrc = image.data.src.endsWith('.html') ? 'imgs/html.jpg' : image.data.src;
-    return { name, description, buttons, 'image': imageSrc, className: '' };
+    let searchable = description;
+    return { name, description, buttons, 'image': imageSrc, className: '', searchable };
 }
 
 function selectImageInHistory(image) {
@@ -298,7 +302,7 @@ function selectImageInHistory(image) {
     }
 }
 
-let imageHistoryBrowser = new GenPageBrowserClass('image_history', listImageHistoryFolderAndFiles, searchImageHistory, 'imagehistorybrowser', 'Thumbnails', describeImage, selectImageInHistory);
+let imageHistoryBrowser = new GenPageBrowserClass('image_history', listImageHistoryFolderAndFiles, 'imagehistorybrowser', 'Thumbnails', describeImage, selectImageInHistory);
 
 function getCurrentStatus() {
     if (versionIsWrong) {

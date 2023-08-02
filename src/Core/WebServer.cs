@@ -211,6 +211,10 @@ public class WebServer
             return (null, $"Refusing dangerous access, got path '{path}' which resolves to '{Directory.GetParent(path)}' which does not obey expected root '{root}'",
                 "Unacceptable path. If you are the server owner, check program console log.");
         }
+        if (path.EndsWith('/'))
+        {
+            path = path[..^1];
+        }
         return (path, null, null);
     }
 

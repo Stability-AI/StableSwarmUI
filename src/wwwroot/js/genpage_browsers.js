@@ -33,10 +33,9 @@ class BrowserTreePart {
  */
 class GenPageBrowserClass {
 
-    constructor(container, listFoldersAndFiles, searchFor, id, defaultFormat, describe, select) {
+    constructor(container, listFoldersAndFiles, id, defaultFormat, describe, select) {
         this.container = getRequiredElementById(container);
         this.listFoldersAndFiles = listFoldersAndFiles;
-        this.searchFor = searchFor;
         this.id = id;
         this.format = getCookie(`${id}_format`) || defaultFormat;
         this.describe = describe;
@@ -44,6 +43,8 @@ class GenPageBrowserClass {
         this.folder = '';
         this.navCaller = this.navigate.bind(this);
         this.tree = new BrowserTreePart('', {}, false, true);
+        this.depth = localStorage.getItem(`browser_${id}_depth`) || 1;
+        this.filter = localStorage.getItem(`browser_${id}_filter`) || '';
     }
 
     /**
@@ -73,7 +74,7 @@ class GenPageBrowserClass {
         let folder = this.folder;
         this.listFoldersAndFiles(folder, isRefresh, (folders, files) => {
             this.build(folder, folders, files);
-        });
+        }, this.depth);
     }
 
     /**
@@ -111,6 +112,20 @@ class GenPageBrowserClass {
      * Updates tree tracker for the given path.
      */
     refillTree(path, folders) {
+        let otherFolders = folders.filter(f => f.includes('/'));
+        if (otherFolders.length > 0) {
+            let baseFolders = folders.filter(f => !f.includes('/'));
+            this.refillTree(path, baseFolders);
+            while (otherFolders.length > 0) {
+                let folder = otherFolders[0];
+                let slash = folder.indexOf('/');
+                let base = folder.substring(0, slash + 1);
+                let same = otherFolders.filter(f => f.startsWith(base)).map(f => f.substring(base.length));
+                this.refillTree(path + base, same);
+                otherFolders = otherFolders.filter(f => !f.startsWith(base));
+            }
+            return;
+        }
         if (path == '') {
             let copy = Object.assign({}, this.tree.children);
             this.tree.children = {};
@@ -179,6 +194,9 @@ class GenPageBrowserClass {
         for (let file of files) {
             id++;
             let desc = this.describe(file);
+            if (this.filter && !desc.searchable.toLowerCase().includes(this.filter)) {
+                continue;
+            }
             let popoverId = `${this.id}-${id}`;
             if (desc.buttons.length > 0) {
                 let menuDiv = createDiv(`popover_${popoverId}`, 'sui-popover sui_popover_model');
@@ -230,8 +248,20 @@ class GenPageBrowserClass {
                 div.appendChild(menu);
             }
             div.title = stripHtmlToText(desc.description);
-            img.src = desc.image;
+            img.dataset.src = desc.image;
             container.appendChild(div);
+        }
+    }
+
+    /**
+     * Make any visible images within a container actually load now.
+     */
+    makeVisible(elem) {
+        for (let img of elem.getElementsByTagName('img')) {
+            if (img.dataset.src && img.getBoundingClientRect().top < window.innerHeight + 256) {
+                img.src = img.dataset.src;
+                delete img.dataset.src;
+            }
         }
     }
 
@@ -242,7 +272,10 @@ class GenPageBrowserClass {
         if (path.endsWith('/')) {
             path = path.substring(0, path.length - 1);
         }
-        this.refillTree(path, folders);
+        if (folders) {
+            this.refillTree(path, folders);
+        }
+        this.lastFiles = files;
         let folderScroll = this.folderTreeDiv ? this.folderTreeDiv.scrollTop : 0;
         this.container.innerHTML = '';
         this.folderTreeDiv = createDiv(`${this.id}-foldertree`, 'browser-folder-tree-container');
@@ -252,6 +285,7 @@ class GenPageBrowserClass {
         let contentDiv = createDiv(`${this.id}-content`, 'browser-content-container');
         let formatSelector = document.createElement('select');
         formatSelector.id = `${this.id}-format-selector`;
+        formatSelector.title = 'Display format';
         formatSelector.className = 'browser-format-selector';
         for (let format of ['Cards', 'Thumbnails', 'List']) {
             let option = document.createElement('option');
@@ -270,7 +304,24 @@ class GenPageBrowserClass {
         let buttons = createSpan(`${this.id}-button-container`, 'browser-header-buttons', `
             <button id="${this.id}_refresh_button" title="Refresh" class="refresh-button">&#128472;</button>
             <button id="${this.id}_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
+            Depth: <input id="${this.id}_depth_input" class="depth-number-input" type="number" min="1" max="10" value="${this.depth}" title="Depth of subfolders to show" autocomplete="false">
+            Filter: <input id="${this.id}_filter_input" type="text" value="${this.filter}" title="Text filter, only show items that contain this text." rows="1" autocomplete="false" placeholder="Filter...">
             `);
+        let inputArr = buttons.getElementsByTagName('input');
+        let depthInput = inputArr[0];
+        depthInput.addEventListener('change', () => {
+            this.depth = depthInput.value;
+            localStorage.setItem(`browser_${this.id}_depth`, this.depth);
+            this.update();
+        });
+        let filterInput = inputArr[1];
+        filterInput.addEventListener('input', () => {
+            this.filter = filterInput.value.toLowerCase();
+            localStorage.setItem(`browser_${this.id}_filter`, this.filter);
+            contentDiv.innerHTML = '';
+            this.buildContentList(contentDiv, files);
+            this.makeVisible(contentDiv);
+        });
         let buttonArr = buttons.getElementsByTagName('button');
         let refreshButton = buttonArr[0];
         let upButton = buttonArr[1];
@@ -281,6 +332,9 @@ class GenPageBrowserClass {
         fullContentDiv.appendChild(headerBar);
         this.buildTreeElements(this.folderTreeDiv, '', this.tree);
         this.buildContentList(contentDiv, files);
+        contentDiv.addEventListener('scroll', () => {
+            this.makeVisible(contentDiv);
+        });
         this.container.appendChild(this.folderTreeDiv);
         this.container.appendChild(folderTreeSplitter);
         fullContentDiv.appendChild(contentDiv);
@@ -322,5 +376,6 @@ class GenPageBrowserClass {
         document.addEventListener('mouseup', this.lastListenUp);
         layoutResets.push(this.lastReset);
         this.folderTreeDiv.scrollTop = folderScroll;
+        this.makeVisible(contentDiv);
     }
 }

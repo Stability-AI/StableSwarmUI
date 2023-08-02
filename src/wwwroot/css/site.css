@@ -366,3 +366,6 @@ textarea, input, select {
     padding-left: 1rem;
     padding-right: 1rem;
 }
+.depth-number-input {
+    width: 3rem;
+}

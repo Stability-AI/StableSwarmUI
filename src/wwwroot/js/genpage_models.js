@@ -101,15 +101,11 @@ function sortModelName(a, b) {
     return aName.localeCompare(bName);
 }
 
-function listModelFolderAndFiles(path, isRefresh, callback) {
+function listModelFolderAndFiles(path, isRefresh, callback, depth) {
     let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
-    genericRequest('ListModels', {'path': path}, data => {
+    genericRequest('ListModels', {'path': path, 'depth': depth}, data => {
         callback(data.folders.sort((a, b) => a.localeCompare(b)), data.files.sort(sortModelName).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; }));
     });
-}
-
-function modelsSearch() {
-    // TODO
 }
 
 function describeModel(model) {
@@ -133,7 +129,8 @@ function describeModel(model) {
         description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
     }
     let className = getRequiredElementById('current_model').value == model.data.name ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
-    return { name, description, buttons, 'image': model.data.preview_image, className };
+    let searchable = `${name}, ${description}, ${model.data.license}, ${model.data.architecture}, ${model.data.usage_hint}, ${model.data.trigger_phrase}, ${model.data.merged_from}, ${model.data.tags}`;
+    return { name, description, buttons, 'image': model.data.preview_image, className, searchable };
 }
 
 function selectModel(model) {
@@ -141,7 +138,7 @@ function selectModel(model) {
     modelBrowser.update();
 }
 
-let modelBrowser = new GenPageBrowserClass('model_list', listModelFolderAndFiles, modelsSearch, 'modelbrowser', 'Cards', describeModel, selectModel);
+let modelBrowser = new GenPageBrowserClass('model_list', listModelFolderAndFiles, 'modelbrowser', 'Cards', describeModel, selectModel);
 
 function loadModelList(path) {
     modelBrowser.navigate(path);

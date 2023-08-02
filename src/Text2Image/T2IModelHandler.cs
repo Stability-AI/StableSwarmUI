@@ -229,6 +229,7 @@ public class T2IModelHandler
             File.Delete(model.RawFilePath + ".tmp2");
         }
     }
+
     public string GetAutoFormatImage(T2IModel model)
     {
         string prefix = Program.ServerSettings.Paths.SDModelFullPath + "/" + model.Name.BeforeLast('.');

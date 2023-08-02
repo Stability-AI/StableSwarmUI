@@ -79,14 +79,26 @@ public static class ImageMetadataTracker
             return null;
         }
         long fileTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
-        byte[] data = File.ReadAllBytes(file);
-        string fileData = new Image(data).GetMetadata();
-        lock (metadata.Lock)
+        try
         {
-            ImageMetadataEntry entry = new() { FileName = filename, Metadata = fileData, LastVerified = timeNow, FileTime = fileTime };
-            metadata.Metadata.Upsert(entry);
+            byte[] data = File.ReadAllBytes(file);
+            if (data.Length == 0)
+            {
+                return null;
+            }
+            string fileData = new Image(data).GetMetadata();
+            lock (metadata.Lock)
+            {
+                ImageMetadataEntry entry = new() { FileName = filename, Metadata = fileData, LastVerified = timeNow, FileTime = fileTime };
+                metadata.Metadata.Upsert(entry);
+            }
+            return fileData;
         }
-        return fileData;
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading image metadata for file '{file}': {ex}");
+            return null;
+        }
     }
 
     /// <summary>Shuts down and stores metadata helper files.</summary>
