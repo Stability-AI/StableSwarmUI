@@ -187,7 +187,11 @@ public class WebServer
     /// <summary>Test the validity of a user-given file path. Returns (path, consoleError, userError).</summary>
     public (string, string, string) CheckOutputFilePath(string path, string userId)
     {
-        string root = $"{Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.OutputPath)}/{userId}";
+        string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.OutputPath);
+        if (Program.ServerSettings.AppendUserNameToOutputPath)
+        {
+            root = $"{root}/{userId}";
+        }
         return CheckFilePath(root, path);
     }
 

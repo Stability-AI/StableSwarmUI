@@ -30,6 +30,9 @@ public class Settings : AutoConfiguration
     [ConfigComment("How to launch the UI. If 'none', just quietly launch. If 'web', launch your web-browser to the page. If 'webinstall', launch web-browser to the install page. If 'electron', launch the UI in an electron window.")]
     public string LaunchMode = "webinstall";
 
+    [ConfigComment("When true, output paths always have the username as a folder. When false, this will be skipped. Keep this on in multi-user environments.")]
+    public bool AppendUserNameToOutputPath = true;
+
     /// <summary>Settings related to backends.</summary>
     public class BackendData : AutoConfiguration
     {

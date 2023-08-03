@@ -258,7 +258,7 @@ public static class T2IAPI
     /// <summary>API route to get a list of available history images.</summary>
     public static async Task<JObject> ListImages(Session session, string path, int depth)
     {
-        string root = $"{Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.OutputPath)}/{session.User.UserID}";
+        string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, session.User.OutputDirectory);
         return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject()
         {
             ["src"] = name,
