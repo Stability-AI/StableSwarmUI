@@ -157,6 +157,7 @@ public class User
                 "model" => user_input.Get(T2IParamTypes.Model)?.Name ?? "unknown",
                 "batch_id" => $"{batchIndex}",
                 "user_name" => UserID,
+                "number" => "[number]",
                 string other => user_input.TryGetRaw(T2IParamTypes.GetType(other, user_input), out object val) ? val.ToString() : null
             };
             if (data is null)

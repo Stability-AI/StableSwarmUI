@@ -116,7 +116,7 @@ public class Session : IEquatable<Session>
             return ("data:image/" + (User.Settings.FileFormat.ImageFormat == "png" ? "png" : "jpeg") + ";base64," + image.AsBase64, null);
         }
         string rawImagePath = User.BuildImageOutputPath(user_input, batchIndex);
-        string imagePath = rawImagePath;
+        string imagePath = rawImagePath.Replace("[number]", "1");
         string extension = (User.Settings.FileFormat.ImageFormat == "png" ? "png" : "jpg");
         string fullPath = $"{User.OutputDirectory}/{imagePath}.{extension}";
         lock (User.UserLock)
@@ -127,7 +127,7 @@ public class Session : IEquatable<Session>
                 while (File.Exists(fullPath))
                 {
                     num++;
-                    imagePath = $"{rawImagePath}-{num}";
+                    imagePath = rawImagePath.Contains("[number]") ? rawImagePath.Replace("[number]", $"{num}") : $"{rawImagePath}-{num}";
                     fullPath = $"{User.OutputDirectory}/{imagePath}.{extension}";
                 }
                 Directory.CreateDirectory(Directory.GetParent(fullPath).FullName);
