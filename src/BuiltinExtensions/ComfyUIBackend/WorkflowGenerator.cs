@@ -1,6 +1,7 @@
 ﻿
 using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
+using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using System.IO;
@@ -41,6 +42,9 @@ public class WorkflowGenerator
                     ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).ToString()
                 };
             }, "4");
+        }, -15);
+        AddStep(g =>
+        {
             if (g.UserInput.TryGet(T2IParamTypes.VAE, out T2IModel vae))
             {
                 g.CreateNode("VAELoader", (_, n) =>
@@ -52,7 +56,31 @@ public class WorkflowGenerator
                 }, "3");
                 g.FinalVae = new JArray() { "3", 0 };
             }
-        }, -10);
+        }, -13);
+        AddStep(g =>
+        {
+            if (g.UserInput.TryGet(T2IParamTypes.Loras, out List<string> loras))
+            {
+                T2IModelHandler loraHandler = Program.T2IModelSets["LoRA"];
+                foreach (string loraName in loras)
+                {
+                    T2IModel lora = loraHandler.Models[loraName];
+                    int newId = g.CreateNode("LoraLoader", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["model"] = g.FinalModel,
+                            ["clip"] = g.FinalClip,
+                            ["lora_name"] = lora.ToString(),
+                            ["strength_model"] = 1.0, // TODO
+                            ["strength_clip"] = 1.0 // TODO
+                        };
+                    });
+                    g.FinalModel = new JArray() { $"{newId}", 0 };
+                    g.FinalClip = new JArray() { $"{newId}", 1 };
+                }
+            }
+        }, -11);
         #endregion
         #region Base Image
         AddStep(g =>

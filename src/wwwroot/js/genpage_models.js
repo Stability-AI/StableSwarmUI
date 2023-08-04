@@ -157,7 +157,7 @@ class ModelBrowserWrapper {
         else {
             description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
         }
-        let selector = this.subType == 'Stable-Diffusion' ? 'current_model' : 'input_vae';
+        let selector = this.subType == 'Stable-Diffusion' ? 'current_model' : (this.subType == 'LoRA' ? 'input_loras' : 'input_vae');
         let isSelected;
         let selectorElem = document.getElementById(selector);
         if (!selectorElem) {
@@ -165,6 +165,9 @@ class ModelBrowserWrapper {
         }
         else if (this.subType == 'VAE' && !document.getElementById('input_vae_toggle').checked) {
             isSelected = model.data.name == 'None';
+        }
+        else if (this.subType == 'LoRA') {
+            isSelected = [...selectorElem.selectedOptions].map(option => option.value).filter(value => value == model.data.name).length > 0;
         }
         else {
             isSelected = selectorElem.value == model.data.name;
@@ -182,13 +185,17 @@ class ModelBrowserWrapper {
 
 let sdModelBrowser = new ModelBrowserWrapper('Stable-Diffusion', 'model_list', 'modelbrowser', (model) => { directSetModel(model.data); });
 let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => { directSetVae(vae.data) });
-let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => {});
+let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data) });
 let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => {});
 
 function initialModelListLoad() {
     for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser]) {
         browser.browser.navigate('');
     }
+}
+
+function toggleSelectLora(lora) {
+    [...getRequiredElementById('input_loras')].filter(option => option.value == lora.name).forEach(option => option.selected = !option.selected);
 }
 
 function directSetVae(vae) {

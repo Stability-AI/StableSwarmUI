@@ -195,6 +195,7 @@ public class T2IParamTypes
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale;
     public static T2IRegisteredParam<Image> InitImage;
     public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE;
+    public static T2IRegisteredParam<List<string>> Loras;
 
     public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners;
 
@@ -277,6 +278,8 @@ public class T2IParamTypes
         VAE = Register<T2IModel>(new("VAE", "The VAE (Variational Auto-Encoder) controls the translation between images and latent space.\nIf your images look faded out, or glitched, you may have the wrong VAE.\nAll models have a VAE baked in by default, this option lets you swap to a different one if you want to.",
             "", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE"
             ));
+        Loras = Register<List<string>>(new("LoRAs", "LoRAs (Low-Rank-Adaptation Models) are a way to customize the content of a model without totally replacing it.\nYou can enable one or several LoRAs over top of one model.",
+            "", IsAdvanced: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelsFor(session).Select(m => m.Name).Order().ToList()));
         BackendType = Register<string>(new("[Internal] Backend Type", "Which StableSwarmUI backend type should be used for this request.",
             "Any", GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true
             ));
@@ -361,6 +364,22 @@ public class T2IParamTypes
                     {
                         throw new InvalidDataException($"Invalid value for param {type.Name} - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
                     }
+                }
+                return val;
+            case T2IParamDataType.LIST:
+                string[] vals = val.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (type.GetValues is not null && type.ValidateValues)
+                {
+                    List<string> possible = type.GetValues(session);
+                    for (int i = 0; i < vals.Length; i++)
+                    {
+                        vals[i] = GetBestInList(vals[i], possible);
+                        if (vals[i] is null)
+                        {
+                            throw new InvalidDataException($"Invalid value for param {type.Name} - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
+                        }
+                    }
+                    return vals.JoinString(",");
                 }
                 return val;
             case T2IParamDataType.IMAGE:

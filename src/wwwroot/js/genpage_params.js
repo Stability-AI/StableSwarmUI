@@ -355,6 +355,9 @@ function getGenInput(input_overrides = {}) {
                 input[type.id] = elem.dataset.filedata;
             }
         }
+        else if (type.type == "list") {
+            input[type.id] = [...elem.selectedOptions].map(option => option.value).join(',');
+        }
         else {
             input[type.id] = elem.value;
         }

@@ -611,7 +611,6 @@ function genpageLoad() {
         initialModelListLoad();
         loadBackendTypesMenu();
         genericRequest('ListT2IParams', {}, data => {
-            console.log(data.models)
             updateAllModels(data.models);
             rawGenParamTypesFromServer = data.list.sort(paramSorter);
             gen_param_types = rawGenParamTypesFromServer;
