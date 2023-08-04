@@ -340,6 +340,9 @@ body {
     border-radius: 1rem;
     border-right: none;
 }
+.lora-weight-input {
+    width: 3rem;
+}
 .preset-remove-button {
     display: inline-block;
     color: var(--text);

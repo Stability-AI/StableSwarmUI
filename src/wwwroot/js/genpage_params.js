@@ -355,8 +355,15 @@ function getGenInput(input_overrides = {}) {
                 input[type.id] = elem.dataset.filedata;
             }
         }
+        else if (type.id == "loraweights") {
+            // Special-cased
+        }
         else if (type.type == "list") {
-            input[type.id] = [...elem.selectedOptions].map(option => option.value).join(',');
+            let valSet = [...elem.selectedOptions].map(option => option.value);
+            input[type.id] = valSet.join(',');
+            if (type.id == 'loras') {
+                input['loraweights'] = valSet.map(lora => loraWeightPref[lora] || 1).join(',');
+            }
         }
         else {
             input[type.id] = elem.value;

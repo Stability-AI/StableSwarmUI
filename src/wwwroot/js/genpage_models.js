@@ -3,6 +3,7 @@ let models = {};
 let cur_model = null;
 let curModelWidth = 0, curModelHeight = 0;
 let curModelMenuModel = null;
+let loraWeightPref = {};
 
 function editModel(model) {
     if (model == null) {
@@ -205,6 +206,16 @@ function updateLoraList() {
     for (let lora of currentLoras) {
         let div = createDiv(null, 'preset-in-list');
         div.innerText = lora;
+        let weightInput = document.createElement('input');
+        weightInput.className = 'lora-weight-input';
+        weightInput.type = 'number';
+        weightInput.min = -10;
+        weightInput.max = 10;
+        weightInput.step = 0.1;
+        weightInput.value = loraWeightPref[lora] || 1;
+        weightInput.addEventListener('change', () => {
+            loraWeightPref[lora] = weightInput.value;
+        });
         let removeButton = createDiv(null, 'preset-remove-button');
         removeButton.innerHTML = '&times;';
         removeButton.title = "Remove this LoRA";
@@ -213,6 +224,7 @@ function updateLoraList() {
             updateLoraList();
             sdLoraBrowser.browser.rerender();
         });
+        div.appendChild(weightInput);
         div.appendChild(removeButton);
         view.appendChild(div);
     }

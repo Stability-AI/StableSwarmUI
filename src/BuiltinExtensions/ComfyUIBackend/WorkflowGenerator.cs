@@ -61,10 +61,12 @@ public class WorkflowGenerator
         {
             if (g.UserInput.TryGet(T2IParamTypes.Loras, out List<string> loras))
             {
+                List<string> weights = g.UserInput.Get(T2IParamTypes.LoraWeights);
                 T2IModelHandler loraHandler = Program.T2IModelSets["LoRA"];
-                foreach (string loraName in loras)
+                for (int i = 0; i < loras.Count; i++)
                 {
-                    T2IModel lora = loraHandler.Models[loraName];
+                    T2IModel lora = loraHandler.Models[loras[i]];
+                    float weight = weights == null ? 1 : float.Parse(weights[i]);
                     int newId = g.CreateNode("LoraLoader", (_, n) =>
                     {
                         n["inputs"] = new JObject()
@@ -72,8 +74,8 @@ public class WorkflowGenerator
                             ["model"] = g.FinalModel,
                             ["clip"] = g.FinalClip,
                             ["lora_name"] = lora.ToString(),
-                            ["strength_model"] = 1.0, // TODO
-                            ["strength_clip"] = 1.0 // TODO
+                            ["strength_model"] = weight,
+                            ["strength_clip"] = weight
                         };
                     });
                     g.FinalModel = new JArray() { $"{newId}", 0 };
