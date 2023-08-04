@@ -198,6 +198,7 @@ function comfyBuildParams(callback) {
                     }
                     if (['seed', 'noise_seed'].includes(inputId)) {
                         type = 'integer';
+                        number_view_type = 'seed';
                         asSeed = true;
                     }
                     else if (['width', 'height'].includes(inputId)) {
