@@ -27,7 +27,7 @@ public class ComfyUIBackendExtension : Extension
     public override void OnPreInit()
     {
         Folder = FilePath;
-        Refresh();
+        LoadWorkflowFiles();
         Program.ModelRefreshEvent += Refresh;
         ScriptFiles.Add("Assets/comfy_workflow_editor_helper.js");
         StyleSheetFiles.Add("Assets/comfy_workflow_editor.css");
@@ -81,7 +81,11 @@ public class ComfyUIBackendExtension : Extension
         return null;
     }
 
-    public void Refresh()
+    public static IEnumerable<ComfyUIAPIAbstractBackend> RunningComfyBackends => Program.Backends.T2IBackends.Values
+            .Select(b => b.Backend as ComfyUIAPIAbstractBackend)
+            .Where(b => b is not null && b.Status == BackendStatus.RUNNING);
+
+    public void LoadWorkflowFiles()
     {
         Workflows = new();
         foreach (string workflow in Directory.EnumerateFiles($"{Folder}/Workflows", "*.json", new EnumerationOptions() { RecurseSubdirectories = true }).Order())
@@ -93,6 +97,18 @@ public class ComfyUIBackendExtension : Extension
             }
         }
     }
+
+    public void Refresh()
+    {
+        LoadWorkflowFiles();
+        List<Task> tasks = new();
+        foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends.ToArray())
+        {
+            tasks.Add(backend.LoadValueSet());
+        }
+        Task.WaitAll(tasks.ToArray(), Program.GlobalProgramCancel);
+    }
+
 
     public static void AssignValuesFromRaw(JObject rawObjectInfo)
     {
@@ -149,10 +165,7 @@ public class ComfyUIBackendExtension : Extension
     /// <summary>Web route for viewing output images. This just works as a simple proxy.</summary>
     public async Task ComfyBackendDirectHandler(HttpContext context)
     {
-        ComfyUIAPIAbstractBackend backend = Program.Backends.T2IBackends.Values
-            .Select(b => b.Backend as ComfyUIAPIAbstractBackend)
-            .Where(b => b is not null && b.Status == BackendStatus.RUNNING)
-            .FirstOrDefault(b => b is not null);
+        ComfyUIAPIAbstractBackend backend = RunningComfyBackends.FirstOrDefault();
         if (backend is null)
         {
             context.Response.ContentType = "text/html";

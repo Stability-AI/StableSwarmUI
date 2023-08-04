@@ -1,6 +1,8 @@
 
 let postParamBuildSteps = [];
 
+let refreshParamsExtra = [];
+
 function getHtmlForParam(param, prefix, textRows = 2) {
     try {
         // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
@@ -360,7 +362,16 @@ function refreshParameterValues(callback = null) {
             let origParam = gen_param_types.find(p => p.id == param.id);
             if (origParam) {
                 origParam.values = param.values;
-                if (origParam.type == "dropdown") {
+            }
+        }
+        let promises = [Promise.resolve(true)];
+        for (let extra of refreshParamsExtra) {
+            let promise = extra();
+            promises.push(Promise.resolve(promise));
+        }
+        Promise.all(promises).then(() => {
+            for (let param of gen_param_types) {
+                if (param.type == "dropdown") {
                     let dropdown = getRequiredElementById(`input_${param.id}`);
                     let val = dropdown.value;
                     let html = '';
@@ -371,11 +382,11 @@ function refreshParameterValues(callback = null) {
                     dropdown.innerHTML = html;
                 }
             }
-        }
-        if (callback) {
-            callback();
-        }
-        hideUnsupportableParams();
+            if (callback) {
+                callback();
+            }
+            hideUnsupportableParams();
+        });
     });
 }
 

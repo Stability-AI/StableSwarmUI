@@ -24,6 +24,17 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public JObject RawObjectInfo;
 
+    public async Task LoadValueSet()
+    {
+        JObject result = await SendGet<JObject>("object_info");
+        if (result.TryGetValue("error", out JToken errorToken))
+        {
+            throw new Exception($"Remote error: {errorToken}");
+        }
+        RawObjectInfo = result;
+        ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
+    }
+
     public async Task InitInternal(bool ignoreWebError)
     {
         if (string.IsNullOrWhiteSpace(Address))
@@ -33,13 +44,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         try
         {
-            JObject result = await SendGet<JObject>("object_info");
-            if (result.TryGetValue("error", out JToken errorToken))
-            {
-                throw new Exception($"Remote error: {errorToken}");
-            }
-            RawObjectInfo = result;
-            ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
+            await LoadValueSet();
             Status = BackendStatus.RUNNING;
         }
         catch (Exception)

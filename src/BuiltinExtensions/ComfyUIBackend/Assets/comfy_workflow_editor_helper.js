@@ -46,6 +46,26 @@ function comfyOnLoadCallback() {
 }
 
 /**
+ * Callback when params refresh, to re-assign object_info.
+ */
+function comfyReloadObjectInfo() {
+    let resolve = undefined;
+    let promise = new Promise(r => { resolve = r });
+    getJsonDirect('/ComfyBackendDirect/object_info', (_, data) => {
+        comfyObjectData = data;
+        for (let param of gen_param_types) {
+            if (param.revalueGetter) {
+                param.values = param.revalueGetter();
+            }
+        }
+        resolve();
+    });
+    return promise;
+}
+
+refreshParamsExtra.push(comfyReloadObjectInfo);
+
+/**
  * Gets the current Comfy API prompt and UI Workflow file (async) then calls a callback with the (workflow, prompt).
  */
 function comfyGetPromptAndWorkflow(callback) {
@@ -67,7 +87,7 @@ function comfyBuildParams(callback) {
         let params = {};
         let inputPrefix = 'comfyrawworkflowinput';
         let idsUsed = [];
-        function addSimpleParam(name, defVal, type, groupName, values, number_view_type, min, max, step, inputIdDirect, groupId, priority, visible = true, toggles = true) {
+        function addSimpleParam(name, defVal, type, groupName, values, number_view_type, min, max, step, inputIdDirect, groupId, priority, visible = true, toggles = true, revalueGetter = null) {
             let inputId = inputIdDirect;
             let counter = 0;
             while (inputId in params) {
@@ -90,6 +110,7 @@ function comfyBuildParams(callback) {
                 advanced: false,
                 feature_flag: null,
                 do_not_save: false,
+                revalueGetter: revalueGetter,
                 group: {
                     name: groupName,
                     id: groupId,
@@ -189,6 +210,7 @@ function comfyBuildParams(callback) {
                         paramDataRaw = possible.required[inputId];
                     }
                 }
+                let revalueGetter = null;
                 let type, values = null, min = -9999999999, max = 9999999999, number_view_type = 'big', step = 1;
                 if (typeof val == 'number') {
                     let asSeed = false;
@@ -267,11 +289,13 @@ function comfyBuildParams(callback) {
                         type = 'dropdown';
                         values = ['enable', 'disable'];
                     }
-                    // TODO: Can we interrogate ComfyUI to ask what values are valid? For eg LoRA inputs, sampler, etc.
                     else {
                         if (paramDataRaw && paramDataRaw.length == 1 && paramDataRaw[0].length > 1) {
                             type = 'dropdown';
                             values = paramDataRaw[0];
+                            revalueGetter = () => {
+                                return comfyObjectData[node.class_type].input.required[inputId][0];
+                            };
                         }
                         else {
                             type = 'text';
@@ -285,7 +309,7 @@ function comfyBuildParams(callback) {
                 }
                 if (!idsUsed.includes(inputIdDirect)) {
                     idsUsed.push(inputIdDirect);
-                    addSimpleParam(inputLabel, val, type, groupLabel, values, number_view_type, min, max, step, inputIdDirect, groupId, priority);
+                    addSimpleParam(inputLabel, val, type, groupLabel, values, number_view_type, min, max, step, inputIdDirect, groupId, priority, true, true, revalueGetter);
                 }
                 return inputIdDirect;
             }
@@ -375,7 +399,7 @@ function comfyBuildParams(callback) {
                 }
             }
         }
-        addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false);
+        addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false, null);
         callback(params, prompt, defaultParamsRetain, defaultParamValue);
     });
 }
