@@ -531,6 +531,7 @@ function pageSizer() {
         midDrag = false;
         midForceToBottom = !midForceToBottom;
         localStorage.setItem('barspot_midForceToBottom', midForceToBottom);
+        pageBarMid = Math.max(pageBarMid, 400);
         setPageBars();
         e.preventDefault();
     }, true);
@@ -547,6 +548,7 @@ function pageSizer() {
         }
         if (midDrag) {
             let refY = Math.min(Math.max(e.pageY, 85), window.innerHeight - 85);
+            midForceToBottom = refY == window.innerHeight - 85;
             pageBarMid = window.innerHeight - refY + topBar.getBoundingClientRect().top + 15;
             setPageBars();
         }
