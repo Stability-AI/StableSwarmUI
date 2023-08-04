@@ -49,7 +49,7 @@ function save_edit_model() {
     }
     function complete() {
         genericRequest('EditModelMetadata', data, data => {
-            modelBrowser.update();
+            sdModelBrowser.browser.update();
         });
         $('#edit_model_modal').modal('hide');
     }
@@ -101,47 +101,63 @@ function sortModelName(a, b) {
     return aName.localeCompare(bName);
 }
 
-function listModelFolderAndFiles(path, isRefresh, callback, depth) {
-    let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
-    genericRequest('ListModels', {'path': path, 'depth': depth}, data => {
-        callback(data.folders.sort((a, b) => a.localeCompare(b)), data.files.sort(sortModelName).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; }));
-    });
-}
+class ModelBrowserWrapper {
+    constructor(subType, container, id, selectOne) {
+        this.subType = subType;
+        this.selectOne = selectOne;
+        this.browser = new GenPageBrowserClass(container, this.listModelFolderAndFiles.bind(this), id, 'Cards', this.describeModel.bind(this), this.selectModel.bind(this));
+    }
 
-function describeModel(model) {
-    let description = '';
-    let buttonLoad = () => {
-        directSetModel(model.data);
-        makeWSRequestT2I('SelectModelWS', {'model': model.data.name}, data => {
-            loadModelList(lastModelDir);
+    listModelFolderAndFiles(path, isRefresh, callback, depth) {
+        let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
+        genericRequest('ListModels', {'path': path, 'depth': depth, 'subtype': this.subType}, data => {
+            callback(data.folders.sort((a, b) => a.localeCompare(b)), data.files.sort(sortModelName).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; }));
         });
     }
-    let buttons = [
-        { label: 'Load Now', onclick: buttonLoad }
-    ];
-    let name = cleanModelName(model.data.name);
-    if (model.data.is_safetensors) {
-        let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
-        description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}${getLine("Description", model.data.description)}`;
-        buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data) });
+
+    describeModel(model) {
+        let description = '';
+        let buttons = [];
+        if (this.subType == 'Stable-Diffusion') {
+            let buttonLoad = () => {
+                directSetModel(model.data);
+                makeWSRequestT2I('SelectModelWS', {'model': model.data.name}, data => {
+                    this.browser.navigate(lastModelDir);
+                });
+            }
+            buttons = [
+                { label: 'Load Now', onclick: buttonLoad }
+            ];
+        }
+        let name = cleanModelName(model.data.name);
+        if (model.data.is_safetensors) {
+            let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
+            description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}${getLine("Description", model.data.description)}`;
+            buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data) });
+        }
+        else {
+            description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
+        }
+        let className = getRequiredElementById('current_model').value == model.data.name ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
+        let searchable = `${name}, ${description}, ${model.data.license}, ${model.data.architecture}, ${model.data.usage_hint}, ${model.data.trigger_phrase}, ${model.data.merged_from}, ${model.data.tags}`;
+        return { name, description, buttons, 'image': model.data.preview_image, className, searchable };
     }
-    else {
-        description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
+
+    selectModel(model) {
+        this.selectOne(model);
+        this.browser.update();
     }
-    let className = getRequiredElementById('current_model').value == model.data.name ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
-    let searchable = `${name}, ${description}, ${model.data.license}, ${model.data.architecture}, ${model.data.usage_hint}, ${model.data.trigger_phrase}, ${model.data.merged_from}, ${model.data.tags}`;
-    return { name, description, buttons, 'image': model.data.preview_image, className, searchable };
 }
 
-function selectModel(model) {
-    directSetModel(model.data);
-    modelBrowser.update();
-}
+let sdModelBrowser = new ModelBrowserWrapper('Stable-Diffusion', 'model_list', 'modelbrowser', (model) => { directSetModel(model.data); });
+let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => {});
+let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => {});
+let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => {});
 
-let modelBrowser = new GenPageBrowserClass('model_list', listModelFolderAndFiles, 'modelbrowser', 'Cards', describeModel, selectModel);
-
-function loadModelList(path) {
-    modelBrowser.navigate(path);
+function initialModelListLoad() {
+    for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser]) {
+        browser.browser.navigate('');
+    }
 }
 
 function directSetModel(model) {

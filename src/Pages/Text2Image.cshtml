@@ -73,6 +73,15 @@
                     <a class="nav-link" data-bs-toggle="tab" href="#Models-Tab" aria-selected="false" tabindex="-1" role="tab">Models</a>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <a class="nav-link" data-bs-toggle="tab" href="#Vaes-Tab" aria-selected="false" tabindex="-1" role="tab">VAEs</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" data-bs-toggle="tab" href="#Loras-Tab" aria-selected="false" tabindex="-1" role="tab">LoRAs</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" data-bs-toggle="tab" href="#Embeddings-Tab" aria-selected="false" tabindex="-1" role="tab">Embeddings</a>
+                </li>
+                <li class="nav-item" role="presentation">
                     <a class="nav-link" data-bs-toggle="tab" href="#Tools-Tab" aria-selected="false" tabindex="-1" role="tab">Tools</a>
                 </li>
             </ul>
@@ -148,29 +157,15 @@
                 </div>
                 <div class="tab-pane genpage-bottom-tab" id="Models-Tab" role="tabpanel">
                     <div class="browser_container" id="model_list"></div>
-                    @WebUtil.ModalHeader("edit_model_modal", """Edit Model Metadata: <input type="text" class="modal_text_extra" id="edit_model_name" placeholder="Model Name" />""")
-                        <div class="modal-body">
-                            <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra" placeholder="Model Author" /></div>
-                            <div>Architecture: <input type="text" id="edit_model_type" class="modal_text_extra" placeholder="Model Type" /></div>
-                            <div>Standard Resolution: <input type="text" id="edit_model_resolution" class="modal_text_extra" placeholder="Resolution, eg 1024x1024" /></div>
-                            <div>License: <input type="text" id="edit_model_license" class="modal_text_extra" placeholder="Model License" /></div>
-                            <div>Date: <input type="text" id="edit_model_date" class="modal_text_extra" placeholder="Model Date" /></div>
-                            <div>Merged From: <input type="text" id="edit_model_merged_from" class="modal_text_extra" placeholder="Model Merged From" /></div>
-                            <div>Tags: <input type="text" id="edit_model_tags" class="modal_text_extra" placeholder="Model Tags" /></div>
-                            <div>Usage Hint: <input type="text" id="edit_model_usage_hint" class="modal_text_extra" placeholder="Model Usage Hint" /></div>
-                            <div>Trigger Phrase: <input type="text" id="edit_model_trigger_phrase" class="modal_text_extra" placeholder="Model Trigger Phrase" /></div>
-                            Description: <textarea class="auto-text" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
-                            <span class="form-check form-switch display-inline-block">
-                                <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_model_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('edit_model_image')"> Use Image
-                            </span>
-                            <div id="edit_model_image" class="new_preset_image"></div>
-                        </div>
-                        <div class="modal-footer">
-                            <span id="edit_model_modal_error" class="edit_model_modal_error"></span>
-                            <button type="button" class="btn btn-primary basic-button" onclick="javascript:save_edit_model()">Save</button>
-                            <button type="button" class="btn btn-secondary" onclick="javascript:close_edit_model()">Cancel</button>
-                        </div>
-                    @WebUtil.ModalFooter()
+                </div>
+                <div class="tab-pane genpage-bottom-tab" id="Vaes-Tab" role="tabpanel">
+                    <div class="browser_container" id="vae_list"></div>
+                </div>
+                <div class="tab-pane genpage-bottom-tab" id="Loras-Tab" role="tabpanel">
+                    <div class="browser_container" id="lora_list"></div>
+                </div>
+                <div class="tab-pane genpage-bottom-tab" id="Embeddings-Tab" role="tabpanel">
+                    <div class="browser_container" id="embedding_list"></div>
                 </div>
                 <div class="tab-pane genpage-bottom-tab" id="Tools-Tab" role="tabpanel">
                     <select class="tool-selector" id="tool_selector">
@@ -181,6 +176,29 @@
                     <div style="height: 10rem"></div> <!-- Spacer -->
                 </div>
             </div>
+            @WebUtil.ModalHeader("edit_model_modal", """Edit Model Metadata: <input type="text" class="modal_text_extra" id="edit_model_name" placeholder="Model Name" />""")
+                <div class="modal-body">
+                    <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra" placeholder="Model Author" /></div>
+                    <div>Architecture: <input type="text" id="edit_model_type" class="modal_text_extra" placeholder="Model Type" /></div>
+                    <div>Standard Resolution: <input type="text" id="edit_model_resolution" class="modal_text_extra" placeholder="Resolution, eg 1024x1024" /></div>
+                    <div>License: <input type="text" id="edit_model_license" class="modal_text_extra" placeholder="Model License" /></div>
+                    <div>Date: <input type="text" id="edit_model_date" class="modal_text_extra" placeholder="Model Date" /></div>
+                    <div>Merged From: <input type="text" id="edit_model_merged_from" class="modal_text_extra" placeholder="Model Merged From" /></div>
+                    <div>Tags: <input type="text" id="edit_model_tags" class="modal_text_extra" placeholder="Model Tags" /></div>
+                    <div>Usage Hint: <input type="text" id="edit_model_usage_hint" class="modal_text_extra" placeholder="Model Usage Hint" /></div>
+                    <div>Trigger Phrase: <input type="text" id="edit_model_trigger_phrase" class="modal_text_extra" placeholder="Model Trigger Phrase" /></div>
+                    Description: <textarea class="auto-text" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
+                    <span class="form-check form-switch display-inline-block">
+                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_model_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('edit_model_image')"> Use Image
+                    </span>
+                    <div id="edit_model_image" class="new_preset_image"></div>
+                </div>
+                <div class="modal-footer">
+                    <span id="edit_model_modal_error" class="edit_model_modal_error"></span>
+                    <button type="button" class="btn btn-primary basic-button" onclick="javascript:save_edit_model()">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="javascript:close_edit_model()">Cancel</button>
+                </div>
+            @WebUtil.ModalFooter()
         </div>
     </div>
     @WebServer.T2ITabBody

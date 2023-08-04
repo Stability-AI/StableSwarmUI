@@ -583,7 +583,7 @@ function genpageLoad() {
     getSession(() => {
         console.log('First session loaded - prepping page.');
         imageHistoryBrowser.navigate('');
-        loadModelList('');
+        initialModelListLoad();
         loadBackendTypesMenu();
         genericRequest('ListT2IParams', {}, data => {
             console.log(data.models)

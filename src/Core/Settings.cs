@@ -73,7 +73,7 @@ public class Settings : AutoConfiguration
         public string SDVAEFolder = "VAE";
 
         [ConfigComment("The Embedding (eg textual inversion) model folder to use within 'ModelRoot'. Defaults to 'Embeddings'.")]
-        public string SDEmbeddingFolder = "VAE";
+        public string SDEmbeddingFolder = "Embeddings";
 
         [ConfigComment("Root path for data (user configs, etc). Defaults to 'Data'")]
         public string DataPath = "Data";
