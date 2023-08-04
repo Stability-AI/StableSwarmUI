@@ -360,9 +360,11 @@ function getGenInput(input_overrides = {}) {
         }
         else if (type.type == "list") {
             let valSet = [...elem.selectedOptions].map(option => option.value);
-            input[type.id] = valSet.join(',');
-            if (type.id == 'loras') {
-                input['loraweights'] = valSet.map(lora => loraWeightPref[lora] || 1).join(',');
+            if (valSet.length > 0) {
+                input[type.id] = valSet.join(',');
+                if (type.id == 'loras') {
+                    input['loraweights'] = valSet.map(lora => loraWeightPref[lora] || 1).join(',');
+                }
             }
         }
         else {
