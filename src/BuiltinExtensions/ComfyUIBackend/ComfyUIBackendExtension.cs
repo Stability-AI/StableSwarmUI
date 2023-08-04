@@ -137,8 +137,9 @@ public class ComfyUIBackendExtension : Extension
     public override void OnInit()
     {
         T2IParamGroup comfyGroup = new("ComfyUI", Toggles: false, Open: false);
+        T2IParamGroup comfyAdvancedGroup = new("ComfyUI Advanced", Toggles: false, IsAdvanced: true, Open: false);
         WorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Workflow", "What workflow to use in ComfyUI (files in 'Workflows' folder within the ComfyUI extension)",
-            "basic", Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup, IsAdvanced: true,
+            "basic", Toggleable: true, FeatureFlag: "comfyui", Group: comfyAdvancedGroup, IsAdvanced: true,
             GetValues: (_) => Workflows.Keys.ToList()
             ));
         SamplerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Sampler", "Sampler type (for ComfyUI)",
