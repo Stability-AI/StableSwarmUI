@@ -164,7 +164,20 @@ public static class BasicAPIFeatures
                 string folder = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDModelFolder) + "/OfficialStableDiffusion";
                 Directory.CreateDirectory(folder);
                 string filename = file.AfterLast('/');
-                await Utilities.DownloadFile(file, $"{folder}/{filename}");
+                try
+                {
+                    await Utilities.DownloadFile(file, $"{folder}/{filename}");
+                }
+                catch (IOException ex)
+                {
+                    Logs.Error($"Failed to download '{file}' (IO): {ex.GetType().Name}: {ex.Message}");
+                    Logs.Debug($"Download exception: {ex}");
+                }
+                catch (HttpRequestException ex)
+                {
+                    Logs.Error($"Failed to download '{file}' (HTTP): {ex.GetType().Name}: {ex.Message}");
+                    Logs.Debug($"Download exception: {ex}");
+                }
                 await output("Model download complete.");
             }
         }
