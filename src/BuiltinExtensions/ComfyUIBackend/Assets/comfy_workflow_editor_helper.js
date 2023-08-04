@@ -186,6 +186,7 @@ function comfyBuildParams(callback) {
             if (groups.includes(groupId)) {
                 groupId = `${groupId}${numberToLetters(parseInt(nodeId))}`;
             }
+            groups.push(groupId);
             let priority = 0;
             if (groupLabel.includes('Prompt')) {
                 priority = -10;
@@ -394,7 +395,7 @@ function comfyBuildParams(callback) {
                 }
                 else {
                     let inputLabel = labelAlterations[`${nodeId}.${inputId}`] || inputId;
-                    let inputIdDirect = cleanParamName(`${inputPrefix}${groupLabel}${inputId}`);
+                    let inputIdDirect = cleanParamName(`${inputPrefix}${groupLabel}${inputId}${numberToLetters(parseInt(nodeId))}`);
                     addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel);
                 }
             }
