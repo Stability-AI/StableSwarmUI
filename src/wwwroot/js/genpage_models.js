@@ -185,7 +185,7 @@ class ModelBrowserWrapper {
 
 let sdModelBrowser = new ModelBrowserWrapper('Stable-Diffusion', 'model_list', 'modelbrowser', (model) => { directSetModel(model.data); });
 let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => { directSetVae(vae.data) });
-let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data) });
+let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data.name) });
 let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => {});
 
 function initialModelListLoad() {
@@ -194,8 +194,35 @@ function initialModelListLoad() {
     }
 }
 
+function updateLoraList() {
+    let view = getRequiredElementById('current_lora_list_view');
+    let loraElem = document.getElementById('input_loras');
+    if (!loraElem) {
+        return;
+    }
+    let currentLoras = [...loraElem.selectedOptions].map(option => option.value);
+    view.innerHTML = '';
+    for (let lora of currentLoras) {
+        let div = createDiv(null, 'preset-in-list');
+        div.innerText = lora;
+        let removeButton = createDiv(null, 'preset-remove-button');
+        removeButton.innerHTML = '&times;';
+        removeButton.title = "Remove this LoRA";
+        removeButton.addEventListener('click', () => {
+            toggleSelectLora(lora);
+            updateLoraList();
+            sdLoraBrowser.browser.rerender();
+        });
+        div.appendChild(removeButton);
+        view.appendChild(div);
+    }
+    getRequiredElementById('current_loras_wrapper').style.display = currentLoras.length > 0 ? 'inline-block' : 'none';
+    getRequiredElementById('lora_info_slot').innerText = ` (${currentLoras.length})`;
+}
+
 function toggleSelectLora(lora) {
-    [...getRequiredElementById('input_loras')].filter(option => option.value == lora.name).forEach(option => option.selected = !option.selected);
+    [...getRequiredElementById('input_loras')].filter(option => option.value == lora).forEach(option => option.selected = !option.selected);
+    updateLoraList();
 }
 
 function directSetVae(vae) {
