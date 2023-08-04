@@ -66,6 +66,15 @@ public class Settings : AutoConfiguration
         [ConfigComment("The model folder to use within 'ModelRoot'. Defaults to 'Stable-Diffusion'.")]
         public string SDModelFolder = "Stable-Diffusion";
 
+        [ConfigComment("The LoRA (or related adapter type) model folder to use within 'ModelRoot'. Defaults to 'Lora'.")]
+        public string SDLoraFolder = "Lora";
+
+        [ConfigComment("The VAE (autoencoder) model folder to use within 'ModelRoot'. Defaults to 'VAE'.")]
+        public string SDVAEFolder = "VAE";
+
+        [ConfigComment("The Embedding (eg textual inversion) model folder to use within 'ModelRoot'. Defaults to 'Embeddings'.")]
+        public string SDEmbeddingFolder = "VAE";
+
         /// <summary>(Getter) Path for Stable Diffusion models.</summary>
         public string SDModelFullPath => Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, ModelRoot, SDModelFolder);
 

@@ -42,20 +42,28 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             {
                 return;
             }
-            string extra = """
-                vae: ../VAE
+            string yaml = $"""
+            stableswarmui:
+                base_path: {Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.ModelRoot)}
+                checkpoints: {Program.ServerSettings.Paths.SDModelFolder}
+                vae: |
+                    {Program.ServerSettings.Paths.SDVAEFolder}
+                    VAE
                 loras: |
-                    ../Lora
-                    ../LyCORIS
+                    {Program.ServerSettings.Paths.SDLoraFolder}
+                    Lora
+                    LyCORIS
                 upscale_models: |
-                    ../ESRGAN
-                    ../RealESRGAN
-                    ../SwinIR
-                embeddings: ../embeddings
-                hypernetworks: ../hypernetworks
-                controlnet: ../ControlNet
+                    ESRGAN
+                    RealESRGAN
+                    SwinIR
+                embeddings: |
+                    {Program.ServerSettings.Paths.SDEmbeddingFolder}
+                    embeddings
+                hypernetworks: hypernetworks
+                controlnet: ControlNet
             """;
-            File.WriteAllText("Data/comfy-auto-model.yaml", $"stableswarmui:\n    base_path: {Program.ServerSettings.Paths.SDModelFullPath}\n    checkpoints: ./\n{extra}");
+            File.WriteAllText("Data/comfy-auto-model.yaml", yaml);
             IsComfyModelFileEmitted = true;
         }
     }
