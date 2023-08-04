@@ -94,6 +94,17 @@ function expandCurrentImage(src, metadata) {
     $('#image_fullview_modal').modal('toggle');
 }
 
+window.addEventListener('keydown', function(kbevent) {
+    if ($('#image_fullview_modal').is(':visible')) {
+        if (kbevent.key == 'Escape') {
+            $('#image_fullview_modal').modal('toggle');
+            kbevent.preventDefault();
+            kbevent.stopPropagation();
+            return false;
+        }
+    }
+});
+
 function setCurrentImage(src, metadata = '') {
     let curImg = getRequiredElementById('current_image');
     curImg.innerHTML = '';
