@@ -39,6 +39,22 @@ public static class ImageMetadataTracker
     /// <summary>File format extensions that even can have metadata on them.</summary>
     public static HashSet<string> ExtensionsWithMetadata = new() { "png", "jpg", "webp" };
 
+    /// <summary>Deletes any tracked metadata for the given filepath.</summary>
+    public static void RemoveMetadataFor(string file)
+    {
+        string ext = file.AfterLast('.');
+        if (!ExtensionsWithMetadata.Contains(ext))
+        {
+            return;
+        }
+        string folder = file.BeforeAndAfterLast('/', out string filename);
+        ImageDatabase metadata = GetDatabaseForFolder(folder);
+        lock (metadata.Lock)
+        {
+            metadata.Metadata.Delete(filename);
+        }
+    }
+
     /// <summary>Get the metadata text for the given file, going through a cache manager.</summary>
     public static string GetMetadataFor(string file)
     {

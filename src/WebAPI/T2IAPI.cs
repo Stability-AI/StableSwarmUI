@@ -18,6 +18,7 @@ public static class T2IAPI
         API.RegisterAPICall(GenerateText2Image);
         API.RegisterAPICall(GenerateText2ImageWS);
         API.RegisterAPICall(ListImages);
+        API.RegisterAPICall(DeleteImage);
         API.RegisterAPICall(ListModels);
         API.RegisterAPICall(DescribeModel);
         API.RegisterAPICall(ListLoadedModels);
@@ -253,6 +254,27 @@ public static class T2IAPI
                 return new JObject() { ["error"] = "Error reading file list." };
             }
         }
+    }
+
+    /// <summary>API route to delete an image.</summary>
+    public static async Task<JObject> DeleteImage(Session session, string path)
+    {
+        string origPath = path;
+        string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, session.User.OutputDirectory);
+        (path, string consoleError, string userError) = WebServer.CheckFilePath(root, path);
+        if (consoleError is not null)
+        {
+            Logs.Error(consoleError);
+            return new JObject() { ["error"] = userError };
+        }
+        if (!File.Exists(path))
+        {
+            Logs.Warning($"User {session.User.UserID} tried to delete image path '{origPath}' which maps to '{path}', but cannot as the image does not exist.");
+            return new JObject() { ["error"] = "That file does not exist, cannot delete." };
+        }
+        File.Delete(path);
+        ImageMetadataTracker.RemoveMetadataFor(path);
+        return new JObject() { ["success"] = true };
     }
 
     /// <summary>API route to get a list of available history images.</summary>
