@@ -154,8 +154,7 @@ function updatePresetList() {
         removeButton.addEventListener('click', () => {
             currentPresets.splice(currentPresets.indexOf(preset), 1);
             updatePresetList();
-            preset.div.classList.remove('preset-block-selected');
-            preset.addButton.innerText = ' Use ';
+            presetBrowser.rerender();
         });
         div.appendChild(removeButton);
         view.appendChild(div);
