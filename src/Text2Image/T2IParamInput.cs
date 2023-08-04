@@ -136,6 +136,12 @@ public class T2IParamInput
         {
             val = param.Clean(ValuesInput.TryGetValue(param.ID, out object valObj) ? valObj.ToString() : null, val);
         }
+        T2IModel getModel(string name)
+        {
+            T2IModelHandler handler = Program.T2IModelSets[param.Subtype ?? "Stable-Diffusion"];
+            string best = T2IParamTypes.GetBestInList(name.Replace('\\', '/'), handler.Models.Keys.ToList());
+            return handler.Models[best];
+        }
         object obj = param.Type switch
         {
             T2IParamDataType.INTEGER => long.Parse(val),
@@ -143,7 +149,7 @@ public class T2IParamInput
             T2IParamDataType.BOOLEAN => bool.Parse(val),
             T2IParamDataType.TEXT or T2IParamDataType.DROPDOWN => val,
             T2IParamDataType.IMAGE => new Image(val),
-            T2IParamDataType.MODEL => Program.T2IModelSets[param.Subtype ?? "Stable-Diffusion"].Models[val],
+            T2IParamDataType.MODEL => getModel(val),
             T2IParamDataType.LIST => val.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
             _ => throw new NotImplementedException()
         };
