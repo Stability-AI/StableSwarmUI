@@ -426,6 +426,7 @@ function registerNewTool(id, name, genOverride = null, runOverride = null) {
 let pageBarTop = -1;
 let pageBarTop2 = -1;
 let pageBarMid = -1;
+let midForceToBottom = localStorage.getItem('barspot_midForceToBottom') == 'true';
 
 let setPageBarsFunc;
 
@@ -438,6 +439,7 @@ function resetPageSizer() {
     pageBarTop = -1;
     pageBarTop2 = -1;
     pageBarMid = -1;
+    localStorage.removeItem('barspot_midForceToBottom');
     setPageBarsFunc();
     for (let runnable of layoutResets) {
         runnable();
@@ -455,6 +457,7 @@ function pageSizer() {
     let mainImageArea = getRequiredElementById('main_image_area');
     let currentImage = getRequiredElementById('current_image');
     let currentImageBatch = getRequiredElementById('current_image_batch');
+    let midSplitButton = getRequiredElementById('t2i-mid-split-quickbutton');
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
@@ -469,8 +472,9 @@ function pageSizer() {
         mainImageArea.style.width = `calc(100vw - ${barTopLeft})`;
         currentImage.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         currentImageBatch.style.width = `${barTopRight}`;
-        if (pageBarMid != -1) {
-            let fixed = `${pageBarMid}px`;
+        midSplitButton.innerHTML = midForceToBottom ? '&#x290A;' : '&#x290B;';
+        if (pageBarMid != -1 || midForceToBottom) {
+            let fixed = midForceToBottom ? `9rem` : `${pageBarMid}px`;
             topSplit.style.height = `calc(100vh - ${fixed})`;
             topSplit2.style.height = `calc(100vh - ${fixed})`;
             inputSidebar.style.height = `calc(100vh - ${fixed})`;
@@ -516,7 +520,18 @@ function pageSizer() {
         e.preventDefault();
     }, true);
     midSplit.addEventListener('mousedown', (e) => {
+        if (e.target == midSplitButton) {
+            return;
+        }
         midDrag = true;
+        midForceToBottom = false;
+        e.preventDefault();
+    }, true);
+    midSplitButton.addEventListener('click', (e) => {
+        midDrag = false;
+        midForceToBottom = !midForceToBottom;
+        localStorage.setItem('barspot_midForceToBottom', midForceToBottom);
+        setPageBars();
         e.preventDefault();
     }, true);
     document.addEventListener('mousemove', (e) => {
@@ -541,6 +556,13 @@ function pageSizer() {
         topDrag2 = false;
         midDrag = false;
     });
+    for (let tab of getRequiredElementById('bottombartabcollection').getElementsByTagName('a')) {
+        console.log(tab)
+        tab.addEventListener('click', (e) => {
+            midForceToBottom = false;
+            setPageBars();
+        });
+    }
 }
 
 function show_t2i_quicktools() {

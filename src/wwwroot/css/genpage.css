@@ -59,6 +59,20 @@ body {
     height: 7px;
     cursor: row-resize;
 }
+.t2i-mid-split-quickbutton {
+    position: relative;
+    float: right;
+    vertical-align: top;
+    top: -1.5rem;
+    right: 2rem;
+    font-size: 200%;
+    cursor: pointer;
+    border-radius: 0.2rem;
+    color: var(--button-text);
+}
+.t2i-mid-split-quickbutton:hover {
+    background-color: var(--button-background-hover);
+}
 .t2i-top-bar {
     display: block;
     height: 50vh;
