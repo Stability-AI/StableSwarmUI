@@ -113,11 +113,11 @@ public class Session : IEquatable<Session>
     {
         if (!User.Settings.SaveFiles)
         {
-            return ("data:image/" + (User.Settings.FileFormat.ImageFormat == "png" ? "png" : "jpeg") + ";base64," + image.AsBase64, null);
+            return ("data:image/" + (User.Settings.FileFormat.ImageFormat == "PNG" ? "png" : "jpeg") + ";base64," + image.AsBase64, null);
         }
         string rawImagePath = User.BuildImageOutputPath(user_input, batchIndex);
         string imagePath = rawImagePath.Replace("[number]", "1");
-        string extension = (User.Settings.FileFormat.ImageFormat == "png" ? "png" : "jpg");
+        string extension = (User.Settings.FileFormat.ImageFormat == "PNG" ? "png" : "jpg");
         string fullPath = $"{User.OutputDirectory}/{imagePath}.{extension}";
         lock (User.UserLock)
         {
