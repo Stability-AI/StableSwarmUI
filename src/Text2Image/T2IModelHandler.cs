@@ -258,7 +258,7 @@ public class T2IModelHandler
             Logs.Warning($"Tried to load metadata for a null model?:\n{Environment.StackTrace}");
             return;
         }
-        if (model.ModelClass is not null || model.Title is not null)
+        if (model.ModelClass is not null || (model.Title is not null && model.Title != model.Name.AfterLast('/')))
         {
             Logs.Debug($"Not loading metadata for {model.Name} as it is already loaded.");
             return;
