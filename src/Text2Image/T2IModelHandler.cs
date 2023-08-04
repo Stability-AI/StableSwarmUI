@@ -388,8 +388,9 @@ public class T2IModelHandler
                 T2IModel model = new()
                 {
                     Name = fullFilename,
+                    Title = fullFilename.AfterLast('/'),
                     RawFilePath = file,
-                    Description = "(Metadata not yet loaded. Wait a minute, then refresh.)",
+                    Description = "(Metadata not yet loaded.)",
                     PreviewImage = "imgs/model_placeholder.jpg",
                 };
                 Models[fullFilename] = model;
