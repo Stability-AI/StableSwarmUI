@@ -120,7 +120,7 @@ public class User
     public Settings.User Settings = new();
 
     /// <summary>Path to the output directory appropriate to this session.</summary>
-    public string OutputDirectory => Program.ServerSettings.AppendUserNameToOutputPath ? $"{Program.ServerSettings.Paths.OutputPath}/{UserID}" : Program.ServerSettings.Paths.OutputPath;
+    public string OutputDirectory => Program.ServerSettings.Paths.AppendUserNameToOutputPath ? $"{Program.ServerSettings.Paths.OutputPath}/{UserID}" : Program.ServerSettings.Paths.OutputPath;
 
     public LockObject UserLock = new();
 

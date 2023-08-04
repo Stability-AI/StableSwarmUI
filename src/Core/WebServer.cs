@@ -188,7 +188,7 @@ public class WebServer
     public (string, string, string) CheckOutputFilePath(string path, string userId)
     {
         string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.OutputPath);
-        if (Program.ServerSettings.AppendUserNameToOutputPath)
+        if (Program.ServerSettings.Paths.AppendUserNameToOutputPath)
         {
             root = $"{root}/{userId}";
         }
