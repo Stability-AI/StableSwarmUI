@@ -260,7 +260,7 @@ public class T2IParamTypes
             return refinerList.Select(m => m.Name).Append("-----").Concat(bases).ToList();
         }
         RefinerModel = Register<T2IModel>(new("Refiner Model", "The model to use for refinement. This should be a model that's good at small-details, and use a structural model as your base model.\nSDXL 1.0 released with an official refiner model.",
-            "", GetValues: listRefinerModels, OrderPriority: -5, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true
+            "", GetValues: listRefinerModels, OrderPriority: -5, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true, Subtype: "Stable-Diffusion"
             ));
         RefinerControl = Register<double>(new("Refine Control Percentage", "Higher values give the refiner more control, lower values give the base more control.\nThis is similar to 'Init Image Creativity', but for the refiner. This controls how many steps the refiner takes.",
             "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, NumberView: NumberViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
@@ -272,7 +272,7 @@ public class T2IParamTypes
             "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, NumberView: NumberViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true
             ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
-            "", Permission: "param_model", VisibleNormally: false
+            "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion"
             ));
         BackendType = Register<string>(new("[Internal] Backend Type", "Which StableSwarmUI backend type should be used for this request.",
             "Any", GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true
