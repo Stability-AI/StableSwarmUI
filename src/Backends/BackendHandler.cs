@@ -295,13 +295,13 @@ public class BackendHandler
     /// <summary>Updates what model(s) are currently loaded.</summary>
     public void ReassignLoadedModelsList()
     {
-        foreach (T2IModel model in Program.T2IModels.Models.Values)
+        foreach (T2IModel model in Program.MainSDModels.Models.Values)
         {
             model.AnyBackendsHaveLoaded = false;
         }
         foreach (T2IBackendData backend in T2IBackends.Values)
         {
-            if (backend.Backend.CurrentModelName is not null && Program.T2IModels.Models.TryGetValue(backend.Backend.CurrentModelName, out T2IModel model))
+            if (backend.Backend.CurrentModelName is not null && Program.MainSDModels.Models.TryGetValue(backend.Backend.CurrentModelName, out T2IModel model))
             {
                 model.AnyBackendsHaveLoaded = true;
             }

@@ -269,8 +269,12 @@ public static class T2IAPI
     public static HashSet<string> ModelExtensions = new() { "safetensors", "ckpt" };
 
     /// <summary>API route to describe a single model.</summary>
-    public static async Task<JObject> DescribeModel(Session session, string modelName)
+    public static async Task<JObject> DescribeModel(Session session, string modelName, string subtype = "Stable-Diffusion")
     {
+        if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler))
+        {
+            return new JObject() { ["error"] = "Invalid sub-type." };
+        }
         modelName = modelName.Replace('\\', '/');
         while (modelName.Contains("//"))
         {
@@ -278,7 +282,7 @@ public static class T2IAPI
         }
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        if ((allowed is null || allowed.IsMatch(modelName)) && Program.T2IModels.Models.TryGetValue(modelName, out T2IModel model))
+        if ((allowed is null || allowed.IsMatch(modelName)) && handler.Models.TryGetValue(modelName, out T2IModel model))
         {
             return new JObject() { ["model"] = model.ToNetObject() };
         }
@@ -287,8 +291,12 @@ public static class T2IAPI
     }
 
     /// <summary>API route to get a list of available models.</summary>
-    public static async Task<JObject> ListModels(Session session, string path, int depth)
+    public static async Task<JObject> ListModels(Session session, string path, int depth, string subtype = "Stable-Diffusion")
     {
+        if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler))
+        {
+            return new JObject() { ["error"] = "Invalid sub-type." };
+        }
         depth = Math.Clamp(depth, 1, 10);
         path = path.Replace('\\', '/');
         if (path != "")
@@ -301,7 +309,7 @@ public static class T2IAPI
         }
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        List<T2IModel> matches = Program.T2IModels.Models.Values.Where(m => m.Name.StartsWith(path) && m.Name.Length > path.Length && (allowed is null || allowed.IsMatch(m.Name))).ToList();
+        List<T2IModel> matches = handler.Models.Values.Where(m => m.Name.StartsWith(path) && m.Name.Length > path.Length && (allowed is null || allowed.IsMatch(m.Name))).ToList();
         HashSet<string> folders = new();
         List<JObject> files = new();
         foreach (T2IModel possible in matches)
@@ -329,12 +337,12 @@ public static class T2IAPI
         };
     }
 
-    /// <summary>API route to get a list of currently loaded models.</summary>
+    /// <summary>API route to get a list of currently loaded Stable-Diffusion models.</summary>
     public static async Task<JObject> ListLoadedModels(Session session)
     {
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        List<T2IModel> matches = Program.T2IModels.Models.Values.Where(m => m.AnyBackendsHaveLoaded && (allowed is null || allowed.IsMatch(m.Name))).ToList();
+        List<T2IModel> matches = Program.MainSDModels.Models.Values.Where(m => m.AnyBackendsHaveLoaded && (allowed is null || allowed.IsMatch(m.Name))).ToList();
         return new JObject()
         {
             ["models"] = JToken.FromObject(matches.Select(m => m.ToNetObject()).ToList())
@@ -363,7 +371,7 @@ public static class T2IAPI
         return null;
     }
 
-    /// <summary>Internal handler of the model-load API route.</summary>
+    /// <summary>Internal handler of the stable-diffusion model-load API route.</summary>
     public static async Task SelectModelInternal(Session session, string model, Action<JObject> output, bool isWS)
     {
         if (!session.User.Restrictions.CanChangeModels)
@@ -373,7 +381,7 @@ public static class T2IAPI
         }
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        if (allowed != null && !allowed.IsMatch(model) || !Program.T2IModels.Models.TryGetValue(model, out T2IModel actualModel))
+        if (allowed != null && !allowed.IsMatch(model) || !Program.MainSDModels.Models.TryGetValue(model, out T2IModel actualModel))
         {
             output(new JObject() { ["error"] = "Model not found." });
             return;
@@ -393,8 +401,12 @@ public static class T2IAPI
 
     /// <summary>API route to modify the metadata of a model.</summary>
     public static async Task<JObject> EditModelMetadata(Session session, string model, string title, string author, string type, string description,
-        int standard_width, int standard_height, string preview_image, string usage_hint, string date, string license, string trigger_phrase, string tags)
+        int standard_width, int standard_height, string preview_image, string usage_hint, string date, string license, string trigger_phrase, string tags, string subtype = "Stable-Diffusion")
     {
+        if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler))
+        {
+            return new JObject() { ["error"] = "Invalid sub-type." };
+        }
         if (!session.User.Restrictions.CanChangeModels)
         {
             return new JObject() { ["error"] = "You are not allowed to change models." };
@@ -402,17 +414,17 @@ public static class T2IAPI
         // TODO: model-metadata-edit permission check
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        if (allowed != null && !allowed.IsMatch(model) || !Program.T2IModels.Models.TryGetValue(model, out T2IModel actualModel))
+        if (allowed != null && !allowed.IsMatch(model) || !handler.Models.TryGetValue(model, out T2IModel actualModel))
         {
             return new JObject() { ["error"] = "Model not found." };
         }
-        lock (Program.T2IModels.ModificationLock)
+        lock (handler.ModificationLock)
         {
             actualModel.Title = string.IsNullOrWhiteSpace(title) ? null : title;
             actualModel.Description = description;
             if (!string.IsNullOrWhiteSpace(type))
             {
-                actualModel.ModelClass = Program.T2IModels.ClassSorter.ModelClasses.GetValueOrDefault(type);
+                actualModel.ModelClass = handler.ClassSorter.ModelClasses.GetValueOrDefault(type);
             }
             if (standard_width > 0)
             {
@@ -435,18 +447,23 @@ public static class T2IAPI
             actualModel.Metadata.TriggerPhrase = string.IsNullOrWhiteSpace(trigger_phrase) ? null : trigger_phrase;
             actualModel.Metadata.Tags = string.IsNullOrWhiteSpace(tags) ? null : tags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         }
-        Program.T2IModels.ResetMetadataFrom(actualModel);
-        _ = Task.Run(() => Program.T2IModels.ApplyNewMetadataDirectly(actualModel));
+        handler.ResetMetadataFrom(actualModel);
+        _ = Task.Run(() => handler.ApplyNewMetadataDirectly(actualModel));
         return new JObject() { ["success"] = true };
     }
 
     /// <summary>API route to get a list of parameter types.</summary>
     public static async Task<JObject> ListT2IParams(Session session)
     {
+        JObject modelData = new();
+        foreach (T2IModelHandler handler in Program.T2IModelSets.Values)
+        {
+            modelData[handler.ModelType] = new JArray(handler.ListModelsFor(session).Select(m => m.Name).Order().ToArray());
+        }
         return new JObject()
         {
             ["list"] = new JArray(T2IParamTypes.Types.Values.Select(v => v.ToNet(session)).ToList()),
-            ["models"] = new JArray(Program.T2IModels.ListModelsFor(session).Select(m => m.Name).Order().ToArray())
+            ["models"] = modelData
         };
     }
 }

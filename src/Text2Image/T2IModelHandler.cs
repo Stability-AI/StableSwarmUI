@@ -32,6 +32,12 @@ public class T2IModelHandler
     /// <summary>Lock for metadata processing.</summary>
     public LockObject MetadataLock = new();
 
+    /// <summary>The type of model this handler is tracking (eg Stable-Diffusion, LoRA, VAE, Embedding, ...).</summary>
+    public string ModelType;
+
+    /// <summary>The full folder path for relevant models.</summary>
+    public string FolderPath;
+
     /// <summary>Helper, data store for model metadata.</summary>
     public class ModelMetadataStore
     {
@@ -232,7 +238,7 @@ public class T2IModelHandler
 
     public string GetAutoFormatImage(T2IModel model)
     {
-        string prefix = Program.ServerSettings.Paths.SDModelFullPath + "/" + model.Name.BeforeLast('.');
+        string prefix = $"{FolderPath}/{model.Name.BeforeLast('.')}";
         if (File.Exists(prefix + ".jpg"))
         {
             return new Image(File.ReadAllBytes(prefix + ".jpg")).ToMetadataFormat();
@@ -363,7 +369,7 @@ public class T2IModelHandler
             return;
         }
         string prefix = folder == "" ? "" : $"{folder}/";
-        string actualFolder = $"{Program.ServerSettings.Paths.SDModelFullPath}/{folder}";
+        string actualFolder = $"{FolderPath}/{folder}";
         if (!Directory.Exists(actualFolder))
         {
             Logs.Verbose($"[Model Scan] Skipping folder {actualFolder}");

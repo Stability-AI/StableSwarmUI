@@ -25,7 +25,10 @@ public class Program
     public static SessionHandler Sessions;
 
     /// <summary>Central store of Text2Image models.</summary>
-    public static T2IModelHandler T2IModels;
+    public static Dictionary<string, T2IModelHandler> T2IModelSets = new();
+
+    /// <summary>Main Stable-Diffusion model tracker.</summary>
+    public static T2IModelHandler MainSDModels => T2IModelSets["Stable-Diffusion"];
 
     /// <summary>All extensions currently loaded.</summary>
     public static List<Extension> Extensions = new();
@@ -90,9 +93,10 @@ public class Program
             Logs.Error($"Command line arguments given are invalid: {ex.Message}");
             return;
         }
+        string modelRoot = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, ServerSettings.Paths.ModelRoot);
         try
         {
-            Directory.CreateDirectory(ServerSettings.Paths.SDModelFullPath);
+            Directory.CreateDirectory(Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder));
         }
         catch (IOException ex)
         {
@@ -101,7 +105,10 @@ public class Program
         }
         RunOnAllExtensions(e => e.OnPreInit());
         Logs.Init("Prepping options...");
-        T2IModels = new();
+        T2IModelSets["Stable-Diffusion"] = new() { ModelType = "Stable-Diffusion", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder) };
+        T2IModelSets["VAE"] = new() { ModelType = "VAE", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDVAEFolder) };
+        T2IModelSets["LoRA"] = new() { ModelType = "LoRA", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDLoraFolder) };
+        T2IModelSets["Embedding"] = new() { ModelType = "Embedding", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDEmbeddingFolder) };
         T2IParamTypes.RegisterDefaults();
         Backends = new();
         Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);
@@ -110,7 +117,10 @@ public class Program
         Web.PreInit();
         RunOnAllExtensions(e => e.OnInit());
         Logs.Init("Loading models list...");
-        T2IModels.Refresh();
+        foreach (T2IModelHandler handler in T2IModelSets.Values)
+        {
+            handler.Refresh();
+        }
         Logs.Init("Loading backends...");
         Backends.Load();
         Logs.Init("Prepping API...");
@@ -171,7 +181,10 @@ public class Program
         Backends?.Shutdown();
         Sessions?.Shutdown();
         ProxyHandler?.Stop();
-        T2IModels?.Shutdown();
+        foreach (T2IModelHandler handler in T2IModelSets.Values)
+        {
+            handler.Shutdown();
+        }
         RunOnAllExtensions(e => e.OnShutdown());
         Extensions.Clear();
         ImageMetadataTracker.Shutdown();

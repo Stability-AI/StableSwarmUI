@@ -72,12 +72,13 @@ public enum NumberViewType
 /// <param name="HideFromMetadata">Whether to hide this parameter from image metadata.</param>
 /// <param name="AlwaysRetain">If true, the parameter will be retained when otherwise it would be removed (for example, by comfy workflow usage).</param>
 /// <param name="Type">The type of the type - text vs integer vs etc (will be set when registering).</param>
+/// <param name="Subtype">The sub-type of the type - for models, this might be eg "Stable-Diffusion".</param>
 /// <param name="ID">The raw ID of this parameter (will be set when registering).</param>
 /// 
 public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMax = 0,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null,
-    NumberViewType NumberView = NumberViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, string ID = null)
+    NumberViewType NumberView = NumberViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, string Subtype = null, string ID = null)
 {
     public JObject ToNet(Session session)
     {
@@ -87,6 +88,7 @@ public record class T2IParamType(string Name, string Description, string Default
             ["id"] = ID,
             ["description"] = Description,
             ["type"] = Type.ToString().ToLowerFast(),
+            ["subtype"] = Subtype,
             ["default"] = Default,
             ["min"] = Min,
             ["max"] = Max,
@@ -248,7 +250,7 @@ public class T2IParamTypes
         GroupRefiners = new("Refiner", Toggles: true, Open: false, OrderPriority: -3);
         static List<string> listRefinerModels(Session s)
         {
-            List<T2IModel> baseList = Program.T2IModels.ListModelsFor(s);
+            List<T2IModel> baseList = Program.MainSDModels.ListModelsFor(s);
             List<T2IModel> refinerList = baseList.Where(m => m.ModelClass is not null && m.ModelClass.Name.Contains("Refiner")).ToList();
             List<string> bases = baseList.Select(m => m.Name).ToList();
             if (refinerList.IsEmpty())
@@ -373,7 +375,11 @@ public class T2IParamTypes
                 }
                 return val;
             case T2IParamDataType.MODEL:
-                val = GetBestInList(val, Program.T2IModels.ListModelsFor(session).Select(s => s.Name).ToList());
+                if (!Program.T2IModelSets.TryGetValue(type.Subtype, out T2IModelHandler handler))
+                {
+                    throw new InvalidDataException($"Invalid model sub-type for param {type.Name}: '{type.Subtype}' - are you sure that type name is correct? (Developer error)");
+                }
+                val = GetBestInList(val, handler.ListModelsFor(session).Select(s => s.Name).ToList());
                 if (val is null)
                 {
                     throw new InvalidDataException($"Invalid model value for param {type.Name} - are you sure that model name is correct?");

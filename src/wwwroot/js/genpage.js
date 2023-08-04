@@ -586,7 +586,8 @@ function genpageLoad() {
         loadModelList('');
         loadBackendTypesMenu();
         genericRequest('ListT2IParams', {}, data => {
-            updateAllModels(data.models);
+            console.log(data.models)
+            updateAllModels(data.models['Stable-Diffusion']);
             rawGenParamTypesFromServer = data.list.sort(paramSorter);
             gen_param_types = rawGenParamTypesFromServer;
             genInputs();

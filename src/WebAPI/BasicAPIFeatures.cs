@@ -161,7 +161,7 @@ public static class BasicAPIFeatures
                     return null;
                 }
                 await output($"Downloading model from '{file}'... please wait...");
-                string folder = Program.ServerSettings.Paths.SDModelFullPath + "/OfficialStableDiffusion";
+                string folder = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDModelFolder) + "/OfficialStableDiffusion";
                 Directory.CreateDirectory(folder);
                 string filename = file.AfterLast('/');
                 await Utilities.DownloadFile(file, $"{folder}/{filename}");

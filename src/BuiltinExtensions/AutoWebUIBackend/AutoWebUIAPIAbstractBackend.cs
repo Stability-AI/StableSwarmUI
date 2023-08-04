@@ -37,7 +37,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
             }
             string targetClean = remoteModel.ToLowerInvariant().Trim('/').Replace('\\', '/');
             string targetBackup = targetClean.BeforeLast('.').AfterLast('/');
-            foreach (T2IModel model in Program.T2IModels.Models.Values)
+            foreach (T2IModel model in Program.MainSDModels.Models.Values)
             {
                 string cleaned = model.Name.ToLowerInvariant();
                 if (cleaned == targetClean)
