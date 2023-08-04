@@ -8,7 +8,7 @@ if exist StableSwarmUI (
     exit
 )
 
-rem winget install Microsoft.DotNet.SDK.7 --accept-source-agreements --accept-package-agreements
+winget install Microsoft.DotNet.SDK.7 --accept-source-agreements --accept-package-agreements
 winget install --id Git.Git -e --source winget --accept-source-agreements --accept-package-agreements
 
 git clone https://github.com/Stability-AI/StableSwarmUI

@@ -2,6 +2,9 @@
 
 cd "%~dp0"
 
+rem Microsoft borked the dotnet installer/path handler, so force x64 to be read first
+set PATH=C:\Program Files\dotnet;%PATH%
+
 dotnet build src/StableSwarmUI.csproj --configuration Release -o src/bin/live_release
 
 set ASPNETCORE_ENVIRONMENT="Production"
