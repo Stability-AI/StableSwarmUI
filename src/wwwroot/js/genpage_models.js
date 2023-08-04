@@ -111,7 +111,26 @@ class ModelBrowserWrapper {
     listModelFolderAndFiles(path, isRefresh, callback, depth) {
         let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
         genericRequest('ListModels', {'path': path, 'depth': depth, 'subtype': this.subType}, data => {
-            callback(data.folders.sort((a, b) => a.localeCompare(b)), data.files.sort(sortModelName).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; }));
+            let files = data.files.sort(sortModelName).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; });
+            if (this.subType == 'VAE') {
+                let noneFile = {
+                    'name': `None`,
+                    'data': {
+                        'name': 'None',
+                        'title': 'None',
+                        'author': '(Internal)',
+                        'architecture': 'VAE',
+                        'class': 'VAE',
+                        'description': 'Use the VAE built-in to your Stable Diffusion model',
+                        'preview_image': '/imgs/none.jpg',
+                        'is_safetensors': true,
+                        standard_width: 0,
+                        standard_height: 0
+                    }
+                };
+                files = [noneFile].concat(files);
+            }
+            callback(data.folders.sort((a, b) => a.localeCompare(b)), files);
         });
     }
 
@@ -138,7 +157,19 @@ class ModelBrowserWrapper {
         else {
             description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
         }
-        let className = getRequiredElementById('current_model').value == model.data.name ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
+        let selector = this.subType == 'Stable-Diffusion' ? 'current_model' : 'input_vae';
+        let isSelected;
+        let selectorElem = document.getElementById(selector);
+        if (!selectorElem) {
+            isSelected = false;
+        }
+        else if (this.subType == 'VAE' && !document.getElementById('input_vae_toggle').checked) {
+            isSelected = model.data.name == 'None';
+        }
+        else {
+            isSelected = selectorElem.value == model.data.name;
+        }
+        let className = isSelected ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
         let searchable = `${name}, ${description}, ${model.data.license}, ${model.data.architecture}, ${model.data.usage_hint}, ${model.data.trigger_phrase}, ${model.data.merged_from}, ${model.data.tags}`;
         return { name, description, buttons, 'image': model.data.preview_image, className, searchable };
     }
@@ -150,7 +181,7 @@ class ModelBrowserWrapper {
 }
 
 let sdModelBrowser = new ModelBrowserWrapper('Stable-Diffusion', 'model_list', 'modelbrowser', (model) => { directSetModel(model.data); });
-let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => {});
+let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => { directSetVae(vae.data) });
 let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => {});
 let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => {});
 
@@ -158,6 +189,18 @@ function initialModelListLoad() {
     for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser]) {
         browser.browser.navigate('');
     }
+}
+
+function directSetVae(vae) {
+    let toggler = getRequiredElementById('input_vae_toggle');
+    if (!vae || vae.name == 'None') {
+        toggler.checked = false;
+        doToggleEnable('input_vae');
+        return;
+    }
+    forceSetDropdownValue('input_vae', vae.name);
+    toggler.checked = true;
+    doToggleEnable('input_vae');
 }
 
 function directSetModel(model) {

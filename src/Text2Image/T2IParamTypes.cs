@@ -194,7 +194,7 @@ public class T2IParamTypes
     public static T2IRegisteredParam<long> Seed, VariationSeed;
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale;
     public static T2IRegisteredParam<Image> InitImage;
-    public static T2IRegisteredParam<T2IModel> Model, RefinerModel;
+    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE;
 
     public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners;
 
@@ -273,6 +273,9 @@ public class T2IParamTypes
             ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion"
+            ));
+        VAE = Register<T2IModel>(new("VAE", "The VAE (Variational Auto-Encoder) controls the translation between images and latent space.\nIf your images look faded out, or glitched, you may have the wrong VAE.\nAll models have a VAE baked in by default, this option lets you swap to a different one if you want to.",
+            "", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE"
             ));
         BackendType = Register<string>(new("[Internal] Backend Type", "Which StableSwarmUI backend type should be used for this request.",
             "Any", GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true
@@ -375,7 +378,7 @@ public class T2IParamTypes
                 }
                 return val;
             case T2IParamDataType.MODEL:
-                if (!Program.T2IModelSets.TryGetValue(type.Subtype, out T2IModelHandler handler))
+                if (!Program.T2IModelSets.TryGetValue(type.Subtype ?? "Stable-Diffusion", out T2IModelHandler handler))
                 {
                     throw new InvalidDataException($"Invalid model sub-type for param {type.Name}: '{type.Subtype}' - are you sure that type name is correct? (Developer error)");
                 }

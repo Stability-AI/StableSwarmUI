@@ -14,6 +14,8 @@ let sessionReadyCallbacks = [];
 
 let allModels = [];
 
+let coreModelMap = {};
+
 const time_started = Date.now();
 
 let statusBarElem = getRequiredElementById('top_status_bar');
@@ -561,14 +563,15 @@ function loadUserData() {
 }
 
 function updateAllModels(models) {
-    allModels = models;
+    coreModelMap = models;
+    allModels = models['Stable-Diffusion'];
     let selector = getRequiredElementById('current_model');
     selector.innerHTML = '';
     let emptyOption = document.createElement('option');
     emptyOption.value = '';
     emptyOption.innerText = '';
     selector.appendChild(emptyOption);
-    for (let model of models) {
+    for (let model of allModels) {
         let option = document.createElement('option');
         option.value = model;
         option.innerText = model;
@@ -587,7 +590,7 @@ function genpageLoad() {
         loadBackendTypesMenu();
         genericRequest('ListT2IParams', {}, data => {
             console.log(data.models)
-            updateAllModels(data.models['Stable-Diffusion']);
+            updateAllModels(data.models);
             rawGenParamTypesFromServer = data.list.sort(paramSorter);
             gen_param_types = rawGenParamTypesFromServer;
             genInputs();

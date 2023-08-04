@@ -41,6 +41,17 @@ public class WorkflowGenerator
                     ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).ToString()
                 };
             }, "4");
+            if (g.UserInput.TryGet(T2IParamTypes.VAE, out T2IModel vae))
+            {
+                g.CreateNode("VAELoader", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["vae_name"] = vae.ToString()
+                    };
+                }, "3");
+                g.FinalVae = new JArray() { "3", 0 };
+            }
         }, -10);
         #endregion
         #region Base Image
@@ -158,7 +169,10 @@ public class WorkflowGenerator
                         };
                     }, "20");
                     refinedModel = new() { "20", 0 };
-                    g.FinalVae = new() { "20", 2 };
+                    if (!g.UserInput.TryGet(T2IParamTypes.VAE, out _))
+                    {
+                        g.FinalVae = new() { "20", 2 };
+                    }
                     g.CreateNode("CLIPTextEncode", (_, n) =>
                     {
                         n["inputs"] = new JObject()
