@@ -279,9 +279,13 @@ class GenPageBrowserClass {
         if (path.endsWith('/')) {
             path = path.substring(0, path.length - 1);
         }
+        let scrollOffset = 0;
         this.lastPath = path;
         if (folders) {
             this.refillTree(path, folders);
+        }
+        else if (folders == null && this.contentDiv) {
+            scrollOffset = this.contentDiv.scrollTop;
         }
         if (files == null) {
             files = this.lastFiles;
@@ -292,8 +296,9 @@ class GenPageBrowserClass {
         this.folderTreeDiv = createDiv(`${this.id}-foldertree`, 'browser-folder-tree-container');
         let folderTreeSplitter = createDiv(`${this.id}-splitter`, 'browser-folder-tree-splitter splitter-bar');
         let headerBar = createDiv(`${this.id}-header`, 'browser-header-bar');
-        let fullContentDiv = createDiv(`${this.id}-content`, 'browser-fullcontent-container');
+        let fullContentDiv = createDiv(`${this.id}-fullcontent`, 'browser-fullcontent-container');
         let contentDiv = createDiv(`${this.id}-content`, 'browser-content-container');
+        this.contentDiv = contentDiv;
         let formatSelector = document.createElement('select');
         formatSelector.id = `${this.id}-format-selector`;
         formatSelector.title = 'Display format';
@@ -388,5 +393,8 @@ class GenPageBrowserClass {
         layoutResets.push(this.lastReset);
         this.folderTreeDiv.scrollTop = folderScroll;
         this.makeVisible(contentDiv);
+        if (scrollOffset) {
+            contentDiv.scrollTop = scrollOffset;
+        }
     }
 }

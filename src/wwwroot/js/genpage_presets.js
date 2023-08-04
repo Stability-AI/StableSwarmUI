@@ -307,7 +307,7 @@ function selectPreset(preset) {
         currentPresets.splice(currentPresets.indexOf(preset.data), 1);
     }
     updatePresetList();
-    presetBrowser.update();
+    presetBrowser.rerender();
 }
 
 let presetBrowser = new GenPageBrowserClass('preset_list', listPresetFolderAndFiles, 'presetbrowser', 'Cards', describePreset, selectPreset);
