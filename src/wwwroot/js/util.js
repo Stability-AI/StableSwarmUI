@@ -491,7 +491,7 @@ function numberToLetters(id) {
     if (id > 26) {
         let rem = id % 26;
         id /= 26;
-        return inputIdToName(id) + inputIdToName(rem);
+        return numberToLetters(id) + numberToLetters(rem);
     }
     return String.fromCharCode(id + 'a'.charCodeAt(0));
 }
