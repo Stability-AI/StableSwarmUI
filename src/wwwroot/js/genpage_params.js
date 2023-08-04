@@ -288,6 +288,16 @@ function genInputs(delay_final = false) {
         if (modelCookie) {
             directSetModel(modelCookie);
         }
+        let vaeInput = document.getElementById('input_vae');
+        if (vaeInput) {
+            vaeInput.addEventListener('change', () => {
+                sdVAEBrowser.browser.rerender();
+            });
+            getRequiredElementById('input_vae_toggle').addEventListener('change', () => {
+                sdVAEBrowser.browser.rerender();
+            });
+            sdVAEBrowser.browser.rerender();
+        }
         hideUnsupportableParams();
         for (let runnable of postParamBuildSteps) {
             runnable();

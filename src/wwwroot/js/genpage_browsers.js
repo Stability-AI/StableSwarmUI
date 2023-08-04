@@ -266,14 +266,25 @@ class GenPageBrowserClass {
     }
 
     /**
+     * Triggers an immediate in-place rerender of the current browser view.
+     */
+    rerender() {
+        this.build(this.lastPath, null, this.lastFiles);
+    }
+
+    /**
      * Central call to build the browser content area.
      */
     build(path, folders, files) {
         if (path.endsWith('/')) {
             path = path.substring(0, path.length - 1);
         }
+        this.lastPath = path;
         if (folders) {
             this.refillTree(path, folders);
+        }
+        if (files == null) {
+            files = this.lastFiles;
         }
         this.lastFiles = files;
         let folderScroll = this.folderTreeDiv ? this.folderTreeDiv.scrollTop : 0;

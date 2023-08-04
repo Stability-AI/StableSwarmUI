@@ -176,7 +176,7 @@ class ModelBrowserWrapper {
 
     selectModel(model) {
         this.selectOne(model);
-        this.browser.update();
+        this.browser.rerender();
     }
 }
 
