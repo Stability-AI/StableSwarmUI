@@ -3,13 +3,15 @@ let models = {};
 let cur_model = null;
 let curModelWidth = 0, curModelHeight = 0;
 let curModelMenuModel = null;
+let curModelMenuBrowser = null;
 let loraWeightPref = {};
 
-function editModel(model) {
+function editModel(model, browser) {
     if (model == null) {
         return;
     }
     curModelMenuModel = model;
+    curModelMenuBrowser = browser;
     let imageInput = getRequiredElementById('edit_model_image');
     imageInput.innerHTML = '';
     let enableImage = getRequiredElementById('edit_model_enable_image');
@@ -48,9 +50,10 @@ function save_edit_model() {
     for (let val of ['author', 'type', 'description', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags']) {
         data[val] = getRequiredElementById(`edit_model_${val}`).value;
     }
+    data.subtype = curModelMenuBrowser.subType;
     function complete() {
         genericRequest('EditModelMetadata', data, data => {
-            sdModelBrowser.browser.update();
+            curModelMenuBrowser.browser.update();
         });
         $('#edit_model_modal').modal('hide');
     }
@@ -153,7 +156,7 @@ class ModelBrowserWrapper {
         if (model.data.is_safetensors) {
             let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
             description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}${getLine("Description", model.data.description)}`;
-            buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data) });
+            buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
         }
         else {
             description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
