@@ -111,7 +111,7 @@ public static class NetworkBackendUtils
         string dir = Path.GetDirectoryName(path);
         start.ArgumentList.Add(dir);
         start.ArgumentList.Add(path.AfterLast('/'));
-        start.ArgumentList.Add(extraArgs.Replace("{PORT}", $"{port}"));
+        start.ArgumentList.Add(extraArgs.Replace("{PORT}", $"{port}").Trim());
         if (startScript.EndsWith(".py"))
         {
             start.ArgumentList.Add("py");
