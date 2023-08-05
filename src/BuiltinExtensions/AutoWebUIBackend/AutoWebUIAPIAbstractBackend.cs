@@ -50,6 +50,8 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
                     CurrentModelName = model.Name;
                 }
             }
+            List<string> samplers = (await SendGet<JArray>("samplers")).Select(obj => (string)obj["name"]).ToList();
+            AutoWebUIBackendExtension.LoadSamplerList(samplers);
             Status = BackendStatus.RUNNING;
         }
         catch (Exception)
@@ -80,7 +82,8 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
             ["height"] = user_input.Get(T2IParamTypes.Height),
             ["cfg_scale"] = user_input.Get(T2IParamTypes.CFGScale),
             ["subseed"] = user_input.Get(T2IParamTypes.VariationSeed),
-            ["subseed_strength"] = user_input.Get(T2IParamTypes.VariationSeedStrength)
+            ["subseed_strength"] = user_input.Get(T2IParamTypes.VariationSeedStrength),
+            ["sampler_name"] = user_input.Get(AutoWebUIBackendExtension.SamplerParam) ?? "Euler"
         };
         string route = "txt2img";
         if (user_input.TryGet(T2IParamTypes.InitImage, out Image initImg))
@@ -110,7 +113,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
 
     public async Task<string> QueryLoadedModel()
     {
-        return (string)((await SendGet<JObject>("options"))["sd_model_checkpoint"]);
+        return (string)(await SendGet<JObject>("options"))["sd_model_checkpoint"];
     }
 
     public override async Task<bool> LoadModel(T2IModel model)
