@@ -98,3 +98,9 @@ table tr td:first-child {
 .accordion-button {
     padding: 0.5rem;
 }
+.save_image_area img {
+    margin-right: 1rem;
+    margin-left: 1rem;
+    border: 2px solid orange;
+    border-radius: 0.5rem;
+}

@@ -622,7 +622,7 @@ function toggleTopSticky() {
     updateTitleSticky();
 }
 
-function makeImage() {
+function makeImage(minRow = 0, doClear = true) {
     // Preprocess data
     var imageTable = document.getElementById('image_table');
     var rows = Array.from(imageTable.getElementsByTagName('tr')).filter(e => e.getElementsByTagName('img').length > 0);
@@ -633,12 +633,21 @@ function makeImage() {
     var columns = 0;
     var rowData = [];
     var pad_x = 64, pad_y = 64;
+    let count = 0;
     for (var row of rows) {
+        count++;
+        if (count < minRow) {
+            continue;
+        }
         var images = Array.from(row.getElementsByTagName('img'));
         var real_images = images.filter(i => i.src != 'placeholder.png');
         widest_width = Math.max(widest_width, ...real_images.map(i => i.naturalWidth));
         var height = Math.max(...real_images.map(i => i.naturalHeight));
         var y = pad_y + total_height;
+        if (total_height + height > 30000) { // 32,767 is max canvas size
+            setTimeout(() => makeImage(count, false), 100);
+            break;
+        }
         total_height += height + 1;
         columns = Math.max(columns, images.length);
         var label = row.getElementsByClassName('axis_label_td')[0];
@@ -646,11 +655,13 @@ function makeImage() {
     }
     console.log(`Will create image at ${widest_width * columns} x ${total_height} pixels`);
     var holder = document.getElementById('save_image_helper');
-    for (var oldImage of holder.getElementsByTagName('img')) {
-        oldImage.remove();
-    }
-    for (var oldImage of holder.getElementsByTagName('canvas')) {
-        oldImage.remove();
+    if (doClear) {
+        for (var oldImage of holder.getElementsByTagName('img')) {
+            oldImage.remove();
+        }
+        for (var oldImage of holder.getElementsByTagName('canvas')) {
+            oldImage.remove();
+        }
     }
     document.getElementById('save_image_info').style.display = 'block';
     // Temporary canvas to measure what padding we need
