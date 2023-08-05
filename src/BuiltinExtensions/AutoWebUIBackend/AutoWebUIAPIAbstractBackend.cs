@@ -30,7 +30,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
         }
         try
         {
-            string remoteModel = await QueryLoadedModel();
+            string remoteModel = await QueryLoadedModel() ?? "";
             if (remoteModel.EndsWith(']'))
             {
                 remoteModel = remoteModel.BeforeLast(" [");
