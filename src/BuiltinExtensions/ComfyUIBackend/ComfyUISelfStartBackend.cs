@@ -73,7 +73,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
     {
         EnsureComfyFile();
         ComfyUISelfStartSettings settings = SettingsRaw as ComfyUISelfStartSettings;
-        string modelPath = $"--extra-model-paths-config {Environment.CurrentDirectory}/Data/comfy-auto-model.yaml";
+        string modelPath = $"--extra-model-paths-config \"{Environment.CurrentDirectory}/Data/comfy-auto-model.yaml\"";
         if (!settings.StartScript.EndsWith("main.py"))
         {
             Logs.Warning($"ComfyUI start script is '{settings.StartScript}', which looks wrong - did you forget to append 'main.py' on the end?");
