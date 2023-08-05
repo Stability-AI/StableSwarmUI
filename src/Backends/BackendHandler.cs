@@ -620,22 +620,30 @@ public class BackendHandler
                 }
                 return;
             }
-            foreach (T2IBackendRequest request in T2IBackendRequests.Values.ToArray())
+            try
             {
-                if (request.Cancel.IsCancellationRequested)
+                foreach (T2IBackendRequest request in T2IBackendRequests.Values.ToArray())
                 {
-                    T2IBackendRequests.TryRemove(request.ID, out _);
-                    request.CompletedEvent.Set();
-                    continue;
+                    if (request.Cancel.IsCancellationRequested)
+                    {
+                        T2IBackendRequests.TryRemove(request.ID, out _);
+                        request.CompletedEvent.Set();
+                        continue;
+                    }
+                    request.TryFind();
+                    if (request.Result is not null || request.Failure is not null)
+                    {
+                        T2IBackendRequests.TryRemove(request.ID, out _);
+                        request.CompletedEvent.Set();
+                    }
                 }
-                request.TryFind();
-                if (request.Result is not null || request.Failure is not null)
-                {
-                    T2IBackendRequests.TryRemove(request.ID, out _);
-                    request.CompletedEvent.Set();
-                }
+                CheckBackendsSignal.WaitAsync(TimeSpan.FromSeconds(1), Program.GlobalProgramCancel).Wait();
             }
-            CheckBackendsSignal.WaitAsync(TimeSpan.FromSeconds(1), Program.GlobalProgramCancel).Wait();
+            catch (Exception ex)
+            {
+                Logs.Error($"Backend handler loop error: {ex}");
+                Task.Delay(2000, Program.GlobalProgramCancel).Wait(); // Delay a bit to be safe in case of repeating errors.
+            }
         }
     }
 
