@@ -236,16 +236,17 @@ public class T2IModelHandler
         }
     }
 
+    private static readonly string[] AutoImageFormatSuffixes = new[] { ".jpg", ".png", ".preview.png", ".preview.jpg" };
+
     public string GetAutoFormatImage(T2IModel model)
     {
         string prefix = $"{FolderPath}/{model.Name.BeforeLast('.')}";
-        if (File.Exists(prefix + ".jpg"))
+        foreach (string suffix in AutoImageFormatSuffixes)
         {
-            return new Image(File.ReadAllBytes(prefix + ".jpg")).ToMetadataFormat();
-        }
-        else if (File.Exists(prefix + ".png"))
-        {
-            return new Image(File.ReadAllBytes(prefix + ".png")).ToMetadataFormat();
+            if (File.Exists(prefix + suffix))
+            {
+                return new Image(File.ReadAllBytes(prefix + suffix)).ToMetadataFormat();
+            }
         }
         return null;
     }
