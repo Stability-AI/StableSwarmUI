@@ -14,7 +14,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
 {
     public class ComfyUISelfStartSettings : AutoConfiguration
     {
-        [ConfigComment("The location of the 'main.py' file. Can be an absolute or relative path, but must end with 'main.py'.")]
+        [ConfigComment("The location of the 'main.py' file. Can be an absolute or relative path, but must end with 'main.py'.\nIf you used the installer, this should be 'dlbackend/ComfyUI/main.py'.")]
         public string StartScript = "";
 
         [ConfigComment("Any arguments to include in the launch script.")]
