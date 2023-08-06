@@ -8,6 +8,8 @@ let comfyButtonsArea = getRequiredElementById('comfy_workflow_buttons');
 
 let comfyObjectData = {};
 
+let comfyHasTriedToLoad = false;
+
 /**
  * Tries to load the ComfyUI workflow frame.
  */
@@ -62,8 +64,6 @@ function comfyReloadObjectInfo() {
     });
     return promise;
 }
-
-refreshParamsExtra.push(comfyReloadObjectInfo);
 
 /**
  * Gets the current Comfy API prompt and UI Workflow file (async) then calls a callback with the (workflow, prompt).
@@ -472,6 +472,10 @@ getRequiredElementById('maintab_comfyworkfloweditor').addEventListener('click', 
 backendsRevisedCallbacks.push(() => {
     let hasAny = Object.values(backends_loaded).filter(x => x.type.startsWith('comfyui_')).length > 0;
     getRequiredElementById('maintab_comfyworkfloweditor').style.display = hasAny ? 'block' : 'none';
+    if (hasAny && !comfyHasTriedToLoad) {
+        comfyHasTriedToLoad = true;
+        comfyReloadObjectInfo();
+    }
 });
 
 /**
