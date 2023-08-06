@@ -147,7 +147,18 @@ public class StabilityAPIBackend : AbstractT2IBackend
             ["text_prompts"] = prompts,
             ["seed"] = user_input.Get(T2IParamTypes.Seed)
         };
-        string engine = user_input.Get(StabilityAPIExtension.EngineParam) ?? "stable-diffusion-v1-5";
+        T2IModel model = user_input.Get(T2IParamTypes.Model);
+        string sapiEngineForModel = model.ModelClass?.ID switch
+        {
+            "stable-diffusion-xl-v1-base" or "stable-diffusion-xl-v1-refiner" => "stable-diffusion-xl-1024-v1-0",
+            "stable-diffusion-v2-inpainting" => "stable-inpainting-512-v2-0",
+            "stable-diffusion-v2-depth" => "stable-diffusion-depth-v2-0",
+            "stable-diffusion-v1-inpainting" => "stable-inpainting-v1-0",
+            "stable-diffusion-v2-768-v" => "stable-diffusion-768-v2-1",
+            "stable-diffusion-v2-512" => "stable-diffusion-512-v2-1",
+            _ => "stable-diffusion-v1-5"
+        };
+        string engine = user_input.Get(StabilityAPIExtension.EngineParam, sapiEngineForModel);
         // TODO: Model tracking.
         JObject response = null;
         try
