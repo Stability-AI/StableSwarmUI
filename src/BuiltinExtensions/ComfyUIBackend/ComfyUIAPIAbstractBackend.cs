@@ -81,8 +81,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         if (result.ContainsKey("error"))
         {
             Logs.Debug($"Error came from prompt: {workflow}");
-            Logs.Error($"ComfyUI error: {result}");
-            throw new Exception("ComfyUI errored");
+            throw new InvalidDataException($"ComfyUI errored: {result}");
         }
         string promptId = result["prompt_id"].ToString();
         JObject output;

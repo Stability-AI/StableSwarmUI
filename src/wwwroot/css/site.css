@@ -379,3 +379,6 @@ textarea, input, select {
     color: var(--text);
     opacity: 0.3;
 }
+.toast-error-box .toast-body {
+    white-space: pre-wrap;
+}
