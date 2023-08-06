@@ -6,6 +6,8 @@ set COMMANDLINE_ARGS="%4"
 
 cd /D %2
 
+echo Generic launcher starting, device=%1, path=%2, yielded=%~dp0, command=%3, args=%4, launch mode=%5, caller tool path=%6
+
 set PYTHONUNBUFFERED=true
 
 set "argument=%~4"

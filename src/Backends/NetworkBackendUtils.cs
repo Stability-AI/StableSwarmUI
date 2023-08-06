@@ -130,10 +130,13 @@ public static class NetworkBackendUtils
                     start.ArgumentList.Add("python");
                 }
             }
+            Logs.Debug($"Will use python: {start.ArgumentList.Last()}");
         }
         else
         {
             start.ArgumentList.Add("shellexec");
+            start.ArgumentList.Add("none");
+            Logs.Debug($"Will shellexec");
         }
         BackendStatus status = BackendStatus.LOADING;
         reviseStatus(status);
@@ -149,6 +152,7 @@ public static class NetworkBackendUtils
                 Logs.Debug($"{nameSimple} launcher: {line}");
             }
             status = getStatus();
+            Logs.Debug($"Status of {nameSimple} after process end is {status}");
             if (status == BackendStatus.RUNNING || status == BackendStatus.LOADING)
             {
                 status = BackendStatus.ERRORED;
@@ -168,6 +172,6 @@ public static class NetworkBackendUtils
             }
             status = getStatus();
         }
-        Logs.Debug($"{nameSimple} self-start port {port} loop ending.");
+        Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
     }
 }
