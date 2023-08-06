@@ -169,6 +169,10 @@ public class StabilityAPIBackend : AbstractT2IBackend
         try
         {
             response = await Post($"generation/{engine}/text-to-image", obj);
+            if (!response.ContainsKey("artifacts") && response.TryGetValue("message", out JToken message))
+            {
+                throw new InvalidDataException($"StabilityAPI refused to generate: {message}");
+            }
             List<Image> images = new();
             foreach (JObject img in response["artifacts"].Cast<JObject>())
             {
