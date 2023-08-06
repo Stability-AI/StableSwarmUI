@@ -579,7 +579,6 @@ function pageSizer() {
         midDrag = false;
     });
     for (let tab of getRequiredElementById('bottombartabcollection').getElementsByTagName('a')) {
-        console.log(tab)
         tab.addEventListener('click', (e) => {
             midForceToBottom = false;
             setPageBars();
