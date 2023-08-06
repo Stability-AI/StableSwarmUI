@@ -172,11 +172,32 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 string fixedTag = Utilities.UnescapeJsonString(tag);
                 string tagName = fixedTag.BeforeAndAfter(':', out string defVal);
                 string tagBasic = tagName.BeforeAndAfter('+', out string tagExtra);
+                string fillDynamic()
+                {
+                    T2IParamType type = T2IParamTypes.GetType(tagBasic, user_input);
+                    if (type is null)
+                    {
+                        throw new InvalidDataException($"Unknown param type request '{tagBasic}'");
+                    }
+                    if (!user_input.TryGetRaw(type, out object val) || val is null)
+                    {
+                        return null;
+                    }
+                    if (type.Type == T2IParamDataType.INTEGER && type.NumberView == NumberViewType.SEED && (long)val == -1)
+                    {
+                        return $"{Random.Shared.Next()}";
+                    }
+                    return val.ToString();
+                }
+                long fixSeed(long input)
+                {
+                    return input == -1 ? Random.Shared.Next() : input;
+                }
                 string filled = tagBasic switch
                 {
                     "prompt" => user_input.Get(T2IParamTypes.Prompt),
                     "negative_prompt" => user_input.Get(T2IParamTypes.NegativePrompt),
-                    "seed" => $"{user_input.Get(T2IParamTypes.Seed) + (int.TryParse(tagExtra, out int add) ? add : 0)}",
+                    "seed" => $"{fixSeed(user_input.Get(T2IParamTypes.Seed)) + (int.TryParse(tagExtra, out int add) ? add : 0)}",
                     "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
                     "width" => $"{user_input.Get(T2IParamTypes.Width)}",
                     "height" => $"{user_input.Get(T2IParamTypes.Height)}",
@@ -189,7 +210,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "comfy_scheduler" or "comfyui_scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "normal" : defVal),
                     "model" => user_input.Get(T2IParamTypes.Model).ToString(),
                     "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
-                    _ => user_input.TryGetRaw(T2IParamTypes.GetType(tagBasic, user_input), out object val) ? val?.ToString() : null
+                    _ => fillDynamic()
                 };
                 if (tagExtra == "seed" && filled == "-1")
                 {

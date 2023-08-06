@@ -51,17 +51,27 @@ public class ComfyUIBackendExtension : Extension
         {
             string nameNoPrefix = name.After("comfyrawworkflowinput");
             T2IParamDataType type = FakeRawInputType.Type;
-            foreach (T2IParamDataType possible in Enum.GetValues<T2IParamDataType>())
+            NumberViewType numberType = NumberViewType.BIG;
+            if (nameNoPrefix.StartsWith("seed"))
             {
-                string typeId = possible.ToString().ToLowerFast();
-                if (nameNoPrefix.StartsWith(typeId))
+                type = T2IParamDataType.INTEGER;
+                numberType = NumberViewType.SEED;
+                nameNoPrefix = nameNoPrefix.After("seed");
+            }
+            else
+            {
+                foreach (T2IParamDataType possible in Enum.GetValues<T2IParamDataType>())
                 {
-                    nameNoPrefix = nameNoPrefix.After(typeId);
-                    type = possible;
-                    break;
+                    string typeId = possible.ToString().ToLowerFast();
+                    if (nameNoPrefix.StartsWith(typeId))
+                    {
+                        nameNoPrefix = nameNoPrefix.After(typeId);
+                        type = possible;
+                        break;
+                    }
                 }
             }
-            T2IParamType resType = FakeRawInputType with { Name = nameNoPrefix, ID = name, HideFromMetadata = false, Type = type };
+            T2IParamType resType = FakeRawInputType with { Name = nameNoPrefix, ID = name, HideFromMetadata = false, Type = type, NumberView = numberType };
             if (type == T2IParamDataType.MODEL)
             {
                 static string cleanup(string _, string val)

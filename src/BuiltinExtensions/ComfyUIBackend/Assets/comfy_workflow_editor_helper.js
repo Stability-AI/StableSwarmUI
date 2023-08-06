@@ -269,7 +269,7 @@ function comfyBuildParams(callback) {
                             type = 'decimal';
                         }
                     }
-                    inputIdDirect = injectType(inputIdDirect, type);
+                    inputIdDirect = injectType(inputIdDirect, asSeed ? 'seed' : type);
                     node.inputs[inputId] = "%%_COMFYFIXME_${" + inputIdDirect + (asSeed ? "+seed" : "") + ":" + val + "}_ENDFIXME_%%";
                 }
                 else if (typeof val == 'string') {
