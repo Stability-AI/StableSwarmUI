@@ -116,7 +116,10 @@ public class ComfyUIBackendExtension : Extension
         {
             tasks.Add(backend.LoadValueSet());
         }
-        Task.WaitAll(tasks.ToArray(), Program.GlobalProgramCancel);
+        if (tasks.Any())
+        {
+            Task.WaitAll(tasks.ToArray(), Program.GlobalProgramCancel);
+        }
     }
 
 

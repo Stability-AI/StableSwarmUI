@@ -87,6 +87,7 @@ public class T2IModelHandler
             return;
         }
         IsShutdown = true;
+        Program.ModelRefreshEvent -= Refresh;
         lock (MetadataLock)
         {
             foreach ((LiteDatabase ldb, _) in ModelMetadataCachePerFolder.Values)

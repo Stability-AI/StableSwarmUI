@@ -182,6 +182,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
         catch (Exception ex)
         {
             Logs.Error($"StabilityAPI request failed: {ex.GetType().Name}: {ex.Message}");
+            Logs.Debug($"Raw StabilityAPI request input was: {obj}");
             Logs.Debug($"raw StabilityAPI response for above error was: {response}");
             throw;
         }
