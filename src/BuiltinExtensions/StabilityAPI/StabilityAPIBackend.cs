@@ -1,5 +1,6 @@
 ﻿
 using FreneticUtilities.FreneticDataSyntax;
+using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
@@ -135,6 +136,10 @@ public class StabilityAPIBackend : AbstractT2IBackend
                 ["text"] = user_input.Get(T2IParamTypes.NegativePrompt),
                 ["weight"] = -1
             });
+        }
+        if (prompts.IsEmpty())
+        {
+            throw new InvalidDataException($"Invalid StabilityAPI generation input: missing prompt!");
         }
         JObject obj = new()
         {
