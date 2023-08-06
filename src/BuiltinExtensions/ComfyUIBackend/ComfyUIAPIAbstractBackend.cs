@@ -174,16 +174,12 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 string tagBasic = tagName.BeforeAndAfter('+', out string tagExtra);
                 string fillDynamic()
                 {
-                    T2IParamType type = T2IParamTypes.GetType(tagBasic, user_input);
-                    if (type is null)
-                    {
-                        throw new InvalidDataException($"Unknown param type request '{tagBasic}'");
-                    }
+                    T2IParamType type = T2IParamTypes.GetType(tagBasic, user_input) ?? throw new InvalidDataException($"Unknown param type request '{tagBasic}'");
                     if (!user_input.TryGetRaw(type, out object val) || val is null)
                     {
-                        return null;
+                        val = defVal;
                     }
-                    if (type.Type == T2IParamDataType.INTEGER && type.NumberView == NumberViewType.SEED && (long)val == -1)
+                    if (type.Type == T2IParamDataType.INTEGER && type.NumberView == NumberViewType.SEED && long.Parse(val.ToString()) == -1)
                     {
                         return $"{Random.Shared.Next()}";
                     }
@@ -212,10 +208,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
                     _ => fillDynamic()
                 };
-                if (tagExtra == "seed" && filled == "-1")
-                {
-                    filled = $"{Random.Shared.Next()}";
-                }
                 filled ??= defVal;
                 return Utilities.EscapeJsonString(filled);
             });

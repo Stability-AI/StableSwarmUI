@@ -127,9 +127,13 @@ function comfyBuildParams(callback) {
         let nodeIdToClean = {};
         let nodeStaticUnique = [];
         let nodeLabelPaths = {};
+        let nodeIsRandomize = {};
         for (let node of workflow.nodes) {
             if (node.title) {
                 labelAlterations[`${node.id}`] = node.title;
+            }
+            if (node.widgets_values && node.widgets_values.includes('randomize')) {
+                nodeIsRandomize[`${node.id}`] = true;
             }
             if (node.type == 'PrimitiveNode' && node.title) {
                 let cleanTitle = cleanParamName(node.title);
@@ -223,6 +227,9 @@ function comfyBuildParams(callback) {
                         type = 'integer';
                         number_view_type = 'seed';
                         asSeed = true;
+                        if (nodeId in nodeIsRandomize) {
+                            val = -1;
+                        }
                     }
                     else if (['width', 'height'].includes(inputId)) {
                         type = 'integer';
