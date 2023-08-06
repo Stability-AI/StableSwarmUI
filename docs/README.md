@@ -1,6 +1,7 @@
 # StableSwarmUI Documentation
 
 - [Basic Usage](/docs/Basic%20Usage.md) to learn how to get started.
+- [Using more GPUs](/docs/Using%20More%20GPUs.md) for more info about splitting generations between multiple GPUs.
 - TODO: Advanced usage (advanced features and all)
 - TODO: Settings
 - TODO: Account system
