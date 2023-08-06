@@ -34,7 +34,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
         string fn = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.DataPath, Settings.KeyFile);
         if (string.IsNullOrWhiteSpace(fn) || fn.Contains("..") || !File.Exists(fn))
         {
-            Logs.Warning($"Refusing to initialize SAPI backend because {fn} does not exist or is invalid.");
+            Logs.Warning($"Refusing to initialize StabilityAPI backend because {fn} does not exist or is invalid.");
             Status = BackendStatus.DISABLED;
             return;
         }
@@ -44,7 +44,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
         await UpdateBalance();
         if (Credits == -1)
         {
-            Logs.Warning($"SAPI Backend init failed.");
+            Logs.Warning($"StabilityAPI Backend init failed.");
             Status = BackendStatus.DISABLED;
             return;
         }
@@ -110,7 +110,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
         {
             Credits = _cred;
         }
-        Logs.Info($"SAPI balance: {Credits}");
+        Logs.Info($"StabilityAPI balance: {Credits}");
     }
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
@@ -149,21 +149,31 @@ public class StabilityAPIBackend : AbstractT2IBackend
         };
         string engine = user_input.Get(StabilityAPIExtension.EngineParam) ?? "stable-diffusion-v1-5";
         // TODO: Model tracking.
-        JObject response = await Post($"generation/{engine}/text-to-image", obj);
-        List<Image> images = new();
-        foreach (JObject img in response["artifacts"].Cast<JObject>())
+        JObject response = null;
+        try
         {
-            if (img["finishReason"].ToString() == "ERROR")
+            response = await Post($"generation/{engine}/text-to-image", obj);
+            List<Image> images = new();
+            foreach (JObject img in response["artifacts"].Cast<JObject>())
             {
-                Logs.Error($"SAPI returned error for request.");
+                if (img["finishReason"].ToString() == "ERROR")
+                {
+                    Logs.Error($"StabilityAPI returned error for request.");
+                }
+                else
+                {
+                    images.Add(new(img["base64"].ToString()));
+                }
             }
-            else
-            {
-                images.Add(new(img["base64"].ToString()));
-            }
+            _ = Task.Run(() => UpdateBalance().Wait());
+            return images.ToArray();
         }
-        _ = Task.Run(() => UpdateBalance().Wait());
-        return images.ToArray();
+        catch (Exception ex)
+        {
+            Logs.Error($"StabilityAPI request failed: {ex.GetType().Name}: {ex.Message}");
+            Logs.Debug($"raw StabilityAPI response for above error was: {response}");
+            throw;
+        }
     }
 
     public override IEnumerable<string> SupportedFeatures => StabilityAPIExtension.FeaturesSupported;
