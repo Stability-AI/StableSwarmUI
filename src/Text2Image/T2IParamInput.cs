@@ -78,7 +78,10 @@ public class T2IParamInput
     }
 
     /// <summary>Gets the value of the parameter, if it is present, or default if not.</summary>
-    public T Get<T>(T2IRegisteredParam<T> param)
+    public T Get<T>(T2IRegisteredParam<T> param) => Get(param, default);
+
+    /// <summary>Gets the value of the parameter, if it is present, or default if not.</summary>
+    public T Get<T>(T2IRegisteredParam<T> param, T defVal)
     {
         if (ValuesInput.TryGetValue(param.Type.ID, out object val))
         {
@@ -92,7 +95,7 @@ public class T2IParamInput
             }
             return (T)val;
         }
-        return default;
+        return defVal;
     }
 
     /// <summary>Gets the value of the parameter as a string, if it is present, or null if not.</summary>

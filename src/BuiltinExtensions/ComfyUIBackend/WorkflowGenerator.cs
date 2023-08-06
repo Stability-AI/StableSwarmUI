@@ -122,14 +122,35 @@ public class WorkflowGenerator
         #region Positive Prompt
         AddStep(g =>
         {
-            g.CreateNode("CLIPTextEncode", (_, n) =>
+            if (g.UserInput.TryGet(T2IParamTypes.Model, out T2IModel model) && model.ModelClass is not null && model.ModelClass.ID == "stable-diffusion-xl-v1-base")
             {
-                n["inputs"] = new JObject()
+                g.CreateNode("CLIPTextEncodeSDXL", (_, n) =>
                 {
-                    ["clip"] = g.FinalClip,
-                    ["text"] = g.UserInput.Get(T2IParamTypes.Prompt)
-                };
-            }, "6");
+                    n["inputs"] = new JObject()
+                    {
+                        ["clip"] = g.FinalClip,
+                        ["text_g"] = g.UserInput.Get(T2IParamTypes.Prompt),
+                        ["text_l"] = g.UserInput.Get(T2IParamTypes.Prompt),
+                        ["crop_w"] = 0,
+                        ["crop_h"] = 0,
+                        ["width"] = g.UserInput.Get(T2IParamTypes.Width, 1024),
+                        ["height"] = g.UserInput.Get(T2IParamTypes.Height, 1024),
+                        ["target_width"] = g.UserInput.Get(T2IParamTypes.Width, 1024),
+                        ["target_height"] = g.UserInput.Get(T2IParamTypes.Height, 1024)
+                    };
+                }, "6");
+            }
+            else
+            {
+                g.CreateNode("CLIPTextEncode", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["clip"] = g.FinalClip,
+                        ["text"] = g.UserInput.Get(T2IParamTypes.Prompt)
+                    };
+                }, "6");
+            }
         }, -8);
         #endregion
         #region Negative Prompt
