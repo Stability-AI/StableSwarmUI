@@ -369,3 +369,13 @@ textarea, input, select {
 .depth-number-input {
     width: 3rem;
 }
+.version-display {
+    position: fixed;
+    z-index: 1000;
+    bottom: 0.5rem;
+    vertical-align: bottom;
+    right: 0.5rem;
+    font-size: 80%;
+    color: var(--text);
+    opacity: 0.3;
+}

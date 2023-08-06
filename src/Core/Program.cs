@@ -64,7 +64,7 @@ public class Program
     {
         SpecialTools.Internationalize(); // Fix for MS's broken localization
         BsonMapper.Global.EmptyStringToNull = false; // Fix for LiteDB's broken handling of empty strings
-        Logs.Init("=== StableSwarmUI Starting ===");
+        Logs.Init($"=== StableSwarmUI v{Utilities.Version} Starting ===");
         AssemblyLoadContext.Default.Unloading += (_) => Shutdown();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Shutdown();
         PrepExtensions();
