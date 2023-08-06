@@ -39,7 +39,7 @@ public class ComfyUIBackendExtension : Extension
         T2IParamTypes.FakeTypeProviders.Remove(DynamicParamGenerator);
     }
 
-    public static T2IParamType FakeRawInputType = new("comfyworkflowraw", "", "", Type: T2IParamDataType.TEXT, ID: "comfyworkflowraw", HideFromMetadata: true); // TODO: Setting to toggle metadata
+    public static T2IParamType FakeRawInputType = new("comfyworkflowraw", "", "", Type: T2IParamDataType.TEXT, ID: "comfyworkflowraw", FeatureFlag: "comfyui", HideFromMetadata: true); // TODO: Setting to toggle metadata
 
     public T2IParamType DynamicParamGenerator(string name, T2IParamInput context)
     {
