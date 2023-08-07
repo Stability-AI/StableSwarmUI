@@ -132,7 +132,8 @@ function comfyBuildParams(callback) {
             if (node.title) {
                 labelAlterations[`${node.id}`] = node.title;
             }
-            if (node.widgets_values && node.widgets_values.includes('randomize')) {
+            let isRandom = node.widgets_values && node.widgets_values.includes('randomize');
+            if (isRandom) {
                 nodeIsRandomize[`${node.id}`] = true;
             }
             if (node.type == 'PrimitiveNode' && node.title) {
@@ -335,6 +336,18 @@ function comfyBuildParams(callback) {
                         useParamName = redirId;
                         actualId = redirId;
                         let title = nodeIdToClean[redirId] || redirId.substring(inputPrefix.length);
+                        let colon = title.indexOf(':');
+                        if (colon > 0 && cleanParamName(title.substring(0, colon)) == 'swarmui') {
+                            let reuseParam = cleanParamName(title.substring(colon + 1));
+                            if (rawGenParamTypesFromServer.filter(x => x.id == reuseParam).length > 0) {
+                                if (!defaultParamsRetain.includes(reuseParam)) {
+                                    defaultParamsRetain.push(reuseParam);
+                                    defaultParamValue[reuseParam] = val;
+                                }
+                                node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + reuseParam + ":" + val + "}_ENDFIXME_%%" : "${" + reuseParam + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
+                                return true;
+                            }
+                        }
                         actualId = addParam(fieldName, actualId, title, val, 'primitives', 'Primitives');
                     }
                     else if (defaultParamsRetain.includes(paramNameClean)) {
