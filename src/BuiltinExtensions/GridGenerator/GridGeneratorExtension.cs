@@ -160,6 +160,10 @@ public class GridGeneratorExtension : Extension
                 data.Rendering.Add(t);
             }
             Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
+            if (Program.Backends.QueuedRequests > Program.Backends.Count)
+            {
+                Task.Delay(100).Wait(); // Add even more delay if we're loading up the backends.
+            }
             return t;
         };
         PostPreprocessCallback = (grid) =>

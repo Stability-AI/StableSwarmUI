@@ -485,7 +485,7 @@ public class BackendHandler
         public void Complete()
         {
             Logs.Debug($"[BackendHandler] Backend request #{ID} finished.");
-            T2IBackendRequests.TryRemove(ID, out _);
+            Handler.T2IBackendRequests.TryRemove(ID, out _);
             ReleasePressure();
         }
 
@@ -552,7 +552,10 @@ public class BackendHandler
     }
 
     /// <summary>All currently tracked T2I backend requests.</summary>
-    public static ConcurrentDictionary<long, T2IBackendRequest> T2IBackendRequests = new();
+    public ConcurrentDictionary<long, T2IBackendRequest> T2IBackendRequests = new();
+
+    /// <summary>Number of currently waiting backend requests.</summary>
+    public int QueuedRequests => T2IBackendRequests.Count;
 
     /// <summary>(Blocking) gets the next available Text2Image backend.</summary>
     /// <returns>A 'using'-compatible wrapper for a backend.</returns>
