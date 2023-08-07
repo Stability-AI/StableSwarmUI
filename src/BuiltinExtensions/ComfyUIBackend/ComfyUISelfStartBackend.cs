@@ -7,6 +7,7 @@ using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -76,7 +77,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         string pathRaw = $"{Environment.CurrentDirectory}/Data/comfy-auto-model.yaml";
         if (pathRaw.Contains(' '))
         {
-            pathRaw = $"\"{pathRaw}\"";
+            pathRaw = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"'{pathRaw}'" : $"\"{pathRaw}\"";
         }
         string modelPath = $"--extra-model-paths-config {pathRaw}";
         if (!settings.StartScript.EndsWith("main.py"))
