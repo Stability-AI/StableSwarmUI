@@ -13,6 +13,7 @@ using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System;
 
 namespace StableSwarmUI.Utils;
 
@@ -294,11 +295,29 @@ public static class Utilities
     public static extern int sys_kill(int pid, int signal);
 
     /// <summary>Downloads a file from a given URL and saves it to a given filepath.</summary>
-    public static async Task DownloadFile(string url, string filepath)
+    public static async Task DownloadFile(string url, string filepath, Action<long> progressUpdate)
     {
         using FileStream writer = File.OpenWrite(filepath);
-        using Stream dlStream = await NetworkBackendUtils.MakeHttpClient().GetStreamAsync(url, Program.GlobalProgramCancel);
-        await dlStream.CopyToAsync(writer, Program.GlobalProgramCancel);
+        HttpClient client = NetworkBackendUtils.MakeHttpClient();
+        using Stream dlStream = await client.GetStreamAsync(url, Program.GlobalProgramCancel);
+        byte[] buffer = new byte[1024 * 1024 * 64]; // 64 megabytes, just grab as big a chunk as we can
+        long progress = 0;
+        long lastUpdate = Environment.TickCount64;
+        while (true)
+        {
+            int read = await dlStream.ReadAsync(buffer, Program.GlobalProgramCancel);
+            if (read <= 0)
+            {
+                return;
+            }
+            progress += read;
+            if (Environment.TickCount64 - lastUpdate > 1000)
+            {
+                progressUpdate?.Invoke(progress);
+                lastUpdate = Environment.TickCount64;
+            }
+            await writer.WriteAsync(buffer.AsMemory(0, read), Program.GlobalProgramCancel);
+        }
     }
 
     /// <summary>Converts a byte array to a hexadecimal string.</summary>

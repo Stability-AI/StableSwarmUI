@@ -115,12 +115,22 @@ class InstallerClass {
 
     submit() {
         let output = getRequiredElementById('install_output');
+        let progress = getRequiredElementById('install_progress_spot');
         output.innerText = 'Sending...\n';
         let data = this.getSubmittable();
         getRequiredElementById('installer_button_confirm').disabled = true;
         makeWSRequest('InstallConfirmWS', data, (response) => {
             if (response.info) {
                 output.innerText += response.info + "\n";
+            }
+            else if (response.progress) {
+                if (response.progress == 0) {
+                    progress.style.display = 'none';
+                }
+                else {
+                    progress.style.display = 'block';
+                    progress.innerText = `Progress: ${fileSizeStringify(response.progress)}`;
+                }
             }
             else if (response.success) {
                 window.location.href = '/Text2Image';

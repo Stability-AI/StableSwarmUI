@@ -88,6 +88,11 @@ public static class BasicAPIFeatures
                 await socket.SendJson(new JObject() { ["error"] = $"Invalid install type!" }, API.WebsocketTimeout);
                 return null;
         }
+        void updateProgress(long progress)
+        {
+            // TODO: better way to send these out without waiting
+            socket.SendJson(new JObject() { ["progress"] = progress }, API.WebsocketTimeout).Wait();
+        }
         HttpClient client = NetworkBackendUtils.MakeHttpClient();
         switch (backend)
         {
@@ -98,13 +103,15 @@ public static class BasicAPIFeatures
                     string path;
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
-                        await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_or_cpu_nightly_pytorch.7z", "dlbackend/comfyui_dl.7z");
+                        await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_or_cpu_nightly_pytorch.7z", "dlbackend/comfyui_dl.7z", updateProgress);
+                        updateProgress(0);
                         await output("Downloaded! Extracting...");
                         Directory.CreateDirectory("dlbackend/tmpcomfy/");
                         await Process.Start("launchtools/7z/win/7za.exe", $"x dlbackend/comfyui_dl.7z -o\"dlbackend/tmpcomfy/\" -y").WaitForExitAsync(Program.GlobalProgramCancel);
                         Directory.Move("dlbackend/tmpcomfy/ComfyUI_windows_portable_nightly_pytorch", "dlbackend/comfy");
                         await output("Installing prereqs...");
-                        await Utilities.DownloadFile("https://aka.ms/vs/16/release/vc_redist.x64.exe", "dlbackend/vc_redist.x64.exe");
+                        await Utilities.DownloadFile("https://aka.ms/vs/16/release/vc_redist.x64.exe", "dlbackend/vc_redist.x64.exe", updateProgress);
+                        updateProgress(0);
                         Process.Start(new ProcessStartInfo(Path.GetFullPath("dlbackend/vc_redist.x64.exe"), "/quiet /install /passive /norestart") { UseShellExecute = true }).WaitForExit();
                         path = "dlbackend/comfy/ComfyUI/main.py";
                     }
@@ -166,7 +173,8 @@ public static class BasicAPIFeatures
                 string filename = file.AfterLast('/');
                 try
                 {
-                    await Utilities.DownloadFile(file, $"{folder}/{filename}");
+                    await Utilities.DownloadFile(file, $"{folder}/{filename}", updateProgress);
+                    updateProgress(0);
                 }
                 catch (IOException ex)
                 {

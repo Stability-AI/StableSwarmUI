@@ -558,3 +558,20 @@ function forceSetDropdownValue(elem, val) {
     }
     elem.dispatchEvent(new Event('change'));
 }
+
+/**
+ * Returns a string representing the given file size in a human-readable format.
+ * For example "1.23 GiB"
+ */
+function fileSizeStringify(size) {
+    if (size > 1024 * 1024 * 1024) {
+        return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GiB`;
+    }
+    if (size > 1024 * 1024) {
+        return `${(size / (1024 * 1024)).toFixed(2)} MiB`;
+    }
+    if (size > 1024) {
+        return `${(size / 1024).toFixed(2)} KiB`;
+    }
+    return `${size} B`;
+}
