@@ -256,12 +256,16 @@ public class ComfyUIBackendExtension : Extension
             await Task.WhenAll(a, b);
             return;
         }
-        HttpRequestMessage request = new(new(context.Request.Method), $"{backend.Address}/{path}");
-        foreach (KeyValuePair<string, StringValues> header in context.Request.Headers)
+        // This code is utterly silly, but it's incredibly fragile, don't touch without significant testing
+        HttpResponseMessage response;
+        if (context.Request.Method == "POST")
         {
-            request.Headers.TryAddWithoutValidation(header.Key, (IEnumerable<string>)header.Value);
+            response = await backend.HttpClient.PostAsync($"{backend.Address}/{path}", new StreamContent(context.Request.Body));
         }
-        HttpResponseMessage response = await backend.HttpClient.SendAsync(request);
+        else
+        {
+            response = await backend.HttpClient.SendAsync(new(new(context.Request.Method), $"{backend.Address}/{path}"));
+        }
         int code = (int)response.StatusCode;
         if (code != 200)
         {
