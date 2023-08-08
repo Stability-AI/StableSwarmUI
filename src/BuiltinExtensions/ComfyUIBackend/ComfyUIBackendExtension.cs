@@ -2,6 +2,7 @@
 using FreneticUtilities.FreneticToolkit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
@@ -9,7 +10,6 @@ using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using System.IO;
 using System.Net.Http;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
@@ -256,15 +256,12 @@ public class ComfyUIBackendExtension : Extension
             await Task.WhenAll(a, b);
             return;
         }
-        HttpResponseMessage response;
-        if (context.Request.Method == "POST")
+        HttpRequestMessage request = new(new(context.Request.Method), $"{backend.Address}/{path}");
+        foreach (KeyValuePair<string, StringValues> header in context.Request.Headers)
         {
-            response = await backend.HttpClient.PostAsync($"{backend.Address}/{path}", new StreamContent(context.Request.Body));
+            request.Headers.TryAddWithoutValidation(header.Key, (IEnumerable<string>)header.Value);
         }
-        else
-        {
-            response = await backend.HttpClient.SendAsync(new(new(context.Request.Method), $"{backend.Address}/{path}"));
-        }
+        HttpResponseMessage response = await backend.HttpClient.SendAsync(request);
         int code = (int)response.StatusCode;
         if (code != 200)
         {
