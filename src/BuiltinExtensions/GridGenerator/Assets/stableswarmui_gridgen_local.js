@@ -11,7 +11,7 @@ function getMetadataScriptFor(slashed) {
 }
 
 function getMetadataForImage(img) {
-    let data = all_metadata[img.dataset.imgPath];
+    let data = all_metadata[img.dataset.img_path];
     if (!data) {
         return "";
     }

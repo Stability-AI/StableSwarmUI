@@ -254,7 +254,7 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         let slashed = imgPath.join('/');
         let actualUrl = slashed + '.' + rawData.ext;
         let id = scoreTrackCounter++;
-        newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img-path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
+        newContent += `<td id="td-img-${id}"><span></span><img class="table_img" data-img_path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" src="${actualUrl}" alt="${actualUrl}" /></td>`;
         let newScr = null;
         if (typeof getMetadataScriptFor != 'undefined') {
             newScr = document.createElement('script');
@@ -907,19 +907,28 @@ let lastUpdateObj = null;
 let updateCheckCount = 0;
 let updatesWithoutData = 0;
 
+function tryReloadImg(img) {
+    let target = img.dataset.errored_src;
+    delete img.dataset.errored_src;
+    img.removeAttribute('width');
+    img.removeAttribute('height');
+    img.addEventListener('error', function() {
+        setImgPlaceholder(img);
+    });
+    img.src = target;
+    if (typeof getMetadataScriptFor != 'undefined') {
+        let newScr = document.createElement('script');
+        newScr.src = getMetadataScriptFor(img.dataset.img_path);
+        document.getElementById('image_script_dump').appendChild(newScr);
+    }
+}
+
 function checkForUpdates() {
     if (!window.lastUpdated) {
         if (updatesWithoutData++ > 2) {
             console.log('Update-checker has no more updates.');
             for (let img of document.querySelectorAll(`img[data-errored_src]`)) {
-                let target = img.dataset.errored_src;
-                delete img.dataset.errored_src;
-                img.removeAttribute('width');
-                img.removeAttribute('height');
-                img.addEventListener('error', function() {
-                    setImgPlaceholder(img);
-                });
-                img.src = target;
+                tryReloadImg(img);
             }
             return;
         }
@@ -929,11 +938,7 @@ function checkForUpdates() {
         for (let url of window.lastUpdated) {
             for (let img of document.querySelectorAll(`img[data-errored_src]`)) {
                 if (img.dataset.errored_src.endsWith(url)) {
-                    let target = img.dataset.errored_src;
-                    delete img.dataset.errored_src;
-                    img.removeAttribute('width');
-                    img.removeAttribute('height');
-                    img.src = target;
+                    tryReloadImg(img);
                 }
             }
         }
