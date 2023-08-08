@@ -348,6 +348,7 @@ public class Program
             };
         }
         LaunchMode = GetCommandLineFlag("launch_mode", ServerSettings.LaunchMode);
+        NetworkBackendUtils.ExplicitShell = GetCommandLineFlag("explicit_shell", null);
     }
     #endregion
 

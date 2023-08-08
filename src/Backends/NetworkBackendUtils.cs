@@ -81,6 +81,8 @@ public static class NetworkBackendUtils
 
     public static int NextPort = 7820;
 
+    public static string ExplicitShell = null;
+
     public static Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput)
     {
         return DoSelfStart(startScript, nameSimple, gpuId, extraArgs, status => backend.Status = status, async (b) => { await initInternal(b); return backend.Status == BackendStatus.RUNNING; }, takeOutput, () => backend.Status);
@@ -102,11 +104,16 @@ public static class NetworkBackendUtils
             return;
         }
         int port = NextPort++;
+        string scriptName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "./launchtools/generic-launcher.bat" : "./launchtools/generic-launcher.sh";
         ProcessStartInfo start = new()
         {
-            FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "./launchtools/generic-launcher.bat" : "./launchtools/generic-launcher.sh",
+            FileName = ExplicitShell ?? scriptName,
             RedirectStandardOutput = true,
         };
+        if (ExplicitShell is not null)
+        {
+            start.ArgumentList.Add(scriptName);
+        }
         start.ArgumentList.Add($"{gpuId}");
         string dir = Path.GetDirectoryName(path);
         start.ArgumentList.Add(dir);
