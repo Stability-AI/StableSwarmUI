@@ -1,4 +1,0 @@
-
-stableswarmui:
-    base_path: /content/drive/MyDrive/StableSwarmUI
-    checkpoints: Models/Stable-Diffusion

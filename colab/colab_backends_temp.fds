@@ -1,9 +1,0 @@
-0:
-	type: comfyui_selfstart
-	settings:
-		#The location of the 'main.py' file.
-		StartScript: /content/StableSwarmUI/dlbackend/ComfyUI/main.py
-		#Any arguments to include in the launch script.
-		ExtraArgs: --extra-model-paths-config /content/StableSwarmUI/colab/extra_models_sui.yaml
-		#Which GPU to use, if multiple are available.
-		GPU_ID: 0
