@@ -1,12 +1,13 @@
 #!/bin/bash
 
-mkdir dlbackend
+ComfyDirectory=ComfyUI
 
+mkdir -p dlbackend
 cd dlbackend
 
-git clone https://github.com/comfyanonymous/ComfyUI
-
-cd ComfyUI
+[ -d $ComfyDirectory ] && rm -rf $ComfyDirectory
+git clone https://github.com/comfyanonymous/ComfyUI $ComfyDirectory
+cd $ComfyDirectory
 
 python3 -m venv venv
 
