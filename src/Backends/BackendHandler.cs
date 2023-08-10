@@ -274,7 +274,10 @@ public class BackendHandler
             {
                 try
                 {
-                    Logs.Init($"Initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name}...");
+                    if (data.Backend.IsReal)
+                    {
+                        Logs.Init($"Initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name}...");
+                    }
                     data.InitAttempts++;
                     data.Backend.Init().Wait(Program.GlobalProgramCancel);
                     any = true;

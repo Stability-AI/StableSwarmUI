@@ -35,6 +35,11 @@ public class User
         {
             Settings.TrySetFieldModified(field, false);
         }
+        Restrictions.Load(Program.ServerSettings.DefaultUserRestriction.Save(false));
+        foreach (string field in Restrictions.InternalData.SharedData.Fields.Keys)
+        {
+            Restrictions.TrySetFieldModified(field, false);
+        }
         Settings.Load(new FDSSection(data.RawSettings));
     }
 
