@@ -147,7 +147,9 @@ public class Image
             case "JPG75":
                 img.SaveAsJpeg(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder() { Quality = 75 });
                 break;
-                // TODO: webp, etc. with appropriate quality handlers
+            // TODO: webp, etc. with appropriate quality handlers
+            default:
+                throw new InvalidDataException($"User setting for image format is '{format}', which is invalid");
         }
         return new(ms.ToArray());
     }
