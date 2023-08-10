@@ -210,14 +210,12 @@ public class ComfyUIBackendExtension : Extension
             {
                 try
                 {
+                    byte[] recvBuf = new byte[10 * 1024 * 1024];
                     while (true)
                     {
                         // TODO: Should this input be allowed to remain open forever? Need a timeout, but the ComfyUI websocket doesn't seem to keepalive properly.
-                        JObject input = await socket.ReceiveJson(10 * 1024 * 1024, true); // TODO: Configurable limits
-                        if (input is not null)
-                        {
-                            await outSocket.SendJson(input, TimeSpan.FromMinutes(2));
-                        }
+                        WebSocketReceiveResult received = await socket.ReceiveAsync(recvBuf, Program.GlobalProgramCancel);
+                        await outSocket.SendAsync(recvBuf.AsMemory(0, received.Count), received.MessageType, received.EndOfMessage, Program.GlobalProgramCancel);
                         if (socket.CloseStatus.HasValue)
                         {
                             await outSocket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, Program.GlobalProgramCancel);
@@ -234,13 +232,11 @@ public class ComfyUIBackendExtension : Extension
             {
                 try
                 {
+                    byte[] recvBuf = new byte[10 * 1024 * 1024];
                     while (true)
                     {
-                        JObject output = await outSocket.ReceiveJson(10 * 1024 * 1024, true);
-                        if (output is not null)
-                        {
-                            await socket.SendJson(output, TimeSpan.FromMinutes(2));
-                        }
+                        WebSocketReceiveResult received = await outSocket.ReceiveAsync(recvBuf, Program.GlobalProgramCancel);
+                        await socket.SendAsync(recvBuf.AsMemory(0, received.Count), received.MessageType, received.EndOfMessage, Program.GlobalProgramCancel);
                         if (socket.CloseStatus.HasValue)
                         {
                             await socket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, Program.GlobalProgramCancel);

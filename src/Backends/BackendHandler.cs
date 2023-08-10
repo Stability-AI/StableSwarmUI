@@ -601,6 +601,10 @@ public class BackendHandler
                 Logs.Error($"[BackendHandler] Backend request #{request.ID} failed: {request.Failure}");
                 throw request.Failure;
             }
+            if (request.Cancel.IsCancellationRequested)
+            {
+                return null;
+            }
             Logs.Info($"[BackendHandler] Backend usage timeout, all backends occupied, giving up after {request.Waited.TotalSeconds} seconds.");
             throw new TimeoutException();
         }

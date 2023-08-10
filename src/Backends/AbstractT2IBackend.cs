@@ -17,6 +17,18 @@ public abstract class AbstractT2IBackend
     /// <summary>Generate an image.</summary>
     public abstract Task<Image[]> Generate(T2IParamInput user_input);
 
+    /// <summary>Runs a generating with live feedback (progress updates, previews, etc.)</summary>
+    /// <param name="user_input">The user input data to generate.</param>
+    /// <param name="batchId">Local batch-ID for this generation.</param>
+    /// <param name="takeOutput">Takes an output object: Image for final images, JObject for anything else.</param>
+    public virtual async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
+    {
+        foreach (Image img in await Generate(user_input))
+        {
+            takeOutput(img);
+        }
+    }
+
     /// <summary>Whether this backend has been configured validly.</summary>
     public volatile BackendStatus Status = BackendStatus.WAITING;
 

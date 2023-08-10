@@ -49,7 +49,7 @@ public static class T2IAPI
             {
                 return obj;
             }
-            if (obj.TryGetValue("image", out JToken image) && obj.TryGetValue("index", out JToken index))
+            if (obj.TryGetValue("image", out JToken image) && obj.TryGetValue("batch_index", out JToken index))
             {
                 imageOutputs.Add((int)index, image.ToString());
             }
@@ -110,7 +110,6 @@ public static class T2IAPI
         }
         user_input.NormalizeSeeds();
         List<T2IEngine.ImageInBatch> imageSet = new();
-        T2IEngine.ImageInBatch[] imageOut = null;
         List<Task> tasks = new();
         void removeDoneTasks()
         {
@@ -127,6 +126,7 @@ public static class T2IAPI
             }
         }
         int max_degrees = session.User.Restrictions.CalcMaxT2ISimultaneous;
+        List<int> discard = new();
         for (int i = 0; i < images && !claim.ShouldCancel; i++)
         {
             removeDoneTasks();
@@ -142,32 +142,27 @@ public static class T2IAPI
             int imageIndex = i;
             T2IParamInput thisParams = user_input.Clone();
             thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed) + imageIndex);
-            tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, claim, output, setError, isWS, Program.ServerSettings.Backends.MaxTimeoutMinutes,
-                (outputs, metadata) =>
+            tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, $"{imageIndex}", claim, output, setError, isWS, Program.ServerSettings.Backends.MaxTimeoutMinutes,
+                (image, metadata) =>
                 {
-                    for (int i = 0; i < outputs.Length; i++)
+                    (string url, string filePath) = session.SaveImage(image, imageIndex, thisParams, metadata);
+                    if (url == "ERROR")
                     {
-                        (string url, string filePath) = session.SaveImage(outputs[i], imageIndex, thisParams, metadata[i]);
-                        if (url == "ERROR")
-                        {
-                            setError($"Server failed to save images.");
-                            return;
-                        }
-                        int index;
-                        lock (imageSet)
-                        {
-                            index = imageSet.Count;
-                            imageSet.Add(new(outputs[i], () =>
-                            {
-                                if (filePath is not null && File.Exists(filePath))
-                                {
-                                    File.Delete(filePath);
-                                }
-                                imageOut[index] = null;
-                            }));
-                        }
-                        output(new JObject() { ["image"] = url, ["index"] = index, ["metadata"] = string.IsNullOrWhiteSpace(metadata[i]) ? null : metadata[i] });
+                        setError($"Server failed to save an image.");
+                        return;
                     }
+                    lock (imageSet)
+                    {
+                        imageSet.Add(new(image, () =>
+                        {
+                            if (filePath is not null && File.Exists(filePath))
+                            {
+                                File.Delete(filePath);
+                            }
+                            discard.Add(imageIndex);
+                        }));
+                    }
+                    output(new JObject() { ["image"] = url, ["batch_index"] = $"{imageIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
                 })));
             Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
         }
@@ -176,9 +171,8 @@ public static class T2IAPI
             await Task.WhenAny(tasks);
             removeDoneTasks();
         }
-        imageOut = imageSet.ToArray();
-        T2IEngine.PostBatchEvent?.Invoke(new(user_input, imageOut));
-        output(new JObject() { ["discard_indices"] = JArray.FromObject(imageOut.FindAllIndicesOf(i => i is null).ToArray()) });
+        T2IEngine.PostBatchEvent?.Invoke(new(user_input, imageSet.ToArray()));
+        output(new JObject() { ["discard_indices"] = JToken.FromObject(discard) });
     }
 
     public static HashSet<string> ImageExtensions = new() { "png", "jpg", "html" };

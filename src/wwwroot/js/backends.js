@@ -55,15 +55,16 @@ function addBackendToHtml(backend, disable, spot = null) {
     });
     let cardBody = createDiv(null, 'card-body');
     for (let setting of type.settings) {
-        let input;
+        let input = document.createElement('div');
         let pop = `<div class="sui-popover" id="popover_setting_${backend.id}_${setting.name}"><b>${escapeHtml(setting.name)}</b> (${setting.type}):<br>&emsp;${escapeHtml(setting.description)}</div>`;
         if (setting.type == 'text') {
-            input = document.createElement('div');
             input.innerHTML = makeTextInput(null, `setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name], 1, setting.placeholder) + pop;
         }
         else if (setting.type == 'integer') {
-            input = document.createElement('div');
             input.innerHTML = makeNumberInput(null, `setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name], 0, 1000, 1) + pop;
+        }
+        else if (setting.type == 'bool') {
+            input.innerHTML = makeCheckboxInput(null, `setting_${backend.id}_${setting.name}`, setting.name, setting.description, backend.settings[setting.name]) + pop;
         }
         else {
             console.log(`Cannot create input slot of type ${setting.type}`);

@@ -5,13 +5,14 @@ using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
-using StableSwarmUI.DataHolders;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Net.WebSockets;
 using System.Web;
+using Newtonsoft.Json;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -72,6 +73,148 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/{route}", new StringContent(input, StringConversionHelper.UTF8Encoding, "application/json"), interrupt));
     }
 
+    /// <summary>Connects a client websocket to the backend.</summary>
+    /// <param name="path">The path to connect on, after the '/', such as 'ws?clientId={uuid}'.</param>
+    public async Task<ClientWebSocket> ConnectWebsocket(string path)
+    {
+        ClientWebSocket outSocket = new();
+        outSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
+        string scheme = Address.BeforeAndAfter("://", out string addr);
+        scheme = scheme == "http" ? "ws" : "wss";
+        await outSocket.ConnectAsync(new Uri($"{scheme}://{addr}/{path}"), Program.GlobalProgramCancel);
+        return outSocket;
+    }
+
+    /// <summary>Runs a job with live feedback (progress updates, previews, etc.)</summary>
+    /// <param name="workflow">The workflow JSON to use.</param>
+    /// <param name="batchId">Local batch-ID for this generation.</param>
+    /// <param name="takeOutput">Takes an output object: Image for final images, JObject for anything else.</param>
+    /// <param name="interrupt">Interrupt token to use.</param>
+    public async Task AwaitJobLive(string workflow, string batchId, Action<object> takeOutput, CancellationToken interrupt)
+    {
+        JObject workflowJson = Utilities.ParseToJson(workflow);
+        int expectedNodes = workflowJson.Count;
+        string id = Guid.NewGuid().ToString();
+        ClientWebSocket socket = await ConnectWebsocket($"ws?clientId={id}");
+        int nodesDone = 0;
+        float curPercent;
+        void yieldProgressUpdate()
+        {
+            takeOutput(new JObject()
+            {
+                ["batch_index"] = batchId,
+                ["overall_percent"] = nodesDone / (float)expectedNodes,
+                ["current_percent"] = curPercent
+            });
+        }
+        try
+        {
+            workflow = $"{{\"prompt\": {workflow}, \"client_id\": \"{id}\"}}";
+            Logs.Verbose($"Will use workflow: {workflow}");
+            JObject promptResult = await PostJSONString("prompt", workflow, interrupt);
+            Logs.Verbose($"ComfyUI prompt said: {promptResult}");
+            if (promptResult.ContainsKey("error"))
+            {
+                Logs.Debug($"Error came from prompt: {workflow}");
+                throw new InvalidDataException($"ComfyUI errored: {promptResult}");
+            }
+            string promptId = $"{promptResult["prompt_id"]}";
+            long start = Environment.TickCount64;
+            while (true)
+            {
+                byte[] output = await socket.ReceiveData(32 * 1024 * 1024, Program.GlobalProgramCancel);
+                if (output is not null)
+                {
+                    if (Encoding.ASCII.GetString(output, 0, 8) == "{\"type\":")
+                    {
+                        JObject json = Utilities.ParseToJson(Encoding.UTF8.GetString(output));
+                        Logs.Verbose($"ComfyUI Websocket said: {json.ToString(Formatting.None)}");
+                        switch ($"{json["type"]}")
+                        {
+                            case "executing":
+                                if ($"{json["data"]["node"]}" == "") // Not true null for some reason, so, ... this.
+                                {
+                                    goto endloop;
+                                }
+                                goto case "execution_cached";
+                            case "execution_cached":
+                                nodesDone++;
+                                curPercent = 0;
+                                yieldProgressUpdate();
+                                break;
+                            case "progress":
+                                curPercent = json["data"].Value<float>("value") / json["data"].Value<float>("max");
+                                yieldProgressUpdate();
+                                break;
+                            case "executed":
+                                nodesDone = expectedNodes;
+                                curPercent = 0;
+                                yieldProgressUpdate();
+                                break;
+                            case "exection_start": // queuing
+                            case "status": // queuing
+                                break;
+                            default:
+                                Logs.Verbose($"Ignore type {json["type"]}");
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        //Logs.Verbose($"ComfyUI Websocket sent raw data: {Encoding.ASCII.GetString(output, 0, Math.Min(output.Length, 32))}...");
+                        long format = BitConverter.ToInt64(output, 0);
+                        string formatLabel = format switch { 1 => "jpeg", 2 => "png", _ => "jpeg" };
+                        takeOutput(new JObject()
+                        {
+                            ["batch_index"] = batchId,
+                            ["preview"] = $"data:image/{formatLabel};base64," + Convert.ToBase64String(output, 8, output.Length - 8)
+                        });
+                    }
+                }
+                if (socket.CloseStatus.HasValue)
+                {
+                    return;
+                }
+            }
+            endloop:
+            JObject historyOut = await SendGet<JObject>($"history/{promptId}");
+            if (!historyOut.Properties().IsEmpty())
+            {
+                foreach (Image image in await GetAllImagesForHistory(historyOut[promptId], interrupt))
+                {
+                    takeOutput(image);
+                }
+            }
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Done", interrupt);
+        }
+        finally
+        {
+            socket.Dispose();
+        }
+    }
+
+    private async Task<Image[]> GetAllImagesForHistory(JToken output, CancellationToken interrupt)
+    {
+        Logs.Verbose($"ComfyUI history said: {output}");
+        List<Image> outputs = new();
+        foreach (JToken outData in output["outputs"].Values())
+        {
+            foreach (JToken outImage in outData["images"])
+            {
+                string fname = outImage["filename"].ToString();
+                byte[] image = await(await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
+                if (image == null || image.Length == 0)
+                {
+                    Logs.Error($"Invalid/null/empty image data from ComfyUI server for '{fname}', under {outData}");
+                    continue;
+                }
+                outputs.Add(new Image(image));
+                PostResultCallback(fname);
+            }
+        }
+        return outputs.ToArray();
+    }
+
     public async Task<Image[]> AwaitJob(string workflow, CancellationToken interrupt)
     {
         workflow = $"{{\"prompt\": {workflow}}}";
@@ -104,29 +247,25 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             Thread.Sleep(50);
         }
-        Logs.Verbose($"ComfyUI history said: {output}");
-        List<Image> outputs = new();
-        foreach (JToken outData in output[promptId]["outputs"].Values())
-        {
-            foreach (JToken outImage in outData["images"])
-            {
-                string fname = outImage["filename"].ToString();
-                byte[] image = await (await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
-                if (image == null || image.Length == 0)
-                {
-                    Logs.Error($"Invalid/null/empty image data from ComfyUI server for '{fname}', under {outData}");
-                    continue;
-                }
-                outputs.Add(new Image(image));
-                PostResultCallback(fname);
-            }
-        }
-        return outputs.ToArray();
+        return await GetAllImagesForHistory(output[promptId], interrupt);
     }
 
     public volatile int ImageIDDedup = 0;
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
+    {
+        List<Image> images = new();
+        await GenerateLive(user_input, "0", output =>
+        {
+            if (output is Image img)
+            {
+                images.Add(img);
+            }
+        });
+        return images.ToArray();
+    }
+
+    public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
     {
         string workflow = null;
         if (user_input.TryGetRaw(ComfyUIBackendExtension.FakeRawInputType, out object workflowRaw))
@@ -218,7 +357,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         try
         {
-            return await AwaitJob(workflow, user_input.InterruptToken);
+            await AwaitJobLive(workflow, batchId, takeOutput, user_input.InterruptToken);
         }
         catch (Exception)
         {
@@ -247,7 +386,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     public override async Task<bool> LoadModel(T2IModel model)
     {
         string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model:error_missing_model}", Utilities.EscapeJsonString(model.ToString()));
-        await AwaitJob(workflow, CancellationToken.None);
+        await AwaitJob(workflow, Program.GlobalProgramCancel);
         CurrentModelName = model.Name;
         return true;
     }

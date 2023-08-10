@@ -105,12 +105,13 @@ window.addEventListener('keydown', function(kbevent) {
     }
 });
 
-function setCurrentImage(src, metadata = '') {
+function setCurrentImage(src, metadata = '', batchId = '') {
     let curImg = getRequiredElementById('current_image');
     curImg.innerHTML = '';
     let img = document.createElement('img');
     img.id = 'current_image_img';
     img.src = src;
+    img.dataset.batch_id = batchId;
     img.onclick = () => expandCurrentImage(src, metadata);
     curImg.appendChild(img);
     currentMetadataVal = metadata;
@@ -176,13 +177,13 @@ function appendImage(container, imageSrc, batchId, textPreview, metadata = '', t
     return div;
 }
 
-function gotImageResult(image, metadata) {
+function gotImageResult(image, metadata, batchId) {
     updateGenCount();
     let src = image;
-    let fname = src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
+    let fname = src && src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
     let batch_div = appendImage('current_image_batch', src, batches, fname, metadata, 'batch');
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
-    setCurrentImage(src, metadata);
+    setCurrentImage(src, metadata, batchId);
     return batch_div;
 }
 
@@ -259,24 +260,55 @@ function doGenerate(input_overrides = {}) {
         let images = {};
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides), data => {
             if (data.image) {
-                let batch_div = gotImageResult(data.image, data.metadata);
-                images[data.index] = [batch_div, data.image, data.metadata];
+                if (!(data.batch_index in images)) {
+                    let batch_div = gotImageResult(data.image, data.metadata, data.batch_index);
+                    images[data.batch_index] = {div: batch_div, image: null, metadata: null, overall_percent: 0, current_percent: 0};
+                }
+                else {
+                    let imgHolder = images[data.batch_index];
+                    let curImgElem = document.getElementById('current_image_img');
+                    if (curImgElem && curImgElem.dataset.batch_id == data.batch_index) {
+                        curImgElem.src = data.image;
+                    }
+                    imgHolder.div.querySelector('img').src = data.image;
+                    imgHolder.image = data.image;
+                }
+                images[data.batch_index].image = data.image;
+                images[data.batch_index].metadata = data.metadata;
+            }
+            if (data.gen_progress) {
+                // TODO: Render progress bars
+                if (!(data.gen_progress.batch_index in images)) {
+                    let batch_div = gotImageResult(data.gen_progress.preview || 'imgs/model_placeholder.jpg', `{"preview": "${data.gen_progress.current_percent}"}`, data.gen_progress.batch_index);
+                    images[data.gen_progress.batch_index] = {div: batch_div, image: null, metadata: null, overall_percent: 0, current_percent: 0};
+                }
+                let imgHolder = images[data.gen_progress.batch_index];
+                imgHolder.overall_percent = data.gen_progress.overall_percent;
+                imgHolder.current_percent = data.gen_progress.current_percent;
+                let curImgElem = document.getElementById('current_image_img');
+                if (data.gen_progress.preview && (!imgHolder.image || data.gen_progress.preview != imgHolder.image)) {
+                    if (curImgElem && curImgElem.dataset.batch_id == data.gen_progress.batch_index) {
+                        curImgElem.src = data.gen_progress.preview;
+                    }
+                    imgHolder.div.querySelector('img').src = data.gen_progress.preview;
+                    imgHolder.image = data.gen_progress.preview;
+                }
             }
             if (data.discard_indices) {
                 let needsNew = false;
                 for (let index of data.discard_indices) {
-                    let [batch_div, image, metadata] = images[index];
-                    batch_div.remove();
+                    let img = images[index];
+                    img.div.remove();
                     let curImgElem = document.getElementById('current_image_img');
-                    if (curImgElem && curImgElem.src == image) {
+                    if (curImgElem && curImgElem.src == img.image) {
                         needsNew = true;
                         delete images[index];
                     }
                 }
                 if (needsNew) {
-                    let img = Object.values(images);
-                    if (img.length > 0) {
-                        setCurrentImage(img[0][2], img[0][3]);
+                    let imgs = Object.values(images);
+                    if (imgs.length > 0) {
+                        setCurrentImage(imgs[0].image, imgs[0].metadata);
                     }
                 }
             }

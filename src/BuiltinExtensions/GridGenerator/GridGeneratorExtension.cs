@@ -129,15 +129,10 @@ public class GridGeneratorExtension : Extension
                 }
             }
             int iteration = runner.Iteration;
-            Task t = Task.Run(() => T2IEngine.CreateImageTask(thisParams, data.Claim, data.AddOutput, setError, true, Program.ServerSettings.Backends.MaxTimeoutMinutes,
-                (outputs, metadata) =>
+            Task t = Task.Run(() => T2IEngine.CreateImageTask(thisParams, $"{iteration}", data.Claim, data.AddOutput, setError, true, Program.ServerSettings.Backends.MaxTimeoutMinutes,
+                (image, metadata) =>
                 {
                     Logs.Info($"Completed gen #{iteration} (of {runner.TotalRun}) ... Set: '{set.Data}', file '{set.BaseFilepath}'");
-                    if (outputs.Length != 1)
-                    {
-                        setError($"Server generated {outputs.Length} images when only expecting 1.");
-                        return;
-                    }
                     string mainpath = $"{set.Grid.Runner.BasePath}/{set.BaseFilepath}";
                     string targetPath = $"{mainpath}.{set.Grid.Format}";
                     string dir = targetPath.Replace('\\', '/').BeforeLast('/');
@@ -145,15 +140,15 @@ public class GridGeneratorExtension : Extension
                     {
                         Directory.CreateDirectory(dir);
                     }
-                    File.WriteAllBytes(targetPath, outputs[0].ImageData);
+                    File.WriteAllBytes(targetPath, image.ImageData);
                     if (set.Grid.PublishMetadata)
                     {
-                        if (!string.IsNullOrWhiteSpace(metadata[0]))
+                        if (!string.IsNullOrWhiteSpace(metadata))
                         {
-                            File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata[0]}".EncodeUTF8());
+                            File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata}".EncodeUTF8());
                         }
                     }
-                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}", ["metadata"] = metadata[0] });
+                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}", ["metadata"] = metadata });
                 }));
             lock (data.UpdateLock)
             {

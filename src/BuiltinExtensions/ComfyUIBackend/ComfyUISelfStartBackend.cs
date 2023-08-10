@@ -21,6 +21,9 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         [ConfigComment("Any arguments to include in the launch script.")]
         public string ExtraArgs = "";
 
+        [ConfigComment("If unchecked, the system will automatically add some relevant arguments to the comfy launch. If checked, automatic args (other than port) won't be added.")]
+        public bool DisableInternalArgs = false;
+
         [ConfigComment("Which GPU to use, if multiple are available.")]
         public int GPU_ID = 0; // TODO: Determine GPU count and provide correct max
     }
@@ -73,18 +76,23 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
     public override async Task Init()
     {
         EnsureComfyFile();
+        string addedArgs = "";
         ComfyUISelfStartSettings settings = SettingsRaw as ComfyUISelfStartSettings;
-        string pathRaw = $"{Environment.CurrentDirectory}/Data/comfy-auto-model.yaml";
-        if (pathRaw.Contains(' '))
+        if (!settings.DisableInternalArgs)
         {
-            pathRaw = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"'{pathRaw}'" : $"\"{pathRaw}\"";
+            string pathRaw = $"{Environment.CurrentDirectory}/Data/comfy-auto-model.yaml";
+            if (pathRaw.Contains(' '))
+            {
+                pathRaw = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"'{pathRaw}'" : $"\"{pathRaw}\"";
+            }
+            string modelPath = $"--extra-model-paths-config {pathRaw}";
+            addedArgs = $" --preview-method auto {modelPath}";
         }
-        string modelPath = $"--extra-model-paths-config {pathRaw}";
         if (!settings.StartScript.EndsWith("main.py"))
         {
             Logs.Warning($"ComfyUI start script is '{settings.StartScript}', which looks wrong - did you forget to append 'main.py' on the end?");
         }
-        await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs + " --port {PORT} " + modelPath, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
+        await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs.Trim() + " --port {PORT}" + addedArgs, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
 
     public override async Task Shutdown()
