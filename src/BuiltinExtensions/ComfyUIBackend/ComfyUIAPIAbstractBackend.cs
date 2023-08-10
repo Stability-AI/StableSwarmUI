@@ -265,7 +265,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return images.ToArray();
     }
 
-    public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
+    public static string CreateWorkflow(T2IParamInput user_input, Func<string, string> initImageFixer)
     {
         string workflow = null;
         if (user_input.TryGetRaw(ComfyUIBackendExtension.FakeRawInputType, out object workflowRaw))
@@ -279,29 +279,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             {
                 throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
             }
-        }
-        List<Action> completeSteps = new();
-        string initImageFixer(string flow) // TODO: This is a hack.
-        {
-            if (workflow.Contains("${init_image}") && user_input.TryGet(T2IParamTypes.InitImage, out Image img))
-            {
-                int id = Interlocked.Increment(ref ImageIDDedup);
-                string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
-                Image fixedImage = img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height));
-                MultipartFormDataContent content = new()
-                    {
-                        { new ByteArrayContent(fixedImage.ImageData), "image", fname },
-                        { new StringContent("true"), "overwrite" }
-                    };
-                HttpClient.PostAsync($"{Address}/upload/image", content).Wait();
-                completeSteps.Add(() =>
-                {
-                    Interlocked.Decrement(ref ImageIDDedup);
-                });
-                // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
-                workflow = workflow.Replace("${init_image}", fname);
-            }
-            return workflow;
         }
         if (workflow is not null)
         {
@@ -355,6 +332,35 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             workflow = new WorkflowGenerator() { UserInput = user_input }.Generate().ToString();
             workflow = initImageFixer(workflow);
         }
+        return workflow;
+    }
+
+    public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
+    {
+        List<Action> completeSteps = new();
+        string initImageFixer(string workflow) // TODO: This is a hack.
+        {
+            if (workflow.Contains("${init_image}") && user_input.TryGet(T2IParamTypes.InitImage, out Image img))
+            {
+                int id = Interlocked.Increment(ref ImageIDDedup);
+                string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
+                Image fixedImage = img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height));
+                MultipartFormDataContent content = new()
+                    {
+                        { new ByteArrayContent(fixedImage.ImageData), "image", fname },
+                        { new StringContent("true"), "overwrite" }
+                    };
+                HttpClient.PostAsync($"{Address}/upload/image", content).Wait();
+                completeSteps.Add(() =>
+                {
+                    Interlocked.Decrement(ref ImageIDDedup);
+                });
+                // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
+                workflow = workflow.Replace("${init_image}", fname);
+            }
+            return workflow;
+        }
+        string workflow = CreateWorkflow(user_input, initImageFixer);
         try
         {
             await AwaitJobLive(workflow, batchId, takeOutput, user_input.InterruptToken);
