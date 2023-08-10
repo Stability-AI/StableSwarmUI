@@ -113,6 +113,8 @@ class GridGenClass {
 
     register() {
         let doGenerate = () => {
+            let startTime = Date.now();
+            let generatedCount = 0;
             let getOpt = (o) => document.getElementById('grid-gen-opt-' + o).checked;
             let data = {
                 'baseParams': getGenInput(),
@@ -139,6 +141,16 @@ class GridGenClass {
             makeWSRequestT2I('GridGenRun', data, data => {
                 if (data.image) {
                     gotImageResult(data.image, data.metadata);
+                    generatedCount++;
+                    let timeProgress = Math.round((Date.now() - startTime) / 1000);
+                    let rate = Math.round(generatedCount / timeProgress * 100) / 100;
+                    let message = `${rate} images per second`;
+                    if (rate < 1) {
+                        rate = 1 / rate;
+                        rate = Math.round(rate * 100) / 100;
+                        message = `${rate} seconds per image`;
+                    }
+                    outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="Output/Grids/${outputFolder.value}/index.html" target="_blank">Output/Grids/<code>${outputFolder.value}</code></a>`;
                 }
                 else if (data.success) {
                     outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="Output/Grids/${outputFolder.value}/index.html" target="_blank">Output/Grids/<code>${outputFolder.value}</code></a>`;
