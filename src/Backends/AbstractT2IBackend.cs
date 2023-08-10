@@ -58,6 +58,9 @@ public abstract class AbstractT2IBackend
 
     /// <summary>Handler-internal data for this backend.</summary>
     public BackendHandler.T2IBackendData BackendData;
+
+    /// <summary>Real backends are user-managed and save to file. Non-real backends are invisible to the user and file.</summary>
+    public bool IsReal = true;
 }
 
 public enum BackendStatus

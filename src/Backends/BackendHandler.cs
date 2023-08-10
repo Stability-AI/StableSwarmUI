@@ -31,6 +31,9 @@ public class BackendHandler
     /// <summary>Value to ensure unique IDs are given to new backends.</summary>
     public int LastBackendID = 0;
 
+    /// <summary>Value to ensure unique IDs are given to new non-real backends.</summary>
+    public int LastNonrealBackendID = -1;
+
     /// <summary>The path to where the backend list is saved.</summary>
     public string SaveFilePath = "Data/Backends.fds";
 
@@ -58,7 +61,7 @@ public class BackendHandler
     };
 
     /// <summary>Register a new backend-type by type ref.</summary>
-    public void RegisterBackendType(Type type, string id, string name, string description)
+    public BackendType RegisterBackendType(Type type, string id, string name, string description)
     {
         Type settingsType = type.GetNestedTypes().First(t => t.IsSubclassOf(typeof(AutoConfiguration)));
         AutoConfiguration.Internal.AutoConfigData settingsInternal = (Activator.CreateInstance(settingsType) as AutoConfiguration).InternalData.SharedData;
@@ -79,13 +82,15 @@ public class BackendHandler
             ["description"] = description,
             ["settings"] = JToken.FromObject(fields)
         };
-        BackendTypes.Add(id, new BackendType(id, name, description, settingsType, settingsInternal, type, netDesc));
+        BackendType typeObj = new(id, name, description, settingsType, settingsInternal, type, netDesc);
+        BackendTypes.Add(id, typeObj);
+        return typeObj;
     }
 
     /// <summary>Register a new backend-type by type ref.</summary>
-    public void RegisterBackendType<T>(string id, string name, string description) where T : AbstractT2IBackend
+    public BackendType RegisterBackendType<T>(string id, string name, string description) where T : AbstractT2IBackend
     {
-        RegisterBackendType(typeof(T), id, name, description);
+        return RegisterBackendType(typeof(T), id, name, description);
     }
 
     /// <summary>Special live data about a registered backend.</summary>
@@ -128,6 +133,28 @@ public class BackendHandler
         lock (CentralLock)
         {
             data.ID = LastBackendID++;
+            T2IBackends.TryAdd(data.ID, data);
+        }
+        data.Backend.Status = BackendStatus.WAITING;
+        BackendsToInit.Enqueue(data);
+        NewBackendInitSignal.Set();
+        return data;
+    }
+
+    public T2IBackendData AddNewNonrealBackend(BackendType type, AutoConfiguration config = null)
+    {
+        T2IBackendData data = new()
+        {
+            Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend
+        };
+        data.Backend.BackendData = data;
+        data.Backend.SettingsRaw = config ?? (Activator.CreateInstance(type.SettingsClass) as AutoConfiguration);
+        data.Backend.HandlerTypeData = type;
+        data.Backend.Handler = this;
+        data.Backend.IsReal = false;
+        lock (CentralLock)
+        {
+            data.ID = LastNonrealBackendID--;
             T2IBackends.TryAdd(data.ID, data);
         }
         data.Backend.Status = BackendStatus.WAITING;
@@ -315,6 +342,10 @@ public class BackendHandler
         FDSSection saveFile = new();
         foreach (T2IBackendData data in T2IBackends.Values)
         {
+            if (!data.Backend.IsReal)
+            {
+                continue;
+            }
             FDSSection data_section = new();
             data_section.Set("type", data.Backend.HandlerTypeData.ID);
             data_section.Set("settings", data.Backend.SettingsRaw.Save(true));

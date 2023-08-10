@@ -78,6 +78,10 @@ public class BackendAPI
         JObject toRet = new();
         foreach (BackendHandler.T2IBackendData data in Program.Backends.T2IBackends.Values.OrderBy(d => d.ID))
         {
+            if (!data.Backend.IsReal)
+            {
+                continue;
+            }
             toRet[data.ID.ToString()] = BackendToNet(data);
         }
         return toRet;
