@@ -8,7 +8,6 @@ body {
     left: 0px;
     width: 100vw;
     height: 100vh;
-    position: fixed;
 }
 @keyframes status_glow-warn {
     0% {background-color: #dddd55;}
