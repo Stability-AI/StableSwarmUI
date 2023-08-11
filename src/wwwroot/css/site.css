@@ -4,6 +4,8 @@
 body {
     background-color: var(--background);
     color: var(--text);
+    top: 0px;
+    position: fixed;
 }
 @keyframes status_glow-warn {
     0% {background-color: #dddd55;}
