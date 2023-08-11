@@ -160,9 +160,20 @@ let backendsListView = document.getElementById('backends_list');
 let backendsCheckRateCounter = 0;
 let hasAppliedFirstRun = false;
 
+function isVisible(element) {
+    // DOM Element visibility isn't supported in all browsers
+    // https://caniuse.com/mdn-api_element_checkvisibility
+    if (typeof element.checkVisibility != "undefined") {
+        return element.checkVisibility();
+    } else {
+        return !(element.offsetParent === null);
+    }
+}
+
 function backendLoopUpdate() {
     let loading = countBackendsByStatus('loading') + countBackendsByStatus('waiting');
-    if (loading > 0 || backendsListView.checkVisibility()) { // TODO: Safari is apparently dumb about 'checkVisibility'? Test and fix.
+
+    if (loading > 0 || !isVisible(backendsListView)) {
         if (backendsCheckRateCounter++ % 5 == 0) {
             loadBackendsList(); // TODO: only if have permission
         }
