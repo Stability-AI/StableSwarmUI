@@ -268,7 +268,7 @@ function doGenerate(input_overrides = {}) {
                     let imgHolder = images[data.batch_index];
                     let curImgElem = document.getElementById('current_image_img');
                     if (curImgElem && curImgElem.dataset.batch_id == data.batch_index) {
-                        curImgElem.src = data.image;
+                        setCurrentImage(data.image, data.metadata, data.batch_index)
                     }
                     imgHolder.div.querySelector('img').src = data.image;
                     imgHolder.image = data.image;
