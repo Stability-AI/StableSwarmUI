@@ -187,6 +187,18 @@ function gotImageResult(image, metadata, batchId) {
     return batch_div;
 }
 
+function gotImagePreview(image, metadata, batchId) {
+    updateGenCount();
+    let src = image;
+    let fname = src && src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
+    let batch_div = appendImage('current_image_batch', src, batches, fname, metadata, 'batch');
+    batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
+    if (!document.getElementById('current_image_img')) {
+        setCurrentImage(src, metadata, batchId);
+    }
+    return batch_div;
+}
+
 function updateCurrentStatusDirect(data) {
     if (data) {
         num_current_gens = data.waiting_gens;
@@ -262,16 +274,14 @@ function doGenerate(input_overrides = {}) {
             if (data.image) {
                 if (!(data.batch_index in images)) {
                     let batch_div = gotImageResult(data.image, data.metadata, data.batch_index);
-                    images[data.batch_index] = {div: batch_div, image: null, metadata: null, overall_percent: 0, current_percent: 0};
+                    images[data.batch_index] = {div: batch_div, image: data.image, metadata: data.metadata, overall_percent: 0, current_percent: 0};
                 }
                 else {
                     let imgHolder = images[data.batch_index];
-                    let curImgElem = document.getElementById('current_image_img');
-                    if (curImgElem && curImgElem.dataset.batch_id == data.batch_index) {
-                        curImgElem.src = data.image;
-                    }
+                    setCurrentImage(data.image, data.metadata, data.batch_index);
                     imgHolder.div.querySelector('img').src = data.image;
                     imgHolder.image = data.image;
+                    imgHolder.div.dataset.metadata = data.metadata;
                 }
                 images[data.batch_index].image = data.image;
                 images[data.batch_index].metadata = data.metadata;
@@ -279,7 +289,7 @@ function doGenerate(input_overrides = {}) {
             if (data.gen_progress) {
                 // TODO: Render progress bars
                 if (!(data.gen_progress.batch_index in images)) {
-                    let batch_div = gotImageResult(data.gen_progress.preview || 'imgs/model_placeholder.jpg', `{"preview": "${data.gen_progress.current_percent}"}`, data.gen_progress.batch_index);
+                    let batch_div = gotImagePreview(data.gen_progress.preview || 'imgs/model_placeholder.jpg', `{"preview": "${data.gen_progress.current_percent}"}`, data.gen_progress.batch_index);
                     images[data.gen_progress.batch_index] = {div: batch_div, image: null, metadata: null, overall_percent: 0, current_percent: 0};
                 }
                 let imgHolder = images[data.gen_progress.batch_index];
