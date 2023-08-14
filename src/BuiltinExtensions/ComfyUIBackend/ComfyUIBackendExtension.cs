@@ -256,7 +256,9 @@ public class ComfyUIBackendExtension : Extension
         HttpResponseMessage response;
         if (context.Request.Method == "POST")
         {
-            response = await backend.HttpClient.PostAsync($"{backend.Address}/{path}", new StreamContent(context.Request.Body));
+            HttpRequestMessage request = new(new HttpMethod("POST"), $"{backend.Address}/{path}") { Content = new StreamContent(context.Request.Body) };
+            request.Content.Headers.Add("Content-Type", context.Request.ContentType);
+            response = await backend.HttpClient.SendAsync(request);
         }
         else
         {
