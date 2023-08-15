@@ -165,8 +165,16 @@ function comfyBuildParams(callback) {
                 }
             }
         }
+        let hasSaves = false;
         for (let nodeId of Object.keys(prompt)) {
             let node = prompt[nodeId];
+            if (node.class_type == 'PreviewImage') {
+                delete prompt[nodeId];
+                continue;
+            }
+            if (node.class_type == 'SaveImage') {
+                hasSaves = true;
+            }
             if (node.inputs) {
                 for (let inputId of Object.keys(node.inputs)) {
                     let val = node.inputs[inputId];
@@ -180,6 +188,11 @@ function comfyBuildParams(callback) {
                     }
                 }
             }
+        }
+        if (!hasSaves) {
+            showError('ComfyUI Workflow must have at least one SaveImage node!');
+            document.getElementById('maintab_comfyworkfloweditor').click();
+            return;
         }
         let defaultParamsRetain = ['images', 'model'];
         let defaultParamValue = {};

@@ -427,7 +427,6 @@ function setDirectParamValue(param, value, paramElem = null) {
     }
     else if (param.type == "list" && paramElem.tagName == "SELECT") {
         let vals = typeof value == 'string' ? value.split(',').map(v => v.trim()) : value;
-        console.log(`set list ${param.id} to ${vals}`)
         for (let option of paramElem.options) {
             option.selected = vals.includes(option.value);
         }
