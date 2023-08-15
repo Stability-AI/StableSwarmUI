@@ -269,7 +269,9 @@ class GenPageBrowserClass {
      * Triggers an immediate in-place rerender of the current browser view.
      */
     rerender() {
-        this.build(this.lastPath, null, this.lastFiles);
+        if (this.lastPath != null) {
+            this.build(this.lastPath, null, this.lastFiles);
+        }
     }
 
     /**

@@ -243,6 +243,13 @@ function genInputs(delay_final = false) {
             });
             resTrick();
         }
+        let inputLoras = document.getElementById('input_loras');
+        if (inputLoras) {
+            inputLoras.addEventListener('change', () => {
+                updateLoraList();
+                sdLoraBrowser.browser.rerender();
+            });
+        }
         shouldApplyDefault = true;
         for (let param of gen_param_types) {
             if (param.visible) {
@@ -250,19 +257,18 @@ function genInputs(delay_final = false) {
                 let cookie = getCookie(`lastparam_input_${param.id}`);
                 if (cookie) {
                     shouldApplyDefault = false;
-                    if (param.type == "boolean") {
-                        elem.checked = cookie == "true";
+                    if (param.type != "image") {
+                        setDirectParamValue(param, cookie);
                     }
-                    else if (param.type != "image") {
-                        elem.value = cookie;
-                    }
-                    elem.dispatchEvent(new Event('input'));
-                    elem.dispatchEvent(new Event('change'));
                 }
                 if (!param.do_not_save) {
                     elem.addEventListener('change', () => {
                         if (param.type == "boolean") {
                             setCookie(`lastparam_input_${param.id}`, elem.checked, 0.25);
+                        }
+                        else if (param.type == "list" && elem.tagName == "SELECT") {
+                            let valSet = [...elem.selectedOptions].map(option => option.value);
+                            setCookie(`lastparam_input_${param.id}`, valSet.join(','), 0.25);
                         }
                         else if (param.type != "image") {
                             setCookie(`lastparam_input_${param.id}`, elem.value, 0.25);
@@ -358,7 +364,7 @@ function getGenInput(input_overrides = {}) {
         else if (type.id == "loraweights") {
             // Special-cased
         }
-        else if (type.type == "list") {
+        else if (type.type == "list" && elem.tagName == "SELECT") {
             let valSet = [...elem.selectedOptions].map(option => option.value);
             if (valSet.length > 0) {
                 input[type.id] = valSet.join(',');
@@ -412,23 +418,36 @@ function refreshParameterValues(callback = null) {
     });
 }
 
+function setDirectParamValue(param, value, paramElem = null) {
+    if (!paramElem) {
+        paramElem = getRequiredElementById(`input_${param.id}`);
+    }
+    if (param.type == "boolean") {
+        paramElem.checked = `${value}` == "true";
+    }
+    else if (param.type == "list" && paramElem.tagName == "SELECT") {
+        let vals = typeof value == 'string' ? value.split(',').map(v => v.trim()) : value;
+        console.log(`set list ${param.id} to ${vals}`)
+        for (let option of paramElem.options) {
+            option.selected = vals.includes(option.value);
+        }
+    }
+    else {
+        paramElem.value = value;
+    }
+    paramElem.dispatchEvent(new Event('input'));
+    paramElem.dispatchEvent(new Event('change'));
+}
+
 function resetParamsToDefault() {
     for (let param of gen_param_types) {
         let id = `input_${param.id}`;
-        let paramElem = getRequiredElementById(id);
         if (param.visible) {
-            if (param.type == "boolean") {
-                paramElem.checked = param.default;
-            }
-            else {
-                paramElem.value = param.default;
-            }
-            paramElem.dispatchEvent(new Event('input'));
-            paramElem.dispatchEvent(new Event('change'));
-            deleteCookie(`lastparam_input_${param.id}`);
+            setDirectParamValue(param, param.default);
+            deleteCookie(`lastparam_${id}`);
             if (param.toggleable) {
                 getRequiredElementById(`${id}_toggle`).checked = false;
-                deleteCookie(`lastparam_input_${param.id}_toggle`);
+                deleteCookie(`lastparam_${id}_toggle`);
                 doToggleEnable(id);
             }
             if (param.group && param.group.toggles) {

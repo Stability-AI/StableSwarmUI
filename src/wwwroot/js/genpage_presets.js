@@ -40,6 +40,11 @@ function clearPresetView() {
         else if (type.type == "text") {
             presetElem.value = "{value}";
         }
+        else if (type.type == "list" && elem.tagName == "SELECT") {
+            for (let option of presetElem.selectedOptions) {
+                option.selected = false;
+            }
+        }
         else {
             presetElem.value = '';
         }
@@ -66,6 +71,12 @@ function create_new_preset_button() {
         }
         else if (type.type == "text") {
             presetElem.value = "{value} " + elem.value;
+        }
+        else if (type.type == "list" && elem.tagName == "SELECT") {
+            let selected = elem.selectedOptions.map(o => o.value);
+            for (let option of presetElem.options) {
+                option.selected = selected.includes(option.value);
+            }
         }
         else {
             presetElem.value = elem.value;
@@ -181,15 +192,11 @@ function applyOnePreset(preset) {
         let param = gen_param_types.filter(p => p.id == key)[0];
         if (param) {
             let elem = getRequiredElementById(`input_${param.id}`);
-            if (param.type == "boolean") {
-                elem.checked = preset.param_map[key];
+            let val = preset.param_map[key];
+            if (typeof val == "string" && val.includes("{value}")) {
+                val = val.replace("{value}", elem.value);
             }
-            else if (preset.param_map[key].includes("{value}")) {
-                elem.value = preset.param_map[key].replace("{value}", elem.value);
-            }
-            else {
-                elem.value = preset.param_map[key];
-            }
+            setDirectParamValue(param, val);
         }
     }
 }
@@ -219,12 +226,7 @@ function editPreset(preset) {
         let type = gen_param_types.filter(p => p.id == key)[0];
         if (type) {
             let presetElem = getRequiredElementById(`preset_input_${type.id}`);
-            if (type.type == "boolean") {
-                presetElem.checked = preset.param_map[key] == "true";
-            }
-            else {
-                presetElem.value = preset.param_map[key];
-            }
+            setDirectParamValue(type, preset.param_map[key], presetElem);
             presetElem.disabled = false;
             getRequiredElementById(`preset_input_${type.id}_toggle`).checked = true;
         }

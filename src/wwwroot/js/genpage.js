@@ -35,12 +35,7 @@ function copy_current_image_params() {
     for (let param of gen_param_types) {
         let elem = document.getElementById(`input_${param.id}`);
         if (elem && metadata[param.id]) {
-            if (param.type == "boolean") {
-                elem.checked = metadata[param.id] == "true";
-            }
-            else {
-                elem.value = metadata[param.id];
-            }
+            setDirectParamValue(param, metadata[param.id]);
             if (param.toggleable && param.visible) {
                 let toggle = getRequiredElementById(`input_${param.id}_toggle`);
                 toggle.checked = true;
