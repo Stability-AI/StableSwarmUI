@@ -40,7 +40,7 @@ function clearPresetView() {
         else if (type.type == "text") {
             presetElem.value = "{value}";
         }
-        else if (type.type == "list" && elem.tagName == "SELECT") {
+        else if (type.type == "list" && presetElem.tagName == "SELECT") {
             for (let option of presetElem.selectedOptions) {
                 option.selected = false;
             }
@@ -73,7 +73,7 @@ function create_new_preset_button() {
             presetElem.value = "{value} " + elem.value;
         }
         else if (type.type == "list" && elem.tagName == "SELECT") {
-            let selected = elem.selectedOptions.map(o => o.value);
+            let selected = [...elem.selectedOptions].map(o => o.value);
             for (let option of presetElem.options) {
                 option.selected = selected.includes(option.value);
             }
