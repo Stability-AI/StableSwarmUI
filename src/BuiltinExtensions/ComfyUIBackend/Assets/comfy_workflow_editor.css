@@ -20,4 +20,21 @@
     border: 1px solid var(--shadow);
     border-radius: 1rem;
     background-color: var(--background-soft);
+    white-space: nowrap;
+}
+.comfy_workflow_buttons_left {
+    display: inline-block;
+    width: fit-content;
+    height: fit-content;
+    white-space: normal;
+}
+.comfy_workflow_buttons_right {
+    display: inline-block;
+    width: fit-content;
+    height: fit-content;
+    white-space: normal;
+    padding-right: 2rem; /* this is a hack, idk why this is needed */
+}
+.comfy-small-button {
+    font-size: 80%;
 }

@@ -194,7 +194,7 @@ function comfyBuildParams(callback) {
             document.getElementById('maintab_comfyworkfloweditor').click();
             return;
         }
-        let defaultParamsRetain = ['images', 'model'];
+        let defaultParamsRetain = ['images', 'model', 'comfyuicustomworkflow'];
         let defaultParamValue = {};
         let groups = [];
         for (let nodeId of Object.keys(prompt)) {
@@ -434,7 +434,7 @@ function comfyBuildParams(callback) {
             }
         }
         addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false, null);
-        callback(params, prompt, defaultParamsRetain, defaultParamValue);
+        callback(params, prompt, defaultParamsRetain, defaultParamValue, workflow);
     });
 }
 
@@ -442,7 +442,7 @@ function comfyBuildParams(callback) {
  * Updates the parameter list to match the currently ComfyUI workflow.
  */
 function replaceParamsToComfy() {
-    comfyBuildParams((params, prompt, retained, paramVal) => {
+    comfyBuildParams((params, prompt, retained, paramVal, workflow) => {
         setComfyWorkflowInput(params, retained, paramVal, true);
     });
 }
@@ -493,6 +493,90 @@ function comfyUseWorkflowNow() {
     getRequiredElementById('text2imagetabbutton').click();
 }
 
+let lastComfyMessageId = 0;
+
+function comfyNoticeMessage(message) {
+    let messageId = ++lastComfyMessageId;
+    let infoSlot = getRequiredElementById('comfy_notice_slot');
+    infoSlot.innerText = message;
+    setTimeout(() => {
+        if (lastComfyMessageId == messageId) {
+            infoSlot.innerText = "";
+        }
+    }, 2000);
+}
+
+/**
+ * Called when the user wants to save the workflow (via button press).
+ */
+function comfySaveWorkflowNow() {
+    comfyBuildParams((params, prompt_text, retained, paramVal, workflow) => {
+        let name = prompt("Enter name to save workflow as:");
+        if (!name.trim()) {
+            return;
+        }
+        comfyNoticeMessage("Saving...");
+        prompt_text = JSON.stringify(prompt_text).replaceAll("\"%%_COMFYFIXME_${", "${").replaceAll("}_ENDFIXME_%%\"", "}");
+        genericRequest('ComfySaveWorkflow', { 'name': name, 'workflow': JSON.stringify(workflow), 'prompt': prompt_text, 'custom_params': params }, (data) => {
+            comfyNoticeMessage("Saved!");
+        });
+    });
+}
+
+/**
+ * Called when the user wants to load a workflow (via button press).
+ */
+function comfyLoadWorkflowNow() {
+    comfyNoticeMessage("Prepping, please wait...");
+    let selector = getRequiredElementById('comfy_load_modal_selector');
+    selector.innerHTML = '<option></option>';
+    genericRequest('ComfyListWorkflows', {}, (data) => {
+        for (let workflow of data.workflows) {
+            let option = document.createElement('option');
+            option.innerText = workflow;
+            selector.appendChild(option);
+        }
+        $('#comfy_workflow_load_modal').modal('show');
+    });
+}
+
+/** Load button in the Load modal. */
+function comfyLoadModalLoadNow() {
+    let selector = getRequiredElementById('comfy_load_modal_selector');
+    let selected = selector.options[selector.selectedIndex].value;
+    if (!selected) {
+        return;
+    }
+    comfyNoticeMessage("Loading...");
+    genericRequest('ComfyReadWorkflow', { 'name': selected }, (data) => {
+        let workflow = data.result.workflow;
+        comfyFrame().contentWindow.app.loadGraphData(JSON.parse(workflow));
+    });
+    comfyHideLoadModal();
+}
+
+/** Delete button in the Load modal. */
+function comfyLoadModalDelete() {
+    let selector = getRequiredElementById('comfy_load_modal_selector');
+    let selected = selector.options[selector.selectedIndex].value;
+    if (!selected) {
+        return;
+    }
+    if (!confirm(`Are you sure you want to delete the workflow "${selected}"?`)) {
+        return;
+    }
+    comfyNoticeMessage("Deleting...");
+    genericRequest('ComfyDeleteWorkflow', { 'name': selected }, (data) => {
+        comfyNoticeMessage("Deleted.");
+    });
+    comfyHideLoadModal();
+}
+
+/** Cancel button in the Load modal. */
+function comfyHideLoadModal() {
+    $('#comfy_workflow_load_modal').modal('hide');
+}
+
 getRequiredElementById('maintab_comfyworkfloweditor').addEventListener('click', comfyTryToLoad);
 
 backendsRevisedCallbacks.push(() => {
@@ -516,4 +600,3 @@ function comfyCheckPrep() {
 }
 
 sessionReadyCallbacks.push(comfyCheckPrep);
-

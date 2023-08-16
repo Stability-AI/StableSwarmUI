@@ -1,6 +1,32 @@
 <div id="comfy_workflow_buttons" class="comfy_workflow_buttons" style="display:none;">
     <div id="comfy_workflow_buttons_actual" class="comfy_workflow_buttons_actual">
-        <button id="comfy_workflow_useme_button" onclick="comfyUseWorkflowNow()" class="basic-button" style="width: 10rem;">Use This Workflow In Generate Tab</button>
+        <div class="comfy_workflow_buttons_left">
+            <button id="comfy_workflow_useme_button" onclick="comfyUseWorkflowNow()" class="basic-button" style="width: 10rem;white-space: pre-wrap;">Use This Workflow In Generate Tab</button>
+        </div>
+        <div class="comfy_workflow_buttons_right">
+            <button id="comfy_workflow_save_button" onclick="comfySaveWorkflowNow()" class="basic-button comfy-small-button">Save Workflow</button>
+            <br><button id="comfy_workflow_load_button" onclick="comfyLoadWorkflowNow()" class="basic-button comfy-small-button">Load Workflow</button>
+        </div>
+        <br><span id="comfy_notice_slot"></span>
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="comfy_workflow_load_modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Load Custom Comfy Workflow</h5>
+        </div>
+        <div class="modal-body">
+            <p>Load workflow... (WARNING: Loading not yet properly functional! Pending info from comfyanon)</p>
+            <select id="comfy_load_modal_selector">
+            </select>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-danger" onclick="comfyLoadModalDelete()">Delete Workflow</button>
+            <button type="button" class="btn btn-primary" onclick="comfyLoadModalLoadNow()">Load Workflow</button>
+            <button type="button" class="btn btn-secondary" onclick="comfyHideLoadModal()">Cancel</button>
+        </div>
+        </div>
     </div>
 </div>
 <div id="comfy_workflow_frameholder" class="comfy_workflow_frameholder">

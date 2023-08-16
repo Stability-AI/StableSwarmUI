@@ -13,6 +13,7 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Web;
 using Newtonsoft.Json;
+using System.Xml.Linq;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -268,7 +269,17 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     public static string CreateWorkflow(T2IParamInput user_input, Func<string, string> initImageFixer)
     {
         string workflow = null;
-        if (user_input.TryGetRaw(ComfyUIBackendExtension.FakeRawInputType, out object workflowRaw))
+        if (user_input.TryGet(ComfyUIBackendExtension.CustomWorkflowParam, out string customWorkflowName))
+        {
+            string path = Utilities.FilePathForbidden.TrimToNonMatches(customWorkflowName).Replace(".", "");
+            path = $"{ComfyUIBackendExtension.Folder}/CustomWorkflows/{path}.json";
+            if (!File.Exists(path))
+            {
+                throw new InvalidDataException("Unrecognized ComfyUI Custom Workflow name.");
+            }
+            workflow = Encoding.UTF8.GetString(File.ReadAllBytes(path)).ParseToJson()["prompt"].ToString();
+        }
+        else if (user_input.TryGetRaw(ComfyUIBackendExtension.FakeRawInputType, out object workflowRaw))
         {
             workflow = (string)workflowRaw;
             workflow = workflow.Replace("\"%%_COMFYFIXME_${", "${").Replace("}_ENDFIXME_%%\"", "}");
