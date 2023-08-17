@@ -44,6 +44,19 @@ body {
     white-space: nowrap;
     overflow: hidden;
 }
+.auto-input-image-preview {
+    width: fit-content;
+    margin: auto;
+}
+.auto-input-image-remove-button {
+    position: absolute;
+    left: 0.5rem;
+}
+.auto-input-image-preview img {
+    max-width: 50rem;
+    max-height: 10rem;
+    margin: auto;
+}
 .backend_add_button_container {
     margin: 0.5rem;
 }

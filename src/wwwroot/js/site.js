@@ -209,13 +209,23 @@ function getToggleHtml(toggles, id, name, extraClass = '', func = 'doToggleEnabl
 
 function load_image_file(e) {
     let file = e.files[0];
+    let preview = e.parentElement.querySelector('.auto-input-image-preview');
     if (file) {
         let reader = new FileReader();
-        reader.addEventListener("load", () => { e.dataset.filedata = reader.result; }, false);
+        reader.addEventListener("load", () => {
+            e.dataset.filedata = reader.result;
+            preview.innerHTML = `<button class="interrupt-button auto-input-image-remove-button" title="Remove image">&times;</button><img src="${reader.result}" alt="Image preview" />`;
+            preview.firstChild.addEventListener('click', () => {
+                e.dataset.filedata = null;
+                preview.innerHTML = '';
+                e.value = '';
+            });
+        }, false);
         reader.readAsDataURL(file);
     }
     else {
         e.dataset.filedata = null;
+        preview.innerHTML = '';
     }
 }
 
@@ -355,6 +365,7 @@ function makeImageInput(featureid, id, name, description, toggles = false) {
         </div>
         <div class="toggler-overlay"></div>
         <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" autocomplete="false">
+        <div class="auto-input-image-preview"></div>
     </div>`;
     return html;
 }
