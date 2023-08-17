@@ -256,6 +256,10 @@ public class ComfyUIBackendExtension : Extension
     /// <summary>Web route for viewing output images. This just works as a simple proxy.</summary>
     public async Task ComfyBackendDirectHandler(HttpContext context)
     {
+        if (context.Response.StatusCode == 404)
+        {
+            return;
+        }
         ComfyUIAPIAbstractBackend backend = RunningComfyBackends.FirstOrDefault();
         if (backend is null)
         {
@@ -352,6 +356,7 @@ public class ComfyUIBackendExtension : Extension
         {
             Logs.Debug($"ComfyUI redirection gave non-200 code: '{code}' for URL: {context.Request.Method} '{path}'");
         }
+        Logs.Verbose($"Comfy Redir status code {code} from {context.Response.StatusCode} and type {response.Content.Headers.ContentType} for {context.Request.Method} '{path}'");
         context.Response.StatusCode = code;
         context.Response.ContentType = response.Content.Headers.ContentType.ToString();
         await response.Content.CopyToAsync(context.Response.Body);
