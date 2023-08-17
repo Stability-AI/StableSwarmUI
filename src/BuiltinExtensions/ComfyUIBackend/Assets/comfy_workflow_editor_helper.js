@@ -550,7 +550,9 @@ function comfyLoadModalLoadNow() {
     comfyNoticeMessage("Loading...");
     genericRequest('ComfyReadWorkflow', { 'name': selected }, (data) => {
         let workflow = data.result.workflow;
-        comfyFrame().contentWindow.app.loadGraphData(JSON.parse(workflow));
+        // Note: litegraph does some dumb prototype hacks so this clone forces it to work properly
+        comfyFrame().contentWindow.app.loadGraphData(comfyFrame().contentWindow.LiteGraph.cloneObject(JSON.parse(workflow)));
+        comfyNoticeMessage("Loaded.");
     });
     comfyHideLoadModal();
 }
