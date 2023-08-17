@@ -109,6 +109,7 @@ public class Program
         T2IModelSets["VAE"] = new() { ModelType = "VAE", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDVAEFolder) };
         T2IModelSets["LoRA"] = new() { ModelType = "LoRA", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDLoraFolder) };
         T2IModelSets["Embedding"] = new() { ModelType = "Embedding", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDEmbeddingFolder) };
+        T2IModelSets["ControlNet"] = new() { ModelType = "ControlNet", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDControlNetsFolder) };
         T2IParamTypes.RegisterDefaults();
         Backends = new();
         Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);

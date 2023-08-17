@@ -192,12 +192,12 @@ public class T2IParamTypes
     public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod;
     public static T2IRegisteredParam<int> Images, Steps, Width, Height;
     public static T2IRegisteredParam<long> Seed, VariationSeed;
-    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale;
-    public static T2IRegisteredParam<Image> InitImage;
-    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE;
+    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength;
+    public static T2IRegisteredParam<Image> InitImage, ControlNetImage;
+    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
 
-    public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, AdvancedModelAddons;
+    public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, GroupControlNet, AdvancedModelAddons;
 
     /// <summary>(For extensions) list of functions that provide fake types for given type names.</summary>
     public static List<Func<string, T2IParamInput, T2IParamType>> FakeTypeProviders = new();
@@ -271,6 +271,16 @@ public class T2IParamTypes
             ));
         RefinerUpscale = Register<double>(new("Refiner Upscale", "Optional upscale of the image between the base and refiner stage.\nSometimes referred to as 'high-res fix'.\nSetting to '1' disables the upscale.",
             "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, NumberView: NumberViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true
+            ));
+        GroupControlNet = new("ControlNet", Toggles: true, Open: false, OrderPriority: -1);
+        ControlNetImage = Register<Image>(new("ControlNet Image Input", "The image to use as the input to ControlNet guidance.\nThis image will be preprocessed by the chosen preprocessor.",
+            "", FeatureFlag: "controlnet", Group: GroupControlNet, OrderPriority: 1
+            ));
+        ControlNetModel = Register<T2IModel>(new("ControlNet Model", "The ControlNet model to use.",
+            "", FeatureFlag: "controlnet", Group: GroupControlNet, Subtype: "ControlNet", OrderPriority: 5
+            ));
+        ControlNetStrength = Register<double>(new("ControlNet Strength", "Higher values make the ControlNet apply more strongly. Weaker values let the prompt overrule the ControlNet.",
+            "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, NumberView: NumberViewType.SLIDER, Group: GroupControlNet
             ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion"

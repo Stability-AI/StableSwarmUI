@@ -75,6 +75,9 @@ public class Settings : AutoConfiguration
         [ConfigComment("The Embedding (eg textual inversion) model folder to use within 'ModelRoot'. Defaults to 'Embeddings'.")]
         public string SDEmbeddingFolder = "Embeddings";
 
+        [ConfigComment("The ControlNets model folder to use within 'ModelRoot'. Defaults to 'controlnet'.")]
+        public string SDControlNetsFolder = "controlnet";
+
         [ConfigComment("Root path for data (user configs, etc). Defaults to 'Data'")]
         public string DataPath = "Data";
 

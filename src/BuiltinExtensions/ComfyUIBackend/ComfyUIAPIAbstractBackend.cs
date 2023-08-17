@@ -351,23 +351,27 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         List<Action> completeSteps = new();
         string initImageFixer(string workflow) // TODO: This is a hack.
         {
-            if (workflow.Contains("${init_image}") && user_input.TryGet(T2IParamTypes.InitImage, out Image img))
+            foreach ((string key, object val) in user_input.ValuesInput)
             {
-                int id = Interlocked.Increment(ref ImageIDDedup);
-                string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
-                Image fixedImage = img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height));
-                MultipartFormDataContent content = new()
+                string replaceMe = "${" + key + "}";
+                if (val is Image img && workflow.Contains(replaceMe))
+                {
+                    int id = Interlocked.Increment(ref ImageIDDedup);
+                    string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
+                    Image fixedImage = img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height));
+                    MultipartFormDataContent content = new()
                     {
                         { new ByteArrayContent(fixedImage.ImageData), "image", fname },
                         { new StringContent("true"), "overwrite" }
                     };
-                HttpClient.PostAsync($"{Address}/upload/image", content).Wait();
-                completeSteps.Add(() =>
-                {
-                    Interlocked.Decrement(ref ImageIDDedup);
-                });
-                // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
-                workflow = workflow.Replace("${init_image}", fname);
+                    HttpClient.PostAsync($"{Address}/upload/image", content).Wait();
+                    completeSteps.Add(() =>
+                    {
+                        Interlocked.Decrement(ref ImageIDDedup);
+                    });
+                    // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
+                    workflow = workflow.Replace(replaceMe, fname);
+                }
             }
             return workflow;
         }

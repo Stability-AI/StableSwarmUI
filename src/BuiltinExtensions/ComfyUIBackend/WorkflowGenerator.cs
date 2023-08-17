@@ -93,7 +93,7 @@ public class WorkflowGenerator
                 {
                     n["inputs"] = new JObject()
                     {
-                        ["image"] = "${init_image}"
+                        ["image"] = "${initimage}"
                     };
                 }, "15");
                 g.CreateNode("VAEEncode", (_, n) =>
@@ -165,6 +165,66 @@ public class WorkflowGenerator
                 };
             }, "7");
         }, -7);
+        #endregion
+        #region ControlNet
+        AddStep(g =>
+        {
+            if (g.UserInput.TryGet(T2IParamTypes.ControlNetImage, out Image controlImage)
+                && g.UserInput.TryGet(T2IParamTypes.ControlNetModel, out T2IModel controlModel)
+                && g.UserInput.TryGet(T2IParamTypes.ControlNetStrength, out double controlStrength))
+            {
+                int imageNode = g.CreateNode("LoadImage", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["image"] = "${controlnetimageinput}"
+                    };
+                });
+                if (!g.UserInput.TryGet(ComfyUIBackendExtension.ControlNetPreprocessorParam, out string preprocessor))
+                {
+                    // TODO: Identify preprocessor choice by model metadata (ModelSpec->preprocessor)
+                    preprocessor = "none";
+                }
+                if (preprocessor.ToLowerFast() != "none")
+                {
+                    JToken objectData = ComfyUIBackendExtension.ControlNetPreprocessors[preprocessor];
+                    int preProcNode = g.CreateNode(preprocessor, (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["image"] = new JArray() { $"{imageNode}", 0 }
+                        };
+                        foreach ((string key, JToken data) in (JObject)objectData["input"]["required"])
+                        {
+                            if (data.Count() == 2 && data[1] is JObject settings && settings.TryGetValue("default", out JToken defaultValue))
+                            {
+                                n["inputs"][key] = defaultValue;
+                            }
+                        }
+                    });
+                    imageNode = preProcNode;
+                }
+                // TODO: Preprocessor
+                int controlModelNode = g.CreateNode("ControlNetLoader", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["control_net_name"] = controlModel.ToString()
+                    };
+                });
+                int applyNode = g.CreateNode("ControlNetApply", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["conditioning"] = g.FinalPrompt,
+                        ["control_net"] = new JArray() { $"{controlModelNode}", 0 },
+                        ["image"] = new JArray() { $"{imageNode}", 0 },
+                        ["strength"] = controlStrength
+                    };
+                });
+                g.FinalPrompt = new JArray() { $"{applyNode}", 0 };
+            }
+        }, -6);
         #endregion
         #region Sampler
         AddStep(g =>

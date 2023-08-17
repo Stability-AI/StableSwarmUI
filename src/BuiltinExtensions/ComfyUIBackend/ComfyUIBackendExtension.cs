@@ -24,7 +24,7 @@ public class ComfyUIBackendExtension : Extension
     public static Dictionary<string, string> Workflows;
 
     /// <summary>Set of all feature-ids supported by ComfyUI backends.</summary>
-    public static HashSet<string> FeaturesSupported = new() { "comfyui", "refiners" };
+    public static HashSet<string> FeaturesSupported = new() { "comfyui", "refiners", "controlnet" };
 
     public override void OnPreInit()
     {
@@ -151,43 +151,61 @@ public class ComfyUIBackendExtension : Extension
                 Samplers = Samplers.Concat(ksampler["input"]["required"]["sampler_name"][0].Select(u => $"{u}")).Distinct().ToList();
                 Schedulers = Schedulers.Concat(ksampler["input"]["required"]["scheduler"][0].Select(u => $"{u}")).Distinct().ToList();
             }
+            foreach ((string key, JToken data) in rawObjectInfo)
+            {
+                if (data["category"].ToString() == "image/preprocessors")
+                {
+                    ControlNetPreprocessors[key] = data;
+                }
+                else if (key.EndsWith("Preprocessor"))
+                {
+                    ControlNetPreprocessors[key] = data;
+                }
+            }
         }
     }
 
     public static LockObject ValueAssignmentLocker = new();
 
-    public static T2IRegisteredParam<string> WorkflowParam, CustomWorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod;
+    public static T2IRegisteredParam<string> WorkflowParam, CustomWorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod, ControlNetPreprocessorParam;
 
     public static List<string> UpscalerModels = new() { "latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic" },
         Samplers = new() { "euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2" },
         Schedulers = new() { "normal", "karras", "exponential", "simple", "ddim_uniform" };
 
+    public static ConcurrentDictionary<string, JToken> ControlNetPreprocessors = new() { ["None"] = null };
+
     /// <summary>All current custom workflow IDs. Values are just a copy of the name (because C# lacks a ConcurrentList).</summary>
     public static ConcurrentDictionary<string, string> CustomWorkflows = new();
 
+    public static T2IParamGroup ComfyGroup, ComfyAdvancedGroup;
+
     public override void OnInit()
     {
-        T2IParamGroup comfyGroup = new("ComfyUI", Toggles: false, Open: false);
-        T2IParamGroup comfyAdvancedGroup = new("ComfyUI Advanced", Toggles: false, IsAdvanced: true, Open: false);
+        ComfyGroup = new("ComfyUI", Toggles: false, Open: false);
+        ComfyAdvancedGroup = new("ComfyUI Advanced", Toggles: false, IsAdvanced: true, Open: false);
         WorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Workflow", "What hand-written specialty workflow to use in ComfyUI (files in 'Workflows' folder within the ComfyUI extension)",
-            "basic", Toggleable: true, FeatureFlag: "comfyui", Group: comfyAdvancedGroup, IsAdvanced: true, VisibleNormally: false,
+            "basic", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyAdvancedGroup, IsAdvanced: true, VisibleNormally: false,
             GetValues: (_) => Workflows.Keys.ToList()
             ));
         CustomWorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Custom Workflow", "What custom workflow to use in ComfyUI (built in the Comfy Workflow Editor tab)",
-            "basic", Toggleable: true, FeatureFlag: "comfyui", Group: comfyAdvancedGroup, IsAdvanced: true,
+            "", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup, IsAdvanced: true,
             GetValues: (_) => CustomWorkflows.Keys.Order().ToList()
             ));
         SamplerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Sampler", "Sampler type (for ComfyUI)",
-            "euler", Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
+            "euler", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup,
             GetValues: (_) => Samplers
             ));
         SchedulerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Scheduler", "Scheduler type (for ComfyUI)",
-            "normal", Toggleable: true, FeatureFlag: "comfyui", Group: comfyGroup,
+            "normal", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup,
             GetValues: (_) => Schedulers
             ));
         RefinerUpscaleMethod = T2IParamTypes.Register<string>(new("Refiner Upscale Method", "How to upscale the image, if upscaling is used.",
             "pixel-bilinear", Group: T2IParamTypes.GroupRefiners, OrderPriority: 1, FeatureFlag: "comfyui",
             GetValues: (_) => UpscalerModels
+            ));
+        ControlNetPreprocessorParam = T2IParamTypes.Register<string>(new("ControlNet Preprocessor", "The preprocessor to use on the ControlNet input image.\nIf toggled off, will be automatically selected.\nUse 'None' to disable preprocessing.",
+            "None", Toggleable: true, FeatureFlag: "controlnet", Group: T2IParamTypes.GroupControlNet, OrderPriority: 3, GetValues: (_) => ControlNetPreprocessors.Keys.Order().OrderBy(v => v == "None" ? -1 : 0).ToList()
             ));
         Program.Backends.RegisterBackendType<ComfyUIAPIBackend>("comfyui_api", "ComfyUI API By URL", "A backend powered by a pre-existing installation of ComfyUI, referenced via API base URL.");
         Program.Backends.RegisterBackendType<ComfyUISelfStartBackend>("comfyui_selfstart", "ComfyUI Self-Starting", "A backend powered by a pre-existing installation of the ComfyUI, automatically launched and managed by this UI server.");
