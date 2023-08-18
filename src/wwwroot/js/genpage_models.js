@@ -166,7 +166,13 @@ class ModelBrowserWrapper {
         else {
             description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
         }
-        let selector = this.subType == 'Stable-Diffusion' ? 'current_model' : (this.subType == 'LoRA' ? 'input_loras' : 'input_vae');
+        let selector = 'current_model';
+        switch (this.subType) {
+            case 'Stable-Diffusion': selector = 'current_model'; break;
+            case 'VAE': selector = 'input_vae'; break;
+            case 'LoRA': selector = 'input_loras'; break;
+            case 'ControlNet': selector = 'input_controlnetmodel'; break;
+        }
         let isSelected;
         let selectorElem = document.getElementById(selector);
         if (!selectorElem) {
@@ -193,10 +199,18 @@ class ModelBrowserWrapper {
 }
 
 let sdModelBrowser = new ModelBrowserWrapper('Stable-Diffusion', 'model_list', 'modelbrowser', (model) => { directSetModel(model.data); });
-let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => { directSetVae(vae.data) });
-let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data.name) });
+let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => { directSetVae(vae.data); });
+let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data.name); });
 let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => {});
-let sdControlnetBrowser = new ModelBrowserWrapper('ControlNet', 'controlnet_list', 'sdcontrolnetbrowser', (controlnet) => {});
+let sdControlnetBrowser = new ModelBrowserWrapper('ControlNet', 'controlnet_list', 'sdcontrolnetbrowser', (controlnet) => { setControlNet(controlnet.data); });
+
+function setControlNet(model) {
+    let input = document.getElementById('input_controlnetmodel');
+    if (!input) {
+        return;
+    }
+    forceSetDropdownValue(input, model.name);
+}
 
 function initialModelListLoad() {
     for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser]) {

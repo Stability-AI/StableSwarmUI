@@ -172,8 +172,7 @@ function isVisible(element) {
 
 function backendLoopUpdate() {
     let loading = countBackendsByStatus('loading') + countBackendsByStatus('waiting');
-
-    if (loading > 0 || !isVisible(backendsListView)) {
+    if (loading > 0 || isVisible(backendsListView)) {
         if (backendsCheckRateCounter++ % 5 == 0) {
             loadBackendsList(); // TODO: only if have permission
         }
