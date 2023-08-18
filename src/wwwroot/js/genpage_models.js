@@ -155,7 +155,12 @@ class ModelBrowserWrapper {
         let name = cleanModelName(model.data.name);
         if (model.data.is_safetensors) {
             let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
-            description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}${getLine("Description", model.data.description)}`;
+            if (this.subType == 'LoRA' || this.subType == 'Stable-Diffusion') {
+                description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}${getLine("Description", model.data.description)}`;
+            }
+            else {
+                description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Description", model.data.description)}`;
+            }
             buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
         }
         else {
@@ -191,9 +196,10 @@ let sdModelBrowser = new ModelBrowserWrapper('Stable-Diffusion', 'model_list', '
 let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => { directSetVae(vae.data) });
 let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data.name) });
 let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => {});
+let sdControlnetBrowser = new ModelBrowserWrapper('ControlNet', 'controlnet_list', 'sdcontrolnetbrowser', (controlnet) => {});
 
 function initialModelListLoad() {
-    for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser]) {
+    for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser]) {
         browser.browser.navigate('');
     }
 }
