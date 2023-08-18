@@ -68,7 +68,9 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     {Program.ServerSettings.Paths.SDEmbeddingFolder}
                     embeddings
                 hypernetworks: hypernetworks
-                controlnet: ControlNet
+                controlnet: |
+                    {Program.ServerSettings.Paths.SDControlNetsFolder}
+                    ControlNet
             """;
             File.WriteAllText("Data/comfy-auto-model.yaml", yaml);
             IsComfyModelFileEmitted = true;
