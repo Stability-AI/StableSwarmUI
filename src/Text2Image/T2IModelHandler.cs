@@ -73,6 +73,8 @@ public class T2IModelHandler
         public string MergedFrom { get; set; }
 
         public string Date { get; set; }
+
+        public string Preprocesor { get; set; }
     }
 
     public T2IModelHandler()
@@ -219,6 +221,7 @@ public class T2IModelHandler
             specSet("tags", string.Join(",", model.Metadata.Tags ?? Array.Empty<string>()));
             specSet("merged_from", model.Metadata.MergedFrom);
             specSet("date", model.Metadata.Date);
+            specSet("preprocessor", model.Metadata.Preprocesor);
             specSet("resolution", $"{model.Metadata.StandardWidth}x{model.Metadata.StandardHeight}");
             json["__metadata__"] = metaHeader;
             {
@@ -339,6 +342,7 @@ public class T2IModelHandler
                 TriggerPhrase = metaHeader?.Value<string>("modelspec.trigger_phrase"),
                 License = metaHeader?.Value<string>("modelspec.license"),
                 Date = metaHeader?.Value<string>("modelspec.date"),
+                Preprocesor = metaHeader?.Value<string>("modelspec.preprocessor"),
                 Tags = metaHeader?.Value<string>("modelspec.tags")?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
             };
             lock (MetadataLock)

@@ -273,8 +273,8 @@ public class T2IParamTypes
             "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, NumberView: NumberViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true
             ));
         GroupControlNet = new("ControlNet", Toggles: true, Open: false, OrderPriority: -1);
-        ControlNetImage = Register<Image>(new("ControlNet Image Input", "The image to use as the input to ControlNet guidance.\nThis image will be preprocessed by the chosen preprocessor.",
-            "", FeatureFlag: "controlnet", Group: GroupControlNet, OrderPriority: 1
+        ControlNetImage = Register<Image>(new("ControlNet Image Input", "The image to use as the input to ControlNet guidance.\nThis image will be preprocessed by the chosen preprocessor.\nIf ControlNet is enabled, but this input is not, Init Image will be used instead.",
+            "", Toggleable: true, FeatureFlag: "controlnet", Group: GroupControlNet, OrderPriority: 1
             ));
         ControlNetModel = Register<T2IModel>(new("ControlNet Model", "The ControlNet model to use.",
             "", FeatureFlag: "controlnet", Group: GroupControlNet, Subtype: "ControlNet", OrderPriority: 5

@@ -169,21 +169,66 @@ public class WorkflowGenerator
         #region ControlNet
         AddStep(g =>
         {
-            if (g.UserInput.TryGet(T2IParamTypes.ControlNetImage, out Image controlImage)
-                && g.UserInput.TryGet(T2IParamTypes.ControlNetModel, out T2IModel controlModel)
+            if (g.UserInput.TryGet(T2IParamTypes.ControlNetModel, out T2IModel controlModel)
                 && g.UserInput.TryGet(T2IParamTypes.ControlNetStrength, out double controlStrength))
             {
+                string imageInput = "${controlnetimageinput}";
+                if (!g.UserInput.TryGet(T2IParamTypes.ControlNetImage, out _))
+                {
+                    if (!g.UserInput.TryGet(T2IParamTypes.InitImage, out _))
+                    {
+                        throw new InvalidDataException("Must specify either a ControlNet Image, or Init image. Or turn off ControlNet if not wanted.");
+                    }
+                    imageInput = "${initimage}";
+                }
                 int imageNode = g.CreateNode("LoadImage", (_, n) =>
                 {
                     n["inputs"] = new JObject()
                     {
-                        ["image"] = "${controlnetimageinput}"
+                        ["image"] = imageInput
                     };
                 });
                 if (!g.UserInput.TryGet(ComfyUIBackendExtension.ControlNetPreprocessorParam, out string preprocessor))
                 {
-                    // TODO: Identify preprocessor choice by model metadata (ModelSpec->preprocessor)
                     preprocessor = "none";
+                    string wantedPreproc = controlModel.Metadata?.Preprocesor;
+                    if (!string.IsNullOrWhiteSpace(wantedPreproc))
+                    {
+
+                        string[] procs = ComfyUIBackendExtension.ControlNetPreprocessors.Keys.Select(k => k.ToLowerFast()).ToArray();
+                        bool getBestFor(string phrase)
+                        {
+                            string result = procs.FirstOrDefault(phrase.Contains);
+                            if (result is not null)
+                            {
+                                preprocessor = result;
+                                return true;
+                            }
+                            return false;
+                        }
+                        if (wantedPreproc == "depth")
+                        {
+                            if (!getBestFor("midas-depthmap") && !getBestFor("depthmap") && !getBestFor("depth") && !getBestFor("midas") && !getBestFor("zoe") && !getBestFor("leres"))
+                            {
+                                preprocessor = "none";
+                            }
+                        }
+                        else if (wantedPreproc == "canny")
+                        {
+                            if (!getBestFor("cannyedge") && !getBestFor("canny"))
+                            {
+                                preprocessor = "none";
+                            }
+                        }
+                        else if (wantedPreproc == "sketch")
+                        {
+                            if (!getBestFor("sketch") && !getBestFor("lineart") && !getBestFor("scribble"))
+                            {
+                                preprocessor = "none";
+                            }
+                        }
+                    }
+                    // TODO: Identify preprocessor choice by model metadata (ModelSpec->preprocessor)
                 }
                 if (preprocessor.ToLowerFast() != "none")
                 {

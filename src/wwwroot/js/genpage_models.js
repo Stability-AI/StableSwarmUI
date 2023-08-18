@@ -210,6 +210,10 @@ function setControlNet(model) {
         return;
     }
     forceSetDropdownValue(input, model.name);
+    let group = document.getElementById('input_group_content_controlnet_toggle');
+    if (group) {
+        group.checked = true;
+    }
 }
 
 function initialModelListLoad() {
