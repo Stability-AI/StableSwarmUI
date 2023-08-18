@@ -194,7 +194,6 @@ public class WorkflowGenerator
                     string wantedPreproc = controlModel.Metadata?.Preprocesor;
                     if (!string.IsNullOrWhiteSpace(wantedPreproc))
                     {
-
                         string[] procs = ComfyUIBackendExtension.ControlNetPreprocessors.Keys.ToArray();
                         bool getBestFor(string phrase)
                         {
@@ -210,7 +209,7 @@ public class WorkflowGenerator
                         {
                             if (!getBestFor("midas-depthmap") && !getBestFor("depthmap") && !getBestFor("depth") && !getBestFor("midas") && !getBestFor("zoe") && !getBestFor("leres"))
                             {
-                                preprocessor = "none";
+                                throw new InvalidDataException("No preprocessor found for depth - please install a Comfy extension that adds eg MiDaS depthmap preprocessors, or select 'none' if using a manual depthmap");
                             }
                         }
                         else if (wantedPreproc == "canny")
@@ -228,7 +227,6 @@ public class WorkflowGenerator
                             }
                         }
                     }
-                    // TODO: Identify preprocessor choice by model metadata (ModelSpec->preprocessor)
                 }
                 if (preprocessor.ToLowerFast() != "none")
                 {
