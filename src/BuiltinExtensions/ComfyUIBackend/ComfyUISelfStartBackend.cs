@@ -24,6 +24,9 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         [ConfigComment("If unchecked, the system will automatically add some relevant arguments to the comfy launch. If checked, automatic args (other than port) won't be added.")]
         public bool DisableInternalArgs = false;
 
+        [ConfigComment("If enabled, will automatically keep the comfy backend up to date when launching.")]
+        public bool AutoUpdate = true;
+
         [ConfigComment("Which GPU to use, if multiple are available.")]
         public int GPU_ID = 0; // TODO: Determine GPU count and provide correct max
     }
@@ -91,6 +94,19 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         if (!settings.StartScript.EndsWith("main.py"))
         {
             Logs.Warning($"ComfyUI start script is '{settings.StartScript}', which looks wrong - did you forget to append 'main.py' on the end?");
+        }
+        if (settings.AutoUpdate)
+        {
+            try
+            {
+                ProcessStartInfo psi = new("git", "pull") { WorkingDirectory = Path.GetFullPath(settings.StartScript).Replace('\\', '/').BeforeLast('/') };
+                Process p = Process.Start(psi);
+                await p.WaitForExitAsync();
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Failed to auto-update comfy backend: {ex}");
+            }
         }
         await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs.Trim() + " --port {PORT}" + addedArgs, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
