@@ -195,10 +195,10 @@ public class WorkflowGenerator
                     if (!string.IsNullOrWhiteSpace(wantedPreproc))
                     {
 
-                        string[] procs = ComfyUIBackendExtension.ControlNetPreprocessors.Keys.Select(k => k.ToLowerFast()).ToArray();
+                        string[] procs = ComfyUIBackendExtension.ControlNetPreprocessors.Keys.ToArray();
                         bool getBestFor(string phrase)
                         {
-                            string result = procs.FirstOrDefault(phrase.Contains);
+                            string result = procs.FirstOrDefault(m => m.ToLowerFast().Contains(phrase.ToLowerFast()));
                             if (result is not null)
                             {
                                 preprocessor = result;
