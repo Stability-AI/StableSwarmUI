@@ -652,11 +652,12 @@ public class BackendHandler
                 Logs.Error($"[BackendHandler] Backend request #{request.ID} failed: {request.Failure}");
                 throw request.Failure;
             }
-            if (request.Cancel.IsCancellationRequested)
+            if (request.Cancel.IsCancellationRequested || Program.GlobalProgramCancel.IsCancellationRequested)
             {
                 return null;
             }
-            Logs.Info($"[BackendHandler] Backend usage timeout, all backends occupied, giving up after {request.Waited.TotalSeconds} seconds.");
+            string modelData = model is null ? "No model requested." : $"Requested model {model.Name}, which is loaded on {T2IBackends.Values.Count(b => b.Backend.CurrentModelName == model.Name)} backends.";
+            Logs.Info($"[BackendHandler] Backend usage timeout, all backends occupied, giving up after {request.Waited.TotalSeconds} seconds ({modelData}).");
             throw new TimeoutException();
         }
         finally
