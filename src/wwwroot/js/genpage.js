@@ -484,6 +484,7 @@ let pageBarTop = -1;
 let pageBarTop2 = -1;
 let pageBarMid = -1;
 let midForceToBottom = localStorage.getItem('barspot_midForceToBottom') == 'true';
+let leftShut = localStorage.getItem('barspot_leftShut') == 'true';
 
 let setPageBarsFunc;
 
@@ -496,7 +497,10 @@ function resetPageSizer() {
     pageBarTop = -1;
     pageBarTop2 = -1;
     pageBarMid = -1;
+    midForceToBottom = false;
+    leftShut = false;
     localStorage.removeItem('barspot_midForceToBottom');
+    localStorage.removeItem('barspot_leftShut');
     setPageBarsFunc();
     for (let runnable of layoutResets) {
         runnable();
@@ -515,6 +519,7 @@ function pageSizer() {
     let currentImage = getRequiredElementById('current_image');
     let currentImageBatch = getRequiredElementById('current_image_batch');
     let midSplitButton = getRequiredElementById('t2i-mid-split-quickbutton');
+    let topSplitButton = getRequiredElementById('t2i-top-split-quickbutton');
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
@@ -522,13 +527,15 @@ function pageSizer() {
         setCookie('barspot_pageBarTop', pageBarTop, 365);
         setCookie('barspot_pageBarTop2', pageBarTop2, 365);
         setCookie('barspot_pageBarMidPx', pageBarMid, 365);
-        let barTopLeft = pageBarTop == -1 ? `28rem` : `${pageBarTop}px`;
+        let barTopLeft = leftShut ? `0px` : pageBarTop == -1 ? `28rem` : `${pageBarTop}px`;
         let barTopRight = pageBarTop2 == -1 ? `21rem` : `${pageBarTop2}px`;
         inputSidebar.style.width = `${barTopLeft}`;
         mainInputsAreaWrapper.style.width = `${barTopLeft}`;
+        inputSidebar.style.display = leftShut ? 'none' : '';
         mainImageArea.style.width = `calc(100vw - ${barTopLeft})`;
         currentImage.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         currentImageBatch.style.width = `${barTopRight}`;
+        topSplitButton.innerHTML = leftShut ? '&#x21DB;' : '&#x21DA;';
         midSplitButton.innerHTML = midForceToBottom ? '&#x290A;' : '&#x290B;';
         if (pageBarMid != -1 || midForceToBottom) {
             let fixed = midForceToBottom ? `9rem` : `${pageBarMid}px`;
@@ -592,11 +599,20 @@ function pageSizer() {
         setPageBars();
         e.preventDefault();
     }, true);
+    topSplitButton.addEventListener('click', (e) => {
+        topDrag = false;
+        leftShut = !leftShut;
+        localStorage.setItem('barspot_leftShut', leftShut);
+        pageBarTop = Math.max(pageBarTop, 400);
+        setPageBars();
+        e.preventDefault();
+    }, true);
     document.addEventListener('mousemove', (e) => {
         let offX = e.pageX;
         offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
         if (topDrag) {
             pageBarTop = offX - 5;
+            leftShut = pageBarTop < 280;
             setPageBars();
         }
         if (topDrag2) {
