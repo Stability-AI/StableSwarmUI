@@ -299,7 +299,8 @@ function comfyBuildParams(callback) {
                         return inputIdDirect;
                     }
                     else if (node.class_type == 'CheckpointLoaderSimple' && inputId == 'ckpt_name') {
-                        if (nodeId == '4') {
+                        if (!('model' in defaultParamValue)) {
+                            defaultParamValue['model'] = node.inputs[inputId];
                             node.inputs[inputId] = "${model:error_missing_model}";
                             return inputIdDirect;
                         }
@@ -393,11 +394,13 @@ function comfyBuildParams(callback) {
             claimOnce('KSamplerAdvanced', 'cfg_scale', 'cfg', true);
             if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Positive Prompt") && !defaultParamsRetain.includes('prompt') && typeof node.inputs.text == 'string') {
                 defaultParamsRetain.push('prompt');
+                defaultParamValue['prompt'] = node.inputs.text;
                 node.inputs.text = "${prompt}";
                 continue;
             }
             else if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Negative Prompt") && !defaultParamsRetain.includes('negativeprompt') && typeof node.inputs.text == 'string') {
                 defaultParamsRetain.push('negativeprompt');
+                defaultParamValue['negativeprompt'] = node.inputs.text;
                 node.inputs.text = "${negativeprompt}";
                 continue;
             }
@@ -462,7 +465,15 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
                 val = -1;
             }
             if (applyValues) {
-                setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
+                if (param.id == 'model') {
+                    setCookie('selected_model', `${val}`, 0.5);
+                    let selector = getRequiredElementById('current_model');
+                    forceSetDropdownValue(selector, val);
+                    selector.dispatchEvent(new Event('change'));
+                }
+                else {
+                    setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
+                }
             }
         }
     }
