@@ -189,6 +189,20 @@ function comfyBuildParams(callback) {
                 }
             }
         }
+        // Special case: propagate label alterations to conditioning nodes, for ReVision workflows
+        let hasFixes = true;
+        while (hasFixes) {
+            hasFixes = false;
+            for (let nodeId of Object.keys(prompt)) {
+                if (node.class_type == 'unCLIPConditioning' && labelAlterations[nodeId]) {
+                    let inputCond = node.inputs['conditioning'];
+                    if (typeof inputCond == 'object' && inputCond.length == 2) {
+                        labelAlterations[inputCond[0]] = labelAlterations[nodeId];
+                        hasFixes = true;
+                    }
+                }
+            }
+        }
         if (!hasSaves) {
             showError('ComfyUI Workflow must have at least one SaveImage node!');
             document.getElementById('maintab_comfyworkfloweditor').click();
