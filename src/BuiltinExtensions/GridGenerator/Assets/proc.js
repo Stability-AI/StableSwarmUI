@@ -405,17 +405,21 @@ function getCurrentSelectedAxis(axisPrefix) {
     return id.substring(index + 1);
 }
 
+function getShownItemsOfAxis(axis) {
+    return axis.values.filter(val => canShowVal(axis.id, val.key));
+}
+
 function getWantedScaling() {
     if (!document.getElementById('autoScaleImages').checked) {
         return 0;
     }
     var x = getCurrentSelectedAxis('x');
     var xAxis = getAxisById(x);
-    var count = xAxis.values.length;
+    var count = getShownItemsOfAxis(xAxis).length;
     var x2 = getCurrentSelectedAxis('x2');
     if (x2 != 'none') {
         var x2Axis = getAxisById(x2);
-        count *= x2Axis.values.length;
+        count *= getShownItemsOfAxis(x2Axis).length;
     }
     return (90 / count);
 }
