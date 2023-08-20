@@ -222,6 +222,15 @@ public class BackendHandler
         {
             return;
         }
+        LoadInternal();
+        NewBackendInitSignal.Set();
+        ReassignLoadedModelsList();
+        new Thread(new ThreadStart(RequestHandlingLoop)).Start();
+    }
+
+    /// <summary>Internal route for loading backends. Do not call directly.</summary>
+    public void LoadInternal()
+    {
         Logs.Init("Loading backends from file...");
         new Thread(InternalInitMonitor) { Name = "BackendHandler_Init_Monitor" }.Start();
         FDSSection file;
@@ -268,9 +277,6 @@ public class BackendHandler
                 T2IBackends.TryAdd(data.ID, data);
             }
         }
-        NewBackendInitSignal.Set();
-        ReassignLoadedModelsList();
-        new Thread(new ThreadStart(RequestHandlingLoop)).Start();
     }
 
     /// <summary>Internal thread path for processing new backend initializations.</summary>
