@@ -596,3 +596,6 @@ body {
     width: 100vw - 12rem;
     border-radius: 0.2rem;
 }
+.alt-prompt-buttons {
+    vertical-align: top;
+}
