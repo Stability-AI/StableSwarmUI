@@ -47,6 +47,11 @@
                 <div class="t2i-top-split-bar splitter-bar" id="t2i-top-split-bar"><div class="t2i-split-quickbutton t2i-top-split-quickbutton" id="t2i-top-split-quickbutton">&#x21DA;</div></div>
                 <div class="main-image-area" id="main_image_area">
                     <div class="current_image" id="current_image"></div><div class="t2i-top-split-bar splitter-bar" id="t2i-top-2nd-split-bar"></div><div class="current_image_batch" id="current_image_batch"></div>
+                    <div class="alt_prompt_region" id="alt_prompt_region" style="display:none;">
+                        <textarea id="alt_prompt_textbox" class="alt_prompt_textbox" rows="1" placeholder="Type your prompt here..."></textarea>
+                        <button class="alt-prompt-button basic-button" id="alt_generate_button" onclick="javascript:doGenerate()">Generate</button>
+                        <button class="interrupt-button interrupt-button-none alt-interrupt" id="alt_interrupt_button" onclick="javascript:doInterrupt()">Interrupt</button>
+                    </div>
                 </div>
                 <div class="model-block-menu-button t2i-area-quicktools" onclick="javascript:show_t2i_quicktools()">Quick Tools</div>
                 <div class="sui-popover sui_popover_model" id="popover_quicktools">

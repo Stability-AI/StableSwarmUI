@@ -243,6 +243,14 @@ function genInputs(delay_final = false) {
             });
             resTrick();
         }
+        let inputPrompt = document.getElementById('input_prompt');
+        if (inputPrompt) {
+            let altText = getRequiredElementById('alt_prompt_textbox');
+            inputPrompt.addEventListener('change', () => {
+                altText.value = inputPrompt.value;
+                altText.dispatchEvent(new Event('input'));
+            });
+        }
         let inputLoras = document.getElementById('input_loras');
         if (inputLoras) {
             inputLoras.addEventListener('change', () => {

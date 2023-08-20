@@ -150,7 +150,7 @@ body {
 }
 .current_image img {
     max-width: 100%;
-    max-height: calc(100% - 5rem);
+    max-height: calc(max(15rem, 100% - 5rem));
 }
 .current_image_batch {
     display: inline-block;
@@ -580,4 +580,19 @@ body {
 .genpage-bottom-tab {
     height: calc(100% - 7rem);
     overflow: auto;
+}
+.alt-interrupt {
+    margin-left: 5px;
+}
+.alt_prompt_region {
+    position: relative;
+    top: -3.5rem;
+    border-top: 1px solid var(--light-border);
+    width: fit-content;
+    padding-top: 0.5rem;
+}
+.alt_prompt_textbox {
+    margin-left: 1rem;
+    width: 100vw - 12rem;
+    border-radius: 0.2rem;
 }

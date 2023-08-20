@@ -293,6 +293,7 @@ function autoS(num) {
  * Sets a cookie with the given name and value, which will expire after the given number of days.
  */
 function setCookie(name, value, expirationDays, sameSite = 'Lax') {
+    value = encodeURIComponent(value);
     const d = new Date();
     d.setTime(d.getTime() + (expirationDays * 24 * 60 * 60 * 1000));
     document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/;SameSite=${sameSite}`;

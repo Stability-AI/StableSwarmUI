@@ -203,6 +203,7 @@ function updateCurrentStatusDirect(data) {
     }
     let total = num_current_gens + num_models_loading + num_live_gens + num_backends_waiting;
     getRequiredElementById('interrupt_button').classList.toggle('interrupt-button-none', total == 0);
+    getRequiredElementById('alt_interrupt_button').classList.toggle('interrupt-button-none', total == 0);
     let elem = getRequiredElementById('num_jobs_span');
     function autoBlock(num, text) {
         if (num == 0) {
@@ -443,6 +444,9 @@ function genToolsList() {
     let generateButton = getRequiredElementById('generate_button');
     let generateButtonRawText = generateButton.innerText;
     let generateButtonRawOnClick = generateButton.onclick;
+    let altGenerateButton = getRequiredElementById('alt_generate_button');
+    let altGenerateButtonRawText = generateButton.innerText;
+    let altGenerateButtonRawOnClick = generateButton.onclick;
     toolSelector.value = '';
     // TODO: Dynamic-from-server option list generation
     toolSelector.addEventListener('change', () => {
@@ -451,6 +455,8 @@ function genToolsList() {
         }
         generateButton.innerText = generateButtonRawText;
         generateButton.onclick = generateButtonRawOnClick;
+        altGenerateButton.innerText = altGenerateButtonRawText;
+        altGenerateButton.onclick = altGenerateButtonRawOnClick;
         let tool = toolSelector.value;
         if (tool == '') {
             return;
@@ -461,6 +467,8 @@ function genToolsList() {
         if (override) {
             generateButton.innerText = override.text;
             generateButton.onclick = override.run;
+            altGenerateButton.innerText = override.text;
+            altGenerateButton.onclick = override.run;
         }
     });
 }
@@ -520,6 +528,8 @@ function pageSizer() {
     let currentImageBatch = getRequiredElementById('current_image_batch');
     let midSplitButton = getRequiredElementById('t2i-mid-split-quickbutton');
     let topSplitButton = getRequiredElementById('t2i-top-split-quickbutton');
+    let altRegion = getRequiredElementById('alt_prompt_region');
+    let altText = getRequiredElementById('alt_prompt_textbox');
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
@@ -532,11 +542,15 @@ function pageSizer() {
         inputSidebar.style.width = `${barTopLeft}`;
         mainInputsAreaWrapper.style.width = `${barTopLeft}`;
         inputSidebar.style.display = leftShut ? 'none' : '';
+        altRegion.style.display = leftShut ? 'block' : 'none';
+        altRegion.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         mainImageArea.style.width = `calc(100vw - ${barTopLeft})`;
+        altText.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 15rem)`;
         currentImage.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         currentImageBatch.style.width = `${barTopRight}`;
         topSplitButton.innerHTML = leftShut ? '&#x21DB;' : '&#x21DA;';
         midSplitButton.innerHTML = midForceToBottom ? '&#x290A;' : '&#x290B;';
+        let altHeight = leftShut ? `(${altText.offsetHeight}px + 2rem)` :'0px';
         if (pageBarMid != -1 || midForceToBottom) {
             let fixed = midForceToBottom ? `9rem` : `${pageBarMid}px`;
             topSplit.style.height = `calc(100vh - ${fixed})`;
@@ -544,7 +558,7 @@ function pageSizer() {
             inputSidebar.style.height = `calc(100vh - ${fixed})`;
             mainInputsAreaWrapper.style.height = `calc(100vh - ${fixed} - 7rem)`;
             mainImageArea.style.height = `calc(100vh - ${fixed})`;
-            currentImage.style.height = `calc(100vh - ${fixed})`;
+            currentImage.style.height = `calc(100vh - ${fixed} - ${altHeight})`;
             currentImageBatch.style.height = `calc(100vh - ${fixed} - 2rem)`;
             topBar.style.height = `calc(100vh - ${fixed})`;
             bottomBarContent.style.height = `calc(${fixed} - 2rem)`;
@@ -555,7 +569,7 @@ function pageSizer() {
             inputSidebar.style.height = '';
             mainInputsAreaWrapper.style.height = '';
             mainImageArea.style.height = '';
-            currentImage.style.height = '';
+            currentImage.style.height = `calc(49vh - ${altHeight})`;
             currentImageBatch.style.height = '';
             topBar.style.height = '';
             bottomBarContent.style.height = '';
@@ -606,6 +620,7 @@ function pageSizer() {
         pageBarTop = Math.max(pageBarTop, 400);
         setPageBars();
         e.preventDefault();
+        altText.dispatchEvent(new Event('input'));
     }, true);
     document.addEventListener('mousemove', (e) => {
         let offX = e.pageX;
@@ -637,6 +652,39 @@ function pageSizer() {
             setPageBars();
         });
     }
+    altText.addEventListener('keydown', (e) => {
+        if (e.key == 'Enter' && !e.shiftKey) {
+            altText.dispatchEvent(new Event('change'));
+            getRequiredElementById('alt_generate_button').click();
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    });
+    altText.addEventListener('change', (e) => {
+        let inputPrompt = document.getElementById('input_prompt');
+        if (inputPrompt) {
+            inputPrompt.value = altText.value;
+        }
+        setCookie(`lastparam_input_prompt`, altText.value, 0.25);
+    });
+    function altTextSize() {
+        altText.style.height = 'auto';
+        altText.style.height = `${altText.scrollHeight + 5}px`;
+        altRegion.style.top = `calc(-${altText.offsetHeight}px - 2rem)`;
+    }
+    altText.addEventListener('input', () => {
+        altTextSize();
+        setCookie(`lastparam_input_prompt`, altText.value, 0.25);
+        setPageBars();
+    });
+    altTextSize();
+    function altPromptSizeHandle() {
+        altRegion.style.top = `calc(-${altText.offsetHeight}px - 2rem)`;
+        setPageBars();
+    }
+    altPromptSizeHandle();
+    new ResizeObserver(altPromptSizeHandle).observe(altText);
 }
 
 function show_t2i_quicktools() {
