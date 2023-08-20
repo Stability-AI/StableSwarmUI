@@ -49,6 +49,9 @@ function getHtmlForParam(param, prefix, textRows = 2) {
                 return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, modelList, param.default, param.toggleable) + pop};
             case 'image':
                 return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop};
+            case 'image_list':
+                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop};
+
         }
         console.log(`Cannot generate input for param ${param.id} of type ${param.type} - unknown type`);
         return null;
@@ -250,6 +253,38 @@ function genInputs(delay_final = false) {
                 altText.value = inputPrompt.value;
                 altText.dispatchEvent(new Event('input'));
             });
+            let promptParent = findParentOfClass(inputPrompt, 'auto-input');
+            promptParent.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            let clearButton = promptParent.querySelector('.image-clear-button');
+            let promptImageArea = promptParent.querySelector('.added-image-area');
+            clearButton.addEventListener('click', () => {
+                promptImageArea.innerHTML = '';
+                clearButton.style.display = 'none';
+            });
+            promptParent.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    let file = e.dataTransfer.files[0];
+                    if (file.type.startsWith('image/')) {
+                        let reader = new FileReader();
+                        reader.onload = (e) => {
+                            let data = e.target.result;
+                            let imageObject = new Image();
+                            imageObject.src = data;
+                            imageObject.width = 128;
+                            imageObject.height = 128;
+                            imageObject.dataset.filedata = data;
+                            clearButton.style.display = 'block';
+                            promptImageArea.appendChild(imageObject);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
         }
         let inputLoras = document.getElementById('input_loras');
         if (inputLoras) {
@@ -383,6 +418,13 @@ function getGenInput(input_overrides = {}) {
         }
         else {
             input[type.id] = elem.value;
+        }
+        if (type.id == "prompt") {
+            let parent = findParentOfClass(elem, 'auto-input').querySelector('.added-image-area');
+            let imgs = [...parent.children].filter(c => c.tagName == "IMG");
+            if (imgs.length > 0) {
+                input["promptimages"] = imgs.map(img => img.dataset.filedata).join('|');
+            }
         }
     }
     input["presets"] = currentPresets.map(p => p.title);

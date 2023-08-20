@@ -78,6 +78,9 @@ public class Settings : AutoConfiguration
         [ConfigComment("The ControlNets model folder to use within 'ModelRoot'. Defaults to 'controlnet'.")]
         public string SDControlNetsFolder = "controlnet";
 
+        [ConfigComment("The CLIP Vision model folder to use within 'ModelRoot'. Defaults to 'clip_vision'.")]
+        public string SDClipVisionFolder = "clip_vision";
+
         [ConfigComment("Root path for data (user configs, etc). Defaults to 'Data'")]
         public string DataPath = "Data";
 

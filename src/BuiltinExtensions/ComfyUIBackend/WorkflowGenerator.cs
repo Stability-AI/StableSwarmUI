@@ -1,5 +1,6 @@
 ﻿
 using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
@@ -29,6 +30,9 @@ public class WorkflowGenerator
         Steps.Add(new(step, priority));
         Steps = Steps.OrderBy(s => s.Priority).ToList();
     }
+
+    /// <summary>Lock for when ensuring the backend has valid models.</summary>
+    public static LockObject ModelDownloaderLock = new();
 
     static WorkflowGenerator()
     {
@@ -152,6 +156,89 @@ public class WorkflowGenerator
                 }, "6");
             }
         }, -8);
+        #endregion
+        #region ReVision/UnCLIP
+        AddStep(g =>
+        {
+            if (g.UserInput.TryGet(T2IParamTypes.PromptImages, out List<Image> images) && images.Any())
+            {
+                if (!g.UserInput.TryGet(T2IParamTypes.Model, out T2IModel model) || model.ModelClass is null || model.ModelClass.ID != "stable-diffusion-xl-v1-base")
+                {
+                    throw new InvalidDataException($"Model type must be stable-diffusion-xl-v1-base for ReVision (currently is {model?.ModelClass?.ID ?? "Unknown"})");
+                }
+                if (g.UserInput.TryGet(T2IParamTypes.Prompt, out string promptText) && string.IsNullOrWhiteSpace(promptText))
+                {
+                    int zeroed = g.CreateNode("ConditioningZeroOut", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["conditioning"] = g.FinalPrompt
+                        };
+                    });
+                    g.FinalPrompt = new JArray() { $"{zeroed}", 0 };
+                }
+                int visionLoader = g.CreateNode("CLIPVisionLoader", (_, n) =>
+                {
+                    string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, "clip_vision_g.safetensors");
+                    if (!File.Exists(filePath))
+                    {
+                        lock (ModelDownloaderLock)
+                        {
+                            if (!File.Exists(filePath)) // Double-check in case another thread downloaded it
+                            {
+                                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                                Logs.Info($"Downloading clip_vision_g.safetensors to {filePath}...");
+                                long total = 3_689_911_098L;
+                                double nextPerc = 0.05;
+                                Utilities.DownloadFile("https://huggingface.co/stabilityai/control-lora/resolve/main/revision/clip_vision_g.safetensors", filePath, (bytes) =>
+                                {
+                                    double perc = bytes / (double)total;
+                                    if (perc >= nextPerc)
+                                    {
+                                        Logs.Info($"clip_vision_g.safetensors download at {perc*100:0.0}%...");
+                                        nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
+                                    }
+                                }).Wait();
+                                Logs.Info($"Downloading complete, continuing.");
+                            }
+                        }
+                    }
+                    n["inputs"] = new JObject()
+                    {
+                        ["clip_name"] = "clip_vision_g.safetensors"
+                    };
+                });
+                for (int i = 0; i < images.Count; i++)
+                {
+                    int imageLoader = g.CreateNode("LoadImage", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["image"] = "${promptimages." + i + "}"
+                        };
+                    });
+                    int encoded = g.CreateNode("CLIPVisionEncode", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["clip_vision"] = new JArray($"{visionLoader}", 0),
+                            ["image"] = new JArray($"{imageLoader}", 0)
+                        };
+                    });
+                    int unclipped = g.CreateNode("unCLIPConditioning", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["conditioning"] = g.FinalPrompt,
+                            ["clip_vision_output"] = new JArray($"{encoded}", 0),
+                            ["strength"] = 1, // TODO: Configurable
+                            ["noise_augmentation"] = 0
+                        };
+                    });
+                    g.FinalPrompt = new JArray() { $"{unclipped}", 0 };
+                }
+            }
+        }, -7);
         #endregion
         #region Negative Prompt
         AddStep(g =>

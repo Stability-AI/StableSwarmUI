@@ -71,6 +71,9 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 controlnet: |
                     {Program.ServerSettings.Paths.SDControlNetsFolder}
                     ControlNet
+                clip_vision: |
+                    {Program.ServerSettings.Paths.SDClipVisionFolder}
+                    clip_vision
             """;
             File.WriteAllText("Data/comfy-auto-model.yaml", yaml);
             IsComfyModelFileEmitted = true;

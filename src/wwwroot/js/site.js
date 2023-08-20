@@ -295,6 +295,8 @@ function makeTextInput(featureid, id, name, description, value, rows, placeholde
         </div>
         <div class="toggler-overlay"></div>
         <textarea class="auto-text" id="${id}" rows="${rows}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
+        <button class="interrupt-button image-clear-button" style="display: none;">Clear Images</button>
+        <div class="added-image-area"></div>
     </div>`;
 }
 

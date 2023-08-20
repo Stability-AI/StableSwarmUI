@@ -351,10 +351,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         List<Action> completeSteps = new();
         string initImageFixer(string workflow) // TODO: This is a hack.
         {
-            foreach ((string key, object val) in user_input.ValuesInput)
+            void TryApply(string key, Image img)
             {
                 string replaceMe = "${" + key + "}";
-                if (val is Image img && workflow.Contains(replaceMe))
+                if (workflow.Contains(key))
                 {
                     int id = Interlocked.Increment(ref ImageIDDedup);
                     string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
@@ -371,6 +371,20 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     });
                     // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
                     workflow = workflow.Replace(replaceMe, fname);
+                }
+            }
+            foreach ((string key, object val) in user_input.ValuesInput)
+            {
+                if (val is Image img)
+                {
+                    TryApply(key, img);
+                }
+                else if (val is List<Image> imgs)
+                {
+                    for (int i = 0; i < imgs.Count; i++)
+                    {
+                        TryApply(key + "." + i, imgs[i]);
+                    }
                 }
             }
             return workflow;

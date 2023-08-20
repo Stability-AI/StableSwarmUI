@@ -28,7 +28,9 @@ public enum T2IParamDataType
     /// <summary>Model reference input.</summary>
     MODEL,
     /// <summary>Multi-select or comma-separated data list.</summary>
-    LIST
+    LIST,
+    /// <summary>List of images.</summary>
+    IMAGE_LIST
 }
 
 /// <summary>Which format to display a number in.</summary>
@@ -156,6 +158,7 @@ public class T2IParamTypes
         if (t == typeof(Image)) return T2IParamDataType.IMAGE;
         if (t == typeof(T2IModel)) return T2IParamDataType.MODEL;
         if (t == typeof(List<string>)) return T2IParamDataType.LIST;
+        if (t == typeof(List<Image>)) return T2IParamDataType.IMAGE_LIST;
         return T2IParamDataType.UNSET;
     }
 
@@ -196,6 +199,7 @@ public class T2IParamTypes
     public static T2IRegisteredParam<Image> InitImage, ControlNetImage;
     public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
+    public static T2IRegisteredParam<List<Image>> PromptImages;
 
     public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, GroupControlNet, AdvancedModelAddons;
 
@@ -207,6 +211,9 @@ public class T2IParamTypes
     {
         Prompt = Register<string>(new("Prompt", "The input prompt text that describes the image you want to generate.\nTell the AI what you want to see.",
             "", Clean: ApplyStringEdit, Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100
+            ));
+        PromptImages = Register<List<Image>>(new("Prompt Images", "Images to include with the prompt, for eg ReVision or UnCLIP.",
+            "", OrderPriority: -95, Toggleable: true, VisibleNormally: false, IsAdvanced: true, HideFromMetadata: true // Has special internal handling
             ));
         NegativePrompt = Register<string>(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.\nTell the AI things you don't want to see.",
             "", Clean: ApplyStringEdit, Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90
@@ -411,6 +418,26 @@ public class T2IParamTypes
                     throw new InvalidDataException($"Invalid image value for param {type.Name} - must be a valid base64 string");
                 }
                 return val;
+            case T2IParamDataType.IMAGE_LIST:
+                List<string> parts = new();
+                foreach (string part in val.Split('|'))
+                {
+                    string partVal = part.Trim();
+                    if (partVal.StartsWith("data:"))
+                    {
+                        partVal = partVal.After(',');
+                    }
+                    if (string.IsNullOrWhiteSpace(val))
+                    {
+                        continue;
+                    }
+                    if (!ValidBase64Matcher.IsOnlyMatches(partVal) || partVal.Length < 10)
+                    {
+                        throw new InvalidDataException($"Invalid image value for param {type.Name} - must be a valid base64 string");
+                    }
+                    parts.Add(partVal);
+                }
+                return parts.JoinString("|");
             case T2IParamDataType.MODEL:
                 if (!Program.T2IModelSets.TryGetValue(type.Subtype ?? "Stable-Diffusion", out T2IModelHandler handler))
                 {
