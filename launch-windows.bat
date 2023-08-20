@@ -1,6 +1,6 @@
 @echo off
 
-cd "%~dp0"
+cd /D "%~dp0"
 
 rem Microsoft borked the dotnet installer/path handler, so force x64 to be read first
 set PATH=C:\Program Files\dotnet;%PATH%
