@@ -536,6 +536,7 @@ public class BackendHandler
         {
             List<T2IBackendData> currentBackends = Handler.T2IBackends.Values.ToList();
             List<T2IBackendData> possible = currentBackends.Where(b => b.Backend.Status == BackendStatus.RUNNING).ToList();
+            Logs.Verbose($"[BackendHandler] Backend request #{ID} searching for backend... have {possible.Count}/{currentBackends.Count} possible");
             if (!possible.Any())
             {
                 if (!currentBackends.Any(b => b.Backend.Status == BackendStatus.LOADING || b.Backend.Status == BackendStatus.WAITING))
@@ -572,6 +573,7 @@ public class BackendHandler
             }
             if (Pressure is null && Model is not null)
             {
+                Logs.Verbose($"[BackendHandler] Backend request #{ID} is creating pressure for model {Model.Name}...");
                 Pressure = Handler.ModelRequests.GetOrCreate(Model.Name, () => new() { Model = Model });
                 lock (Pressure.Locker)
                 {
@@ -660,10 +662,12 @@ public class BackendHandler
     /// <summary>Primary internal loop thread to handles tracking of backend requests.</summary>
     public void RequestHandlingLoop()
     {
+        Logs.Init("Backend request handler loop ready...");
         while (true)
         {
             if (HasShutdown)
             {
+                Logs.Init("Backend request handler loop closing...");
                 foreach (T2IBackendRequest request in T2IBackendRequests.Values.ToArray())
                 {
                     request.CompletedEvent.Set();
@@ -700,6 +704,7 @@ public class BackendHandler
     /// <summary>Internal helper route for <see cref="GetNextT2IBackend"/> to trigger a backend model load.</summary>
     public void LoadHighestPressureNow(List<T2IBackendData> possible, List<T2IBackendData> available, Action ReleasePressure, CancellationToken cancel)
     {
+        Logs.Verbose($"[BackendHandler] Will load highest pressure model...");
         long timeRel = Environment.TickCount64;
         ModelRequestPressure highestPressure = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).FirstOrDefault();
         if (highestPressure is not null)
@@ -708,6 +713,7 @@ public class BackendHandler
             {
                 if (highestPressure.IsLoading) // Another thread already got here, let it take control.
                 {
+                    Logs.Verbose($"[BackendHandler] Cancelling highest-pressure load, another thread is handling it.");
                     return;
                 }
                 long timeWait = timeRel - highestPressure.TimeFirstRequest;
@@ -754,6 +760,10 @@ public class BackendHandler
                             access.Dispose();
                         }
                     }, cancel);
+                }
+                else
+                {
+                    Logs.Verbose($"[BackendHandler] Nothing to load onto right now, pressure is too new.");
                 }
             }
         }
