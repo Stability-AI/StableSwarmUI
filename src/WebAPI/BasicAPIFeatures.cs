@@ -196,6 +196,7 @@ public static class BasicAPIFeatures
             Program.ServerSettings.LaunchMode = "web";
         }
         Program.SaveSettingsFile();
+        await Program.Backends.ReloadAllBackends();
         await output("Installed!");
         await socket.SendJson(new JObject() { ["success"] = true }, API.WebsocketTimeout);
         return null;

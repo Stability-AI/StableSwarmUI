@@ -206,6 +206,15 @@ public class BackendHandler
         return data;
     }
 
+    /// <summary>Causes all backends to restart.</summary>
+    public async Task ReloadAllBackends()
+    {
+        foreach (int id in T2IBackends.Keys.ToArray())
+        {
+            await EditById(id, new()); // Perform an empty edit to trigger a reload
+        }
+    }
+
     /// <summary>Loads the backends list from a file.</summary>
     public void Load()
     {
