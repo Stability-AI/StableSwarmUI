@@ -187,16 +187,31 @@ function doToggleEnable(id) {
         return;
     }
     elem.disabled = !toggler.checked;
+    let elem2 = document.getElementById(id + '_rangeslider');
+    if (elem2) {
+        elem2.disabled = !toggler.checked;
+    }
     let div = elem.parentElement.querySelector('.toggler-overlay-part');
     if (div) {
         div.remove();
     }
     if (elem.disabled) {
         let overlay = elem.parentElement.querySelector('.toggler-overlay');
-        overlay.innerHTML = `<div class="toggler-overlay-part" style="width: ${elem.clientWidth}px; height: ${elem.clientHeight}px"></div>`;
+        if (overlay.querySelector('.toggler-overlay-part')) {
+            overlay.firstChild.remove();
+        }
+        let width = Math.max(elem.clientWidth, 200);
+        if (elem2) {
+            width = Math.max(width, elem2.clientWidth);
+        }
+        let height = Math.max(elem.clientHeight, 16);
+        overlay.innerHTML = `<div class="toggler-overlay-part" style="width: ${width}px; height: ${height}px"></div>`;
         overlay.firstChild.addEventListener('click', () => {
             toggler.checked = true;
             elem.disabled = false;
+            if (elem2) {
+                elem2.disabled = false;
+            }
             overlay.firstChild.remove();
             elem.focus();
         });

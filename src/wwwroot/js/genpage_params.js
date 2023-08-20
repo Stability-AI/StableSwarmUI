@@ -259,41 +259,48 @@ function genInputs(delay_final = false) {
                 altText.value = inputPrompt.value;
                 altText.dispatchEvent(new Event('input'));
             });
-            let promptParent = findParentOfClass(inputPrompt, 'auto-input');
-            promptParent.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-            let clearButton = promptParent.querySelector('.image-clear-button');
-            let promptImageArea = promptParent.querySelector('.added-image-area');
-            let revisionStrengthParent = findParentOfClass(inputRevisionStrength, 'auto-input');
-            clearButton.addEventListener('click', () => {
-                promptImageArea.innerHTML = '';
-                clearButton.style.display = 'none';
-                revisionStrengthParent.style.display = 'none';
-            });
-            promptParent.addEventListener('drop', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    let file = e.dataTransfer.files[0];
-                    if (file.type.startsWith('image/')) {
-                        let reader = new FileReader();
-                        reader.onload = (e) => {
-                            let data = e.target.result;
-                            let imageObject = new Image();
-                            imageObject.src = data;
-                            imageObject.width = 128;
-                            imageObject.height = 128;
-                            imageObject.dataset.filedata = data;
-                            clearButton.style.display = 'block';
-                            revisionStrengthParent.style.display = 'block';
-                            promptImageArea.appendChild(imageObject);
-                        };
-                        reader.readAsDataURL(file);
+            if (inputRevisionStrength) {
+                let revisionStrengthToggler = getRequiredElementById('input_revisionstrength_toggle');
+                let promptParent = findParentOfClass(inputPrompt, 'auto-input');
+                promptParent.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+                let clearButton = promptParent.querySelector('.image-clear-button');
+                let promptImageArea = promptParent.querySelector('.added-image-area');
+                let revisionStrengthParent = findParentOfClass(inputRevisionStrength, 'auto-input');
+                clearButton.addEventListener('click', () => {
+                    promptImageArea.innerHTML = '';
+                    clearButton.style.display = 'none';
+                    revisionStrengthParent.style.display = 'none';
+                    revisionStrengthToggler.checked = false;
+                    doToggleEnable('input_revisionstrength');
+                });
+                promptParent.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        let file = e.dataTransfer.files[0];
+                        if (file.type.startsWith('image/')) {
+                            let reader = new FileReader();
+                            reader.onload = (e) => {
+                                let data = e.target.result;
+                                let imageObject = new Image();
+                                imageObject.src = data;
+                                imageObject.width = 128;
+                                imageObject.height = 128;
+                                imageObject.dataset.filedata = data;
+                                clearButton.style.display = 'block';
+                                revisionStrengthParent.style.display = 'block';
+                                revisionStrengthToggler.checked = true;
+                                doToggleEnable('input_revisionstrength');
+                                promptImageArea.appendChild(imageObject);
+                            };
+                            reader.readAsDataURL(file);
+                        }
                     }
-                }
-            });
+                });
+            }
         }
         let inputLoras = document.getElementById('input_loras');
         if (inputLoras) {
