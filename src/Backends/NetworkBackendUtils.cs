@@ -79,7 +79,7 @@ public static class NetworkBackendUtils
         throw new NotImplementedException();
     }
 
-    public static int NextPort = 7820;
+    public static volatile int NextPort = 7820;
 
     public static string ExplicitShell = null;
 
@@ -103,7 +103,11 @@ public static class NetworkBackendUtils
             reviseStatus(BackendStatus.ERRORED);
             return;
         }
-        int port = NextPort++;
+        int port = Interlocked.Increment(ref NextPort);
+        while (Utilities.IsPortTaken(port))
+        {
+            port = Interlocked.Increment(ref NextPort);
+        }
         string scriptName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "./launchtools/generic-launcher.bat" : "./launchtools/generic-launcher.sh";
         ProcessStartInfo start = new()
         {
