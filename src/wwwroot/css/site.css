@@ -395,3 +395,6 @@ textarea, input, select {
 .toast-error-box .toast-body {
     white-space: pre-wrap;
 }
+.added-image-area {
+    white-space: break-spaces;
+}
