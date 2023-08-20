@@ -20,7 +20,6 @@ Those interested in helping push from Alpha to Beta to Full Release are welcome 
 
 Key feature targets not yet implemented:
 - Image editing tools
-- ControlNets
 - Internal TIs (already supported as a listing, and indirectly as all compatible backends specify these via text anyway, but a handler for them should be present)
 - Text prompt tools (CLIP token counter, wildcards, etc) (some tools like prompt weighting already implicitly supported via backends)
 - Localization / automatic translation
@@ -29,7 +28,7 @@ Key feature targets not yet implemented:
 - Self-contained internal mini-backend for simple usages
 - Simple box grids for batches (eg 2x2 squares of images when you generate a batch of 4)
 - Properly display ModelSpec usage-hint/trigger-phrase/etc. (need full detail "Current Model" display in UI, separate from the model selector - probably as a tab within the batch sidebar?)
-- In-UI Comfy workflow Save&Load, and metadata edit (ie to reconfigure which parameters to send over or not)
+- ComfyUI custom workflow metadata edit (ie to reconfigure which parameters to send over or not)
 
 # Installing on Windows
 
