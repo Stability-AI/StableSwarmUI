@@ -194,9 +194,10 @@ function comfyBuildParams(callback) {
         while (hasFixes) {
             hasFixes = false;
             for (let nodeId of Object.keys(prompt)) {
+                let node = prompt[nodeId];
                 if (node.class_type == 'unCLIPConditioning' && labelAlterations[nodeId]) {
                     let inputCond = node.inputs['conditioning'];
-                    if (typeof inputCond == 'object' && inputCond.length == 2) {
+                    if (typeof inputCond == 'object' && inputCond.length == 2 && !labelAlterations[inputCond[0]]) {
                         labelAlterations[inputCond[0]] = labelAlterations[nodeId];
                         hasFixes = true;
                     }
