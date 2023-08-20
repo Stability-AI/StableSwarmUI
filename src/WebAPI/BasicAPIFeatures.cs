@@ -188,6 +188,7 @@ public static class BasicAPIFeatures
                 }
                 await output("Model download complete.");
             }
+            Program.MainSDModels.Refresh();
         }
         Program.ServerSettings.IsInstalled = true;
         if (Program.ServerSettings.LaunchMode == "webinstall")
