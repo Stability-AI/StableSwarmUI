@@ -195,9 +195,9 @@ public class T2IParamTypes
     public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod;
     public static T2IRegisteredParam<int> Images, Steps, Width, Height;
     public static T2IRegisteredParam<long> Seed, VariationSeed;
-    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength;
+    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength;
     public static T2IRegisteredParam<Image> InitImage, ControlNetImage;
-    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel;
+    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
     public static T2IRegisteredParam<List<Image>> PromptImages;
 
@@ -214,6 +214,12 @@ public class T2IParamTypes
             ));
         PromptImages = Register<List<Image>>(new("Prompt Images", "Images to include with the prompt, for eg ReVision or UnCLIP.",
             "", OrderPriority: -95, Toggleable: true, VisibleNormally: false, IsAdvanced: true, HideFromMetadata: true // Has special internal handling
+            ));
+        ReVisionStrength = Register<double>(new("ReVision Strength", "How strong to apply ReVision image inputs.",
+            "1", OrderPriority: -94, Min: 0, Max: 10, Step: 0.1, Toggleable: true, NumberView: NumberViewType.SLIDER
+            ));
+        ReVisionModel = Register<T2IModel>(new("ReVision Model", "The CLIP Vision model to use for ReVision inputs.",
+            "", Subtype: "ClipVision", IsAdvanced: true, Toggleable: true
             ));
         NegativePrompt = Register<string>(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.\nTell the AI things you don't want to see.",
             "", Clean: ApplyStringEdit, Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90

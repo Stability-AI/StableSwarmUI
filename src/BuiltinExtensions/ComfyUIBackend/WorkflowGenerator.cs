@@ -179,33 +179,41 @@ public class WorkflowGenerator
                 }
                 int visionLoader = g.CreateNode("CLIPVisionLoader", (_, n) =>
                 {
-                    string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, "clip_vision_g.safetensors");
-                    if (!File.Exists(filePath))
+                    string model = "clip_vision_g.safetensors";
+                    if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
                     {
-                        lock (ModelDownloaderLock)
+                        model = visionModel.ToString();
+                    }
+                    else
+                    {
+                        string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, "clip_vision_g.safetensors");
+                        if (!File.Exists(filePath))
                         {
-                            if (!File.Exists(filePath)) // Double-check in case another thread downloaded it
+                            lock (ModelDownloaderLock)
                             {
-                                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                                Logs.Info($"Downloading clip_vision_g.safetensors to {filePath}...");
-                                long total = 3_689_911_098L;
-                                double nextPerc = 0.05;
-                                Utilities.DownloadFile("https://huggingface.co/stabilityai/control-lora/resolve/main/revision/clip_vision_g.safetensors", filePath, (bytes) =>
+                                if (!File.Exists(filePath)) // Double-check in case another thread downloaded it
                                 {
-                                    double perc = bytes / (double)total;
-                                    if (perc >= nextPerc)
+                                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                                    Logs.Info($"Downloading clip_vision_g.safetensors to {filePath}...");
+                                    long total = 3_689_911_098L;
+                                    double nextPerc = 0.05;
+                                    Utilities.DownloadFile("https://huggingface.co/stabilityai/control-lora/resolve/main/revision/clip_vision_g.safetensors", filePath, (bytes) =>
                                     {
-                                        Logs.Info($"clip_vision_g.safetensors download at {perc*100:0.0}%...");
-                                        nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
-                                    }
-                                }).Wait();
-                                Logs.Info($"Downloading complete, continuing.");
+                                        double perc = bytes / (double)total;
+                                        if (perc >= nextPerc)
+                                        {
+                                            Logs.Info($"clip_vision_g.safetensors download at {perc * 100:0.0}%...");
+                                            nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
+                                        }
+                                    }).Wait();
+                                    Logs.Info($"Downloading complete, continuing.");
+                                }
                             }
                         }
                     }
                     n["inputs"] = new JObject()
                     {
-                        ["clip_name"] = "clip_vision_g.safetensors"
+                        ["clip_name"] = model
                     };
                 });
                 for (int i = 0; i < images.Count; i++)
@@ -231,7 +239,7 @@ public class WorkflowGenerator
                         {
                             ["conditioning"] = g.FinalPrompt,
                             ["clip_vision_output"] = new JArray($"{encoded}", 0),
-                            ["strength"] = 1, // TODO: Configurable
+                            ["strength"] = g.UserInput.Get(T2IParamTypes.ReVisionStrength, 1),
                             ["noise_augmentation"] = 0
                         };
                     });

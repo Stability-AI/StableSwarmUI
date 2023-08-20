@@ -246,6 +246,12 @@ function genInputs(delay_final = false) {
             });
             resTrick();
         }
+        let inputRevisionStrength = document.getElementById('input_revisionstrength');
+        if (inputRevisionStrength) {
+            let parent = findParentOfClass(inputRevisionStrength, 'auto-input');
+            parent.style.display = 'none';
+            parent.dataset.visible_controlled = true;
+        }
         let inputPrompt = document.getElementById('input_prompt');
         if (inputPrompt) {
             let altText = getRequiredElementById('alt_prompt_textbox');
@@ -260,9 +266,11 @@ function genInputs(delay_final = false) {
             });
             let clearButton = promptParent.querySelector('.image-clear-button');
             let promptImageArea = promptParent.querySelector('.added-image-area');
+            let revisionStrengthParent = findParentOfClass(inputRevisionStrength, 'auto-input');
             clearButton.addEventListener('click', () => {
                 promptImageArea.innerHTML = '';
                 clearButton.style.display = 'none';
+                revisionStrengthParent.style.display = 'none';
             });
             promptParent.addEventListener('drop', (e) => {
                 e.preventDefault();
@@ -279,6 +287,7 @@ function genInputs(delay_final = false) {
                             imageObject.height = 128;
                             imageObject.dataset.filedata = data;
                             clearButton.style.display = 'block';
+                            revisionStrengthParent.style.display = 'block';
                             promptImageArea.appendChild(imageObject);
                         };
                         reader.readAsDataURL(file);
@@ -526,7 +535,9 @@ function hideUnsupportableParams() {
             let box = findParentOfClass(elem, 'auto-input');
             let show = param.feature_flag == null || Object.values(backends_loaded).filter(b => b.features.includes(param.feature_flag)).length > 0;
             param.feature_missing = !show;
-            if (show) {
+            if (box.dataset.visible_controlled) {
+            }
+            else if (show) {
                 box.style.display = 'inline-block';
             }
             else {
