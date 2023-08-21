@@ -749,6 +749,10 @@ public class BackendHandler
                             availableBackend.Backend.LoadModel(highestPressure.Model).Wait(cancel);
                             Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} loaded model, returning to pool");
                         }
+                        catch (Exception ex)
+                        {
+                            Logs.Error($"[BackendHandler] backend #{availableBackend.ID} failed to load model with error: {ex}");
+                        }
                         finally
                         {
                             if (availableBackend.Backend.CurrentModelName != highestPressure.Model.Name)
