@@ -236,7 +236,7 @@ function comfyBuildParams(callback) {
                 }
                 return id;
             }
-            function addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel) {
+            function addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel, forceUniqueId) {
                 let paramDataRaw;
                 if (node.class_type in comfyObjectData) {
                     let possible = comfyObjectData[node.class_type].input;
@@ -306,6 +306,13 @@ function comfyBuildParams(callback) {
                         }
                     }
                     inputIdDirect = injectType(inputIdDirect, asSeed ? 'seed' : type);
+                    if (forceUniqueId) {
+                        let count = 0;
+                        while (idsUsed.includes(inputIdDirect)) {
+                            count++;
+                            inputIdDirect = `${inputIdDirect}${numberToLetters(count)}`;
+                        }
+                    }
                     node.inputs[inputId] = "%%_COMFYFIXME_${" + inputIdDirect + (asSeed ? "+seed" : "") + ":" + val + "}_ENDFIXME_%%";
                 }
                 else if (typeof val == 'string') {
@@ -340,6 +347,13 @@ function comfyBuildParams(callback) {
                         }
                     }
                     inputIdDirect = injectType(inputIdDirect, type);
+                    if (forceUniqueId) {
+                        let count = 0;
+                        while (idsUsed.includes(inputIdDirect)) {
+                            count++;
+                            inputIdDirect = `${inputIdDirect}${numberToLetters(count)}`;
+                        }
+                    }
                     node.inputs[inputId] = "${" + inputIdDirect + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
                 }
                 else {
@@ -377,7 +391,7 @@ function comfyBuildParams(callback) {
                                 return true;
                             }
                         }
-                        actualId = addParam(fieldName, actualId, title, val, 'primitives', 'Primitives');
+                        actualId = addParam(fieldName, actualId, title, val, 'primitives', 'Primitives', false);
                     }
                     else if (defaultParamsRetain.includes(paramNameClean)) {
                         return false;
@@ -442,12 +456,12 @@ function comfyBuildParams(callback) {
                             continue;
                         }
                     }
-                    addParam(inputId, redirId, title, val, 'primitives', 'Primitives');
+                    addParam(inputId, redirId, title, val, 'primitives', 'Primitives', false);
                 }
                 else {
                     let inputLabel = labelAlterations[`${nodeId}.${inputId}`] || inputId;
                     let inputIdDirect = cleanParamName(`${inputPrefix}${groupLabel}${inputId}${numberToLetters(parseInt(nodeId))}`);
-                    addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel);
+                    addParam(inputId, inputIdDirect, inputLabel, val, groupId, groupLabel, true);
                 }
             }
         }
