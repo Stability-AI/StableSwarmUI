@@ -88,7 +88,7 @@ function addBackendToHtml(backend, disable, spot = null) {
         saveButton.style.display = 'none';
         for (let entry of cardBody.querySelectorAll('[data-name]')) {
             let name = entry.dataset.name;
-            let value = entry.value;
+            let value = entry.type == 'checkbox' ? entry.checked : entry.value;
             backend.settings[name] = value;
             entry.disabled = true;
         }

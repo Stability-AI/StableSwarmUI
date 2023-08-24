@@ -325,7 +325,7 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
         <br>
         <div class="toggler-overlay"></div>
-        <input class="auto-checkbox" type="checkbox" id="${id}"${checked}> <span class="auto-input-description" autocomplete="false">${description}</span>
+        <input class="auto-checkbox" type="checkbox" data-name="${name}" id="${id}"${checked}> <span class="auto-input-description" autocomplete="false">${description}</span>
     </div>`;
 }
 
