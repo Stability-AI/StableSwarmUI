@@ -2,7 +2,6 @@
 setlocal enabledelayedexpansion
 
 set CUDA_VISIBLE_DEVICES=%1
-set COMMANDLINE_ARGS=%4
 
 cd /D %2
 
