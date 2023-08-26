@@ -298,7 +298,7 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                                 scoreMin = 1;
                                 scoreMax = 0;
                                 for (let image of document.getElementsByClassName('table_img')) {
-                                    let score = getScoreFor(image.dataset.imgPath);
+                                    let score = getScoreFor(image.dataset.img_path);
                                     if (score) {
                                         scoreMin = Math.min(scoreMin, score);
                                         scoreMax = Math.max(scoreMax, score);
@@ -587,7 +587,7 @@ function doPopupFor(img) {
         metaText = getMetadataForImage(img);
     }
     else {
-        let imgPath = img.dataset.imgPath.split('/');
+        let imgPath = img.dataset.img_path.split('/');
         let metaData = crunchMetadata(imgPath);
         metaText = typeof(formatMetadata) == 'undefined' ? JSON.stringify(metaData) : formatMetadata(metaData);
     }
