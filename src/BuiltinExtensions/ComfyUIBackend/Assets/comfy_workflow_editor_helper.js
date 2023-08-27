@@ -619,6 +619,23 @@ function comfyHideLoadModal() {
     $('#comfy_workflow_load_modal').modal('hide');
 }
 
+/** Button to get the buttons out of the way. */
+function comfyToggleButtonsVisible() {
+    let button = getRequiredElementById('comfy_buttons_closer');
+    let left = getRequiredElementById('comfy_workflow_buttons_left');
+    let right = getRequiredElementById('comfy_workflow_buttons_right');
+    if (left.style.display == 'none') {
+        left.style.display = '';
+        right.style.display = '';
+        button.innerHTML = '&#x2B9D;';
+    }
+    else {
+        left.style.display = 'none';
+        right.style.display = 'none';
+        button.innerHTML = '&#x2B9F;';
+    }
+}
+
 getRequiredElementById('maintab_comfyworkfloweditor').addEventListener('click', comfyTryToLoad);
 
 backendsRevisedCallbacks.push(() => {

@@ -21,12 +21,15 @@
     border-radius: 1rem;
     background-color: var(--background-soft);
     white-space: nowrap;
+    min-width: 3rem;
+    min-height: 3rem;
 }
 .comfy_workflow_buttons_left {
     display: inline-block;
     width: fit-content;
     height: fit-content;
     white-space: normal;
+    vertical-align: top;
 }
 .comfy_workflow_buttons_right {
     display: inline-block;
@@ -34,7 +37,30 @@
     height: fit-content;
     white-space: normal;
     padding-right: 2rem; /* this is a hack, idk why this is needed */
+    vertical-align: top;
 }
 .comfy-small-button {
     font-size: 80%;
+}
+.comfy_buttons_closer_wrapper {
+    position: relative;
+    width: 0;
+    height: 0;
+}
+.comfy_buttons_closer {
+    font-size: 80%;
+    position: absolute;
+    top: 0rem;
+    left: 0rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    border: 1px solid var(--button-border);
+    background-color: var(--button-background);
+    color: var(--button-text);
+    width: fit-content;
+    padding: 0.2rem;
+}
+.comfy_buttons_closer:hover {
+    background-color: var(--button-background-hover);
+    color: var(--button-foreground-hover);
 }
