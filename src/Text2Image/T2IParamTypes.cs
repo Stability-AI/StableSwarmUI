@@ -235,7 +235,7 @@ public class T2IParamTypes
             "20", Min: 1, Max: 200, ViewMax: 100, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: GroupCore, NumberView: NumberViewType.SLIDER
             ));
         CFGScale = Register<double>(new("CFG Scale", "How strongly to scale prompt input.\nToo-high values can cause corrupted/burnt images, too-low can cause nonsensical images.\n7 is a good baseline. Normal usages vary between 5 and 9.",
-            "7", Min: 0, Max: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER, Group: GroupCore
+            "7", Min: 0, Max: 100, ViewMax: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER, Group: GroupCore
             ));
         GroupVariation = new("Variation Seed", Toggles: true, Open: false, OrderPriority: -17);
         VariationSeed = Register<long>(new("Variation Seed", "Image-variation seed.\nCombined partially with the original seed to create a similar-but-different image for the same seed.\n-1 = random.",
