@@ -121,7 +121,7 @@ class GenPageBrowserClass {
                 let slash = folder.indexOf('/');
                 let base = folder.substring(0, slash + 1);
                 let same = otherFolders.filter(f => f.startsWith(base)).map(f => f.substring(base.length));
-                this.refillTree(path + base, same);
+                this.refillTree(path + ((path == '' || path.endsWith('/')) ? '' : '/') + base, same);
                 otherFolders = otherFolders.filter(f => !f.startsWith(base));
             }
             return;
