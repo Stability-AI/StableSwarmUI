@@ -190,11 +190,21 @@ body {
     padding-left: 0.1rem;
     padding-right: 0.1rem;
 }
+.image-block-big {
+    height: 17.5rem;
+    width: 16rem;
+    padding-top: 0.2rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+}
 .image-block-legacy img {
     height: 8rem;
 }
 .image-block-small img {
     height: 5rem;
+}
+.image-block-big img {
+    height: 15rem;
 }
 .image-block-batch {
     max-height: calc(10rem + 2px);
