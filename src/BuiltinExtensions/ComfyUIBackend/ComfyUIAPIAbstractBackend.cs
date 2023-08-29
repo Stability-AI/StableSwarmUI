@@ -176,6 +176,12 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 {
                     return;
                 }
+                if (interrupt.IsCancellationRequested)
+                {
+                    Logs.Debug("ComfyUI Interrupt requested");
+                    await HttpClient.PostAsync($"{Address}/interrupt", new StringContent(""), interrupt);
+                    break;
+                }
             }
             endloop:
             JObject historyOut = await SendGet<JObject>($"history/{promptId}");
