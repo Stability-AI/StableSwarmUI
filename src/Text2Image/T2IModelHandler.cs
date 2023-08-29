@@ -347,7 +347,14 @@ public class T2IModelHandler
             };
             lock (MetadataLock)
             {
-                cache.Upsert(metadata);
+                try
+                {
+                    cache.Upsert(metadata);
+                }
+                catch (Exception ex)
+                {
+                    Logs.Warning($"Error handling metadata database: {ex}");
+                }
             }
         }
         lock (ModificationLock)
