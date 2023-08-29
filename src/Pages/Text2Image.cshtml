@@ -150,7 +150,7 @@
                     @WebUtil.ModalFooter()
                     @WebUtil.ModalHeader("add_preset_modal", """Create New Preset: <input type="text" id="new_preset_name" placeholder="Preset Name" />""")
                         <div class="modal-body">
-                            <textarea class="auto-text" id="preset_description" rows="3" placeholder="Preset description text..."></textarea>
+                            <textarea class="auto-text auto-text-block" id="preset_description" rows="3" placeholder="Preset description text..."></textarea>
                             <span class="form-check form-switch display-inline-block">
                                 <input class="auto-slider-toggle form-check-input" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('new_preset_image')"> Use Image
                             </span>
@@ -212,7 +212,7 @@
                     <div>Tags: <input type="text" id="edit_model_tags" class="modal_text_extra" placeholder="Model Tags" /></div>
                     <div>Usage Hint: <input type="text" id="edit_model_usage_hint" class="modal_text_extra" placeholder="Model Usage Hint" /></div>
                     <div>Trigger Phrase: <input type="text" id="edit_model_trigger_phrase" class="modal_text_extra" placeholder="Model Trigger Phrase" /></div>
-                    Description: <textarea class="auto-text" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
+                    Description: <textarea class="auto-text auto-text-block" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
                     <span class="form-check form-switch display-inline-block">
                         <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_model_enable_image" title="Enable/disable image" onclick="javascript:doToggleEnable('edit_model_image')"> Use Image
                     </span>

@@ -383,6 +383,7 @@ textarea, input, select {
     width: 100%;
     margin-bottom: 0.1rem;
     border-radius: 0.5rem;
+    background-color: transparent;
 }
 .info-popover-button {
     cursor: pointer;
