@@ -8,8 +8,8 @@ cd "$2"
 export PYTHONUNBUFFERED=true
 
 if [[ $5 == py ]]; then
-    if test -f "$2/venv/bin/activate"; then
-        source "$2/venv/bin/activate"
+    if test -f "venv/bin/activate"; then
+        source "venv/bin/activate"
     fi
     python3 "$3" $4
 else
