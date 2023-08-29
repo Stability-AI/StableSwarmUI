@@ -48,8 +48,6 @@ public class T2IModelHandler
 
         public string ModelClassType { get; set; }
 
-        public string ModelMetadataRaw { get; set; }
-
         public string Title { get; set; }
 
         public string Author { get; set; }
@@ -330,7 +328,6 @@ public class T2IModelHandler
                 ModelFileVersion = modified,
                 ModelName = fileName,
                 ModelClassType = clazz?.ID,
-                ModelMetadataRaw = header,
                 Title = metaHeader?.Value<string>("modelspec.title") ?? metaHeader?.Value<string>("title") ?? fileName.BeforeLast('.'),
                 Author = metaHeader?.Value<string>("modelspec.author") ?? metaHeader?.Value<string>("author"),
                 Description = metaHeader?.Value<string>("modelspec.description") ?? metaHeader?.Value<string>("description"),
