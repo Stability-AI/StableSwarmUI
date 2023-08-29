@@ -240,10 +240,33 @@ function makeWSRequestT2I(url, in_data, callback) {
     });
 }
 
+let isGeneratingForever = false;
+
 function doInterrupt(allSessions = false) {
     genericRequest('InterruptAll', {'other_sessions': allSessions}, data => {
         updateGenCount();
     });
+    if (isGeneratingForever) {
+        toggleGenerateForever();
+    }
+}
+let genForeverInterval;
+
+function toggleGenerateForever() {
+    let button = getRequiredElementById('generate_forever_button');
+    isGeneratingForever = !isGeneratingForever;
+    if (isGeneratingForever) {
+        button.innerText = 'Stop Generating';
+        genForeverInterval = setInterval(() => {
+            if (num_current_gens == 0) {
+                doGenerate();
+            }
+        }, 100);
+    }
+    else {
+        button.innerText = 'Generate Forever';
+        clearInterval(genForeverInterval);
+    }
 }
 
 function doGenerate(input_overrides = {}) {
@@ -529,9 +552,6 @@ function pageSizer() {
     let topSplitButton = getRequiredElementById('t2i-top-split-quickbutton');
     let altRegion = getRequiredElementById('alt_prompt_region');
     let altText = getRequiredElementById('alt_prompt_textbox');
-    // (Note: set in javascript to make \n work)
-    altText.title = "Tell the AI what you want to see, then press Enter to submit.\nConsider 'a photo of a cat', or 'cartoonish drawing of an astronaut'";
-    getRequiredElementById('alt_interrupt_button').title = "Interrupt current generation(s)\nRight-click for advanced options.";
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
@@ -669,7 +689,7 @@ function pageSizer() {
             return false;
         }
     });
-    altText.addEventListener('change', (e) => {
+    altText.addEventListener('input', (e) => {
         let inputPrompt = document.getElementById('input_prompt');
         if (inputPrompt) {
             inputPrompt.value = altText.value;
@@ -726,6 +746,14 @@ function updateAllModels(models) {
         selector.appendChild(option);
     }
 }
+
+/** Set some element titles via JavaScript (to allow '\n'). */
+function setTitles() {
+    getRequiredElementById('alt_prompt_textbox').title = "Tell the AI what you want to see, then press Enter to submit.\nConsider 'a photo of a cat', or 'cartoonish drawing of an astronaut'";
+    getRequiredElementById('alt_interrupt_button').title = "Interrupt current generation(s)\nRight-click for advanced options.";
+    getRequiredElementById('alt_generate_button').title = "Start generating images\nRight-click for advanced options.";
+}
+setTitles();
 
 function genpageLoad() {
     console.log('Load page...');
