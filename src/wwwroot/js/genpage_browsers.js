@@ -230,6 +230,16 @@ class GenPageBrowserClass {
                 textBlock.innerText = desc.name;
                 div.appendChild(textBlock);
             }
+            else if (this.format == 'Small Thumbnails') {
+                div.className += ' image-block image-block-legacy image-block-small';
+                img.addEventListener('load', () => {
+                    let ratio = img.width / img.height;
+                    div.style.width = `${(ratio * 5) + 1}rem`;
+                });
+                let textBlock = createDiv(null, 'image-preview-text');
+                textBlock.innerText = desc.name;
+                div.appendChild(textBlock);
+            }
             else if (this.format == 'List') {
                 div.className += ' browser-list-entry';
                 let textBlock = createSpan(null, 'browser-list-entry-text');
@@ -305,7 +315,7 @@ class GenPageBrowserClass {
         formatSelector.id = `${this.id}-format-selector`;
         formatSelector.title = 'Display format';
         formatSelector.className = 'browser-format-selector';
-        for (let format of ['Cards', 'Thumbnails', 'List']) {
+        for (let format of ['Cards', 'Thumbnails', 'Small Thumbnails', 'List']) {
             let option = document.createElement('option');
             option.value = format;
             option.innerText = format;

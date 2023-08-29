@@ -183,8 +183,18 @@ body {
     white-space: pre-wrap;
     word-break: break-all;
 }
+.image-block-small {
+    height: 7rem;
+    width: 7rem;
+    padding-top: 0.1rem;
+    padding-left: 0.1rem;
+    padding-right: 0.1rem;
+}
 .image-block-legacy img {
     height: 8rem;
+}
+.image-block-small img {
+    height: 5rem;
 }
 .image-block-batch {
     max-height: calc(10rem + 2px);
