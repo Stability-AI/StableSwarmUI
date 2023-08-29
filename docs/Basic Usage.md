@@ -41,8 +41,8 @@ If you have pre-existing Stable Diffusion files, you'll want to configure settin
 
 ![img](/docs/images/draggable.png)
 
-- Now, at the top left, there's a box labeled `Prompt` - type something nice into this box, like `a photo of a cat`
-- Click the big purple `Generate Image` button!
+- Now, in the bottom-center, there's a text box that says `Type your prompt here...` - type something nice into this box, like `a photo of a cat`
+- Next either hit Enter, or click the purple `Generate` button
 
 ![img](/docs/images/yourfirstprompt.png)
 
