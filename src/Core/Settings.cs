@@ -38,8 +38,13 @@ public class Settings : AutoConfiguration
         [ConfigComment("How many times to retry initializing a backend before giving up. Default is 3.")]
         public int MaxBackendInitAttempts = 3;
 
-        [ConfigComment("The maximum duration a request can be waiting on a backend to be available before giving up.")]
+        [ConfigComment("Safety check, the maximum duration all requests can be waiting for a backend before the system declares a backend handling failure.")]
         public int MaxTimeoutMinutes = 20;
+
+        [ConfigComment("The maximum duration an individual request can be waiting on a backend to be available before giving up.\n"
+            + "Not to be confused with 'MaxTimeoutMinutes' which requires backends be unresponsive for that duration, this duration includes requests that are merely waiting because other requests are queued."
+            + "\nDefaults to 60 * 24 * 7 = 1 week (ultra-long max queue duration).")]
+        public int PerRequestTimeoutMinutes = 60 * 24 * 7;
     }
 
     /// <summary>Settings related to networking and the webserver.</summary>

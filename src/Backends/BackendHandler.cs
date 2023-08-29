@@ -548,7 +548,7 @@ public class BackendHandler
                 if (!currentBackends.Any(b => b.Backend.Status == BackendStatus.LOADING || b.Backend.Status == BackendStatus.WAITING))
                 {
                     Logs.Warning("[BackendHandler] No backends are available! Cannot generate anything.");
-                    throw new InvalidOperationException("No backends available!");
+                    Failure = new InvalidOperationException("No backends available!");
                 }
                 return;
             }
@@ -556,7 +556,8 @@ public class BackendHandler
             if (!possible.Any())
             {
                 Logs.Warning("[BackendHandler] No backends match the request! Cannot generate anything.");
-                throw new InvalidOperationException("No backends match the settings of the request given!");
+                Failure = new InvalidOperationException("No backends match the settings of the request given!");
+                return;
             }
             List<T2IBackendData> available = possible.Where(b => !b.IsInUse).ToList();
             T2IBackendData firstAvail = available.FirstOrDefault();
@@ -670,6 +671,7 @@ public class BackendHandler
     public void RequestHandlingLoop()
     {
         Logs.Init("Backend request handler loop ready...");
+        long lastUpdate = Environment.TickCount64;
         while (true)
         {
             if (HasShutdown)
@@ -695,6 +697,21 @@ public class BackendHandler
                     if (request.Result is not null || request.Failure is not null)
                     {
                         T2IBackendRequests.TryRemove(request.ID, out _);
+                        request.CompletedEvent.Set();
+                        lastUpdate = Environment.TickCount64;
+                    }
+                }
+                if (T2IBackendRequests.IsEmpty())
+                {
+                    lastUpdate = Environment.TickCount64;
+                }
+                else if (Environment.TickCount64 - lastUpdate > Program.ServerSettings.Backends.MaxTimeoutMinutes * 60 * 1000)
+                {
+                    lastUpdate = Environment.TickCount64;
+                    Logs.Error($"[BackendHandler] {T2IBackendRequests.Count} requests denied due to backend timeout failure. Server backends are failing to respond.");
+                    foreach (T2IBackendRequest request in T2IBackendRequests.Values.ToArray())
+                    {
+                        request.Failure = new TimeoutException($"No backend has responded in {Program.ServerSettings.Backends.MaxTimeoutMinutes} minutes.");
                         request.CompletedEvent.Set();
                     }
                 }
