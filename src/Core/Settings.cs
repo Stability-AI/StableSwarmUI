@@ -28,6 +28,7 @@ public class Settings : AutoConfiguration
     public long NvidiaQueryRateLimitMS = 1000;
 
     [ConfigComment("How to launch the UI. If 'none', just quietly launch. If 'web', launch your web-browser to the page. If 'webinstall', launch web-browser to the install page. If 'electron', launch the UI in an electron window.")]
+    [ManualSettingsOptions(Impl = null, Vals = new string[] { "none", "web", "webinstall", "electron" })]
     public string LaunchMode = "webinstall";
 
     /// <summary>Settings related to backends.</summary>
@@ -184,5 +185,13 @@ public class SettingsOptionsAttribute : Attribute
 
     public Type Impl;
 
-    public string[] Options => (Activator.CreateInstance(Impl) as AbstractImpl).GetOptions;
+    public virtual string[] Options => (Activator.CreateInstance(Impl) as AbstractImpl).GetOptions;
+}
+
+[AttributeUsage(AttributeTargets.Field)]
+public class ManualSettingsOptionsAttribute : SettingsOptionsAttribute
+{
+    public string[] Vals;
+
+    public override string[] Options => Vals;
 }
