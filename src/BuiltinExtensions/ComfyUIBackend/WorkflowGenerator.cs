@@ -177,6 +177,17 @@ public class WorkflowGenerator
                     });
                     g.FinalPrompt = new JArray() { $"{zeroed}", 0 };
                 }
+                if (g.UserInput.TryGet(T2IParamTypes.NegativePrompt, out string negPromptText) && string.IsNullOrWhiteSpace(negPromptText))
+                {
+                    int zeroed = g.CreateNode("ConditioningZeroOut", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["conditioning"] = g.FinalNegativePrompt
+                        };
+                    });
+                    g.FinalNegativePrompt = new JArray() { $"{zeroed}", 0 };
+                }
                 int visionLoader = g.CreateNode("CLIPVisionLoader", (_, n) =>
                 {
                     string model = "clip_vision_g.safetensors";
