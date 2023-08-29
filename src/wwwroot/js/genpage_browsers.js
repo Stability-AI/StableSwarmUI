@@ -214,8 +214,10 @@ class GenPageBrowserClass {
                 this.select(file);
             });
             div.appendChild(img);
-            if (this.format == 'Cards') {
+            if (this.format.includes('Cards')) {
                 div.className += ' model-block model-block-hoverable';
+                if (this.format.startsWith('Small')) { div.classList.add('model-block-small'); }
+                else if (this.format.startsWith('Big')) { div.classList.add('model-block-big'); }
                 let textBlock = createDiv(null, 'model-descblock');
                 textBlock.innerHTML = desc.description;
                 div.appendChild(textBlock);
@@ -309,7 +311,7 @@ class GenPageBrowserClass {
         formatSelector.id = `${this.id}-format-selector`;
         formatSelector.title = 'Display format';
         formatSelector.className = 'browser-format-selector';
-        for (let format of ['Cards', 'Thumbnails', 'Small Thumbnails', 'Big Thumbnails', 'Giant Thumbnails', 'List']) {
+        for (let format of ['Cards', 'Small Cards', 'Big Cards', 'Thumbnails', 'Small Thumbnails', 'Big Thumbnails', 'Giant Thumbnails', 'List']) {
             let option = document.createElement('option');
             option.value = format;
             option.innerText = format;
