@@ -642,10 +642,13 @@ body {
     width: fit-content;
     padding-top: 0.5rem;
 }
+.alt_prompt_main_line {
+    display: flex;
+}
 .alt_prompt_textbox {
     margin-left: 1rem;
-    width: 100vw - 12rem;
     border-radius: 0.2rem;
+    flex-grow: 10;
 }
 .alt-prompt-buttons {
     vertical-align: top;

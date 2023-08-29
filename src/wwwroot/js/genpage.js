@@ -568,7 +568,6 @@ function pageSizer() {
         inputSidebar.style.display = leftShut ? 'none' : '';
         altRegion.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         mainImageArea.style.width = `calc(100vw - ${barTopLeft})`;
-        altText.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10rem)`;
         currentImage.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         currentImageBatch.style.width = `${barTopRight}`;
         topSplitButton.innerHTML = leftShut ? '&#x21DB;' : '&#x21DA;';
