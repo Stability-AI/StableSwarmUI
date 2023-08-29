@@ -320,7 +320,7 @@ class GenPageBrowserClass {
             this.update();
         });
         let buttons = createSpan(`${this.id}-button-container`, 'browser-header-buttons', `
-            <button id="${this.id}_refresh_button" title="Refresh" class="refresh-button">&#128472;</button>
+            <button id="${this.id}_refresh_button" title="Refresh" class="refresh-button">&#x21BB;</button>
             <button id="${this.id}_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
             Depth: <input id="${this.id}_depth_input" class="depth-number-input" type="number" min="1" max="10" value="${this.depth}" title="Depth of subfolders to show" autocomplete="false">
             Filter: <input id="${this.id}_filter_input" type="text" value="${this.filter}" title="Text filter, only show items that contain this text." rows="1" autocomplete="false" placeholder="Filter...">
