@@ -37,7 +37,7 @@ body {
     font-weight: bold;
     padding: 0.2rem;
     border-radius: 0.7rem;
-    width: 2rem;
+    min-width: 2rem;
     margin-left: 0;
 }
 .interrupt-button-none {

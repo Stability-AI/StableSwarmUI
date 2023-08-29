@@ -517,6 +517,7 @@ let midForceToBottom = localStorage.getItem('barspot_midForceToBottom') == 'true
 let leftShut = localStorage.getItem('barspot_leftShut') == 'true';
 
 let setPageBarsFunc;
+let altPromptSizeHandleFunc;
 
 let layoutResets = [];
 
@@ -552,6 +553,7 @@ function pageSizer() {
     let topSplitButton = getRequiredElementById('t2i-top-split-quickbutton');
     let altRegion = getRequiredElementById('alt_prompt_region');
     let altText = getRequiredElementById('alt_prompt_textbox');
+    let altImageRegion = getRequiredElementById('alt_prompt_extra_area');
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
@@ -571,7 +573,7 @@ function pageSizer() {
         currentImageBatch.style.width = `${barTopRight}`;
         topSplitButton.innerHTML = leftShut ? '&#x21DB;' : '&#x21DA;';
         midSplitButton.innerHTML = midForceToBottom ? '&#x290A;' : '&#x290B;';
-        let altHeight = `(${altText.offsetHeight}px + 2rem)`;
+        let altHeight = `(${altText.offsetHeight + altImageRegion.offsetHeight}px + 2rem)`;
         if (pageBarMid != -1 || midForceToBottom) {
             let fixed = midForceToBottom ? `8rem` : `${pageBarMid}px`;
             topSplit.style.height = `calc(100vh - ${fixed})`;
@@ -699,7 +701,7 @@ function pageSizer() {
     function altTextSize() {
         altText.style.height = 'auto';
         altText.style.height = `${Math.max(altText.scrollHeight, 15) + 5}px`;
-        altRegion.style.top = `calc(-${altText.offsetHeight}px - 2rem)`;
+        altRegion.style.top = `calc(-${altText.offsetHeight + altImageRegion.offsetHeight}px - 2rem)`;
     }
     altText.addEventListener('input', () => {
         altTextSize();
@@ -708,11 +710,12 @@ function pageSizer() {
     });
     altTextSize();
     function altPromptSizeHandle() {
-        altRegion.style.top = `calc(-${altText.offsetHeight}px - 2rem)`;
+        altRegion.style.top = `calc(-${altText.offsetHeight + altImageRegion.offsetHeight}px - 2rem)`;
         setPageBars();
     }
     altPromptSizeHandle();
     new ResizeObserver(altPromptSizeHandle).observe(altText);
+    altPromptSizeHandleFunc = altPromptSizeHandle;
 }
 
 function loadUserData() {
@@ -754,6 +757,56 @@ function setTitles() {
     getRequiredElementById('alt_generate_button').title = "Start generating images\nRight-click for advanced options.";
 }
 setTitles();
+
+function revisionInputHandler() {
+    let dragArea = getRequiredElementById('alt_prompt_region');
+    dragArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    let clearButton = getRequiredElementById('alt_prompt_image_clear_button');
+    let promptImageArea = getRequiredElementById('alt_prompt_image_area');
+    clearButton.addEventListener('click', () => {
+        promptImageArea.innerHTML = '';
+        clearButton.style.display = 'none';
+        let revisionStrengthToggler = document.getElementById('input_revisionstrength_toggle');
+        if (revisionStrengthToggler) {
+            findParentOfClass(revisionStrengthToggler, 'auto-input').style.display = 'none';
+            revisionStrengthToggler.checked = false;
+            doToggleEnable('input_revisionstrength');
+        }
+        altPromptSizeHandleFunc();
+    });
+    dragArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            let file = e.dataTransfer.files[0];
+            if (file.type.startsWith('image/')) {
+                let reader = new FileReader();
+                reader.onload = (e) => {
+                    let data = e.target.result;
+                    let imageObject = new Image();
+                    imageObject.src = data;
+                    imageObject.width = 128;
+                    imageObject.height = 128;
+                    imageObject.dataset.filedata = data;
+                    clearButton.style.display = 'block';
+                    let revisionStrengthToggler = document.getElementById('input_revisionstrength_toggle');
+                    if (revisionStrengthToggler) {
+                        findParentOfClass(revisionStrengthToggler, 'auto-input').style.display = 'block';
+                        revisionStrengthToggler.checked = true;
+                        doToggleEnable('input_revisionstrength');
+                    }
+                    promptImageArea.appendChild(imageObject);
+                    altPromptSizeHandleFunc();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    });
+}
+revisionInputHandler();
 
 function genpageLoad() {
     console.log('Load page...');
