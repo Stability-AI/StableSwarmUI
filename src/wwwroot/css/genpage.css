@@ -618,3 +618,13 @@ body {
     text-align: center;
     border-radius: 0.7rem;
 }
+.alt_prompt_extra_area {
+    width: 100%;
+}
+.alt-prompt-added-image-area {
+    max-width: calc(100% - 7rem);
+}
+.image-clear-button {
+    vertical-align: middle;
+    display: inline-block;
+}

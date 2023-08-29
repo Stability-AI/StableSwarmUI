@@ -791,10 +791,10 @@ function revisionInputHandler() {
                     imageObject.width = 128;
                     imageObject.height = 128;
                     imageObject.dataset.filedata = data;
-                    clearButton.style.display = 'block';
+                    clearButton.style.display = '';
                     let revisionStrengthToggler = document.getElementById('input_revisionstrength_toggle');
                     if (revisionStrengthToggler) {
-                        findParentOfClass(revisionStrengthToggler, 'auto-input').style.display = 'block';
+                        findParentOfClass(revisionStrengthToggler, 'auto-input').style.display = '';
                         revisionStrengthToggler.checked = true;
                         doToggleEnable('input_revisionstrength');
                     }

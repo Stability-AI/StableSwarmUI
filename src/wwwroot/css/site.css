@@ -458,6 +458,8 @@ textarea, input, select {
 }
 .added-image-area {
     white-space: break-spaces;
+    margin-bottom: 0.5rem;
+    display: inline-block;
 }
 .disabled-input {
     opacity: 0.5;
