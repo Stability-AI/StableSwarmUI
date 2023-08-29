@@ -28,7 +28,7 @@ function buildSettingsMenu(container, data, prefix, tracker) {
             else {
                 let fakeParam = { feature_flag: null, type: data.type, id: settingFull, name: data.name, description: data.description, default: data.value, min: null, max: null, step: null, toggleable: false, number_view_type: 'big', values: data.values };
                 let result = getHtmlForParam(fakeParam, prefix, 1);
-                content += result.html + '<br>';
+                content += result.html;
                 keys.push(settingFull);
                 tracker.known[settingFull] = data;
                 if (result.runnable) {

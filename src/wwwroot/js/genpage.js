@@ -202,7 +202,6 @@ function updateCurrentStatusDirect(data) {
         num_backends_waiting = data.waiting_backends;
     }
     let total = num_current_gens + num_models_loading + num_live_gens + num_backends_waiting;
-    getRequiredElementById('interrupt_button').classList.toggle('interrupt-button-none', total == 0);
     getRequiredElementById('alt_interrupt_button').classList.toggle('interrupt-button-none', total == 0);
     let elem = getRequiredElementById('num_jobs_span');
     function autoBlock(num, text) {
@@ -211,7 +210,7 @@ function updateCurrentStatusDirect(data) {
         }
         return `<span class="interrupt-line-part">${num} ${text.replaceAll('%', autoS(num))},</span> `;
     }
-    elem.innerHTML = `${autoBlock(num_current_gens, 'current generation%')}${autoBlock(num_live_gens, 'running')}${autoBlock(num_backends_waiting, 'queued')}${autoBlock(num_models_loading, 'waiting on model load')} ...`;
+    elem.innerHTML = total == 0 ? '' : `${autoBlock(num_current_gens, 'current generation%')}${autoBlock(num_live_gens, 'running')}${autoBlock(num_backends_waiting, 'queued')}${autoBlock(num_models_loading, 'waiting on model load')} ...`;
 }
 
 let doesHaveGenCountUpdateQueued = false;
@@ -410,12 +409,17 @@ let popHide = [];
 document.addEventListener('click', (e) => {
     mouseX = e.pageX;
     mouseY = e.pageY;
-    for (let id of popHide) {
+    for (let x = 0; x < popHide.length; x++) {
+        let id = popHide[x];
         let pop = getRequiredElementById(`popover_${id}`);
+        console.log(pop, e.target)
+        if (pop.contains(e.target)) {
+            continue;
+        }
         pop.style.display = 'none';
         pop.dataset.visible = "false";
+        popHide.splice(x, 1);
     }
-    popHide = [];
 }, true);
 
 function doPopover(id) {
@@ -441,20 +445,15 @@ let toolSelector = getRequiredElementById('tool_selector');
 let toolContainer = getRequiredElementById('tool_container');
 
 function genToolsList() {
-    let generateButton = getRequiredElementById('generate_button');
-    let generateButtonRawText = generateButton.innerText;
-    let generateButtonRawOnClick = generateButton.onclick;
     let altGenerateButton = getRequiredElementById('alt_generate_button');
-    let altGenerateButtonRawText = generateButton.innerText;
-    let altGenerateButtonRawOnClick = generateButton.onclick;
+    let altGenerateButtonRawText = altGenerateButton.innerText;
+    let altGenerateButtonRawOnClick = altGenerateButton.onclick;
     toolSelector.value = '';
     // TODO: Dynamic-from-server option list generation
     toolSelector.addEventListener('change', () => {
         for (let opened of toolContainer.getElementsByClassName('tool-open')) {
             opened.classList.remove('tool-open');
         }
-        generateButton.innerText = generateButtonRawText;
-        generateButton.onclick = generateButtonRawOnClick;
         altGenerateButton.innerText = altGenerateButtonRawText;
         altGenerateButton.onclick = altGenerateButtonRawOnClick;
         let tool = toolSelector.value;
@@ -465,8 +464,6 @@ function genToolsList() {
         div.classList.add('tool-open');
         let override = toolOverrides[tool];
         if (override) {
-            generateButton.innerText = override.text;
-            generateButton.onclick = override.run;
             altGenerateButton.innerText = override.text;
             altGenerateButton.onclick = override.run;
         }
@@ -530,6 +527,8 @@ function pageSizer() {
     let topSplitButton = getRequiredElementById('t2i-top-split-quickbutton');
     let altRegion = getRequiredElementById('alt_prompt_region');
     let altText = getRequiredElementById('alt_prompt_textbox');
+    // (Note: set in javascript to make \n work)
+    altText.title = "Tell the AI what you want to see, then press Enter to submit.\nConsider 'a photo of a cat', or 'cartoonish drawing of an astronaut'";
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
@@ -542,21 +541,20 @@ function pageSizer() {
         inputSidebar.style.width = `${barTopLeft}`;
         mainInputsAreaWrapper.style.width = `${barTopLeft}`;
         inputSidebar.style.display = leftShut ? 'none' : '';
-        altRegion.style.display = leftShut ? 'block' : 'none';
         altRegion.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         mainImageArea.style.width = `calc(100vw - ${barTopLeft})`;
-        altText.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 15rem)`;
+        altText.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10rem)`;
         currentImage.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         currentImageBatch.style.width = `${barTopRight}`;
         topSplitButton.innerHTML = leftShut ? '&#x21DB;' : '&#x21DA;';
         midSplitButton.innerHTML = midForceToBottom ? '&#x290A;' : '&#x290B;';
-        let altHeight = leftShut ? `(${altText.offsetHeight}px + 2rem)` :'0px';
+        let altHeight = `(${altText.offsetHeight}px + 2rem)`;
         if (pageBarMid != -1 || midForceToBottom) {
-            let fixed = midForceToBottom ? `9rem` : `${pageBarMid}px`;
+            let fixed = midForceToBottom ? `8rem` : `${pageBarMid}px`;
             topSplit.style.height = `calc(100vh - ${fixed})`;
             topSplit2.style.height = `calc(100vh - ${fixed})`;
             inputSidebar.style.height = `calc(100vh - ${fixed})`;
-            mainInputsAreaWrapper.style.height = `calc(100vh - ${fixed} - 7rem)`;
+            mainInputsAreaWrapper.style.height = `calc(100vh - ${fixed})`;
             mainImageArea.style.height = `calc(100vh - ${fixed})`;
             currentImage.style.height = `calc(100vh - ${fixed} - ${altHeight})`;
             currentImageBatch.style.height = `calc(100vh - ${fixed} - 2rem)`;
@@ -597,26 +595,32 @@ function pageSizer() {
         topDrag2 = true;
         e.preventDefault();
     }, true);
+    function setMidForce(val) {
+        midForceToBottom = val;
+        localStorage.setItem('barspot_midForceToBottom', midForceToBottom);
+    }
+    function setLeftShut(val) {
+        leftShut = val;
+        localStorage.setItem('barspot_leftShut', leftShut);
+    }
     midSplit.addEventListener('mousedown', (e) => {
         if (e.target == midSplitButton) {
             return;
         }
         midDrag = true;
-        midForceToBottom = false;
+        setMidForce(false);
         e.preventDefault();
     }, true);
     midSplitButton.addEventListener('click', (e) => {
         midDrag = false;
-        midForceToBottom = !midForceToBottom;
-        localStorage.setItem('barspot_midForceToBottom', midForceToBottom);
+        setMidForce(!midForceToBottom);
         pageBarMid = Math.max(pageBarMid, 400);
         setPageBars();
         e.preventDefault();
     }, true);
     topSplitButton.addEventListener('click', (e) => {
         topDrag = false;
-        leftShut = !leftShut;
-        localStorage.setItem('barspot_leftShut', leftShut);
+        setLeftShut(!leftShut);
         pageBarTop = Math.max(pageBarTop, 400);
         setPageBars();
         e.preventDefault();
@@ -626,8 +630,8 @@ function pageSizer() {
         let offX = e.pageX;
         offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
         if (topDrag) {
-            pageBarTop = offX - 5;
-            leftShut = pageBarTop < 280;
+            pageBarTop = Math.min(offX - 5, 51 * 16);
+            setLeftShut(pageBarTop < 280);
             setPageBars();
         }
         if (topDrag2) {
@@ -635,8 +639,9 @@ function pageSizer() {
             setPageBars();
         }
         if (midDrag) {
-            let refY = Math.min(Math.max(e.pageY, 85), window.innerHeight - 85);
-            midForceToBottom = refY == window.innerHeight - 85;
+            const MID_OFF = 85;
+            let refY = Math.min(Math.max(e.pageY, MID_OFF), window.innerHeight - MID_OFF);
+            setMidForce(refY >= window.innerHeight - MID_OFF);
             pageBarMid = window.innerHeight - refY + topBar.getBoundingClientRect().top + 15;
             setPageBars();
         }
@@ -648,7 +653,7 @@ function pageSizer() {
     });
     for (let tab of getRequiredElementById('bottombartabcollection').getElementsByTagName('a')) {
         tab.addEventListener('click', (e) => {
-            midForceToBottom = false;
+            setMidForce(false);
             setPageBars();
         });
     }
@@ -670,7 +675,7 @@ function pageSizer() {
     });
     function altTextSize() {
         altText.style.height = 'auto';
-        altText.style.height = `${altText.scrollHeight + 5}px`;
+        altText.style.height = `${Math.max(altText.scrollHeight, 15) + 5}px`;
         altRegion.style.top = `calc(-${altText.offsetHeight}px - 2rem)`;
     }
     altText.addEventListener('input', () => {

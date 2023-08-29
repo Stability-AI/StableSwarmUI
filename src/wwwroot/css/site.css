@@ -4,6 +4,7 @@
 body {
     background-color: var(--background);
     color: var(--text);
+    font-size: 14px;
 }
 @keyframes status_glow-warn {
     0% {background-color: #dddd55;}
@@ -34,15 +35,15 @@ body {
     background-color: #888800;
 }
 .auto-input {
-    display: inline-block;
-    border-radius: 0.5rem;
+    display: block;
     max-width: 50rem;
     width: 100%;
-    margin: 5px;
-    padding-left: 2px;
-    box-shadow: var(--shadow) 0px 0px 1px 1px;
-    white-space: nowrap;
     overflow: hidden;
+    align-items: center;
+}
+.auto-input-flex {
+    display: flex;
+    flex-wrap: wrap;
 }
 .auto-input-image-preview {
     width: fit-content;
@@ -155,22 +156,12 @@ body {
 .auto-fade-max-contain {
     width: calc(100% - 2px);
 }
-.auto-number-box, .auto-checkbox-box {
-    width: fit-content;
-    max-width: calc(min(25rem, 100%));
-}
 .auto-input-name {
     display: inline-block;
     text-align: center;
     font-weight: bold;
-    box-shadow: var(--shadow) 0px 1px 1px 1px;
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-right-radius: 0.5rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-bottom: 2px;
     margin-bottom: 1px;
-    min-width: 7rem;
+    white-space: nowrap;
 }
 .auto-input-description {
     display: inline-block;
@@ -187,36 +178,96 @@ body {
     -webkit-mask-image: linear-gradient(to right, black 70%, transparent 100%);
 }
 .auto-text {
-    width: 100%;
+    flex-grow: 10;
     vertical-align: middle;
+    border-radius: 0.3rem;
+    background-color: transparent;
+}
+.auto-text-block {
+    width: 100%;
+}
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+input[type="range"] {
+    /*
+    -webkit-appearance: none;
+    appearance: none;
+    */
+    cursor: pointer;
+    outline: none;
+    overflow: hidden;
+    border-radius: 2px;
+    background-color: transparent;
+    height: 6px;
+    width: 100%;
+}
+input[type="range"]::-webkit-slider-runnable-track, input[type="range"]::-moz-range-track {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--shadow);
+}
+input[type="range"]::-webkit-slider-thumb, input[type="range"]::-moz-range-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    width: 15px;
+    background-color: var(--text);
+    border-radius: 2px;
+    border: 1px solid var(--emphasis);
+    box-shadow: -407px 0 0 400px var(--emphasis);
+    margin-top: -4px;
 }
 .auto-slider-range {
-    width: 100%;
-    vertical-align: middle;
+    cursor: pointer;
+    width: 90%;
+    display: block;
+    margin: auto;
+    margin-bottom: 0.5rem;
 }
 .auto-slider-number {
     float: right;
-    width: 5rem;
+    width: 4rem;
     border-radius: 0.5rem;
     margin-bottom: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    text-align: right;
 }
 .auto-number {
-    width: calc(max(10rem, 100%));
     border-radius: 0.5rem;
     margin-bottom: 0px;
+    background-color: transparent;
+    border-color: transparent;
 }
 .auto-number-seedbox {
-    width: calc(max(10rem, 100%) - 5rem);
+    width: calc(max(10rem, 100%) - 12rem);
+    flex-grow: 10;
 }
 .auto-number-small {
-    width: 5rem;
     border-radius: 0.5rem;
     margin-bottom: 0px;
+    background-color: transparent;
+    border-color: transparent;
+    width: calc(max(5rem, 100% - 12rem));
 }
 .auto-dropdown {
-    width: 100%;
+    appearance: none;
+    width: fit-content;
     border-radius: 0.5rem;
     margin-bottom: 0px;
+    background-color: var(--background);
+    border-color: transparent;
 }
 textarea, input, select {
     border-color: var(--shadow);
@@ -243,8 +294,8 @@ textarea, input, select {
     padding-left: 0.3rem;
     padding-right: 0.3rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--qbutton);
-    color: var(--qbutton);
+    border: 1px solid color-mix(in srgb, var(--qbutton) 60%, var(--background));
+    color: color-mix(in srgb, var(--qbutton) 60%, var(--background));
 }
 .auto-input-qbutton:hover {
     background-color: var(--qbutton);
@@ -266,7 +317,6 @@ textarea, input, select {
 }
 .auto-slider-toggle {
     position: relative;
-    left: -0.5rem;
 }
 .display-inline-block {
     display: inline-block !important;
@@ -282,6 +332,7 @@ textarea, input, select {
     margin-top: 0.8rem;
     margin-bottom: 0.2rem;
     padding-bottom: 0.1rem;
+    max-width: 51rem;
 }
 .input-group-closed {
     border: none;
@@ -294,7 +345,7 @@ textarea, input, select {
     display: block;
     width: 100%;
     left: 0.5rem;
-    top: -1rem;
+    top: -0.7rem;
     height: 0.5rem;
     cursor: pointer;
 }
@@ -397,4 +448,7 @@ textarea, input, select {
 }
 .added-image-area {
     white-space: break-spaces;
+}
+.disabled-input {
+    opacity: 0.5;
 }

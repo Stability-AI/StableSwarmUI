@@ -254,6 +254,9 @@ function genInputs(delay_final = false) {
         }
         let inputPrompt = document.getElementById('input_prompt');
         if (inputPrompt) {
+            let promptParent = findParentOfClass(inputPrompt, 'auto-input');
+            promptParent.dataset.visible_controlled = true;
+            promptParent.style.display = 'none';
             let altText = getRequiredElementById('alt_prompt_textbox');
             inputPrompt.addEventListener('change', () => {
                 altText.value = inputPrompt.value;
@@ -261,7 +264,6 @@ function genInputs(delay_final = false) {
             });
             if (inputRevisionStrength) {
                 let revisionStrengthToggler = getRequiredElementById('input_revisionstrength_toggle');
-                let promptParent = findParentOfClass(inputPrompt, 'auto-input');
                 promptParent.addEventListener('dragover', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -409,7 +411,7 @@ function getGenInput(input_overrides = {}) {
         }
         let elem = getRequiredElementById(`input_${type.id}`);
         let parent = findParentOfClass(elem, 'auto-input');
-        if (parent && parent.style.display == 'none') {
+        if (parent && parent.dataset.disabled == 'true') {
             continue;
         }
         if (type.type == "boolean") {
@@ -545,10 +547,12 @@ function hideUnsupportableParams() {
             if (box.dataset.visible_controlled) {
             }
             else if (show) {
-                box.style.display = 'inline-block';
+                box.style.display = '';
+                box.dataset.disabled = 'false';
             }
             else {
                 box.style.display = 'none';
+                box.dataset.disabled = 'true';
             }
             let group = findParentOfClass(elem, 'input-group');
             if (group) {
