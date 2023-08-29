@@ -353,7 +353,7 @@ public class T2IModelHandler
                 }
                 catch (Exception ex)
                 {
-                    Logs.Warning($"Error handling metadata database: {ex}");
+                    Logs.Warning($"Error handling metadata database for model {fileName}: {ex}");
                 }
             }
         }
