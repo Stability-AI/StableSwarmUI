@@ -240,8 +240,8 @@ function makeWSRequestT2I(url, in_data, callback) {
     });
 }
 
-function doInterrupt() {
-    genericRequest('InterruptAll', {}, data => {
+function doInterrupt(allSessions = false) {
+    genericRequest('InterruptAll', {'other_sessions': allSessions}, data => {
         updateGenCount();
     });
 }
@@ -406,14 +406,16 @@ function genpageLoop() {
 let mouseX, mouseY;
 let popHide = [];
 
-document.addEventListener('click', (e) => {
+document.addEventListener('mousedown', (e) => {
     mouseX = e.pageX;
     mouseY = e.pageY;
+}, true);
+
+document.addEventListener('click', (e) => {
     for (let x = 0; x < popHide.length; x++) {
         let id = popHide[x];
         let pop = getRequiredElementById(`popover_${id}`);
-        console.log(pop, e.target)
-        if (pop.contains(e.target)) {
+        if (pop.contains(e.target) && !e.target.classList.contains('sui_popover_model_button')) {
             continue;
         }
         pop.style.display = 'none';
@@ -529,6 +531,7 @@ function pageSizer() {
     let altText = getRequiredElementById('alt_prompt_textbox');
     // (Note: set in javascript to make \n work)
     altText.title = "Tell the AI what you want to see, then press Enter to submit.\nConsider 'a photo of a cat', or 'cartoonish drawing of an astronaut'";
+    getRequiredElementById('alt_interrupt_button').title = "Interrupt current generation(s)\nRight-click for advanced options.";
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
@@ -690,10 +693,6 @@ function pageSizer() {
     }
     altPromptSizeHandle();
     new ResizeObserver(altPromptSizeHandle).observe(altText);
-}
-
-function show_t2i_quicktools() {
-    doPopover('quicktools');
 }
 
 function loadUserData() {

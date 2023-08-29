@@ -173,4 +173,11 @@ public class Session : IEquatable<Session>
     {
         return ID == other.ID;
     }
+
+    /// <summary>Immediately interrupt any current processing on this session.</summary>
+    public void Interrupt()
+    {
+        SessInterrupt.Cancel();
+        SessInterrupt = new();
+    }
 }

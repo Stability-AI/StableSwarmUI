@@ -35,8 +35,8 @@
                     <div class="main_inputs_area_wrapper" id="main_inputs_area_wrapper">
                         <div id="main_inputs_area"></div>
                         <div class="advanced_input_checkbox">
-                            <input type="checkbox" id="advanced_options_checkbox" onclick="javascript:toggle_advanced()"/>
-                            <span onclick="javascript:toggle_advanced_checkbox_manual()">Display Advanced Options?</span>
+                            <input type="checkbox" id="advanced_options_checkbox" onclick="toggle_advanced()"/>
+                            <span onclick="toggle_advanced_checkbox_manual()">Display Advanced Options?</span>
                         </div>
                         <div id="main_inputs_area_advanced" class="main_inputs_area_advanced" style="display:none;"></div>
                         <div id="main_inputs_area_hidden" class="main_inputs_area_hidden"></div>
@@ -48,15 +48,19 @@
                     <div class="current_image" id="current_image"></div><div class="t2i-top-split-bar splitter-bar" id="t2i-top-2nd-split-bar"></div><div class="current_image_batch" id="current_image_batch"></div>
                     <div class="alt_prompt_region" id="alt_prompt_region">
                         <textarea id="alt_prompt_textbox" class="alt_prompt_textbox" rows="1" placeholder="Type your prompt here..."></textarea>
-                        <button class="alt-prompt-buttons basic-button" id="alt_generate_button" onclick="javascript:doGenerate()" title="Start generating images">Generate</button>
-                        <button class="alt-prompt-buttons interrupt-button interrupt-button-none alt-interrupt" id="alt_interrupt_button" title="Interrupt current generation(s)" onclick="javascript:doInterrupt()">&times;</button>
+                        <button class="alt-prompt-buttons basic-button" id="alt_generate_button" onclick="doGenerate()" title="Start generating images">Generate</button>
+                        <button class="alt-prompt-buttons interrupt-button interrupt-button-none alt-interrupt" id="alt_interrupt_button" oncontextmenu="doPopover('interrupt'); return false;" onclick="doInterrupt()">&times;</button>
+                        <div class="sui-popover sui_popover_model" id="popover_interrupt">
+                            <div class="sui_popover_model_button" onclick="doInterrupt()">Interrupt Current Session</div>
+                            <div class="sui_popover_model_button" onclick="doInterrupt(true)">Interrupt All Sessions</div>
+                        </div>
                     </div>
                 </div>
-                <div class="model-block-menu-button t2i-area-quicktools" onclick="javascript:show_t2i_quicktools()">Quick Tools</div>
+                <div class="model-block-menu-button t2i-area-quicktools" onclick="doPopover('quicktools')">Quick Tools</div>
                 <div class="sui-popover sui_popover_model" id="popover_quicktools">
-                    <div class="sui_popover_model_button" onclick="javascript:resetPageSizer()">Reset Page Layout</div>
-                    <div class="sui_popover_model_button" onclick="javascript:refreshParameterValues()">Reload Parameter Values</div>
-                    <div class="sui_popover_model_button" onclick="javascript:resetParamsToDefault()">Reset Params to Default</div>
+                    <div class="sui_popover_model_button" onclick="resetPageSizer()">Reset Page Layout</div>
+                    <div class="sui_popover_model_button" onclick="refreshParameterValues()">Reload Parameter Values</div>
+                    <div class="sui_popover_model_button" onclick="resetParamsToDefault()">Reset Params to Default</div>
                 </div>
             </div>
         </div>

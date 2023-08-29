@@ -28,7 +28,7 @@ public class User
 
     public User(SessionHandler sessions, DatabaseEntry data)
     {
-        Sessions = sessions;
+        SessionHandlerSource = sessions;
         Data = data;
         Settings.Load(Program.ServerSettings.DefaultUser.Save(false));
         foreach (string field in Settings.InternalData.SharedData.Fields.Keys)
@@ -47,30 +47,30 @@ public class User
     public void Save()
     {
         Data.RawSettings = Settings.Save(false).ToString();
-        lock (Sessions.DBLock)
+        lock (SessionHandlerSource.DBLock)
         {
-            Sessions.UserDatabase.Upsert(Data);
+            SessionHandlerSource.UserDatabase.Upsert(Data);
         }
     }
 
     /// <summary>Returns the user preset for the given name, or null if not found.</summary>
     public T2IPreset GetPreset(string name)
     {
-        lock (Sessions.DBLock)
+        lock (SessionHandlerSource.DBLock)
         {
-            return Sessions.T2IPresets.FindById($"{UserID}///{name.ToLowerFast()}");
+            return SessionHandlerSource.T2IPresets.FindById($"{UserID}///{name.ToLowerFast()}");
         }
     }
 
     /// <summary>Returns a list of all presets this user has saved.</summary>
     public List<T2IPreset> GetAllPresets()
     {
-        lock (Sessions.DBLock)
+        lock (SessionHandlerSource.DBLock)
         {
-            List<T2IPreset> presets = Data.Presets.Select(p => Sessions.T2IPresets.FindById(p)).ToList();
+            List<T2IPreset> presets = Data.Presets.Select(p => SessionHandlerSource.T2IPresets.FindById(p)).ToList();
             if (presets.Any(p => p is null))
             {
-                List<string> bad = Data.Presets.Where(p => Sessions.T2IPresets.FindById(p) is null).ToList();
+                List<string> bad = Data.Presets.Where(p => SessionHandlerSource.T2IPresets.FindById(p) is null).ToList();
                 Logs.Error($"User {UserID} has presets that don't exist (database error?): {string.Join(", ", bad)}");
                 presets.RemoveAll(p => p is null);
             }
@@ -81,10 +81,10 @@ public class User
     /// <summary>Saves a new preset on the user's account.</summary>
     public void SavePreset(T2IPreset preset)
     {
-        lock (Sessions.DBLock)
+        lock (SessionHandlerSource.DBLock)
         {
             preset.ID = $"{UserID}///{preset.Title.ToLowerFast()}";
-            Sessions.T2IPresets.Upsert(preset.ID, preset);
+            SessionHandlerSource.T2IPresets.Upsert(preset.ID, preset);
             if (!Data.Presets.Contains(preset.ID))
             {
                 Data.Presets.Add(preset.ID);
@@ -96,12 +96,12 @@ public class User
     /// <summary>Deletes a user preset, returns true if anything was deleted.</summary>
     public bool DeletePreset(string name)
     {
-        lock (Sessions.DBLock)
+        lock (SessionHandlerSource.DBLock)
         {
             string id = $"{UserID}///{name.ToLowerFast()}";
             if (Data.Presets.Remove(id))
             {
-                Sessions.T2IPresets.Delete(id);
+                SessionHandlerSource.T2IPresets.Delete(id);
                 Save();
                 return true;
             }
@@ -110,7 +110,10 @@ public class User
     }
 
     /// <summary>The relevant sessions handler backend.</summary>
-    public SessionHandler Sessions;
+    public SessionHandler SessionHandlerSource;
+
+    /// <summary>Any/all current sessions for this user account.</summary>
+    public ConcurrentDictionary<string, Session> CurrentSessions = new();
 
     /// <summary>Core data for this user in the backend database.</summary>
     public DatabaseEntry Data;

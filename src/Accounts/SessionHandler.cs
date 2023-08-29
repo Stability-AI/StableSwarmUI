@@ -57,6 +57,7 @@ public class SessionHandler
             };
             if (Sessions.TryAdd(sess.ID, sess))
             {
+                sess.User.CurrentSessions[sess.ID] = sess;
                 return sess;
             }
         }

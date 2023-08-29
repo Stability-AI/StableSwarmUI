@@ -267,11 +267,17 @@ public static class BasicAPIFeatures
         return GetCurrentStatusRaw(session);
     }
 
-    /// <summary>API Route to tell all waiting generations to interrupt.</summary>
-    public static async Task<JObject> InterruptAll(Session session)
+    /// <summary>API Route to tell all waiting generations in this session to interrupt.</summary>
+    public static async Task<JObject> InterruptAll(Session session, bool other_sessions = false)
     {
-        session.SessInterrupt.Cancel();
-        session.SessInterrupt = new();
+        session.Interrupt();
+        if (other_sessions)
+        {
+            foreach (Session sess in session.User.CurrentSessions.Values.ToArray())
+            {
+                sess.Interrupt();
+            }
+        }
         return new JObject() { ["success"] = true };
     }
 
