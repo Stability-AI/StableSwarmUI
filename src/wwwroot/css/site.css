@@ -1,10 +1,19 @@
 .modal-content {
     background-color: var(--background) !important;
 }
+@font-face {
+    /* Fallback font to force all OS's to render unicode glyphs properly. */
+    font-family: "Unifont";
+    src: url("/fonts/unifont-12.0.01.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+}
 body {
     background-color: var(--background);
     color: var(--text);
     font-size: 14px;
+    --bs-font-sans-serif: Lato, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", Unifont;
+    --bs-body-font-family: var(--bs-font-sans-serif);
 }
 @keyframes status_glow-warn {
     0% {background-color: #dddd55;}
