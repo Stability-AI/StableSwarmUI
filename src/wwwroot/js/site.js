@@ -245,6 +245,10 @@ function load_image_file(e) {
     }
 }
 
+function makeGenericPopover(id, name, type, description, example) {
+    return `<div class="sui-popover" id="popover_${id}"><b>${escapeHtml(name)}</b> (${type}):<br>&emsp;${escapeHtml(description)}${example}</div>`;
+}
+
 function makeSliderInput(featureid, id, name, description, value, min, max, view_max = 0, step = 1, isPot = false, toggles = false) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
@@ -278,11 +282,12 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
         </div>`;
 }
 
-function makeTextInput(featureid, id, name, description, value, rows, placeholder, toggles = false) {
+function makeTextInput(featureid, id, name, description, value, rows, placeholder, toggles = false, genPopover = false) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let onInp = rows == 1 ? '' : ' oninput="javascript:textInputSize(this)"';
     return `
+    ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-text-box${(rows == 1 ? " auto-input-flex" : "")}"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
         <textarea class="auto-text${(rows == 1 ? "" : " auto-text-block")}" id="${id}" rows="${rows}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
@@ -291,11 +296,12 @@ function makeTextInput(featureid, id, name, description, value, rows, placeholde
     </div>`;
 }
 
-function makeCheckboxInput(featureid, id, name, description, value, toggles = false) {
+function makeCheckboxInput(featureid, id, name, description, value, toggles = false, genPopover = false) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let checked = `${value}` == "true" ? ' checked="true"' : '';
     return `
+    ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-checkbox-box auto-input-flex"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
         <input class="auto-checkbox" type="checkbox" data-name="${name}" id="${id}"${checked}>
