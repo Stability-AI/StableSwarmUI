@@ -429,22 +429,29 @@ function genpageLoop() {
 let mouseX, mouseY;
 let popHide = [];
 
-document.addEventListener('mousedown', (e) => {
-    mouseX = e.pageX;
-    mouseY = e.pageY;
-}, true);
-
-document.addEventListener('click', (e) => {
+function doPopHideCleanup(target) {
     for (let x = 0; x < popHide.length; x++) {
         let id = popHide[x];
         let pop = getRequiredElementById(`popover_${id}`);
-        if (pop.contains(e.target) && !e.target.classList.contains('sui_popover_model_button')) {
+        if (pop.contains(target) && !target.classList.contains('sui_popover_model_button')) {
             continue;
         }
         pop.style.display = 'none';
         pop.dataset.visible = "false";
         popHide.splice(x, 1);
     }
+}
+
+document.addEventListener('mousedown', (e) => {
+    mouseX = e.pageX;
+    mouseY = e.pageY;
+    if (e.button == 2) { // right-click
+        doPopHideCleanup(e.target);
+    }
+}, true);
+
+document.addEventListener('click', (e) => {
+    doPopHideCleanup(e.target);
 }, true);
 
 function doPopover(id) {
