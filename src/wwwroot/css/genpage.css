@@ -536,13 +536,13 @@ body {
     width: 0;
 }
 .browser-folder-tree-part-open .browser-folder-tree-part-symbol::before {
-    content: "⮟";
+    content: "\02B9F";
     position: absolute;
     left: -16px;
     width: 0;
 }
 .browser-folder-tree-part-closed .browser-folder-tree-part-symbol::before {
-    content: "⮞";
+    content: "\02B9E";
     position: absolute;
     left: -16px;
     width: 0;

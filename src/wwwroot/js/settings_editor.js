@@ -21,7 +21,7 @@ function buildSettingsMenu(container, data, prefix, tracker) {
             let data = block[setting];
             let settingFull = `${blockPrefix}${setting}`;
             if (data.type == 'group') {
-                content += `<div class="input-group settings-group" id="auto-group-${prefix}${settingFull}"><span id="input_group_${prefix}${settingFull}" class="input-group-header group-label"><span onclick="toggleGroupOpen(this)"><span class="auto-symbol">⮟</span><span class="header-label">${data.name}: ${escapeHtml(data.description)}</span></span></span><div class="input-group-content" id="input_group_content_${prefix}${settingFull}">`;
+                content += `<div class="input-group settings-group" id="auto-group-${prefix}${settingFull}"><span id="input_group_${prefix}${settingFull}" class="input-group-header group-label"><span onclick="toggleGroupOpen(this)"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${data.name}: ${escapeHtml(data.description)}</span></span></span><div class="input-group-content" id="input_group_content_${prefix}${settingFull}">`;
                 addBlock(data.value, `${settingFull}.`);
                 content += '</div></div>';
             }

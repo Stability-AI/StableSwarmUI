@@ -63,13 +63,12 @@ function getHtmlForParam(param, prefix, textRows = 2) {
 }
 
 function toggleGroupOpen(elem) {
-    // ⮟⮞
     let parent = findParentOfClass(elem, 'input-group');
     let group = parent.querySelector('.input-group-content');
     if (group.style.display == 'none') {
         group.style.display = 'block';
         parent.classList.remove('input-group-closed');
-        parent.querySelector('.auto-symbol').innerText = '⮟';
+        parent.querySelector('.auto-symbol').innerHTML = '&#x2B9F;';
         if (!group.dataset.do_not_save) {
             setCookie(`group_open_${parent.id}`, 'open', 365);
         }
@@ -81,7 +80,7 @@ function toggleGroupOpen(elem) {
     else {
         group.style.display = 'none';
         parent.classList.add('input-group-closed');
-        parent.querySelector('.auto-symbol').innerText = '⮞';
+        parent.querySelector('.auto-symbol').innerHTML = '&#x2B9E;';
         if (!group.dataset.do_not_save) {
             setCookie(`group_open_${parent.id}`, 'closed', 365);
         }
@@ -141,9 +140,9 @@ function genInputs(delay_final = false) {
                         }
                     }
                     let toggler = getToggleHtml(param.group.toggles, `input_group_content_${groupId}`, escapeHtml(param.group.name), ' group-toggler-switch', 'doToggleGroup');
-                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header"><span onclick="toggleGroupOpen(this)"><span class="auto-symbol">⮟</span><span class="header-label">${escapeHtml(param.group.name)}</span></span>${toggler}</span><div class="input-group-content" id="input_group_content_${groupId}">`;
+                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header"><span onclick="toggleGroupOpen(this)"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${escapeHtml(param.group.name)}</span></span>${toggler}</span><div class="input-group-content" id="input_group_content_${groupId}">`;
                     if (presetArea) {
-                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header"><span class="auto-symbol">⮟</span>${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
+                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header"><span class="auto-symbol">&#x2B9F;</span>${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
                     }
                 }
                 lastGroup = groupName;
