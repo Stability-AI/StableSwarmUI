@@ -58,7 +58,8 @@ public class Image
     public string ToMetadataFormat()
     {
         ISImage img = ToIS;
-        img.Mutate(i => i.Resize(256, 256));
+        float factor = 256f / Math.Min(img.Width, img.Height);
+        img.Mutate(i => i.Resize((int)(img.Width * factor), (int)(img.Height * factor)));
         return "data:image/jpeg;base64," + new Image(ISImgToJpgBytes(img)).AsBase64;
     }
 
