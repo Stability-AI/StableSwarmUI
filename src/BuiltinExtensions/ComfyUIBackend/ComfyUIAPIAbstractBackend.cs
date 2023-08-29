@@ -121,6 +121,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             string promptId = $"{promptResult["prompt_id"]}";
             long start = Environment.TickCount64;
+            bool hasInterrupted = false;
             while (true)
             {
                 byte[] output = await socket.ReceiveData(32 * 1024 * 1024, Program.GlobalProgramCancel);
@@ -176,11 +177,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 {
                     return;
                 }
-                if (interrupt.IsCancellationRequested)
+                if (interrupt.IsCancellationRequested && !hasInterrupted)
                 {
+                    hasInterrupted = true;
                     Logs.Debug("ComfyUI Interrupt requested");
                     await HttpClient.PostAsync($"{Address}/interrupt", new StringContent(""), interrupt);
-                    break;
                 }
             }
             endloop:
