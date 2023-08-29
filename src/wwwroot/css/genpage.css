@@ -176,9 +176,9 @@ body {
     position: relative;
     height: 11.5rem;
     width: 10rem;
-    padding-top: 0.25rem;
-    padding-left: 0.5rem;
-    padding-right: 0.25rem;
+    padding-top: 0.1rem;
+    padding-left: 0.1rem;
+    padding-right: 0.1rem;
     overflow: hidden;
     white-space: pre-wrap;
     word-break: break-all;
@@ -186,16 +186,14 @@ body {
 .image-block-small {
     height: 7rem;
     width: 7rem;
-    padding-top: 0.1rem;
-    padding-left: 0.1rem;
-    padding-right: 0.1rem;
 }
 .image-block-big {
     height: 17.5rem;
     width: 16rem;
-    padding-top: 0.2rem;
-    padding-left: 0.2rem;
-    padding-right: 0.2rem;
+}
+.image-block-giant {
+    height: 27.5rem;
+    width: 26rem;
 }
 .image-block-legacy img {
     height: 8rem;
@@ -205,6 +203,9 @@ body {
 }
 .image-block-big img {
     height: 15rem;
+}
+.image-block-giant img {
+    height: 25rem;
 }
 .image-block-batch {
     max-height: calc(10rem + 2px);

@@ -220,31 +220,15 @@ class GenPageBrowserClass {
                 textBlock.innerHTML = desc.description;
                 div.appendChild(textBlock);
             }
-            else if (this.format == 'Thumbnails') {
+            else if (this.format.includes('Thumbnails')) {
                 div.className += ' image-block image-block-legacy';
                 img.addEventListener('load', () => {
                     let ratio = img.width / img.height;
-                    div.style.width = `${(ratio * 8) + 2}rem`;
-                });
-                let textBlock = createDiv(null, 'image-preview-text');
-                textBlock.innerText = desc.name;
-                div.appendChild(textBlock);
-            }
-            else if (this.format == 'Big Thumbnails') {
-                div.className += ' image-block image-block-legacy image-block-big';
-                img.addEventListener('load', () => {
-                    let ratio = img.width / img.height;
-                    div.style.width = `${(ratio * 15) + 1}rem`;
-                });
-                let textBlock = createDiv(null, 'image-preview-text');
-                textBlock.innerText = desc.name;
-                div.appendChild(textBlock);
-            }
-            else if (this.format == 'Small Thumbnails') {
-                div.className += ' image-block image-block-legacy image-block-small';
-                img.addEventListener('load', () => {
-                    let ratio = img.width / img.height;
-                    div.style.width = `${(ratio * 5) + 1}rem`;
+                    let factor = 8;
+                    if (this.format.startsWith('Big')) { factor = 15; div.classList.add('image-block-big'); }
+                    else if (this.format.startsWith('Giant')) { factor = 25; div.classList.add('image-block-giant'); }
+                    else if (this.format.startsWith('Small')) { factor = 5; div.classList.add('image-block-small'); }
+                    div.style.width = `${(ratio * factor) + 1}rem`;
                 });
                 let textBlock = createDiv(null, 'image-preview-text');
                 textBlock.innerText = desc.name;
@@ -325,7 +309,7 @@ class GenPageBrowserClass {
         formatSelector.id = `${this.id}-format-selector`;
         formatSelector.title = 'Display format';
         formatSelector.className = 'browser-format-selector';
-        for (let format of ['Cards', 'Thumbnails', 'Big Thumbnails', 'Small Thumbnails', 'List']) {
+        for (let format of ['Cards', 'Thumbnails', 'Small Thumbnails', 'Big Thumbnails', 'Giant Thumbnails', 'List']) {
             let option = document.createElement('option');
             option.value = format;
             option.innerText = format;
