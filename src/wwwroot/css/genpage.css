@@ -116,7 +116,7 @@ body {
     padding: 0.5rem;
     padding-right: 1rem;
     width: calc(28rem - 5px);
-    height: calc(50vh - 7rem);
+    height: 50vh;
 }
 .main_inputs_area_hidden {
     display: none;
