@@ -750,6 +750,12 @@ public class BackendHandler
                         ReleasePressure();
                         throw new InvalidOperationException("All available backends failed to load the model.");
                     }
+                    valid = available.Where(b => b.Backend.CurrentModelName != highestPressure.Model.Name).ToList();
+                    if (valid.IsEmpty())
+                    {
+                        Logs.Verbose("$[BackendHandler] Cancelling highest-pressure load, model is already loaded on all available backends.");
+                        return;
+                    }
                     T2IBackendData availableBackend = valid.MinBy(a => a.TimeLastRelease);
                     Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} will load a model: {highestPressure.Model.Name}, with {highestPressure.Count} requests waiting for {timeWait / 1000f:0.#} seconds");
                     highestPressure.IsLoading = true;

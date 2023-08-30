@@ -238,7 +238,7 @@ public class T2IModelHandler
         }
     }
 
-    private static readonly string[] AutoImageFormatSuffixes = new[] { ".jpg", ".png", ".preview.png", ".preview.jpg" };
+    private static readonly string[] AutoImageFormatSuffixes = new[] { ".jpg", ".png", ".preview.png", ".preview.jpg", ".thumb.jpg", ".thumb.png" };
 
     public string GetAutoFormatImage(T2IModel model)
     {
