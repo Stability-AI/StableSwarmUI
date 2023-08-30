@@ -375,6 +375,7 @@ function comfyBuildParams(callback) {
                     let useParamName = paramName;
                     let paramNameClean = cleanParamName(paramName);
                     let actualId = useParamName;
+                    let result = false;
                     if (redirId) {
                         useParamName = redirId;
                         actualId = redirId;
@@ -399,9 +400,10 @@ function comfyBuildParams(callback) {
                     else {
                         defaultParamsRetain.push(paramNameClean);
                         defaultParamValue[paramNameClean] = val;
+                        result = true;
                     }
                     node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + actualId + ":" + val + "}_ENDFIXME_%%" : "${" + actualId + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
-                    return true;
+                    return result;
                 }
                 return false;
             }
