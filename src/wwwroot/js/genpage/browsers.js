@@ -159,7 +159,7 @@ class GenPageBrowserClass {
     buildTreeElements(container, path, tree, offset = 16) {
         let span = createSpan(`${this.id}-foldertree-${tree.name}`, 'browser-folder-tree-part');
         span.style.left = `${offset}px`;
-        span.innerHTML = `<span class="browser-folder-tree-part-symbol"></span> ${escapeHtml(tree.name || '..')}`;
+        span.innerHTML = `<span class="browser-folder-tree-part-symbol" data-issymbol="true"></span> ${escapeHtml(tree.name || '..')}`;
         span.dataset.path = path;
         container.appendChild(span);
         if (Object.keys(tree.children).length == 0 && tree.hasOpened) {
@@ -179,9 +179,14 @@ class GenPageBrowserClass {
         if (this.folder == path) {
             span.classList.add('browser-folder-tree-part-selected');
         }
-        span.onclick = () => {
+        span.onclick = (e) => {
             tree.hasOpened = true;
-            tree.isOpen = !tree.isOpen;
+            if (e.target.dataset.issymbol) {
+                tree.isOpen = !tree.isOpen;
+            }
+            else {
+                tree.isOpen = true;
+            }
             this.navigate(path);
         };
     }
