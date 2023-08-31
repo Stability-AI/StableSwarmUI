@@ -17,24 +17,26 @@ function buildSettingsMenu(container, data, prefix, tracker) {
     let runnables = [];
     let keys = [];
     function addBlock(block, blockPrefix = '') {
-        for (let setting of Object.keys(block)) {
+        let groups = Object.keys(block).filter(x => block[x].type == 'group');
+        let settings = Object.keys(block).filter(x => block[x].type != 'group');
+        for (let setting of settings) {
             let data = block[setting];
             let settingFull = `${blockPrefix}${setting}`;
-            if (data.type == 'group') {
-                content += `<div class="input-group settings-group" id="auto-group-${prefix}${settingFull}"><span id="input_group_${prefix}${settingFull}" class="input-group-header group-label"><span onclick="toggleGroupOpen(this)"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${data.name}: ${escapeHtml(data.description)}</span></span></span><div class="input-group-content" id="input_group_content_${prefix}${settingFull}">`;
-                addBlock(data.value, `${settingFull}.`);
-                content += '</div></div>';
+            let fakeParam = { feature_flag: null, type: data.type, id: settingFull, name: data.name, description: data.description, default: data.value, min: null, max: null, step: null, toggleable: false, number_view_type: 'big', values: data.values };
+            let result = getHtmlForParam(fakeParam, prefix, 1);
+            content += result.html;
+            keys.push(settingFull);
+            tracker.known[settingFull] = data;
+            if (result.runnable) {
+                runnables.push(result.runnable);
             }
-            else {
-                let fakeParam = { feature_flag: null, type: data.type, id: settingFull, name: data.name, description: data.description, default: data.value, min: null, max: null, step: null, toggleable: false, number_view_type: 'big', values: data.values };
-                let result = getHtmlForParam(fakeParam, prefix, 1);
-                content += result.html;
-                keys.push(settingFull);
-                tracker.known[settingFull] = data;
-                if (result.runnable) {
-                    runnables.push(result.runnable);
-                }
-            }
+        }
+        for (let setting of groups) {
+            let data = block[setting];
+            let settingFull = `${blockPrefix}${setting}`;
+            content += `<div class="input-group settings-group" id="auto-group-${prefix}${settingFull}"><span id="input_group_${prefix}${settingFull}" class="input-group-header group-label"><span onclick="toggleGroupOpen(this)"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${data.name}: ${escapeHtml(data.description)}</span></span></span><div class="input-group-content" id="input_group_content_${prefix}${settingFull}">`;
+            addBlock(data.value, `${settingFull}.`);
+            content += '</div></div>';
         }
     }
     addBlock(data);

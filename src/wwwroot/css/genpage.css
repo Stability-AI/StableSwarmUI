@@ -481,6 +481,10 @@ body {
     margin-left: 1rem;
     display: inline-block;
 }
+.settings-container {
+    padding-left: 1rem;
+    padding-top: 1rem;
+}
 .settings-group {
     display: block;
     width: 100%;
