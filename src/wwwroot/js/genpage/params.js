@@ -265,31 +265,33 @@ function genInputs(delay_final = false) {
                 sdLoraBrowser.browser.rerender();
             });
         }
+        let inputLoraWeights = document.getElementById('input_loraweights');
+        if (inputLoraWeights) {
+            inputLoraWeights.addEventListener('change', reapplyLoraWeights);
+        }
         shouldApplyDefault = true;
         for (let param of gen_param_types) {
-            if (param.visible) {
-                let elem = getRequiredElementById(`input_${param.id}`);
-                let cookie = getCookie(`lastparam_input_${param.id}`);
-                if (cookie) {
-                    shouldApplyDefault = false;
-                    if (param.type != "image") {
-                        setDirectParamValue(param, cookie);
+            let elem = getRequiredElementById(`input_${param.id}`);
+            let cookie = getCookie(`lastparam_input_${param.id}`);
+            if (cookie) {
+                shouldApplyDefault = false;
+                if (param.type != "image") {
+                    setDirectParamValue(param, cookie);
+                }
+            }
+            if (!param.do_not_save) {
+                elem.addEventListener('change', () => {
+                    if (param.type == "boolean") {
+                        setCookie(`lastparam_input_${param.id}`, elem.checked, 0.25);
                     }
-                }
-                if (!param.do_not_save) {
-                    elem.addEventListener('change', () => {
-                        if (param.type == "boolean") {
-                            setCookie(`lastparam_input_${param.id}`, elem.checked, 0.25);
-                        }
-                        else if (param.type == "list" && elem.tagName == "SELECT") {
-                            let valSet = [...elem.selectedOptions].map(option => option.value);
-                            setCookie(`lastparam_input_${param.id}`, valSet.join(','), 0.25);
-                        }
-                        else if (param.type != "image") {
-                            setCookie(`lastparam_input_${param.id}`, elem.value, 0.25);
-                        }
-                    });
-                }
+                    else if (param.type == "list" && elem.tagName == "SELECT") {
+                        let valSet = [...elem.selectedOptions].map(option => option.value);
+                        setCookie(`lastparam_input_${param.id}`, valSet.join(','), 0.25);
+                    }
+                    else if (param.type != "image") {
+                        setCookie(`lastparam_input_${param.id}`, elem.value, 0.25);
+                    }
+                });
             }
             if (param.toggleable) {
                 let toggler = getRequiredElementById(`input_${param.id}_toggle`);
@@ -458,9 +460,9 @@ function setDirectParamValue(param, value, paramElem = null) {
 function resetParamsToDefault() {
     for (let param of gen_param_types) {
         let id = `input_${param.id}`;
+        deleteCookie(`lastparam_${id}`);
         if (param.visible) {
             setDirectParamValue(param, param.default);
-            deleteCookie(`lastparam_${id}`);
             if (param.toggleable) {
                 getRequiredElementById(`${id}_toggle`).checked = false;
                 deleteCookie(`lastparam_${id}_toggle`);

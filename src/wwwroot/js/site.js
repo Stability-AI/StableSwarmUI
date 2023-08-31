@@ -202,8 +202,10 @@ function doToggleEnable(id) {
                 doToggleEnable(id);
             };
             elem.addEventListener('focus', autoActivate);
+            elem.addEventListener('change', autoActivate);
             if (elem2) {
                 elem2.addEventListener('focus', autoActivate);
+                elem2.addEventListener('change', autoActivate);
             }
             elem.dataset.has_toggle_handler = true;
         }

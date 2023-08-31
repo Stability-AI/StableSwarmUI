@@ -222,10 +222,29 @@ function initialModelListLoad() {
     }
 }
 
+function reapplyLoraWeights() {
+    let valSet = [...getRequiredElementById('input_loras').selectedOptions].map(option => option.value);
+    let weights = getRequiredElementById('input_loraweights').value.split(',');
+    if (weights.length != valSet.length) {
+        console.log("Ignoring invalid LoRA weights value.");
+        return;
+    }
+    let viewable = [...getRequiredElementById('current_lora_list_view').children];
+    for (let i = 0; i < valSet.length; i++) {
+        loraWeightPref[valSet[i]] = weights[i];
+        let entry = viewable.filter(elem => elem.dataset.lora_name == valSet[i]);
+        if (entry.length == 1) {
+            entry[0].querySelector('.lora-weight-input').value = weights[i];
+        }
+    }
+}
+
 function updateLoraWeights() {
     let valSet = [...getRequiredElementById('input_loras').selectedOptions].map(option => option.value);
-    getRequiredElementById('input_loraweights').value = valSet.map(lora => loraWeightPref[lora] || 1).join(',');
+    let inputWeights = getRequiredElementById('input_loraweights');
+    inputWeights.value = valSet.map(lora => loraWeightPref[lora] || 1).join(',');
     getRequiredElementById('input_loraweights_toggle').checked = valSet.length > 0;
+    inputWeights.dispatchEvent(new Event('change'));
     doToggleEnable('input_loraweights');
 }
 
@@ -239,6 +258,7 @@ function updateLoraList() {
     view.innerHTML = '';
     for (let lora of currentLoras) {
         let div = createDiv(null, 'preset-in-list');
+        div.dataset.lora_name = lora;
         div.innerText = lora;
         let weightInput = document.createElement('input');
         weightInput.className = 'lora-weight-input';
@@ -284,6 +304,7 @@ function toggleSelectLora(lora) {
     $(loraInput).trigger('change');
     getRequiredElementById('input_loras_toggle').checked = selected.length > 0;
     doToggleEnable('input_loras');
+    loraInput.dispatchEvent(new Event('change'));
     updateLoraWeights();
     updateLoraList();
 }
