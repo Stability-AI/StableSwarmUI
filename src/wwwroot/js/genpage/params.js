@@ -112,7 +112,7 @@ function genInputs(delay_final = false) {
     let groupsEnable = [];
     for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !isParamAdvanced(p)],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p)],
-            ['main_inputs_area_hidden', null, (p) => !p.visible]]) {
+            ['main_inputs_area_hidden', 'new_preset_modal_hidden_inputs', (p) => !p.visible]]) {
         let area = getRequiredElementById(areaData[0]);
         area.innerHTML = '';
         let presetArea = areaData[1] ? getRequiredElementById(areaData[1]) : null;
@@ -152,14 +152,12 @@ function genInputs(delay_final = false) {
             if (newData.runnable) {
                 runnables.push(newData.runnable);
             }
-            if (param.visible) { // Hidden excluded from presets.
-                let presetParam = JSON.parse(JSON.stringify(param));
-                presetParam.toggleable = true;
-                let presetData = getHtmlForParam(presetParam, "preset_input_");
-                presetHtml += presetData.html;
-                if (presetData.runnable) {
-                    runnables.push(presetData.runnable);
-                }
+            let presetParam = JSON.parse(JSON.stringify(param));
+            presetParam.toggleable = true;
+            let presetData = getHtmlForParam(presetParam, "preset_input_");
+            presetHtml += presetData.html;
+            if (presetData.runnable) {
+                runnables.push(presetData.runnable);
             }
         }
         area.innerHTML = html;
@@ -187,11 +185,9 @@ function genInputs(delay_final = false) {
             }
         }
         for (let param of gen_param_types) {
-            if (param.visible) {
-                if (param.toggleable) {
-                    doToggleEnable(`input_${param.id}`);
-                    doToggleEnable(`preset_input_${param.id}`);
-                }
+            if (param.toggleable) {
+                doToggleEnable(`input_${param.id}`);
+                doToggleEnable(`preset_input_${param.id}`);
             }
         }
         let inputAspectRatio = document.getElementById('input_aspectratio');
@@ -294,18 +290,18 @@ function genInputs(delay_final = false) {
                         }
                     });
                 }
-                if (param.toggleable) {
-                    let toggler = getRequiredElementById(`input_${param.id}_toggle`);
-                    let cookie = getCookie(`lastparam_input_${param.id}_toggle`);
-                    if (cookie) {
-                        toggler.checked = cookie == "true";
-                    }
-                    doToggleEnable(`input_${param.id}`);
-                    if (!param.do_not_save) {
-                        toggler.addEventListener('change', () => {
-                            setCookie(`lastparam_input_${param.id}_toggle`, toggler.checked, 0.25);
-                        });
-                    }
+            }
+            if (param.toggleable) {
+                let toggler = getRequiredElementById(`input_${param.id}_toggle`);
+                let cookie = getCookie(`lastparam_input_${param.id}_toggle`);
+                if (cookie) {
+                    toggler.checked = cookie == "true";
+                }
+                doToggleEnable(`input_${param.id}`);
+                if (!param.do_not_save) {
+                    toggler.addEventListener('change', () => {
+                        setCookie(`lastparam_input_${param.id}_toggle`, toggler.checked, 0.25);
+                    });
                 }
             }
         }
@@ -313,6 +309,10 @@ function genInputs(delay_final = false) {
         if (modelCookie) {
             directSetModel(modelCookie);
         }
+        let modelInput = getRequiredElementById('input_model');
+        modelInput.addEventListener('change', () => {
+            forceSetDropdownValue('current_model', modelInput.value);
+        });
         let vaeInput = document.getElementById('input_vae');
         if (vaeInput) {
             vaeInput.addEventListener('change', () => {
@@ -343,7 +343,7 @@ function toggle_advanced() {
     let toggler = getRequiredElementById('advanced_options_checkbox');
     advancedArea.style.display = toggler.checked ? 'block' : 'none';
     for (let param of gen_param_types) {
-        if (param.toggleable && param.visible) {
+        if (param.toggleable) {
             doToggleEnable(`input_${param.id}`);
         }
     }
@@ -380,16 +380,10 @@ function getGenInput(input_overrides = {}) {
                 input[type.id] = elem.dataset.filedata;
             }
         }
-        else if (type.id == "loraweights") {
-            // Special-cased
-        }
         else if (type.type == "list" && elem.tagName == "SELECT") {
             let valSet = [...elem.selectedOptions].map(option => option.value);
             if (valSet.length > 0) {
                 input[type.id] = valSet.join(',');
-                if (type.id == 'loras') {
-                    input['loraweights'] = valSet.map(lora => loraWeightPref[lora] || 1).join(',');
-                }
             }
         }
         else {
@@ -451,9 +445,8 @@ function setDirectParamValue(param, value, paramElem = null) {
     }
     else if (param.type == "list" && paramElem.tagName == "SELECT") {
         let vals = typeof value == 'string' ? value.split(',').map(v => v.trim()) : value;
-        for (let option of paramElem.options) {
-            option.selected = vals.includes(option.value);
-        }
+        $(paramElem).val(vals);
+        $(paramElem).trigger('change');
     }
     else {
         paramElem.value = value;
@@ -547,16 +540,12 @@ function paramSorter(a, b) {
     }
 }
 
-/**
- * Returns a copy of the parameter name, cleaned for ID format input.
- */
+/** Returns a copy of the parameter name, cleaned for ID format input. */
 function cleanParamName(name) {
     return name.toLowerCase().replaceAll(/[^a-z]/g, '');
 }
 
-/**
- * Sets the value of a parameter to the value used in the currently selected image, if any.
- */
+/** Sets the value of a parameter to the value used in the currently selected image, if any. */
 function reuseLastParamVal(paramId) {
     if (!currentMetadataVal) {
         return;
@@ -575,4 +564,11 @@ function reuseLastParamVal(paramId) {
     if (pid in params) {
         getRequiredElementById(paramId).value = params[pid];
     }
+}
+
+/** Internal debug function to show the hidden params. */
+function debugShowHiddenParams() {
+    let hiddenArea = getRequiredElementById('main_inputs_area_hidden');
+    hiddenArea.style.display = 'block';
+    hiddenArea.style.visibility = 'visible';
 }

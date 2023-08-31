@@ -196,7 +196,7 @@ function doToggleEnable(id) {
         if (elem2) {
             elem2.classList.add('disabled-input');
         }
-        if (!elem.dataset.has_handler) {
+        if (!elem.dataset.has_toggle_handler) {
             function autoActivate() {
                 toggler.checked = true;
                 doToggleEnable(id);
@@ -205,7 +205,7 @@ function doToggleEnable(id) {
             if (elem2) {
                 elem2.addEventListener('focus', autoActivate);
             }
-            elem.dataset.has_handler = true;
+            elem.dataset.has_toggle_handler = true;
         }
     }
     else {

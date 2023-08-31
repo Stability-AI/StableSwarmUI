@@ -222,6 +222,13 @@ function initialModelListLoad() {
     }
 }
 
+function updateLoraWeights() {
+    let valSet = [...getRequiredElementById('input_loras').selectedOptions].map(option => option.value);
+    getRequiredElementById('input_loraweights').value = valSet.map(lora => loraWeightPref[lora] || 1).join(',');
+    getRequiredElementById('input_loraweights_toggle').checked = valSet.length > 0;
+    doToggleEnable('input_loraweights');
+}
+
 function updateLoraList() {
     let view = getRequiredElementById('current_lora_list_view');
     let loraElem = document.getElementById('input_loras');
@@ -242,6 +249,7 @@ function updateLoraList() {
         weightInput.value = loraWeightPref[lora] || 1;
         weightInput.addEventListener('change', () => {
             loraWeightPref[lora] = weightInput.value;
+            updateLoraWeights();
         });
         let removeButton = createDiv(null, 'preset-remove-button');
         removeButton.innerHTML = '&times;';
@@ -260,7 +268,23 @@ function updateLoraList() {
 }
 
 function toggleSelectLora(lora) {
-    [...getRequiredElementById('input_loras')].filter(option => option.value == lora).forEach(option => option.selected = !option.selected);
+    let loraInput = document.getElementById('input_loras');
+    if (!loraInput) {
+        showError("Cannot set LoRAs currently. Are you using a custom workflow? LoRAs only work in the default mode.");
+        return;
+    }
+    let selected = [...loraInput.selectedOptions].map(option => option.value);
+    if (selected.includes(lora)) {
+        selected = selected.filter(l => l != lora);
+    }
+    else {
+        selected.push(lora);
+    }
+    $(loraInput).val(selected);
+    $(loraInput).trigger('change');
+    getRequiredElementById('input_loras_toggle').checked = selected.length > 0;
+    doToggleEnable('input_loras');
+    updateLoraWeights();
     updateLoraList();
 }
 
@@ -320,10 +344,10 @@ function setCurrentModel(callback) {
     }
 }
 
-let noDup = false;
+let noModelChangeDup = false;
 
-getRequiredElementById('current_model').addEventListener('change', () => {
-    if (noDup) {
+function currentModelChanged() {
+    if (noModelChangeDup) {
         return;
     }
     let name = getRequiredElementById('current_model').value;
@@ -331,8 +355,10 @@ getRequiredElementById('current_model').addEventListener('change', () => {
         return;
     }
     genericRequest('DescribeModel', {'modelName': name}, data => {
-        noDup = true;
+        noModelChangeDup = true;
         directSetModel(data.model);
-        noDup = false;
+        noModelChangeDup = false;
     });
-});
+}
+
+getRequiredElementById('current_model').addEventListener('change', currentModelChanged);

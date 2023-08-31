@@ -6,9 +6,7 @@ let preset_to_edit = null;
 
 function fixPresetParamClickables() {
     for (let param of gen_param_types) {
-        if (param.visible) {
-            doToggleEnable(`preset_input_${param.id}`);
-        }
+        doToggleEnable(`preset_input_${param.id}`);
     }
 }
 
@@ -18,7 +16,7 @@ function getPresetByTitle(title) {
 }
 
 function getPresetTypes() {
-    return gen_param_types.filter(type => type.visible && (!type.toggleable || getRequiredElementById(`input_${type.id}_toggle`).checked));
+    return gen_param_types.filter(type => !type.toggleable || getRequiredElementById(`input_${type.id}_toggle`).checked);
 }
 
 function clearPresetView() {
@@ -41,20 +39,20 @@ function clearPresetView() {
             presetElem.value = "{value}";
         }
         else if (type.type == "list" && presetElem.tagName == "SELECT") {
-            for (let option of presetElem.selectedOptions) {
-                option.selected = false;
-            }
+            $(presetElem).val(null);
+            $(presetElem).trigger('change');
         }
         else {
             presetElem.value = '';
         }
         getRequiredElementById(presetElem.id + '_toggle').checked = false;
-        presetElem.disabled = true;
+        doToggleEnable(presetElem.id);
     }
 }
 
 function create_new_preset_button() {
     clearPresetView();
+    $('#add_preset_modal').modal('show');
     let curImg = document.getElementById('current_image_img');
     if (curImg) {
         let newImg = curImg.cloneNode(true);
@@ -74,15 +72,13 @@ function create_new_preset_button() {
         }
         else if (type.type == "list" && elem.tagName == "SELECT") {
             let selected = [...elem.selectedOptions].map(o => o.value);
-            for (let option of presetElem.options) {
-                option.selected = selected.includes(option.value);
-            }
+            $(presetElem).val(selected);
+            $(presetElem).trigger('change');
         }
         else {
             presetElem.value = elem.value;
         }
     }
-    $('#add_preset_modal').modal('show');
     fixPresetParamClickables();
 }
 
@@ -144,6 +140,19 @@ function preset_toggle_advanced_checkbox_manual() {
     let toggler = getRequiredElementById('preset_advanced_options_checkbox');
     toggler.checked = !toggler.checked;
     preset_toggle_advanced();
+}
+
+function preset_toggle_hidden() {
+    let hiddenArea = getRequiredElementById('new_preset_modal_hidden_inputs');
+    let toggler = getRequiredElementById('preset_hidden_options_checkbox');
+    hiddenArea.style.display = toggler.checked ? 'block' : 'none';
+    fixPresetParamClickables();
+}
+
+function preset_toggle_hidden_checkbox_manual() {
+    let toggler = getRequiredElementById('preset_hidden_options_checkbox');
+    toggler.checked = !toggler.checked;
+    preset_toggle_hidden();
 }
 
 function updatePresetList() {
@@ -227,8 +236,8 @@ function editPreset(preset) {
         if (type) {
             let presetElem = getRequiredElementById(`preset_input_${type.id}`);
             setDirectParamValue(type, preset.param_map[key], presetElem);
-            presetElem.disabled = false;
             getRequiredElementById(`preset_input_${type.id}_toggle`).checked = true;
+            doToggleEnable(presetElem.id);
         }
     }
     $('#add_preset_modal').modal('show');

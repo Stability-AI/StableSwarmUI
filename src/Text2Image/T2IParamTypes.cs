@@ -305,10 +305,10 @@ public class T2IParamTypes
             "", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE", Group: AdvancedModelAddons
             ));
         Loras = Register<List<string>>(new("LoRAs", "LoRAs (Low-Rank-Adaptation Models) are a way to customize the content of a model without totally replacing it.\nYou can enable one or several LoRAs over top of one model.",
-            "", IsAdvanced: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelsFor(session).Select(m => m.Name).Order().ToList(), Group: AdvancedModelAddons, VisibleNormally: false
+            "", IsAdvanced: true, Toggleable: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelsFor(session).Select(m => m.Name).Order().ToList(), Group: AdvancedModelAddons, VisibleNormally: false
             ));
         LoraWeights = Register<List<string>>(new("LoRA Weights", "Weight values for the LoRA model list.",
-            "", IsAdvanced: true, Group: AdvancedModelAddons, VisibleNormally: false
+            "", IsAdvanced: true, Toggleable: true, Group: AdvancedModelAddons, VisibleNormally: false
             ));
         BackendType = Register<string>(new("[Internal] Backend Type", "Which StableSwarmUI backend type should be used for this request.",
             "Any", GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true

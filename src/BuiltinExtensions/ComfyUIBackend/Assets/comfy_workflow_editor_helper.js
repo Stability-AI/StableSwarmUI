@@ -498,9 +498,7 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
             if (applyValues) {
                 if (param.id == 'model') {
                     setCookie('selected_model', `${val}`, 0.5);
-                    let selector = getRequiredElementById('current_model');
-                    forceSetDropdownValue(selector, val);
-                    selector.dispatchEvent(new Event('change'));
+                    forceSetDropdownValue('current_model', val);
                 }
                 else {
                     setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
