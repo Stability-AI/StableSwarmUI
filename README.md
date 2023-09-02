@@ -80,7 +80,19 @@ docker build -t stableswarmui . --progress=plain
 ```
 
 ```
+docker build -t stableswarmui . --progress=plain --no-cache
+```
+
+```
 docker run --rm -it --gpus=all -p 7801:7801 stableswarmui src/bin/live_release/StableSwarmUI.dll $@
+```
+
+```
+docker run --rm -it --gpus=all -p 7801:7801 stableswarmui StableSwarmUI.dll $@
+```
+
+```
+docker run --rm -it --gpus=all -p 7801:7801 --entrypoint bash stableswarmui
 ```
 
 # Documentation
