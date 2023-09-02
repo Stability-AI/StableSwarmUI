@@ -82,7 +82,7 @@ docker build -t stableswarmui .
 2. Run your image
 
 ```
-docker run --rm -it --gpus=all -p 7801:7801 stableswarmui StableSwarmUI.dll $@
+docker run --rm -it --gpus=all -p 7801:7801 stableswarmui StableSwarmUI.dll $@ --launch_mode none --host "*"
 ```
 3. Use this command to exec into the container's shell for troubleshooting (or curiosity)
 ```
