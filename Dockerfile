@@ -15,6 +15,7 @@ RUN apt install -y \
   python3-pip \
   python3-dev \
   python3.11-dev \
+  vim \
   ;
 
 WORKDIR /code
