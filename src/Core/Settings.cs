@@ -29,7 +29,7 @@ public class Settings : AutoConfiguration
 
     [ConfigComment("How to launch the UI. If 'none', just quietly launch. If 'web', launch your web-browser to the page. If 'webinstall', launch web-browser to the install page. If 'electron', launch the UI in an electron window.")]
     [ManualSettingsOptions(Impl = null, Vals = new string[] { "none", "web", "webinstall", "electron" })]
-    public string LaunchMode = "none";
+    public string LaunchMode = "webinstall";
 
     /// <summary>Settings related to backends.</summary>
     public class BackendData : AutoConfiguration
