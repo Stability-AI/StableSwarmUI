@@ -11,5 +11,5 @@ dotnet build src/StableSwarmUI.csproj --configuration Release -o ./src/bin/live_
 # Default env configuration, gets overwritten by the C# code's settings handler
 ASPNETCORE_ENVIRONMENT="Production"
 ASPNETCORE_URLS="http://*:7801"
-cp ./src/* /publish/
+cp -R ./src/* /publish/
 dotnet publish --os linux --arch x64 -c Release --property:PublishDir=/publish #/t:PublishContainer -c Release
