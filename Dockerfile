@@ -24,5 +24,7 @@ RUN git clone https://github.com/surfingdoggo/StableSwarmUI.git
 WORKDIR /code/StableSwarmUI
 RUN ls -lah && pwd
 RUN ./launch-docker.sh
+WORKDIR /publish
+RUN ls -lah
 EXPOSE 7801
 ENTRYPOINT [ "dotnet" ]
