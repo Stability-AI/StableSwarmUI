@@ -24,3 +24,4 @@ WORKDIR /code/StableSwarmUI
 RUN ls -lah && pwd
 RUN ./launch-docker.sh
 EXPOSE 7801
+ENTRYPOINT [ "dotnet" ]

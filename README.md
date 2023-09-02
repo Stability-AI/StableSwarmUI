@@ -73,6 +73,16 @@ The installation starts now and downloads the Stable Diffusion models from the i
 
 > **Important**: During the StableSwarmUI installation, you are prompted for the type of backend you want to use. For Mac computers with M1 or M2, you can safely choose the ComfyUI backend and choose the Stable Diffusion XL Base and Refiner models in the Download Models screen.
 
+# Running with Docker
+
+```
+docker build -t stableswarmui . --progress=plain
+```
+
+```
+docker run --rm -it --gpus=all -p 7801:7801 stableswarmui src/bin/live_release/StableSwarmUI.dll $@
+```
+
 # Documentation
 
 See [the documentation folder](docs).
