@@ -16,3 +16,4 @@ ASPNETCORE_ENVIRONMENT="Production"
 ASPNETCORE_URLS="http://*:7801"
 # dotnet publish --os linux --arch x64 -c Release --property:PublishDir=/publish --self-contained true #/t:PublishContainer -c Release p:PublishReadyToRun=true 
 # cp -R /code/StableSwarmUI/src /publish/src
+dotnet publish --os linux --arch x64 -c Release -p:PublishProfile=DefaultContainer
