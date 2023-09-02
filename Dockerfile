@@ -18,8 +18,9 @@ RUN apt install -y \
   ;
 
 WORKDIR /code
-RUN git clone https://github.com/Stability-AI/StableSwarmUI
+# RUN git clone https://github.com/Stability-AI/StableSwarmUI
+RUN git clone https://github.com/surfingdoggo/StableSwarmUI.git
 WORKDIR /code/StableSwarmUI
 RUN ls -lah && pwd
-RUN ./launch-linux.sh
+RUN ./launch-docker.sh
 EXPOSE 7801
