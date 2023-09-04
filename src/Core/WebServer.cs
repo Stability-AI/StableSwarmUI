@@ -10,8 +10,6 @@ using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
 using System.IO;
-using System.Text;
-using System.Web;
 
 namespace StableSwarmUI.Core;
 
@@ -243,7 +241,7 @@ public class WebServer
     public async Task ViewOutput(HttpContext context)
     {
         string path = context.Request.Path.ToString().After("/Output/");
-        path = HttpUtility.UrlDecode(path).Replace('\\', '/');
+        path = Uri.UnescapeDataString(path).Replace('\\', '/');
         string userId = Program.Sessions.AdminUser.UserID; // TODO: From login cookie
         (path, string consoleError, string userError) = CheckOutputFilePath(path, userId);
         if (consoleError is not null)
@@ -261,6 +259,7 @@ public class WebServer
         {
             if (ex is FileNotFoundException || ex is DirectoryNotFoundException || ex is PathTooLongException)
             {
+                Logs.Verbose($"File-not-found error reading output file '{path}': {ex}");
                 await context.YieldJsonOutput(null, 04, Utilities.ErrorObj("404, file not found.", "file_not_found"));
             }
             else
