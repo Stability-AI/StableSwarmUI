@@ -33,11 +33,11 @@ class GridGenClass {
         let axisTypeSelector = document.createElement('select');
         axisTypeSelector.className = 'grid-gen-selector';
         axisTypeSelector.id = `grid-gen-axis-type-${id}`;
-        axisTypeSelector.add(new Option('', '', true, true));
         this.fillSelectorOptions(axisTypeSelector);
         let inputBox = document.createElement('div');
         inputBox.className = 'grid-gen-axis-input';
         inputBox.id = `grid-gen-axis-input-${id}`;
+        let mode = null;
         //let lastSelection = 0;
         let updateInput = () => {
             let lastSelection = getCurrentCursorPosition(inputBox.id);
@@ -62,7 +62,19 @@ class GridGenClass {
         fillButton.className = 'basic-button grid-gen-axis-fill-button';
         fillButton.title = 'Fill with available values';
         fillButton.addEventListener('click', () => {
-            let toFill = fillButton.dataset.values;
+            let toFill;
+            if (mode && (mode.values || mode.type == 'model')) {
+                toFill = mode.type == 'model' ? coreModelMap[mode.subtype || 'Stable-Diffusion'].join(' || ') : mode.values.join(' || ');
+            }
+            else if (mode && mode.type == 'boolean') {
+                toFill = 'true || false';
+            }
+            else if (mode && mode.examples) {
+                toFill = mode.examples.join(' || ');
+            }
+            else {
+                return;
+            }
             let text = inputBox.innerText.trim();
             if (!toFill.includes(',') && !text.includes('||')) {
                 toFill = toFill.replaceAll(' || ', ', ');
@@ -79,23 +91,20 @@ class GridGenClass {
             updateInput();
         });
         axisTypeSelector.addEventListener('change', () => {
-            let mode = gen_param_types.find(e => e.id == axisTypeSelector.value);
+            mode = gen_param_types.find(e => e.id == axisTypeSelector.value);
             if (mode && (mode.values || mode.type == 'model')) {
                 fillButton.innerText = 'Fill';
                 fillButton.style.visibility = 'visible';
-                fillButton.dataset.values = mode.type == 'model' ? coreModelMap[mode.subtype || 'Stable-Diffusion'].join(' || ') : mode.values.join(' || ');
                 fillButton.title = 'Fill with available values';
             }
             else if (mode && mode.type == 'boolean') {
                 fillButton.innerText = 'Fill';
                 fillButton.style.visibility = 'visible';
-                fillButton.dataset.values = 'true || false';
                 fillButton.title = 'Fill with "true" and "false"';
             }
             else if (mode && mode.examples) {
                 fillButton.innerText = 'Examples';
                 fillButton.style.visibility = 'visible';
-                fillButton.dataset.values = mode.examples.join(' || ');
                 fillButton.title = 'Fill with example values';
             }
             else {
