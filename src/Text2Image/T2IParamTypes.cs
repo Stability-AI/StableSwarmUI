@@ -75,13 +75,14 @@ public enum NumberViewType
 /// <param name="AlwaysRetain">If true, the parameter will be retained when otherwise it would be removed (for example, by comfy workflow usage).</param>
 /// <param name="Type">The type of the type - text vs integer vs etc (will be set when registering).</param>
 /// <param name="DoNotSave">Can be set to forbid tracking/saving of a param value.</param>
+/// <param name="ImageShouldResize">(For Image-type params) If true, the image should resize to match the target resolution.</param>
 /// <param name="Subtype">The sub-type of the type - for models, this might be eg "Stable-Diffusion".</param>
 /// <param name="ID">The raw ID of this parameter (will be set when registering).</param>
 /// 
 public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMax = 0,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null,
-    NumberViewType NumberView = NumberViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, string Subtype = null, string ID = null)
+    NumberViewType NumberView = NumberViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, string Subtype = null, string ID = null)
 {
     public JObject ToNet(Session session)
     {
@@ -217,7 +218,7 @@ public class T2IParamTypes
             "", Clean: ApplyStringEdit, Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100
             ));
         PromptImages = Register<List<Image>>(new("Prompt Images", "Images to include with the prompt, for eg ReVision or UnCLIP.",
-            "", OrderPriority: -95, Toggleable: true, VisibleNormally: false, IsAdvanced: true, HideFromMetadata: true // Has special internal handling
+            "", OrderPriority: -95, Toggleable: true, VisibleNormally: false, IsAdvanced: true, ImageShouldResize: false, HideFromMetadata: true // Has special internal handling
             ));
         ReVisionStrength = Register<double>(new("ReVision Strength", "How strong to apply ReVision image inputs.",
             "1", OrderPriority: -94, Min: 0, Max: 10, Step: 0.1, Toggleable: true, NumberView: NumberViewType.SLIDER

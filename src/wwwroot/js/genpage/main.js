@@ -831,8 +831,8 @@ function revisionInputHandler() {
                     let data = e.target.result;
                     let imageObject = new Image();
                     imageObject.src = data;
-                    imageObject.width = 128;
                     imageObject.height = 128;
+                    imageObject.className = 'alt-prompt-image';
                     imageObject.dataset.filedata = data;
                     clearButton.style.display = '';
                     let revisionStrengthToggler = document.getElementById('input_revisionstrength_toggle');

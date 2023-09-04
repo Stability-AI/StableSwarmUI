@@ -358,14 +358,14 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         List<Action> completeSteps = new();
         string initImageFixer(string workflow) // TODO: This is a hack.
         {
-            void TryApply(string key, Image img)
+            void TryApply(string key, Image img, bool resize)
             {
                 string replaceMe = "${" + key + "}";
                 if (workflow.Contains(key))
                 {
                     int id = Interlocked.Increment(ref ImageIDDedup);
                     string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
-                    Image fixedImage = img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height));
+                    Image fixedImage = resize ? img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height)) : img;
                     MultipartFormDataContent content = new()
                     {
                         { new ByteArrayContent(fixedImage.ImageData), "image", fname },
@@ -382,15 +382,16 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             foreach ((string key, object val) in user_input.ValuesInput)
             {
+                bool resize = !T2IParamTypes.TryGetType(key, out T2IParamType type, user_input) || type.ImageShouldResize;
                 if (val is Image img)
                 {
-                    TryApply(key, img);
+                    TryApply(key, img, resize);
                 }
                 else if (val is List<Image> imgs)
                 {
                     for (int i = 0; i < imgs.Count; i++)
                     {
-                        TryApply(key + "." + i, imgs[i]);
+                        TryApply(key + "." + i, imgs[i], resize);
                     }
                 }
             }

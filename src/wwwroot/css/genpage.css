@@ -668,6 +668,10 @@ body {
 .alt-prompt-added-image-area {
     max-width: calc(100% - 7rem);
 }
+.alt-prompt-image {
+    max-height: 128px;
+    margin-right: 1px;
+}
 .image-clear-button {
     vertical-align: middle;
     display: inline-block;
