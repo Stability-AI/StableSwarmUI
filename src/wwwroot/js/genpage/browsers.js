@@ -112,6 +112,12 @@ class GenPageBrowserClass {
      * Updates tree tracker for the given path.
      */
     refillTree(path, folders) {
+        if (path.endsWith('/')) {
+            path = path.substring(0, path.length - 1);
+        }
+        if (path.startsWith('/')) {
+            path = path.substring(1);
+        }
         let otherFolders = folders.filter(f => f.includes('/'));
         if (otherFolders.length > 0) {
             let baseFolders = folders.filter(f => !f.includes('/'));
@@ -121,7 +127,7 @@ class GenPageBrowserClass {
                 let slash = folder.indexOf('/');
                 let base = folder.substring(0, slash + 1);
                 let same = otherFolders.filter(f => f.startsWith(base)).map(f => f.substring(base.length));
-                this.refillTree(path + ((path == '' || path.endsWith('/')) ? '' : '/') + base, same);
+                this.refillTree(`${path}/${base}`, same);
                 otherFolders = otherFolders.filter(f => !f.startsWith(base));
             }
             return;
