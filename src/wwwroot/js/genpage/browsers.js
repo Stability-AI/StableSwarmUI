@@ -305,109 +305,111 @@ class GenPageBrowserClass {
         }
         this.lastFiles = files;
         let folderScroll = this.folderTreeDiv ? this.folderTreeDiv.scrollTop : 0;
-        this.container.innerHTML = '';
-        this.folderTreeDiv = createDiv(`${this.id}-foldertree`, 'browser-folder-tree-container');
-        let folderTreeSplitter = createDiv(`${this.id}-splitter`, 'browser-folder-tree-splitter splitter-bar');
-        let headerBar = createDiv(`${this.id}-header`, 'browser-header-bar');
-        let fullContentDiv = createDiv(`${this.id}-fullcontent`, 'browser-fullcontent-container');
-        let contentDiv = createDiv(`${this.id}-content`, 'browser-content-container');
-        this.contentDiv = contentDiv;
-        let formatSelector = document.createElement('select');
-        formatSelector.id = `${this.id}-format-selector`;
-        formatSelector.title = 'Display format';
-        formatSelector.className = 'browser-format-selector';
-        for (let format of ['Cards', 'Small Cards', 'Big Cards', 'Thumbnails', 'Small Thumbnails', 'Big Thumbnails', 'Giant Thumbnails', 'List']) {
-            let option = document.createElement('option');
-            option.value = format;
-            option.innerText = format;
-            if (format == this.format) {
-                option.selected = true;
+        if (!this.hasGenerated) {
+            this.hasGenerated = true;
+            this.container.innerHTML = '';
+            this.folderTreeDiv = createDiv(`${this.id}-foldertree`, 'browser-folder-tree-container');
+            let folderTreeSplitter = createDiv(`${this.id}-splitter`, 'browser-folder-tree-splitter splitter-bar');
+            this.headerBar = createDiv(`${this.id}-header`, 'browser-header-bar');
+            this.fullContentDiv = createDiv(`${this.id}-fullcontent`, 'browser-fullcontent-container');
+            this.container.appendChild(this.folderTreeDiv);
+            this.container.appendChild(folderTreeSplitter);
+            this.container.appendChild(this.fullContentDiv);
+            let formatSelector = document.createElement('select');
+            formatSelector.id = `${this.id}-format-selector`;
+            formatSelector.title = 'Display format';
+            formatSelector.className = 'browser-format-selector';
+            for (let format of ['Cards', 'Small Cards', 'Big Cards', 'Thumbnails', 'Small Thumbnails', 'Big Thumbnails', 'Giant Thumbnails', 'List']) {
+                let option = document.createElement('option');
+                option.value = format;
+                option.innerText = format;
+                if (format == this.format) {
+                    option.selected = true;
+                }
+                formatSelector.appendChild(option);
             }
-            formatSelector.appendChild(option);
-        }
-        formatSelector.addEventListener('change', () => {
-            this.format = formatSelector.value;
-            setCookie(`${this.id}_format`, this.format, 365);
-            this.update();
-        });
-        let buttons = createSpan(`${this.id}-button-container`, 'browser-header-buttons', `
-            <button id="${this.id}_refresh_button" title="Refresh" class="refresh-button">&#x21BB;</button>
-            <button id="${this.id}_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
-            Depth: <input id="${this.id}_depth_input" class="depth-number-input" type="number" min="1" max="10" value="${this.depth}" title="Depth of subfolders to show" autocomplete="false">
-            Filter: <input id="${this.id}_filter_input" type="text" value="${this.filter}" title="Text filter, only show items that contain this text." rows="1" autocomplete="false" placeholder="Filter...">
-            `);
-        let inputArr = buttons.getElementsByTagName('input');
-        let depthInput = inputArr[0];
-        depthInput.addEventListener('change', () => {
-            this.depth = depthInput.value;
-            localStorage.setItem(`browser_${this.id}_depth`, this.depth);
-            this.update();
-        });
-        let filterInput = inputArr[1];
-        filterInput.addEventListener('input', () => {
-            this.filter = filterInput.value.toLowerCase();
-            localStorage.setItem(`browser_${this.id}_filter`, this.filter);
-            contentDiv.innerHTML = '';
-            this.buildContentList(contentDiv, files);
-            this.makeVisible(contentDiv);
-        });
-        let buttonArr = buttons.getElementsByTagName('button');
-        let refreshButton = buttonArr[0];
-        let upButton = buttonArr[1];
-        headerBar.appendChild(formatSelector);
-        headerBar.appendChild(buttons);
-        headerBar.appendChild(this.genPath(path, upButton));
-        refreshButton.onclick = this.refresh.bind(this);
-        fullContentDiv.appendChild(headerBar);
-        this.buildTreeElements(this.folderTreeDiv, '', this.tree);
-        this.buildContentList(contentDiv, files);
-        contentDiv.addEventListener('scroll', () => {
-            this.makeVisible(contentDiv);
-        });
-        this.container.appendChild(this.folderTreeDiv);
-        this.container.appendChild(folderTreeSplitter);
-        fullContentDiv.appendChild(contentDiv);
-        this.container.appendChild(fullContentDiv);
-        if (this.lastListenMove) {
-            document.removeEventListener('mousemove', this.lastListenMove);
-            document.removeEventListener('mouseup', this.lastListenUp);
-            layoutResets.slice(layoutResets.indexOf(this.lastReset), 1);
-        }
-        let barSpot;
-        let selfRef = this;
-        function setBar() {
-            selfRef.folderTreeDiv.style.width = `${barSpot}px`;
-            fullContentDiv.style.width = `calc(100vw - ${barSpot}px - 1rem)`;
-        }
-        this.lastReset = () => {
-            barSpot = parseInt(getCookie(`barspot_browser_${this.id}`) || convertRemToPixels(15));
-            setBar();
-        };
-        this.lastReset();
-        let isDrag = false;
-        folderTreeSplitter.addEventListener('mousedown', (e) => {
-            isDrag = true;
-            e.preventDefault();
-        }, true);
-        this.lastListen = (e) => {
-            let offX = e.pageX;
-            offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
-            if (isDrag) {
-                barSpot = offX - 5;
-                setCookie(`barspot_browser_${this.id}`, barSpot, 365);
+            formatSelector.addEventListener('change', () => {
+                this.format = formatSelector.value;
+                setCookie(`${this.id}_format`, this.format, 365);
+                this.update();
+            });
+            let buttons = createSpan(`${this.id}-button-container`, 'browser-header-buttons', `
+                <button id="${this.id}_refresh_button" title="Refresh" class="refresh-button">&#x21BB;</button>
+                <button id="${this.id}_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
+                Depth: <input id="${this.id}_depth_input" class="depth-number-input" type="number" min="1" max="10" value="${this.depth}" title="Depth of subfolders to show" autocomplete="false">
+                Filter: <input id="${this.id}_filter_input" type="text" value="${this.filter}" title="Text filter, only show items that contain this text." rows="1" autocomplete="false" placeholder="Filter...">
+                `);
+            let inputArr = buttons.getElementsByTagName('input');
+            let depthInput = inputArr[0];
+            depthInput.addEventListener('change', () => {
+                this.depth = depthInput.value;
+                localStorage.setItem(`browser_${this.id}_depth`, this.depth);
+                this.update();
+            });
+            let filterInput = inputArr[1];
+            filterInput.addEventListener('input', () => {
+                this.filter = filterInput.value.toLowerCase();
+                localStorage.setItem(`browser_${this.id}_filter`, this.filter);
+                this.contentDiv.innerHTML = '';
+                this.buildContentList(this.contentDiv, files);
+                this.makeVisible(this.contentDiv);
+            });
+            let buttonArr = buttons.getElementsByTagName('button');
+            let refreshButton = buttonArr[0];
+            this.upButton = buttonArr[1];
+            this.headerBar.appendChild(formatSelector);
+            this.headerBar.appendChild(buttons);
+            refreshButton.onclick = this.refresh.bind(this);
+            this.fullContentDiv.appendChild(this.headerBar);
+            this.contentDiv = createDiv(`${this.id}-content`, 'browser-content-container');
+            this.contentDiv.addEventListener('scroll', () => {
+                this.makeVisible(this.contentDiv);
+            });
+            this.fullContentDiv.appendChild(this.contentDiv);
+            let barSpot;
+            let setBar = () => {
+                this.folderTreeDiv.style.width = `${barSpot}px`;
+                this.fullContentDiv.style.width = `calc(100vw - ${barSpot}px - 1rem)`;
+            }
+            this.lastReset = () => {
+                barSpot = parseInt(getCookie(`barspot_browser_${this.id}`) || convertRemToPixels(15));
                 setBar();
-            }
-        };
-        this.lastListenUp = (e) => {
-            isDrag = false;
-        };
-        document.addEventListener('mousemove', this.lastListen);
-        document.addEventListener('mouseup', this.lastListenUp);
-        layoutResets.push(this.lastReset);
+            };
+            this.lastReset();
+            let isDrag = false;
+            folderTreeSplitter.addEventListener('mousedown', (e) => {
+                isDrag = true;
+                e.preventDefault();
+            }, true);
+            this.lastListen = (e) => {
+                let offX = e.pageX;
+                offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
+                if (isDrag) {
+                    barSpot = offX - 5;
+                    setCookie(`barspot_browser_${this.id}`, barSpot, 365);
+                    setBar();
+                }
+            };
+            this.lastListenUp = () => {
+                isDrag = false;
+            };
+            document.addEventListener('mousemove', this.lastListen);
+            document.addEventListener('mouseup', this.lastListenUp);
+            layoutResets.push(() => this.lastReset());
+        }
+        else {
+            this.folderTreeDiv.innerHTML = '';
+            this.contentDiv.innerHTML = '';
+            this.headerPath.remove();
+        }
+        this.headerPath = this.genPath(path, this.upButton);
+        this.headerBar.appendChild(this.headerPath);
+        this.buildTreeElements(this.folderTreeDiv, '', this.tree);
+        this.buildContentList(this.contentDiv, files);
         this.folderTreeDiv.scrollTop = folderScroll;
-        this.makeVisible(contentDiv);
+        this.makeVisible(this.contentDiv);
         if (scrollOffset) {
-            contentDiv.scrollTop = scrollOffset;
+            this.contentDiv.scrollTop = scrollOffset;
         }
     }
 }
