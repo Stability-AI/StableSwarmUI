@@ -5,6 +5,7 @@ class GridGenClass {
     axisDiv = null;
     settingsDiv = null;
     lastAxisId = 0;
+    popover = null;
 
     fillSelectorOptions(selector) {
         selector.add(new Option('', '', true, true));
@@ -38,7 +39,6 @@ class GridGenClass {
         inputBox.className = 'grid-gen-axis-input';
         inputBox.id = `grid-gen-axis-input-${id}`;
         let mode = null;
-        //let lastSelection = 0;
         let updateInput = () => {
             let lastSelection = getCurrentCursorPosition(inputBox.id);
             let text = inputBox.innerText;
@@ -50,10 +50,96 @@ class GridGenClass {
             }
             inputBox.innerHTML = html;
             if (lastSelection != -1) {
+                let searchable = mode.type == 'model' ? coreModelMap[mode.subtype || 'Stable-Diffusion'] : mode.values;
+                if (searchable) {
+                    let searchPre = text.substring(0, lastSelection);
+                    let searchPost = text.substring(lastSelection);
+                    let areaPre = "", areaPost = "";
+                    if (searchPre.includes(separator)) {
+                        let index = searchPre.lastIndexOf(separator);
+                        areaPre = searchPre.substring(0, index + separator.length);
+                        searchPre = searchPre.substring(index + separator.length);
+                    }
+                    if (searchPost.includes(separator)) {
+                        let index = searchPost.indexOf(separator);
+                        areaPost = searchPost.substring(index);
+                        searchPost = searchPost.substring(0, index);
+                    }
+                    searchPre = searchPre.trim().toLowerCase();
+                    searchPost = searchPost.trim().toLowerCase();
+                    let possible = searchable.filter(e => e.toLowerCase().includes(searchPre) && e.toLowerCase().includes(searchPost));
+                    if (this.popover) {
+                        hidePopover('grid_search');
+                        this.popover.remove();
+                        this.popover = null;
+                    }
+                    if (possible.length > 0 && possible.filter(e => e.toLowerCase() == searchPre).length == 0) {
+                        this.popover = createDiv('popover_grid_search', 'sui-popover sui_popover_model sui_popover_scrollable');
+                        let isFirst = true;
+                        for (let val of possible) {
+                            let button = createDiv(null, (isFirst ? 'sui_popover_model_button_selected ' : '') + 'sui_popover_model_button');
+                            isFirst = false;
+                            button.innerText = val;
+                            button.addEventListener('click', () => {
+                                hidePopover('grid_search');
+                                this.popover.remove();
+                                this.popover = null;
+                                inputBox.innerText = areaPre + val + areaPost;
+                                setSelectionRange(inputBox, areaPre.length + val.length, areaPre.length + val.length);
+                                updateInput();
+                            });
+                            this.popover.appendChild(button);
+                        }
+                        this.mainDiv.appendChild(this.popover);
+                        let rect = inputBox.getBoundingClientRect();
+                        showPopover('grid_search', rect.x, rect.y + inputBox.offsetHeight + 6);
+                    }
+                }
                 setSelectionRange(inputBox, lastSelection, lastSelection);
             }
             lastSelection = -1;
         };
+        let popoverSelected = () => this.popover.getElementsByClassName('sui_popover_model_button_selected')[0];
+        let popoverScrollFix = () => {
+            let selected = popoverSelected();
+            if (selected.offsetTop + selected.offsetHeight > this.popover.scrollTop + this.popover.offsetHeight) {
+                this.popover.scrollTop = selected.offsetTop + selected.offsetHeight - this.popover.offsetHeight + 6;
+            }
+            else if (selected.offsetTop < this.popover.scrollTop) {
+                this.popover.scrollTop = selected.offsetTop;
+            }
+        };
+        inputBox.addEventListener('keydown', e => {
+            if (e.key == 'Tab' && this.popover) {
+                popoverSelected().click();
+            }
+            else if (e.key == 'ArrowDown' && this.popover) {
+                let possible = [...this.popover.getElementsByClassName('sui_popover_model_button')];
+                let selectedIndex = possible.findIndex(e => e.classList.contains('sui_popover_model_button_selected'));
+                possible[selectedIndex].classList.remove('sui_popover_model_button_selected');
+                possible[(selectedIndex + 1) % possible.length].classList.add('sui_popover_model_button_selected');
+                popoverScrollFix();
+            }
+            else if (e.key == 'ArrowUp' && this.popover) {
+                let possible = [...this.popover.getElementsByClassName('sui_popover_model_button')];
+                let selectedIndex = possible.findIndex(e => e.classList.contains('sui_popover_model_button_selected'));
+                possible[selectedIndex].classList.remove('sui_popover_model_button_selected');
+                possible[(selectedIndex + possible.length - 1) % possible.length].classList.add('sui_popover_model_button_selected');
+                popoverScrollFix();
+            }
+            else if (e.key == 'Home') {
+                setSelectionRange(inputBox, 0, 0);
+            }
+            else if (e.key == 'End') {
+                setSelectionRange(inputBox, inputBox.innerText.length, inputBox.innerText.length);
+            }
+            else {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
         inputBox.addEventListener('input', updateInput);
         inputBox.contentEditable = true;
         let fillButton = document.createElement('button');

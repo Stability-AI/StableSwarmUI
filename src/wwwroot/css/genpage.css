@@ -338,8 +338,15 @@ body {
     padding-left: 3px;
     padding-right: 3px;
 }
+.sui_popover_model_button_selected {
+    background-color: color-mix(in srgb, var(--emphasis) 50%, var(--background));
+}
 .sui_popover_model_button:hover {
     background-color: var(--emphasis);
+}
+.sui_popover_scrollable {
+    max-height: 15rem;
+    overflow-y: auto;
 }
 .model_filename {
     font-size: 80%;

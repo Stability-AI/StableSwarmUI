@@ -491,22 +491,41 @@ document.addEventListener('click', (e) => {
     doPopHideCleanup(e.target);
 }, true);
 
-function doPopover(id) {
+/** Ensures the popover for the given ID is hidden. */
+function hidePopover(id) {
     let pop = getRequiredElementById(`popover_${id}`);
     if (pop.dataset.visible == "true") {
         pop.style.display = 'none';
         pop.dataset.visible = "false";
         popHide.splice(popHide.indexOf(id), 1);
     }
+}
+
+/** Shows the given popover, optionally at the specified location. */
+function showPopover(id, targetX = mouseX, targetY = mouseY) {
+    let pop = getRequiredElementById(`popover_${id}`);
+    if (pop.dataset.visible == "true") {
+        hidePopover(id); // Hide to reset before showing again.
+    }
+    pop.style.display = 'block';
+    pop.style.width = '200px';
+    pop.dataset.visible = "true";
+    let x = Math.min(targetX, window.innerWidth - pop.offsetWidth - 10);
+    let y = Math.min(targetY, window.innerHeight - pop.offsetHeight);
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y}px`;
+    pop.style.width = '';
+    popHide.push(id);
+}
+
+/** Toggles the given popover, showing it or hiding it as relevant. */
+function doPopover(id) {
+    let pop = getRequiredElementById(`popover_${id}`);
+    if (pop.dataset.visible == "true") {
+        hidePopover(id);
+    }
     else {
-        pop.style.display = 'block';
-        pop.style.width = '200px';
-        pop.dataset.visible = "true";
-        let x = Math.min(mouseX, window.innerWidth - pop.offsetWidth - 10);
-        pop.style.left = `${x}px`;
-        pop.style.top = `${mouseY}px`;
-        pop.style.width = '';
-        popHide.push(id);
+        showPopover(id);
     }
 }
 
