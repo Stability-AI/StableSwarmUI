@@ -1,7 +1,5 @@
 let gen_param_types = null, rawGenParamTypesFromServer = null;
 
-let batches = 0;
-
 let lastImageDir = '';
 
 let lastModelDir = '';
@@ -86,18 +84,58 @@ function formatMetadata(metadata) {
 
 function expandCurrentImage(src, metadata) {
     getRequiredElementById('image_fullview_modal').innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="imageview_modal_inner_div"><img class="imageview_popup_modal_img" src="${src}"><br><div class="imageview_popup_modal_undertext">${formatMetadata(metadata)}</div>`;
-    $('#image_fullview_modal').modal('toggle');
+    $('#image_fullview_modal').modal('show');
+}
+
+function shiftToNextImagePreview(next = true, expand = false) {
+    let curImgElem = document.getElementById('current_image_img');
+    if (!curImgElem) {
+        return;
+    }
+    let batch_area = getRequiredElementById('current_image_batch');
+    let imgs = [...batch_area.getElementsByTagName('img')];
+    let index = imgs.findIndex(img => img.src == curImgElem.src);
+    if (index == -1) {
+        let cleanSrc = (img) => img.src.length > 100 ? img.src.substring(0, 100) + '...' : img.src;
+        console.log(`Image preview shift failed as current image ${cleanSrc(curImgElem)} is not in batch area set ${imgs.map(cleanSrc)}`);
+        return;
+    }
+    let newIndex = index + (next ? 1 : -1);
+    if (newIndex < 0) {
+        newIndex = imgs.length - 1;
+    }
+    else if (newIndex >= imgs.length) {
+        newIndex = 0;
+    }
+    let newImg = imgs[newIndex];
+    let block = findParentOfClass(newImg, 'image-block');
+    setCurrentImage(newImg.src, block.dataset.metadata, block.dataset.batch_id);
+    if (expand) {
+        expandCurrentImage(newImg.src, block.dataset.metadata);
+    }
 }
 
 window.addEventListener('keydown', function(kbevent) {
-    if ($('#image_fullview_modal').is(':visible')) {
-        if (kbevent.key == 'Escape') {
-            $('#image_fullview_modal').modal('toggle');
-            kbevent.preventDefault();
-            kbevent.stopPropagation();
-            return false;
-        }
+    let isFullView = $('#image_fullview_modal').is(':visible');
+    let isCurImgFocused = document.activeElement && 
+        (findParentOfClass(document.activeElement, 'current_image')
+        || findParentOfClass(document.activeElement, 'current_image_batch')
+        || document.activeElement.tagName == 'BODY');
+    if (isFullView && kbevent.key == 'Escape') {
+        $('#image_fullview_modal').modal('toggle');
     }
+    else if ((kbevent.key == 'ArrowLeft' || kbevent.key == 'ArrowUp') && (isFullView || isCurImgFocused)) {
+        shiftToNextImagePreview(false, isFullView);
+    }
+    else if ((kbevent.key == 'ArrowRight' || kbevent.key == 'ArrowDown') && (isFullView || isCurImgFocused)) {
+        shiftToNextImagePreview(true, isFullView);
+    }
+    else {
+        return;
+    }
+    kbevent.preventDefault();
+    kbevent.stopPropagation();
+    return false;
 });
 
 function setCurrentImage(src, metadata = '', batchId = '') {
@@ -176,7 +214,7 @@ function gotImageResult(image, metadata, batchId) {
     updateGenCount();
     let src = image;
     let fname = src && src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
-    let batch_div = appendImage('current_image_batch', src, batches, fname, metadata, 'batch');
+    let batch_div = appendImage('current_image_batch', src, batchId, fname, metadata, 'batch');
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
     setCurrentImage(src, metadata, batchId);
     return batch_div;
@@ -186,7 +224,7 @@ function gotImagePreview(image, metadata, batchId) {
     updateGenCount();
     let src = image;
     let fname = src && src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
-    let batch_div = appendImage('current_image_batch', src, batches, fname, metadata, 'batch');
+    let batch_div = appendImage('current_image_batch', src, batchId, fname, metadata, 'batch');
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
     if (!document.getElementById('current_image_img')) {
         setCurrentImage(src, metadata, batchId);
@@ -286,7 +324,6 @@ function doGenerate(input_overrides = {}) {
             return;
         }
         getRequiredElementById('current_image_batch').innerHTML = '';
-        batches++;
         let images = {};
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides), data => {
             if (data.image) {
