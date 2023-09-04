@@ -120,6 +120,7 @@ public class T2IModelHandler
         {
             return;
         }
+        Directory.CreateDirectory(FolderPath);
         lock (ModificationLock)
         {
             Models.Clear();
