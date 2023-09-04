@@ -286,7 +286,10 @@ class GridGenClass {
         };
         outputFolder.addEventListener('input', updateOutputInfo);
         let today = new Date();
-        outputFolder.value = `grid-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}-${today.getHours()}-${today.getMinutes()}-${today.getSeconds()}`;
+        function pad(n) {
+            return n < 10 ? '0' + n : n;
+        }
+        outputFolder.value = `grid-${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}-${pad(today.getHours())}-${pad(today.getMinutes())}-${pad(today.getSeconds())}`;
         updateOutputInfo();
         this.addAxis();
     }
