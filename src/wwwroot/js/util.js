@@ -576,3 +576,35 @@ function fileSizeStringify(size) {
     }
     return `${size} B`;
 }
+
+/**
+ * Filters the array to only contain values for which the map function returns a distinct (unique) value.
+ */
+function filterDistinctBy(array, map) {
+    return array.filter((value, index) => {
+        let mapped = map(value);
+         return array.findIndex(v => map(v) == mapped) == index;
+    });
+}
+
+/**
+ * Gets the current value of an input element (in a checkbox-compatible way).
+ */
+function getInputVal(input) {
+    if (input.type && input.type == 'checkbox') {
+        return input.checked;
+    }
+    return input.value;
+}
+
+/**
+ * Sets the current value of an input element (in a checkbox-compatible way).
+ */
+function setInputVal(input, val) {
+    if (input.type && input.type == 'checkbox') {
+        input.checked = `${val}` == "true";
+    }
+    else {
+        input.value = val;
+    }
+}

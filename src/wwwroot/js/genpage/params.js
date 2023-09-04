@@ -574,3 +574,237 @@ function debugShowHiddenParams() {
     hiddenArea.style.display = 'block';
     hiddenArea.style.visibility = 'visible';
 }
+
+/** Central handler for user-edited parameters. */
+class ParamConfigurationClass {
+
+    constructor() {
+        this.edited_groups = {};
+        this.edited_params = {};
+        this.param_edits = {};
+        this.container = getRequiredElementById('user_param_config_container');
+        this.confirmer = getRequiredElementById('user_param_config_confirmer');
+    }
+
+    /** First init, mostly just to store the server's original param info. */
+    preInit() {
+        this.original_param_types = JSON.parse(JSON.stringify(rawGenParamTypesFromServer));
+        let arr = filterDistinctBy(this.original_param_types.filter(p => p.group).map(p => p.group), g => g.id);
+        this.original_groups = {};
+        for (let group of arr) {
+            this.original_groups[group.id] = group;
+        }
+    }
+
+    /** Loads the user-editable parameter configuration tab, filling out the inputs and values. Called only once during init. */
+    loadUserParamConfigTab() {
+        this.container.innerHTML = ``;
+        let lastGroup = '__none__';
+        let groupDiv = null;
+        for (let param of rawGenParamTypesFromServer) {
+            let groupId = param.group ? param.group.id : null;
+            if (groupId != lastGroup) {
+                lastGroup = groupId;
+                groupDiv = createDiv(null, 'param-edit-group-container');
+                if (groupId) {
+                    let groupPrefix = `user_param_config_group_${param.group.id}`;
+                    let groupHtml = `
+                        <div class="param-edit-header">Group: ${param.group.name}</div>
+                        <div class="param-edit-part"><button id="${groupPrefix}_reset" class="basic-button">Reset</button></div>
+                        <div class="param-edit-part">Open by default: <input type="checkbox" id="${groupPrefix}__open"${param.group.open ? ` checked="true"` : ''} autocomplete="off"></div>
+                        <div class="param-edit-part">IsAdvanced: <input type="checkbox" id="${groupPrefix}__advanced"${param.group.advanced ? ` checked="true"` : ''} autocomplete="off"></div>
+                        <div class="param-edit-part">Ordering Priority: <input type="number" class="param-edit-number" id="${groupPrefix}__priority" value="${param.group.priority}" autocomplete="off"></div>`;
+                    groupDiv.appendChild(createDiv(null, 'param-edit-container-for-group', groupHtml));
+                    this.container.appendChild(groupDiv);
+                    getRequiredElementById(`${groupPrefix}_reset`).addEventListener('click', () => {
+                        for (let opt of ['open', 'advanced', 'priority']) {
+                            let elem = getRequiredElementById(`${groupPrefix}__${opt}`);
+                            setInputVal(elem, this.original_groups[groupId][opt]);
+                            elem.dispatchEvent(new Event('input'));
+                        }
+                    });
+                    for (let opt of ['open', 'advanced', 'priority']) {
+                        let elem = getRequiredElementById(`${groupPrefix}__${opt}`);
+                        elem.dataset.orig_val = getInputVal(elem);
+                        elem.addEventListener('input', () => {
+                            if (!this.edited_groups[param.group.id]) {
+                                this.edited_groups[param.group.id] = { changed: {} };
+                            }
+                            let val = `${getInputVal(elem)}`;
+                            if (val == elem.dataset.orig_val) {
+                                delete this.edited_groups[param.group.id].changed[opt];
+                                if (Object.keys(this.edited_groups[param.group.id].changed).length == 0) {
+                                    delete this.edited_groups[param.group.id];
+                                }
+                            }
+                            else {
+                                this.edited_groups[param.group.id].changed[opt] = val;
+                            }
+                            this.updateConfirmer();
+                        });
+                    }
+                }
+                else {
+                    this.container.appendChild(groupDiv);
+                }
+            }
+            let paramPrefix = `user_param_config_param_${param.id}`;
+            let paramHtml = `
+                <div class="param-edit-header">Param: ${param.name} (${param.type})</div>
+                <div class="param-edit-part"><button id="${paramPrefix}_reset" class="basic-button">Reset</button></div>
+                <div class="param-edit-part">Visible Normally: <input type="checkbox" id="${paramPrefix}__visible"${param.visible ? ` checked="true"` : ''} autocomplete="off"></div>
+                    <div class="param-edit-part">Do Not Save: <input type="checkbox" id="${paramPrefix}__do_not_save"${param.do_not_save ? ` checked="true"` : ''} autocomplete="off"></div>
+                    <div class="param-edit-part">IsAdvanced: <input type="checkbox" id="${paramPrefix}__advanced"${param.advanced ? ` checked="true"` : ''} autocomplete="off"></div>
+                    <div class="param-edit-part">Ordering Priority: <input type="number" class="param-edit-number" id="${paramPrefix}__priority" value="${param.priority}" autocomplete="off"></div>`;
+            if (param.type == "integer" || param.type == "decimal") {
+                paramHtml += `
+                    <div class="param-edit-part">Min: <input class="param-edit-number" type="number" id="${paramPrefix}__min" value="${param.min}" autocomplete="off"></div>
+                    <div class="param-edit-part">Max: <input class="param-edit-number" type="number" id="${paramPrefix}__max" value="${param.max}" autocomplete="off"></div>
+                    <div class="param-edit-part"><span title="If using a slider, this is where the slider stops">View Max</span>: <input type="number" id="${paramPrefix}__view_max" value="${param.view_max}" autocomplete="off"></div>
+                    <div class="param-edit-part">Step: <input class="param-edit-number" type="number" id="${paramPrefix}__step" value="${param.step}" autocomplete="off"></div>
+                    <div class="param-edit-part">Number View Type: <select id="${paramPrefix}__number_view_type" autocomplete="off">`;
+                for (let type of ['small', 'big', 'seed', 'slider', 'pot_slider']) {
+                    paramHtml += `<option value="${type}"${param.number_view_type == type ? ` selected="true"` : ''}>${type}</option>`;
+                }
+                paramHtml += `</select></div>`;
+            }
+            if (!param.values) {
+                paramHtml += `<div class="param-edit-part">Examples: <input class="param-edit-text" type="text" id="${paramPrefix}__examples" value="${param.examples ? param.examples.join(' || ') : ''}" autocomplete="off"></div>`;
+            }
+            groupDiv.appendChild(createDiv(null, 'param-edit-container', paramHtml));
+            getRequiredElementById(`${paramPrefix}_reset`).addEventListener('click', () => {
+                for (let opt of ['visible', 'do_not_save', 'advanced', 'priority', 'min', 'max', 'view_max', 'step', 'number_view_type', 'examples']) {
+                    let elem = document.getElementById(`${paramPrefix}__${opt}`);
+                    if (!elem) {
+                        continue;
+                    }
+                    let val = this.original_param_types.find(p => p.id == param.id)[opt];
+                    if (opt == 'examples') {
+                        val = val ? val.join(' || ') : '';
+                    }
+                    setInputVal(elem, val);
+                    elem.dispatchEvent(new Event('input'));
+                }
+            });
+            for (let opt of ['visible', 'do_not_save', 'advanced', 'priority', 'min', 'max', 'view_max', 'step', 'number_view_type', 'examples']) {
+                let elem = document.getElementById(`${paramPrefix}__${opt}`);
+                if (!elem) {
+                    continue;
+                }
+                elem.dataset.orig_val = getInputVal(elem);
+                elem.addEventListener('input', () => {
+                    if (!this.edited_params[param.id]) {
+                        this.edited_params[param.id] = { changed: {} };
+                    }
+                    let val = `${getInputVal(elem)}`;
+                    if (val == elem.dataset.orig_val) {
+                        delete this.edited_params[param.id].changed[opt];
+                        if (Object.keys(this.edited_params[param.id].changed).length == 0) {
+                            delete this.edited_params[param.id];
+                        }
+                    }
+                    else {
+                        this.edited_params[param.id].changed[opt] = val;
+                    }
+                    this.updateConfirmer();
+                });
+            }
+        }
+    }
+
+    /** Applies a map of parameter edits provided by the server. */
+    applyParamEdits(edits) {
+        this.param_edits = edits;
+        if (!edits) {
+            return;
+        }
+        for (let param of rawGenParamTypesFromServer) {
+            if (param.group) {
+                let groupEdits = edits.groups[param.group.id];
+                if (groupEdits) {
+                    for (let key in groupEdits) {
+                        param.group[key] = groupEdits[key];
+                    }
+                }
+            }
+            let paramEdits = edits.params[param.id];
+            if (paramEdits) {
+                for (let key in paramEdits) {
+                    if (key == 'examples') {
+                        param[key] = paramEdits[key].split('||').map(s => s.trim()).filter(s => s != '');
+                    }
+                    else {
+                        param[key] = paramEdits[key];
+                    }
+                }
+            }
+        }
+    }
+
+    /** Updates the save/cancel confirm menu. */
+    updateConfirmer() {
+        let data = Object.values(this.edited_groups).concat(Object.values(this.edited_params)).map(g => Object.keys(g.changed).length);
+        let count = data.length == 0 ? 0 : data.reduce((a, b) => a + b);
+        getRequiredElementById(`user_param_config_edit_count`).innerText = count;
+        this.confirmer.style.display = count == 0 ? 'none' : 'block';
+    }
+
+    /** Saves any edits to parameter settings to the server, and applies them. */
+    saveEdits() {
+        if (!this.param_edits) {
+            this.param_edits = { groups: {}, params: {} };
+        }
+        for (let groupId in this.edited_groups) {
+            let edit = this.edited_groups[groupId];
+            if (!this.param_edits.groups[groupId]) {
+                this.param_edits.groups[groupId] = {};
+            }
+            for (let key in edit.changed) {
+                this.param_edits.groups[groupId][key] = edit.changed[key];
+                let elem = getRequiredElementById(`user_param_config_group_${groupId}__${key}`);
+                elem.dataset.orig_val = edit.changed[key];
+            }
+        }
+        for (let paramId in this.edited_params) {
+            let edit = this.edited_params[paramId];
+            if (!this.param_edits.params[paramId]) {
+                this.param_edits.params[paramId] = {};
+            }
+            for (let key in edit.changed) {
+                this.param_edits.params[paramId][key] = edit.changed[key];
+                let elem = getRequiredElementById(`user_param_config_param_${paramId}__${key}`);
+                elem.dataset.orig_val = edit.changed[key];
+            }
+        }
+        this.edited_groups = [];
+        this.edited_params = [];
+        this.updateConfirmer();
+        this.applyParamEdits(this.param_edits);
+        genInputs();
+        genericRequest('SetParamEdits', { edits: this.param_edits }, data => {});
+    }
+
+    /** Reverts any edits to parameter settings. */
+    cancelEdits() {
+        for (let groupId in this.edited_groups) {
+            let edit = this.edited_groups[groupId];
+            for (let key in edit.changed) {
+                let input = getRequiredElementById(`user_param_config_group_${groupId}__${key}`);
+                setInputVal(input, input.dataset.orig_val);
+            }
+        }
+        for (let paramId in this.edited_params) {
+            let edit = this.edited_params[paramId];
+            for (let key in edit.changed) {
+                let input = getRequiredElementById(`user_param_config_param_${paramId}__${key}`);
+                setInputVal(input, input.dataset.orig_val);
+            }
+        }
+        this.edited_groups = [];
+        this.edited_params = [];
+        this.updateConfirmer();
+    }
+}
+
+/** Instance of ParamConfigurationClass, central handler for user-edited parameters. */
+let paramConfig = new ParamConfigurationClass();

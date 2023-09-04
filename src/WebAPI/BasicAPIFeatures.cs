@@ -13,6 +13,7 @@ using StableSwarmUI.Builtin_ComfyUIBackend;
 using StableSwarmUI.Backends;
 using System.Diagnostics;
 using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace StableSwarmUI.WebAPI;
 
@@ -31,6 +32,7 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(InterruptAll);
         API.RegisterAPICall(GetUserSettings);
         API.RegisterAPICall(ChangeUserSettings);
+        API.RegisterAPICall(SetParamEdits);
         T2IAPI.Register();
         BackendAPI.Register();
         AdminAPI.Register();
@@ -315,6 +317,14 @@ public static class BasicAPIFeatures
             }
             session.User.Settings.TrySetFieldValue(key, obj);
         }
+        session.User.Save();
+        return new JObject() { ["success"] = true };
+    }
+
+    public static async Task<JObject> SetParamEdits(Session session, JObject rawData)
+    {
+        JObject edits = (JObject)rawData["edits"];
+        session.User.Data.RawParamEdits = edits.ToString(Formatting.None);
         session.User.Save();
         return new JObject() { ["success"] = true };
     }

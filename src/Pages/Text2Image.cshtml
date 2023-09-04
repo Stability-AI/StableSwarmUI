@@ -52,7 +52,7 @@
                             <div class="added-image-area alt-prompt-added-image-area" id="alt_prompt_image_area"></div>
                         </div>
                         <div class="alt_prompt_main_line">
-                            <textarea id="alt_prompt_textbox" class="alt_prompt_textbox" rows="1" placeholder="Type your prompt here..."></textarea>
+                            <textarea id="alt_prompt_textbox" class="alt_prompt_textbox" rows="1" placeholder="Type your prompt here... (or, drag an image in to use ReVision)"></textarea>
                             <button class="alt-prompt-buttons basic-button" id="alt_generate_button" oncontextmenu="doPopover('generate'); return false;" onclick="doGenerate()">Generate</button>
                             <button class="alt-prompt-buttons interrupt-button interrupt-button-none alt-interrupt" id="alt_interrupt_button" oncontextmenu="doPopover('interrupt'); return false;" onclick="doInterrupt()">&times;</button>
                         </div>
@@ -242,6 +242,9 @@
             <li class="nav-item" role="presentation">
                 <a class="nav-link" data-bs-toggle="tab" href="#Settings-User" id="userconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">User Settings</a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#Param-Config-User" id="userparamconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">Parameter Configuration</a>
+            </li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane show active" id="user-info" role="tabpanel">
@@ -254,6 +257,14 @@
                     <span class="settings_submit_confirmer_text">Save <span id="usersettings_edit_count">0</span> edited setting(s)?</span>
                     <button type="button" class="btn btn-primary basic-button" onclick="save_user_settings()">Save</button>
                     <button type="button" class="btn btn-secondary" onclick="cancel_user_settings_edit()">Cancel</button>
+                </div>
+            </div>
+            <div class="tab-pane" id="Param-Config-User" role="tabpanel">
+                <div id="user_param_config_container" class="settings-container"></div>
+                <div class="settings_submit_confirmer" id="user_param_config_confirmer">
+                    <span class="settings_submit_confirmer_text">Save <span id="user_param_config_edit_count">0</span> edited parameter setting(s)?</span>
+                    <button type="button" class="btn btn-primary basic-button" onclick="paramConfig.saveEdits()">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="paramConfig.cancelEdits()">Cancel</button>
                 </div>
             </div>
         </div>

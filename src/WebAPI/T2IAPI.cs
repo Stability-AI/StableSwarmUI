@@ -479,7 +479,8 @@ public static class T2IAPI
         return new JObject()
         {
             ["list"] = new JArray(T2IParamTypes.Types.Values.Select(v => v.ToNet(session)).ToList()),
-            ["models"] = modelData
+            ["models"] = modelData,
+            ["param_edits"] = string.IsNullOrWhiteSpace(session.User.Data.RawParamEdits) ? null : JObject.Parse(session.User.Data.RawParamEdits)
         };
     }
 }

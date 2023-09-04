@@ -672,3 +672,35 @@ body {
     vertical-align: middle;
     display: inline-block;
 }
+.param-edit-group-container {
+    display: block;
+    border-radius: 0.5rem;
+    border: 1px solid var(--light-border);
+    padding: 0.5rem;
+}
+.param-edit-container-for-group {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+.param-edit-container {
+    display: block;
+    border-radius: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--background) 70%, var(--light-border));
+    padding: 0.2rem;
+    margin-left: 1rem;
+}
+.param-edit-header {
+    display: inline-block;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+.param-edit-part {
+    display: inline-block;
+    margin-right: 1rem;
+}
+.param-edit-number {
+    width: 3rem;
+}
+.param-edit-text {
+    width: 20rem;
+}

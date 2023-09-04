@@ -864,6 +864,9 @@ function genpageLoad() {
             updateAllModels(data.models);
             rawGenParamTypesFromServer = data.list.sort(paramSorter);
             gen_param_types = rawGenParamTypesFromServer;
+            paramConfig.preInit();
+            paramConfig.applyParamEdits(data.param_edits);
+            paramConfig.loadUserParamConfigTab();
             genInputs();
             genToolsList();
             reviseStatusBar();

@@ -7,6 +7,7 @@ using StableSwarmUI.Utils;
 using StableSwarmUI.Text2Image;
 using FreneticUtilities.FreneticExtensions;
 using System.Xml.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace StableSwarmUI.Accounts;
 
@@ -24,6 +25,9 @@ public class User
 
         /// <summary>This users stored settings data.</summary>
         public string RawSettings { get; set; } = "";
+
+        /// <summary>JSON blob of user customized parameter edits (if any).</summary>
+        public string RawParamEdits { get; set; } = "";
     }
 
     public User(SessionHandler sessions, DatabaseEntry data)
