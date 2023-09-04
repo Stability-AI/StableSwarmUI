@@ -131,7 +131,7 @@ public static class NetworkBackendUtils
                 if (File.Exists($"{dir}/venv/Scripts/python.exe"))
                 {
                     start.ArgumentList.Add(Path.GetFullPath($"{dir}/venv/Scripts/python.exe"));
-                    start.ArgumentList.Add(Path.GetFullPath($"{dir}/venv/Scripts"));
+                    start.ArgumentList.Add(Path.GetFullPath($"{dir}/venv"));
                 }
                 else if (File.Exists($"{dir}/../python_embeded/python.exe"))
                 {
