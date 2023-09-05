@@ -184,6 +184,8 @@ public static class NetworkBackendUtils
                 else if (File.Exists($"{dir}/../python_embeded/python.exe"))
                 {
                     start.FileName = Path.GetFullPath($"{dir}/../python_embeded/python.exe");
+                    start.WorkingDirectory = Path.GetFullPath($"{dir}/..");
+                    preArgs = "-s " + Path.GetFullPath(startScript)[(start.WorkingDirectory.Length + 1)..];
                     AddPath(Path.GetFullPath($"{dir}/../python_embeded"));
                 }
                 else
