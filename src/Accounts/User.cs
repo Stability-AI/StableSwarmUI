@@ -164,7 +164,7 @@ public class User
                 "seed" => $"{user_input.Get(T2IParamTypes.Seed)}",
                 "cfg_scale" => $"{user_input.Get(T2IParamTypes.CFGScale)}",
                 "width" => $"{user_input.Get(T2IParamTypes.Width)}",
-                "height" => $"{user_input.Get(T2IParamTypes.Height)}",
+                "height" => $"{user_input.GetImageHeight()}",
                 "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
                 "model" => user_input.Get(T2IParamTypes.Model)?.Name ?? "unknown",
                 "batch_id" => $"{batchIndex}",

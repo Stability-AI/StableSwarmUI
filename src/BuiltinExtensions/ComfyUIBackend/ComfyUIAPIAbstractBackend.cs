@@ -329,7 +329,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "seed" => $"{fixSeed(user_input.Get(T2IParamTypes.Seed)) + (int.TryParse(tagExtra, out int add) ? add : 0)}",
                     "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
                     "width" => $"{user_input.Get(T2IParamTypes.Width)}",
-                    "height" => $"{user_input.Get(T2IParamTypes.Height)}",
+                    "height" => $"{user_input.GetImageHeight()}",
                     "cfg_scale" => $"{user_input.Get(T2IParamTypes.CFGScale)}",
                     "subseed" => $"{user_input.Get(T2IParamTypes.VariationSeed)}",
                     "subseed_strength" => user_input.GetString(T2IParamTypes.VariationSeedStrength),
@@ -365,7 +365,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 {
                     int id = Interlocked.Increment(ref ImageIDDedup);
                     string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
-                    Image fixedImage = resize ? img.Resize(user_input.Get(T2IParamTypes.Width), user_input.Get(T2IParamTypes.Height)) : img;
+                    Image fixedImage = resize ? img.Resize(user_input.Get(T2IParamTypes.Width), user_input.GetImageHeight()) : img;
                     MultipartFormDataContent content = new()
                     {
                         { new ByteArrayContent(fixedImage.ImageData), "image", fname },

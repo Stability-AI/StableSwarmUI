@@ -29,6 +29,17 @@ public class T2IParamInput
         InterruptToken = session.SessInterrupt.Token;
     }
 
+    /// <summary>Gets the desired image width, automatically using alt-res parameter if needed.</summary>
+    public int GetImageHeight()
+    {
+        if (TryGet(T2IParamTypes.AltResolutionHeightMult, out double val)
+            && TryGet(T2IParamTypes.Width, out int width))
+        {
+            return (int)(val * width);
+        }
+        return Get(T2IParamTypes.Height, 512);
+    }
+
     /// <summary>Returns a perfect duplicate of this parameter input, with new reference addresses.</summary>
     public T2IParamInput Clone()
     {
@@ -147,8 +158,8 @@ public class T2IParamInput
         }
         object obj = param.Type switch
         {
-            T2IParamDataType.INTEGER => long.Parse(val),
-            T2IParamDataType.DECIMAL => double.Parse(val),
+            T2IParamDataType.INTEGER => param.SharpType == typeof(long) ? long.Parse(val) : int.Parse(val),
+            T2IParamDataType.DECIMAL => param.SharpType == typeof(double) ? double.Parse(val) : float.Parse(val),
             T2IParamDataType.BOOLEAN => bool.Parse(val),
             T2IParamDataType.TEXT or T2IParamDataType.DROPDOWN => val,
             T2IParamDataType.IMAGE => new Image(val),
@@ -157,6 +168,15 @@ public class T2IParamInput
             T2IParamDataType.LIST => val.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
             _ => throw new NotImplementedException()
         };
+        if (param.SharpType == typeof(int))
+        {
+            obj = (int)(long)obj; // WTF. Yes this is needed. No I can't explain why. Ternaries are broken maybe?
+        }
+        if (param.SharpType == typeof(float))
+        {
+            obj = (float)(double)obj;
+        }
+        Logs.Debug($"Is now {obj} as {obj.GetType()}");
         ValuesInput[param.ID] = obj;
     }
 

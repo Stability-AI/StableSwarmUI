@@ -116,7 +116,7 @@ public class WorkflowGenerator
                     n["inputs"] = new JObject()
                     {
                         ["batch_size"] = "1",
-                        ["height"] = g.UserInput.Get(T2IParamTypes.Height),
+                        ["height"] = g.UserInput.GetImageHeight(),
                         ["width"] = g.UserInput.Get(T2IParamTypes.Width)
                     };
                 }, "5");
@@ -138,9 +138,9 @@ public class WorkflowGenerator
                         ["crop_w"] = 0,
                         ["crop_h"] = 0,
                         ["width"] = g.UserInput.Get(T2IParamTypes.Width, 1024),
-                        ["height"] = g.UserInput.Get(T2IParamTypes.Height, 1024),
+                        ["height"] = g.UserInput.GetImageHeight(),
                         ["target_width"] = g.UserInput.Get(T2IParamTypes.Width, 1024),
-                        ["target_height"] = g.UserInput.Get(T2IParamTypes.Height, 1024)
+                        ["target_height"] = g.UserInput.GetImageHeight()
                     };
                 }, "6");
             }
@@ -504,7 +504,7 @@ public class WorkflowGenerator
                                 {
                                     ["image"] = new JArray() { "28", 0 },
                                     ["width"] = (int)Math.Round(g.UserInput.Get(T2IParamTypes.Width) * refineUpscale),
-                                    ["height"] = (int)Math.Round(g.UserInput.Get(T2IParamTypes.Height) * refineUpscale),
+                                    ["height"] = (int)Math.Round(g.UserInput.GetImageHeight() * refineUpscale),
                                     ["upscale_method"] = "bilinear",
                                     ["crop"] = "disabled"
                                 };

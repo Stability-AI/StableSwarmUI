@@ -49,7 +49,7 @@ public class GridGeneratorExtension : Extension
             }
             if (call.Grid.MinHeight == 0)
             {
-                call.Grid.MinHeight = call.Grid.InitialParams.Get(T2IParamTypes.Height);
+                call.Grid.MinHeight = call.Grid.InitialParams.GetImageHeight();
             }
             string cleaned = T2IParamTypes.CleanTypeName(param);
             if (cleaned == "gridgenpromptreplace")

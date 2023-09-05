@@ -79,7 +79,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
             ["seed"] = user_input.Get(T2IParamTypes.Seed),
             ["steps"] = user_input.Get(T2IParamTypes.Steps),
             ["width"] = user_input.Get(T2IParamTypes.Width),
-            ["height"] = user_input.Get(T2IParamTypes.Height),
+            ["height"] = user_input.GetImageHeight(),
             ["cfg_scale"] = user_input.Get(T2IParamTypes.CFGScale),
             ["subseed"] = user_input.Get(T2IParamTypes.VariationSeed),
             ["subseed_strength"] = user_input.Get(T2IParamTypes.VariationSeedStrength),

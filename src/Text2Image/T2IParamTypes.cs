@@ -78,11 +78,12 @@ public enum NumberViewType
 /// <param name="ImageShouldResize">(For Image-type params) If true, the image should resize to match the target resolution.</param>
 /// <param name="Subtype">The sub-type of the type - for models, this might be eg "Stable-Diffusion".</param>
 /// <param name="ID">The raw ID of this parameter (will be set when registering).</param>
+/// <param name="SharpType">The C# datatype.</param>
 /// 
 public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMax = 0,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null,
-    NumberViewType NumberView = NumberViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, string Subtype = null, string ID = null)
+    NumberViewType NumberView = NumberViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, string Subtype = null, string ID = null, Type SharpType = null)
 {
     public JObject ToNet(Session session)
     {
@@ -170,7 +171,7 @@ public class T2IParamTypes
     /// <summary>Register a new parameter type.</summary>
     public static T2IRegisteredParam<T> Register<T>(T2IParamType type)
     {
-        type = type with { ID = CleanTypeName(type.Name), Type = SharpTypeToDataType(typeof(T), type.GetValues != null) };
+        type = type with { ID = CleanTypeName(type.Name), Type = SharpTypeToDataType(typeof(T), type.GetValues != null), SharpType = typeof(T) };
         Types.Add(type.ID, type);
         return new T2IRegisteredParam<T>() { Type = type };
     }
@@ -200,13 +201,13 @@ public class T2IParamTypes
     public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod;
     public static T2IRegisteredParam<int> Images, Steps, Width, Height;
     public static T2IRegisteredParam<long> Seed, VariationSeed;
-    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength;
+    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult;
     public static T2IRegisteredParam<Image> InitImage, ControlNetImage;
     public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
     public static T2IRegisteredParam<List<Image>> PromptImages;
 
-    public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, GroupControlNet, AdvancedModelAddons;
+    public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, GroupControlNet, GroupAdvancedModelAddons;
 
     /// <summary>(For extensions) list of functions that provide fake types for given type names.</summary>
     public static List<Func<string, T2IParamInput, T2IParamType>> FakeTypeProviders = new();
@@ -303,18 +304,21 @@ public class T2IParamTypes
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion"
             ));
-        AdvancedModelAddons = new("Advanced Model Addons", Open: false, IsAdvanced: true);
+        GroupAdvancedModelAddons = new("Advanced Model Addons", Open: false, IsAdvanced: true);
         VAE = Register<T2IModel>(new("VAE", "The VAE (Variational Auto-Encoder) controls the translation between images and latent space.\nIf your images look faded out, or glitched, you may have the wrong VAE.\nAll models have a VAE baked in by default, this option lets you swap to a different one if you want to.",
-            "", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE", Group: AdvancedModelAddons
+            "", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE", Group: GroupAdvancedModelAddons
             ));
         Loras = Register<List<string>>(new("LoRAs", "LoRAs (Low-Rank-Adaptation Models) are a way to customize the content of a model without totally replacing it.\nYou can enable one or several LoRAs over top of one model.",
-            "", IsAdvanced: true, Toggleable: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelsFor(session).Select(m => m.Name).Order().ToList(), Group: AdvancedModelAddons, VisibleNormally: false
+            "", IsAdvanced: true, Toggleable: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelsFor(session).Select(m => m.Name).Order().ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false
             ));
         LoraWeights = Register<List<string>>(new("LoRA Weights", "Weight values for the LoRA model list.",
-            "", IsAdvanced: true, Toggleable: true, Group: AdvancedModelAddons, VisibleNormally: false
+            "", IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons, VisibleNormally: false
             ));
         BackendType = Register<string>(new("[Internal] Backend Type", "Which StableSwarmUI backend type should be used for this request.",
             "Any", GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true
+            ));
+        AltResolutionHeightMult = Register<double>(new("Alt Resolution Height Multiplier", "When enabled, the normal width parameter is used, and this value is multiplied by the width to derive the image height.",
+            "1", Min: 0, Max: 10, Step: 0.1, Examples: new[] { "0.5", "1", "1.5" }, IsAdvanced: true, Toggleable: true, NumberView: NumberViewType.SLIDER
             ));
     }
 

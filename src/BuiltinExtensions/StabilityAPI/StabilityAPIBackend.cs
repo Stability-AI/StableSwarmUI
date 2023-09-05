@@ -144,7 +144,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
         JObject obj = new()
         {
             ["cfg_scale"] = user_input.Get(T2IParamTypes.CFGScale),
-            ["height"] = user_input.Get(T2IParamTypes.Height),
+            ["height"] = user_input.GetImageHeight(),
             ["width"] = user_input.Get(T2IParamTypes.Width),
             ["samples"] = 1,
             ["steps"] = user_input.Get(T2IParamTypes.Steps),
