@@ -166,7 +166,14 @@ public static class NetworkBackendUtils
                 void AddPath(string path)
                 {
                     string above = Path.GetFullPath($"{path}/..");
-                    start.Environment["PATH"] = $"{path};{path}\\Scripts;{path}\\Lib;{path}\\Lib\\site-packages;{above};{Environment.GetEnvironmentVariable("PATH")}";
+                    // Strip python but be a little cautious about it
+                    string[] paths = Environment.GetEnvironmentVariable("PATH").Split(';').Where(p => !p.Contains("Python3") && !p.Contains("Programs\\Python") && !p.Contains("Python\\Python")).ToArray();
+                    string[] python = paths.Where(p => p.ToLowerFast().Contains("python")).ToArray();
+                    if (python.Any())
+                    {
+                        Logs.Debug($"Python paths left: {python.JoinString("; ")}");
+                    }
+                    start.Environment["PATH"] = $"{path};{path}\\Scripts;{path}\\Lib;{path}\\Lib\\site-packages;{above};{paths.JoinString(";")}";
                     Logs.Debug($"({nameSimple} launch) Adding path {path}");
                 }
                 if (File.Exists($"{dir}/venv/Scripts/python.exe"))
