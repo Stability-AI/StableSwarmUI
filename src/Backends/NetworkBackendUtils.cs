@@ -160,7 +160,7 @@ public static class NetworkBackendUtils
         string postArgs = extraArgs.Replace("{PORT}", $"{port}").Trim();
         if (startScript.EndsWith(".py"))
         {
-            preArgs = startScript.AfterLast("/");
+            preArgs = "-s " + startScript.AfterLast("/");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 void AddPath(string path)
