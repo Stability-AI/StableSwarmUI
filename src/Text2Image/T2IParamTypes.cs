@@ -215,7 +215,7 @@ public class T2IParamTypes
     public static void RegisterDefaults()
     {
         Prompt = Register<string>(new("Prompt", "The input prompt text that describes the image you want to generate.\nTell the AI what you want to see.",
-            "", Clean: ApplyStringEdit, Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100
+            "", Clean: ApplyStringEdit, Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100, VisibleNormally: false
             ));
         PromptImages = Register<List<Image>>(new("Prompt Images", "Images to include with the prompt, for eg ReVision or UnCLIP.",
             "", OrderPriority: -95, Toggleable: true, VisibleNormally: false, IsAdvanced: true, ImageShouldResize: false, HideFromMetadata: true // Has special internal handling

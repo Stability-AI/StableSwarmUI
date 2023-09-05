@@ -147,6 +147,11 @@ function genInputs(delay_final = false) {
                 }
                 lastGroup = groupName;
             }
+            if (param.id == 'prompt' && param.visible) {
+                
+                html += `<button class="generate-button" id="generate_button" onclick="getRequiredElementById('alt_generate_button').click()">Generate Image</button>
+                <br><span class="interrupt_line"><button class="interrupt-button interrupt-button-none" id="interrupt_button" onclick="getRequiredElementById('alt_interrupt_button').click()">Interrupt</button></span>`;
+            }
             let newData = getHtmlForParam(param, "input_");
             html += newData.html;
             if (newData.runnable) {
@@ -249,14 +254,13 @@ function genInputs(delay_final = false) {
         }
         let inputPrompt = document.getElementById('input_prompt');
         if (inputPrompt) {
-            let promptParent = findParentOfClass(inputPrompt, 'auto-input');
-            promptParent.dataset.visible_controlled = true;
-            promptParent.style.display = 'none';
             let altText = getRequiredElementById('alt_prompt_textbox');
-            inputPrompt.addEventListener('change', () => {
+            let update = () => {
                 altText.value = inputPrompt.value;
                 altText.dispatchEvent(new Event('input'));
-            });
+            };
+            inputPrompt.addEventListener('input', update);
+            inputPrompt.addEventListener('change', update);
         }
         let inputLoras = document.getElementById('input_loras');
         if (inputLoras) {
@@ -581,7 +585,9 @@ class ParamConfigurationClass {
     constructor() {
         this.edited_groups = {};
         this.edited_params = {};
+        this.extra_count = 0;
         this.param_edits = {};
+        this.saved_edits = {};
         this.container = getRequiredElementById('user_param_config_container');
         this.confirmer = getRequiredElementById('user_param_config_confirmer');
     }
@@ -619,9 +625,14 @@ class ParamConfigurationClass {
                     getRequiredElementById(`${groupPrefix}_reset`).addEventListener('click', () => {
                         for (let opt of ['open', 'advanced', 'priority']) {
                             let elem = getRequiredElementById(`${groupPrefix}__${opt}`);
+                            delete elem.dataset.orig_val;
                             setInputVal(elem, this.original_groups[groupId][opt]);
                             elem.dispatchEvent(new Event('input'));
                         }
+                        delete this.edited_groups[groupId];
+                        delete this.param_edits.groups[groupId];
+                        this.extra_count++;
+                        this.updateConfirmer();
                     });
                     for (let opt of ['open', 'advanced', 'priority']) {
                         let elem = getRequiredElementById(`${groupPrefix}__${opt}`);
@@ -630,8 +641,8 @@ class ParamConfigurationClass {
                             if (!this.edited_groups[param.group.id]) {
                                 this.edited_groups[param.group.id] = { changed: {} };
                             }
-                            let val = `${getInputVal(elem)}`;
-                            if (val == elem.dataset.orig_val) {
+                            let val = getInputVal(elem);
+                            if (`${val}` == elem.dataset.orig_val) {
                                 delete this.edited_groups[param.group.id].changed[opt];
                                 if (Object.keys(this.edited_groups[param.group.id].changed).length == 0) {
                                     delete this.edited_groups[param.group.id];
@@ -678,6 +689,7 @@ class ParamConfigurationClass {
                     if (!elem) {
                         continue;
                     }
+                    delete elem.dataset.orig_val;
                     let val = this.original_param_types.find(p => p.id == param.id)[opt];
                     if (opt == 'examples') {
                         val = val ? val.join(' || ') : '';
@@ -685,6 +697,10 @@ class ParamConfigurationClass {
                     setInputVal(elem, val);
                     elem.dispatchEvent(new Event('input'));
                 }
+                delete this.edited_params[param.id];
+                delete this.param_edits.params[param.id];
+                this.extra_count++;
+                this.updateConfirmer();
             });
             for (let opt of ['visible', 'do_not_save', 'advanced', 'priority', 'min', 'max', 'view_max', 'step', 'number_view_type', 'examples']) {
                 let elem = document.getElementById(`${paramPrefix}__${opt}`);
@@ -696,8 +712,8 @@ class ParamConfigurationClass {
                     if (!this.edited_params[param.id]) {
                         this.edited_params[param.id] = { changed: {} };
                     }
-                    let val = `${getInputVal(elem)}`;
-                    if (val == elem.dataset.orig_val) {
+                    let val = getInputVal(elem);
+                    if (`${val}` == elem.dataset.orig_val) {
                         delete this.edited_params[param.id].changed[opt];
                         if (Object.keys(this.edited_params[param.id].changed).length == 0) {
                             delete this.edited_params[param.id];
@@ -714,7 +730,13 @@ class ParamConfigurationClass {
 
     /** Applies a map of parameter edits provided by the server. */
     applyParamEdits(edits) {
+        let doReplace = rawGenParamTypesFromServer == gen_param_types;
+        rawGenParamTypesFromServer = JSON.parse(JSON.stringify(this.original_param_types));
+        if (doReplace) {
+            gen_param_types = rawGenParamTypesFromServer;
+        }
         this.param_edits = edits;
+        this.saved_edits = JSON.parse(JSON.stringify(edits));
         if (!edits) {
             return;
         }
@@ -744,7 +766,7 @@ class ParamConfigurationClass {
     /** Updates the save/cancel confirm menu. */
     updateConfirmer() {
         let data = Object.values(this.edited_groups).concat(Object.values(this.edited_params)).map(g => Object.keys(g.changed).length);
-        let count = data.length == 0 ? 0 : data.reduce((a, b) => a + b);
+        let count = (data.length == 0 ? 0 : data.reduce((a, b) => a + b)) + this.extra_count;
         getRequiredElementById(`user_param_config_edit_count`).innerText = count;
         this.confirmer.style.display = count == 0 ? 'none' : 'block';
     }
@@ -778,6 +800,7 @@ class ParamConfigurationClass {
         }
         this.edited_groups = [];
         this.edited_params = [];
+        this.extra_count = 0;
         this.updateConfirmer();
         this.applyParamEdits(this.param_edits);
         genInputs();
@@ -802,6 +825,8 @@ class ParamConfigurationClass {
         }
         this.edited_groups = [];
         this.edited_params = [];
+        this.param_edits = JSON.parse(JSON.stringify(this.saved_edits));
+        this.extra_count = 0;
         this.updateConfirmer();
     }
 }
