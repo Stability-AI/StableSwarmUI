@@ -110,7 +110,7 @@ class GridGenClass {
             }
         };
         inputBox.addEventListener('keydown', e => {
-            if (e.key == 'Tab' && this.popover) {
+            if ((e.key == 'Tab' || (e.key == 'Enter' && !e.shiftKey)) && this.popover) {
                 popoverSelected().click();
             }
             else if (e.key == 'ArrowDown' && this.popover) {
