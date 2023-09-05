@@ -184,7 +184,7 @@ function setCurrentImage(src, metadata = '', batchId = '') {
     curImg.appendChild(data);
 }
 
-function appendImage(container, imageSrc, batchId, textPreview, metadata = '', type = 'legacy') {
+function appendImage(container, imageSrc, batchId, textPreview, metadata = '', type = 'legacy', prepend = true) {
     if (typeof container == 'string') {
         container = getRequiredElementById(container);
     }
@@ -206,7 +206,12 @@ function appendImage(container, imageSrc, batchId, textPreview, metadata = '', t
         textBlock.innerText = textPreview;
         div.appendChild(textBlock);
     }
-    container.appendChild(div);
+    if (prepend) {
+        container.prepend(div);
+    }
+    else {
+        container.appendChild(div);
+    }
     return div;
 }
 
