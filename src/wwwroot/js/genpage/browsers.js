@@ -356,9 +356,7 @@ class GenPageBrowserClass {
             filterInput.addEventListener('input', () => {
                 this.filter = filterInput.value.toLowerCase();
                 localStorage.setItem(`browser_${this.id}_filter`, this.filter);
-                this.contentDiv.innerHTML = '';
-                this.buildContentList(this.contentDiv, files);
-                this.makeVisible(this.contentDiv);
+                this.update();
             });
             let buttonArr = buttons.getElementsByTagName('button');
             let refreshButton = buttonArr[0];
