@@ -26,4 +26,3 @@ Argument | Default | Description
 `--proxy-region` | (None) | If specified, sets the proxy (ngrok/cloudflared) region. If unspecified, defaults to closest.
 `--ngrok-basic-auth` | (None) | If specified, sets an ngrok basic-auth requirement to access.
 `--launch_mode` | `none` | Can be used to override the 'LaunchMode' server setting.
-`--explicit_shell` | `none` | Can be used to force an explicit shell can when launching backend scripts, eg `--explicit_shell bash`.

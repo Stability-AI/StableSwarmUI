@@ -10,8 +10,11 @@ using System.Runtime.InteropServices;
 
 namespace StableSwarmUI.Backends;
 
+/// <summary>General utility for backends that self-start or use network APIs.</summary>
 public static class NetworkBackendUtils
 {
+    #region Network
+    /// <summary>Create and preconfigure a basic <see cref="HttpClient"/> instance to make web requests with.</summary>
     public static HttpClient MakeHttpClient()
     {
         HttpClient client = new();
@@ -20,6 +23,41 @@ public static class NetworkBackendUtils
         return client;
     }
 
+    /// <summary>Parses an <see cref="HttpResponseMessage"/> into a JSON object result.</summary>
+    /// <exception cref="InvalidOperationException">Thrown when the server returns invalid data (error code or other non-JSON).</exception>
+    /// <exception cref="NotImplementedException">Thrown when an invalid JSON type is requested.</exception>
+    public static async Task<JType> Parse<JType>(HttpResponseMessage message) where JType : class
+    {
+        string content = await message.Content.ReadAsStringAsync();
+        if (content.StartsWith("500 Internal Server Error"))
+        {
+            throw new InvalidOperationException($"Server turned 500 Internal Server Error, something went wrong: {content}");
+        }
+        try
+        {
+            if (typeof(JType) == typeof(JObject)) // TODO: Surely C# has syntax for this?
+            {
+                return JObject.Parse(content) as JType;
+            }
+            else if (typeof(JType) == typeof(JArray))
+            {
+                return JArray.Parse(content) as JType;
+            }
+            else if (typeof(JType) == typeof(string))
+            {
+                return content as JType;
+            }
+        }
+        catch (JsonReaderException ex)
+        {
+            throw new InvalidOperationException($"Failed to read JSON '{content}' with message: {ex.Message}");
+        }
+        throw new NotImplementedException();
+    }
+    #endregion
+
+    #region Self Start
+    /// <summary>Returns true if the path given looks valid as a start-script for a backend, or false if not with an error message explaining why.</summary>
     public static bool IsValidStartPath(string backendLabel, string path, string ext)
     {
         if (path.Length < 5)
@@ -50,48 +88,53 @@ public static class NetworkBackendUtils
         return true;
     }
 
-    public static async Task<JType> Parse<JType>(HttpResponseMessage message) where JType : class
+    /// <summary>Clean up a <see cref="ProcessStartInfo"/> environment of python env vars that cause problems.</summary>
+    public static void CleanEnvironmentOfPythonMess(ProcessStartInfo start, string prefix)
     {
-        string content = await message.Content.ReadAsStringAsync();
-        if (content.StartsWith("500 Internal Server Error"))
+        void RemoveEnvLoudly(string key)
         {
-            throw new InvalidOperationException($"Server turned 500 Internal Server Error, something went wrong: {content}");
-        }
-        try
-        {
-            if (typeof(JType) == typeof(JObject)) // TODO: Surely C# has syntax for this?
+            if (start.Environment.TryGetValue(key, out string val))
             {
-                return JObject.Parse(content) as JType;
-            }
-            else if (typeof(JType) == typeof(JArray))
-            {
-                return JArray.Parse(content) as JType;
-            }
-            else if (typeof(JType) == typeof(string))
-            {
-                return content as JType;
+                start.Environment.Remove(key);
+                Logs.Debug($"{prefix}Removing environment variable {key} which was {val}");
             }
         }
-        catch (JsonReaderException ex)
+        RemoveEnvLoudly("PYTHONHOME");
+        RemoveEnvLoudly("PYTHONPATH");
+        if (start.Environment.TryGetValue("LIB", out string libVal) && libVal.Contains("python"))
         {
-            throw new InvalidOperationException($"Failed to read JSON '{content}' with message: {ex.Message}");
+            start.Environment.Remove("LIB");
+            Logs.Debug($"{prefix}Removing environment variable LIB due to being a python-lib val which was {libVal}");
         }
-        throw new NotImplementedException();
+        start.Environment["PYTHONUNBUFFERED"] = "true";
     }
 
+    /// <summary>Internal tracking value of what port to use next.</summary>
     public static volatile int NextPort = 7820;
 
-    public static string ExplicitShell = null;
+    /// <summary>Get the next available port to use, as an incremental value with checks against port usage.</summary>
+    public static int GetNextPort()
+    {
+        int port = Interlocked.Increment(ref NextPort);
+        while (Utilities.IsPortTaken(port))
+        {
+            port = Interlocked.Increment(ref NextPort);
+        }
+        return port;
+    }
 
+    /// <summary>Starts a self-start backend based on the user-configuration and backend-specifics provided.</summary>
     public static Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput)
     {
         return DoSelfStart(startScript, nameSimple, gpuId, extraArgs, status => backend.Status = status, async (b) => { await initInternal(b); return backend.Status == BackendStatus.RUNNING; }, takeOutput, () => backend.Status);
     }
 
+    /// <summary>Starts a self-start backend based on the user-configuration and backend-specifics provided.</summary>
     public static async Task DoSelfStart(string startScript, string nameSimple, int gpuId, string extraArgs, Action<BackendStatus> reviseStatus, Func<bool, Task<bool>> initInternal, Action<int, Process> takeOutput, Func<BackendStatus> getStatus)
     {
         if (string.IsNullOrWhiteSpace(startScript))
         {
+            Logs.Debug($"Cancelling start of {nameSimple} as it has an empty start script.");
             reviseStatus(BackendStatus.DISABLED);
             return;
         }
@@ -103,55 +146,71 @@ public static class NetworkBackendUtils
             reviseStatus(BackendStatus.ERRORED);
             return;
         }
-        int port = Interlocked.Increment(ref NextPort);
-        while (Utilities.IsPortTaken(port))
-        {
-            port = Interlocked.Increment(ref NextPort);
-        }
-        string scriptName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "./launchtools/generic-launcher.bat" : "./launchtools/generic-launcher.sh";
+        int port = GetNextPort();
+        string dir = Path.GetDirectoryName(path);
         ProcessStartInfo start = new()
         {
-            FileName = ExplicitShell ?? scriptName,
             RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WorkingDirectory = dir
         };
-        if (ExplicitShell is not null)
-        {
-            start.ArgumentList.Add(scriptName);
-        }
-        start.ArgumentList.Add($"{gpuId}");
-        string dir = Path.GetDirectoryName(path);
-        start.ArgumentList.Add(dir);
-        start.ArgumentList.Add(path.AfterLast('/'));
-        start.ArgumentList.Add(extraArgs.Replace("{PORT}", $"{port}").Trim());
+        CleanEnvironmentOfPythonMess(start, $"({nameSimple} launch) ");
+        start.Environment["CUDA_VISIBLE_DEVICES"] = $"{gpuId}";
+        string preArgs = "";
+        string postArgs = extraArgs.Replace("{PORT}", $"{port}").Trim();
         if (startScript.EndsWith(".py"))
         {
-            start.ArgumentList.Add("py");
+            preArgs = startScript.AfterLast("/");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
+                void AddPath(string path)
+                {
+                    string above = Path.GetFullPath($"{path}/..");
+                    start.Environment["PATH"] = $"{path};{path}\\Scripts;{path}\\Lib;{path}\\Lib\\site-packages;{above};{Environment.GetEnvironmentVariable("PATH")}";
+                    Logs.Debug($"({nameSimple} launch) Adding path {path}");
+                }
                 if (File.Exists($"{dir}/venv/Scripts/python.exe"))
                 {
-                    start.ArgumentList.Add(Path.GetFullPath($"{dir}/venv/Scripts/python.exe"));
-                    start.ArgumentList.Add(Path.GetFullPath($"{dir}/venv"));
+                    start.FileName = Path.GetFullPath($"{dir}/venv/Scripts/python.exe");
+                    AddPath(Path.GetFullPath($"{dir}/venv"));
                 }
                 else if (File.Exists($"{dir}/../python_embeded/python.exe"))
                 {
-                    start.ArgumentList.Add(Path.GetFullPath($"{dir}/../python_embeded/python.exe"));
-                    start.ArgumentList.Add(Path.GetFullPath($"{dir}/../python_embeded"));
+                    start.FileName = Path.GetFullPath($"{dir}/../python_embeded/python.exe");
+                    AddPath(Path.GetFullPath($"{dir}/../python_embeded"));
                 }
                 else
                 {
-                    start.ArgumentList.Add("python");
-                    start.ArgumentList.Add("");
+                    start.FileName = "python";
                 }
             }
-            Logs.Debug($"Will use python: {start.ArgumentList.Last()}");
+            else
+            {
+                void AddPath(string path)
+                {
+                    string above = Path.GetFullPath($"{path}/..");
+                    string libFolder = Directory.GetDirectories(path, "lib").FirstOrDefault();
+                    string libPath = libFolder == null ? "" : Path.GetFullPath(Utilities.CombinePathWithAbsolute(path, "lib", libFolder));
+                    start.Environment["PATH"] = $"{path}:{path}/bin:{path}/lib:{libPath}:{libPath}/site-packages:{above}:{Environment.GetEnvironmentVariable("PATH")}";
+                    Logs.Debug($"({nameSimple} launch) Adding path {path} and {libPath}");
+                }
+                if (File.Exists($"{dir}/venv/bin/python3"))
+                {
+                    start.FileName = Path.GetFullPath($"{dir}/venv/bin/python3");
+                    AddPath(Path.GetFullPath($"{dir}/venv"));
+                }
+                else
+                {
+                    start.FileName = "python3";
+                }
+            }
+            Logs.Debug($"({nameSimple} launch) Will use python: {start.FileName}");
         }
         else
         {
-            start.ArgumentList.Add("shellexec");
-            start.ArgumentList.Add("none");
-            Logs.Debug($"Will shellexec");
+            Logs.Debug($"({nameSimple} launch) Will shellexec");
         }
+        start.Arguments = $"{preArgs} {postArgs}".Trim();
         BackendStatus status = BackendStatus.LOADING;
         reviseStatus(status);
         Process runningProcess = new() { StartInfo = start };
@@ -172,9 +231,24 @@ public static class NetworkBackendUtils
                 status = BackendStatus.ERRORED;
                 reviseStatus(status);
             }
-            Logs.Info($"Self-Start {nameSimple} on port {port} exited.");
         }
         new Thread(MonitorLoop) { Name = $"SelfStart{nameSimple}_{port}_Monitor" }.Start();
+        void MonitorErrLoop()
+        {
+            StringBuilder errorLog = new();
+            string line;
+            while ((line = runningProcess.StandardError.ReadLine()) != null)
+            {
+                Logs.Debug($"{nameSimple} launcher ERROR: {line}");
+                errorLog.AppendLine($"{nameSimple} error: {line}");
+                if (errorLog.Length > 1024 * 50)
+                {
+                    errorLog = new StringBuilder(errorLog.ToString()[(1024 * 10)..]);
+                }
+            }
+            Logs.Info($"Self-Start {nameSimple} on port {port} exited (if something failed, launch with `--loglevel debug` to see why!)");
+        }
+        new Thread(MonitorErrLoop) { Name = $"SelfStart{nameSimple}_{port}_MonitorErr" }.Start();
         while (status == BackendStatus.LOADING)
         {
             await Task.Delay(TimeSpan.FromSeconds(1));
@@ -188,4 +262,5 @@ public static class NetworkBackendUtils
         }
         Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
     }
+    #endregion
 }
