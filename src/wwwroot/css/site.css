@@ -203,6 +203,10 @@ body {
     border-radius: 0.3rem;
     background-color: transparent;
 }
+.auto-input-prompt-tokencount {
+    float: right;
+    color: var(--text-soft);
+}
 .auto-text-block {
     width: 100%;
 }

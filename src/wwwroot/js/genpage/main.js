@@ -767,6 +767,7 @@ function pageSizer() {
             inputPrompt.value = altText.value;
         }
         setCookie(`lastparam_input_prompt`, altText.value, 0.25);
+        textPromptDoCount(altText);
     });
     function altTextSize() {
         altText.style.height = 'auto';

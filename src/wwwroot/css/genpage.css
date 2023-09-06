@@ -661,6 +661,17 @@ body {
     border-radius: 0.2rem;
     flex-grow: 10;
 }
+.alt-text-tokencount-wrapper {
+    position: relative;
+    width: 0;
+    height: 0;
+    left: calc(100% - 7.2rem);
+}
+.alt-text-tokencount {
+    position: relative;
+    top: -1.5rem;
+    left: 0;
+}
 .alt-prompt-buttons {
     vertical-align: top;
     padding-top: 0.1rem;

@@ -182,9 +182,32 @@ function triggerChangeFor(elem) {
     }
 }
 
-function textInputSize(elem) {
+function textPromptDoCount(elem) {
+    let tokenCount = elem.parentElement.querySelector('.auto-input-prompt-tokencount');
+    function countTokens() {
+        elem.dataset.has_token_count_running = true;
+        genericRequest('CountTokens', { text: elem.value }, data => {
+            let chunks = Math.max(75, Math.ceil(data.count / 75) * 75);
+            tokenCount.innerText = `${data.count}/${chunks}`;
+            delete elem.dataset.has_token_count_running;
+            if (elem.dataset.needs_token_recount) {
+                delete elem.dataset.needs_token_recount;
+                countTokens();
+            }
+        });
+    }
+    if (elem.dataset.has_token_count_running) {
+        elem.dataset.needs_token_recount = true;
+    }
+    else {
+        countTokens();
+    }
+}
+
+function textPromptInputHandle(elem) {
     elem.style.height = '0px';
     elem.style.height = `max(3.4rem, ${elem.scrollHeight + 5}px)`;
+    textPromptDoCount(elem);
 }
 
 function doToggleEnable(id) {
@@ -298,11 +321,12 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
 function makeTextInput(featureid, id, name, description, value, isPrompt, placeholder, toggles = false, genPopover = false) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
-    let onInp = isPrompt ? ' oninput="textInputSize(this)"' : '';
+    let onInp = isPrompt ? ' oninput="textPromptInputHandle(this)"' : '';
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-text-box${(isPrompt ? "" : " auto-input-flex")}"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
+        <span class="auto-input-prompt-tokencount" title="Text-Encoder token count / chunk-size">0/75</span>
         <textarea class="auto-text${(isPrompt ? " auto-text-block" : "")}" id="${id}" rows="${isPrompt ? 2 : 1}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
         <button class="interrupt-button image-clear-button" style="display: none;">Clear Images</button>
         <div class="added-image-area"></div>
