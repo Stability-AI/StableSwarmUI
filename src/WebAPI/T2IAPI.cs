@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace StableSwarmUI.WebAPI;
 
-/// <summary>Text-to-Image API routes</summary>
+/// <summary>Text-to-Image API routes.</summary>
 public static class T2IAPI
 {
     public static void Register()

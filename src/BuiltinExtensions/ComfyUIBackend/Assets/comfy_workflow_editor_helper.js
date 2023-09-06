@@ -87,7 +87,7 @@ function comfyBuildParams(callback) {
         let params = {};
         let inputPrefix = 'comfyrawworkflowinput';
         let idsUsed = [];
-        function addSimpleParam(name, defVal, type, groupName, values, number_view_type, min, max, step, inputIdDirect, groupId, priority, visible = true, toggles = true, revalueGetter = null) {
+        function addSimpleParam(name, defVal, type, groupName, values, view_type, min, max, step, inputIdDirect, groupId, priority, visible = true, toggles = true, revalueGetter = null) {
             let inputId = inputIdDirect;
             let counter = 0;
             while (inputId in params) {
@@ -100,7 +100,7 @@ function comfyBuildParams(callback) {
                 type: type,
                 description: `The ${name} input for ${groupName} (${type})`,
                 values: values,
-                number_view_type: number_view_type,
+                view_type: view_type,
                 min: min,
                 max: max,
                 step: step,
@@ -245,7 +245,7 @@ function comfyBuildParams(callback) {
                     }
                 }
                 let revalueGetter = null;
-                let type, values = null, min = -9999999999, max = 9999999999, number_view_type = 'big', step = 1;
+                let type, values = null, min = -9999999999, max = 9999999999, view_type = 'normal', step = 1;
                 if (typeof val == 'number') {
                     let asSeed = false;
                     if (inputId == 'batch_size') {
@@ -254,7 +254,7 @@ function comfyBuildParams(callback) {
                     }
                     if (['seed', 'noise_seed'].includes(inputId)) {
                         type = 'integer';
-                        number_view_type = 'seed';
+                        view_type = 'seed';
                         asSeed = true;
                         if (nodeId in nodeIsRandomize) {
                             val = -1;
@@ -262,7 +262,7 @@ function comfyBuildParams(callback) {
                     }
                     else if (['width', 'height'].includes(inputId)) {
                         type = 'integer';
-                        number_view_type = 'pot_slider';
+                        view_type = 'pot_slider';
                         min = 128;
                         max = 8192;
                         step = 64;
@@ -272,7 +272,7 @@ function comfyBuildParams(callback) {
                         min = 0;
                         max = 1;
                         step = 0.05;
-                        number_view_type = 'slider';
+                        view_type = 'slider';
                     }
                     else if (inputId == 'cfg') {
                         type = 'decimal';
@@ -289,14 +289,14 @@ function comfyBuildParams(callback) {
                     else {
                         if (paramDataRaw && paramDataRaw[0] == 'INT' && paramDataRaw.length == 2) {
                             type = 'integer';
-                            number_view_type = 'big';
+                            view_type = 'big';
                             min = paramDataRaw[1].min;
                             max = paramDataRaw[1].max;
                             step = 1;
                         }
                         else if (paramDataRaw && paramDataRaw[0] == 'FLOAT' && paramDataRaw.length == 2) {
                             type = 'decimal';
-                            number_view_type = 'slider';
+                            view_type = 'slider';
                             min = paramDataRaw[1].min;
                             max = paramDataRaw[1].max;
                             step = (max - min) * 0.01;
@@ -343,6 +343,9 @@ function comfyBuildParams(callback) {
                             };
                         }
                         else {
+                            if (node.class_type.includes('CLIP')) {
+                                view_type = 'prompt';
+                            }
                             type = 'text';
                         }
                     }
@@ -361,7 +364,7 @@ function comfyBuildParams(callback) {
                 }
                 if (!idsUsed.includes(inputIdDirect)) {
                     idsUsed.push(inputIdDirect);
-                    addSimpleParam(inputLabel, val, type, groupLabel, values, number_view_type, min, max, step, inputIdDirect, groupId, priority, true, true, revalueGetter);
+                    addSimpleParam(inputLabel, val, type, groupLabel, values, view_type, min, max, step, inputIdDirect, groupId, priority, true, true, revalueGetter);
                 }
                 return inputIdDirect;
             }
@@ -492,7 +495,7 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
         let val = paramVal[param.id];
         if (val) {
             // Comfy can do full 2^64 but that causes backend issues (can't have 2^64 *and* -1 as options, so...) so cap to 2^63
-            if (param.type == 'integer' && param.number_view_type == 'seed' && val > 2**63) {
+            if (param.type == 'integer' && param.view_type == 'seed' && val > 2**63) {
                 val = -1;
             }
             if (applyValues) {

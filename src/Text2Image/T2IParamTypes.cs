@@ -34,8 +34,12 @@ public enum T2IParamDataType
 }
 
 /// <summary>Which format to display a number in.</summary>
-public enum NumberViewType
+public enum ParamViewType
 {
+    /// <summary>Use whatever the default is.</summary>
+    NORMAL,
+    /// <summary>Prompt-text box.</summary>
+    PROMPT,
     /// <summary>Small numeric input box.</summary>
     SMALL,
     /// <summary>Large numeric input box.</summary>
@@ -70,7 +74,7 @@ public enum NumberViewType
 /// <param name="Toggleable">If true, the setting's presence can be toggled on/off.</param>
 /// <param name="OrderPriority">Value to help sort parameter types appropriately.</param>
 /// <param name="Group">Optional grouping info.</param>
-/// <param name="NumberView">How to display a number input.</param>
+/// <param name="ViewType">How to display a number input.</param>
 /// <param name="HideFromMetadata">Whether to hide this parameter from image metadata.</param>
 /// <param name="AlwaysRetain">If true, the parameter will be retained when otherwise it would be removed (for example, by comfy workflow usage).</param>
 /// <param name="Type">The type of the type - text vs integer vs etc (will be set when registering).</param>
@@ -83,7 +87,7 @@ public enum NumberViewType
 public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMax = 0,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null,
-    NumberViewType NumberView = NumberViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, string Subtype = null, string ID = null, Type SharpType = null)
+    ParamViewType ViewType = ParamViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, string Subtype = null, string ID = null, Type SharpType = null)
 {
     public JObject ToNet(Session session)
     {
@@ -109,7 +113,7 @@ public record class T2IParamType(string Name, string Description, string Default
             ["group"] = Group?.ToNet(session),
             ["always_retain"] = AlwaysRetain,
             ["do_not_save"] = DoNotSave,
-            ["number_view_type"] = NumberView.ToString().ToLowerFast()
+            ["view_type"] = ViewType.ToString().ToLowerFast()
         };
     }
 }
@@ -216,56 +220,57 @@ public class T2IParamTypes
     public static void RegisterDefaults()
     {
         Prompt = Register<string>(new("Prompt", "The input prompt text that describes the image you want to generate.\nTell the AI what you want to see.",
-            "", Clean: ApplyStringEdit, Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100, VisibleNormally: false
+            "", Clean: ApplyStringEdit, Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100, VisibleNormally: false, ViewType: ParamViewType.PROMPT
             ));
         PromptImages = Register<List<Image>>(new("Prompt Images", "Images to include with the prompt, for eg ReVision or UnCLIP.",
             "", OrderPriority: -95, Toggleable: true, VisibleNormally: false, IsAdvanced: true, ImageShouldResize: false, HideFromMetadata: true // Has special internal handling
             ));
         ReVisionStrength = Register<double>(new("ReVision Strength", "How strong to apply ReVision image inputs.",
-            "1", OrderPriority: -94, Min: 0, Max: 10, Step: 0.1, Toggleable: true, NumberView: NumberViewType.SLIDER
+            "1", OrderPriority: -94, Min: 0, Max: 10, Step: 0.1, Toggleable: true, ViewType: ParamViewType.SLIDER
             ));
+        GroupAdvancedModelAddons = new("Advanced Model Addons", Open: false, IsAdvanced: true);
         ReVisionModel = Register<T2IModel>(new("ReVision Model", "The CLIP Vision model to use for ReVision inputs.",
-            "", Subtype: "ClipVision", IsAdvanced: true, Toggleable: true
+            "", Subtype: "ClipVision", IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons
             ));
         NegativePrompt = Register<string>(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.\nTell the AI things you don't want to see.",
-            "", Clean: ApplyStringEdit, Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90
+            "", Clean: ApplyStringEdit, Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90, ViewType: ParamViewType.PROMPT
             ));
         GroupCore = new("Core Parameters", Toggles: false, Open: true, OrderPriority: -50);
         Images = Register<int>(new("Images", "How many images to generate at once.",
             "1", Min: 1, Max: 10000, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: GroupCore
             ));
         Seed = Register<long>(new("Seed", "Image seed.\n-1 = random.\nDifferent seeds produce different results for the same prompt.",
-            "-1", Min: -1, Max: long.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -30, NumberView: NumberViewType.SEED, Group: GroupCore
+            "-1", Min: -1, Max: long.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -30, ViewType: ParamViewType.SEED, Group: GroupCore
             ));
         Steps = Register<int>(new("Steps", "How many times to run the model.\nMore steps = better quality, but more time.\n20 is a good baseline for speed, 40 is good for maximizing quality.\nYou can go much higher, but it quickly becomes pointless above 70 or so.",
-            "20", Min: 1, Max: 200, ViewMax: 100, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: GroupCore, NumberView: NumberViewType.SLIDER
+            "20", Min: 1, Max: 200, ViewMax: 100, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -20, Group: GroupCore, ViewType: ParamViewType.SLIDER
             ));
         CFGScale = Register<double>(new("CFG Scale", "How strongly to scale prompt input.\nToo-high values can cause corrupted/burnt images, too-low can cause nonsensical images.\n7 is a good baseline. Normal usages vary between 5 and 9.",
-            "7", Min: 0, Max: 100, ViewMax: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, NumberView: NumberViewType.SLIDER, Group: GroupCore
+            "7", Min: 0, Max: 100, ViewMax: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, ViewType: ParamViewType.SLIDER, Group: GroupCore
             ));
         GroupVariation = new("Variation Seed", Toggles: true, Open: false, OrderPriority: -17);
         VariationSeed = Register<long>(new("Variation Seed", "Image-variation seed.\nCombined partially with the original seed to create a similar-but-different image for the same seed.\n-1 = random.",
-            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, NumberView: NumberViewType.SEED, Group: GroupVariation, FeatureFlag: "variation_seed"
+            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, ViewType: ParamViewType.SEED, Group: GroupVariation, FeatureFlag: "variation_seed"
             ));
         VariationSeedStrength = Register<double>(new("Variation Seed Strength", "How strongly to apply the variation seed.\n0 = don't use, 1 = replace the base seed entirely. 0.5 is a good value.",
-            "0", Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, NumberView: NumberViewType.SLIDER, Group: GroupVariation, FeatureFlag: "variation_seed"
+            "0", Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, ViewType: ParamViewType.SLIDER, Group: GroupVariation, FeatureFlag: "variation_seed"
             ));
         GroupResolution = new("Resolution", Toggles: false, Open: false, OrderPriority: -11);
         AspectRatio = Register<string>(new("Aspect Ratio", "Image aspect ratio. Some models can stretch better than others.",
             "1:1", GetValues: (_) => new() { "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom" }, OrderPriority: -11, Group: GroupResolution
             ));
         Width = Register<int>(new("Width", "Image width, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
-            "512", Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, NumberView: NumberViewType.POT_SLIDER, Group: GroupResolution
+            "512", Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, ViewType: ParamViewType.POT_SLIDER, Group: GroupResolution
             ));
         Height = Register<int>(new("Height", "Image height, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
-            "512", Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -9, NumberView: NumberViewType.POT_SLIDER, Group: GroupResolution
+            "512", Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -9, ViewType: ParamViewType.POT_SLIDER, Group: GroupResolution
             ));
         GroupInitImage = new("Init Image", Toggles: true, Open: false, OrderPriority: -5);
         InitImage = Register<Image>(new("Init Image", "Init-image, to edit an image using diffusion.\nThis process is sometimes called 'img2img' or 'Image To Image'.",
             "", OrderPriority: -5, Group: GroupInitImage
             ));
         InitImageCreativity = Register<double>(new("Init Image Creativity", "Higher values make the generation more creative, lower values follow the init image closer.\nSometimes referred to as 'Denoising Strength' for 'img2img'.",
-            "0.6", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, NumberView: NumberViewType.SLIDER, Group: GroupInitImage
+            "0.6", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, ViewType: ParamViewType.SLIDER, Group: GroupInitImage
             ));
         GroupRefiners = new("Refiner", Toggles: true, Open: false, OrderPriority: -3);
         static List<string> listRefinerModels(Session s)
@@ -283,13 +288,13 @@ public class T2IParamTypes
             "", GetValues: listRefinerModels, OrderPriority: -5, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true, Subtype: "Stable-Diffusion"
             ));
         RefinerControl = Register<double>(new("Refine Control Percentage", "Higher values give the refiner more control, lower values give the base more control.\nThis is similar to 'Init Image Creativity', but for the refiner. This controls how many steps the refiner takes.",
-            "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, NumberView: NumberViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
+            "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
             ));
         RefinerMethod = Register<string>(new("Refiner Method", "How to apply the refiner. Different methods create different results.\n'StepSwap' swaps the model after x steps during generation. 'PostApply' runs the base in full, then runs the refiner with an Init Image.",
             "StepSwap", GetValues: (_) => new() { "StepSwap", "PostApply" }, OrderPriority: -3, Group: GroupRefiners, FeatureFlag: "refiners"
             ));
         RefinerUpscale = Register<double>(new("Refiner Upscale", "Optional upscale of the image between the base and refiner stage.\nSometimes referred to as 'high-res fix'.\nSetting to '1' disables the upscale.",
-            "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, NumberView: NumberViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true
+            "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true
             ));
         GroupControlNet = new("ControlNet", Toggles: true, Open: false, OrderPriority: -1);
         ControlNetImage = Register<Image>(new("ControlNet Image Input", "The image to use as the input to ControlNet guidance.\nThis image will be preprocessed by the chosen preprocessor.\nIf ControlNet is enabled, but this input is not, Init Image will be used instead.",
@@ -299,12 +304,11 @@ public class T2IParamTypes
             "", FeatureFlag: "controlnet", Group: GroupControlNet, Subtype: "ControlNet", OrderPriority: 5
             ));
         ControlNetStrength = Register<double>(new("ControlNet Strength", "Higher values make the ControlNet apply more strongly. Weaker values let the prompt overrule the ControlNet.",
-            "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, NumberView: NumberViewType.SLIDER, Group: GroupControlNet
+            "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, ViewType: ParamViewType.SLIDER, Group: GroupControlNet
             ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion"
             ));
-        GroupAdvancedModelAddons = new("Advanced Model Addons", Open: false, IsAdvanced: true);
         VAE = Register<T2IModel>(new("VAE", "The VAE (Variational Auto-Encoder) controls the translation between images and latent space.\nIf your images look faded out, or glitched, you may have the wrong VAE.\nAll models have a VAE baked in by default, this option lets you swap to a different one if you want to.",
             "", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE", Group: GroupAdvancedModelAddons
             ));
@@ -318,7 +322,7 @@ public class T2IParamTypes
             "Any", GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true
             ));
         AltResolutionHeightMult = Register<double>(new("Alt Resolution Height Multiplier", "When enabled, the normal width parameter is used, and this value is multiplied by the width to derive the image height.",
-            "1", Min: 0, Max: 10, Step: 0.1, Examples: new[] { "0.5", "1", "1.5" }, IsAdvanced: true, Toggleable: true, NumberView: NumberViewType.SLIDER
+            "1", Min: 0, Max: 10, Step: 0.1, Examples: new[] { "0.5", "1", "1.5" }, IsAdvanced: true, Toggleable: true, ViewType: ParamViewType.SLIDER
             ));
     }
 

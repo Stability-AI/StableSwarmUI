@@ -312,7 +312,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     {
                         val = defVal;
                     }
-                    if (type.Type == T2IParamDataType.INTEGER && type.NumberView == NumberViewType.SEED && long.Parse(val.ToString()) == -1)
+                    if (type.Type == T2IParamDataType.INTEGER && type.ViewType == ParamViewType.SEED && long.Parse(val.ToString()) == -1)
                     {
                         return $"{Random.Shared.Next()}";
                     }

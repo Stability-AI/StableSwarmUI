@@ -53,11 +53,11 @@ public class ComfyUIBackendExtension : Extension
         {
             string nameNoPrefix = name.After("comfyrawworkflowinput");
             T2IParamDataType type = FakeRawInputType.Type;
-            NumberViewType numberType = NumberViewType.BIG;
+            ParamViewType numberType = ParamViewType.BIG;
             if (nameNoPrefix.StartsWith("seed"))
             {
                 type = T2IParamDataType.INTEGER;
-                numberType = NumberViewType.SEED;
+                numberType = ParamViewType.SEED;
                 nameNoPrefix = nameNoPrefix.After("seed");
             }
             else
@@ -73,7 +73,7 @@ public class ComfyUIBackendExtension : Extension
                     }
                 }
             }
-            T2IParamType resType = FakeRawInputType with { Name = nameNoPrefix, ID = name, HideFromMetadata = false, Type = type, NumberView = numberType };
+            T2IParamType resType = FakeRawInputType with { Name = nameNoPrefix, ID = name, HideFromMetadata = false, Type = type, ViewType = numberType };
             if (type == T2IParamDataType.MODEL)
             {
                 static string cleanup(string _, string val)

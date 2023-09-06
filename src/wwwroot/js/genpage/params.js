@@ -3,14 +3,14 @@ let postParamBuildSteps = [];
 
 let refreshParamsExtra = [];
 
-function getHtmlForParam(param, prefix, textRows = 2) {
+function getHtmlForParam(param, prefix) {
     try {
         // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
         let example = param.examples ? `<br><br>Examples: <code>${param.examples.map(escapeHtml).join("</code>,&emsp;<code>")}</code>` : '';
         let pop = `<div class="sui-popover" id="popover_${prefix}${param.id}"><b>${escapeHtml(param.name)}</b> (${param.type}):<br>&emsp;${escapeHtml(param.description)}${example}</div>`;
         switch (param.type) {
             case 'text':
-                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, textRows, param.description, param.toggleable) + pop};
+                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.view_type == 'prompt', param.description, param.toggleable) + pop};
             case 'decimal':
             case 'integer':
                 let min = param.min;
@@ -19,9 +19,10 @@ function getHtmlForParam(param, prefix, textRows = 2) {
                     min = -9999999;
                     max = 9999999;
                 }
-                switch (param.number_view_type) {
+                switch (param.view_type) {
                     case 'small':
                         return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, true, param.toggleable) + pop};
+                    case 'normal':
                     case 'big':
                         return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, false, param.toggleable) + pop};
                     case 'seed':
@@ -43,7 +44,7 @@ function getHtmlForParam(param, prefix, textRows = 2) {
                     return {html: makeMultiselectInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, "Select...", param.toggleable) + pop,
                         runnable: () => $(`#${prefix}${param.id}`).select2({ theme: "bootstrap-5", width: 'style', placeholder: $(this).data('placeholder'), closeOnSelect: false }) };
                 }
-                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, textRows, param.description, param.toggleable) + pop};
+                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.view_type == 'prompt', param.description, param.toggleable) + pop};
             case 'model':
                 let modelList = param.values && param.values.length > 0 ? param.values : coreModelMap[param.subtype || 'Stable-Diffusion'];
                 return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, modelList, param.default, param.toggleable) + pop};
@@ -676,9 +677,16 @@ class ParamConfigurationClass {
                     <div class="param-edit-part">Max: <input class="param-edit-number" type="number" id="${paramPrefix}__max" value="${param.max}" autocomplete="off"></div>
                     <div class="param-edit-part"><span title="If using a slider, this is where the slider stops">View Max</span>: <input type="number" id="${paramPrefix}__view_max" value="${param.view_max}" autocomplete="off"></div>
                     <div class="param-edit-part">Step: <input class="param-edit-number" type="number" id="${paramPrefix}__step" value="${param.step}" autocomplete="off"></div>
-                    <div class="param-edit-part">Number View Type: <select id="${paramPrefix}__number_view_type" autocomplete="off">`;
+                    <div class="param-edit-part">View Type: <select id="${paramPrefix}__view_type" autocomplete="off">`;
                 for (let type of ['small', 'big', 'seed', 'slider', 'pot_slider']) {
-                    paramHtml += `<option value="${type}"${param.number_view_type == type ? ` selected="true"` : ''}>${type}</option>`;
+                    paramHtml += `<option value="${type}"${param.view_type == type ? ` selected="true"` : ''}>${type}</option>`;
+                }
+                paramHtml += `</select></div>`;
+            }
+            else if (param.type == "text") {
+                paramHtml += `<div class="param-edit-part">View Type: <select id="${paramPrefix}__view_type" autocomplete="off">`;
+                for (let type of ['normal', 'prompt']) {
+                    paramHtml += `<option value="${type}"${param.view_type == type ? ` selected="true"` : ''}>${type}</option>`;
                 }
                 paramHtml += `</select></div>`;
             }
@@ -687,7 +695,7 @@ class ParamConfigurationClass {
             }
             groupDiv.appendChild(createDiv(null, 'param-edit-container', paramHtml));
             getRequiredElementById(`${paramPrefix}_reset`).addEventListener('click', () => {
-                for (let opt of ['visible', 'do_not_save', 'advanced', 'priority', 'min', 'max', 'view_max', 'step', 'number_view_type', 'examples']) {
+                for (let opt of ['visible', 'do_not_save', 'advanced', 'priority', 'min', 'max', 'view_max', 'step', 'view_type', 'examples']) {
                     let elem = document.getElementById(`${paramPrefix}__${opt}`);
                     if (!elem) {
                         continue;
@@ -705,7 +713,7 @@ class ParamConfigurationClass {
                 this.extra_count++;
                 this.updateConfirmer();
             });
-            for (let opt of ['visible', 'do_not_save', 'advanced', 'priority', 'min', 'max', 'view_max', 'step', 'number_view_type', 'examples']) {
+            for (let opt of ['visible', 'do_not_save', 'advanced', 'priority', 'min', 'max', 'view_max', 'step', 'view_type', 'examples']) {
                 let elem = document.getElementById(`${paramPrefix}__${opt}`);
                 if (!elem) {
                     continue;

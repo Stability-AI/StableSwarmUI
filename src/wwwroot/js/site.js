@@ -295,15 +295,15 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
         </div>`;
 }
 
-function makeTextInput(featureid, id, name, description, value, rows, placeholder, toggles = false, genPopover = false) {
+function makeTextInput(featureid, id, name, description, value, isPrompt, placeholder, toggles = false, genPopover = false) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
-    let onInp = rows == 1 ? '' : ' oninput="textInputSize(this)"';
+    let onInp = isPrompt ? ' oninput="textInputSize(this)"' : '';
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
-    <div class="auto-input auto-text-box${(rows == 1 ? " auto-input-flex" : "")}"${featureid}>
+    <div class="auto-input auto-text-box${(isPrompt ? "" : " auto-input-flex")}"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
-        <textarea class="auto-text${(rows == 1 ? "" : " auto-text-block")}" id="${id}" rows="${rows}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
+        <textarea class="auto-text${(isPrompt ? " auto-text-block" : "")}" id="${id}" rows="${isPrompt ? 2 : 1}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
         <button class="interrupt-button image-clear-button" style="display: none;">Clear Images</button>
         <div class="added-image-area"></div>
     </div>`;

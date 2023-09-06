@@ -22,8 +22,8 @@ function buildSettingsMenu(container, data, prefix, tracker) {
         for (let setting of settings) {
             let data = block[setting];
             let settingFull = `${blockPrefix}${setting}`;
-            let fakeParam = { feature_flag: null, type: data.type, id: settingFull, name: data.name, description: data.description, default: data.value, min: null, max: null, step: null, toggleable: false, number_view_type: 'big', values: data.values };
-            let result = getHtmlForParam(fakeParam, prefix, 1);
+            let fakeParam = { feature_flag: null, type: data.type, id: settingFull, name: data.name, description: data.description, default: data.value, min: null, max: null, step: null, toggleable: false, view_type: 'normal', values: data.values };
+            let result = getHtmlForParam(fakeParam, prefix);
             content += result.html;
             keys.push(settingFull);
             tracker.known[settingFull] = data;
