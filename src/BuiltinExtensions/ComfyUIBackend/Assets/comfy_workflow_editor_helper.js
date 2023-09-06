@@ -111,6 +111,7 @@ function comfyBuildParams(callback) {
                 feature_flag: null,
                 do_not_save: false,
                 revalueGetter: revalueGetter,
+                no_popover: true,
                 group: {
                     name: groupName,
                     id: groupId,
