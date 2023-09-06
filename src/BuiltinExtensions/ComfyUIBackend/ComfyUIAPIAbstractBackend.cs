@@ -26,6 +26,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public JObject RawObjectInfo;
 
+    public string ModelFolderFormat = null;
+
     public async Task LoadValueSet()
     {
         JObject result = await SendGet<JObject>("object_info");
@@ -34,6 +36,18 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             throw new Exception($"Remote error: {errorToken}");
         }
         RawObjectInfo = result;
+        if (RawObjectInfo.TryGetValue("CheckpointLoaderSimple", out JToken modelLoader))
+        {
+            string[] models = modelLoader["input"]["required"]["ckpt_name"][0].Select(t => (string)t).ToArray();
+            if (models.Any(m => m.Contains('/')))
+            {
+                ModelFolderFormat = "/";
+            }
+            else if (models.Any(m => m.Contains('\\')))
+            {
+                ModelFolderFormat = "\\";
+            }
+        }
         ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
     }
 
@@ -75,7 +89,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         CancellationToken cancel = IdleMonitorCancel.Token;
         while (true)
         {
-            Task.Delay(TimeSpan.FromSeconds(5), Program.GlobalProgramCancel);
+            Task.Delay(TimeSpan.FromSeconds(5), Program.GlobalProgramCancel).Wait();
             if (cancel.IsCancellationRequested || Program.GlobalProgramCancel.IsCancellationRequested)
             {
                 return;
@@ -87,6 +101,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             try
             {
                 JObject result = SendGet<JObject>("object_info").Result;
+                if (Status != BackendStatus.RUNNING && Status != BackendStatus.IDLE)
+                {
+                    continue;
+                }
                 Status = BackendStatus.RUNNING;
             }
             catch (Exception)
@@ -106,11 +124,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
     }
 
-    public override Task Shutdown()
+    public override async Task Shutdown()
     {
-        Status = BackendStatus.DISABLED;
+        Logs.Info($"ComfyUI backend {HandlerTypeData.ID} shutting down...");
         StopIdleMonitor();
-        return Task.CompletedTask;
+        Status = BackendStatus.DISABLED;
     }
 
     public virtual void PostResultCallback(string filename)
@@ -144,7 +162,21 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         JObject workflowJson = Utilities.ParseToJson(workflow);
         int expectedNodes = workflowJson.Count;
         string id = Guid.NewGuid().ToString();
-        ClientWebSocket socket = await ConnectWebsocket($"ws?clientId={id}");
+        ClientWebSocket socket;
+        try
+        {
+            socket = await ConnectWebsocket($"ws?clientId={id}");
+        }
+        catch (Exception ex)
+        {
+            Logs.Verbose($"Websocket comfy connection failed: {ex}");
+            if (CanIdle)
+            {
+                Status = BackendStatus.IDLE;
+                throw new PleaseRedirectException();
+            }
+            throw;
+        }
         int nodesDone = 0;
         float curPercent;
         void yieldProgressUpdate()
@@ -243,6 +275,14 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Done", interrupt);
         }
+        catch (Exception)
+        {
+            if (CanIdle)
+            {
+                Status = BackendStatus.IDLE;
+            }
+            throw;
+        }
         finally
         {
             socket.Dispose();
@@ -271,41 +311,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return outputs.ToArray();
     }
 
-    public async Task<Image[]> AwaitJob(string workflow, CancellationToken interrupt)
-    {
-        workflow = $"{{\"prompt\": {workflow}}}";
-        Logs.Verbose($"Will use workflow: {workflow}");
-        JObject result = await PostJSONString("prompt", workflow, interrupt);
-        Logs.Verbose($"ComfyUI prompt said: {result}");
-        if (result.ContainsKey("error"))
-        {
-            Logs.Debug($"Error came from prompt: {workflow}");
-            throw new InvalidDataException($"ComfyUI errored: {result}");
-        }
-        string promptId = result["prompt_id"].ToString();
-        JObject output;
-        while (true)
-        {
-            output = await SendGet<JObject>($"history/{promptId}");
-            if (!output.Properties().IsEmpty())
-            {
-                break;
-            }
-            if (Program.GlobalProgramCancel.IsCancellationRequested)
-            {
-                return null;
-            }
-            if (interrupt.IsCancellationRequested)
-            {
-                Logs.Debug("ComfyUI Interrupt requested");
-                await HttpClient.PostAsync($"{Address}/interrupt", new StringContent(""), interrupt);
-                break;
-            }
-            Thread.Sleep(50);
-        }
-        return await GetAllImagesForHistory(output[promptId], interrupt);
-    }
-
     public volatile int ImageIDDedup = 0;
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
@@ -321,7 +326,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return images.ToArray();
     }
 
-    public static string CreateWorkflow(T2IParamInput user_input, Func<string, string> initImageFixer)
+    public static string CreateWorkflow(T2IParamInput user_input, Func<string, string> initImageFixer, string ModelFolderFormat = null)
     {
         string workflow = null;
         if (user_input.TryGet(ComfyUIBackendExtension.CustomWorkflowParam, out string customWorkflowName))
@@ -364,6 +369,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     {
                         return $"{Random.Shared.Next()}";
                     }
+                    if (val is T2IModel model)
+                    {
+                        return model.ToString(ModelFolderFormat);
+                    }
                     return val.ToString();
                 }
                 long fixSeed(long input)
@@ -385,7 +394,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "init_image_strength" => user_input.GetString(T2IParamTypes.InitImageCreativity),
                     "comfy_sampler" or "comfyui_sampler" => user_input.GetString(ComfyUIBackendExtension.SamplerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "euler" : defVal),
                     "comfy_scheduler" or "comfyui_scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "normal" : defVal),
-                    "model" => user_input.Get(T2IParamTypes.Model).ToString(),
+                    "model" => user_input.Get(T2IParamTypes.Model).ToString(ModelFolderFormat),
                     "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
                     _ => fillDynamic()
                 };
@@ -395,7 +404,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         else
         {
-            workflow = new WorkflowGenerator() { UserInput = user_input }.Generate().ToString();
+            workflow = new WorkflowGenerator() { UserInput = user_input, ModelFolderFormat = ModelFolderFormat }.Generate().ToString();
             workflow = initImageFixer(workflow);
         }
         return workflow;
@@ -445,7 +454,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             return workflow;
         }
-        string workflow = CreateWorkflow(user_input, initImageFixer);
+        string workflow = CreateWorkflow(user_input, initImageFixer, ModelFolderFormat);
         try
         {
             await AwaitJobLive(workflow, batchId, takeOutput, user_input.InterruptToken);
@@ -476,8 +485,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public override async Task<bool> LoadModel(T2IModel model)
     {
-        string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model:error_missing_model}", Utilities.EscapeJsonString(model.ToString()));
-        await AwaitJob(workflow, Program.GlobalProgramCancel);
+        string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model:error_missing_model}", Utilities.EscapeJsonString(model.ToString(ModelFolderFormat)));
+        await AwaitJobLive(workflow, "0", _ => { }, Program.GlobalProgramCancel);
         CurrentModelName = model.Name;
         return true;
     }

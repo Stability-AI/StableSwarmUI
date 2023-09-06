@@ -70,6 +70,11 @@ public abstract class AbstractT2IBackend
 
     /// <summary>If true, a special process wants to claim this backend next (ie, normal gen usage should not run).</summary>
     public volatile bool Reserved = false;
+
+    /// <summary>Exception can be thrown to indicate the backend cannot fulfill the request, but for temporary reasons, and another backend should be used instead.</summary>
+    public class PleaseRedirectException : Exception
+    {
+    }
 }
 
 public enum BackendStatus

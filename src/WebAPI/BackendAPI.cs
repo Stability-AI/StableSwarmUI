@@ -71,6 +71,7 @@ public class BackendAPI
             return new JObject() { ["result"] = "No change." };
         }
         backend.Backend.IsEnabled = enabled;
+        backend.Backend.Reserved = true;
         while (backend.CheckIsInUse)
         {
             if (Program.GlobalProgramCancel.IsCancellationRequested)
@@ -88,6 +89,7 @@ public class BackendAPI
             backend.Backend.Status = BackendStatus.WAITING;
             Program.Backends.BackendsToInit.Enqueue(backend);
         }
+        backend.Backend.Reserved = false;
         return new JObject() { ["result"] = "Success." };
     }
 

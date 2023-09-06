@@ -158,6 +158,11 @@ namespace StableSwarmUI.Text2Image
                     });
                 }
             }
+            catch (AbstractT2IBackend.PleaseRedirectException)
+            {
+                claim.Extend(gens: 1);
+                await CreateImageTask(user_input, batchId, claim, output, setError, isWS, backendTimeoutMin, saveImages);
+            }
             catch (InvalidOperationException ex)
             {
                 setError($"Invalid operation: {ex.Message}");

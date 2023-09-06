@@ -43,7 +43,7 @@ public class WorkflowGenerator
             {
                 n["inputs"] = new JObject()
                 {
-                    ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).ToString()
+                    ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).ToString(g.ModelFolderFormat)
                 };
             }, "4");
         }, -15);
@@ -55,7 +55,7 @@ public class WorkflowGenerator
                 {
                     n["inputs"] = new JObject()
                     {
-                        ["vae_name"] = vae.ToString()
+                        ["vae_name"] = vae.ToString(g.ModelFolderFormat)
                     };
                 }, "3");
                 g.FinalVae = new JArray() { "3", 0 };
@@ -77,7 +77,7 @@ public class WorkflowGenerator
                         {
                             ["model"] = g.FinalModel,
                             ["clip"] = g.FinalClip,
-                            ["lora_name"] = lora.ToString(),
+                            ["lora_name"] = lora.ToString(g.ModelFolderFormat),
                             ["strength_model"] = weight,
                             ["strength_clip"] = weight
                         };
@@ -193,7 +193,7 @@ public class WorkflowGenerator
                     string model = "clip_vision_g.safetensors";
                     if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
                     {
-                        model = visionModel.ToString();
+                        model = visionModel.ToString(g.ModelFolderFormat);
                     }
                     else
                     {
@@ -358,7 +358,7 @@ public class WorkflowGenerator
                 {
                     n["inputs"] = new JObject()
                     {
-                        ["control_net_name"] = controlModel.ToString()
+                        ["control_net_name"] = controlModel.ToString(g.ModelFolderFormat)
                     };
                 });
                 int applyNode = g.CreateNode("ControlNetApply", (_, n) =>
@@ -425,7 +425,7 @@ public class WorkflowGenerator
                     {
                         n["inputs"] = new JObject()
                         {
-                            ["ckpt_name"] = refineModel.ToString()
+                            ["ckpt_name"] = refineModel.ToString(g.ModelFolderFormat)
                         };
                     }, "20");
                     refinedModel = new() { "20", 0 };
@@ -615,6 +615,9 @@ public class WorkflowGenerator
 
     /// <summary>Last used ID, tracked to safely add new nodes with sequential IDs. Note that this starts at 100, as below 100 is reserved for constant node IDs.</summary>
     public int LastID = 100;
+
+    /// <summary>Model folder separator format, if known.</summary>
+    public string ModelFolderFormat;
 
     /// <summary>Creates a new node with the given class type and configuration action.</summary>
     public int CreateNode(string classType, Action<string, JObject> configure)

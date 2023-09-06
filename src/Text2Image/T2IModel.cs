@@ -76,6 +76,12 @@ public class T2IModel
     }
 
     /// <summary>Returns the name of the model.</summary>
+    public string ToString(string folderFormat)
+    {
+        return Name.Replace("/", folderFormat ?? $"{Path.DirectorySeparatorChar}");
+    }
+
+    /// <summary>Returns the name of the model.</summary>
     public override string ToString()
     {
         return Name.Replace('/', Path.DirectorySeparatorChar);
