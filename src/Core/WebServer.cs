@@ -91,10 +91,12 @@ public class WebServer
     /// <summary>Main prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>
     public void Prep()
     {
+        Utilities.LoadTimer timer = new();
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "src/wwwroot" });
         builder.Services.AddRazorPages();
         builder.Logging.SetMinimumLevel(LogLevel);
         WebApp = builder.Build();
+        timer.Check("[Web] WebApp build");
         if (WebApp.Environment.IsDevelopment())
         {
             Utilities.VaryID += ".DEV" + ((DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 10L) % 1000000L);
@@ -104,19 +106,24 @@ public class WebServer
         {
             WebApp.UseExceptionHandler("/Error/Internal");
         }
+        timer.Check("[Web] exception handler");
         if (Program.ProxyHandler is not null)
         {
             WebApp.Lifetime.ApplicationStarted.Register(Program.ProxyHandler.Start);
         }
         WebApp.Lifetime.ApplicationStopping.Register(Program.Shutdown);
+        timer.Check("[Web] StartStop handler");
         WebApp.UseStaticFiles(new StaticFileOptions());
+        timer.Check("[Web] static files");
         WebApp.UseRouting();
         WebApp.UseWebSockets(new WebSocketOptions() { KeepAliveInterval = TimeSpan.FromSeconds(30) });
         WebApp.MapRazorPages();
+        timer.Check("[Web] core use calls");
         WebApp.MapGet("/", () => Results.Redirect("/Text2Image"));
         WebApp.Map("/API/{*Call}", API.HandleAsyncRequest);
         WebApp.MapGet("/Output/{*Path}", ViewOutput);
         WebApp.MapGet("/ExtensionFile/{*f}", ViewExtensionScript);
+        timer.Check("[Web] core maps");
         WebApp.Use(async (context, next) =>
         {
             await next();
@@ -138,6 +145,7 @@ public class WebServer
         });
         Logs.Init("Scan for web extensions...");
         GatherExtensionPageAdditions();
+        timer.Check("[Web] end");
     }
 
     public void GatherExtensionPageAdditions()

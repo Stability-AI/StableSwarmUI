@@ -29,6 +29,20 @@ public static class Utilities
     /// <summary>Matcher for characters banned or specialcased by Windows or other OS's.</summary>
     public static AsciiMatcher FilePathForbidden = new(c => c < 32 || "<>:\"\\|?*~&@;".Contains(c));
 
+    /// <summary>Mini-utility class to debug load times.</summary>
+    public class LoadTimer
+    {
+        public long StartTime = Environment.TickCount64;
+        public long LastTime = Environment.TickCount64;
+
+        public void Check(string part)
+        {
+            long timeNow = Environment.TickCount64;
+            Logs.Debug($"[Load Time] {part} took {(timeNow - LastTime) / 1000.0:0.##}s ({(timeNow - StartTime) / 1000.0:0.##}s from start)");
+            LastTime = timeNow;
+        }
+    }
+
     /// <summary>Gets a secure hex string of a given length (will generate half as many bytes).</summary>
     public static string SecureRandomHex(int length)
     {

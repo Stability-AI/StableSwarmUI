@@ -47,7 +47,7 @@ public class Program
     /// <summary>Path to the settings file, as set by command line.</summary>
     public static string SettingsFilePath;
 
-    /// <summary>Ngrok instance, if loaded at all.</summary>
+    /// <summary>Proxy (ngrok/cloudflared) instance, if loaded at all.</summary>
     public static PublicProxyHandler ProxyHandler;
 
     /// <summary>Central web server core.</summary>
@@ -65,14 +65,7 @@ public class Program
         SpecialTools.Internationalize(); // Fix for MS's broken localization
         BsonMapper.Global.EmptyStringToNull = false; // Fix for LiteDB's broken handling of empty strings
         Logs.Init($"=== StableSwarmUI v{Utilities.Version} Starting ===");
-        long startTime = Environment.TickCount64;
-        long lastTime = startTime;
-        void timeCheck(string part)
-        {
-            long timeNow = Environment.TickCount64;
-            Logs.Debug($"[Load Time] {part} took {(timeNow - lastTime) / 1000.0:0.##}s ({(timeNow - startTime) / 1000.0:0.##}s from start)");
-            lastTime = timeNow;
-        }
+        Utilities.LoadTimer timer = new();
         AssemblyLoadContext.Default.Unloading += (_) => Shutdown();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Shutdown();
         PrepExtensions();
@@ -111,9 +104,9 @@ public class Program
             Logs.Error($"Failed to create directory for SD models. You may need to check your ModelRoot and SDModelFolder settings. {ex.Message}");
             return;
         }
-        timeCheck("Initial settings load");
+        timer.Check("Initial settings load");
         RunOnAllExtensions(e => e.OnPreInit());
-        timeCheck("Extension PreInit");
+        timer.Check("Extension PreInit");
         Logs.Init("Prepping options...");
         T2IModelSets["Stable-Diffusion"] = new() { ModelType = "Stable-Diffusion", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder) };
         T2IModelSets["VAE"] = new() { ModelType = "VAE", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDVAEFolder) };
@@ -126,36 +119,36 @@ public class Program
         Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);
         Sessions = new();
         Web = new();
-        timeCheck("Prep Objects");
+        timer.Check("Prep Objects");
         Web.PreInit();
-        timeCheck("Web PreInit");
+        timer.Check("Web PreInit");
         RunOnAllExtensions(e => e.OnInit());
-        timeCheck("Extensions Init");
+        timer.Check("Extensions Init");
         Logs.Init("Loading models list...");
         foreach (T2IModelHandler handler in T2IModelSets.Values)
         {
             handler.Refresh();
         }
-        timeCheck("Model listing");
+        timer.Check("Model listing");
         Logs.Init("Loading backends...");
         Backends.Load();
-        timeCheck("Backends");
+        timer.Check("Backends");
         Logs.Init("Prepping API...");
         BasicAPIFeatures.Register();
         foreach (string str in CommandLineFlags.Keys.Where(k => !CommandLineFlagsRead.Contains(k)))
         {
             Logs.Warning($"Unused command line flag '{str}'");
         }
-        timeCheck("API");
+        timer.Check("API");
         Logs.Init("Prepping webserver...");
         Web.Prep();
-        timeCheck("Web prep");
+        timer.Check("Web prep");
         Logs.Init("Readying extensions for launch...");
         RunOnAllExtensions(e => e.OnPreLaunch());
-        timeCheck("Extensions pre-launch");
+        timer.Check("Extensions pre-launch");
         Logs.Init("Launching server...");
         Web.Launch();
-        timeCheck("Web launch");
+        timer.Check("Web launch");
         Task.Run(() =>
         {
             Thread.Sleep(500);
