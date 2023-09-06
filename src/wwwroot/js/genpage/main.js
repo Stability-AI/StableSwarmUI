@@ -438,6 +438,9 @@ function getCurrentStatus() {
     if (Object.values(backends_loaded).length == 0) {
         return ['warn', 'No backends present. You must configure backends in the Backends section of the Server tab before you can continue.'];
     }
+    if (Object.values(backends_loaded).filter(x => x.enabled).length == 0) {
+        return ['warn', 'All backends are disabled. You must enable backends in the Backends section of the Server tab before you can continue.'];
+    }
     let loading = countBackendsByStatus('waiting') + countBackendsByStatus('loading');
     if (countBackendsByStatus('running') == 0) {
         if (loading > 0) {

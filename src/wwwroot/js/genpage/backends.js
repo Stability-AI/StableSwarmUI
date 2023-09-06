@@ -25,9 +25,30 @@ function addBackendToHtml(backend, disable, spot = null) {
     let type = backend_types[backend.type];
     let cardBase = createDiv(`backend-card-${backend.id}`, `card backend-${backend.status} backend-card`);
     let cardHeader = createDiv(null, 'card-header');
+    let togglerSpan = document.createElement('span');
+    togglerSpan.className = 'form-check form-switch display-inline-block';
+    let toggleSwitch = document.createElement('input');
+    toggleSwitch.type = 'checkbox';
+    toggleSwitch.className = 'backend-toggle-switch form-check-input';
+    toggleSwitch.title = 'Enable/Disable backend';
+    toggleSwitch.checked = backend.enabled;
+    toggleSwitch.addEventListener('change', () => {
+        backend.enabled = toggleSwitch.checked;
+        genericRequest('ToggleBackend', {'backend_id': backend.id, 'enabled': toggleSwitch.checked}, data => {});
+    });
+    togglerSpan.appendChild(toggleSwitch);
+    cardHeader.appendChild(togglerSpan);
     let cardTitleSpan = document.createElement('span');
-    cardTitleSpan.className = 'card-title-span';
-    cardTitleSpan.innerText = `${backend.status} backend: (${backend.id}): ${type.name}`;
+    let cardTitleStatus = document.createElement('span');
+    cardTitleStatus.className = 'card-title-status';
+    cardTitleStatus.innerText = backend.status;
+    cardTitleSpan.appendChild(cardTitleStatus);
+    let cardTitleCenter = document.createElement('span');
+    cardTitleCenter.innerText = ` backend: (${backend.id}): `;
+    cardTitleSpan.appendChild(cardTitleCenter);
+    let actualCardTitle = document.createElement('span');
+    actualCardTitle.innerText = backend.title || type.name;
+    cardTitleSpan.appendChild(actualCardTitle);
     cardHeader.appendChild(cardTitleSpan);
     let deleteButton = document.createElement('button');
     deleteButton.className = 'backend-delete-button';
@@ -77,22 +98,29 @@ function addBackendToHtml(backend, disable, spot = null) {
     for (let entry of cardBody.querySelectorAll('[data-name]')) {
         entry.disabled = disable;
     }
+    actualCardTitle.addEventListener('keydown', e => {
+        if (e.key == 'Enter') {
+            e.preventDefault();
+        }
+    });
     editButton.addEventListener('click', () => {
         saveButton.style.display = 'inline-block';
         editButton.disabled = true;
+        actualCardTitle.contentEditable = true;
         for (let entry of cardBody.querySelectorAll('[data-name]')) {
             entry.disabled = false;
         }
     });
     saveButton.addEventListener('click', () => {
         saveButton.style.display = 'none';
+        actualCardTitle.contentEditable = false;
         for (let entry of cardBody.querySelectorAll('[data-name]')) {
             let name = entry.dataset.name;
             let value = entry.type == 'checkbox' ? entry.checked : entry.value;
             backend.settings[name] = value;
             entry.disabled = true;
         }
-        genericRequest('EditBackend', {'backend_id': backend.id, 'settings': backend.settings}, data => {
+        genericRequest('EditBackend', {'backend_id': backend.id, 'title': actualCardTitle.textContent, 'settings': backend.settings}, data => {
             addBackendToHtml(data, true, spot);
         });
     });
@@ -113,7 +141,7 @@ function loadBackendsList() {
                     let card = document.getElementById(`backend-card-${oldBack.id}`);
                     card.classList.remove(`backend-${oldBack.status}`);
                     card.classList.add(`backend-${newBack.status}`);
-                    card.querySelector('.card-title-span').innerText = `${newBack.status} backend: (${newBack.id}): ${backend_types[newBack.type].name}`;
+                    card.querySelector('.card-title-status').innerText = newBack.status;
                 }
                 if (newBack.modcount > oldBack.modcount) {
                     addBackendToHtml(newBack, true, spot);
@@ -135,7 +163,7 @@ function loadBackendsList() {
 }
 
 function countBackendsByStatus(status) {
-    return Object.values(backends_loaded).filter(x => x.status == status).length;
+    return Object.values(backends_loaded).filter(x => x.enabled && x.status == status).length;
 }
 
 function loadBackendTypesMenu() {

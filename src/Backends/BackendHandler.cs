@@ -141,6 +141,7 @@ public class BackendHandler
         return data;
     }
 
+    /// <summary>Adds a new backend that is not a 'real' backend (it will not save nor show in the UI, but is available for generation calls).</summary>
     public T2IBackendData AddNewNonrealBackend(BackendType type, AutoConfiguration config = null)
     {
         T2IBackendData data = new()
@@ -163,6 +164,28 @@ public class BackendHandler
         return data;
     }
 
+    /// <summary>Shuts down the given backend properly and cleanly, in a way that avoids interrupting usage of the backend.</summary>
+    public async Task ShutdownBackendCleanly(T2IBackendData data)
+    {
+        data.Backend.Reserved = true;
+        try
+        {
+            while (data.CheckIsInUse)
+            {
+                if (Program.GlobalProgramCancel.IsCancellationRequested)
+                {
+                    return;
+                }
+                await Task.Delay(TimeSpan.FromSeconds(0.5));
+            }
+            await data.Backend.Shutdown();
+        }
+        finally
+        {
+            data.Backend.Reserved = false;
+        }
+    }
+
     /// <summary>Shutdown and delete a given backend.</summary>
     public async Task<bool> DeleteById(int id)
     {
@@ -170,36 +193,24 @@ public class BackendHandler
         {
             return false;
         }
-        while (data.CheckIsInUse)
-        {
-            if (Program.GlobalProgramCancel.IsCancellationRequested)
-            {
-                return false;
-            }
-            await Task.Delay(TimeSpan.FromSeconds(0.5));
-        }
-        await data.Backend.Shutdown();
+        await ShutdownBackendCleanly(data);
         ReassignLoadedModelsList();
         return true;
     }
 
     /// <summary>Replace the settings of a given backend. Shuts it down immediately and queues a reload.</summary>
-    public async Task<T2IBackendData> EditById(int id, FDSSection newSettings)
+    public async Task<T2IBackendData> EditById(int id, FDSSection newSettings, string title)
     {
         if (!T2IBackends.TryGetValue(id, out T2IBackendData data))
         {
             return null;
         }
-        while (data.CheckIsInUse)
-        {
-            if (Program.GlobalProgramCancel.IsCancellationRequested)
-            {
-                return null;
-            }
-            await Task.Delay(TimeSpan.FromSeconds(0.5));
-        }
-        await data.Backend.Shutdown();
+        await ShutdownBackendCleanly(data);
         data.Backend.SettingsRaw.Load(newSettings);
+        if (title is not null)
+        {
+            data.Backend.Title = title;
+        }
         data.ModCount++;
         data.Backend.Status = BackendStatus.WAITING;
         BackendsToInit.Enqueue(data);
@@ -209,9 +220,11 @@ public class BackendHandler
     /// <summary>Causes all backends to restart.</summary>
     public async Task ReloadAllBackends()
     {
-        foreach (int id in T2IBackends.Keys.ToArray())
+        foreach (T2IBackendData data in T2IBackends.Values.ToArray())
         {
-            await EditById(id, new()); // Perform an empty edit to trigger a reload
+            await ShutdownBackendCleanly(data);
+            data.Backend.Status = BackendStatus.WAITING;
+            BackendsToInit.Enqueue(data);
         }
     }
 
@@ -268,6 +281,8 @@ public class BackendHandler
             LastBackendID = Math.Max(LastBackendID, data.ID + 1);
             data.Backend.SettingsRaw = Activator.CreateInstance(type.SettingsClass) as AutoConfiguration;
             data.Backend.SettingsRaw.Load(section.GetSection("settings"));
+            data.Backend.IsEnabled = section.GetBool("enabled", true).Value;
+            data.Backend.Title = section.GetString("title", "");
             data.Backend.HandlerTypeData = type;
             data.Backend.Handler = this;
             data.Backend.Status = BackendStatus.WAITING;
@@ -287,6 +302,11 @@ public class BackendHandler
             bool any = false;
             while (BackendsToInit.TryDequeue(out T2IBackendData data) && !HasShutdown)
             {
+                if (!data.Backend.IsEnabled)
+                {
+                    data.Backend.Status = BackendStatus.DISABLED;
+                    continue;
+                }
                 try
                 {
                     if (data.Backend.IsReal)
@@ -366,6 +386,8 @@ public class BackendHandler
             }
             FDSSection data_section = new();
             data_section.Set("type", data.Backend.HandlerTypeData.ID);
+            data_section.Set("title", data.Backend.Title);
+            data_section.Set("enabled", data.Backend.IsEnabled);
             data_section.Set("settings", data.Backend.SettingsRaw.Save(true));
             saveFile.Set(data.ID.ToString(), data_section);
         }
@@ -541,7 +563,7 @@ public class BackendHandler
         public void TryFind()
         {
             List<T2IBackendData> currentBackends = Handler.T2IBackends.Values.ToList();
-            List<T2IBackendData> possible = currentBackends.Where(b => b.Backend.Status == BackendStatus.RUNNING).ToList();
+            List<T2IBackendData> possible = currentBackends.Where(b => b.Backend.IsEnabled && !b.Backend.Reserved && b.Backend.Status == BackendStatus.RUNNING).ToList();
             Logs.Verbose($"[BackendHandler] Backend request #{ID} searching for backend... have {possible.Count}/{currentBackends.Count} possible");
             if (!possible.Any())
             {

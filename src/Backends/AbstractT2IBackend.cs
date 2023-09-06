@@ -61,6 +61,15 @@ public abstract class AbstractT2IBackend
 
     /// <summary>Real backends are user-managed and save to file. Non-real backends are invisible to the user and file.</summary>
     public bool IsReal = true;
+
+    /// <summary>If true, the backend should be live. If false, the server admin wants the backend turned off.</summary>
+    public volatile bool IsEnabled = true;
+
+    /// <summary>If non-empty, is a user-facing title-override for the given backend.</summary>
+    public string Title = "";
+
+    /// <summary>If true, a special process wants to claim this backend next (ie, normal gen usage should not run).</summary>
+    public volatile bool Reserved = false;
 }
 
 public enum BackendStatus

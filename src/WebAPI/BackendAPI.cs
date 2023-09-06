@@ -14,6 +14,7 @@ public class BackendAPI
         API.RegisterAPICall(ListBackendTypes);
         API.RegisterAPICall(ListBackends);
         API.RegisterAPICall(DeleteBackend);
+        API.RegisterAPICall(ToggleBackend);
         API.RegisterAPICall(EditBackend);
         API.RegisterAPICall(AddNewBackend);
     }
@@ -34,7 +35,9 @@ public class BackendAPI
             ["id"] = backend.ID,
             ["settings"] = JToken.FromObject(backend.Backend.SettingsRaw.Save(true).ToSimple()),
             ["modcount"] = backend.ModCount,
-            ["features"] = new JArray(backend.Backend.SupportedFeatures.ToArray())
+            ["features"] = new JArray(backend.Backend.SupportedFeatures.ToArray()),
+            ["enabled"] = backend.Backend.IsEnabled,
+            ["title"] = backend.Backend.Title
         };
     }
 
@@ -52,8 +55,44 @@ public class BackendAPI
         return new JObject() { ["result"] = "Already didn't exist." };
     }
 
+    /// <summary>API route to disable or re-enable a backend.</summary>
+    public static async Task<JObject> ToggleBackend(int backend_id, bool enabled)
+    {
+        if (Program.LockSettings)
+        {
+            return new() { ["error"] = "Settings are locked." };
+        }
+        if (!Program.Backends.T2IBackends.TryGetValue(backend_id, out BackendHandler.T2IBackendData backend))
+        {
+            return new() { ["error"] = $"Invalid backend ID {backend_id}" };
+        }
+        if (backend.Backend.IsEnabled == enabled)
+        {
+            return new JObject() { ["result"] = "No change." };
+        }
+        backend.Backend.IsEnabled = enabled;
+        while (backend.CheckIsInUse)
+        {
+            if (Program.GlobalProgramCancel.IsCancellationRequested)
+            {
+                return null;
+            }
+            await Task.Delay(TimeSpan.FromSeconds(0.5));
+        }
+        if (backend.Backend.Status != BackendStatus.DISABLED && backend.Backend.Status != BackendStatus.ERRORED)
+        {
+            await backend.Backend.Shutdown();
+        }
+        if (enabled)
+        {
+            backend.Backend.Status = BackendStatus.WAITING;
+            Program.Backends.BackendsToInit.Enqueue(backend);
+        }
+        return new JObject() { ["result"] = "Success." };
+    }
+
     /// <summary>API route to modify and re-init an already registered backend.</summary>
-    public static async Task<JObject> EditBackend(int backend_id, JObject raw_inp)
+    public static async Task<JObject> EditBackend(int backend_id, string title, JObject raw_inp)
     {
         if (Program.LockSettings)
         {
@@ -64,7 +103,7 @@ public class BackendAPI
             return new() { ["error"] = "Missing settings." };
         }
         FDSSection parsed = FDSSection.FromSimple(settings.ToBasicObject());
-        BackendHandler.T2IBackendData result = await Program.Backends.EditById(backend_id, parsed);
+        BackendHandler.T2IBackendData result = await Program.Backends.EditById(backend_id, parsed, title);
         if (result is null)
         {
             return new() { ["error"] = $"Invalid backend ID {backend_id}" };
