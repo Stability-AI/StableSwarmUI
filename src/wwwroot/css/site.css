@@ -158,6 +158,17 @@ body {
     border: 1px solid #000000 !important;
     background-color: var(--green) !important;
 }
+.backend-toggle-switch {
+    float: none !important;
+    vertical-align: middle !important;
+}
+.backend-title-editable {
+    border: 1px solid var(--shadow);
+    border-radius: 0.5rem;
+    background-color: var(--background);
+    padding: 0.3rem;
+    padding-bottom: 0.4rem;
+}
 .auto-slider-fade-contain {
     display: inline-block;
     width: calc(min(100%, 50rem) - 5rem - 2px);

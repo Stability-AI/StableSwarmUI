@@ -29,7 +29,7 @@ function addBackendToHtml(backend, disable, spot = null) {
     togglerSpan.className = 'form-check form-switch display-inline-block';
     let toggleSwitch = document.createElement('input');
     toggleSwitch.type = 'checkbox';
-    toggleSwitch.className = 'backend-toggle-switch form-check-input';
+    toggleSwitch.className = 'form-check-input backend-toggle-switch';
     toggleSwitch.title = 'Enable/Disable backend';
     toggleSwitch.checked = backend.enabled;
     toggleSwitch.addEventListener('change', () => {
@@ -107,6 +107,7 @@ function addBackendToHtml(backend, disable, spot = null) {
         saveButton.style.display = 'inline-block';
         editButton.disabled = true;
         actualCardTitle.contentEditable = true;
+        actualCardTitle.classList.add('backend-title-editable');
         for (let entry of cardBody.querySelectorAll('[data-name]')) {
             entry.disabled = false;
         }
@@ -114,6 +115,7 @@ function addBackendToHtml(backend, disable, spot = null) {
     saveButton.addEventListener('click', () => {
         saveButton.style.display = 'none';
         actualCardTitle.contentEditable = false;
+        actualCardTitle.classList.remove('backend-title-editable');
         for (let entry of cardBody.querySelectorAll('[data-name]')) {
             let name = entry.dataset.name;
             let value = entry.type == 'checkbox' ? entry.checked : entry.value;
