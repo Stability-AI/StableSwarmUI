@@ -224,9 +224,13 @@ function initialModelListLoad() {
 
 function reapplyLoraWeights() {
     let valSet = [...getRequiredElementById('input_loras').selectedOptions].map(option => option.value);
-    let weights = getRequiredElementById('input_loraweights').value.split(',');
+    let weightVal = getRequiredElementById('input_loraweights').value;
+    if (!weightVal) {
+        return;
+    }
+    let weights = weightVal.split(',');
     if (weights.length != valSet.length) {
-        console.log("Ignoring invalid LoRA weights value.");
+        console.log(`Ignoring invalid LoRA weights value. Have ${valSet.length} LoRAs (${JSON.stringify(valSet)}), but ${weights.length} weights (${weightVal})`);
         return;
     }
     let viewable = [...getRequiredElementById('current_lora_list_view').children];
