@@ -110,14 +110,15 @@ function genInputs(delay_final = false) {
     let runnables = [];
     let groupsClose = [];
     let groupsEnable = [];
-    for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => (p.visible || p.id == 'prompt') && !isParamAdvanced(p)],
-            ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p)],
-            ['main_inputs_area_hidden', 'new_preset_modal_hidden_inputs', (p) => (!p.visible && p.id != 'prompt')]]) {
+    for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => (p.visible || p.id == 'prompt') && !isParamAdvanced(p), true],
+            ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p), false],
+            ['main_inputs_area_hidden', 'new_preset_modal_hidden_inputs', (p) => (!p.visible || p.id == 'prompt'), false]]) {
         let area = getRequiredElementById(areaData[0]);
         area.innerHTML = '';
         let presetArea = areaData[1] ? getRequiredElementById(areaData[1]) : null;
         let html = '', presetHtml = '';
         let lastGroup = null;
+        let isMain = areaData[3];
         for (let param of gen_param_types.filter(areaData[2])) {
             let groupName = param.group ? param.group.name : null;
             if (groupName != lastGroup) {
@@ -147,23 +148,25 @@ function genInputs(delay_final = false) {
                 }
                 lastGroup = groupName;
             }
-            if (param.id == 'prompt' && param.visible) {
+            if (param.id == 'prompt' && param.visible && isMain) {
                 html += `<button class="generate-button" id="generate_button" onclick="getRequiredElementById('alt_generate_button').click()">Generate Image</button>
                 <br><span class="interrupt_line"><button class="interrupt-button interrupt-button-none" id="interrupt_button" onclick="getRequiredElementById('alt_interrupt_button').click()">Interrupt</button></span>`;
             }
-            if (param.id == 'prompt' ? param.visible : true) {
+            if (param.id == 'prompt' ? param.visible == isMain : true) {
                 let newData = getHtmlForParam(param, "input_");
                 html += newData.html;
                 if (newData.runnable) {
                     runnables.push(newData.runnable);
                 }
             }
-            let presetParam = JSON.parse(JSON.stringify(param));
-            presetParam.toggleable = true;
-            let presetData = getHtmlForParam(presetParam, "preset_input_");
-            presetHtml += presetData.html;
-            if (presetData.runnable) {
-                runnables.push(presetData.runnable);
+            if (param.id == 'prompt' ? isMain : true) {
+                let presetParam = JSON.parse(JSON.stringify(param));
+                presetParam.toggleable = true;
+                let presetData = getHtmlForParam(presetParam, "preset_input_");
+                presetHtml += presetData.html;
+                if (presetData.runnable) {
+                    runnables.push(presetData.runnable);
+                }
             }
         }
         area.innerHTML = html;
