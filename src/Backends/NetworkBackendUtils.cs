@@ -280,10 +280,10 @@ public static class NetworkBackendUtils
             else
             {
                 Logs.Info($"Self-Start {nameSimple} on port {port} unexpectedly exited (if something failed, launch with `--loglevel debug` to see why!)");
-            }
-            if (errorLog.Length > 0)
-            {
-                Logs.Info($"Self-Start {nameSimple} on port {port} had errors before shutdown:\n{errorLog}");
+                if (errorLog.Length > 0)
+                {
+                    Logs.Info($"Self-Start {nameSimple} on port {port} had errors before shutdown:\n{errorLog}");
+                }
             }
         }
         new Thread(MonitorErrLoop) { Name = $"SelfStart{nameSimple}_{port}_MonitorErr" }.Start();
