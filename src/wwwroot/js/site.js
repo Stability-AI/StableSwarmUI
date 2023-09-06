@@ -48,7 +48,7 @@ function enableSliderForBox(div) {
             range.dispatchEvent(new Event('change'));
         });
     }
-    triggerChangeFor(number);
+    number.dispatchEvent(new Event('input'));
 }
 
 function showError(message) {
@@ -374,7 +374,7 @@ function makeMultiselectInput(featureid, id, name, description, values, defaultV
     let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
     let html = `
     <div class="auto-input auto-dropdown-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
         <select class="form-select" id="${id}" autocomplete="false" data-placeholder="${escapeHtml(placeholder)}" multiple>`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
@@ -392,7 +392,7 @@ function makeImageInput(featureid, id, name, description, toggles = false, popov
     let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
     let html = `
     <div class="auto-input auto-file-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
         <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" autocomplete="false">
         <div class="auto-input-image-preview"></div>
     </div>`;
