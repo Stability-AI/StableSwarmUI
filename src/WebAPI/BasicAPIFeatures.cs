@@ -36,6 +36,7 @@ public static class BasicAPIFeatures
         T2IAPI.Register();
         BackendAPI.Register();
         AdminAPI.Register();
+        UtilAPI.Register();
     }
 
     /// <summary>API Route to create a new session automatically.</summary>
