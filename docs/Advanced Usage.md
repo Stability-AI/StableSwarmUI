@@ -5,8 +5,7 @@
 # Accessing StableSwarmUI From Other Devices
 
 - To access StableSwarmUI from another device over LAN:
-    - Simply launch from the command line with `--host 0.0.0.0` and connect to the LAN IP of the host from your other device.
-        - For example, on Windows, use `./launch-windows.bat --host 0.0.0.0`
+    - Simply open StableSwarmUI to the `Server` -> `Server Configuration` tab, find `Host` (default value is `localhost`) and change the value to `0.0.0.0`, then save and restart
         - Note you may also need to allow StableSwarmUI through your firewall.
 - To access StableSwarmUI over open internet without port forwarding:
     - You can either launch use Cloudflared or Ngrok
