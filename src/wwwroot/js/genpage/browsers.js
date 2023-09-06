@@ -43,7 +43,7 @@ class GenPageBrowserClass {
         this.folder = '';
         this.navCaller = this.navigate.bind(this);
         this.tree = new BrowserTreePart('', {}, false, true);
-        this.depth = localStorage.getItem(`browser_${id}_depth`) || 1;
+        this.depth = localStorage.getItem(`browser_${id}_depth`) || 2;
         this.filter = localStorage.getItem(`browser_${id}_filter`) || '';
     }
 
