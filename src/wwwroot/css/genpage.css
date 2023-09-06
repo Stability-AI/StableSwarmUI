@@ -554,7 +554,7 @@ body {
     margin-left: 0.2rem;
     display: inline-block;
     width: calc(100vw - 15rem - 2rem);
-    height: calc(max(10rem, 100% - 1rem));
+    height: calc(max(10rem, 100%));
     vertical-align: top;
     overflow: hidden;
     white-space: nowrap;

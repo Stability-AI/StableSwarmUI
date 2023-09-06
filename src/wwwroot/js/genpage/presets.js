@@ -231,6 +231,7 @@ function editPreset(preset) {
         enableImage.checked = false;
         enableImage.disabled = false;
     }
+    $('#add_preset_modal').modal('show');
     for (let key of Object.keys(preset.param_map)) {
         let type = gen_param_types.filter(p => p.id == key)[0];
         if (type) {
@@ -240,7 +241,6 @@ function editPreset(preset) {
             doToggleEnable(presetElem.id);
         }
     }
-    $('#add_preset_modal').modal('show');
     fixPresetParamClickables();
 }
 

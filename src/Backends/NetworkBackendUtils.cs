@@ -266,7 +266,7 @@ public static class NetworkBackendUtils
             string line;
             while ((line = runningProcess.StandardError.ReadLine()) != null)
             {
-                Logs.Debug($"{nameSimple} launcher ERROR: {line}");
+                Logs.Debug($"{nameSimple} launcher stderr: {line}");
                 errorLog.AppendLine($"{nameSimple} error: {line}");
                 if (errorLog.Length > 1024 * 50)
                 {

@@ -48,7 +48,7 @@ function enableSliderForBox(div) {
             range.dispatchEvent(new Event('change'));
         });
     }
-    number.dispatchEvent(new Event('input'));
+    triggerChangeFor(number);
 }
 
 function showError(message) {
@@ -171,6 +171,17 @@ function getSession(callback) {
     });
 }
 
+function triggerChangeFor(elem) {
+    elem.dispatchEvent(new Event('input'));
+    if (elem.oninput) {
+        elem.oninput();
+    }
+    elem.dispatchEvent(new Event('change'));
+    if (elem.onchange) {
+        elem.onchange();
+    }
+}
+
 function textInputSize(elem) {
     elem.style.height = '0px';
     elem.style.height = `max(3.4rem, ${elem.scrollHeight + 5}px)`;
@@ -222,7 +233,7 @@ function doToggleEnable(id) {
 }
 
 function getToggleHtml(toggles, id, name, extraClass = '', func = 'doToggleEnable') {
-    return toggles ? `<span class="form-check form-switch display-inline-block${extraClass}"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="javascript:${func}('${id}')" autocomplete="false"></span>` : '';
+    return toggles ? `<span class="form-check form-switch display-inline-block${extraClass}"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="${func}('${id}')" autocomplete="false"></span>` : '';
 }
 
 function load_image_file(e) {
@@ -258,7 +269,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, view
     return `
     <div class="slider-auto-container">
     <div class="auto-input auto-slider-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
         <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
         <br>
         <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
@@ -271,15 +282,15 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
     if (small == 'seed') {
         return `
             <div class="auto-input auto-number-box auto-input-flex"${featureid}>
-                <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
+                <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
                 <input class="auto-number auto-number-seedbox" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
-                <button class="basic-button" title="Random (Set to -1)" onclick="javascript:getRequiredElementById('${id}').value = -1;">&#x1F3B2;</button>
-                <button class="basic-button" title="Reuse (from currently selected image)" onclick="javascript:reuseLastParamVal('${id}');">&#128257;</button>
+                <button class="basic-button" title="Random (Set to -1)" onclick="getRequiredElementById('${id}').value = -1;">&#x1F3B2;</button>
+                <button class="basic-button" title="Reuse (from currently selected image)" onclick="reuseLastParamVal('${id}');">&#128257;</button>
             </div>`;
     }
     return `
         <div class="auto-input auto-number-box auto-input-flex"${featureid}>
-            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
             <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
         </div>`;
 }
@@ -287,11 +298,11 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
 function makeTextInput(featureid, id, name, description, value, rows, placeholder, toggles = false, genPopover = false) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
-    let onInp = rows == 1 ? '' : ' oninput="javascript:textInputSize(this)"';
+    let onInp = rows == 1 ? '' : ' oninput="textInputSize(this)"';
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-text-box${(rows == 1 ? " auto-input-flex" : "")}"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
         <textarea class="auto-text${(rows == 1 ? "" : " auto-text-block")}" id="${id}" rows="${rows}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
         <button class="interrupt-button image-clear-button" style="display: none;">Clear Images</button>
         <div class="added-image-area"></div>
@@ -305,7 +316,7 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-checkbox-box auto-input-flex"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
         <input class="auto-checkbox" type="checkbox" data-name="${name}" id="${id}"${checked}>
     </div>`;
 }
@@ -315,7 +326,7 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let html = `
     <div class="auto-input auto-dropdown-box auto-input-flex"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
         <select class="auto-dropdown" id="${id}" autocomplete="false">`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
@@ -332,7 +343,7 @@ function makeMultiselectInput(featureid, id, name, description, values, defaultV
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let html = `
     <div class="auto-input auto-dropdown-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
         <select class="form-select" id="${id}" autocomplete="false" data-placeholder="${escapeHtml(placeholder)}" multiple>`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
@@ -349,7 +360,7 @@ function makeImageInput(featureid, id, name, description, toggles = false) {
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let html = `
     <div class="auto-input auto-file-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="javascript:doPopover('${id}')">?</span></span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
         <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" autocomplete="false">
         <div class="auto-input-image-preview"></div>
     </div>`;

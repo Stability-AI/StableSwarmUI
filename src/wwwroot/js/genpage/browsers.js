@@ -235,12 +235,13 @@ class GenPageBrowserClass {
             }
             else if (this.format.includes('Thumbnails')) {
                 div.className += ' image-block image-block-legacy';
+                let factor = 8;
+                if (this.format.startsWith('Big')) { factor = 15; div.classList.add('image-block-big'); }
+                else if (this.format.startsWith('Giant')) { factor = 25; div.classList.add('image-block-giant'); }
+                else if (this.format.startsWith('Small')) { factor = 5; div.classList.add('image-block-small'); }
+                div.style.width = `${factor + 1}rem`;
                 img.addEventListener('load', () => {
                     let ratio = img.width / img.height;
-                    let factor = 8;
-                    if (this.format.startsWith('Big')) { factor = 15; div.classList.add('image-block-big'); }
-                    else if (this.format.startsWith('Giant')) { factor = 25; div.classList.add('image-block-giant'); }
-                    else if (this.format.startsWith('Small')) { factor = 5; div.classList.add('image-block-small'); }
                     div.style.width = `${(ratio * factor) + 1}rem`;
                 });
                 let textBlock = createDiv(null, 'image-preview-text');

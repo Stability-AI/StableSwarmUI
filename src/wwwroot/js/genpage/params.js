@@ -110,9 +110,9 @@ function genInputs(delay_final = false) {
     let runnables = [];
     let groupsClose = [];
     let groupsEnable = [];
-    for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => p.visible && !isParamAdvanced(p)],
+    for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => (p.visible || p.id == 'prompt') && !isParamAdvanced(p)],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p)],
-            ['main_inputs_area_hidden', 'new_preset_modal_hidden_inputs', (p) => !p.visible]]) {
+            ['main_inputs_area_hidden', 'new_preset_modal_hidden_inputs', (p) => (!p.visible && p.id != 'prompt')]]) {
         let area = getRequiredElementById(areaData[0]);
         area.innerHTML = '';
         let presetArea = areaData[1] ? getRequiredElementById(areaData[1]) : null;
@@ -148,14 +148,15 @@ function genInputs(delay_final = false) {
                 lastGroup = groupName;
             }
             if (param.id == 'prompt' && param.visible) {
-                
                 html += `<button class="generate-button" id="generate_button" onclick="getRequiredElementById('alt_generate_button').click()">Generate Image</button>
                 <br><span class="interrupt_line"><button class="interrupt-button interrupt-button-none" id="interrupt_button" onclick="getRequiredElementById('alt_interrupt_button').click()">Interrupt</button></span>`;
             }
-            let newData = getHtmlForParam(param, "input_");
-            html += newData.html;
-            if (newData.runnable) {
-                runnables.push(newData.runnable);
+            if (param.id == 'prompt' ? param.visible : true) {
+                let newData = getHtmlForParam(param, "input_");
+                html += newData.html;
+                if (newData.runnable) {
+                    runnables.push(newData.runnable);
+                }
             }
             let presetParam = JSON.parse(JSON.stringify(param));
             presetParam.toggleable = true;
@@ -239,8 +240,8 @@ function genInputs(delay_final = false) {
                     else if (aspectRatio == "9:21") { width = 320; height = 768; }
                     inputWidth.value = width * (curModelWidth == 0 ? 512 : curModelWidth) / 512;
                     inputHeight.value = height * (curModelHeight == 0 ? 512 : curModelHeight) / 512;
-                    inputWidth.dispatchEvent(new Event('input'));
-                    inputHeight.dispatchEvent(new Event('input'));
+                    triggerChangeFor(inputWidth);
+                    triggerChangeFor(inputHeight);
                 }
                 resTrick();
             });
@@ -257,7 +258,7 @@ function genInputs(delay_final = false) {
             let altText = getRequiredElementById('alt_prompt_textbox');
             let update = () => {
                 altText.value = inputPrompt.value;
-                altText.dispatchEvent(new Event('input'));
+                triggerChangeFor(altText);
             };
             inputPrompt.addEventListener('input', update);
             inputPrompt.addEventListener('change', update);
@@ -457,8 +458,7 @@ function setDirectParamValue(param, value, paramElem = null) {
     else {
         paramElem.value = value;
     }
-    paramElem.dispatchEvent(new Event('input'));
-    paramElem.dispatchEvent(new Event('change'));
+    triggerChangeFor(paramElem);
 }
 
 function resetParamsToDefault() {
@@ -627,7 +627,7 @@ class ParamConfigurationClass {
                             let elem = getRequiredElementById(`${groupPrefix}__${opt}`);
                             delete elem.dataset.orig_val;
                             setInputVal(elem, this.original_groups[groupId][opt]);
-                            elem.dispatchEvent(new Event('input'));
+                            triggerChangeFor(elem);
                         }
                         delete this.edited_groups[groupId];
                         delete this.param_edits.groups[groupId];
@@ -695,7 +695,7 @@ class ParamConfigurationClass {
                         val = val ? val.join(' || ') : '';
                     }
                     setInputVal(elem, val);
-                    elem.dispatchEvent(new Event('input'));
+                    triggerChangeFor(elem);
                 }
                 delete this.edited_params[param.id];
                 delete this.param_edits.params[param.id];

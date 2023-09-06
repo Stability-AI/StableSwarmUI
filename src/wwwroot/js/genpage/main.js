@@ -716,7 +716,7 @@ function pageSizer() {
         pageBarTop = Math.max(pageBarTop, 400);
         setPageBars();
         e.preventDefault();
-        altText.dispatchEvent(new Event('input'));
+        triggerChangeFor(altText);
     }, true);
     document.addEventListener('mousemove', (e) => {
         let offX = e.pageX;
