@@ -51,6 +51,14 @@ public partial class CliplikeTokenizer
         {
             string token = Tokens[i];
             DataMap[GetIndex(token)].Add(new TokenData(i, token));
+            if (token.Length == 1) // Ensure multi-letter words still read single-letter tokens
+            {
+                int baseIndex = GetIndex(token);
+                for (int x = 1; x < 128; x++)
+                {
+                    DataMap[baseIndex + x].Add(new TokenData(i, token));
+                }
+            }
         }
         for (int i = 0; i < DataMap.Length; i++)
         {
@@ -66,10 +74,6 @@ public partial class CliplikeTokenizer
             return result;
         }
         IEnumerable<TokenData> tokens = DataMap[GetIndex(word)];
-        if (word.Length > 1)
-        {
-            tokens = tokens.Concat(DataMap[GetIndex(word[0].ToString())]);
-        }
         int[] best = null;
         foreach (TokenData token in tokens)
         {
