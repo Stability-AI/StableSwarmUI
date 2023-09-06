@@ -116,7 +116,7 @@ function comfyBuildParams(callback) {
                     id: groupId,
                     open: false,
                     priority: priority,
-                    advanced: false,
+                    advanced: groupId != 'primitives',
                     toggles: false,
                     do_not_save: false
                 }
