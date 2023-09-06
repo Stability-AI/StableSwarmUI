@@ -726,3 +726,23 @@ body {
 .param-edit-text {
     width: 20rem;
 }
+.clip-tokenization-input-box {
+    margin-top: 1rem;
+    width: 90%;
+    margin-left: 1rem;
+}
+.clip-tokenization-block {
+    border-radius: 0.5rem;
+    display: inline-block;
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+    margin: 1px;
+    background-color: color-mix(in srgb, var(--background) 70%, #ffff00);
+}
+.clip-tokenization-word-tweak {
+    background-color: color-mix(in srgb, var(--background) 70%, #00ff00);
+}
+.clip-tokenization-wordbreak {
+    font-size: 80%;
+    color: var(--text-soft);
+}

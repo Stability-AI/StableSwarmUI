@@ -20,6 +20,9 @@
     </li>
     @WebServer.T2ITabHeader
     <li class="nav-item" role="presentation">
+        <a class="nav-link" data-bs-toggle="tab" href="#Utilities-Tab" id="utilitiestabbutton" aria-selected="false" tabindex="-1" role="tab">Utilities</a>
+    </li>
+    <li class="nav-item" role="presentation">
         <a class="nav-link" data-bs-toggle="tab" href="#User-Settings" id="usersettingstabbutton" aria-selected="false" tabindex="-1" role="tab">User</a>
     </li>
     <li class="nav-item" role="presentation">
@@ -235,6 +238,31 @@
         </div>
     </div>
     @WebServer.T2ITabBody
+    <div class="tab-pane tab-pane-vw" id="Utilities-Tab" role="tabpanel">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" data-bs-toggle="tab" href="#Utilities-Info-Tab" aria-selected="true" role="tab">Info</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#Utilities-CLIP-Token-Tab" aria-selected="false" tabindex="-1" role="tab">CLIP Tokenization</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane show active" id="Utilities-Info-Tab" role="tabpanel">
+                The "Utilities" tab provides a variety of general utilities and tools in the subtabs above.
+            </div>
+            <div class="tab-pane" id="Utilities-CLIP-Token-Tab" role="tabpanel">
+                This is a tool to analyze CLIP tokenization for Stable Diffusion models.
+                <br>All current Stable Diffusion models use the same CLIP token set, so this applies to them all.
+                <br>Simply type some text in the box below to see how it gets tokenized.
+                <br>It will show each text-piece, and its numerical ID.
+                <br><textarea class="auto-text clip-tokenization-input-box" id="clip_tokenization_test_textarea" rows="2" oninput="utilClipTokenize()"></textarea>
+                <br>
+                <br><span class="tokenizer-output-area" id="clip_tokenization_result_line"></span>
+            </div>
+        </div>
+        <div style="height: 10rem"></div> <!-- Spacer -->
+    </div>
     <div class="tab-pane tab-pane-vw" id="User-Settings" role="tabpanel">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -307,6 +335,7 @@
     <script src="/js/genpage/presets.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/models.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/params.js?vary=@Utilities.VaryID"></script>
+    <script src="/js/genpage/utiltab.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/main.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/settings_editor.js?vary=@Utilities.VaryID"></script>
     @WebServer.PageFooterExtra

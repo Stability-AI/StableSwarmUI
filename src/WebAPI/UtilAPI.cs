@@ -71,7 +71,7 @@ public static class UtilAPI
         int[] tokens = tokenizer.Encode(text);
         return new JObject()
         {
-            ["tokens"] = new JArray(tokens.Select(t => new JObject() { ["id"] = t, ["token"] = tokenizer.Tokens[t] }).ToArray())
+            ["tokens"] = new JArray(tokens.Select(t => new JObject() { ["id"] = t, ["text"] = tokenizer.Tokens[t] }).ToArray())
         };
     }
 }
