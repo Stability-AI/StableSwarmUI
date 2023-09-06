@@ -96,11 +96,11 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             string modelPath = $"--extra-model-paths-config {pathRaw}";
             addedArgs = $" --preview-method auto {modelPath}";
         }
-        if (!settings.StartScript.EndsWith("main.py"))
+        if (!settings.StartScript.EndsWith("main.py") && !string.IsNullOrWhiteSpace(settings.StartScript))
         {
             Logs.Warning($"ComfyUI start script is '{settings.StartScript}', which looks wrong - did you forget to append 'main.py' on the end?");
         }
-        if (settings.AutoUpdate)
+        if (settings.AutoUpdate && !string.IsNullOrWhiteSpace(settings.StartScript))
         {
             try
             {

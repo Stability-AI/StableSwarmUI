@@ -98,6 +98,10 @@ function addBackendToHtml(backend, disable, spot = null) {
     for (let entry of cardBody.querySelectorAll('[data-name]')) {
         entry.disabled = disable;
     }
+    if (!disable) {
+        actualCardTitle.contentEditable = true;
+        actualCardTitle.classList.add('backend-title-editable');
+    }
     actualCardTitle.addEventListener('keydown', e => {
         if (e.key == 'Enter') {
             e.preventDefault();
