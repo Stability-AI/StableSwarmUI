@@ -12,12 +12,17 @@ public class ComfyUIAPIBackend : ComfyUIAPIAbstractBackend
         [SuggestionPlaceholder(Text = "ComfyUI's address...")]
         [ConfigComment("The address of the ComfyUI instance, eg 'http://localhost:8188'.")]
         public string Address = "";
+
+        [ConfigComment("Whether the backend is allowed to revert to an 'idle' state if the API address is unresponsive.\nAn idle state is not considered an error, but cannot generate.\nIt will automatically return to 'running' if the API becomes available.")]
+        public bool AllowIdle = false;
     }
 
     public override string Address => (SettingsRaw as ComfyUIAPISettings).Address.TrimEnd('/');
 
+    public override bool CanIdle => (SettingsRaw as ComfyUIAPISettings).AllowIdle;
+
     public override Task Init()
     {
-        return InitInternal(false);
+        return InitInternal(CanIdle);
     }
 }

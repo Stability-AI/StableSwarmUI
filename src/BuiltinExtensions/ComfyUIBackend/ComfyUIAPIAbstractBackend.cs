@@ -37,6 +37,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
     }
 
+    public abstract bool CanIdle { get; }
+
     public async Task InitInternal(bool ignoreWebError)
     {
         if (string.IsNullOrWhiteSpace(Address))
@@ -56,12 +58,58 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 throw;
             }
         }
+        StopIdleMonitor();
+        if (CanIdle)
+        {
+            IdleMonitorThread = new Thread(IdleMonitorLoop);
+            IdleMonitorThread.Start();
+        }
+    }
+
+    public Thread IdleMonitorThread;
+
+    public CancellationTokenSource IdleMonitorCancel = new();
+
+    public void IdleMonitorLoop()
+    {
+        CancellationToken cancel = IdleMonitorCancel.Token;
+        while (true)
+        {
+            Task.Delay(TimeSpan.FromSeconds(5), Program.GlobalProgramCancel);
+            if (cancel.IsCancellationRequested || Program.GlobalProgramCancel.IsCancellationRequested)
+            {
+                return;
+            }
+            if (Status != BackendStatus.RUNNING && Status != BackendStatus.IDLE)
+            {
+                continue;
+            }
+            try
+            {
+                JObject result = SendGet<JObject>("object_info").Result;
+                Status = BackendStatus.RUNNING;
+            }
+            catch (Exception)
+            {
+                Status = BackendStatus.IDLE;
+            }
+        }
+    }
+
+    void StopIdleMonitor()
+    {
+        if (IdleMonitorThread is not null)
+        {
+            IdleMonitorCancel.Cancel();
+            IdleMonitorCancel = new();
+            IdleMonitorThread = null;
+        }
     }
 
     public override Task Shutdown()
     {
         Status = BackendStatus.DISABLED;
-        // Nothing to do, not our server.
+        StopIdleMonitor();
         return Task.CompletedTask;
     }
 

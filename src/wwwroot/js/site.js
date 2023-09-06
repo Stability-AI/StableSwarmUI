@@ -322,11 +322,12 @@ function makeTextInput(featureid, id, name, description, value, isPrompt, placeh
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let onInp = isPrompt ? ' oninput="textPromptInputHandle(this)"' : '';
+    let tokenCounter = isPrompt ? '<span class="auto-input-prompt-tokencount" title="Text-Encoder token count / chunk-size">0/75</span>' : '';
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-text-box${(isPrompt ? "" : " auto-input-flex")}"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span></span>
-        <span class="auto-input-prompt-tokencount" title="Text-Encoder token count / chunk-size">0/75</span>
+        ${tokenCounter}
         <textarea class="auto-text${(isPrompt ? " auto-text-block" : "")}" id="${id}" rows="${isPrompt ? 2 : 1}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
         <button class="interrupt-button image-clear-button" style="display: none;">Clear Images</button>
         <div class="added-image-area"></div>

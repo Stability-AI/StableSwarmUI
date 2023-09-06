@@ -78,5 +78,6 @@ public enum BackendStatus
     ERRORED,
     WAITING,
     LOADING,
+    IDLE,
     RUNNING
 }

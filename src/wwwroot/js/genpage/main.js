@@ -450,7 +450,10 @@ function getCurrentStatus() {
             return ['error', 'Some backends have errored on the server. Check the server logs for details.'];
         }
         if (countBackendsByStatus('disabled') > 0) {
-            return ['warn', 'Some backends are disabled. Please configure them to continue.'];
+            return ['warn', 'Some backends are disabled. Please enable or configure them to continue.'];
+        }
+        if (countBackendsByStatus('idle') > 0) {
+            return ['warn', 'All backends are idle. Cannot generate until at least one backend is running.'];
         }
         return ['error', 'Something is wrong with your backends. Please check the Backends section of the Server tab, or the server logs.'];
     }

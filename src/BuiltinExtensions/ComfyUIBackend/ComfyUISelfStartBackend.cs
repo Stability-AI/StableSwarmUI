@@ -37,6 +37,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
 
     public override string Address => $"http://localhost:{Port}";
 
+    public override bool CanIdle => false;
+
     public static LockObject ComfyModelFileHelperLock = new();
 
     public static bool IsComfyModelFileEmitted = false;
