@@ -229,9 +229,27 @@ public static class NetworkBackendUtils
         void MonitorLoop()
         {
             string line;
+            bool keepShowing = false;
             while ((line = runningProcess.StandardOutput.ReadLine()) != null)
             {
-                Logs.Debug($"{nameSimple} launcher: {line}");
+                if (line.StartsWith("Traceback ("))
+                {
+                    keepShowing = true;
+                    Logs.Warning($"{nameSimple} launcher: {line}");
+                }
+                else if (keepShowing && line.StartsWith("  "))
+                {
+                    Logs.Warning($"{nameSimple} launcher: {line}");
+                }
+                else if (keepShowing)
+                {
+                    Logs.Warning($"{nameSimple} launcher: {line}");
+                    keepShowing = false;
+                }
+                else
+                {
+                    Logs.Debug($"{nameSimple} launcher: {line}");
+                }
             }
             status = getStatus();
             Logs.Debug($"Status of {nameSimple} after process end is {status}");
@@ -255,7 +273,18 @@ public static class NetworkBackendUtils
                     errorLog = new StringBuilder(errorLog.ToString()[(1024 * 10)..]);
                 }
             }
-            Logs.Info($"Self-Start {nameSimple} on port {port} exited (if something failed, launch with `--loglevel debug` to see why!)");
+            if (getStatus() == BackendStatus.DISABLED)
+            {
+                Logs.Info($"Self-Start {nameSimple} on port {port} exited properly from disabling.");
+            }
+            else
+            {
+                Logs.Info($"Self-Start {nameSimple} on port {port} unexpectedly exited (if something failed, launch with `--loglevel debug` to see why!)");
+            }
+            if (errorLog.Length > 0)
+            {
+                Logs.Info($"Self-Start {nameSimple} on port {port} had errors before shutdown:\n{errorLog}");
+            }
         }
         new Thread(MonitorErrLoop) { Name = $"SelfStart{nameSimple}_{port}_MonitorErr" }.Start();
         while (status == BackendStatus.LOADING)

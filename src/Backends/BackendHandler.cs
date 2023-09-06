@@ -676,7 +676,7 @@ public class BackendHandler
         {
             if (HasShutdown)
             {
-                Logs.Init("Backend request handler loop closing...");
+                Logs.Info("Backend request handler loop closing...");
                 foreach (T2IBackendRequest request in T2IBackendRequests.Values.ToArray())
                 {
                     request.CompletedEvent.Set();

@@ -176,7 +176,6 @@ public class T2IParamInput
         {
             obj = (float)(double)obj;
         }
-        Logs.Debug($"Is now {obj} as {obj.GetType()}");
         ValuesInput[param.ID] = obj;
     }
 
