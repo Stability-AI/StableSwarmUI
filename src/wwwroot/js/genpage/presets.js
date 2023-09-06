@@ -216,6 +216,7 @@ function apply_presets() {
     }
     currentPresets = [];
     updatePresetList();
+    presetBrowser.rerender();
 }
 
 function editPreset(preset) {
