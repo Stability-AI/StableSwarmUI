@@ -107,13 +107,19 @@ public class Session : IEquatable<Session>
         return (image, metadata ?? "");
     }
 
+    /// <summary>Returns a properly web-formatted base64 encoding of an image, per the user's file format preference.</summary>
+    public string GetImageB64(Image image)
+    {
+        return "data:image/" + (User.Settings.FileFormat.ImageFormat == "PNG" ? "png" : "jpeg") + ";base64," + image.AsBase64;
+    }
+
     /// <summary>Save an image as this user, and returns the new URL. If user has disabled saving, returns a data URL.</summary>
     /// <returns>(User-Visible-WebPath, Local-FilePath)</returns>
     public (string, string) SaveImage(Image image, int batchIndex, T2IParamInput user_input, string metadata)
     {
         if (!User.Settings.SaveFiles)
         {
-            return ("data:image/" + (User.Settings.FileFormat.ImageFormat == "PNG" ? "png" : "jpeg") + ";base64," + image.AsBase64, null);
+            return (GetImageB64(image), null);
         }
         string rawImagePath = User.BuildImageOutputPath(user_input, batchIndex);
         string imagePath = rawImagePath.Replace("[number]", "1");

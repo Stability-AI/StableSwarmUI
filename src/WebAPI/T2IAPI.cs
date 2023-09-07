@@ -68,6 +68,29 @@ public static class T2IAPI
         return new JObject() { ["images"] = new JArray(imageOutputs.Values.ToArray()) };
     }
 
+    /// <summary>Helper util to take a user-supplied JSON object of parameter data and turn it into a valid T2I request object.</summary>
+    public static T2IParamInput RequestToParams(Session session, JObject rawInput)
+    {
+        T2IParamInput user_input = new(session);
+        foreach ((string key, JToken val) in rawInput)
+        {
+            if (T2IParamTypes.TryGetType(key, out _, user_input))
+            {
+                T2IParamTypes.ApplyParameter(key, val.ToString(), user_input);
+            }
+        }
+        if (rawInput.TryGetValue("presets", out JToken presets))
+        {
+            foreach (JToken presetName in presets.Values())
+            {
+                T2IPreset presetObj = session.User.GetPreset(presetName.ToString());
+                presetObj.ApplyTo(user_input);
+            }
+        }
+        user_input.NormalizeSeeds();
+        return user_input;
+    }
+
     /// <summary>Internal route for generating images.</summary>
     public static async Task GenT2I_Internal(Session session, (int, JObject) input, Action<JObject> output, bool isWS)
     {
@@ -79,24 +102,10 @@ public static class T2IAPI
             output(new JObject() { ["error"] = message });
             claim.LocalClaimInterrupt.Cancel();
         }
-        T2IParamInput user_input = new(session);
+        T2IParamInput user_input;
         try
         {
-            foreach ((string key, JToken val) in rawInput)
-            {
-                if (T2IParamTypes.TryGetType(key, out _, user_input))
-                {
-                    T2IParamTypes.ApplyParameter(key, val.ToString(), user_input);
-                }
-            }
-            if (rawInput.TryGetValue("presets", out JToken presets))
-            {
-                foreach (JToken presetName in presets.Values())
-                {
-                    T2IPreset presetObj = session.User.GetPreset(presetName.ToString());
-                    presetObj.ApplyTo(user_input);
-                }
-            }
+            user_input = RequestToParams(session, rawInput);
         }
         catch (InvalidOperationException ex)
         {
@@ -108,7 +117,6 @@ public static class T2IAPI
             setError(ex.Message);
             return;
         }
-        user_input.NormalizeSeeds();
         List<T2IEngine.ImageInBatch> imageSet = new();
         List<Task> tasks = new();
         void removeDoneTasks()
@@ -132,8 +140,8 @@ public static class T2IAPI
             removeDoneTasks();
             while (tasks.Count > max_degrees)
             {
-                removeDoneTasks();
                 await Task.WhenAny(tasks);
+                removeDoneTasks();
             }
             if (claim.ShouldCancel)
             {

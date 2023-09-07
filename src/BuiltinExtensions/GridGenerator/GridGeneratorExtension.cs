@@ -260,18 +260,11 @@ public class GridGeneratorExtension : Extension
     public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun)
     {
         using Session.GenClaim claim = session.Claim(gens: 1);
-        T2IParamInput baseParams = new(session);
+        T2IParamInput baseParams;
         try
         {
-            foreach ((string key, JToken val) in (raw["baseParams"] as JObject))
-            {
-                if (T2IParamTypes.TryGetType(key, out _, baseParams))
-                {
-                    T2IParamTypes.ApplyParameter(key, val.ToString(), baseParams);
-                }
-            }
+            baseParams = T2IAPI.RequestToParams(session, raw["baseParams"] as JObject);
             outputFolderName = CleanFolderName(outputFolderName);
-            baseParams.NormalizeSeeds();
         }
         catch (InvalidDataException ex)
         {
