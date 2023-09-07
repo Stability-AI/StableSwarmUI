@@ -164,6 +164,22 @@ body {
     vertical-align: top;
     white-space: normal;
 }
+.auto-clear-batch-box {
+    color: color-mix(in srgb, var(--text) 70%, var(--background));
+    background-color: color-mix(in srgb, transparent 50%, var(--background));
+    border-radius: 0.3rem;
+    width: 7.5rem;
+    height: 1rem;
+    position: absolute;
+    top: -0.2rem;
+    left: 0;
+    transition: all 0.5s ease-out;
+    font-size: 80%;
+}
+.auto-clear-batch-box:hover {
+    color: var(--text);
+    background-color: var(--background);
+}
 .image-block {
     display: inline-block;
     cursor: pointer;

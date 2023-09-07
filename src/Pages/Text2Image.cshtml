@@ -48,7 +48,17 @@
                 </div>
                 <div class="t2i-top-split-bar splitter-bar" id="t2i-top-split-bar"><div class="t2i-split-quickbutton t2i-top-split-quickbutton" id="t2i-top-split-quickbutton">&#x21DA;</div></div>
                 <div class="main-image-area" id="main_image_area">
-                    <div class="current_image" id="current_image"></div><div class="t2i-top-split-bar splitter-bar" id="t2i-top-2nd-split-bar"></div><div class="current_image_batch" id="current_image_batch"></div>
+                    <div class="current_image" id="current_image"></div><div class="t2i-top-split-bar splitter-bar" id="t2i-top-2nd-split-bar"></div>
+                    <div class="current_image_batch">
+                        <div style="position: relative; width: 0; height: 0;">
+                            <div class="auto-clear-batch-box" title="If enabled, automatically clears out the image batch when generating a new one. If disabled, leaves history to grow until you refresh the page.">
+                                <span class="form-check form-switch display-inline-block">
+                                    <input type="checkbox" class="form-check-input" id="auto_clear_batch_checkbox" onchange="toggleAutoClearBatch()" checked=""> <label class="form-check-label" for="import_presets_overwrite">Auto Clear Batch</label>
+                                </span>
+                            </div>
+                        </div>
+                        <div id="current_image_batch"></div>
+                    </div>
                     <div class="alt_prompt_region" id="alt_prompt_region">
                         <div id="alt_prompt_extra_area" class="alt_prompt_extra_area">
                             <button class="interrupt-button image-clear-button" style="display: none;" id="alt_prompt_image_clear_button">Clear Images</button>
@@ -146,7 +156,9 @@
                                 <input type="file" id="import_preset_uploader" /> <label for="import_preset_uploader" oninput=":importPresetUpload()"></i>&nbsp; Upload Preset File (JSON or CSV)</label>
                                 <textarea id="import_presets_textarea" style="width: 100%;" rows="10" oninput="importPresetsCheck()"></textarea>
                             </div>
-                            <input type="checkbox" class="form-check-input" id="import_presets_overwrite" onchange="importPresetsCheck()"> <label class="form-check-label" for="import_presets_overwrite">Overwrite existing presets</label>
+                            <span class="form-check form-switch display-inline-block">
+                                <input type="checkbox" class="form-check-input" id="import_presets_overwrite" onchange="importPresetsCheck()"> <label class="form-check-label" for="import_presets_overwrite">Overwrite existing presets</label>
+                            </span>
                         </div>
                         <div class="modal-footer">
                             <span id="import_preset_modal_error" class="modal_error_bottom"></span>

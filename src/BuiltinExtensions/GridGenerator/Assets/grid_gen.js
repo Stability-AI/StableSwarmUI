@@ -208,6 +208,7 @@ class GridGenClass {
 
     register() {
         let doGenerate = () => {
+            resetBatchIfNeeded();
             let startTime = Date.now();
             let generatedCount = 0;
             let getOpt = (o) => document.getElementById('grid-gen-opt-' + o).checked;

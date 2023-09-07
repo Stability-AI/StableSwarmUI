@@ -328,7 +328,7 @@ function doGenerate(input_overrides = {}) {
             showError("Cannot generate, no model selected.");
             return;
         }
-        getRequiredElementById('current_image_batch').innerHTML = '';
+        resetBatchIfNeeded();
         let images = {};
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides), data => {
             if (data.image) {
@@ -790,6 +790,21 @@ function pageSizer() {
     altPromptSizeHandle();
     new ResizeObserver(altPromptSizeHandle).observe(altText);
     altPromptSizeHandleFunc = altPromptSizeHandle;
+}
+
+/** Reference to the auto-clear-batch toggle checkbox. */
+let autoClearBatchElem = getRequiredElementById('auto_clear_batch_checkbox');
+autoClearBatchElem.checked = localStorage.getItem('autoClearBatch') != 'false';
+/** Called when the user changes auto-clear-batch toggle to update local storage. */
+function toggleAutoClearBatch() {
+    localStorage.setItem('autoClearBatch', `${autoClearBatchElem.checked}`);
+}
+
+/** Clears out and resets the image-batch view, only if the user wants that. */
+function resetBatchIfNeeded() {
+    if (autoClearBatchElem.checked) {
+        getRequiredElementById('current_image_batch').innerHTML = '';
+    }
 }
 
 function loadUserData() {
