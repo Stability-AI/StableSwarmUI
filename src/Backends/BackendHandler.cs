@@ -34,6 +34,9 @@ public class BackendHandler
     /// <summary>Value to ensure unique IDs are given to new non-real backends.</summary>
     public int LastNonrealBackendID = -1;
 
+    /// <summary>If true, then at some point backends were edited, and re-saving is needed.</summary>
+    public bool BackendsEdited = false;
+
     /// <summary>The path to where the backend list is saved.</summary>
     public string SaveFilePath = "Data/Backends.fds";
 
@@ -122,6 +125,7 @@ public class BackendHandler
     /// <summary>Adds a new backend of the given type, and returns its data. Note that the backend will not be initialized at first.</summary>
     public T2IBackendData AddNewOfType(BackendType type, AutoConfiguration config = null)
     {
+        BackendsEdited = true;
         T2IBackendData data = new()
         {
             Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend
@@ -189,6 +193,7 @@ public class BackendHandler
     /// <summary>Shutdown and delete a given backend.</summary>
     public async Task<bool> DeleteById(int id)
     {
+        BackendsEdited = true;
         if (!T2IBackends.TryRemove(id, out T2IBackendData data))
         {
             return false;
@@ -211,6 +216,7 @@ public class BackendHandler
         {
             data.Backend.Title = title;
         }
+        BackendsEdited = true;
         data.ModCount++;
         data.Backend.Status = BackendStatus.WAITING;
         BackendsToInit.Enqueue(data);
@@ -471,9 +477,16 @@ public class BackendHandler
             Task.Delay(TimeSpan.FromMilliseconds(100)).Wait();
             tasks = tasks.Where(t => !t.Item2.IsCompleted).ToList();
         }
-        Logs.Info("All backends shut down, saving file...");
-        Save();
-        Logs.Info("Backend handler shutdown complete.");
+        if (BackendsEdited)
+        {
+            Logs.Info("All backends shut down, saving file...");
+            Save();
+            Logs.Info("Backend handler shutdown complete.");
+        }
+        else
+        {
+            Logs.Info("Backend handler shutdown complete without saving.");
+        }
     }
 
     /// <summary>Helper data for a model being requested, used to inform backend model switching choices.</summary>
