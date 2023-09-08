@@ -22,6 +22,7 @@ public abstract class AbstractT2IBackend
     {
         OnShutdown?.Invoke();
         OnShutdown = null;
+        CurrentModelName = null;
         await Shutdown();
     }
 

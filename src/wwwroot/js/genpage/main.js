@@ -342,19 +342,27 @@ function doGenerate(input_overrides = {}) {
                     imgHolder.div.querySelector('img').src = data.image;
                     imgHolder.image = data.image;
                     imgHolder.div.dataset.metadata = data.metadata;
+                    let progress_bars = imgHolder.div.querySelector('.image-preview-progress-wrapper');
+                    if (progress_bars) {
+                        progress_bars.remove();
+                    }
                 }
                 images[data.batch_index].image = data.image;
                 images[data.batch_index].metadata = data.metadata;
             }
             if (data.gen_progress) {
-                // TODO: Render progress bars
                 if (!(data.gen_progress.batch_index in images)) {
                     let batch_div = gotImagePreview(data.gen_progress.preview || 'imgs/model_placeholder.jpg', `{"preview": "${data.gen_progress.current_percent}"}`, data.gen_progress.batch_index);
                     images[data.gen_progress.batch_index] = {div: batch_div, image: null, metadata: null, overall_percent: 0, current_percent: 0};
+                    let progress_bars_html = `<div class="image-preview-progress-inner"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>`;
+                    let progress_bars = createDiv(null, 'image-preview-progress-wrapper', progress_bars_html);
+                    batch_div.prepend(progress_bars);
                 }
                 let imgHolder = images[data.gen_progress.batch_index];
                 imgHolder.overall_percent = data.gen_progress.overall_percent;
                 imgHolder.current_percent = data.gen_progress.current_percent;
+                imgHolder.div.querySelector('.image-preview-progress-overall').style.width = `${imgHolder.overall_percent * 100}%`;
+                imgHolder.div.querySelector('.image-preview-progress-current').style.width = `${imgHolder.current_percent * 100}%`;
                 let curImgElem = document.getElementById('current_image_img');
                 if (data.gen_progress.preview && (!imgHolder.image || data.gen_progress.preview != imgHolder.image)) {
                     if (curImgElem && curImgElem.dataset.batch_id == data.gen_progress.batch_index) {
