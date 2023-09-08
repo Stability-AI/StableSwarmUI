@@ -210,6 +210,12 @@ function textPromptInputHandle(elem) {
     textPromptDoCount(elem);
 }
 
+function setSeedToRandom(elemId) {
+    let elem = getRequiredElementById(elemId);
+    elem.value = -1;
+    triggerChangeFor(elem);
+}
+
 function doToggleEnable(id) {
     let elem = document.getElementById(id);
     if (!elem) {
@@ -300,16 +306,16 @@ function makeSliderInput(featureid, id, name, description, value, min, max, view
     </div></div>`;
 }
 
-function makeNumberInput(featureid, id, name, description, value, min, max, step = 1, small = false, toggles = false, popover_button = true) {
+function makeNumberInput(featureid, id, name, description, value, min, max, step = 1, format = 'big', toggles = false, popover_button = true) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
-    if (small == 'seed') {
+    if (format == 'seed') {
         return `
             <div class="auto-input auto-number-box auto-input-flex"${featureid}>
                 <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
                 <input class="auto-number auto-number-seedbox" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
-                <button class="basic-button" title="Random (Set to -1)" onclick="getRequiredElementById('${id}').value = -1;">&#x1F3B2;</button>
+                <button class="basic-button" title="Random (Set to -1)" onclick="setSeedToRandom('${id}')">&#x1F3B2;</button>
                 <button class="basic-button" title="Reuse (from currently selected image)" onclick="reuseLastParamVal('${id}');">&#128257;</button>
             </div>`;
     }
