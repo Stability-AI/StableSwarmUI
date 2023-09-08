@@ -93,7 +93,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             string pathRaw = $"{Environment.CurrentDirectory}/Data/comfy-auto-model.yaml";
             if (pathRaw.Contains(' '))
             {
-                pathRaw = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"'{pathRaw}'" : $"\"{pathRaw}\"";
+                pathRaw = $"\"{pathRaw}\"";
             }
             string modelPath = $"--extra-model-paths-config {pathRaw}";
             addedArgs = $" --preview-method auto {modelPath}";
