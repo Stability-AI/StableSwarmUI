@@ -11,8 +11,19 @@ public abstract class AbstractT2IBackend
     /// <summary>Load this backend and get it ready for usage. Do not return until ready. Throw an exception if not possible.</summary>
     public abstract Task Init();
 
-    /// <summary>Shut down this backend and clear any memory/resources/etc. Do not return until fully cleared.</summary>
+    /// <summary>Shut down this backend and clear any memory/resources/etc. Do not return until fully cleared. Call <see cref="DoShutdownNow"/> to trigger this correctly.</summary>
     public abstract Task Shutdown();
+
+    /// <summary>Event fired when this backend is about to shutdown.</summary>
+    public Action OnShutdown;
+
+    /// <summary>Shuts down this backend and clears any memory/resources/etc. Does not return until fully cleared.</summary>
+    public async Task DoShutdownNow()
+    {
+        OnShutdown?.Invoke();
+        OnShutdown = null;
+        await Shutdown();
+    }
 
     /// <summary>Generate an image.</summary>
     public abstract Task<Image[]> Generate(T2IParamInput user_input);

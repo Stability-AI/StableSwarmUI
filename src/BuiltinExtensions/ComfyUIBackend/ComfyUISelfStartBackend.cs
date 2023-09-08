@@ -24,8 +24,11 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         [ConfigComment("If unchecked, the system will automatically add some relevant arguments to the comfy launch. If checked, automatic args (other than port) won't be added.")]
         public bool DisableInternalArgs = false;
 
-        [ConfigComment("If enabled, will automatically keep the comfy backend up to date when launching.")]
+        [ConfigComment("If checked, will automatically keep the comfy backend up to date when launching.")]
         public bool AutoUpdate = true;
+
+        [ConfigComment("If checked, tells Comfy to generate image previews. If unchecked, previews will not be generated, and images won't show up until they're done.")]
+        public bool EnablePreviews = true;
 
         [ConfigComment("Which GPU to use, if multiple are available.")]
         public int GPU_ID = 0; // TODO: Determine GPU count and provide correct max
@@ -95,8 +98,11 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             {
                 pathRaw = $"\"{pathRaw}\"";
             }
-            string modelPath = $"--extra-model-paths-config {pathRaw}";
-            addedArgs = $" --preview-method auto {modelPath}";
+            addedArgs += $" --extra-model-paths-config {pathRaw}";
+            if (settings.EnablePreviews)
+            {
+                addedArgs += " --preview-method auto";
+            }
         }
         if (!settings.StartScript.EndsWith("main.py") && !string.IsNullOrWhiteSpace(settings.StartScript))
         {

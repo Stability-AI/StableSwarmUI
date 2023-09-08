@@ -23,6 +23,8 @@ public class ScorersExtension : Extension
 
     public static T2IRegisteredParam<int> TakeBestNScore;
 
+    public static Action ShutdownEvent;
+
     public override void OnInit()
     {
         T2IEngine.PostGenerateEvent += PostGenEvent;
@@ -42,6 +44,7 @@ public class ScorersExtension : Extension
 
     public override void OnShutdown()
     {
+        ShutdownEvent?.Invoke();
         T2IEngine.PostGenerateEvent -= PostGenEvent;
         T2IEngine.PostBatchEvent -= PostBatchEvent;
         if (RunningProcess is not null)
@@ -93,7 +96,7 @@ public class ScorersExtension : Extension
                     return false;
                 }
             }
-            NetworkBackendUtils.DoSelfStart(FilePath + "scorer_engine.py", "ScorersExtension", 0, "{PORT}", s => Status = s, Check, (p, r) => { Port = p; RunningProcess = r; }, () => Status).Wait();
+            NetworkBackendUtils.DoSelfStart(FilePath + "scorer_engine.py", "ScorersExtension", 0, "{PORT}", s => Status = s, Check, (p, r) => { Port = p; RunningProcess = r; }, () => Status, a => ShutdownEvent += a).Wait();
         }
     }
 

@@ -82,7 +82,7 @@ public class BackendAPI
         }
         if (backend.Backend.Status != BackendStatus.DISABLED && backend.Backend.Status != BackendStatus.ERRORED)
         {
-            await backend.Backend.Shutdown();
+            await backend.Backend.DoShutdownNow();
         }
         if (enabled)
         {

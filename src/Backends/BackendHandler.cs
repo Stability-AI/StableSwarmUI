@@ -182,7 +182,7 @@ public class BackendHandler
                 }
                 await Task.Delay(TimeSpan.FromSeconds(0.5));
             }
-            await data.Backend.Shutdown();
+            await data.Backend.DoShutdownNow();
         }
         finally
         {
@@ -463,7 +463,7 @@ public class BackendHandler
                     }
                     Thread.Sleep(100);
                 }
-                tasks.Add((backend, backend.Backend.Shutdown()));
+                tasks.Add((backend, backend.Backend.DoShutdownNow()));
             })));
         }
         int ticks = 0;

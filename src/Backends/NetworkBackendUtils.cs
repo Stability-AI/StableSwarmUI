@@ -126,11 +126,11 @@ public static class NetworkBackendUtils
     /// <summary>Starts a self-start backend based on the user-configuration and backend-specifics provided.</summary>
     public static Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput)
     {
-        return DoSelfStart(startScript, nameSimple, gpuId, extraArgs, status => backend.Status = status, async (b) => { await initInternal(b); return backend.Status == BackendStatus.RUNNING; }, takeOutput, () => backend.Status);
+        return DoSelfStart(startScript, nameSimple, gpuId, extraArgs, status => backend.Status = status, async (b) => { await initInternal(b); return backend.Status == BackendStatus.RUNNING; }, takeOutput, () => backend.Status, a => backend.OnShutdown += a);
     }
 
     /// <summary>Starts a self-start backend based on the user-configuration and backend-specifics provided.</summary>
-    public static async Task DoSelfStart(string startScript, string nameSimple, int gpuId, string extraArgs, Action<BackendStatus> reviseStatus, Func<bool, Task<bool>> initInternal, Action<int, Process> takeOutput, Func<BackendStatus> getStatus)
+    public static async Task DoSelfStart(string startScript, string nameSimple, int gpuId, string extraArgs, Action<BackendStatus> reviseStatus, Func<bool, Task<bool>> initInternal, Action<int, Process> takeOutput, Func<BackendStatus> getStatus, Action<Action> addShutdownEvent)
     {
         if (string.IsNullOrWhiteSpace(startScript))
         {
@@ -226,6 +226,8 @@ public static class NetworkBackendUtils
         takeOutput(port, runningProcess);
         runningProcess.Start();
         Logs.Init($"Self-Start {nameSimple} on port {port} is loading...");
+        bool isShuttingDown = false;
+        addShutdownEvent?.Invoke(() => { Volatile.Write(ref isShuttingDown, true); });
         void MonitorLoop()
         {
             string line;
@@ -276,6 +278,10 @@ public static class NetworkBackendUtils
             if (getStatus() == BackendStatus.DISABLED)
             {
                 Logs.Info($"Self-Start {nameSimple} on port {port} exited properly from disabling.");
+            }
+            else if (Volatile.Read(ref isShuttingDown))
+            {
+                Logs.Info($"Self-Start {nameSimple} on port {port} exited properly.");
             }
             else
             {
