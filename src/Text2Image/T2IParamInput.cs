@@ -72,6 +72,8 @@ public class T2IParamInput
                 output[key] = JToken.FromObject(val);
             }
         }
+        output["swarm_version"] = Utilities.Version;
+        output["date"] = DateTime.Now.ToString("yyyy-MM-dd");
         return output;
     }
 
