@@ -203,7 +203,7 @@ public class T2IParamTypes
     }
 
     public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod;
-    public static T2IRegisteredParam<int> Images, Steps, Width, Height;
+    public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize;
     public static T2IRegisteredParam<long> Seed, VariationSeed;
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult;
     public static T2IRegisteredParam<Image> InitImage, ControlNetImage;
@@ -323,6 +323,9 @@ public class T2IParamTypes
             ));
         AltResolutionHeightMult = Register<double>(new("Alt Resolution Height Multiplier", "When enabled, the normal width parameter is used, and this value is multiplied by the width to derive the image height.",
             "1", Min: 0, Max: 10, Step: 0.1, Examples: new[] { "0.5", "1", "1.5" }, IsAdvanced: true, Toggleable: true, ViewType: ParamViewType.SLIDER
+            ));
+        BatchSize = Register<int>(new("Batch Size", "Batch size - generates more images at once on a single GPU.\nThis increases VRAM usage.\nMay in some cases increase overall speed by a small amount (runs slower to get the images, but slightly faster per-image).",
+            "1", Toggleable: true, Min: 1, Max: 100, Step: 1, IsAdvanced: true, ViewType: ParamViewType.SLIDER, ViewMax: 10
             ));
     }
 

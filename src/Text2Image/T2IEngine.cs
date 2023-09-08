@@ -117,12 +117,15 @@ namespace StableSwarmUI.Text2Image
                 claim.Extend(liveGens: 1);
                 sendStatus();
                 long prepTime;
+                int numImagesGenned = 0;
+                long lastGenTime = 0;
+                string genTimeReport = "? failed!";
                 void handleImage(Image img)
                 {
                     if (img is not null)
                     {
-                        long genTime = timer.ElapsedMilliseconds;
-                        string genTimeReport = $"{prepTime / 1000.0:0.00} (prep) and {(genTime - prepTime) / 1000.0:0.00} (gen) seconds";
+                        lastGenTime = timer.ElapsedMilliseconds;
+                        genTimeReport = $"{prepTime / 1000.0:0.00} (prep) and {(lastGenTime - prepTime) / 1000.0:0.00} (gen) seconds";
                         Dictionary<string, object> extras = new() { ["generation_time"] = genTimeReport };
                         bool refuse = false;
                         PostGenerateEvent?.Invoke(new(img, extras, user_input, () => refuse = true));
@@ -132,9 +135,9 @@ namespace StableSwarmUI.Text2Image
                         }
                         else
                         {
-                            (img, string metadata) = user_input.SourceSession.ApplyMetadata(img, user_input, extras);
+                            (img, string metadata) = user_input.SourceSession.ApplyMetadata(img, user_input, extras, numImagesGenned);
                             saveImages(img, metadata);
-                            Logs.Info($"Generated an image in {genTimeReport}");
+                            numImagesGenned++;
                         }
                     }
                 }
@@ -156,6 +159,18 @@ namespace StableSwarmUI.Text2Image
                             output(new JObject() { ["gen_progress"] = (JToken)obj });
                         }
                     });
+                    if (numImagesGenned == 0)
+                    {
+                        Logs.Info($"No images were generated (all refused, or failed).");
+                    }
+                    else if (numImagesGenned == 1)
+                    {
+                        Logs.Info($"Generated an image in {genTimeReport}");
+                    }
+                    else
+                    {
+                        Logs.Info($"Generated {numImagesGenned} images in {genTimeReport} ({((lastGenTime - prepTime) / numImagesGenned) / 1000.0:0.00} seconds per image)");
+                    }
                 }
             }
             catch (AbstractT2IBackend.PleaseRedirectException)

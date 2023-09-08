@@ -135,6 +135,8 @@ public static class T2IAPI
         }
         int max_degrees = session.User.Restrictions.CalcMaxT2ISimultaneous;
         List<int> discard = new();
+        int numExtra = 0;
+        int batchSizeExpected = user_input.Get(T2IParamTypes.BatchSize, 1);
         for (int i = 0; i < images && !claim.ShouldCancel; i++)
         {
             removeDoneTasks();
@@ -147,13 +149,20 @@ public static class T2IAPI
             {
                 break;
             }
-            int imageIndex = i;
+            int imageIndex = i * batchSizeExpected;
             T2IParamInput thisParams = user_input.Clone();
             thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed) + imageIndex);
+            int numCalls = 0;
             tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, $"{imageIndex}", claim, output, setError, isWS, Program.ServerSettings.Backends.PerRequestTimeoutMinutes,
                 (image, metadata) =>
                 {
-                    (string url, string filePath) = session.SaveImage(image, imageIndex, thisParams, metadata);
+                    int actualIndex = imageIndex + numCalls;
+                    numCalls++;
+                    if (numCalls > batchSizeExpected)
+                    {
+                        actualIndex = images * batchSizeExpected + Interlocked.Increment(ref numExtra);
+                    }
+                    (string url, string filePath) = session.SaveImage(image, actualIndex, thisParams, metadata);
                     if (url == "ERROR")
                     {
                         setError($"Server failed to save an image.");
@@ -167,10 +176,10 @@ public static class T2IAPI
                             {
                                 File.Delete(filePath);
                             }
-                            discard.Add(imageIndex);
+                            discard.Add(actualIndex);
                         }));
                     }
-                    output(new JObject() { ["image"] = url, ["batch_index"] = $"{imageIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
+                    output(new JObject() { ["image"] = url, ["batch_index"] = $"{actualIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
                 })));
             Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
         }

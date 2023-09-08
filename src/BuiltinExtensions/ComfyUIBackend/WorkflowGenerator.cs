@@ -115,7 +115,7 @@ public class WorkflowGenerator
                 {
                     n["inputs"] = new JObject()
                     {
-                        ["batch_size"] = "1",
+                        ["batch_size"] = g.UserInput.Get(T2IParamTypes.BatchSize, 1),
                         ["height"] = g.UserInput.GetImageHeight(),
                         ["width"] = g.UserInput.Get(T2IParamTypes.Width)
                     };
