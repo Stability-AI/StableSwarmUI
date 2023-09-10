@@ -8,8 +8,11 @@ git clone https://github.com/comfyanonymous/ComfyUI
 
 cd ComfyUI
 
-python3 -m venv venv
+if [ -z "${SWARM_NO_VENV}" ]; then
 
-. venv/bin/activate
+    python3 -m venv venv
+
+    . venv/bin/activate
+fi
 
 pip install -r requirements.txt
