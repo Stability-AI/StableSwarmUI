@@ -26,6 +26,9 @@ public static class Utilities
     /// <summary>Used by linked pages to prevent cache errors when data changes.</summary>
     public static string VaryID = Version;
 
+    /// <summary>A unique ID for this server, used to make sure we don't ever form a circular swarm connection path.</summary>
+    public static Guid LoopPreventionID = Guid.NewGuid();
+
     /// <summary>Matcher for characters banned or specialcased by Windows or other OS's.</summary>
     public static AsciiMatcher FilePathForbidden = new(c => c < 32 || "<>:\"\\|?*~&@;".Contains(c));
 
@@ -95,6 +98,10 @@ public static class Utilities
         {
             result = await socket.ReceiveAsync(buffer, limit);
             ms.Write(buffer, 0, result.Count);
+            if (ms.Length > maxBytes)
+            {
+                throw new IOException($"Received too much data! (over {maxBytes} bytes)");
+            }
         }
         while (!result.EndOfMessage);
         return ms.ToArray();

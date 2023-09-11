@@ -42,7 +42,12 @@ public static class BasicAPIFeatures
     /// <summary>API Route to create a new session automatically.</summary>
     public static async Task<JObject> GetNewSession(HttpContext context)
     {
-        return new JObject() { ["session_id"] = Program.Sessions.CreateAdminSession(context.Connection.RemoteIpAddress?.ToString() ?? "unknown").ID, ["version"] = Utilities.VaryID };
+        return new JObject()
+        {
+            ["session_id"] = Program.Sessions.CreateAdminSession(context.Connection.RemoteIpAddress?.ToString() ?? "unknown").ID,
+            ["version"] = Utilities.VaryID,
+            ["server_id"] = Utilities.LoopPreventionID.ToString()
+        };
     }
 
     public static async Task<JObject> InstallConfirmWS(Session session, WebSocket socket, string theme, string installed_for, string backend, string stability_api_key, string models)
