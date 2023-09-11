@@ -49,6 +49,11 @@ public class BackendHandler
     /// <summary>The number of currently loaded backends.</summary>
     public int Count => T2IBackends.Count;
 
+    public BackendHandler()
+    {
+        RegisterBackendType<SwarmSwarmBackend>("swarmswarmbackend", "Swarm-API-Backend", "Connection StableSwarmUI to another instance of StableSwarmUI as a backend.");
+    }
+
     /// <summary>Metadata about backend types.</summary>
     public record class BackendType(string ID, string Name, string Description, Type SettingsClass, AutoConfiguration.Internal.AutoConfigData SettingsInternal, Type BackendClass, JObject NetDescription);
 

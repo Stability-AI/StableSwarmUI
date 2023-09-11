@@ -49,6 +49,28 @@ public class T2IParamInput
         return toret;
     }
 
+    /// <summary>Generates a JSON object for this input that can be fed straight back into the Swarm API.</summary>
+    public JObject ToJSON()
+    {
+        JObject result = new();
+        foreach ((string key, object val) in ValuesInput)
+        {
+            if (val is Image img)
+            {
+                result[key] = img.AsBase64;
+            }
+            else if (val is T2IModel model)
+            {
+                result[key] = model.Name;
+            }
+            else
+            {
+                result[key] = JToken.FromObject(val);
+            }
+        }
+        return result;
+    }
+
     /// <summary>Generates a metadata JSON object for this input and the given set of extra parameters.</summary>
     public JObject GenMetadataObject(Dictionary<string, object> extraParams)
     {
