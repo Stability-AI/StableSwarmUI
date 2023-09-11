@@ -192,6 +192,11 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         {
             Logs.Info($"SwarmSwarmBackend {BackendData.ID} shutting down...");
             Idler.Stop();
+            foreach (BackendHandler.T2IBackendData data in ControlledNonrealBackends)
+            {
+                await Handler.DeleteById(data.ID);
+            }
+            ControlledNonrealBackends.Clear();
         }
         Status = BackendStatus.DISABLED;
     }
