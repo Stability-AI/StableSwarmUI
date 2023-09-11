@@ -22,6 +22,9 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
         [ConfigComment("Whether the backend is allowed to revert to an 'idle' state if the API address is unresponsive.\nAn idle state is not considered an error, but cannot generate.\nIt will automatically return to 'running' if the API becomes available.")]
         public bool AllowIdle = false;
+
+        [ConfigComment("How many more requests than backends available to queue onto this backend.\nQueuing a few extra to a Swarm instance helps it orchestrate better.\nThe downside if too high is it may cause this backend to take requests that other backends are ready to handle.")]
+        public int OverQueue = 1;
     }
 
     /// <summary>Internal HTTP handler.</summary>
@@ -171,7 +174,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     Idler.Start();
                 }
                 // If there's multiple remote backends, add non-real copies to be able to use them
-                for (int i = 0; i < BackendCount - 1; i++)
+                for (int i = 0; i < BackendCount - 1 + Settings.OverQueue; i++)
                 {
                     ControlledNonrealBackends.Add(Handler.AddNewNonrealBackend(HandlerTypeData, SettingsRaw));
                 }
