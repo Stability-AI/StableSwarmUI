@@ -31,22 +31,32 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
     public NetworkBackendUtils.IdleMonitor Idler = new();
 
+    /// <summary>A set of all supported features the remote Swarm instance has.</summary>
     public ConcurrentDictionary<string, string> RemoteFeatureCombo = new();
 
+    /// <summary>A set of all backend-types the remote Swarm instance has.</summary>
     public volatile HashSet<string> RemoteBackendTypes = new();
 
     public override IEnumerable<string> SupportedFeatures => RemoteFeatureCombo.Keys;
 
+    /// <summary>Current API session ID.</summary>
     public string Session;
 
     /// <summary>If true, at least one remote sub-backend is still 'loading'.</summary>
     public volatile bool AnyLoading = true;
+
+    /// <summary>How many sub-backends are available.</summary>
+    public volatile int BackendCount = 0;
+
+    /// <summary>A list of any non-real backends this instance controls.</summary>
+    public List<BackendHandler.T2IBackendData> ControlledNonrealBackends = new();
 
     public async Task ValidateAndBuild()
     {
         JObject sessData = await HttpClient.PostJson($"{Settings.Address}/API/GetNewSession", new());
         Session = sessData["session_id"].ToString();
         string id = sessData["server_id"]?.ToString();
+        BackendCount = sessData["count_running"].Value<int>();
         if (id == Utilities.LoopPreventionID.ToString())
         {
             Logs.Error($"Swarm is connecting to itself as a backend. This is a bad idea. Check the address being used: {Settings.Address}");
@@ -116,6 +126,13 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             Status = BackendStatus.DISABLED;
             return;
         }
+        if (!IsReal)
+        {
+            Status = BackendStatus.LOADING;
+            await ValidateAndBuild();
+            Status = BackendStatus.RUNNING;
+            return;
+        }
         Idler.Stop();
         try
         {
@@ -144,6 +161,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     {
                         Logs.Error($"SwarmSwarmBackend {BackendData.ID} failed to load: {ex}");
                         Status = BackendStatus.ERRORED;
+                        return;
                     }
                 }
                 if (Settings.AllowIdle)
@@ -151,6 +169,11 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     Idler.Backend = this;
                     Idler.ValidateCall = () => ReviseRemoteDataList().Wait();
                     Idler.Start();
+                }
+                // If there's multiple remote backends, add non-real copies to be able to use them
+                for (int i = 0; i < BackendCount - 1; i++)
+                {
+                    ControlledNonrealBackends.Add(Handler.AddNewNonrealBackend(HandlerTypeData, SettingsRaw));
                 }
             });
         }
@@ -165,8 +188,11 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
     public override async Task Shutdown()
     {
-        Logs.Info($"SwarmSwarmBackend {BackendData.ID} shutting down...");
-        Idler.Stop();
+        if (IsReal)
+        {
+            Logs.Info($"SwarmSwarmBackend {BackendData.ID} shutting down...");
+            Idler.Stop();
+        }
         Status = BackendStatus.DISABLED;
     }
 
@@ -204,30 +230,47 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             req["images"] = 1;
             req["session_id"] = Session;
             req["do_not_save"] = true;
-            JObject generated = await HttpClient.PostJson($"{Settings.Address}/API/GenerateText2Image", req);
             ClientWebSocket websocket = await NetworkBackendUtils.ConnectWebsocket(Settings.Address, "API/GenerateText2ImageWS");
             await websocket.SendJson(req, API.WebsocketTimeout);
             while (true)
             {
-                JObject response = await websocket.ReceiveJson(1024 * 1024 * 100);
-                Logs.Verbose($"Swarm backend gave response: {response}");
-                if (response.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
+                JObject response = await websocket.ReceiveJson(1024 * 1024 * 100, true);
+                if (response is not null)
                 {
-                    throw new SessionInvalidException();
+                    if (response.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
+                    {
+                        Logs.Verbose($"[SwarmSwarmBackend] Got error from websocket: {response}");
+                        throw new SessionInvalidException();
+                    }
+                    else if (response.TryGetValue("gen_progress", out JToken val) && val is JObject objVal)
+                    {
+                        if (objVal.ContainsKey("preview"))
+                        {
+                            Logs.Verbose($"[SwarmSwarmBackend] Got progress image from websocket");
+                        }
+                        else
+                        {
+                            Logs.Verbose($"[SwarmSwarmBackend] Got progress from websocket: {response}");
+                        }
+                        objVal["batch_index"] = batchId;
+                        takeOutput(val);
+                    }
+                    else if (response.TryGetValue("image", out val))
+                    {
+                        Logs.Verbose($"[SwarmSwarmBackend] Got image from websocket");
+                        takeOutput(new Image(val.ToString().After(";base64,")));
+                    }
+                    else
+                    {
+                        Logs.Verbose($"[SwarmSwarmBackend] Got other from websocket: {response}");
+                    }
                 }
                 if (websocket.CloseStatus.HasValue)
                 {
                     break;
                 }
-                if (response.TryGetValue("gen_progress", out JToken val))
-                {
-                    takeOutput(val);
-                }
-                if (response.TryGetValue("image", out val))
-                {
-                    takeOutput(new Image(val.ToString().After(";base64,")));
-                }
             }
+            await websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, Program.GlobalProgramCancel);
         });
     }
 }
