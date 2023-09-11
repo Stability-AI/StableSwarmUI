@@ -46,7 +46,8 @@ public static class BasicAPIFeatures
         {
             ["session_id"] = Program.Sessions.CreateAdminSession(context.Connection.RemoteIpAddress?.ToString() ?? "unknown").ID,
             ["version"] = Utilities.VaryID,
-            ["server_id"] = Utilities.LoopPreventionID.ToString()
+            ["server_id"] = Utilities.LoopPreventionID.ToString(),
+            ["count_running"] = Program.Backends.T2IBackends.Values.Count(b => b.Backend.Status == BackendStatus.RUNNING)
         };
     }
 
