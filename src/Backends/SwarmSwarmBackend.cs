@@ -33,6 +33,8 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
     public ConcurrentDictionary<string, string> RemoteFeatureCombo = new();
 
+    public volatile HashSet<string> RemoteBackendTypes = new();
+
     public override IEnumerable<string> SupportedFeatures => RemoteFeatureCombo.Keys;
 
     public string Session;
@@ -62,7 +64,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             {
                 throw new SessionInvalidException();
             }
-            HashSet<string> features = new();
+            HashSet<string> features = new(), types = new();
             bool isLoading = false;
             foreach (JToken backend in backendData.Values())
             {
@@ -70,6 +72,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                 if (status == "running")
                 {
                     features.UnionWith(backend["features"].ToArray().Select(f => f.ToString()));
+                    types.Add(backend["type"].ToString());
                 }
                 else if (status == "loading")
                 {
@@ -85,6 +88,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                 RemoteFeatureCombo.TryRemove(str, out _);
             }
             AnyLoading = isLoading;
+            RemoteBackendTypes = types;
         });
     }
 

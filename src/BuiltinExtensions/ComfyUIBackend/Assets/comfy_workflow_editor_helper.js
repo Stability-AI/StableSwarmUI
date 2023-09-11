@@ -643,7 +643,9 @@ function comfyToggleButtonsVisible() {
 getRequiredElementById('maintab_comfyworkfloweditor').addEventListener('click', comfyTryToLoad);
 
 backendsRevisedCallbacks.push(() => {
-    let hasAny = Object.values(backends_loaded).filter(x => x.type.startsWith('comfyui_')).length > 0;
+    let hasAny = Object.values(backends_loaded).filter(x => x.type.startsWith('comfyui_')
+        || x.type == 'swarmswarmbackend' // TODO: Actually check if the backend has a comfy instance rather than just assuming swarmback==comfy
+        ).length > 0;
     getRequiredElementById('maintab_comfyworkfloweditor').style.display = hasAny ? 'block' : 'none';
     if (hasAny && !comfyHasTriedToLoad) {
         comfyHasTriedToLoad = true;

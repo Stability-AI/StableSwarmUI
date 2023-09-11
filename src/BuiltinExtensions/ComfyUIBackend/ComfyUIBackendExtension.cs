@@ -278,14 +278,31 @@ public class ComfyUIBackendExtension : Extension
         {
             return;
         }
+        HttpClient client;
+        string address;
         ComfyUIAPIAbstractBackend backend = RunningComfyBackends.FirstOrDefault();
         if (backend is null)
         {
-            context.Response.ContentType = "text/html";
-            context.Response.StatusCode = 400;
-            await context.Response.WriteAsync("<!DOCTYPE html><html><head><stylesheet>body{background-color:#101010;color:#eeeeee;}</stylesheet></head><body><span class=\"comfy-failed-to-load\">No ComfyUI backend available, loading failed.</span></body></html>");
-            await context.Response.CompleteAsync();
-            return;
+            SwarmSwarmBackend altBack = Program.Backends.T2IBackends.Values.Select(b => b.Backend as SwarmSwarmBackend)
+                .Where(b => b is not null && b.Status == BackendStatus.RUNNING && b.RemoteBackendTypes.Any(b => b.StartsWith("comfyui_"))).FirstOrDefault();
+            if (altBack is not null)
+            {
+                client = altBack.HttpClient;
+                address = $"{altBack.Settings.Address}/ComfyBackendDirect";
+            }
+            else
+            {
+                context.Response.ContentType = "text/html";
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsync("<!DOCTYPE html><html><head><stylesheet>body{background-color:#101010;color:#eeeeee;}</stylesheet></head><body><span class=\"comfy-failed-to-load\">No ComfyUI backend available, loading failed.</span></body></html>");
+                await context.Response.CompleteAsync();
+                return;
+            }
+        }
+        else
+        {
+            client = backend.HttpClient;
+            address = backend.Address;
         }
         string path = context.Request.Path.Value;
         path = path.After("/ComfyBackendDirect");
@@ -302,7 +319,7 @@ public class ComfyUIBackendExtension : Extension
             WebSocket socket = await context.WebSockets.AcceptWebSocketAsync();
             ClientWebSocket outSocket = new();
             outSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
-            string scheme = backend.Address.BeforeAndAfter("://", out string addr);
+            string scheme = address.BeforeAndAfter("://", out string addr);
             scheme = scheme == "http" ? "ws" : "wss";
             await outSocket.ConnectAsync(new Uri($"{scheme}://{addr}/{path}"), Program.GlobalProgramCancel);
             Task a = Task.Run(async () =>
@@ -361,13 +378,13 @@ public class ComfyUIBackendExtension : Extension
         HttpResponseMessage response;
         if (context.Request.Method == "POST")
         {
-            HttpRequestMessage request = new(new HttpMethod("POST"), $"{backend.Address}/{path}") { Content = new StreamContent(context.Request.Body) };
+            HttpRequestMessage request = new(new HttpMethod("POST"), $"{address}/{path}") { Content = new StreamContent(context.Request.Body) };
             request.Content.Headers.Add("Content-Type", context.Request.ContentType);
-            response = await backend.HttpClient.SendAsync(request);
+            response = await client.SendAsync(request);
         }
         else
         {
-            response = await backend.HttpClient.SendAsync(new(new(context.Request.Method), $"{backend.Address}/{path}"));
+            response = await client.SendAsync(new(new(context.Request.Method), $"{address}/{path}"));
         }
         int code = (int)response.StatusCode;
         if (code != 200)
