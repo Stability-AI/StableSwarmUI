@@ -30,17 +30,17 @@ public static class T2IAPI
     }
 
     /// <summary>API route to generate images with WebSocket updates.</summary>
-    public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, Session session, int images, JObject rawInput)
+    public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, Session session, int images, JObject rawInput, bool do_not_save = false)
     {
-        await API.RunWebsocketHandlerCallWS(GenT2I_Internal, session, (images, rawInput), socket);
+        await API.RunWebsocketHandlerCallWS(GenT2I_Internal, session, (images, rawInput, do_not_save), socket);
         await socket.SendJson(BasicAPIFeatures.GetCurrentStatusRaw(session), API.WebsocketTimeout);
         return null;
     }
 
     /// <summary>API route to generate images directly as HTTP.</summary>
-    public static async Task<JObject> GenerateText2Image(Session session, int images, JObject rawInput)
+    public static async Task<JObject> GenerateText2Image(Session session, int images, JObject rawInput, bool do_not_save = false)
     {
-        List<JObject> outputs = await API.RunWebsocketHandlerCallDirect(GenT2I_Internal, session, (images, rawInput));
+        List<JObject> outputs = await API.RunWebsocketHandlerCallDirect(GenT2I_Internal, session, (images, rawInput, do_not_save));
         Dictionary<int, string> imageOutputs = new();
         int[] discards = null;
         foreach (JObject obj in outputs)
@@ -92,9 +92,9 @@ public static class T2IAPI
     }
 
     /// <summary>Internal route for generating images.</summary>
-    public static async Task GenT2I_Internal(Session session, (int, JObject) input, Action<JObject> output, bool isWS)
+    public static async Task GenT2I_Internal(Session session, (int, JObject, bool) input, Action<JObject> output, bool isWS)
     {
-        (int images, JObject rawInput) = input;
+        (int images, JObject rawInput, bool do_not_save) = input;
         using Session.GenClaim claim = session.Claim(gens: images);
         void setError(string message)
         {
@@ -162,7 +162,7 @@ public static class T2IAPI
                     {
                         actualIndex = images * batchSizeExpected + Interlocked.Increment(ref numExtra);
                     }
-                    (string url, string filePath) = session.SaveImage(image, actualIndex, thisParams, metadata);
+                    (string url, string filePath) = do_not_save ? (session.GetImageB64(image), null) : session.SaveImage(image, actualIndex, thisParams, metadata);
                     if (url == "ERROR")
                     {
                         setError($"Server failed to save an image.");
