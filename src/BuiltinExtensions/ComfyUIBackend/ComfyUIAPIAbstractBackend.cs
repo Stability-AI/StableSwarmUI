@@ -62,6 +62,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             Status = BackendStatus.DISABLED;
             return;
         }
+        Status = BackendStatus.LOADING;
         try
         {
             await LoadValueSet();

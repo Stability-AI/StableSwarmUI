@@ -82,6 +82,10 @@ public static class NetworkBackendUtils
         public void Start()
         {
             Stop();
+            if (Backend.Status == BackendStatus.LOADING)
+            {
+                Backend.Status = BackendStatus.IDLE;
+            }
             IdleMonitorThread = new Thread(IdleMonitorLoop);
             IdleMonitorThread.Start();
         }
@@ -91,7 +95,14 @@ public static class NetworkBackendUtils
             CancellationToken cancel = IdleMonitorCancel.Token;
             while (true)
             {
-                Task.Delay(TimeSpan.FromSeconds(5), Program.GlobalProgramCancel).Wait();
+                try
+                {
+                    Task.Delay(TimeSpan.FromSeconds(5), Program.GlobalProgramCancel).Wait();
+                }
+                catch (Exception)
+                {
+                    return;
+                }
                 if (cancel.IsCancellationRequested || Program.GlobalProgramCancel.IsCancellationRequested)
                 {
                     return;
