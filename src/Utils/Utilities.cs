@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System;
+using System.Net;
 
 namespace StableSwarmUI.Utils;
 
@@ -133,6 +134,18 @@ public static class Utilities
             return null;
         }
         return raw.ParseToJson();
+    }
+
+    /// <summary>Sends a JSON object post and receives a JSON object back.</summary>
+    public static async Task<JObject> PostJson(this HttpClient client, string url, JObject data)
+    {
+        return (await (await client.PostAsync(url, JSONContent(data))).Content.ReadAsStringAsync()).ParseToJson();
+    }
+
+    /// <summary>Sends a JSON string post and receives a JSON object back.</summary>
+    public static async Task<JObject> PostJSONString(this HttpClient client, string route, string input, CancellationToken interrupt)
+    {
+        return await NetworkBackendUtils.Parse<JObject>(await client.PostAsync(route, new StringContent(input, StringConversionHelper.UTF8Encoding, "application/json"), interrupt));
     }
 
     /// <summary>Converts the JSON data to predictable basic data.</summary>

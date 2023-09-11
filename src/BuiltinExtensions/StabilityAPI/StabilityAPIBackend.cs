@@ -6,6 +6,7 @@ using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
+using System;
 using System.IO;
 using System.Net.Http;
 
@@ -74,11 +75,6 @@ public class StabilityAPIBackend : AbstractT2IBackend
             data = "{\"data\":" + data + "}";
         }
         return data.ParseToJson();
-    }
-
-    public async Task<JObject> Post(string url, JObject data)
-    {
-        return (await (await WebClient.PostAsync($"{Settings.Endpoint}/{url}", Utilities.JSONContent(data))).Content.ReadAsStringAsync()).ParseToJson();
     }
 
     public async Task RefreshEngines()
@@ -168,7 +164,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
         JObject response = null;
         try
         {
-            response = await Post($"generation/{engine}/text-to-image", obj);
+            response = await WebClient.PostJson($"{Settings.Endpoint}/generation/{engine}/text-to-image", obj);
             if (!response.ContainsKey("artifacts") && response.TryGetValue("message", out JToken message))
             {
                 throw new InvalidDataException($"StabilityAPI refused to generate: {message}");

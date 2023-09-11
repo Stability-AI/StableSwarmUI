@@ -53,6 +53,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public abstract bool CanIdle { get; }
 
+    public NetworkBackendUtils.IdleMonitor Idler = new();
+
     public async Task InitInternal(bool ignoreWebError)
     {
         if (string.IsNullOrWhiteSpace(Address))
@@ -72,84 +74,24 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 throw;
             }
         }
-        StopIdleMonitor();
+        Idler.Stop();
         if (CanIdle)
         {
-            IdleMonitorThread = new Thread(IdleMonitorLoop);
-            IdleMonitorThread.Start();
-        }
-    }
-
-    public Thread IdleMonitorThread;
-
-    public CancellationTokenSource IdleMonitorCancel = new();
-
-    public void IdleMonitorLoop()
-    {
-        CancellationToken cancel = IdleMonitorCancel.Token;
-        while (true)
-        {
-            Task.Delay(TimeSpan.FromSeconds(5), Program.GlobalProgramCancel).Wait();
-            if (cancel.IsCancellationRequested || Program.GlobalProgramCancel.IsCancellationRequested)
-            {
-                return;
-            }
-            if (Status != BackendStatus.RUNNING && Status != BackendStatus.IDLE)
-            {
-                continue;
-            }
-            try
-            {
-                JObject result = SendGet<JObject>("object_info").Result;
-                if (Status != BackendStatus.RUNNING && Status != BackendStatus.IDLE)
-                {
-                    continue;
-                }
-                Status = BackendStatus.RUNNING;
-            }
-            catch (Exception)
-            {
-                Status = BackendStatus.IDLE;
-            }
-        }
-    }
-
-    void StopIdleMonitor()
-    {
-        if (IdleMonitorThread is not null)
-        {
-            IdleMonitorCancel.Cancel();
-            IdleMonitorCancel = new();
-            IdleMonitorThread = null;
+            Idler.Backend = this;
+            Idler.ValidateCall = () => SendGet<JObject>("object_info").Wait();
+            Idler.Start();
         }
     }
 
     public override async Task Shutdown()
     {
-        Logs.Info($"ComfyUI backend {HandlerTypeData.ID} shutting down...");
-        StopIdleMonitor();
+        Logs.Info($"ComfyUI backend {BackendData.ID} shutting down...");
+        Idler.Stop();
         Status = BackendStatus.DISABLED;
     }
 
     public virtual void PostResultCallback(string filename)
     {
-    }
-
-    public async Task<JObject> PostJSONString(string route, string input, CancellationToken interrupt)
-    {
-        return await NetworkBackendUtils.Parse<JObject>(await HttpClient.PostAsync($"{Address}/{route}", new StringContent(input, StringConversionHelper.UTF8Encoding, "application/json"), interrupt));
-    }
-
-    /// <summary>Connects a client websocket to the backend.</summary>
-    /// <param name="path">The path to connect on, after the '/', such as 'ws?clientId={uuid}'.</param>
-    public async Task<ClientWebSocket> ConnectWebsocket(string path)
-    {
-        ClientWebSocket outSocket = new();
-        outSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
-        string scheme = Address.BeforeAndAfter("://", out string addr);
-        scheme = scheme == "http" ? "ws" : "wss";
-        await outSocket.ConnectAsync(new Uri($"{scheme}://{addr}/{path}"), Program.GlobalProgramCancel);
-        return outSocket;
     }
 
     /// <summary>Runs a job with live feedback (progress updates, previews, etc.)</summary>
@@ -165,7 +107,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         ClientWebSocket socket;
         try
         {
-            socket = await ConnectWebsocket($"ws?clientId={id}");
+            socket = await NetworkBackendUtils.ConnectWebsocket(Address, $"ws?clientId={id}");
         }
         catch (Exception ex)
         {
@@ -192,7 +134,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         {
             workflow = $"{{\"prompt\": {workflow}, \"client_id\": \"{id}\"}}";
             Logs.Verbose($"Will use workflow: {workflow}");
-            JObject promptResult = await PostJSONString("prompt", workflow, interrupt);
+            JObject promptResult = await HttpClient.PostJSONString($"{Address}/prompt", workflow, interrupt);
             Logs.Verbose($"ComfyUI prompt said: {promptResult}");
             if (promptResult.ContainsKey("error"))
             {

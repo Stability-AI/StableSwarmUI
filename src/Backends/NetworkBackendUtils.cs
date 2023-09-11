@@ -6,6 +6,7 @@ using StableSwarmUI.Utils;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 
 namespace StableSwarmUI.Backends;
@@ -53,6 +54,77 @@ public static class NetworkBackendUtils
             throw new InvalidOperationException($"Failed to read JSON '{content}' with message: {ex.Message}");
         }
         throw new NotImplementedException();
+    }
+
+    /// <summary>Connects a client websocket to the backend.</summary>
+    /// <param name="path">The path to connect on, after the '/', such as 'ws?clientId={uuid}'.</param>
+    public static async Task<ClientWebSocket> ConnectWebsocket(string address, string path)
+    {
+        ClientWebSocket outSocket = new();
+        outSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
+        string scheme = address.BeforeAndAfter("://", out string addr);
+        scheme = scheme == "http" ? "ws" : "wss";
+        await outSocket.ConnectAsync(new Uri($"{scheme}://{addr}/{path}"), Program.GlobalProgramCancel);
+        return outSocket;
+    }
+
+    /// <summary>Helper for API-by-URL backends to allow those backends to go idle automatically if connection is lost.</summary>
+    public class IdleMonitor
+    {
+        public Thread IdleMonitorThread;
+
+        public CancellationTokenSource IdleMonitorCancel = new();
+
+        public AbstractT2IBackend Backend;
+
+        public Action ValidateCall;
+
+        public void Start()
+        {
+            Stop();
+            IdleMonitorThread = new Thread(IdleMonitorLoop);
+            IdleMonitorThread.Start();
+        }
+
+        public void IdleMonitorLoop()
+        {
+            CancellationToken cancel = IdleMonitorCancel.Token;
+            while (true)
+            {
+                Task.Delay(TimeSpan.FromSeconds(5), Program.GlobalProgramCancel).Wait();
+                if (cancel.IsCancellationRequested || Program.GlobalProgramCancel.IsCancellationRequested)
+                {
+                    return;
+                }
+                if (Backend.Status != BackendStatus.RUNNING && Backend.Status != BackendStatus.IDLE)
+                {
+                    continue;
+                }
+                try
+                {
+                    ValidateCall();
+                    if (Backend.Status != BackendStatus.RUNNING && Backend.Status != BackendStatus.IDLE)
+                    {
+                        continue;
+                    }
+                    Backend.Status = BackendStatus.RUNNING;
+                }
+                catch (Exception)
+                {
+                    Backend.Status = BackendStatus.IDLE;
+                }
+            }
+        }
+
+        public void Stop()
+        {
+            if (IdleMonitorThread is not null)
+            {
+                IdleMonitorCancel.Cancel();
+                IdleMonitorCancel = new();
+                IdleMonitorThread = null;
+            }
+        }
     }
     #endregion
 
