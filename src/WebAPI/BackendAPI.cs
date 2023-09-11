@@ -72,6 +72,7 @@ public class BackendAPI
         }
         backend.Backend.IsEnabled = enabled;
         backend.Backend.Reserved = true;
+        Program.Backends.BackendsEdited = true;
         while (backend.CheckIsInUse)
         {
             if (Program.GlobalProgramCancel.IsCancellationRequested)
