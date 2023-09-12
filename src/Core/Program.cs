@@ -339,7 +339,7 @@ public class Program
         }
         WebServer.SetHost(host, port);
         WebServer.LogLevel = Enum.Parse<LogLevel>(GetCommandLineFlag("asp_loglevel", "warning"), true);
-        Logs.MinimumLevel = Enum.Parse<Logs.LogLevel>(GetCommandLineFlag("loglevel", "info"), true);
+        Logs.MinimumLevel = Enum.Parse<Logs.LogLevel>(GetCommandLineFlag("loglevel", ServerSettings.LogLevel), true);
         SessionHandler.LocalUserID = GetCommandLineFlag("user_id", SessionHandler.LocalUserID);
         LockSettings = GetCommandLineFlagAsBool("lock_settings", false);
         if (CommandLineFlags.ContainsKey("ngrok-path"))

@@ -31,6 +31,10 @@ public class Settings : AutoConfiguration
     [ManualSettingsOptions(Impl = null, Vals = new string[] { "none", "web", "webinstall", "electron" })]
     public string LaunchMode = "webinstall";
 
+    [ConfigComment("The minimum tier of logs that should be visible in the console.\nDefault is 'info'.")]
+    [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<Logs.LogLevel>))]
+    public string LogLevel = "Info";
+
     /// <summary>Settings related to backends.</summary>
     public class BackendData : AutoConfiguration
     {
