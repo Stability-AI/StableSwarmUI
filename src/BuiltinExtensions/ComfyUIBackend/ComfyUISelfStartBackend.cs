@@ -142,9 +142,11 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         }
     }
 
+    public string ComfyPathBase => (SettingsRaw as ComfyUISelfStartSettings).StartScript.Replace('\\', '/').BeforeLast('/');
+
     public override void PostResultCallback(string filename)
     {
-        string path = (SettingsRaw as ComfyUISelfStartSettings).StartScript.Replace('\\', '/').BeforeLast('/') + "/output/" + filename;
+        string path =  $"{ComfyPathBase}/output/{filename}";
         Task.Run(() =>
         {
             if (File.Exists(path))
@@ -152,5 +154,18 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 File.Delete(path);
             }
         });
+    }
+
+    public override bool RemoveInputFile(string filename)
+    {
+        string path = $"{ComfyPathBase}/input/{filename}";
+        Task.Run(() =>
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        });
+        return true;
     }
 }

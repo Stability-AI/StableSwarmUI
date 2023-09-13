@@ -259,8 +259,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return outputs.ToArray();
     }
 
-    public volatile int ImageIDDedup = 0;
-
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
         List<Image> images = new();
@@ -362,6 +360,14 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return workflow;
     }
 
+    public volatile int ImageIDDedup = 0;
+
+    /// <summary>Returns true if the file will be deleted properly (and ID should not be reused as it may conflict), or false if it can't be deleted (and thus the ID should be reused to reduce amount of images getting stored).</summary>
+    public virtual bool RemoveInputFile(string filename)
+    {
+        return false;
+    }
+
     public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
     {
         List<Action> completeSteps = new();
@@ -389,9 +395,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     HttpClient.PostAsync($"{Address}/upload/image", content).Wait();
                     completeSteps.Add(() =>
                     {
-                        Interlocked.Decrement(ref ImageIDDedup);
+                        if (!RemoveInputFile(fname))
+                        {
+                            Interlocked.Decrement(ref ImageIDDedup);
+                        }
                     });
-                    // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
                     workflow = workflow[0..index] + fname + workflow[(workflow.IndexOf('}', index) + 1)..];
                     index = workflow.IndexOf("${" + key);
                 }
