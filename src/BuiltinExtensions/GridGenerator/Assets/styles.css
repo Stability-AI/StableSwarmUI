@@ -42,6 +42,15 @@ table tr td:first-child {
     position: sticky;
     left: -1px;
 }
+.nostickytable tr:first-child {
+    position: static !important;
+}
+.nostickytable tr th {
+    position: static !important;
+}
+.nostickytable tr td:first-child {
+    position: static !important;
+}
 .popup_modal_background {
     font-family: monospace, monospace;
     background-color: rgb(50, 50, 50, 0.7);

@@ -33,13 +33,17 @@ function loadData() {
     console.log(`Loaded data for '${rawData.title}'`);
     document.getElementById('autoScaleImages').addEventListener('change', updateScaling);
     document.getElementById('stickyNavigation').addEventListener('change', toggleTopSticky);
+    document.getElementById('stickyLabels').addEventListener('change', toggleLabelSticky);
     document.getElementById('toggle_nav_button').addEventListener('click', updateTitleSticky);
     document.getElementById('toggle_adv_button').addEventListener('click', updateTitleSticky);
     document.getElementById('showDescriptions').checked = rawData.defaults.show_descriptions;
     document.getElementById('autoScaleImages').checked = rawData.defaults.autoscale;
     document.getElementById('stickyNavigation').checked = rawData.defaults.sticky;
+    document.getElementById('stickyLabels').checked = rawData.defaults.sticky_labels;
     document.getElementById('score_display').addEventListener('click', fillTable);
     document.getElementById('score_setting').style.display = typeof getScoreFor == 'undefined' ? 'none' : 'inline-block';
+    toggleTopSticky();
+    toggleLabelSticky();
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
@@ -606,10 +610,14 @@ function updateTitleStickyDirect() {
 }
 
 function updateTitleSticky() {
+    var header = document.getElementById('image_table_header');
+    if (!header) {
+        return;
+    }
     updateHash();
     var topBar = document.getElementById('top_nav_bar');
     if (!topBar.classList.contains('sticky_top')) {
-        document.getElementById('image_table_header').style.top = '0';
+        header.style.top = '0';
         return;
     }
     // client rect is dynamically animated, so, uh, just hack it for now.
@@ -622,8 +630,20 @@ function updateTitleSticky() {
 
 function toggleTopSticky() {
     var topBar = document.getElementById('top_nav_bar');
-    topBar.classList.toggle('sticky_top');
+    topBar.classList.remove('sticky_top');
+    if (document.getElementById('stickyNavigation').checked) {
+        topBar.classList.add('sticky_top');
+    }
     updateTitleSticky();
+}
+
+function toggleLabelSticky() {
+    updateHash();
+    var table = document.getElementById('image_table');
+    table.classList.remove('nostickytable');
+    if (!document.getElementById('stickyLabels').checked) {
+        table.classList.add('nostickytable');
+    }
 }
 
 function makeImage(minRow = 0, doClear = true) {
@@ -857,7 +877,7 @@ function makeGif() {
 
 function updateHash() {
     var hash = `#auto-loc`;
-    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation']) {
+    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation', 'stickyLabels']) {
         hash += `,${document.getElementById(elem).checked}`;
     }
     for (let val of ['x', 'y', 'x2', 'y2']) {
@@ -874,7 +894,7 @@ function applyHash(hash) {
         return;
     }
     let hashInputs = hash.substring(1).split(',');
-    let expectedLen = 1 + 3 + 4 + rawData.axes.length;
+    let expectedLen = 1 + 4 + 4 + rawData.axes.length;
     if (hashInputs.length != expectedLen) {
         console.log(`Hash length mismatch: ${hashInputs.length} != ${expectedLen}, skipping value reload.`);
         return;
@@ -884,7 +904,7 @@ function applyHash(hash) {
         return;
     }
     let index = 1;
-    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation']) {
+    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation', 'stickyLabels']) {
         document.getElementById(elem).checked = hashInputs[index++] == 'true';
     }
     for (let axis of ['x', 'y', 'x2', 'y2']) {

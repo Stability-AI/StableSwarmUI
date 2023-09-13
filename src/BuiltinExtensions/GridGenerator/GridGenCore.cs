@@ -202,7 +202,7 @@ public partial class GridGenCore
 
         public int MinWidth, MinHeight;
 
-        public bool Autoscale, ShowDescriptions, Sticky;
+        public bool Autoscale = false, ShowDescriptions = true, Sticky = false, StickyLabels = true;
 
         public string DefaultX, DefaultY, DefaultX2 = "none", DefaultY2 = "none";
 
@@ -427,6 +427,7 @@ public partial class GridGenCore
                     ["show_descriptions"] = Grid.ShowDescriptions,
                     ["autoscale"] = Grid.Autoscale,
                     ["sticky"] = Grid.Sticky,
+                    ["sticky_labels"] = Grid.StickyLabels,
                     ["x"] = Grid.DefaultX,
                     ["y"] = Grid.DefaultY,
                     ["x2"] = Grid.DefaultX2,
