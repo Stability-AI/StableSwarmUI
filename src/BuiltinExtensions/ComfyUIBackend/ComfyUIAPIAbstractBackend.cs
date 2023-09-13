@@ -316,6 +316,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     {
                         return model.ToString(ModelFolderFormat);
                     }
+                    else if (val is Image image)
+                    {
+                        return image.AsBase64;
+                    }
                     return val.ToString();
                 }
                 long fixSeed(long input)
@@ -360,9 +364,15 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         {
             void TryApply(string key, Image img, bool resize)
             {
-                string replaceMe = "${" + key + "}";
-                if (workflow.Contains(key))
+                int index = workflow.IndexOf("${" + key);
+                while (index != -1)
                 {
+                    char symbol = workflow[index + key.Length + 2];
+                    if (symbol != '}' && symbol != ':')
+                    {
+                        index = workflow.IndexOf("${" + key, index + 1);
+                        continue;
+                    }
                     int id = Interlocked.Increment(ref ImageIDDedup);
                     string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
                     Image fixedImage = resize ? img.Resize(user_input.Get(T2IParamTypes.Width), user_input.GetImageHeight()) : img;
@@ -377,7 +387,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                         Interlocked.Decrement(ref ImageIDDedup);
                     });
                     // TODO: Emit cleanup step to remove the image, or find a way to send it purely over network rather than needing file storage
-                    workflow = workflow.Replace(replaceMe, fname);
+                    workflow = workflow[0..index] + fname + workflow[(workflow.IndexOf('}', index) + 1)..];
+                    index = workflow.IndexOf("${" + key);
                 }
             }
             foreach ((string key, object val) in user_input.ValuesInput)

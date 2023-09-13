@@ -427,6 +427,7 @@ function comfyBuildParams(callback) {
             claimOnce('KSamplerAdvanced', 'comfyui_sampler', 'sampler_name', false);
             claimOnce('KSamplerAdvanced', 'comfyui_scheduler', 'scheduler', false);
             claimOnce('KSamplerAdvanced', 'cfg_scale', 'cfg', true);
+            claimOnce('LoadImage', 'initimage', 'image', false);
             if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Positive Prompt") && !defaultParamsRetain.includes('prompt') && typeof node.inputs.text == 'string') {
                 defaultParamsRetain.push('prompt');
                 defaultParamValue['prompt'] = node.inputs.text;
