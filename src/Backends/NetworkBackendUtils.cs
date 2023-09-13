@@ -79,6 +79,8 @@ public static class NetworkBackendUtils
 
         public Action ValidateCall;
 
+        public Action<BackendStatus> StatusChangeEvent;
+
         public void Start()
         {
             Stop();
@@ -88,6 +90,15 @@ public static class NetworkBackendUtils
             }
             IdleMonitorThread = new Thread(IdleMonitorLoop);
             IdleMonitorThread.Start();
+        }
+
+        void SetStatus(BackendStatus status)
+        {
+            if (Backend.Status != status)
+            {
+                Backend.Status = status;
+                StatusChangeEvent?.Invoke(status);
+            }
         }
 
         public void IdleMonitorLoop()
@@ -118,11 +129,11 @@ public static class NetworkBackendUtils
                     {
                         continue;
                     }
-                    Backend.Status = BackendStatus.RUNNING;
+                    SetStatus(BackendStatus.RUNNING);
                 }
                 catch (Exception)
                 {
-                    Backend.Status = BackendStatus.IDLE;
+                    SetStatus(BackendStatus.IDLE);
                 }
             }
         }
@@ -320,20 +331,20 @@ public static class NetworkBackendUtils
                 if (line.StartsWith("Traceback ("))
                 {
                     keepShowing = true;
-                    Logs.Warning($"{nameSimple} launcher: {line}");
+                    Logs.Warning($"{nameSimple} stdout: {line}");
                 }
                 else if (keepShowing && line.StartsWith("  "))
                 {
-                    Logs.Warning($"{nameSimple} launcher: {line}");
+                    Logs.Warning($"{nameSimple} stdout: {line}");
                 }
                 else if (keepShowing)
                 {
-                    Logs.Warning($"{nameSimple} launcher: {line}");
+                    Logs.Warning($"{nameSimple} stdout: {line}");
                     keepShowing = false;
                 }
                 else
                 {
-                    Logs.Debug($"{nameSimple} launcher: {line}");
+                    Logs.Debug($"{nameSimple} stdout: {line}");
                 }
             }
             status = getStatus();
@@ -351,7 +362,7 @@ public static class NetworkBackendUtils
             string line;
             while ((line = runningProcess.StandardError.ReadLine()) != null)
             {
-                Logs.Debug($"{nameSimple} launcher stderr: {line}");
+                Logs.Debug($"{nameSimple} stderr: {line}");
                 errorLog.AppendLine($"{nameSimple} error: {line}");
                 if (errorLog.Length > 1024 * 50)
                 {

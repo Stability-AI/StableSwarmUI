@@ -66,6 +66,10 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             throw new Exception("Swarm connected to itself, backend load failed.");
         }
         await ReviseRemoteDataList();
+        if (IsReal)
+        {
+            await EnsureQueueSizeCorrect();
+        }
     }
 
     public async Task ReviseRemoteDataList()
@@ -117,8 +121,26 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         }
         catch (SessionInvalidException)
         {
+            Logs.Verbose($"{HandlerTypeData.Name} {BackendData.ID} session invalid, resetting...");
             await ValidateAndBuild();
             await RunWithSession(run);
+        }
+    }
+
+    public async Task EnsureQueueSizeCorrect()
+    {
+        int target = BackendCount - 1 + Settings.OverQueue;
+        int toAdd = target - ControlledNonrealBackends.Count;
+        int toRemove = ControlledNonrealBackends.Count - target;
+        for (int i = 0; i < toRemove; i++)
+        {
+            BackendHandler.T2IBackendData data = ControlledNonrealBackends[0];
+            ControlledNonrealBackends.RemoveAt(0);
+            await Handler.DeleteById(data.ID);
+        }
+        for (int i = 0; i < toAdd; i++)
+        {
+            ControlledNonrealBackends.Add(Handler.AddNewNonrealBackend(HandlerTypeData, SettingsRaw));
         }
     }
 
@@ -132,11 +154,46 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         if (!IsReal)
         {
             Status = BackendStatus.LOADING;
-            await ValidateAndBuild();
-            Status = BackendStatus.RUNNING;
+            try
+            {
+                await ValidateAndBuild();
+                Status = BackendStatus.RUNNING;
+            }
+            catch (Exception ex)
+            {
+                if (Status != BackendStatus.LOADING)
+                {
+                    return;
+                }
+                if (Settings.AllowIdle)
+                {
+                    Status = BackendStatus.IDLE;
+                }
+                else
+                {
+                    Status = BackendStatus.ERRORED;
+                    Logs.Error($"Non-real {HandlerTypeData.Name} {BackendData.ID} failed to load: {ex}");
+                }
+            }
             return;
         }
         Idler.Stop();
+        async Task PostEnable()
+        {
+            if (Settings.AllowIdle)
+            {
+                Idler.Backend = this;
+                Idler.ValidateCall = () => ReviseRemoteDataList().Wait();
+                Idler.StatusChangeEvent = status =>
+                {
+                    foreach (BackendHandler.T2IBackendData data in ControlledNonrealBackends)
+                    {
+                        data.Backend.Status = status;
+                    }
+                };
+                Idler.Start();
+            }
+        }
         try
         {
             Status = BackendStatus.LOADING;
@@ -147,7 +204,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                 {
                     while (AnyLoading)
                     {
-                        Logs.Debug($"SwarmSwarmBackend {BackendData.ID} waiting for remote backends to load, have featureset {RemoteFeatureCombo.Keys.JoinString(", ")}");
+                        Logs.Debug($"{HandlerTypeData.Name} {BackendData.ID} waiting for remote backends to load, have featureset {RemoteFeatureCombo.Keys.JoinString(", ")}");
                         if (Program.GlobalProgramCancel.IsCancellationRequested
                             || Status != BackendStatus.LOADING)
                         {
@@ -162,22 +219,12 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                 {
                     if (!Settings.AllowIdle)
                     {
-                        Logs.Error($"SwarmSwarmBackend {BackendData.ID} failed to load: {ex}");
+                        Logs.Error($"{HandlerTypeData.Name} {BackendData.ID} failed to load: {ex}");
                         Status = BackendStatus.ERRORED;
                         return;
                     }
                 }
-                if (Settings.AllowIdle)
-                {
-                    Idler.Backend = this;
-                    Idler.ValidateCall = () => ReviseRemoteDataList().Wait();
-                    Idler.Start();
-                }
-                // If there's multiple remote backends, add non-real copies to be able to use them
-                for (int i = 0; i < BackendCount - 1 + Settings.OverQueue; i++)
-                {
-                    ControlledNonrealBackends.Add(Handler.AddNewNonrealBackend(HandlerTypeData, SettingsRaw));
-                }
+                await PostEnable();
             });
         }
         catch (Exception)
@@ -186,6 +233,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             {
                 throw;
             }
+            await PostEnable();
         }
     }
 
@@ -193,7 +241,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
     {
         if (IsReal)
         {
-            Logs.Info($"SwarmSwarmBackend {BackendData.ID} shutting down...");
+            Logs.Info($"{HandlerTypeData.Name} {BackendData.ID} shutting down...");
             Idler.Stop();
             foreach (BackendHandler.T2IBackendData data in ControlledNonrealBackends)
             {
@@ -247,30 +295,30 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                 {
                     if (response.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
                     {
-                        Logs.Verbose($"[SwarmSwarmBackend] Got error from websocket: {response}");
+                        Logs.Verbose($"[{HandlerTypeData.Name}] Got error from websocket: {response}");
                         throw new SessionInvalidException();
                     }
                     else if (response.TryGetValue("gen_progress", out JToken val) && val is JObject objVal)
                     {
                         if (objVal.ContainsKey("preview"))
                         {
-                            Logs.Verbose($"[SwarmSwarmBackend] Got progress image from websocket");
+                            Logs.Verbose($"[{HandlerTypeData.Name}] Got progress image from websocket");
                         }
                         else
                         {
-                            Logs.Verbose($"[SwarmSwarmBackend] Got progress from websocket: {response}");
+                            Logs.Verbose($"[{HandlerTypeData.Name}] Got progress from websocket: {response}");
                         }
                         objVal["batch_index"] = batchId;
                         takeOutput(val);
                     }
                     else if (response.TryGetValue("image", out val))
                     {
-                        Logs.Verbose($"[SwarmSwarmBackend] Got image from websocket");
+                        Logs.Verbose($"[{HandlerTypeData.Name}] Got image from websocket");
                         takeOutput(new Image(val.ToString().After(";base64,")));
                     }
                     else
                     {
-                        Logs.Verbose($"[SwarmSwarmBackend] Got other from websocket: {response}");
+                        Logs.Verbose($"[{HandlerTypeData.Name}] Got other from websocket: {response}");
                     }
                 }
                 if (websocket.CloseStatus.HasValue)
