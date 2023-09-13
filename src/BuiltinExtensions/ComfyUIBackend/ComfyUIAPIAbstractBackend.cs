@@ -238,6 +238,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         List<Image> outputs = new();
         foreach (JToken outData in output["outputs"].Values())
         {
+            if (outData is null || outData["images"] is null)
+            {
+                Logs.Error($"Invalid/null/empty output data from ComfyUI server: {outData}");
+                continue;
+            }
             foreach (JToken outImage in outData["images"])
             {
                 string fname = outImage["filename"].ToString();
