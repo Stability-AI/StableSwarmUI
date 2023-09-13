@@ -137,12 +137,17 @@ public class ImageBatchToolExtension : Extension
             {
                 param.Set(T2IParamTypes.ControlNetImage, image);
             }
-            await T2IEngine.CreateImageTask(param, $"{imageIndex}", claim, output, setError, isWS, Program.ServerSettings.Backends.PerRequestTimeoutMinutes,
+            tasks.Add(T2IEngine.CreateImageTask(param, $"{imageIndex}", claim, output, setError, isWS, Program.ServerSettings.Backends.PerRequestTimeoutMinutes,
                 (image, metadata) =>
                 {
                     File.WriteAllBytes($"{output_folder}/{fname}", image.ImageData);
                     output(new JObject() { ["image"] = session.GetImageB64(image), ["batch_index"] = $"{imageIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
-                });
+                }));
+        }
+        while (tasks.Any())
+        {
+            await Task.WhenAny(tasks);
+            removeDoneTasks();
         }
         claim.Dispose();
         await sendStatus();
