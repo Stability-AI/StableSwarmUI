@@ -184,7 +184,7 @@ class ModelBrowserWrapper {
             if (this.subType == 'LoRA' || this.subType == 'Stable-Diffusion') {
                 interject += `${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}`;
             }
-            description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${interject}${getOptLine('Trigger Phrase', model.data.trigger_phrase)}${getOptLine('Usage Hint', model.data.usage_hint)}${getLine("Description", model.data.description)}`;
+            description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getOptLine("Author", model.data.author)}${getLine("Type", model.data.class)}${interject}${getOptLine('Trigger Phrase', model.data.trigger_phrase)}${getOptLine('Usage Hint', model.data.usage_hint)}${getLine("Description", model.data.description)}`;
             buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
         }
         else {
