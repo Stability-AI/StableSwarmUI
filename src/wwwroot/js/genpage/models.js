@@ -2,6 +2,7 @@
 let models = {};
 let cur_model = null;
 let curModelWidth = 0, curModelHeight = 0;
+let curModelArch = '';
 let curModelMenuModel = null;
 let curModelMenuBrowser = null;
 let loraWeightPref = {};
@@ -93,7 +94,26 @@ function cleanModelName(name) {
     return name;
 }
 
+function isModelArchCorrect(model) {
+    if (model.architecture) {
+        let slash = model.architecture.indexOf('/');
+        if (slash != -1) {
+            let arch = model.architecture.substring(0, slash);
+            return arch == curModelArch;
+        }
+    }
+    return true;
+}
+
 function sortModelName(a, b) {
+    let aCorrect = isModelArchCorrect(a);
+    let bCorrect = isModelArchCorrect(b);
+    if (aCorrect && !bCorrect) {
+        return -1;
+    }
+    if (!aCorrect && bCorrect) {
+        return 1;
+    }
     let aName = a.name.toLowerCase();
     let bName = b.name.toLowerCase();
     if (aName.endsWith('.safetensors') && !bName.endsWith('.safetensors')) {
@@ -153,13 +173,18 @@ class ModelBrowserWrapper {
             ];
         }
         let name = cleanModelName(model.data.name);
+        let isCorrect = isModelArchCorrect(model.data);
+        let interject = '';
+        if (!isCorrect && this.subType != 'Stable-Diffusion') {
+            interject = `<b>(Incompatible with current model!)</b><br>`;
+        }
         if (model.data.is_safetensors) {
             let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
             if (this.subType == 'LoRA' || this.subType == 'Stable-Diffusion') {
-                description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}${getLine("Description", model.data.description)}`;
+                description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}${interject}${getLine("Description", model.data.description)}`;
             }
             else {
-                description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Description", model.data.description)}`;
+                description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${interject}${getLine("Description", model.data.description)}`;
             }
             buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
         }
@@ -187,7 +212,7 @@ class ModelBrowserWrapper {
         else {
             isSelected = selectorElem.value == model.data.name;
         }
-        let className = isSelected ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
+        let className = isSelected ? 'model-selected' : (model.data.loaded ? 'model-loaded' : (!isCorrect ? 'model-unavailable' : ''));
         let searchable = `${model.data.name}, ${description}, ${model.data.license}, ${model.data.architecture||'no-arch'}, ${model.data.usage_hint}, ${model.data.trigger_phrase}, ${model.data.merged_from}, ${model.data.tags}`;
         return { name, description, buttons, 'image': model.data.preview_image, className, searchable };
     }
@@ -332,22 +357,26 @@ function directSetModel(model) {
     if (model.name) {
         forceSetDropdownValue('input_model', model.name);
         forceSetDropdownValue('current_model', model.name);
-        setCookie('selected_model', `${model.name},${model.standard_width},${model.standard_height}`, 90);
+        setCookie('selected_model', `${model.name},${model.standard_width},${model.standard_height},${model.architecture}`, 90);
         curModelWidth = model.standard_width;
         curModelHeight = model.standard_height;
+        curModelArch = model.architecture;
     }
     else if (model.includes(',')) {
-        let [name, width, height] = model.split(',');
+        let [name, width, height, arch] = model.split(',');
         forceSetDropdownValue('input_model', name);
         forceSetDropdownValue('current_model', name);
-        setCookie('selected_model', `${name},${width},${height}`, 90);
+        setCookie('selected_model', `${name},${width},${height},${arch}`, 90);
         curModelWidth = parseInt(width);
         curModelHeight = parseInt(height);
+        curModelArch = arch;
     }
     let aspect = document.getElementById('input_aspectratio');
     if (aspect) {
         aspect.dispatchEvent(new Event('change'));
     }
+    sdLoraBrowser.browser.update();
+    sdEmbedBrowser.browser.update();
 }
 
 function setCurrentModel(callback) {

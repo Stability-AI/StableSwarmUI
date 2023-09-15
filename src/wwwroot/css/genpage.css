@@ -344,6 +344,9 @@ body {
     border: 1px solid color-mix(in srgb, var(--background) 50%, var(--box-selected-border));
     background-color: color-mix(in srgb, var(--background) 50%, var(--box-selected-background));
 }
+.model-unavailable {
+    opacity: 0.3;
+}
 .sui_popover_model {
     white-space: normal;
 }
