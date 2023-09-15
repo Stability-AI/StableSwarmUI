@@ -83,8 +83,12 @@ function formatMetadata(metadata) {
 }
 
 function expandCurrentImage(src, metadata) {
-    getRequiredElementById('image_fullview_modal').innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="imageview_modal_inner_div"><img class="imageview_popup_modal_img" src="${src}"><br><div class="imageview_popup_modal_undertext">${formatMetadata(metadata)}</div>`;
+    getRequiredElementById('image_fullview_modal_content').innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="imageview_modal_inner_div"><img class="imageview_popup_modal_img" src="${src}"><br><div class="imageview_popup_modal_undertext">${formatMetadata(metadata)}</div>`;
     $('#image_fullview_modal').modal('show');
+}
+
+function closeImageFullview() {
+    $('#image_fullview_modal').modal('hide');
 }
 
 function shiftToNextImagePreview(next = true, expand = false) {

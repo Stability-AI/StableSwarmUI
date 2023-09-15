@@ -399,6 +399,18 @@ textarea, input, select {
     background-color: color-mix(in srgb, var(--button-background) 40%, rgba(100, 0, 0, 0.5));
     color: color-mix(in srgb, var(--button-text) 60%, transparent);
 }
+.text_button {
+    background-color: color-mix(in srgb, var(--button-background) 50%, transparent);
+    color: var(--text);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: all 0.5s;
+}
+.text_button:hover {
+    color: var(--button-text);
+    text-decoration: none;
+    transition: all 0.5s;
+}
 .modal_text_extra {
     width: 100%;
     margin-bottom: 0.1rem;
