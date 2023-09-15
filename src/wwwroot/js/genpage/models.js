@@ -377,6 +377,8 @@ function directSetModel(model) {
     }
     sdLoraBrowser.browser.update();
     sdEmbedBrowser.browser.update();
+    sdControlnetBrowser.browser.update();
+    sdVAEBrowser.browser.update();
 }
 
 function setCurrentModel(callback) {
