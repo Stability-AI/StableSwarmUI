@@ -381,7 +381,7 @@ public class BackendHandler
         }
         foreach (T2IBackendData backend in T2IBackends.Values)
         {
-            if (backend.Backend.CurrentModelName is not null && Program.MainSDModels.Models.TryGetValue(backend.Backend.CurrentModelName, out T2IModel model))
+            if (backend.Backend is not null && backend.Backend.CurrentModelName is not null && Program.MainSDModels.Models.TryGetValue(backend.Backend.CurrentModelName, out T2IModel model))
             {
                 model.AnyBackendsHaveLoaded = true;
             }
@@ -837,6 +837,7 @@ public class BackendHandler
                             }
                             access.Dispose();
                         }
+                        ReassignLoadedModelsList();
                     }, cancel);
                 }
                 else

@@ -341,8 +341,8 @@ body {
     background-color: var(--box-selected-background-stronger);
 }
 .model-loaded {
-    border: 1px solid var(--box-selected-border);
-    background-color: var(--box-selected-background);
+    border: 1px solid color-mix(in srgb, var(--background) 50%, var(--box-selected-border));
+    background-color: color-mix(in srgb, var(--background) 50%, var(--box-selected-background));
 }
 .sui_popover_model {
     white-space: normal;
