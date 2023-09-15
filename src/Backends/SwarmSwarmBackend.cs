@@ -267,7 +267,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             JObject req = user_input.ToJSON();
             req["images"] = 1;
             req["session_id"] = Session;
-            req["do_not_save"] = true;
+            req["donotsave"] = true;
             JObject generated = await HttpClient.PostJson($"{Settings.Address}/API/GenerateText2Image", req);
             if (generated.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
             {
@@ -285,7 +285,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             JObject req = user_input.ToJSON();
             req["images"] = 1;
             req["session_id"] = Session;
-            req["do_not_save"] = true;
+            req["donotsave"] = true;
             ClientWebSocket websocket = await NetworkBackendUtils.ConnectWebsocket(Settings.Address, "API/GenerateText2ImageWS");
             await websocket.SendJson(req, API.WebsocketTimeout);
             while (true)
