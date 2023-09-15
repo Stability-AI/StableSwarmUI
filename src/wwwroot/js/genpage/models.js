@@ -180,12 +180,11 @@ class ModelBrowserWrapper {
         }
         if (model.data.is_safetensors) {
             let getLine = (label, val) => `<b>${label}:</b> ${val == null ? "(Unset)" : escapeHtml(val)}<br>`;
+            let getOptLine = (label, val) => val ? getLine(label, val) : '';
             if (this.subType == 'LoRA' || this.subType == 'Stable-Diffusion') {
-                description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}${interject}${getLine("Description", model.data.description)}`;
+                interject += `${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}`;
             }
-            else {
-                description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${interject}${getLine("Description", model.data.description)}`;
-            }
+            description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getLine("Author", model.data.author)}${getLine("Type", model.data.class)}${interject}${getOptLine('Trigger Phrase', model.data.trigger_phrase)}${getOptLine('Usage Hint', model.data.usage_hint)}${getLine("Description", model.data.description)}`;
             buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
         }
         else {
