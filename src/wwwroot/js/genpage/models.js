@@ -188,7 +188,7 @@ class ModelBrowserWrapper {
             isSelected = selectorElem.value == model.data.name;
         }
         let className = isSelected ? 'model-selected' : (model.data.loaded ? 'model-loaded' : '');
-        let searchable = `${model.data.name}, ${description}, ${model.data.license}, ${model.data.architecture}, ${model.data.usage_hint}, ${model.data.trigger_phrase}, ${model.data.merged_from}, ${model.data.tags}`;
+        let searchable = `${model.data.name}, ${description}, ${model.data.license}, ${model.data.architecture||'no-arch'}, ${model.data.usage_hint}, ${model.data.trigger_phrase}, ${model.data.merged_from}, ${model.data.tags}`;
         return { name, description, buttons, 'image': model.data.preview_image, className, searchable };
     }
 

@@ -67,12 +67,19 @@ public class T2IModelClassSorter
         {
             return isXL09Refiner(h);
         }});
+        Register(new() { ID = "stable-diffusion-v1/lora", Name = "Stable Diffusion v1 LoRA", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) =>
+        {
+            return h.ContainsKey("lora_unet_up_blocks_3_attentions_2_transformer_blocks_0_ff_net_2.lora_up.weight");
+        }});
+        Register(new() { ID = "stable-diffusion-xl-v1-base/lora", Name = "Stable Diffusion XL 1.0-Base LoRA", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
+        {
+            return h.ContainsKey("lora_unet_output_blocks_5_1_transformer_blocks_1_ff_net_2.lora_up.weight");
+        }});
         // Everything below this point does not autodetect, it must match through ModelSpec
         Register(new() { ID = "stable-diffusion-xl-v1/vae", Name = "Stable Diffusion v1 VAE", StandardWidth = 512, StandardHeight = 512, IsThisModelOfClass = (m, h) => { return false; } });
         Register(new() { ID = "stable-diffusion-xl-v1-base", Name = "Stable Diffusion XL 1.0-Base", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; }});
         Register(new() { ID = "stable-diffusion-xl-v1-refiner", Name = "Stable Diffusion XL 1.0-Refiner", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; } });
         Register(new() { ID = "stable-diffusion-xl-v1-base/vae", Name = "Stable Diffusion XL 1.0-Base VAE", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; } });
-        Register(new() { ID = "stable-diffusion-xl-v1-base/lora", Name = "Stable Diffusion XL 1.0-Base LoRA", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; } });
         Register(new() { ID = "stable-diffusion-xl-v1-base/control-lora", Name = "Stable Diffusion XL 1.0-Base Control-LoRA", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; } });
     }
 
