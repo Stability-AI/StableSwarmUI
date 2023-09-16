@@ -108,7 +108,7 @@ public static class NetworkBackendUtils
             {
                 try
                 {
-                    Task.Delay(TimeSpan.FromSeconds(5), Program.GlobalProgramCancel).Wait();
+                    Task.Delay(TimeSpan.FromSeconds(5), cancel).Wait();
                 }
                 catch (Exception)
                 {

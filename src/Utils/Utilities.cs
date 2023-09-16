@@ -170,7 +170,7 @@ public static class Utilities
     /// <summary>Sends a JSON object post and receives a JSON object back.</summary>
     public static async Task<JObject> PostJson(this HttpClient client, string url, JObject data)
     {
-        return (await (await client.PostAsync(url, JSONContent(data))).Content.ReadAsStringAsync()).ParseToJson();
+        return (await (await client.PostAsync(url, JSONContent(data), Program.GlobalProgramCancel)).Content.ReadAsStringAsync()).ParseToJson();
     }
 
     /// <summary>Sends a JSON string post and receives a JSON object back.</summary>
