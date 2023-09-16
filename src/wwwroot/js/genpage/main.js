@@ -640,7 +640,7 @@ function pageSizer() {
     let mainInputsAreaWrapper = getRequiredElementById('main_inputs_area_wrapper');
     let mainImageArea = getRequiredElementById('main_image_area');
     let currentImage = getRequiredElementById('current_image');
-    let currentImageBatch = getRequiredElementById('current_image_batch');
+    let currentImageBatch = getRequiredElementById('current_image_batch_wrapper');
     let midSplitButton = getRequiredElementById('t2i-mid-split-quickbutton');
     let topSplitButton = getRequiredElementById('t2i-top-split-quickbutton');
     let altRegion = getRequiredElementById('alt_prompt_region');
@@ -673,7 +673,7 @@ function pageSizer() {
             mainInputsAreaWrapper.style.height = `calc(100vh - ${fixed})`;
             mainImageArea.style.height = `calc(100vh - ${fixed})`;
             currentImage.style.height = `calc(100vh - ${fixed} - ${altHeight})`;
-            currentImageBatch.style.height = `calc(100vh - ${fixed} - 2rem)`;
+            currentImageBatch.style.height = `calc(100vh - ${fixed})`;
             topBar.style.height = `calc(100vh - ${fixed})`;
             bottomBarContent.style.height = `calc(${fixed} - 2rem)`;
         }
