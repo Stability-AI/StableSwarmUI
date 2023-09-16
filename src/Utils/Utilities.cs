@@ -33,6 +33,37 @@ public static class Utilities
     /// <summary>Matcher for characters banned or specialcased by Windows or other OS's.</summary>
     public static AsciiMatcher FilePathForbidden = new(c => c < 32 || "<>:\"\\|?*~&@;".Contains(c));
 
+    public static HashSet<string> ReservedFilenames = new() { "con", "prn", "aux", "nul" };
+
+    static Utilities()
+    {
+        for (int i = 0; i <= 9; i++)
+        {
+            ReservedFilenames.Add($"com{i}");
+            ReservedFilenames.Add($"lpt{i}");
+        }
+    }
+
+    /// <summary>Cleans a filename with strict filtering, including removal of forbidden characters, removal of the '.' symbol, but permitting '/'.</summary>
+    public static string StrictFilenameClean(string name)
+    {
+        name = FilePathForbidden.TrimToNonMatches(name.Replace('\\', '/')).Replace(".", "");
+        while (name.Contains("//"))
+        {
+            name = name.Replace("//", "/");
+        }
+        name = name.Trim();
+        string[] parts = name.Split('/');
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (ReservedFilenames.Contains(parts[i].ToLowerFast()))
+            {
+                parts[i] = $"{parts[i]}_";
+            }
+        }
+        return parts.JoinString("/");
+    }
+
     /// <summary>Mini-utility class to debug load times.</summary>
     public class LoadTimer
     {

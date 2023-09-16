@@ -211,7 +211,7 @@ public class WebServer
             path = path.Replace("..", "");
         }
         root = root.Replace('\\', '/');
-        path = $"{root}/{path}";
+        path = $"{root}/{path.Trim()}";
         if (path.Contains("//"))
         {
             path = path.Replace("//", "/");

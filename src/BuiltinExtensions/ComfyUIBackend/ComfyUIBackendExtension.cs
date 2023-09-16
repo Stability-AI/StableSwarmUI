@@ -218,7 +218,7 @@ public class ComfyUIBackendExtension : Extension
     /// <summary>API route to save a comfy workflow object to persistent file.</summary>
     public async Task<JObject> ComfySaveWorkflow(string name, string workflow, string prompt, string custom_params)
     {
-        string path = Utilities.FilePathForbidden.TrimToNonMatches(name).Replace(".", "");
+        string path = Utilities.StrictFilenameClean(name);
         CustomWorkflows.TryAdd(path, path);
         Directory.CreateDirectory($"{Folder}/CustomWorkflows");
         path = $"{Folder}/CustomWorkflows/{path}.json";
@@ -235,7 +235,7 @@ public class ComfyUIBackendExtension : Extension
     /// <summary>API route to read a comfy workflow object from persistent file.</summary>
     public async Task<JObject> ComfyReadWorkflow(string name)
     {
-        string path = Utilities.FilePathForbidden.TrimToNonMatches(name).Replace(".", "");
+        string path = Utilities.StrictFilenameClean(name);
         path = $"{Folder}/CustomWorkflows/{path}.json";
         if (!File.Exists(path))
         {
@@ -255,7 +255,7 @@ public class ComfyUIBackendExtension : Extension
     /// <summary>API route to read a delete a saved Comfy custom workflows.</summary>
     public async Task<JObject> ComfyDeleteWorkflow(string name)
     {
-        string path = Utilities.FilePathForbidden.TrimToNonMatches(name).Replace(".", "");
+        string path = Utilities.StrictFilenameClean(name);
         CustomWorkflows.Remove(path, out _);
         path = $"{Folder}/CustomWorkflows/{path}.json";
         if (!File.Exists(path))

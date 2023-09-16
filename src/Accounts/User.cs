@@ -185,11 +185,6 @@ public class User
         }
         string path = Settings.OutPathBuilder.Format;
         path = StringConversionHelper.QuickSimpleTagFiller(path, "[", "]", buildPathPart);
-        path = Utilities.FilePathForbidden.TrimToNonMatches(path).Replace(".", "");
-        if (path.Length < 5) // Quiet trick: some short file names, eg 'CON.png', would hit Windows reserved names, so quietly break that.
-        {
-            path = $"{path}_";
-        }
-        return path;
+        return Utilities.StrictFilenameClean(path);
     }
 }

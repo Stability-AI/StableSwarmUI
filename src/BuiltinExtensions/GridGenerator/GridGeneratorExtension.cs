@@ -234,20 +234,12 @@ public class GridGeneratorExtension : Extension
 
     public string CleanFolderName(string name)
     {
-        name = Utilities.FilePathForbidden.TrimToNonMatches(name);
-        if (name.Contains('.'))
-        {
-            throw new InvalidDataException("Output folder name cannot contain dots.");
-        }
-        while (name.Contains("//"))
-        {
-            name = name.Replace("//", "/");
-        }
+        name = Utilities.StrictFilenameClean(name);
         if (name.Trim() == "")
         {
             throw new InvalidDataException("Output folder name cannot be empty.");
         }
-        return $"Grids/{name}";
+        return $"Grids/{name.Trim()}";
     }
 
     public async Task<JObject> GridGenDoesExist(Session session, string folderName)

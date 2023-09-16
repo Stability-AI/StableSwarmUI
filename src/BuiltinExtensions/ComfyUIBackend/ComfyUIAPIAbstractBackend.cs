@@ -277,7 +277,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         string workflow = null;
         if (user_input.TryGet(ComfyUIBackendExtension.CustomWorkflowParam, out string customWorkflowName))
         {
-            string path = Utilities.FilePathForbidden.TrimToNonMatches(customWorkflowName).Replace(".", "");
+            string path = Utilities.StrictFilenameClean(customWorkflowName);
             path = $"{ComfyUIBackendExtension.Folder}/CustomWorkflows/{path}.json";
             if (!File.Exists(path))
             {
