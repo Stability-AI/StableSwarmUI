@@ -512,6 +512,12 @@ document.addEventListener('mousedown', (e) => {
 
 document.addEventListener('click', (e) => {
     doPopHideCleanup(e.target);
+    if (getRequiredElementById('image_fullview_modal').style.display == 'block' && !findParentOfClass(e.target, 'imageview_popup_modal_undertext')) {
+        closeImageFullview();
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
 }, true);
 
 /** Ensures the popover for the given ID is hidden. */
