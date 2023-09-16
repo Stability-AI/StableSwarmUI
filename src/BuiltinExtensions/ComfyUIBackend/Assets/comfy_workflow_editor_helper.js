@@ -411,10 +411,9 @@ function comfyBuildParams(callback) {
                 }
                 return false;
             }
-            if (claimOnce('EmptyLatentImage', 'width', 'width', true) && claimOnce('EmptyLatentImage', 'height', 'height', true)) {
+            if (claimOnce('EmptyLatentImage', 'width', 'width', true) && claimOnce('EmptyLatentImage', 'height', 'height', true) && claimOnce('EmptyLatentImage', 'batchsize', 'batch_size', true)) {
                 defaultParamsRetain.push('aspectratio');
                 defaultParamValue['aspectratio'] = 'Custom';
-                node.inputs.batch_size = 1;
                 continue;
             }
             claimOnce('KSampler', 'seed', 'seed', true);
@@ -500,7 +499,7 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
             if (param.type == 'integer' && param.view_type == 'seed' && val > 2**63) {
                 val = -1;
             }
-            if (applyValues) {
+            if (applyValues && val !== null && val !== undefined) {
                 if (param.id == 'model') {
                     setCookie('selected_model', `${val}`, 0.5);
                     forceSetDropdownValue('current_model', val);
