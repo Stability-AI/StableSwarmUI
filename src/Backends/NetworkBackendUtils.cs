@@ -252,9 +252,9 @@ public static class NetworkBackendUtils
         start.Environment["CUDA_VISIBLE_DEVICES"] = $"{gpuId}";
         string preArgs = "";
         string postArgs = extraArgs.Replace("{PORT}", $"{port}").Trim();
-        if (startScript.EndsWith(".py"))
+        if (path.EndsWith(".py"))
         {
-            preArgs = "-s " + startScript.AfterLast("/");
+            preArgs = "-s " + path.AfterLast("/");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 void AddPath(string path)
@@ -279,7 +279,7 @@ public static class NetworkBackendUtils
                 {
                     start.FileName = Path.GetFullPath($"{dir}/../python_embeded/python.exe");
                     start.WorkingDirectory = Path.GetFullPath($"{dir}/..");
-                    preArgs = "-s " + Path.GetFullPath(startScript)[(start.WorkingDirectory.Length + 1)..];
+                    preArgs = "-s " + Path.GetFullPath(path)[(start.WorkingDirectory.Length + 1)..];
                     AddPath(Path.GetFullPath($"{dir}/../python_embeded"));
                 }
                 else
@@ -312,6 +312,7 @@ public static class NetworkBackendUtils
         else
         {
             Logs.Debug($"({nameSimple} launch) Will shellexec");
+            start.FileName = Path.GetFullPath(path);
         }
         start.Arguments = $"{preArgs} {postArgs}".Trim();
         BackendStatus status = BackendStatus.LOADING;
