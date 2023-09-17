@@ -271,8 +271,8 @@ function updateLoraWeights() {
     let valSet = [...getRequiredElementById('input_loras').selectedOptions].map(option => option.value);
     let inputWeights = getRequiredElementById('input_loraweights');
     inputWeights.value = valSet.map(lora => loraWeightPref[lora] || 1).join(',');
-    getRequiredElementById('input_loraweights_toggle').checked = valSet.length > 0;
     inputWeights.dispatchEvent(new Event('change'));
+    getRequiredElementById('input_loraweights_toggle').checked = valSet.length > 0;
     doToggleEnable('input_loraweights');
 }
 
@@ -330,9 +330,9 @@ function toggleSelectLora(lora) {
     }
     $(loraInput).val(selected);
     $(loraInput).trigger('change');
+    loraInput.dispatchEvent(new Event('change'));
     getRequiredElementById('input_loras_toggle').checked = selected.length > 0;
     doToggleEnable('input_loras');
-    loraInput.dispatchEvent(new Event('change'));
     updateLoraWeights();
     updateLoraList();
 }
