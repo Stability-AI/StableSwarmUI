@@ -480,9 +480,9 @@ function resetParamsToDefault() {
         if (param.visible) {
             setDirectParamValue(param, param.default);
             if (param.toggleable) {
-                getRequiredElementById(`${id}_toggle`).checked = false;
-                deleteCookie(`lastparam_${id}_toggle`);
-                doToggleEnable(id);
+                let toggler = getRequiredElementById(`${id}_toggle`);
+                toggler.checked = false;
+                triggerChangeFor(toggler);
             }
             if (param.group && param.group.toggles) {
                 let toggler = document.getElementById(`input_group_content_${param.group.id}_toggle`);
