@@ -5,6 +5,7 @@ using StableSwarmUI.DataHolders;
 using StableSwarmUI.Utils;
 using System.Diagnostics;
 using StableSwarmUI.Backends;
+using System.IO;
 
 namespace StableSwarmUI.Builtin_AutoWebUIExtension;
 
@@ -32,6 +33,22 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend
     public override async Task Init()
     {
         AutoWebUISelfStartSettings settings = SettingsRaw as AutoWebUISelfStartSettings;
+        if (settings.StartScript.AfterLast('/').BeforeLast('.') == "webui-user" && File.Exists(settings.StartScript))
+        {
+            if (settings.StartScript.EndsWith(".sh")) // On Linux, webui-user.sh is not a valid launcher at all
+            {
+                Logs.Error($"Refusing init of AutoWebUI with 'webui-user.sh' target script. Please use the 'webui.sh' script instead.");
+                Status = BackendStatus.ERRORED;
+                return;
+            }
+            string scrContent = File.ReadAllText(settings.StartScript);
+            if (!scrContent.Contains("%*") && !scrContent.Contains("%~")) // on Windows, it's only valid if you forward swarm's CLI args
+            {
+                Logs.Error($"Refusing init of AutoWebUI with 'webui-user.bat' target script. Please use the 'webui.bat' script instead. (If webui-user.bat usage is intentional, please forward CLI args, eg 'COMMANDLINE_ARGS=%*'.");
+                Status = BackendStatus.ERRORED;
+                return;
+            }
+        }
         await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "AutoWebUI", settings.GPU_ID, settings.ExtraArgs + " --api --port={PORT}", InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
 
