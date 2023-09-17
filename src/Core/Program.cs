@@ -312,6 +312,7 @@ public class Program
     /// <summary>Pre-applies settings choices from command line.</summary>
     public static void ApplyCommandLineSettings()
     {
+        ReapplySettings();
         string environment = GetCommandLineFlag("environment", "production").ToLowerFast() switch
         {
             "dev" or "development" => "Development",
@@ -339,7 +340,6 @@ public class Program
         }
         WebServer.SetHost(host, port);
         WebServer.LogLevel = Enum.Parse<LogLevel>(GetCommandLineFlag("asp_loglevel", "warning"), true);
-        Logs.MinimumLevel = Enum.Parse<Logs.LogLevel>(GetCommandLineFlag("loglevel", ServerSettings.LogLevel), true);
         SessionHandler.LocalUserID = GetCommandLineFlag("user_id", SessionHandler.LocalUserID);
         LockSettings = GetCommandLineFlagAsBool("lock_settings", false);
         if (CommandLineFlags.ContainsKey("ngrok-path"))
@@ -362,6 +362,12 @@ public class Program
             };
         }
         LaunchMode = GetCommandLineFlag("launch_mode", ServerSettings.LaunchMode);
+    }
+
+    /// <summary>Applies runtime-changable settings.</summary>
+    public static void ReapplySettings()
+    {
+        Logs.MinimumLevel = Enum.Parse<Logs.LogLevel>(GetCommandLineFlag("loglevel", ServerSettings.LogLevel), true);
     }
     #endregion
 

@@ -78,7 +78,7 @@ public static class AdminAPI
                 Logs.Error($"User '{session.User.UserID}' tried to set unknown server setting '{key}' to '{val}'.");
                 continue;
             }
-            object obj = AdminAPI.DataToType(val, field.Field.FieldType);
+            object obj = DataToType(val, field.Field.FieldType);
             if (obj is null)
             {
                 Logs.Error($"User '{session.User.UserID}' tried to set server setting '{key}' of type '{field.Field.FieldType.Name}' to '{val}', but type-conversion failed.");
@@ -87,6 +87,7 @@ public static class AdminAPI
             Program.ServerSettings.TrySetFieldValue(key, obj);
         }
         Program.SaveSettingsFile();
+        Program.ReapplySettings();
         return new JObject() { ["success"] = true };
     }
 }
