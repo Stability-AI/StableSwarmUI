@@ -47,6 +47,7 @@ public class T2IModel
             ["loaded"] = AnyBackendsHaveLoaded,
             ["architecture"] = ModelClass?.ID,
             ["class"] = ModelClass?.Name,
+            ["compat_class"] = ModelClass?.CompatClass,
             ["standard_width"] = StandardWidth,
             ["standard_height"] = StandardHeight,
             ["license"] = Metadata?.License,

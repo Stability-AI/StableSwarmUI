@@ -3,6 +3,7 @@ let models = {};
 let cur_model = null;
 let curModelWidth = 0, curModelHeight = 0;
 let curModelArch = '';
+let curModelCompatClass = '';
 let curModelMenuModel = null;
 let curModelMenuBrowser = null;
 let loraWeightPref = {};
@@ -95,11 +96,10 @@ function cleanModelName(name) {
 }
 
 function isModelArchCorrect(model) {
-    if (model.architecture) {
+    if (model.compat_class) {
         let slash = model.architecture.indexOf('/');
-        if (slash != -1) {
-            let arch = model.architecture.substring(0, slash);
-            return arch == curModelArch;
+        if (slash != -1) { // Base models are excluded
+            return model.compat_class == curModelCompatClass;
         }
     }
     return true;
@@ -356,28 +356,29 @@ function directSetModel(model) {
     if (model.name) {
         forceSetDropdownValue('input_model', model.name);
         forceSetDropdownValue('current_model', model.name);
-        setCookie('selected_model', `${model.name},${model.standard_width},${model.standard_height},${model.architecture}`, 90);
+        setCookie('selected_model', `${model.name},${model.standard_width},${model.standard_height},${model.architecture},${model.compat_class}`, 90);
         curModelWidth = model.standard_width;
         curModelHeight = model.standard_height;
         curModelArch = model.architecture;
+        curModelCompatClass = model.compat_class;
     }
     else if (model.includes(',')) {
-        let [name, width, height, arch] = model.split(',');
+        let [name, width, height, arch, compatClass] = model.split(',');
         forceSetDropdownValue('input_model', name);
         forceSetDropdownValue('current_model', name);
-        setCookie('selected_model', `${name},${width},${height},${arch}`, 90);
+        setCookie('selected_model', `${name},${width},${height},${arch},${compatClass}`, 90);
         curModelWidth = parseInt(width);
         curModelHeight = parseInt(height);
         curModelArch = arch;
+        curModelCompatClass = compatClass;
     }
     let aspect = document.getElementById('input_aspectratio');
     if (aspect) {
         aspect.dispatchEvent(new Event('change'));
     }
-    sdLoraBrowser.browser.update();
-    sdEmbedBrowser.browser.update();
-    sdControlnetBrowser.browser.update();
-    sdVAEBrowser.browser.update();
+    for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser]) {
+        browser.browser.rerender();
+    }
 }
 
 function setCurrentModel(callback) {
