@@ -134,7 +134,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 return;
             }
             Logs.Info($"Shutting down self-start ComfyUI (port={Port}) process #{RunningProcess.Id}...");
-            RunningProcess.Kill();
+            Utilities.KillProcess(RunningProcess, 10);
         }
         catch (Exception ex)
         {

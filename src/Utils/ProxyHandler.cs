@@ -114,12 +114,7 @@ public class PublicProxyHandler
                 return;
             }
             Logs.Info($"Shutting down {Name} process #{Process.Id}...");
-            Utilities.sys_kill(Process.Id, 15); // try graceful exit (SIGTERM=15)
-            Process.WaitForExit(TimeSpan.FromSeconds(15));
-            if (!Process.HasExited)
-            {
-                Process.Kill(); // If still running 15 seconds later, hardkill it (SIGKILL=9)
-            }
+            Utilities.KillProcess(Process, 15);
         }
         catch (Exception e)
         {

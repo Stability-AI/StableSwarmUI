@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System;
 using System.Net;
+using System.Diagnostics;
 
 namespace StableSwarmUI.Utils;
 
@@ -355,9 +356,34 @@ public static class Utilities
         return IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(e => e.Port == port);
     }
 
-    /// <summary>Kill system process..</summary>
+    /// <summary>Kill system process.</summary>
     [DllImport("libc", SetLastError = true, EntryPoint = "kill")]
     public static extern int sys_kill(int pid, int signal);
+
+    /// <summary>Attempt to properly kill a process.</summary>
+    public static void KillProcess(Process proc, int graceSeconds)
+    {
+        if (proc is null || proc.HasExited)
+        {
+            return;
+        }
+        try
+        {
+            sys_kill(proc.Id, 15); // try graceful exit (SIGTERM=15)
+            proc.WaitForExit(TimeSpan.FromSeconds(graceSeconds));
+        }
+        catch (DllNotFoundException)
+        {
+            Logs.Verbose($"Utilities.KillProcess: DllNotFoundException for libc");
+            // Sometimes libc just isn't available (Windows especially) so just ignore those failures, ungraceful kill only I guess.
+        }
+        proc.Kill(true); // Now kill the full tree (SIGKILL=9)
+        proc.WaitForExit(TimeSpan.FromSeconds(graceSeconds));
+        if (!proc.HasExited)
+        {
+            proc.Kill(); // Make really sure it's dead (SIGKILL=9)
+        }
+    }
 
     /// <summary>Downloads a file from a given URL and saves it to a given filepath.</summary>
     public static async Task DownloadFile(string url, string filepath, Action<long> progressUpdate)

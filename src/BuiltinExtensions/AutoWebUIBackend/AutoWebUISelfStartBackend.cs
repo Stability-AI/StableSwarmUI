@@ -62,7 +62,8 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend
                 return;
             }
             Logs.Info($"Shutting down self-start Auto WebUI (port={Port}) process #{RunningProcess.Id}...");
-            RunningProcess.Kill();
+            Utilities.KillProcess(RunningProcess, 10);
+            Logs.Info("Auto WebUI process shut down.");
         }
         catch (Exception ex)
         {
