@@ -401,8 +401,8 @@ function doGenerate(input_overrides = {}) {
 function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
     let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
     genericRequest('ListImages', {'path': path, 'depth': depth}, data => {
-        data.files = data.files.sort((a, b) => a.src.toLowerCase().localeCompare(b.src.toLowerCase()));
-        let folders = data.folders.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        data.files = data.files.sort((a, b) => b.src.toLowerCase().localeCompare(a.src.toLowerCase()));
+        let folders = data.folders.sort((a, b) => b.toLowerCase().localeCompare(a.toLowerCase()));
         let mapped = data.files.map(f => {
             let fullSrc = `${prefix}${f.src}`;
             return { 'name': fullSrc, 'data': { 'src': `Output/${fullSrc}`, 'name': f.src, 'metadata': f.metadata } };
