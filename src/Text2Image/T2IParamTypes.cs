@@ -441,7 +441,8 @@ public class T2IParamTypes
                 }
                 if (!ValidBase64Matcher.IsOnlyMatches(val) || val.Length < 10)
                 {
-                    throw new InvalidDataException($"Invalid image value for param {type.Name} - must be a valid base64 string");
+                    string shortText = val.Length > 10 ? val[..10] + "..." : val;
+                    throw new InvalidDataException($"Invalid image value for param {type.Name} - must be a valid base64 string - got '{shortText}'");
                 }
                 return val;
             case T2IParamDataType.IMAGE_LIST:
@@ -459,7 +460,8 @@ public class T2IParamTypes
                     }
                     if (!ValidBase64Matcher.IsOnlyMatches(partVal) || partVal.Length < 10)
                     {
-                        throw new InvalidDataException($"Invalid image value for param {type.Name} - must be a valid base64 string");
+                        string shortText = partVal.Length > 10 ? partVal[..10] + "..." : partVal;
+                        throw new InvalidDataException($"Invalid image-list value for param {type.Name} - must be a valid base64 string - got '{shortText}'");
                     }
                     parts.Add(partVal);
                 }

@@ -59,6 +59,10 @@ public class T2IParamInput
             {
                 result[key] = img.AsBase64;
             }
+            else if (val is List<Image> imgList)
+            {
+                result[key] = new JArray(imgList.Select(img => img.AsBase64).ToArray());
+            }
             else if (val is T2IModel model)
             {
                 result[key] = model.Name;
