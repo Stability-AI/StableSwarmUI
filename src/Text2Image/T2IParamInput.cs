@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using FreneticUtilities.FreneticExtensions;
+using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
@@ -61,7 +62,7 @@ public class T2IParamInput
             }
             else if (val is List<Image> imgList)
             {
-                result[key] = new JArray(imgList.Select(img => img.AsBase64).ToArray());
+                result[key] = imgList.Select(img => img.AsBase64).JoinString("|");
             }
             else if (val is T2IModel model)
             {
