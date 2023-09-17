@@ -438,6 +438,14 @@ function refreshParameterValues(callback = null) {
                     }
                     dropdown.innerHTML = html;
                 }
+                else if (param.type == "list" && param.values) {
+                    let listElem = getRequiredElementById(`input_${param.id}`);
+                    let listOpts = [...listElem.options].map(o => o.value);
+                    let newVals = param.values.filter(v => !listOpts.includes(v));
+                    for (let val of newVals) {
+                        $(listElem).append(new Option(val, val, false, false));
+                    }
+                }
             }
             if (callback) {
                 callback();
