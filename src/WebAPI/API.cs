@@ -184,7 +184,7 @@ public class API
         {
             if (obj is not null)
             {
-                outputs.Append(obj);
+                outputs.Enqueue(obj);
             }
         }
         await handler(session, val, takeOutput, false);
