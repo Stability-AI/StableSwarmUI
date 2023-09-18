@@ -49,7 +49,7 @@ public class ComfyUIBackendExtension : Extension
         {
             return FakeRawInputType;
         }
-        else if (name.StartsWith("comfyrawworkflowinput") && context.ValuesInput.ContainsKey("comfyworkflowraw"))
+        else if (name.StartsWith("comfyrawworkflowinput") && (context.ValuesInput.ContainsKey("comfyworkflowraw") || context.ValuesInput.ContainsKey("comfyuicustomworkflow")))
         {
             string nameNoPrefix = name.After("comfyrawworkflowinput");
             T2IParamDataType type = FakeRawInputType.Type;
