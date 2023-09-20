@@ -71,9 +71,18 @@ StableSwarmUI is designed on the principle of exposing all the parameters to you
 
 ## More Than Text: Playing with Prompts
 
-Prompting is, primarily, just text input. However (depending on backend, this doc assumes the standard Comfy backend), there are some special options also available:
-- Prompt weighting, eg `an (orange) cat` or `an (orange:1.5) cat`. Anything in `(parens)` has its weighting modified - meaning, the model will pay more attention to that part of the prompt. Values above `1` are more important, values below `1` (eg `0.5`) are less important. You can also hold Control and press the up/down arrow keys to change the weight of selected text.
+Prompting is, primarily, just text input. However, there are some special options also available (on both Prompt and Negative Prompt):
+- Prompt weighting, eg `an (orange) cat` or `an (orange:1.5) cat`. Anything in `(parens)` has its weighting modified - meaning, the model will pay more attention to that part of the prompt. Values above `1` are more important, values below `1` (eg `0.5`) are less important.
+    - You can also hold Control and press the up/down arrow keys to change the weight of selected text.
+    - Note: the way prompt weights are understood is different depending on backend.
 - If using SDXL or UnClip, you can use *ReVision* by just dragging an image into the prompt box. This will have the model interpret the image (using ClipVision) and include it in the prompt.
+- You can use the syntax `<random:red, blue, purple>` to randomly select from a list for each gen
+    - This random is seeded by the main seed - so if you have a static seed, this won't change.
+    - You can use `,` to separate the entries, or `|`, or `||`. Whichever is most unique gets used - so if you want random options with `,` in them, just use `|` as a separator, and `,` will be ignored (eg `<random:red|blue|purple>`).
+- You can use `<embed:filename>` to use a Textual Inversion embedding anywhere.
+- You may use `<lora:filename:weight>` to enable a LoRA
+    - Note that it's generally preferred to use the GUI at the bottom of the page to select loras
+    - Note that position within the prompt doesn't matter, loras are not actually a prompt feature, this is just a convenience option for users used to Auto WebUI.
 
 ## We Gotta Go Faster: Add More Backends
 

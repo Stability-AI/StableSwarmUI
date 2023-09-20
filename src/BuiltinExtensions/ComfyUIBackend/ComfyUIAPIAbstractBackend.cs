@@ -296,6 +296,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
             }
         }
+        user_input.PreparsePromptLikes(x => $"embedding:{x}");
         if (workflow is not null && !user_input.Get(T2IParamTypes.ControlNetPreviewOnly))
         {
             Logs.Verbose($"Will fill workflow {workflow}");

@@ -112,6 +112,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
+        user_input.PreparsePromptLikes(x => x);
         if (user_input.TryGet(T2IParamTypes.InitImage, out Image initImg))
         {
             // TODO: img2img

@@ -261,6 +261,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
+        user_input.PreparsePromptLikes(x => $"<embedding:{x}>");
         Image[] images = null;
         await RunWithSession(async () =>
         {
@@ -280,6 +281,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
     public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
     {
+        user_input.PreparsePromptLikes(x => $"<embedding:{x}>");
         await RunWithSession(async () =>
         {
             JObject req = user_input.ToJSON();

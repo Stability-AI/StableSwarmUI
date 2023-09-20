@@ -72,9 +72,18 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
+        user_input.PreparsePromptLikes(x => x.BeforeLast('.'));
+        string promptAdd = "";
+        if (user_input.TryGet(T2IParamTypes.Loras, out List<string> loras) && user_input.TryGet(T2IParamTypes.LoraWeights, out List<string> loraWeights) && loras.Count > 0 && loras.Count == loraWeights.Count)
+        {
+            for (int i = 0; i < loras.Count; i++)
+            {
+                promptAdd += $"<lora:{loras[i]}:{loraWeights[i]}>";
+            }
+        }
         JObject toSend = new()
         {
-            ["prompt"] = user_input.Get(T2IParamTypes.Prompt),
+            ["prompt"] = user_input.Get(T2IParamTypes.Prompt) + promptAdd,
             ["negative_prompt"] = user_input.Get(T2IParamTypes.NegativePrompt),
             ["seed"] = user_input.Get(T2IParamTypes.Seed),
             ["steps"] = user_input.Get(T2IParamTypes.Steps),

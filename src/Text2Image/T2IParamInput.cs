@@ -1,8 +1,10 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
+using System;
 
 namespace StableSwarmUI.Text2Image;
 
@@ -109,6 +111,95 @@ public class T2IParamInput
     {
         JObject obj = GenMetadataObject(extraParams);
         return new JObject() { ["sui_image_params"] = obj }.ToString(Newtonsoft.Json.Formatting.Indented);
+    }
+
+    /// <summary>Special utility to process prompt inputs before the request is executed (to parse wildcards, embeddings, etc).</summary>
+    public void PreparsePromptLikes(Func<string, string> embedFormatter)
+    {
+        ValuesInput["prompt"] = ProcessPromptLike(T2IParamTypes.Prompt, embedFormatter);
+        ValuesInput["negativeprompt"] = ProcessPromptLike(T2IParamTypes.NegativePrompt, embedFormatter);
+    }
+
+    /// <summary>Special utility to process prompt inputs before the request is executed (to parse wildcards, embeddings, etc).</summary>
+    public string ProcessPromptLike(T2IRegisteredParam<string> param, Func<string, string> embedFormatter)
+    {
+        string val = Get(param);
+        if (val is null)
+        {
+            return null;
+        }
+        Random rand = new((int)Get(T2IParamTypes.Seed) + param.Type.Name.Length);
+        string lowRef = val.ToLowerFast();
+        string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelsFor(SourceSession).Select(m => m.ToString()).ToArray() : null;
+        string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelsFor(SourceSession).Select(m => m.ToString().ToLowerFast()).ToArray() : null;
+        return StringConversionHelper.QuickSimpleTagFiller(val, "<", ">", tag =>
+        {
+            (string prefix, string data) = tag.BeforeAndAfter(':');
+            if (string.IsNullOrWhiteSpace(data))
+            {
+                return $"<{tag}>";
+            }
+            switch (prefix.ToLowerFast())
+            {
+                case "embed":
+                case "embedding":
+                    {
+                        if (embeds is not null)
+                        {
+                            string want = data.ToLowerFast();
+                            string matched = embeds.FirstOrDefault(e => e.ToLowerFast().StartsWith(want)) ?? embeds.FirstOrDefault(e => e.ToLowerFast().Contains(want));
+                            if (matched is not null)
+                            {
+                                data = matched;
+                            }
+                        }
+                        return embedFormatter(data);
+                    }
+                case "lora":
+                    {
+                        string lora = data.ToLowerFast();
+                        int colonIndex = lora.IndexOf(':');
+                        double strength = 1;
+                        if (colonIndex != -1 && double.TryParse(lora[(colonIndex + 1)..], out strength))
+                        {
+                            lora = lora[..colonIndex];
+                        }
+                        string matched = loras.FirstOrDefault(e => e.ToLowerFast().StartsWith(lora)) ?? loras.FirstOrDefault(e => e.ToLowerFast().Contains(lora));
+                        if (matched is not null)
+                        {
+                            List<string> loraList = Get(T2IParamTypes.Loras);
+                            List<string> weights = Get(T2IParamTypes.LoraWeights);
+                            if (loraList is null)
+                            {
+                                loraList = new();
+                                weights = new();
+                            }
+                            loraList.Add(matched);
+                            weights.Add(strength.ToString());
+                            Set(T2IParamTypes.Loras, loraList);
+                            Set(T2IParamTypes.LoraWeights, weights);
+                            return "";
+                        }
+                        else
+                        {
+                            return $"<{tag}>";
+                        }
+                    }
+                case "random":
+                    {
+                        string separator = data.Contains("||") ? "||" : (data.Contains('|') ? "|" : ",");
+                        string[] vals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        if (vals.Length == 0)
+                        {
+                            return "";
+                        }
+                        return vals[rand.Next(vals.Length)];
+                    }
+                case "wildcard": // TODO
+                default:
+                    return $"<{tag}>";
+            }
+        });
     }
 
     /// <summary>Gets the raw value of the parameter, if it is present, or null if not.</summary>
