@@ -17,6 +17,8 @@ public class T2IParamInput
         public Random Random;
 
         public T2IParamInput Input;
+
+        public string Param;
     }
 
     /// <summary>Mapping of prompt tag prefixes, to allow for registration of custom prompt tags.</summary>
@@ -30,9 +32,23 @@ public class T2IParamInput
             string[] vals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (vals.Length == 0)
             {
-                return "";
+                return null;
             }
             return vals[context.Random.Next(vals.Length)];
+        };
+        PromptTagProcessors["preset"] = (data, context) =>
+        {
+            T2IPreset preset = context.Input.SourceSession.User.GetPreset(data);
+            if (preset is null)
+            {
+                return null;
+            }
+            preset.ApplyTo(context.Input);
+            if (preset.ParamMap.TryGetValue(context.Param, out string prompt))
+            {
+                return "\0" + prompt;
+            }
+            return "";
         };
         // TODO: Wildcards
     }
@@ -162,7 +178,8 @@ public class T2IParamInput
         string lowRef = val.ToLowerFast();
         string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelsFor(SourceSession).Select(m => m.Name).ToArray() : null;
         string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelsFor(SourceSession).Select(m => m.Name.ToLowerFast()).ToArray() : null;
-        PromptTagContext context = new() { Input = this, Random = rand };
+        PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID };
+        string addBefore = "", addAfter = "";
         string fixedVal = StringConversionHelper.QuickSimpleTagFiller(val, "<", ">", tag =>
         {
             (string prefix, string data) = tag.BeforeAndAfter(':');
@@ -222,12 +239,23 @@ public class T2IParamInput
                         string result = proc(data, context);
                         if (result is not null)
                         {
+                            if (result.StartsWithNull()) // Special case for preset tag modifying the current value
+                            {
+                                result = result[1..];
+                                if (result.Contains("{value}"))
+                                {
+                                    addBefore += result.Before("{value}");
+                                }
+                                addAfter += result.After("{value}");
+                                return "";
+                            }
                             return result;
                         }
                     }
                     return $"<{tag}>";
             }
         });
+        fixedVal = addBefore + fixedVal + addAfter;
         if (fixedVal != val)
         {
             ExtraMeta[$"original_{param.Type.ID}"] = val;

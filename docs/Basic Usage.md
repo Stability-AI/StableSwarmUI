@@ -83,6 +83,8 @@ Prompting is, primarily, just text input. However, there are some special option
 - You may use `<lora:filename:weight>` to enable a LoRA
     - Note that it's generally preferred to use the GUI at the bottom of the page to select loras
     - Note that position within the prompt doesn't matter, loras are not actually a prompt feature, this is just a convenience option for users used to Auto WebUI.
+- You can use `<preset:presetname>` to inject a preset.
+    - GUI is generally preferred for LoRAs, this is available to allow dynamically messing with presets (eg `<preset:<random:a, b>>`)
 
 ## We Gotta Go Faster: Add More Backends
 
