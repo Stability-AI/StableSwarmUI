@@ -5,6 +5,7 @@ using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
 using System;
+using System.IO;
 
 namespace StableSwarmUI.Text2Image;
 
@@ -130,8 +131,8 @@ public class T2IParamInput
         }
         Random rand = new((int)Get(T2IParamTypes.Seed) + param.Type.Name.Length);
         string lowRef = val.ToLowerFast();
-        string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelsFor(SourceSession).Select(m => m.ToString()).ToArray() : null;
-        string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelsFor(SourceSession).Select(m => m.ToString().ToLowerFast()).ToArray() : null;
+        string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelsFor(SourceSession).Select(m => m.Name).ToArray() : null;
+        string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelsFor(SourceSession).Select(m => m.Name.ToLowerFast()).ToArray() : null;
         return StringConversionHelper.QuickSimpleTagFiller(val, "<", ">", tag =>
         {
             (string prefix, string data) = tag.BeforeAndAfter(':');
@@ -146,18 +147,18 @@ public class T2IParamInput
                     {
                         if (embeds is not null)
                         {
-                            string want = data.ToLowerFast();
+                            string want = data.ToLowerFast().Replace('\\', '/');
                             string matched = embeds.FirstOrDefault(e => e.ToLowerFast().StartsWith(want)) ?? embeds.FirstOrDefault(e => e.ToLowerFast().Contains(want));
                             if (matched is not null)
                             {
                                 data = matched;
                             }
                         }
-                        return embedFormatter(data);
+                        return embedFormatter(data.Replace('/', Path.DirectorySeparatorChar));
                     }
                 case "lora":
                     {
-                        string lora = data.ToLowerFast();
+                        string lora = data.ToLowerFast().Replace('\\', '/');
                         int colonIndex = lora.IndexOf(':');
                         double strength = 1;
                         if (colonIndex != -1 && double.TryParse(lora[(colonIndex + 1)..], out strength))

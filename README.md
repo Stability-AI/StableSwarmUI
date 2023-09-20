@@ -18,14 +18,12 @@ Those interested in helping push from Alpha to Beta to Full Release are welcome 
 
 Key feature targets not yet implemented:
 - Image editing tools
-- Internal TIs (already supported as a listing, and indirectly as all compatible backends specify these via text anyway, but a handler for them should be present)
-- Text prompt tools (wildcards, etc) (some tools like prompt weighting already implicitly supported via backends)
+- Wildcards
 - Localization / automatic translation
 - Mobile browser formatting
 - Self-contained internal mini-backend for simple usages
 - Simple box grids for batches (eg 2x2 squares of images when you generate a batch of 4)
-- Properly display ModelSpec usage-hint/trigger-phrase/etc. (need full detail "Current Model" display in UI, separate from the model selector - probably as a tab within the batch sidebar?)
-- ComfyUI custom workflow metadata edit (ie to reconfigure which parameters to send over or not)
+- full detail "Current Model" display in UI, separate from the model selector (probably as a tab within the batch sidebar?)
 
 # Installing on Windows
 
