@@ -299,8 +299,6 @@ public static class T2IAPI
         }, depth);
     }
 
-    public static HashSet<string> ModelExtensions = new() { "safetensors", "ckpt" };
-
     /// <summary>API route to describe a single model.</summary>
     public static async Task<JObject> DescribeModel(Session session, string modelName, string subtype = "Stable-Diffusion")
     {

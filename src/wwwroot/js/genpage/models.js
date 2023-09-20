@@ -96,7 +96,7 @@ function cleanModelName(name) {
 }
 
 function isModelArchCorrect(model) {
-    if (model.compat_class) {
+    if (model.compat_class && curModelCompatClass) {
         let slash = model.architecture.indexOf('/');
         if (slash != -1) { // Base models are excluded
             return model.compat_class == curModelCompatClass;
@@ -188,7 +188,8 @@ class ModelBrowserWrapper {
             buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
         }
         else {
-            description = `${escapeHtml(name)}.ckpt<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
+            let ext = model.data.name.substring(model.data.name.lastIndexOf('.') + 1);
+            description = `${escapeHtml(name)}.${ext}<br>(Metadata only available for 'safetensors' models.)<br><b>WARNING:</b> 'ckpt' pickle files can contain malicious code! Use with caution.<br>`;
         }
         let selector = 'current_model';
         switch (this.subType) {
