@@ -210,7 +210,7 @@ public class T2IParamTypes
     public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
     public static T2IRegisteredParam<List<Image>> PromptImages;
-    public static T2IRegisteredParam<bool> DoNotSave;
+    public static T2IRegisteredParam<bool> DoNotSave, ControlNetPreviewOnly;
 
     public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, GroupControlNet, GroupAdvancedModelAddons;
 
@@ -308,6 +308,8 @@ public class T2IParamTypes
         ControlNetStrength = Register<double>(new("ControlNet Strength", "Higher values make the ControlNet apply more strongly. Weaker values let the prompt overrule the ControlNet.",
             "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, ViewType: ParamViewType.SLIDER, Group: GroupControlNet
             ));
+        ControlNetPreviewOnly = Register<bool>(new("ControlNet Preview Only", "(For API usage) If enabled, requests preview output from ControlNet and no image generation at all.",
+            "false", FeatureFlag: "controlnet", VisibleNormally: false));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion"
             ));

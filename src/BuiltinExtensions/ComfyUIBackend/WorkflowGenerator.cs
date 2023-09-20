@@ -351,6 +351,11 @@ public class WorkflowGenerator
                             }
                         }
                     });
+                    g.NodeHelpers["controlnet_preprocessor"] = $"{preProcNode}";
+                    if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
+                    {
+                        g.FinalImageOut = new JArray() { $"{preProcNode}", 0 };
+                    }
                     imageNode = preProcNode;
                 }
                 // TODO: Preprocessor
@@ -582,6 +587,11 @@ public class WorkflowGenerator
         #region SaveImage
         AddStep(g =>
         {
+            // Should already be set correct, but make sure (in case eg overwritten by refiner)
+            if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly) && g.NodeHelpers.TryGetValue("controlnet_preprocessor", out string preproc))
+            {
+                g.FinalImageOut = new() { preproc, 0 };
+            }
             g.CreateNode("SaveImage", (_, n) =>
             {
                 n["inputs"] = new JObject()

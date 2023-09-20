@@ -334,6 +334,10 @@ function genInputs(delay_final = false) {
             });
             sdVAEBrowser.browser.rerender();
         }
+        let controlnetGroup = document.getElementById('input_group_content_controlnet');
+        if (controlnetGroup) {
+            controlnetGroup.append(createDiv(`controlnet_button_preview`, null, `<button class="basic-button" onclick="controlnetShowPreview()">Preview</button>`));
+        }
         hideUnsupportableParams();
         for (let runnable of postParamBuildSteps) {
             runnable();
@@ -589,6 +593,48 @@ function debugShowHiddenParams() {
     let hiddenArea = getRequiredElementById('main_inputs_area_hidden');
     hiddenArea.style.display = 'block';
     hiddenArea.style.visibility = 'visible';
+}
+
+/** Loads and shows a preview of ControlNet preprocessing to the user. */
+function controlnetShowPreview() {
+    let toggler = getRequiredElementById('input_group_content_controlnet_toggle');
+    if (!toggler.checked) {
+        toggler.checked = true;
+        doToggleGroup('input_group_content_controlnet');
+    }
+    setCurrentModel(() => {
+        if (getRequiredElementById('current_model').value == '') {
+            showError("Cannot generate, no model selected.");
+            return;
+        }
+        let previewArea = getRequiredElementById('controlnet_button_preview');
+        let lastResult = previewArea.querySelector('.controlnet-preview-result');
+        if (lastResult) {
+            lastResult.remove();
+        }
+        let imgInput = getRequiredElementById('input_controlnetimageinput');
+        if (!imgInput || !imgInput.dataset.filedata) {
+            previewArea.append(createDiv(null, 'controlnet-preview-result', 'Must select an image.'));
+            return;
+        }
+        let genData = getGenInput();
+        genData['images'] = 1;
+        genData['prompt'] = '';
+        delete genData['batchsize'];
+        genData['donotsave'] = true;
+        genData['controlnetpreviewonly'] = true;
+        genericRequest('GenerateText2Image', genData, data => {
+            if (data.images.length < 1) {
+                showError("Could not generate preview, something went wrong.");
+                return;
+            }
+            let imgElem = document.createElement('img');
+            imgElem.src = data.images[0];
+            let resultBox = createDiv(null, 'controlnet-preview-result');
+            resultBox.append(imgElem);
+            previewArea.append(resultBox);
+        });
+    });
 }
 
 /** Central handler for user-edited parameters. */

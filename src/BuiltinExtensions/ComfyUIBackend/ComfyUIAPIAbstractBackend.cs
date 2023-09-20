@@ -13,7 +13,6 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Web;
 using Newtonsoft.Json;
-using System.Xml.Linq;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -297,7 +296,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
             }
         }
-        if (workflow is not null)
+        if (workflow is not null && !user_input.Get(T2IParamTypes.ControlNetPreviewOnly))
         {
             Logs.Verbose($"Will fill workflow {workflow}");
             workflow = StringConversionHelper.QuickSimpleTagFiller(initImageFixer(workflow), "${", "}", (tag) => {
