@@ -245,6 +245,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             foreach (JToken outImage in outData["images"])
             {
                 string fname = outImage["filename"].ToString();
+                if ($"{outImage["type"]}" == "temp")
+                {
+                    Logs.Debug($"Comfy - Skip temp image '{fname}'");
+                    continue;
+                }
                 byte[] image = await(await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
                 if (image == null || image.Length == 0)
                 {

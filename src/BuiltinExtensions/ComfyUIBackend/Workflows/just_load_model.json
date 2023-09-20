@@ -27,7 +27,7 @@
         }
     },
     "9": {
-        "class_type": "SaveImage",
+        "class_type": "PreviewImage",
         "inputs": {
             "filename_prefix": "model_load_discard_me",
             "images": [
