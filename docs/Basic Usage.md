@@ -69,6 +69,12 @@ StableSwarmUI is designed on the principle of exposing all the parameters to you
 - All the parameters have a lil purple `?` icon next to them. Clicking this will open a popup with an explanation of the parameter and some examples.
 - When in doubt, with most parameters, just play with them and see what happens. Lock in your `Seed` to a constant one before trying to avoid unrelated changes.
 
+## More Than Text: Playing with Prompts
+
+Prompting is, primarily, just text input. However (depending on backend, this doc assumes the standard Comfy backend), there are some special options also available:
+- Prompt weighting, eg `an (orange) cat` or `an (orange:1.5) cat`. Anything in `(parens)` has its weighting modified - meaning, the model will pay more attention to that part of the prompt. Values above `1` are more important, values below `1` (eg `0.5`) are less important. You can also hold Control and press the up/down arrow keys to change the weight of selected text.
+- If using SDXL or UnClip, you can use *ReVision* by just dragging an image into the prompt box. This will have the model interpret the image (using ClipVision) and include it in the prompt.
+
 ## We Gotta Go Faster: Add More Backends
 
 You want more images more faster right now hurry up and tell me how quick quick quick? The Backends tab holds the key to your speedy needs.
@@ -102,20 +108,6 @@ What's the fun in testing changes one by one, when you can unleash your machine 
 
 ![img](/docs/images/grids.png)
 
-## Getting REALLY Advanced: Custom Workflows
+## Take It Further: Advanced Usage
 
-So, all those parameters aren't enough, you want MORE control? Don't worry, we got you covered, with the power of raw ComfyUI node graphs!
-
-- Note that this requires you use a ComfyUI backend.
-- At the top, click the `Comfy Workflow Editor` tab
-- Use [the full power of ComfyUI](https://comfyanonymous.github.io/ComfyUI_examples/) at will to build a workflow that suites your crazy needs.
-- You can generate images within comfy while you're going.
-- If you have weird parameters, I highly recommend creating `Primitive` nodes and setting their title to something clear, and routing them to the inputs, so you can recognize them easily later.
-- Once you're done, make sure you have a single `Save Image` node at the end, then click the `Use This Workflow` button
-
-![img](/docs/images/usecomfy.png)
-
-- Your parameter listing is now updated to parameters that are in your workflow. Recognized ones use their default parameter view, other ones get listed on their own with Node IDs or titles.
-- You can now generate images as normal, but it will automatically use your workflow. This applies to all generation features, including the Grid Generator tool - which has its axes list automatically updated to the workflow parameter list!
-- If you update the workflow in the comfy tab, you have to click `Use This Workflow` again to load your changes.
-- If you want to go back to normal and remove the comfy workflow, make sure your parameters list is scrolled up, as there's a `Disable Custom Comfy Workflow` button you can click there.
+View more info about advanced usages in the [Advanced Usage](/docs/Advanced%20Usage.md) doc.
