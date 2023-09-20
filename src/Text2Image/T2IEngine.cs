@@ -31,7 +31,7 @@ namespace StableSwarmUI.Text2Image
         public static Action<PostGenerationEventParams> PostGenerateEvent;
 
         /// <summary>Paramters for <see cref="PostGenerateEvent"/>.</summary>
-        public record class PostGenerationEventParams(Image Image, Dictionary<string, object> ExtraMetadata, T2IParamInput UserInput, Action RefuseImage);
+        public record class PostGenerationEventParams(Image Image, T2IParamInput UserInput, Action RefuseImage);
 
         /// <summary>Extension event, fired after a batch of images were generated.
         /// Use "RefuseImage" to mark an image as removed. Note that it may have already been shown to a user, when the live result websocket API is in use.</summary>
@@ -126,16 +126,16 @@ namespace StableSwarmUI.Text2Image
                     {
                         lastGenTime = timer.ElapsedMilliseconds;
                         genTimeReport = $"{prepTime / 1000.0:0.00} (prep) and {(lastGenTime - prepTime) / 1000.0:0.00} (gen) seconds";
-                        Dictionary<string, object> extras = new() { ["generation_time"] = genTimeReport };
+                        user_input.ExtraMeta["generation_time"] = genTimeReport;
                         bool refuse = false;
-                        PostGenerateEvent?.Invoke(new(img, extras, user_input, () => refuse = true));
+                        PostGenerateEvent?.Invoke(new(img, user_input, () => refuse = true));
                         if (refuse)
                         {
                             Logs.Info($"Refused an image.");
                         }
                         else
                         {
-                            (img, string metadata) = user_input.SourceSession.ApplyMetadata(img, user_input, extras, numImagesGenned);
+                            (img, string metadata) = user_input.SourceSession.ApplyMetadata(img, user_input, numImagesGenned);
                             saveImages(img, metadata);
                             numImagesGenned++;
                         }

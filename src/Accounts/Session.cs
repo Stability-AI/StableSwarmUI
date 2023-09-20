@@ -100,14 +100,14 @@ public class Session : IEquatable<Session>
     }
 
     /// <summary>Applies metadata to an image and converts the filetype, following the user's preferences.</summary>
-    public (Image, string) ApplyMetadata(Image image, T2IParamInput user_input, Dictionary<string, object> extraParams, int numImagesGenned)
+    public (Image, string) ApplyMetadata(Image image, T2IParamInput user_input, int numImagesGenned)
     {
         if (numImagesGenned > 0 && user_input.TryGet(T2IParamTypes.BatchSize, out int batchSize) && numImagesGenned < batchSize)
         {
             user_input = user_input.Clone();
             user_input.Set(T2IParamTypes.Seed, user_input.Get(T2IParamTypes.Seed) + numImagesGenned);
         }
-        string metadata = user_input.GenRawMetadata(extraParams);
+        string metadata = user_input.GenRawMetadata();
         image = image.ConvertTo(User.Settings.FileFormat.ImageFormat, User.Settings.FileFormat.SaveMetadata ? metadata : null, User.Settings.FileFormat.DPI);
         return (image, metadata ?? "");
     }

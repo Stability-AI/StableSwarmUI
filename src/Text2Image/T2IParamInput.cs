@@ -12,10 +12,38 @@ namespace StableSwarmUI.Text2Image;
 /// <summary>Represents user-input for a Text2Image request.</summary>
 public class T2IParamInput
 {
+    public class PromptTagContext
+    {
+        public Random Random;
+
+        public T2IParamInput Input;
+    }
+
+    /// <summary>Mapping of prompt tag prefixes, to allow for registration of custom prompt tags.</summary>
+    public static Dictionary<string, Func<string, PromptTagContext, string>> PromptTagProcessors = new();
+
+    static T2IParamInput()
+    {
+        PromptTagProcessors["random"] = (data, context) =>
+        {
+            string separator = data.Contains("||") ? "||" : (data.Contains('|') ? "|" : ",");
+            string[] vals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (vals.Length == 0)
+            {
+                return "";
+            }
+            return vals[context.Random.Next(vals.Length)];
+        };
+        // TODO: Wildcards
+    }
+
     /// <summary>The raw values in this input. Do not use this directly, instead prefer:
     /// <see cref="Get{T}(T2IRegisteredParam{T})"/>, <see cref="TryGet{T}(T2IRegisteredParam{T}, out T)"/>,
     /// <see cref="Set{T}(T2IRegisteredParam{T}, string)"/>.</summary>
     public Dictionary<string, object> ValuesInput = new();
+
+    /// <summary>Extra data to store in metadata.</summary>
+    public Dictionary<string, object> ExtraMeta = new();
 
     /// <summary>A set of feature flags required for this input.</summary>
     public HashSet<string> RequiredFlags = new();
@@ -31,6 +59,8 @@ public class T2IParamInput
     {
         SourceSession = session;
         InterruptToken = session.SessInterrupt.Token;
+        ExtraMeta["swarm_version"] = Utilities.Version;
+        ExtraMeta["date"] = DateTime.Now.ToString("yyyy-MM-dd");
     }
 
     /// <summary>Gets the desired image width, automatically using alt-res parameter if needed.</summary>
@@ -49,6 +79,7 @@ public class T2IParamInput
     {
         T2IParamInput toret = MemberwiseClone() as T2IParamInput;
         toret.ValuesInput = new Dictionary<string, object>(ValuesInput);
+        toret.ExtraMeta = new Dictionary<string, object>(ExtraMeta);
         toret.RequiredFlags = new HashSet<string>(RequiredFlags);
         return toret;
     }
@@ -80,10 +111,10 @@ public class T2IParamInput
     }
 
     /// <summary>Generates a metadata JSON object for this input and the given set of extra parameters.</summary>
-    public JObject GenMetadataObject(Dictionary<string, object> extraParams)
+    public JObject GenMetadataObject()
     {
         JObject output = new();
-        foreach ((string key, object val) in ValuesInput.Union(extraParams))
+        foreach ((string key, object val) in ValuesInput.Union(ExtraMeta))
         {
             if (T2IParamTypes.TryGetType(key, out T2IParamType type, this) && type.HideFromMetadata)
             {
@@ -102,15 +133,13 @@ public class T2IParamInput
                 output[key] = JToken.FromObject(val);
             }
         }
-        output["swarm_version"] = Utilities.Version;
-        output["date"] = DateTime.Now.ToString("yyyy-MM-dd");
         return output;
     }
 
     /// <summary>Generates a metadata JSON object for this input and creates a proper string form of it, fit for inclusion in an image.</summary>
-    public string GenRawMetadata(Dictionary<string, object> extraParams)
+    public string GenRawMetadata()
     {
-        JObject obj = GenMetadataObject(extraParams);
+        JObject obj = GenMetadataObject();
         return new JObject() { ["sui_image_params"] = obj }.ToString(Newtonsoft.Json.Formatting.Indented);
     }
 
@@ -133,7 +162,8 @@ public class T2IParamInput
         string lowRef = val.ToLowerFast();
         string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelsFor(SourceSession).Select(m => m.Name).ToArray() : null;
         string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelsFor(SourceSession).Select(m => m.Name.ToLowerFast()).ToArray() : null;
-        return StringConversionHelper.QuickSimpleTagFiller(val, "<", ">", tag =>
+        PromptTagContext context = new() { Input = this, Random = rand };
+        string fixedVal = StringConversionHelper.QuickSimpleTagFiller(val, "<", ">", tag =>
         {
             (string prefix, string data) = tag.BeforeAndAfter(':');
             if (string.IsNullOrWhiteSpace(data))
@@ -186,21 +216,23 @@ public class T2IParamInput
                             return $"<{tag}>";
                         }
                     }
-                case "random":
-                    {
-                        string separator = data.Contains("||") ? "||" : (data.Contains('|') ? "|" : ",");
-                        string[] vals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                        if (vals.Length == 0)
-                        {
-                            return "";
-                        }
-                        return vals[rand.Next(vals.Length)];
-                    }
-                case "wildcard": // TODO
                 default:
+                    if (PromptTagProcessors.TryGetValue(prefix, out Func<string, PromptTagContext, string> proc))
+                    {
+                        string result = proc(data, context);
+                        if (result is not null)
+                        {
+                            return result;
+                        }
+                    }
                     return $"<{tag}>";
             }
         });
+        if (fixedVal != val)
+        {
+            ExtraMeta[$"original_{param.Type.ID}"] = val;
+        }
+        return fixedVal;
     }
 
     /// <summary>Gets the raw value of the parameter, if it is present, or null if not.</summary>

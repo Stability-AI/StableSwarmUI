@@ -140,7 +140,7 @@ public class ScorersExtension : Extension
         }
         float averageScore = scoreAccum / scorers.Count;
         scores["average"] = averageScore;
-        p.ExtraMetadata["scoring"] = scores;
+        p.UserInput.ExtraMeta["scoring"] = scores;
         if (p.UserInput.TryGet(ScoreMustExceed, out double scoreMin))
         {
             if (averageScore < scoreMin)
