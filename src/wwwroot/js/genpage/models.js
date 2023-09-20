@@ -377,7 +377,7 @@ function directSetModel(model) {
         aspect.dispatchEvent(new Event('change'));
     }
     for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser]) {
-        browser.browser.rerender();
+        browser.browser.update();
     }
 }
 
