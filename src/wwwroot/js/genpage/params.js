@@ -10,7 +10,8 @@ function getHtmlForParam(param, prefix) {
         let pop = param.no_popover ? '' : `<div class="sui-popover" id="popover_${prefix}${param.id}"><b>${escapeHtml(param.name)}</b> (${param.type}):<br>&emsp;${escapeHtml(param.description)}${example}</div>`;
         switch (param.type) {
             case 'text':
-                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.view_type == 'prompt', param.description, param.toggleable, false, !param.no_popover) + pop};
+                let runnable = param.view_type == 'prompt' ? () => textPromptAddKeydownHandler(getRequiredElementById(`${prefix}${param.id}`)) : null;
+                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.view_type == 'prompt', param.description, param.toggleable, false, !param.no_popover) + pop, runnable: runnable};
             case 'decimal':
             case 'integer':
                 let min = param.min;

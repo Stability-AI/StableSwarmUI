@@ -615,3 +615,11 @@ function setInputVal(input, val) {
         input.value = val;
     }
 }
+
+/**
+ * JavaScript sucks at floating point numerics, so this is a hacky way to format numbers un-stupidly.
+ */
+function formatNumberClean(num, maxDigits) {
+    let fixed = num.toFixed(maxDigits);
+    return parseFloat(fixed);
+}

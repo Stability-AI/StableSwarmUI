@@ -210,6 +210,72 @@ function textPromptInputHandle(elem) {
     textPromptDoCount(elem);
 }
 
+function textPromptAddKeydownHandler(elem) {
+    let shiftText = (up) => {
+        let selStart = elem.selectionStart;
+        let selEnd = elem.selectionEnd;
+        let before = elem.value.substring(0, selStart);
+        let after = elem.value.substring(selEnd);
+        let mid = elem.value.substring(selStart, selEnd);
+        let strength = 1;
+        while (mid.startsWith(" ")) {
+            mid = mid.substring(1);
+            before = before + " ";
+        }
+        while (mid.endsWith(" ")) {
+            mid = mid.substring(0, mid.length - 1);
+            after = " " + after;
+        }
+        if (mid.startsWith("(")) {
+            before += mid.substring(0, 1);
+            mid = mid.substring(1);
+        }
+        // Sorry for the regex. Matches ends with ":1.5)" or just ")". Or Just ":1.5". Also empty, so that needs a check after.
+        let matched = mid.trim().match(/(?:\:[0-9.-]*)?\)?$/);
+        if (matched && matched[0]) {
+            after = mid.substring(mid.length - matched[0].length) + after;
+            mid = mid.substring(0, mid.length - matched[0].length);
+        }
+        if (before.trimEnd().endsWith("(") && after.trimStart().startsWith(":")) {
+            let postColon = after.trimStart().substring(1);
+            let paren = postColon.indexOf(')');
+            if (paren != -1) {
+                before = before.trimEnd();
+                before = before.substring(0, before.length - 1);
+                strength = parseFloat(postColon.substring(0, paren).trim());
+                after = postColon.substring(paren + 1);
+            }
+        }
+        else if (before.trimEnd().endsWith("(") && after.trimStart().startsWith(")")) {
+            before = before.trimEnd();
+            before = before.substring(0, before.length - 1);
+            strength = 1.1;
+            after = after.trimStart().substring(1);
+        }
+        strength += up ? 0.1 : -0.1;
+        strength = `${formatNumberClean(strength, 5)}`;
+        if (strength == "1") {
+            elem.value = `${before}${mid}${after}`;
+            elem.selectionStart = before.length;
+            elem.selectionEnd = before.length + mid.length;
+        }
+        else {
+            elem.value = `${before}(${mid}:${strength})${after}`;
+            elem.selectionStart = before.length + 1;
+            elem.selectionEnd = before.length + mid.length + 1;
+        }
+        triggerChangeFor(elem);
+    }
+    elem.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && (e.key == 'ArrowUp' || e.key == 'ArrowDown')) {
+            shiftText(e.key == 'ArrowUp');
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    });
+}
+
 function setSeedToRandom(elemId) {
     let elem = getRequiredElementById(elemId);
     elem.value = -1;

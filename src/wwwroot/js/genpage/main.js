@@ -808,6 +808,7 @@ function pageSizer() {
     altPromptSizeHandle();
     new ResizeObserver(altPromptSizeHandle).observe(altText);
     altPromptSizeHandleFunc = altPromptSizeHandle;
+    textPromptAddKeydownHandler(altText);
 }
 
 /** Reference to the auto-clear-batch toggle checkbox. */
