@@ -615,8 +615,11 @@ function controlnetShowPreview() {
         }
         let imgInput = getRequiredElementById('input_controlnetimageinput');
         if (!imgInput || !imgInput.dataset.filedata) {
-            previewArea.append(createDiv(null, 'controlnet-preview-result', 'Must select an image.'));
-            return;
+            let secondaryImageOption = getRequiredElementById('input_initimage');
+            if (!secondaryImageOption || !secondaryImageOption.dataset.filedata) {
+                previewArea.append(createDiv(null, 'controlnet-preview-result', 'Must select an image.'));
+                return;
+            }
         }
         let genData = getGenInput();
         genData['images'] = 1;
