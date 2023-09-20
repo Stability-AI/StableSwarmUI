@@ -609,14 +609,18 @@ function controlnetShowPreview() {
             return;
         }
         let previewArea = getRequiredElementById('controlnet_button_preview');
-        let lastResult = previewArea.querySelector('.controlnet-preview-result');
-        if (lastResult) {
-            lastResult.remove();
-        }
+        let clearPreview = () => {
+            let lastResult = previewArea.querySelector('.controlnet-preview-result');
+            if (lastResult) {
+                lastResult.remove();
+            }
+        };
+        clearPreview();
         let imgInput = getRequiredElementById('input_controlnetimageinput');
         if (!imgInput || !imgInput.dataset.filedata) {
             let secondaryImageOption = getRequiredElementById('input_initimage');
             if (!secondaryImageOption || !secondaryImageOption.dataset.filedata) {
+                clearPreview();
                 previewArea.append(createDiv(null, 'controlnet-preview-result', 'Must select an image.'));
                 return;
             }
@@ -636,6 +640,7 @@ function controlnetShowPreview() {
             imgElem.src = data.images[0];
             let resultBox = createDiv(null, 'controlnet-preview-result');
             resultBox.append(imgElem);
+            clearPreview();
             previewArea.append(resultBox);
         });
     });
