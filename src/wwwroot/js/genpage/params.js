@@ -498,6 +498,10 @@ function resetParamsToDefault() {
             }
         }
     }
+    let aspect = document.getElementById('input_aspectratio');
+    if (aspect) { // Fix resolution trick incase the reset broke it
+        triggerChangeFor(aspect);
+    }
     let defaultPreset = getPresetByTitle('default');
     if (defaultPreset) {
         applyOnePreset(defaultPreset);
