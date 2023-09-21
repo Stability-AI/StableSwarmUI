@@ -86,6 +86,9 @@ public abstract class AbstractT2IBackend
     /// <summary>The maximum number of simultaneous requests this backend should take.</summary>
     public int MaxUsages = 1;
 
+    /// <summary>Whether this backend has the capability to load a model.</summary>
+    public bool CanLoadModels = true;
+
     /// <summary>Exception can be thrown to indicate the backend cannot fulfill the request, but for temporary reasons, and another backend should be used instead.</summary>
     public class PleaseRedirectException : Exception
     {

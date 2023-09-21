@@ -419,7 +419,7 @@ public class BackendHandler
         bool result = await Task.Run(async () => // TODO: this is weird async jank
         {
             bool any = false;
-            foreach (T2IBackendData backend in T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && (filter is null || filter(b))))
+            foreach (T2IBackendData backend in T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && b.Backend.CanLoadModels && (filter is null || filter(b))))
             {
                 backend.ReserveModelLoad = true;
                 while (backend.CheckIsInUseNoModelReserve)
@@ -777,6 +777,12 @@ public class BackendHandler
     /// <summary>Internal helper route for <see cref="GetNextT2IBackend"/> to trigger a backend model load.</summary>
     public void LoadHighestPressureNow(List<T2IBackendData> possible, List<T2IBackendData> available, Action ReleasePressure, CancellationToken cancel)
     {
+        List<T2IBackendData> possibleLoaders = possible.Where(b => b.Backend.CanLoadModels).ToList();
+        if (possibleLoaders.IsEmpty())
+        {
+            Logs.Verbose($"[BackendHandler] No current backends are able to load models.");
+            return;
+        }
         Logs.Verbose($"[BackendHandler] Will load highest pressure model...");
         long timeRel = Environment.TickCount64;
         List<ModelRequestPressure> pressures = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).ToList();
@@ -785,13 +791,13 @@ public class BackendHandler
             Logs.Verbose($"[BackendHandler] No model requests, skipping load.");
             return;
         }
-        pressures = pressures.Where(p => p.Requests.Any(r => r.Filter is null || possible.Any(b => r.Filter(b)))).ToList();
+        pressures = pressures.Where(p => p.Requests.Any(r => r.Filter is null || possibleLoaders.Any(b => r.Filter(b)))).ToList();
         if (pressures.IsEmpty())
         {
             Logs.Verbose($"[BackendHandler] Unable to find valid model requests that are matched to the current backend list.");
             return;
         }
-        List<ModelRequestPressure> perfect = pressures.Where(p => p.Requests.All(r => r.Filter is null || possible.Any(b => r.Filter(b)))).ToList();
+        List<ModelRequestPressure> perfect = pressures.Where(p => p.Requests.All(r => r.Filter is null || possibleLoaders.Any(b => r.Filter(b)))).ToList();
         if (!perfect.IsEmpty())
         {
             pressures = perfect;
@@ -807,7 +813,7 @@ public class BackendHandler
                     return;
                 }
                 long timeWait = timeRel - highestPressure.TimeFirstRequest;
-                if (possible.Count == 1 || timeWait > 1500)
+                if (possibleLoaders.Count == 1 || timeWait > 1500)
                 {
                     List<T2IBackendData> valid = available.Where(b => !highestPressure.BadBackends.Contains(b.ID)).ToList();
                     if (valid.IsEmpty())
