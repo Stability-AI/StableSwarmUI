@@ -8,6 +8,12 @@ if exist StableSwarmUI (
     exit
 )
 
+if exist StableSwarmUI.sln (
+    echo StableSwarmUI is already installed in this folder. If this is incorrect, delete 'StableSwarmUI.sln' and try again.
+    pause
+    exit
+)
+
 winget install Microsoft.DotNet.SDK.7 --accept-source-agreements --accept-package-agreements
 winget install --id Git.Git -e --source winget --accept-source-agreements --accept-package-agreements
 
