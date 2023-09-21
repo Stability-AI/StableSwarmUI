@@ -67,6 +67,10 @@ public class Image
     public Image Resize(int width, int height)
     {
         ISImage img = ToIS;
+        if (ToIS.Width == width && ToIS.Height == height)
+        {
+            return this;
+        }
         img.Mutate(i => i.Resize(width, height));
         return new(ISImgToPngBytes(img));
     }
