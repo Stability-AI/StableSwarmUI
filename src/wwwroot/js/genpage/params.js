@@ -553,18 +553,32 @@ function hideUnsupportableParams() {
 }
 
 function paramSorter(a, b) {
+    let aPrio, bPrio;
     if (a.group == b.group) {
-        return a.priority - b.priority;
+        aPrio = a.priority;
+        bPrio = b.priority;
     }
     else if (a.group && !b.group) {
-        return a.group.priority - b.priority;
+        aPrio = a.group.priority;
+        bPrio = b.priority;
     }
     else if (!a.group && b.group) {
-        return a.priority - b.group.priority;
+        aPrio = a.priority;
+        bPrio = b.group.priority;
     }
     else {
-        return a.group.priority - b.group.priority;
+        aPrio = a.group.priority;
+        bPrio = b.group.priority;
     }
+    if (aPrio == bPrio) {
+        let aGroup = a.group ? a.group.name : '';
+        let bGroup = b.group ? b.group.name : '';
+        if (aGroup == bGroup) {
+            return a.name.localeCompare(b.name);
+        }
+        return aGroup.localeCompare(bGroup);
+    }
+    return aPrio - bPrio;
 }
 
 /** Returns a copy of the parameter name, cleaned for ID format input. */
