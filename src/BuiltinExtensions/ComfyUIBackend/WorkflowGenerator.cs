@@ -354,7 +354,7 @@ public class WorkflowGenerator
                     g.NodeHelpers["controlnet_preprocessor"] = $"{preProcNode}";
                     if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
                     {
-                        g.FinalImageOut = new JArray() { $"{preProcNode}", 0 };
+                        g.FinalImageOut = new() { $"{preProcNode}", 0 };
                     }
                     imageNode = preProcNode;
                 }
@@ -376,7 +376,7 @@ public class WorkflowGenerator
                         ["strength"] = controlStrength
                     };
                 });
-                g.FinalPrompt = new JArray() { $"{applyNode}", 0 };
+                g.FinalPrompt = new() { $"{applyNode}", 0 };
             }
         }, -6);
         #endregion

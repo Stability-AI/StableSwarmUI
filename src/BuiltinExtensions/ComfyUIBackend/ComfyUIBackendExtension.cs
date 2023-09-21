@@ -2,7 +2,6 @@
 using FreneticUtilities.FreneticToolkit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
@@ -25,6 +24,9 @@ public class ComfyUIBackendExtension : Extension
 
     /// <summary>Set of all feature-ids supported by ComfyUI backends.</summary>
     public static HashSet<string> FeaturesSupported = new() { "comfyui", "refiners", "controlnet" };
+
+    /// <summary>Extensible map of ComfyUI Node IDs to supported feature IDs.</summary>
+    public static Dictionary<string, string> NodeToFeatureMap = new();
 
     public override void OnPreInit()
     {
@@ -160,6 +162,10 @@ public class ComfyUIBackendExtension : Extension
                 else if (key.EndsWith("Preprocessor"))
                 {
                     ControlNetPreprocessors[key] = data;
+                }
+                if (NodeToFeatureMap.TryGetValue(key, out string featureId))
+                {
+                    FeaturesSupported.Add(featureId);
                 }
             }
         }
