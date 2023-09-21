@@ -96,7 +96,8 @@ You want more images more faster right now hurry up and tell me how quick quick 
     - Got some cash to spare? Rent a GPU server online (eg vastai, runpod, aws, etc).
     - Got close friends with GPUs? If you can figure out the network routing (and the interpersonal agreements), you can use those!
 - Go to the `Server` -> `Backends` page
-- Pick the backend type that you want, and click the button to add it. For remote hosts, you'll want to set up ComfyUI over there, get a remote connection working, and then add `ComfyUI API By URL`, and give the URL to it.
+- Pick the backend type that you want, and click the button to add it.
+    - For remote hosts, you'll want to set up StableSwarmUI over there, get a remote connection working, and then add `Swarm-API-Backend`, and give the URL to it.
     - For more GPUs in your one machine, you can eg use multiple `ComfyUI Self-Starting` and just change the GPU ID for each.
 - If it doesn't error out, you can immediately start using it.
     - When you generate images, your first generation goes to the first backend, your second to the second one, etc.

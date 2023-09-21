@@ -8,15 +8,22 @@ You can also view the ComfyUI node graph and work with custom workflows directly
 
 ### API vs Self-Start
 
-(TODO)
-
-### Installation (API)
-
-(TODO)
+- Self-Start lets swarm configure, launch, and manage the ComfyUI backend. This is highly recommended.
+- API-By-URL is for if you want to launch and manage the ComfyUI instance entirely yourself, but still connect it from Swarm.
+    - Configuration is significantly more complex, and misbehavior may occur. This is not recommended.
 
 ### Installation (Self-Start)
 
-(TODO)
+- First: Have a valid ComfyUI install. The StableSwarmUI installer automatically provides you one (if not disabled) as `dlbackend/comfy/ComfyUI/main.py`.
+- Go to `Server` -> `Backends`, and click `ComfyUI Self-Starting`, and fill in the `StartScript` path as above. Other values can be left default or configured to your preference.
+- Save the backend, and it should just work.
+
+### Installation (API)
+
+- First: have a valid and working ComfyUI installation.
+- Make sure it uses the exact same model paths as your StableSwarmUI instance does. This means that if you have eg `OfficialStableDiffusion/sd_xl_base_1.0.safetensors` in Swarm, you need have *EXACTLY* that in ComfyUI. The only exception is Windows paths that use `\` instead of `/` are fine, Swarm will automatically correct for that (If you use Self-Start, this is automatically managed from your Swarm settings).
+- Note that swarm may leave stray Input or Output images in the ComfyUI folder that you may wish to clean up (if you use Self-Start, this will be prevented automatically).
+- Swarm provides extra Comfy nodes automatically to Self-Start ComfyUI instances from folders within the ComfyUI extension folder, including `DLNodes` and `ExtraNodes` - it is highly recommended you copy these to your remote Comfy's `custom_nodes` path.
 
 ### Basic Usage Within StableSwarmUI
 
