@@ -54,6 +54,24 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             {
                 return;
             }
+            string nodePath = Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes");
+            if (!Directory.Exists(nodePath))
+            {
+                Directory.CreateDirectory(nodePath);
+            }
+            void EnsureNodeRepo(string url)
+            {
+                string folderName = url.AfterLast('/');
+                if (!Directory.Exists($"{nodePath}/{folderName}"))
+                {
+                    Process.Start(new ProcessStartInfo("git", $"clone {url}") { WorkingDirectory = nodePath }).WaitForExit();
+                }
+                else
+                {
+                    Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }).WaitForExit();
+                }
+            }
+            EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding");
             string yaml = $"""
             stableswarmui:
                 base_path: {Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.ModelRoot)}
@@ -79,6 +97,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 clip_vision: |
                     {Program.ServerSettings.Paths.SDClipVisionFolder}
                     clip_vision
+                custom_nodes: |
+                    {nodePath}
             """;
             File.WriteAllText("Data/comfy-auto-model.yaml", yaml);
             IsComfyModelFileEmitted = true;
