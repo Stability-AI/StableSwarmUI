@@ -99,6 +99,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     clip_vision
                 custom_nodes: |
                     {nodePath}
+                    {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/ExtraNodes")}
             """;
             File.WriteAllText("Data/comfy-auto-model.yaml", yaml);
             IsComfyModelFileEmitted = true;

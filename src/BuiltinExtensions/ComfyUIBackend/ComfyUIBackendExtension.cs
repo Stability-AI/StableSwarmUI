@@ -26,7 +26,10 @@ public class ComfyUIBackendExtension : Extension
     public static HashSet<string> FeaturesSupported = new() { "comfyui", "refiners", "controlnet" };
 
     /// <summary>Extensible map of ComfyUI Node IDs to supported feature IDs.</summary>
-    public static Dictionary<string, string> NodeToFeatureMap = new();
+    public static Dictionary<string, string> NodeToFeatureMap = new()
+    {
+        ["SwarmLoadImageB64"] = "comfy_loadimage_b64"
+    };
 
     public override void OnPreInit()
     {

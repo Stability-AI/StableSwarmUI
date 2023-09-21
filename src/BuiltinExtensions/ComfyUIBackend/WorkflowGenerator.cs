@@ -93,13 +93,7 @@ public class WorkflowGenerator
         {
             if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image img))
             {
-                g.CreateNode("LoadImage", (_, n) =>
-                {
-                    n["inputs"] = new JObject()
-                    {
-                        ["image"] = "${initimage}"
-                    };
-                }, "15");
+                g.CreateLoadImageNode(img, "${initimage}", true, "15");
                 g.CreateNode("VAEEncode", (_, n) =>
                 {
                     n["inputs"] = new JObject()
@@ -229,14 +223,8 @@ public class WorkflowGenerator
                 });
                 for (int i = 0; i < images.Count; i++)
                 {
-                    int imageLoader = g.CreateNode("LoadImage", (_, n) =>
-                    {
-                        n["inputs"] = new JObject()
-                        {
-                            ["image"] = "${promptimages." + i + "}"
-                        };
-                    });
-                    int encoded = g.CreateNode("CLIPVisionEncode", (_, n) =>
+                    string imageLoader = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", false);
+                    string encoded = g.CreateNode("CLIPVisionEncode", (_, n) =>
                     {
                         n["inputs"] = new JObject()
                         {
@@ -279,21 +267,15 @@ public class WorkflowGenerator
                 && g.UserInput.TryGet(T2IParamTypes.ControlNetStrength, out double controlStrength))
             {
                 string imageInput = "${controlnetimageinput}";
-                if (!g.UserInput.TryGet(T2IParamTypes.ControlNetImage, out _))
+                if (!g.UserInput.TryGet(T2IParamTypes.ControlNetImage, out Image img))
                 {
-                    if (!g.UserInput.TryGet(T2IParamTypes.InitImage, out _))
+                    if (!g.UserInput.TryGet(T2IParamTypes.InitImage, out img))
                     {
                         throw new InvalidDataException("Must specify either a ControlNet Image, or Init image. Or turn off ControlNet if not wanted.");
                     }
                     imageInput = "${initimage}";
                 }
-                int imageNode = g.CreateNode("LoadImage", (_, n) =>
-                {
-                    n["inputs"] = new JObject()
-                    {
-                        ["image"] = imageInput
-                    };
-                });
+                string imageNode = g.CreateLoadImageNode(img, imageInput, true);
                 if (!g.UserInput.TryGet(ComfyUIBackendExtension.ControlNetPreprocessorParam, out string preprocessor))
                 {
                     preprocessor = "none";
@@ -639,12 +621,29 @@ public class WorkflowGenerator
         return id;
     }
 
-    /// <summary>Creates a new node with the given class type and configuration action, and manual ID.</summary>
-    public void CreateNode(string classType, Action<string, JObject> configure, string id)
+    /// <summary>Creates a new node to load an image.</summary>
+    public string CreateLoadImageNode(Image img, string param, bool resize, string nodeId = null)
     {
-        JObject obj = new() { ["class_type"] = classType };
-        configure(id, obj);
-        Workflow[id] = obj;
+        if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_loadimage_b64"))
+        {
+            return CreateNode("SwarmLoadImageB64", (_, n) =>
+            {
+                n["inputs"] = new JObject()
+                {
+                    ["image_base64"] = (resize ? img.Resize(UserInput.Get(T2IParamTypes.Width), UserInput.GetImageHeight()) : img).AsBase64
+                };
+            }, nodeId);
+        }
+        else
+        {
+            return CreateNode("LoadImage", (_, n) =>
+            {
+                n["inputs"] = new JObject()
+                {
+                    ["image"] = param
+                };
+            }, nodeId);
+        }
     }
 
     /// <summary>Call to run the generation process and get the result.</summary>
