@@ -9,7 +9,47 @@ class GridGenClass {
 
     fillSelectorOptions(selector) {
         selector.add(new Option('', '', true, true));
-        for (let option of gen_param_types) {
+        let opts = [...gen_param_types];
+        opts.sort((a, b) => {
+            if (a.id == 'model') {
+                return -1;
+            }
+            if (b.id == 'model') {
+                return 1;
+            }
+            if (a.id == 'prompt') {
+                return -1;
+            }
+            if (b.id == 'prompt') {
+                return 1;
+            }
+            if (a.id.startsWith('gridgen') && !b.id.startsWith('gridgen')) {
+                return -1;
+            }
+            if (!a.id.startsWith('gridgen') && b.id.startsWith('gridgen')) {
+                return 1;
+            }
+            if (!a.visible && b.visible) {
+                return 1;
+            }
+            if (a.visible && !b.visible) {
+                return -1;
+            }
+            if (isParamAdvanced(a) && !isParamAdvanced(b)) {
+                return 1;
+            }
+            if (!isParamAdvanced(a) && isParamAdvanced(b)) {
+                return -1;
+            }
+            if (a.group == b.group) {
+                return a.priority - b.priority;
+            }
+            let aPrio = a.group ? a.group.priority : a.priority;
+            let bPrio = b.group ? b.group.priority : b.priority;
+            return aPrio - bPrio;
+
+        });
+        for (let option of opts) {
             if (!option.extra_hidden && option.id != 'images') {
                 selector.add(new Option(option.name, option.id));
             }
