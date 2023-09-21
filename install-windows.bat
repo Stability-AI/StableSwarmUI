@@ -3,7 +3,13 @@
 cd "%~dp0"
 
 if exist StableSwarmUI (
-    echo "StableSwarmUI already installed in this folder. If this is incorrect, delete the 'StableSwarmUI' folder and try again."
+    echo StableSwarmUI is already installed in this folder. If this is incorrect, delete the 'StableSwarmUI' folder and try again.
+    pause
+    exit
+)
+
+if exist StableSwarmUI.sln (
+    echo StableSwarmUI is already installed in this folder. If this is incorrect, delete 'StableSwarmUI.sln' and try again.
     pause
     exit
 )
