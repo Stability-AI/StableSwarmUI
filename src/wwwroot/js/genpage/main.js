@@ -255,9 +255,9 @@ function updateCurrentStatusDirect(data) {
         if (num == 0) {
             return '';
         }
-        return `<span class="interrupt-line-part">${num} ${text.replaceAll('%', autoS(num))},</span> `;
+        return `<span class="interrupt-line-part">${num} ${text.replaceAll('%', autoS(num))}.</span> `;
     }
-    elem.innerHTML = total == 0 ? '' : `${autoBlock(num_current_gens, 'current generation%')}${autoBlock(num_live_gens, 'running')}${autoBlock(num_backends_waiting, 'queued')}${autoBlock(num_models_loading, 'waiting on model load')} ...`;
+    elem.innerHTML = total == 0 ? '' : `${autoBlock(num_current_gens, 'current generation%')}${autoBlock(num_live_gens, 'running')}${autoBlock(num_backends_waiting, 'queued')}${autoBlock(num_models_loading, 'waiting on model load')} `;
 }
 
 let doesHaveGenCountUpdateQueued = false;
