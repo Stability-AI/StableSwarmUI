@@ -37,7 +37,8 @@ public class BackendAPI
             ["modcount"] = backend.ModCount,
             ["features"] = new JArray(backend.Backend.SupportedFeatures.ToArray()),
             ["enabled"] = backend.Backend.IsEnabled,
-            ["title"] = backend.Backend.Title
+            ["title"] = backend.Backend.Title,
+            ["max_usages"] = backend.Backend.MaxUsages
         };
     }
 
@@ -115,12 +116,12 @@ public class BackendAPI
     }
 
     /// <summary>API route to list currently registered backends.</summary>
-    public static async Task<JObject> ListBackends()
+    public static async Task<JObject> ListBackends(bool nonreal = false)
     {
         JObject toRet = new();
         foreach (BackendHandler.T2IBackendData data in Program.Backends.T2IBackends.Values.OrderBy(d => d.ID))
         {
-            if (!data.Backend.IsReal)
+            if (!data.Backend.IsReal && !nonreal)
             {
                 continue;
             }
