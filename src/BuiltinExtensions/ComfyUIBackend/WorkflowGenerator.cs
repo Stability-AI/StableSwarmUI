@@ -71,7 +71,7 @@ public class WorkflowGenerator
                 {
                     T2IModel lora = loraHandler.Models[loras[i]];
                     float weight = weights == null ? 1 : float.Parse(weights[i]);
-                    int newId = g.CreateNode("LoraLoader", (_, n) =>
+                    string newId = g.CreateNode("LoraLoader", (_, n) =>
                     {
                         n["inputs"] = new JObject()
                         {
@@ -168,7 +168,7 @@ public class WorkflowGenerator
                 }
                 if (g.UserInput.TryGet(T2IParamTypes.Prompt, out string promptText) && string.IsNullOrWhiteSpace(promptText))
                 {
-                    int zeroed = g.CreateNode("ConditioningZeroOut", (_, n) =>
+                    string zeroed = g.CreateNode("ConditioningZeroOut", (_, n) =>
                     {
                         n["inputs"] = new JObject()
                         {
@@ -179,7 +179,7 @@ public class WorkflowGenerator
                 }
                 if (g.UserInput.TryGet(T2IParamTypes.NegativePrompt, out string negPromptText) && string.IsNullOrWhiteSpace(negPromptText))
                 {
-                    int zeroed = g.CreateNode("ConditioningZeroOut", (_, n) =>
+                    string zeroed = g.CreateNode("ConditioningZeroOut", (_, n) =>
                     {
                         n["inputs"] = new JObject()
                         {
@@ -188,7 +188,7 @@ public class WorkflowGenerator
                     });
                     g.FinalNegativePrompt = new JArray() { $"{zeroed}", 0 };
                 }
-                int visionLoader = g.CreateNode("CLIPVisionLoader", (_, n) =>
+                string visionLoader = g.CreateNode("CLIPVisionLoader", (_, n) =>
                 {
                     string model = "clip_vision_g.safetensors";
                     if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
@@ -244,7 +244,7 @@ public class WorkflowGenerator
                             ["image"] = new JArray($"{imageLoader}", 0)
                         };
                     });
-                    int unclipped = g.CreateNode("unCLIPConditioning", (_, n) =>
+                    string unclipped = g.CreateNode("unCLIPConditioning", (_, n) =>
                     {
                         n["inputs"] = new JObject()
                         {
@@ -337,7 +337,7 @@ public class WorkflowGenerator
                 if (preprocessor.ToLowerFast() != "none")
                 {
                     JToken objectData = ComfyUIBackendExtension.ControlNetPreprocessors[preprocessor];
-                    int preProcNode = g.CreateNode(preprocessor, (_, n) =>
+                    string preProcNode = g.CreateNode(preprocessor, (_, n) =>
                     {
                         n["inputs"] = new JObject()
                         {
@@ -359,14 +359,14 @@ public class WorkflowGenerator
                     imageNode = preProcNode;
                 }
                 // TODO: Preprocessor
-                int controlModelNode = g.CreateNode("ControlNetLoader", (_, n) =>
+                string controlModelNode = g.CreateNode("ControlNetLoader", (_, n) =>
                 {
                     n["inputs"] = new JObject()
                     {
                         ["control_net_name"] = controlModel.ToString(g.ModelFolderFormat)
                     };
                 });
-                int applyNode = g.CreateNode("ControlNetApply", (_, n) =>
+                string applyNode = g.CreateNode("ControlNetApply", (_, n) =>
                 {
                     n["inputs"] = new JObject()
                     {
@@ -629,11 +629,13 @@ public class WorkflowGenerator
     /// <summary>Model folder separator format, if known.</summary>
     public string ModelFolderFormat;
 
-    /// <summary>Creates a new node with the given class type and configuration action.</summary>
-    public int CreateNode(string classType, Action<string, JObject> configure)
+    /// <summary>Creates a new node with the given class type and configuration action, and optional manual ID.</summary>
+    public string CreateNode(string classType, Action<string, JObject> configure, string id = null)
     {
-        int id = LastID++;
-        CreateNode(classType, configure, $"{id}");
+        id ??= $"{LastID++}";
+        JObject obj = new() { ["class_type"] = classType };
+        configure(id, obj);
+        Workflow[id] = obj;
         return id;
     }
 

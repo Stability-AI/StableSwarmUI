@@ -65,7 +65,7 @@ public class DynamicThresholdingExtension : Extension
         {
             if (ComfyUIBackendExtension.FeaturesSupported.Contains("dynamic_thresholding") && g.UserInput.TryGet(MimicScale, out double mimicScale))
             {
-                int newNode = g.CreateNode("DynamicThresholdingFull", (_, n) =>
+                string newNode = g.CreateNode("DynamicThresholdingFull", (_, n) =>
                 {
                     n["inputs"] = new JObject()
                     {
