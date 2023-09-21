@@ -24,7 +24,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         public bool AllowIdle = false;
 
         [ConfigComment("How many more requests than backends available to queue onto this backend.\nQueuing a few extra to a Swarm instance helps it orchestrate better.\nThe downside if too high is it may cause this backend to take requests that other backends are ready to handle.")]
-        public int OverQueue = 1;
+        public int OverQueue = 0;
     }
 
     /// <summary>Internal HTTP handler.</summary>
@@ -51,8 +51,11 @@ public class SwarmSwarmBackend : AbstractT2IBackend
     /// <summary>How many sub-backends are available.</summary>
     public volatile int BackendCount = 0;
 
+    /// <summary>The remote backend ID this specific instance is linked to (if any).</summary>
+    public int LinkedRemoteBackendID;
+
     /// <summary>A list of any non-real backends this instance controls.</summary>
-    public List<BackendHandler.T2IBackendData> ControlledNonrealBackends = new();
+    public Dictionary<int, BackendHandler.T2IBackendData> ControlledNonrealBackends = new();
 
     public async Task ValidateAndBuild()
     {
@@ -66,34 +69,69 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             throw new Exception("Swarm connected to itself, backend load failed.");
         }
         await ReviseRemoteDataList();
-        if (IsReal)
-        {
-            await EnsureQueueSizeCorrect();
-        }
     }
 
     public async Task ReviseRemoteDataList()
     {
         await RunWithSession(async () =>
         {
-            JObject backendData = await HttpClient.PostJson($"{Settings.Address}/API/ListBackends", new() { ["session_id"] = Session });
+            JObject backendData = await HttpClient.PostJson($"{Settings.Address}/API/ListBackends", new() { ["session_id"] = Session, ["nonreal"] = true });
             if (backendData.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
             {
                 throw new SessionInvalidException();
             }
             HashSet<string> features = new(), types = new();
             bool isLoading = false;
+            HashSet<int> ids = IsReal ? new(ControlledNonrealBackends.Keys) : null;
+            if (!IsReal)
+            {
+                if (backendData.TryGetValue($"{LinkedRemoteBackendID}", out JToken data))
+                {
+                    backendData = new JObject()
+                    {
+                        [$"{LinkedRemoteBackendID}"] = data
+                    };
+                }
+                else
+                {
+                    return;
+                }
+            }
             foreach (JToken backend in backendData.Values())
             {
                 string status = backend["status"].ToString();
+                int id = backend["id"].Value<int>();
                 if (status == "running")
                 {
                     features.UnionWith(backend["features"].ToArray().Select(f => f.ToString()));
-                    types.Add(backend["type"].ToString());
+                    string type = backend["type"].ToString();
+                    types.Add(type);
+                    if (IsReal && !ids.Remove(id))
+                    {
+                        Logs.Verbose($"{HandlerTypeData.Name} {BackendData.ID} adding remote backend {id} ({type})");
+                        BackendHandler.T2IBackendData newData = Handler.AddNewNonrealBackend(HandlerTypeData, SettingsRaw);
+                        (newData.Backend as SwarmSwarmBackend).LinkedRemoteBackendID = id;
+                        ControlledNonrealBackends.Add(id, newData);
+                    }
+                    if (ControlledNonrealBackends.TryGetValue(id, out BackendHandler.T2IBackendData data))
+                    {
+                        data.Backend.MaxUsages = backend["max_usages"].Value<int>();
+                    }
                 }
                 else if (status == "loading")
                 {
                     isLoading = true;
+                }
+            }
+            if (IsReal)
+            {
+                foreach (int id in ids)
+                {
+                    Logs.Verbose($"{HandlerTypeData.Name} {BackendData.ID} removing remote backend {id}.");
+                    if (ControlledNonrealBackends.Remove(id, out BackendHandler.T2IBackendData data))
+                    {
+                        await Handler.DeleteById(data.ID);
+                    }
                 }
             }
             foreach (string str in features.Where(f => !RemoteFeatureCombo.ContainsKey(f)))
@@ -127,25 +165,12 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         }
     }
 
-    public async Task EnsureQueueSizeCorrect()
-    {
-        int target = BackendCount - 1 + Settings.OverQueue;
-        int toAdd = target - ControlledNonrealBackends.Count;
-        int toRemove = ControlledNonrealBackends.Count - target;
-        for (int i = 0; i < toRemove; i++)
-        {
-            BackendHandler.T2IBackendData data = ControlledNonrealBackends[0];
-            ControlledNonrealBackends.RemoveAt(0);
-            await Handler.DeleteById(data.ID);
-        }
-        for (int i = 0; i < toAdd; i++)
-        {
-            ControlledNonrealBackends.Add(Handler.AddNewNonrealBackend(HandlerTypeData, SettingsRaw));
-        }
-    }
-
     public override async Task Init()
     {
+        if (IsReal)
+        {
+            CanLoadModels = false;
+        }
         if (string.IsNullOrWhiteSpace(Settings.Address))
         {
             Status = BackendStatus.DISABLED;
@@ -161,6 +186,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             }
             catch (Exception ex)
             {
+                Logs.Verbose($"{HandlerTypeData.Name} {BackendData.ID} failed to load, WillIdle={Settings.AllowIdle}, Status={Status}: {ex}");
                 if (Status != BackendStatus.LOADING)
                 {
                     return;
@@ -186,7 +212,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                 Idler.ValidateCall = () => ReviseRemoteDataList().Wait();
                 Idler.StatusChangeEvent = status =>
                 {
-                    foreach (BackendHandler.T2IBackendData data in ControlledNonrealBackends)
+                    foreach (BackendHandler.T2IBackendData data in ControlledNonrealBackends.Values)
                     {
                         data.Backend.Status = status;
                     }
@@ -243,7 +269,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         {
             Logs.Info($"{HandlerTypeData.Name} {BackendData.ID} shutting down...");
             Idler.Stop();
-            foreach (BackendHandler.T2IBackendData data in ControlledNonrealBackends)
+            foreach (BackendHandler.T2IBackendData data in ControlledNonrealBackends.Values)
             {
                 await Handler.DeleteById(data.ID);
             }
@@ -254,7 +280,30 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
     public override async Task<bool> LoadModel(T2IModel model)
     {
-        // TODO: actually trigger a remote model load and return whether it worked
+        if (IsReal)
+        {
+            return false;
+        }
+        bool success = false;
+        await RunWithSession(async () =>
+        {
+            JObject req = new()
+            {
+                ["session_id"] = Session,
+                ["model"] = model.Name,
+                ["backendId"] = LinkedRemoteBackendID
+            };
+            JObject response = await HttpClient.PostJson($"{Settings.Address}/API/SelectModel", req);
+            if (response.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
+            {
+                throw new SessionInvalidException();
+            }
+            success = response.TryGetValue("success", out JToken successTok) && successTok.Value<bool>();
+        });
+        if (!success)
+        {
+            return false;
+        }
         CurrentModelName = model.Name;
         return true;
     }
@@ -269,6 +318,10 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             req["images"] = 1;
             req["session_id"] = Session;
             req["donotsave"] = true;
+            if (!IsReal)
+            {
+                req["exactbackendid"] = LinkedRemoteBackendID;
+            }
             JObject generated = await HttpClient.PostJson($"{Settings.Address}/API/GenerateText2Image", req);
             if (generated.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
             {
@@ -288,6 +341,10 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             req["images"] = 1;
             req["session_id"] = Session;
             req["donotsave"] = true;
+            if (!IsReal)
+            {
+                req["exactbackendid"] = LinkedRemoteBackendID;
+            }
             ClientWebSocket websocket = await NetworkBackendUtils.ConnectWebsocket(Settings.Address, "API/GenerateText2ImageWS");
             await websocket.SendJson(req, API.WebsocketTimeout);
             while (true)
