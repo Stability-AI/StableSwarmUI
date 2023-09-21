@@ -28,7 +28,8 @@ public class ComfyUIBackendExtension : Extension
     /// <summary>Extensible map of ComfyUI Node IDs to supported feature IDs.</summary>
     public static Dictionary<string, string> NodeToFeatureMap = new()
     {
-        ["SwarmLoadImageB64"] = "comfy_loadimage_b64"
+        ["SwarmLoadImageB64"] = "comfy_loadimage_b64",
+        ["SwarmSaveImageWS"] = "comfy_saveimage_ws"
     };
 
     public override void OnPreInit()

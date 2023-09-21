@@ -574,14 +574,27 @@ public class WorkflowGenerator
             {
                 g.FinalImageOut = new() { preproc, 0 };
             }
-            g.CreateNode("SaveImage", (_, n) =>
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_saveimage_ws"))
             {
-                n["inputs"] = new JObject()
+                g.CreateNode("SwarmSaveImageWS", (_, n) =>
                 {
-                    ["filename_prefix"] = $"StableSwarmUI_{Random.Shared.Next():X4}_",
-                    ["images"] = g.FinalImageOut
-                };
-            }, "9");
+                    n["inputs"] = new JObject()
+                    {
+                        ["images"] = g.FinalImageOut
+                    };
+                }, "9");
+            }
+            else
+            {
+                g.CreateNode("SaveImage", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["filename_prefix"] = $"StableSwarmUI_{Random.Shared.Next():X4}_",
+                        ["images"] = g.FinalImageOut
+                    };
+                }, "9");
+            }
         }, 10);
         #endregion
     }

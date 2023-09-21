@@ -174,6 +174,15 @@ function comfyBuildParams(callback) {
                 continue;
             }
             if (node.class_type == 'SaveImage') {
+                if ('SwarmSaveImageWS' in comfyObjectData)
+                {
+                    node.class_type = 'SwarmSaveImageWS';
+                    delete node.inputs['filename_prefix'];
+                }
+                hasSaves = true;
+            }
+            else if (node.class_type == 'SwarmSaveImageWS')
+            {
                 hasSaves = true;
             }
             if (node.inputs) {

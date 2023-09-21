@@ -151,6 +151,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             string promptId = $"{promptResult["prompt_id"]}";
             long start = Environment.TickCount64;
             bool hasInterrupted = false;
+            bool isReceivingOutputs = false;
             while (true)
             {
                 byte[] output = await socket.ReceiveData(32 * 1024 * 1024, Program.GlobalProgramCancel);
@@ -177,7 +178,9 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                                 yieldProgressUpdate();
                                 break;
                             case "progress":
-                                curPercent = json["data"].Value<float>("value") / json["data"].Value<float>("max");
+                                int max = json["data"].Value<int>("max");
+                                curPercent = json["data"].Value<float>("value") / max;
+                                isReceivingOutputs = max == 12345;
                                 yieldProgressUpdate();
                                 break;
                             case "executed":
@@ -197,11 +200,18 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     {
                         long format = BitConverter.ToInt64(output, 0);
                         string formatLabel = format switch { 1 => "jpeg", 2 => "png", _ => "jpeg" };
-                        takeOutput(new JObject()
+                        if (isReceivingOutputs)
                         {
-                            ["batch_index"] = batchId,
-                            ["preview"] = $"data:image/{formatLabel};base64," + Convert.ToBase64String(output, 8, output.Length - 8)
-                        });
+                            takeOutput(new Image(output[8..]));
+                        }
+                        else
+                        {
+                            takeOutput(new JObject()
+                            {
+                                ["batch_index"] = batchId,
+                                ["preview"] = $"data:image/{formatLabel};base64," + Convert.ToBase64String(output, 8, output.Length - 8)
+                            });
+                        }
                     }
                 }
                 if (socket.CloseStatus.HasValue)
