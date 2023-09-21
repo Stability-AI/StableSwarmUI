@@ -389,22 +389,23 @@ public static class T2IAPI
     }
 
     /// <summary>API route to select a model for loading.</summary>
-    public static async Task<JObject> SelectModel(Session session, string model)
+    public static async Task<JObject> SelectModel(Session session, string model, string backendId = null)
     {
-        return (await API.RunWebsocketHandlerCallDirect(SelectModelInternal, session, model))[0];
+        return (await API.RunWebsocketHandlerCallDirect(SelectModelInternal, session, (model, backendId)))[0];
     }
 
     /// <summary>API route to select a model for loading, as a websocket with live status updates.</summary>
     public static async Task<JObject> SelectModelWS(WebSocket socket, Session session, string model)
     {
-        await API.RunWebsocketHandlerCallWS(SelectModelInternal, session, model, socket);
+        await API.RunWebsocketHandlerCallWS(SelectModelInternal, session, (model, (string)null), socket);
         await socket.SendJson(BasicAPIFeatures.GetCurrentStatusRaw(session), API.WebsocketTimeout);
         return null;
     }
 
     /// <summary>Internal handler of the stable-diffusion model-load API route.</summary>
-    public static async Task SelectModelInternal(Session session, string model, Action<JObject> output, bool isWS)
+    public static async Task SelectModelInternal(Session session, (string, string) data, Action<JObject> output, bool isWS)
     {
+        (string model, string backendId) = data;
         if (!session.User.Restrictions.CanChangeModels)
         {
             output(new JObject() { ["error"] = "You are not allowed to change models." });
@@ -422,7 +423,7 @@ public static class T2IAPI
         {
             output(BasicAPIFeatures.GetCurrentStatusRaw(session));
         }
-        if (!(await Program.Backends.LoadModelOnAll(actualModel)))
+        if (!(await Program.Backends.LoadModelOnAll(actualModel, backendId is null ? null : (b => $"{b.ID}" == backendId))))
         {
             output(new JObject() { ["error"] = "Model failed to load." });
             return;

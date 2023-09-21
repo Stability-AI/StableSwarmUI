@@ -414,12 +414,12 @@ public class BackendHandler
     }
 
     /// <summary>Tells all backends to load a given model. Returns true if any backends have loaded it, or false if not.</summary>
-    public async Task<bool> LoadModelOnAll(T2IModel model)
+    public async Task<bool> LoadModelOnAll(T2IModel model, Func<T2IBackendData, bool> filter = null)
     {
         bool result = await Task.Run(async () => // TODO: this is weird async jank
         {
             bool any = false;
-            foreach (T2IBackendData backend in T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING))
+            foreach (T2IBackendData backend in T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && (filter is null || filter(b))))
             {
                 backend.ReserveModelLoad = true;
                 while (backend.CheckIsInUseNoModelReserve)
@@ -516,6 +516,9 @@ public class BackendHandler
 
         /// <summary>Sessions that want the model.</summary>
         public HashSet<Session> Sessions = new();
+
+        /// <summary>Requests that want the model.</summary>
+        public List<T2IBackendRequest> Requests = new();
 
         /// <summary>Set of backends that tried to satisfy this request but failed.</summary>
         public HashSet<int> BadBackends = new();
@@ -634,6 +637,7 @@ public class BackendHandler
                     {
                         Pressure.Sessions.Add(Session);
                     }
+                    Pressure.Requests.Add(this);
                 }
             }
             if (available.Any())
@@ -775,7 +779,24 @@ public class BackendHandler
     {
         Logs.Verbose($"[BackendHandler] Will load highest pressure model...");
         long timeRel = Environment.TickCount64;
-        ModelRequestPressure highestPressure = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).FirstOrDefault();
+        List<ModelRequestPressure> pressures = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).ToList();
+        if (pressures.IsEmpty())
+        {
+            Logs.Verbose($"[BackendHandler] No model requests, skipping load.");
+            return;
+        }
+        pressures = pressures.Where(p => p.Requests.Any(r => r.Filter is null || possible.Any(b => r.Filter(b)))).ToList();
+        if (pressures.IsEmpty())
+        {
+            Logs.Verbose($"[BackendHandler] Unable to find valid model requests that are matched to the current backend list.");
+            return;
+        }
+        List<ModelRequestPressure> perfect = pressures.Where(p => p.Requests.All(r => r.Filter is null || possible.Any(b => r.Filter(b)))).ToList();
+        if (!perfect.IsEmpty())
+        {
+            pressures = perfect;
+        }
+        ModelRequestPressure highestPressure = pressures.FirstOrDefault();
         if (highestPressure is not null)
         {
             lock (highestPressure.Locker)
