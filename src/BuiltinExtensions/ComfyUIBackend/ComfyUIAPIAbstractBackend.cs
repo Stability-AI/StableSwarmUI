@@ -134,9 +134,15 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         try
         {
             workflow = $"{{\"prompt\": {workflow}, \"client_id\": \"{id}\"}}";
-            Logs.Verbose($"Will use workflow: {workflow}");
+            if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
+            {
+                Logs.Verbose($"Will use workflow: {workflow}");
+            }
             JObject promptResult = await HttpClient.PostJSONString($"{Address}/prompt", workflow, interrupt);
-            Logs.Verbose($"ComfyUI prompt said: {promptResult}");
+            if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
+            {
+                Logs.Verbose($"ComfyUI prompt said: {promptResult}");
+            }
             if (promptResult.ContainsKey("error"))
             {
                 Logs.Debug($"Error came from prompt: {workflow}");
@@ -153,7 +159,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     if (Encoding.ASCII.GetString(output, 0, 8) == "{\"type\":")
                     {
                         JObject json = Utilities.ParseToJson(Encoding.UTF8.GetString(output));
-                        Logs.Verbose($"ComfyUI Websocket said: {json.ToString(Formatting.None)}");
+                        if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
+                        {
+                            Logs.Verbose($"ComfyUI Websocket said: {json.ToString(Formatting.None)}");
+                        }
                         switch ($"{json["type"]}")
                         {
                             case "executing":
@@ -186,7 +195,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     }
                     else
                     {
-                        //Logs.Verbose($"ComfyUI Websocket sent raw data: {Encoding.ASCII.GetString(output, 0, Math.Min(output.Length, 32))}...");
                         long format = BitConverter.ToInt64(output, 0);
                         string formatLabel = format switch { 1 => "jpeg", 2 => "png", _ => "jpeg" };
                         takeOutput(new JObject()
@@ -234,7 +242,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     private async Task<Image[]> GetAllImagesForHistory(JToken output, CancellationToken interrupt)
     {
-        Logs.Verbose($"ComfyUI history said: {output}");
+        if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
+        {
+            Logs.Verbose($"ComfyUI history said: {output}");
+        }
         List<Image> outputs = new();
         foreach (JToken outData in output["outputs"].Values())
         {
@@ -305,7 +316,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         user_input.PreparsePromptLikes(x => $"embedding:{x}");
         if (workflow is not null && !user_input.Get(T2IParamTypes.ControlNetPreviewOnly))
         {
-            Logs.Verbose($"Will fill workflow {workflow}");
+            if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
+            {
+                Logs.Verbose($"Will fill workflow {workflow}");
+            }
             workflow = StringConversionHelper.QuickSimpleTagFiller(initImageFixer(workflow), "${", "}", (tag) => {
                 string fixedTag = Utilities.UnescapeJsonString(tag);
                 string tagName = fixedTag.BeforeAndAfter(':', out string defVal);
@@ -377,7 +391,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
     {
         List<Action> completeSteps = new();
-        string initImageFixer(string workflow) // TODO: This is a hack.
+        string initImageFixer(string workflow) // This is a hack, backup for if Swarm nodes are missing
         {
             void TryApply(string key, Image img, bool resize)
             {
@@ -390,6 +404,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                         index = workflow.IndexOf("${" + key, index + 1);
                         continue;
                     }
+                    Logs.Debug($"Uploading image for '{key}' to Comfy server's file folder... are you missing the Swarm-Comfy nodes?");
                     int id = Interlocked.Increment(ref ImageIDDedup);
                     string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
                     Image fixedImage = resize ? img.Resize(user_input.Get(T2IParamTypes.Width), user_input.GetImageHeight()) : img;
