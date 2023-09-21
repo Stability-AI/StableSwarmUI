@@ -607,7 +607,7 @@ public class BackendHandler
                 Failure = new InvalidOperationException("No backends match the settings of the request given!");
                 return;
             }
-            List<T2IBackendData> available = possible.Where(b => !b.CheckIsInUse).ToList();
+            List<T2IBackendData> available = possible.Where(b => !b.CheckIsInUse).OrderBy(b => b.Usages).ToList();
             T2IBackendData firstAvail = available.FirstOrDefault();
             if (Model is null && firstAvail is not null)
             {
