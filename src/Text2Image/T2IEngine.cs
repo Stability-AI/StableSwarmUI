@@ -46,14 +46,16 @@ namespace StableSwarmUI.Text2Image
         /// <summary>Helper to create a function to match a backend to a user input request.</summary>
         public static Func<T2IBackendData, bool> BackendMatcherFor(T2IParamInput user_input)
         {
-            if (!user_input.TryGet(T2IParamTypes.BackendType, out string type) || type == "any")
-            {
-                return _ => true;
-            }
+            string type = user_input.Get(T2IParamTypes.BackendType, "any");
+            bool requireId = user_input.TryGet(T2IParamTypes.ExactBackendID, out int reqId);
             string typeLow = type.ToLowerFast();
             return backend =>
             {
                 if (typeLow != "any" && typeLow != backend.Backend.HandlerTypeData.ID.ToLowerFast())
+                {
+                    return false;
+                }
+                if (requireId && backend.ID != reqId)
                 {
                     return false;
                 }
