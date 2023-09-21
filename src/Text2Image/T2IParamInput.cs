@@ -144,6 +144,10 @@ public class T2IParamInput
             {
                 output[key] = model.Name;
             }
+            else if (val is null)
+            {
+                Logs.Warning($"Null parameter {key} in T2I parameters?");
+            }
             else
             {
                 output[key] = JToken.FromObject(val);
