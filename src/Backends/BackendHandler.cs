@@ -777,8 +777,8 @@ public class BackendHandler
     /// <summary>Internal helper route for <see cref="GetNextT2IBackend"/> to trigger a backend model load.</summary>
     public void LoadHighestPressureNow(List<T2IBackendData> possible, List<T2IBackendData> available, Action ReleasePressure, CancellationToken cancel)
     {
-        List<T2IBackendData> possibleLoaders = possible.Where(b => b.Backend.CanLoadModels).ToList();
-        if (possibleLoaders.IsEmpty())
+        List<T2IBackendData> availableLoaders = available.Where(b => b.Backend.CanLoadModels).ToList();
+        if (availableLoaders.IsEmpty())
         {
             Logs.Verbose($"[BackendHandler] No current backends are able to load models.");
             return;
@@ -791,13 +791,13 @@ public class BackendHandler
             Logs.Verbose($"[BackendHandler] No model requests, skipping load.");
             return;
         }
-        pressures = pressures.Where(p => p.Requests.Any(r => r.Filter is null || possibleLoaders.Any(b => r.Filter(b)))).ToList();
+        pressures = pressures.Where(p => p.Requests.Any(r => r.Filter is null || availableLoaders.Any(b => r.Filter(b)))).ToList();
         if (pressures.IsEmpty())
         {
             Logs.Verbose($"[BackendHandler] Unable to find valid model requests that are matched to the current backend list.");
             return;
         }
-        List<ModelRequestPressure> perfect = pressures.Where(p => p.Requests.All(r => r.Filter is null || possibleLoaders.Any(b => r.Filter(b)))).ToList();
+        List<ModelRequestPressure> perfect = pressures.Where(p => p.Requests.All(r => r.Filter is null || availableLoaders.Any(b => r.Filter(b)))).ToList();
         if (!perfect.IsEmpty())
         {
             pressures = perfect;
@@ -813,16 +813,16 @@ public class BackendHandler
                     return;
                 }
                 long timeWait = timeRel - highestPressure.TimeFirstRequest;
-                if (possibleLoaders.Count == 1 || timeWait > 1500)
+                if (availableLoaders.Count == 1 || timeWait > 1500)
                 {
-                    List<T2IBackendData> valid = available.Where(b => !highestPressure.BadBackends.Contains(b.ID)).ToList();
+                    List<T2IBackendData> valid = availableLoaders.Where(b => !highestPressure.BadBackends.Contains(b.ID)).ToList();
                     if (valid.IsEmpty())
                     {
                         Logs.Warning("[BackendHandler] All backends failed to load the model! Cannot generate anything.");
                         ReleasePressure();
                         throw new InvalidOperationException("All available backends failed to load the model.");
                     }
-                    valid = available.Where(b => b.Backend.CurrentModelName != highestPressure.Model.Name).ToList();
+                    valid = availableLoaders.Where(b => b.Backend.CurrentModelName != highestPressure.Model.Name).ToList();
                     if (valid.IsEmpty())
                     {
                         Logs.Verbose("$[BackendHandler] Cancelling highest-pressure load, model is already loaded on all available backends.");
@@ -838,17 +838,21 @@ public class BackendHandler
                     {
                         claims.Add(sess.Claim(0, 1, 0, 0));
                     }
-                    T2IBackendAccess access = new(availableBackend);
                     Task.Factory.StartNew(() =>
                     {
                         try
                         {
                             availableBackend.ReserveModelLoad = true;
+                            int ticks = 0;
                             while (availableBackend.CheckIsInUseNoModelReserve)
                             {
                                 if (Program.GlobalProgramCancel.IsCancellationRequested)
                                 {
                                     return;
+                                }
+                                if (ticks++ % 5 == 0)
+                                {
+                                    Logs.Debug($"[BackendHandler] model loader is waiting for backend #{availableBackend.ID} to be released from use ({availableBackend.Usages}/{availableBackend.Backend.MaxUsages})...");
                                 }
                                 Thread.Sleep(100);
                             }
@@ -875,7 +879,6 @@ public class BackendHandler
                             {
                                 claim.Dispose();
                             }
-                            access.Dispose();
                         }
                         ReassignLoadedModelsList();
                     }, cancel);
