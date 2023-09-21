@@ -106,9 +106,13 @@ public class BackendHandler
     {
         public AbstractT2IBackend Backend;
 
-        public volatile bool IsInUse = false;
+        public volatile bool ReserveModelLoad = false;
 
-        public bool CheckIsInUse => IsInUse && Backend.Status == BackendStatus.RUNNING;
+        public volatile int Usages = 0;
+
+        public bool CheckIsInUse => (ReserveModelLoad || Usages >= Backend.MaxUsages) && Backend.Status == BackendStatus.RUNNING;
+
+        public bool CheckIsInUseNoModelReserve => Usages >= Backend.MaxUsages && Backend.Status == BackendStatus.RUNNING;
 
         public LockObject AccessLock = new();
 
@@ -122,7 +126,7 @@ public class BackendHandler
 
         public void Claim()
         {
-            IsInUse = true;
+            Interlocked.Increment(ref Usages);
             TimeLastRelease = Environment.TickCount64;
         }
     }
@@ -417,17 +421,14 @@ public class BackendHandler
             bool any = false;
             foreach (T2IBackendData backend in T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING))
             {
-                lock (CentralLock)
+                backend.ReserveModelLoad = true;
+                while (backend.CheckIsInUseNoModelReserve)
                 {
-                    while (backend.CheckIsInUse)
+                    if (Program.GlobalProgramCancel.IsCancellationRequested)
                     {
-                        if (Program.GlobalProgramCancel.IsCancellationRequested)
-                        {
-                            return false;
-                        }
-                        Thread.Sleep(100);
+                        return false;
                     }
-                    backend.IsInUse = true;
+                    await Task.Delay(TimeSpan.FromSeconds(0.1));
                 }
                 try
                 {
@@ -437,7 +438,7 @@ public class BackendHandler
                 {
                     Logs.Error($"Error loading model on backend {backend.ID} ({backend.Backend.HandlerTypeData.Name}): {ex}");
                 }
-                backend.IsInUse = false;
+                backend.ReserveModelLoad = false;
             }
             return any;
         });
@@ -603,7 +604,7 @@ public class BackendHandler
                 Failure = new InvalidOperationException("No backends match the settings of the request given!");
                 return;
             }
-            List<T2IBackendData> available = possible.Where(b => !b.IsInUse).ToList();
+            List<T2IBackendData> available = possible.Where(b => !b.CheckIsInUse).ToList();
             T2IBackendData firstAvail = available.FirstOrDefault();
             if (Model is null && firstAvail is not null)
             {
@@ -800,6 +801,8 @@ public class BackendHandler
                         Logs.Verbose("$[BackendHandler] Cancelling highest-pressure load, model is already loaded on all available backends.");
                         return;
                     }
+                    List<T2IBackendData> unused = valid.Where(a => a.Usages == 0).ToList();
+                    valid = unused.Any() ? unused : valid;
                     T2IBackendData availableBackend = valid.MinBy(a => a.TimeLastRelease);
                     Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} will load a model: {highestPressure.Model.Name}, with {highestPressure.Count} requests waiting for {timeWait / 1000f:0.#} seconds");
                     highestPressure.IsLoading = true;
@@ -813,6 +816,15 @@ public class BackendHandler
                     {
                         try
                         {
+                            availableBackend.ReserveModelLoad = true;
+                            while (availableBackend.CheckIsInUseNoModelReserve)
+                            {
+                                if (Program.GlobalProgramCancel.IsCancellationRequested)
+                                {
+                                    return;
+                                }
+                                Thread.Sleep(100);
+                            }
                             availableBackend.Backend.LoadModel(highestPressure.Model).Wait(cancel);
                             Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} loaded model, returning to pool");
                         }
@@ -822,6 +834,7 @@ public class BackendHandler
                         }
                         finally
                         {
+                            availableBackend.ReserveModelLoad = false;
                             if (availableBackend.Backend.CurrentModelName != highestPressure.Model.Name)
                             {
                                 Logs.Warning($"[BackendHandler] backend #{availableBackend.ID} failed to load model {highestPressure.Model.Name}");
@@ -872,7 +885,7 @@ public class T2IBackendAccess : IDisposable
         {
             IsDisposed = true;
             Data.TimeLastRelease = Environment.TickCount64;
-            Data.IsInUse = false;
+            Interlocked.Decrement(ref Data.Usages);
             Backend.Handler.CheckBackendsSignal.Set();
             GC.SuppressFinalize(this);
         }

@@ -56,6 +56,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public async Task InitInternal(bool ignoreWebError)
     {
+        MaxUsages = 2;
         if (string.IsNullOrWhiteSpace(Address))
         {
             Status = BackendStatus.DISABLED;
