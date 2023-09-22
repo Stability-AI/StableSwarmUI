@@ -702,6 +702,7 @@ function makeImage(minRow = 0, doClear = true) {
             pad_x = Math.max(pad_x, ctx.measureText(blocks[1].textContent).width);
         }
     }
+    pad_x = Math.min(pad_x, widest_width / 2);
     pad_x += 5;
     canvas = document.createElement('canvas');
     canvas.width = (widest_width + 1) * columns + pad_x;
@@ -770,14 +771,36 @@ function makeImage(minRow = 0, doClear = true) {
         }
         grid_x += widest_width + 1;
     }
+    function wrap(text, width) {
+        var words = text.split(' ');
+        var lines = [];
+        var line = '';
+        for (var word of words) {
+            var newLine = line + word + ' ';
+            if (ctx.measureText(newLine).width > width) {
+                lines.push(line);
+                line = word + ' ';
+            }
+            else {
+                line = newLine;
+            }
+        }
+        lines.push(line);
+        return lines.join('\n');
+    }
+    function writeMultiline(ctx, text, x, y) {
+        for (var line of text.split('\n')) {
+            ctx.fillText(line, x, y);
+            y += 16;
+        }
+    }
     for (var row of rowData) {
         var blocks = row.label.getElementsByTagName('b');
         if (blocks.length == 2) {
-            ctx.fillText(blocks[0].textContent, 5, row.y + 4);
-            ctx.fillText(blocks[1].textContent, 5, row.y + 25);
+            writeMultiline(ctx, wrap(blocks[0].textContent + "\n" + blocks[1].textContent, widest_width / 2), 5, row.y + 4);
         }
         else {
-            ctx.fillText(blocks[0].textContent, 5, row.y + 25);
+            writeMultiline(ctx, wrap(blocks[0].textContent, widest_width / 2), 5, row.y + 25);
         }
     }
     // Images
