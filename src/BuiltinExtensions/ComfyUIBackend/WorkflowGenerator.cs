@@ -24,6 +24,9 @@ public class WorkflowGenerator
     /// <summary>Callable steps for modifying workflows as they go.</summary>
     public static List<WorkflowGenStep> Steps = new();
 
+    /// <summary>Can be set to globally block custom nodes, if needed.</summary>
+    public static volatile bool RestrictCustomNodes = false;
+
     /// <summary>Register a new step to the workflow generator.</summary>
     public static void AddStep(Action<WorkflowGenerator> step, double priority)
     {
@@ -376,26 +379,39 @@ public class WorkflowGenerator
             {
                 endStep = (int)Math.Round(steps * (1 - refinerControl));
             }
-            g.CreateNode("KSamplerAdvanced", (_, n) =>
+            JObject inputs = new()
             {
-                n["inputs"] = new JObject()
+                ["model"] = g.FinalModel,
+                ["noise_seed"] = g.UserInput.Get(T2IParamTypes.Seed),
+                ["steps"] = steps,
+                ["cfg"] = g.UserInput.Get(T2IParamTypes.CFGScale),
+                // TODO: proper sampler input, and intelligent default scheduler per sampler
+                ["sampler_name"] = g.UserInput.Get(ComfyUIBackendExtension.SamplerParam, "euler"),
+                ["scheduler"] = g.UserInput.Get(ComfyUIBackendExtension.SchedulerParam, "normal"),
+                ["positive"] = g.FinalPrompt,
+                ["negative"] = g.FinalNegativePrompt,
+                ["latent_image"] = g.FinalLatentImage,
+                ["start_at_step"] = startStep,
+                ["end_at_step"] = endStep
+            };
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("variation_seed") && !RestrictCustomNodes)
+            {
+                g.CreateNode("SwarmKSampler", (_, n) =>
                 {
-                    ["model"] = g.FinalModel,
-                    ["add_noise"] = "enable",
-                    ["noise_seed"] = g.UserInput.Get(T2IParamTypes.Seed),
-                    ["steps"] = steps,
-                    ["cfg"] = g.UserInput.Get(T2IParamTypes.CFGScale),
-                    // TODO: proper sampler input, and intelligent default scheduler per sampler
-                    ["sampler_name"] = g.UserInput.Get(ComfyUIBackendExtension.SamplerParam)?.ToString() ?? "euler",
-                    ["scheduler"] = g.UserInput.Get(ComfyUIBackendExtension.SchedulerParam)?.ToString() ?? "normal",
-                    ["positive"] = g.FinalPrompt,
-                    ["negative"] = g.FinalNegativePrompt,
-                    ["latent_image"] = g.FinalLatentImage,
-                    ["start_at_step"] = startStep,
-                    ["end_at_step"] = endStep,
-                    ["return_with_leftover_noise"] = "disable"
-                };
-            }, "10");
+                    inputs["var_seed"] = g.UserInput.Get(T2IParamTypes.VariationSeed, 0);
+                    inputs["var_seed_strength"] = g.UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
+                    n["inputs"] = inputs;
+                }, "10");
+            }
+            else
+            {
+                g.CreateNode("KSamplerAdvanced", (_, n) =>
+                {
+                    inputs["return_with_leftover_noise"] = "disable";
+                    inputs["add_noise"] = "enable";
+                    n["inputs"] = inputs;
+                }, "10");
+            }
         }, -5);
         #endregion
         #region Refiner
@@ -574,7 +590,7 @@ public class WorkflowGenerator
             {
                 g.FinalImageOut = new() { preproc, 0 };
             }
-            if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_saveimage_ws"))
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_saveimage_ws") && !RestrictCustomNodes)
             {
                 g.CreateNode("SwarmSaveImageWS", (_, n) =>
                 {
@@ -637,7 +653,7 @@ public class WorkflowGenerator
     /// <summary>Creates a new node to load an image.</summary>
     public string CreateLoadImageNode(Image img, string param, bool resize, string nodeId = null)
     {
-        if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_loadimage_b64"))
+        if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_loadimage_b64") && !RestrictCustomNodes)
         {
             return CreateNode("SwarmLoadImageB64", (_, n) =>
             {

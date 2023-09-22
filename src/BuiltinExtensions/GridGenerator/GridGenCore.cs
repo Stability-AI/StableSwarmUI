@@ -77,7 +77,7 @@ public partial class GridGenCore
                     {
                         outVal = (int)Math.Round(outVal);
                     }
-                    outList.Add($"{outVal:0.#}");
+                    outList.Add($"{outVal:0.#######}");
                 }
             }
             else

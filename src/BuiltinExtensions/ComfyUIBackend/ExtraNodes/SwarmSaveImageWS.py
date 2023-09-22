@@ -10,10 +10,10 @@ class SwarmSaveImageWS:
                     {"images": ("IMAGE", ),}
                 }
 
+    CATEGORY = "StableSwarmUI"
     RETURN_TYPES = ()
     FUNCTION = "save_images"
     OUTPUT_NODE = True
-    CATEGORY = "image"
 
     def save_images(self, images):
         SPECIAL_ID = 12345 # Tells swarm that the node is going to output final images

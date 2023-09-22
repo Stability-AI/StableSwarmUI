@@ -29,7 +29,8 @@ public class ComfyUIBackendExtension : Extension
     public static Dictionary<string, string> NodeToFeatureMap = new()
     {
         ["SwarmLoadImageB64"] = "comfy_loadimage_b64",
-        ["SwarmSaveImageWS"] = "comfy_saveimage_ws"
+        ["SwarmSaveImageWS"] = "comfy_saveimage_ws",
+        ["SwarmKSampler"] = "variation_seed"
     };
 
     public override void OnPreInit()

@@ -151,7 +151,14 @@ public static class T2IAPI
             }
             int imageIndex = i * batchSizeExpected;
             T2IParamInput thisParams = user_input.Clone();
-            thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed) + imageIndex);
+            if (thisParams.TryGet(T2IParamTypes.VariationSeed, out long varSeed) && thisParams.Get(T2IParamTypes.VariationSeedStrength) > 0)
+            {
+                thisParams.Set(T2IParamTypes.VariationSeed, varSeed + imageIndex);
+            }
+            else
+            {
+                thisParams.Set(T2IParamTypes.Seed, thisParams.Get(T2IParamTypes.Seed) + imageIndex);
+            }
             int numCalls = 0;
             tasks.Add(Task.Run(() => T2IEngine.CreateImageTask(thisParams, $"{imageIndex}", claim, output, setError, isWS, Program.ServerSettings.Backends.PerRequestTimeoutMinutes,
                 (image, metadata) =>

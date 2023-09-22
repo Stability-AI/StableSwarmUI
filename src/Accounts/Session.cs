@@ -105,7 +105,14 @@ public class Session : IEquatable<Session>
         if (numImagesGenned > 0 && user_input.TryGet(T2IParamTypes.BatchSize, out int batchSize) && numImagesGenned < batchSize)
         {
             user_input = user_input.Clone();
-            user_input.Set(T2IParamTypes.Seed, user_input.Get(T2IParamTypes.Seed) + numImagesGenned);
+            if (user_input.TryGet(T2IParamTypes.VariationSeed, out long varSeed) && user_input.Get(T2IParamTypes.VariationSeedStrength) > 0)
+            {
+                user_input.Set(T2IParamTypes.VariationSeed, varSeed + numImagesGenned);
+            }
+            else
+            {
+                user_input.Set(T2IParamTypes.Seed, user_input.Get(T2IParamTypes.Seed) + numImagesGenned);
+            }
         }
         string metadata = user_input.GenRawMetadata();
         image = image.ConvertTo(User.Settings.FileFormat.ImageFormat, User.Settings.FileFormat.SaveMetadata ? metadata : null, User.Settings.FileFormat.DPI);
