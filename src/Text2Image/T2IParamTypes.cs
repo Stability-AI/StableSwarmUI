@@ -277,7 +277,7 @@ public class T2IParamTypes
         GroupRefiners = new("Refiner", Toggles: true, Open: false, OrderPriority: -3);
         static List<string> listRefinerModels(Session s)
         {
-            List<T2IModel> baseList = Program.MainSDModels.ListModelsFor(s);
+            List<T2IModel> baseList = Program.MainSDModels.ListModelsFor(s).OrderBy(m => m.Name).ToList();
             List<T2IModel> refinerList = baseList.Where(m => m.ModelClass is not null && m.ModelClass.Name.Contains("Refiner")).ToList();
             List<string> bases = baseList.Select(m => m.Name).ToList();
             if (refinerList.IsEmpty())
