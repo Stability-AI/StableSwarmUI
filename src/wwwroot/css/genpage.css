@@ -147,6 +147,7 @@ body {
     height: 49vh;
     vertical-align: top;
     overflow: auto;
+    object-fit: contain;
 }
 .current-image-data {
     white-space: pre-wrap;
@@ -155,6 +156,8 @@ body {
 .current_image img {
     max-width: 100%;
     max-height: calc(max(15rem, 100% - 5rem));
+    object-fit: contain;
+    object-position: left;
 }
 .current_image_batch {
     display: inline-block;
