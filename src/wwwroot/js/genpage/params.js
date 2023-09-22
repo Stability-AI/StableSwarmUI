@@ -343,6 +343,10 @@ function genInputs(delay_final = false) {
         for (let runnable of postParamBuildSteps) {
             runnable();
         }
+        let loras = document.getElementById('input_loras');
+        if (loras) {
+            reapplyLoraWeights();
+        }
     };
     if (delay_final) {
         setTimeout(() => {
