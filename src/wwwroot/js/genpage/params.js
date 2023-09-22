@@ -553,20 +553,16 @@ function hideUnsupportableParams() {
 }
 
 function paramSorter(a, b) {
-    let aPrio, bPrio;
-    if (a.group == b.group) {
-        aPrio = a.priority;
-        bPrio = b.priority;
+    let aPrio = a.priority, bPrio = b.priority;
+    if (a.group && b.group && a.group.name == b.group.name) {
     }
     else if (a.group && !b.group) {
         aPrio = a.group.priority;
-        bPrio = b.priority;
     }
     else if (!a.group && b.group) {
-        aPrio = a.priority;
         bPrio = b.group.priority;
     }
-    else {
+    else if (a.group && b.group) {
         aPrio = a.group.priority;
         bPrio = b.group.priority;
     }
