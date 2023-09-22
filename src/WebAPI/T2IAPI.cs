@@ -231,7 +231,7 @@ public static class T2IAPI
                 }
                 if (subDepth > 0)
                 {
-                    foreach (string subDir in Directory.EnumerateDirectories(path + "/" + dir).Select(Path.GetFileName))
+                    foreach (string subDir in Directory.EnumerateDirectories(path + "/" + dir).Select(Path.GetFileName).OrderDescending())
                     {
                         string subPath = dir == "" ? subDir : dir + "/" + subDir;
                         if (isAllowed(subPath))
