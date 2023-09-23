@@ -77,6 +77,7 @@ function toggleGroupOpen(elem) {
         let toggler = document.getElementById(`${group.id}_toggle`);
         if (toggler) {
             toggler.checked = true;
+            doToggleGroup(group.id);
         }
     }
     else {
