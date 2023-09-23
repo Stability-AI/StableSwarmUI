@@ -305,21 +305,28 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         return true;
     }
 
+    public JObject BuildRequest(T2IParamInput user_input)
+    {
+        JObject req = user_input.ToJSON();
+        req[T2IParamTypes.Images.Type.ID] = 1;
+        req["session_id"] = Session;
+        req[T2IParamTypes.DoNotSave.Type.ID] = true;
+        req.Remove(T2IParamTypes.ExactBackendID.Type.ID);
+        req.Remove(T2IParamTypes.BackendType.Type.ID);
+        if (!IsReal)
+        {
+            req[T2IParamTypes.ExactBackendID.Type.ID] = LinkedRemoteBackendID;
+        }
+        return req;
+    }
+
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
         user_input.PreparsePromptLikes(x => $"<embedding:{x}>");
         Image[] images = null;
         await RunWithSession(async () =>
         {
-            JObject req = user_input.ToJSON();
-            req["images"] = 1;
-            req["session_id"] = Session;
-            req["donotsave"] = true;
-            if (!IsReal)
-            {
-                req["exactbackendid"] = LinkedRemoteBackendID;
-            }
-            JObject generated = await HttpClient.PostJson($"{Settings.Address}/API/GenerateText2Image", req);
+            JObject generated = await HttpClient.PostJson($"{Settings.Address}/API/GenerateText2Image", BuildRequest(user_input));
             if (generated.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
             {
                 throw new SessionInvalidException();
@@ -334,16 +341,8 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         user_input.PreparsePromptLikes(x => $"<embedding:{x}>");
         await RunWithSession(async () =>
         {
-            JObject req = user_input.ToJSON();
-            req["images"] = 1;
-            req["session_id"] = Session;
-            req["donotsave"] = true;
-            if (!IsReal)
-            {
-                req["exactbackendid"] = LinkedRemoteBackendID;
-            }
             ClientWebSocket websocket = await NetworkBackendUtils.ConnectWebsocket(Settings.Address, "API/GenerateText2ImageWS");
-            await websocket.SendJson(req, API.WebsocketTimeout);
+            await websocket.SendJson(BuildRequest(user_input), API.WebsocketTimeout);
             while (true)
             {
                 JObject response = await websocket.ReceiveJson(1024 * 1024 * 100, true);

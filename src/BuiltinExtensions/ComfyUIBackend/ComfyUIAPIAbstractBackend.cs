@@ -49,7 +49,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             {
                 ModelFolderFormat = "\\";
             }
-            Logs.Debug($"Comfy model folder format: {ModelFolderFormat} ... forward slash: {forwardSlash.Length} ({forwardSlash.Take(3).JoinString(", ")}), back slash: {backSlash.Length} ({backSlash.Take(3).JoinString(", ")})");
+            Logs.Debug($"Comfy model folder format: {ModelFolderFormat} ... forward slash: {forwardSlash.Length} ({forwardSlash.Take(2).JoinString(", ")}), back slash: {backSlash.Length} ({backSlash.Take(2).JoinString(", ")})");
         }
         ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
     }
