@@ -200,7 +200,7 @@ public class ComfyUIBackendExtension : Extension
             GetValues: (_) => Workflows.Keys.ToList()
             ));
         CustomWorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Custom Workflow", "What custom workflow to use in ComfyUI (built in the Comfy Workflow Editor tab)",
-            "", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup, IsAdvanced: true,
+            "", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup, IsAdvanced: true, ValidateValues: false,
             GetValues: (_) => CustomWorkflows.Keys.Order().ToList(),
             Clean: ((_, val) => CustomWorkflows.ContainsKey(val) ? $"PARSED%{val}%{ReadCustomWorkflow(val)["prompt"]}" : val),
             MetadataFormat: v => v.StartsWith("PARSED%") ? v.After("%").Before("%") : v
