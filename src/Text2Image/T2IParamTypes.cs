@@ -502,11 +502,22 @@ public class T2IParamTypes
                 throw new InvalidDataException($"You do not have permission to use parameter {type.Name}.");
             }
         }
-        value = ValidateParam(type, value, data.SourceSession);
-        data.Set(type, value);
-        if (type.FeatureFlag is not null)
+        try
         {
-            data.RequiredFlags.Add(type.FeatureFlag);
+            value = ValidateParam(type, value, data.SourceSession);
+            data.Set(type, value);
+            if (type.FeatureFlag is not null)
+            {
+                data.RequiredFlags.Add(type.FeatureFlag);
+            }
+        }
+        catch (InvalidDataException ex)
+        {
+            throw new InvalidDataException($"Invalid value for parameter {type.Name}: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Invalid value for parameter {type.Name}", ex);
         }
     }
 

@@ -355,7 +355,7 @@ public class T2IParamInput
         };
         if (param.SharpType == typeof(int))
         {
-            obj = (int)(long)obj; // WTF. Yes this is needed. No I can't explain why. Ternaries are broken maybe?
+            obj = unchecked((int)(long)obj); // WTF. Yes this double-cast is needed. No I can't explain why. Ternaries are broken maybe?
         }
         if (param.SharpType == typeof(float))
         {
