@@ -390,7 +390,7 @@ public class WorkflowGenerator
                     n["inputs"] = new JObject()
                     {
                         ["model"] = g.FinalModel,
-                        ["keep_loaded"] = "enable" // TODO: Optional? Probably harmful to VRAM. It takes really long to load when disabled though.
+                        ["keep_loaded"] = "disable" // TODO: Optional? On high-end cards it's faster to keep it loaded, on low end cards it can run out of VRAM
                     };
                 });
                 g.FinalModel = new() { $"{aitLoad}", 0 };
