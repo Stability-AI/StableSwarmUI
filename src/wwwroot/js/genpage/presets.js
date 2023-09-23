@@ -206,6 +206,11 @@ function applyOnePreset(preset) {
                 val = val.replace("{value}", elem.value);
             }
             setDirectParamValue(param, val);
+            if (param.group && param.group.toggles) {
+                let toggler = document.getElementById(`input_group_content_${param.group.id}_toggle`);
+                toggler.checked = true;
+                doToggleEnable(toggler.id);
+            }
         }
     }
 }
