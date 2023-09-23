@@ -365,6 +365,26 @@ public class WorkflowGenerator
             }
         }, -6);
         #endregion
+        #region FreeU
+        AddStep(g =>
+        {
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && g.UserInput.TryGet(T2IParamTypes.FreeUBlock1, out double block1))
+            {
+                string freeU = g.CreateNode("FreeU", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["model"] = g.FinalModel,
+                        ["b1"] = block1,
+                        ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
+                        ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
+                        ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
+                    };
+                });
+                g.FinalModel = new() { $"{freeU}", 0 };
+            }
+        }, -5.1);
+        #endregion
         #region Sampler
         AddStep(g =>
         {

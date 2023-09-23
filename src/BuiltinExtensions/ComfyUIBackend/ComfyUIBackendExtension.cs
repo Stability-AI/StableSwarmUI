@@ -30,7 +30,8 @@ public class ComfyUIBackendExtension : Extension
     {
         ["SwarmLoadImageB64"] = "comfy_loadimage_b64",
         ["SwarmSaveImageWS"] = "comfy_saveimage_ws",
-        ["SwarmKSampler"] = "variation_seed"
+        ["SwarmKSampler"] = "variation_seed",
+        ["FreeU"] = "freeu"
     };
 
     public override void OnPreInit()
