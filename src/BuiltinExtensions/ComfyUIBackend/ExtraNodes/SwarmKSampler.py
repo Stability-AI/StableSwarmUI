@@ -80,12 +80,9 @@ class SwarmKSampler:
 
         pbar = comfy.utils.ProgressBar(steps)
         def callback(step, x0, x, total_steps):
-            preview_img = None
+            pbar.update_absolute(step + 1, total_steps, None)
             if previewer:
-                preview_img = previewer.decode_latent_to_preview_image("JPEG", x0)
-            pbar.update_absolute(step + 1, total_steps, preview_img)
-            if previewer and x0.shape[0] > 1:
-                for i in range(1, x0.shape[0]):
+                for i in range(x0.shape[0]):
                     preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[i:i+1])
                     swarm_send_extra_preview(i, preview_img[1])
 
