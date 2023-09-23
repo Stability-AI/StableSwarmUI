@@ -258,10 +258,6 @@ function comfyBuildParams(callback) {
                 let type, values = null, min = -9999999999, max = 9999999999, view_type = 'normal', step = 1;
                 if (typeof val == 'number') {
                     let asSeed = false;
-                    if (inputId == 'batch_size') {
-                        node.inputs[inputId] = 1;
-                        return inputIdDirect;
-                    }
                     if (['seed', 'noise_seed'].includes(inputId)) {
                         type = 'integer';
                         view_type = 'seed';
