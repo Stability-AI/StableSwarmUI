@@ -77,6 +77,7 @@ public enum ParamViewType
 /// <param name="IgnoreIf">Ignore this parameter if the value is equal to this.</param>
 /// <param name="ViewType">How to display a number input.</param>
 /// <param name="HideFromMetadata">Whether to hide this parameter from image metadata.</param>
+/// <param name="MetadataFormat">Optional function to reformat value for display in metadata.</param>
 /// <param name="AlwaysRetain">If true, the parameter will be retained when otherwise it would be removed (for example, by comfy workflow usage).</param>
 /// <param name="Type">The type of the type - text vs integer vs etc (will be set when registering).</param>
 /// <param name="DoNotSave">Can be set to forbid tracking/saving of a param value.</param>
@@ -88,7 +89,8 @@ public enum ParamViewType
 public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMax = 0,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null, string IgnoreIf = null,
-    ParamViewType ViewType = ParamViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, string Subtype = null, string ID = null, Type SharpType = null)
+    ParamViewType ViewType = ParamViewType.SMALL, bool HideFromMetadata = false, Func<string, string> MetadataFormat = null, bool AlwaysRetain = false,
+    T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, string Subtype = null, string ID = null, Type SharpType = null)
 {
     public JObject ToNet(Session session)
     {

@@ -317,13 +317,19 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         string workflow = null;
         if (user_input.TryGet(ComfyUIBackendExtension.CustomWorkflowParam, out string customWorkflowName))
         {
-            string path = Utilities.StrictFilenameClean(customWorkflowName);
-            path = $"{ComfyUIBackendExtension.Folder}/CustomWorkflows/{path}.json";
-            if (!File.Exists(path))
+            if (customWorkflowName.StartsWith("PARSED%"))
             {
-                throw new InvalidDataException("Unrecognized ComfyUI Custom Workflow name.");
+                workflow = customWorkflowName["PARSED%".Length..].After("%");
             }
-            workflow = Encoding.UTF8.GetString(File.ReadAllBytes(path)).ParseToJson()["prompt"].ToString();
+            else
+            {
+                JObject flowObj = ComfyUIBackendExtension.ReadCustomWorkflow(customWorkflowName);
+                if (flowObj.ContainsKey("error"))
+                {
+                    throw new InvalidDataException("Unrecognized ComfyUI Custom Workflow name.");
+                }
+                workflow = flowObj["prompt"].ToString();
+            }
         }
         else if (user_input.TryGetRaw(ComfyUIBackendExtension.FakeRawInputType, out object workflowRaw))
         {

@@ -130,11 +130,19 @@ public class T2IParamInput
     public JObject GenMetadataObject()
     {
         JObject output = new();
-        foreach ((string key, object val) in ValuesInput.Union(ExtraMeta))
+        foreach ((string key, object origVal) in ValuesInput.Union(ExtraMeta))
         {
-            if (T2IParamTypes.TryGetType(key, out T2IParamType type, this) && type.HideFromMetadata)
+            object val = origVal;
+            if (T2IParamTypes.TryGetType(key, out T2IParamType type, this))
             {
-                continue;
+                if (type.HideFromMetadata)
+                {
+                    continue;
+                }
+                if (type.MetadataFormat is not null)
+                {
+                    val = type.MetadataFormat($"{val}");
+                }
             }
             if (val is Image)
             {

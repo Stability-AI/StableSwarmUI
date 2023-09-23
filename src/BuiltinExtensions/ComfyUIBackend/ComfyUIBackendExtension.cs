@@ -201,7 +201,9 @@ public class ComfyUIBackendExtension : Extension
             ));
         CustomWorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Custom Workflow", "What custom workflow to use in ComfyUI (built in the Comfy Workflow Editor tab)",
             "", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup, IsAdvanced: true,
-            GetValues: (_) => CustomWorkflows.Keys.Order().ToList()
+            GetValues: (_) => CustomWorkflows.Keys.Order().ToList(),
+            Clean: ((_, val) => CustomWorkflows.ContainsKey(val) ? $"PARSED%{val}%{ReadCustomWorkflow(val)["prompt"]}" : val),
+            MetadataFormat: v => v.StartsWith("PARSED%") ? v.After("%").Before("%") : v
             ));
         SamplerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Sampler", "Sampler type (for ComfyUI)",
             "euler", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup,
@@ -243,8 +245,8 @@ public class ComfyUIBackendExtension : Extension
         return new JObject() { ["success"] = true };
     }
 
-    /// <summary>API route to read a comfy workflow object from persistent file.</summary>
-    public async Task<JObject> ComfyReadWorkflow(string name)
+    /// <summary>Method to directly read a custom workflow file.</summary>
+    public static JObject ReadCustomWorkflow(string name)
     {
         string path = Utilities.StrictFilenameClean(name);
         path = $"{Folder}/CustomWorkflows/{path}.json";
@@ -253,8 +255,18 @@ public class ComfyUIBackendExtension : Extension
             return new JObject() { ["error"] = "Unknown custom workflow name." };
         }
         string data = Encoding.UTF8.GetString(File.ReadAllBytes(path));
-        JObject parsed = data.ParseToJson();
-        return new JObject() { ["result"] = parsed };
+        return data.ParseToJson();
+    }
+
+    /// <summary>API route to read a comfy workflow object from persistent file.</summary>
+    public async Task<JObject> ComfyReadWorkflow(string name)
+    {
+        JObject val = ReadCustomWorkflow(name);
+        if (val.ContainsKey("error"))
+        {
+            return val;
+        }
+        return new JObject() { ["result"] = val };
     }
 
     /// <summary>API route to read a list of available Comfy custom workflows.</summary>
