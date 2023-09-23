@@ -142,7 +142,14 @@ public partial class GridGenCore
         {
             RawID = id;
             ID = CleanID(id);
-            Title = RawID;
+            if (T2IParamTypes.TryGetType(RawID, out T2IParamType type, grid.InitialParams))
+            {
+                Title = type.Name;
+            }
+            else
+            {
+                Title = RawID;
+            }
             bool isSplitByDoublePipe = listStr.Contains("||");
             List<string> valuesList = listStr.Split(isSplitByDoublePipe ? "||" : ",").ToList();
             ModeName = T2IParamTypes.CleanNameGeneric(id);
