@@ -122,7 +122,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             addedArgs += $" --extra-model-paths-config {pathRaw}";
             if (settings.EnablePreviews)
             {
-                addedArgs += " --preview-method auto";
+                addedArgs += " --preview-method latent2rgb";
             }
         }
         if (!settings.StartScript.EndsWith("main.py") && !string.IsNullOrWhiteSpace(settings.StartScript))
