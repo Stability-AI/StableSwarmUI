@@ -101,7 +101,7 @@ function save_new_preset() {
         }
         let elem = getRequiredElementById(`preset_input_${type.id}`);
         if (type.type == "boolean") {
-            data[type.id] = elem.checked;
+            data[type.id] = elem.checked ? "true" : "false";
         }
         else {
             data[type.id] = elem.value;
