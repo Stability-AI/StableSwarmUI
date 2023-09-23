@@ -176,7 +176,7 @@ public class T2IParamInput
         string val = Get(param);
         if (val is null)
         {
-            return null;
+            return "";
         }
         Random rand = new((int)Get(T2IParamTypes.Seed) + (int)Get(T2IParamTypes.VariationSeed, 0) + param.Type.Name.Length);
         string lowRef = val.ToLowerFast();
@@ -341,6 +341,11 @@ public class T2IParamInput
             string best = T2IParamTypes.GetBestInList(name.Replace('\\', '/'), handler.Models.Keys.ToList());
             return handler.Models[best];
         }
+        if (param.IgnoreIf is not null && param.IgnoreIf == val)
+        {
+            ValuesInput.Remove(param.ID);
+            return;
+        }
         object obj = param.Type switch
         {
             T2IParamDataType.INTEGER => param.SharpType == typeof(long) ? long.Parse(val) : int.Parse(val),
@@ -370,6 +375,11 @@ public class T2IParamInput
         if (param.Type.Clean is not null)
         {
             Set(param.Type, val.ToString());
+            return;
+        }
+        if (param.Type.IgnoreIf is not null && param.Type.IgnoreIf == $"{val}")
+        {
+            ValuesInput.Remove(param.Type.ID);
             return;
         }
         ValuesInput[param.Type.ID] = val;

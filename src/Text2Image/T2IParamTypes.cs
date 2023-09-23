@@ -74,6 +74,7 @@ public enum ParamViewType
 /// <param name="Toggleable">If true, the setting's presence can be toggled on/off.</param>
 /// <param name="OrderPriority">Value to help sort parameter types appropriately.</param>
 /// <param name="Group">Optional grouping info.</param>
+/// <param name="IgnoreIf">Ignore this parameter if the value is equal to this.</param>
 /// <param name="ViewType">How to display a number input.</param>
 /// <param name="HideFromMetadata">Whether to hide this parameter from image metadata.</param>
 /// <param name="AlwaysRetain">If true, the parameter will be retained when otherwise it would be removed (for example, by comfy workflow usage).</param>
@@ -86,7 +87,7 @@ public enum ParamViewType
 /// 
 public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMax = 0,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
-    bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null,
+    bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null, string IgnoreIf = null,
     ParamViewType ViewType = ParamViewType.SMALL, bool HideFromMetadata = false, bool AlwaysRetain = false, T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, string Subtype = null, string ID = null, Type SharpType = null)
 {
     public JObject ToNet(Session session)
@@ -224,7 +225,7 @@ public class T2IParamTypes
             "", Clean: ApplyStringEdit, Examples: new[] { "a photo of a cat", "a cartoonish drawing of an astronaut" }, OrderPriority: -100, VisibleNormally: false, ViewType: ParamViewType.PROMPT
             ));
         PromptImages = Register<List<Image>>(new("Prompt Images", "Images to include with the prompt, for eg ReVision or UnCLIP.",
-            "", OrderPriority: -95, Toggleable: true, VisibleNormally: false, IsAdvanced: true, ImageShouldResize: false, HideFromMetadata: true // Has special internal handling
+            "", IgnoreIf: "", OrderPriority: -95, Toggleable: true, VisibleNormally: false, IsAdvanced: true, ImageShouldResize: false, HideFromMetadata: true // Has special internal handling
             ));
         ReVisionStrength = Register<double>(new("ReVision Strength", "How strong to apply ReVision image inputs.",
             "1", OrderPriority: -94, Min: 0, Max: 10, Step: 0.1, Toggleable: true, ViewType: ParamViewType.SLIDER
@@ -234,11 +235,11 @@ public class T2IParamTypes
             "", Subtype: "ClipVision", IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons
             ));
         NegativePrompt = Register<string>(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.\nTell the AI things you don't want to see.",
-            "", Clean: ApplyStringEdit, Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90, ViewType: ParamViewType.PROMPT
+            "", IgnoreIf: "", Clean: ApplyStringEdit, Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90, ViewType: ParamViewType.PROMPT
             ));
         GroupCore = new("Core Parameters", Toggles: false, Open: true, OrderPriority: -50);
         Images = Register<int>(new("Images", "How many images to generate at once.",
-            "1", Min: 1, Max: 10000, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: GroupCore
+            "1", IgnoreIf: "1", Min: 1, Max: 10000, Step: 1, Examples: new[] { "1", "4" }, OrderPriority: -50, Group: GroupCore
             ));
         Seed = Register<long>(new("Seed", "Image seed.\n-1 = random.\nDifferent seeds produce different results for the same prompt.",
             "-1", Min: -1, Max: long.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -30, ViewType: ParamViewType.SEED, Group: GroupCore
@@ -255,11 +256,11 @@ public class T2IParamTypes
             "-1", Min: -1, Max: uint.MaxValue, Step: 1, Examples: new[] { "1", "2", "...", "10" }, OrderPriority: -17, ViewType: ParamViewType.SEED, Group: GroupVariation, FeatureFlag: "variation_seed"
             ));
         VariationSeedStrength = Register<double>(new("Variation Seed Strength", "How strongly to apply the variation seed.\n0 = don't use, 1 = replace the base seed entirely. 0.5 is a good value.",
-            "0", Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, ViewType: ParamViewType.SLIDER, Group: GroupVariation, FeatureFlag: "variation_seed"
+            "0", IgnoreIf: "0", Min: 0, Max: 1, Step: 0.05, Examples: new[] { "0", "0.25", "0.5", "0.75" }, OrderPriority: -17, ViewType: ParamViewType.SLIDER, Group: GroupVariation, FeatureFlag: "variation_seed"
             ));
         GroupResolution = new("Resolution", Toggles: false, Open: false, OrderPriority: -11);
         AspectRatio = Register<string>(new("Aspect Ratio", "Image aspect ratio. Some models can stretch better than others.",
-            "1:1", GetValues: (_) => new() { "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom" }, OrderPriority: -11, Group: GroupResolution
+            "1:1", IgnoreIf: "Custom", GetValues: (_) => new() { "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom" }, OrderPriority: -11, Group: GroupResolution
             ));
         Width = Register<int>(new("Width", "Image width, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
             "512", Min: 128, Max: 4096, Step: 64, Examples: new[] { "512", "768", "1024" }, OrderPriority: -10, ViewType: ParamViewType.POT_SLIDER, Group: GroupResolution
@@ -296,7 +297,7 @@ public class T2IParamTypes
             "StepSwap", GetValues: (_) => new() { "StepSwap", "PostApply" }, OrderPriority: -3, Group: GroupRefiners, FeatureFlag: "refiners"
             ));
         RefinerUpscale = Register<double>(new("Refiner Upscale", "Optional upscale of the image between the base and refiner stage.\nSometimes referred to as 'high-res fix'.\nSetting to '1' disables the upscale.",
-            "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", Toggleable: true
+            "1", IgnoreIf: "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
             ));
         GroupControlNet = new("ControlNet", Toggles: true, Open: false, OrderPriority: -1);
         ControlNetImage = Register<Image>(new("ControlNet Image Input", "The image to use as the input to ControlNet guidance.\nThis image will be preprocessed by the chosen preprocessor.\nIf ControlNet is enabled, but this input is not, Init Image will be used instead.",
@@ -309,31 +310,32 @@ public class T2IParamTypes
             "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, ViewType: ParamViewType.SLIDER, Group: GroupControlNet
             ));
         ControlNetPreviewOnly = Register<bool>(new("ControlNet Preview Only", "(For API usage) If enabled, requests preview output from ControlNet and no image generation at all.",
-            "false", FeatureFlag: "controlnet", VisibleNormally: false));
+            "false", IgnoreIf: "false", FeatureFlag: "controlnet", VisibleNormally: false
+            ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion"
             ));
         VAE = Register<T2IModel>(new("VAE", "The VAE (Variational Auto-Encoder) controls the translation between images and latent space.\nIf your images look faded out, or glitched, you may have the wrong VAE.\nAll models have a VAE baked in by default, this option lets you swap to a different one if you want to.",
-            "", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE", Group: GroupAdvancedModelAddons
+            "", IgnoreIf: "", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE", Group: GroupAdvancedModelAddons
             ));
         Loras = Register<List<string>>(new("LoRAs", "LoRAs (Low-Rank-Adaptation Models) are a way to customize the content of a model without totally replacing it.\nYou can enable one or several LoRAs over top of one model.",
-            "", IsAdvanced: true, Toggleable: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelsFor(session).Select(m => m.Name).Order().ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false
+            "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelsFor(session).Select(m => m.Name).Order().ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false
             ));
         LoraWeights = Register<List<string>>(new("LoRA Weights", "Weight values for the LoRA model list.",
-            "", IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons, VisibleNormally: false
+            "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons, VisibleNormally: false
             ));
         AltResolutionHeightMult = Register<double>(new("Alt Resolution Height Multiplier", "When enabled, the normal width parameter is used, and this value is multiplied by the width to derive the image height.",
             "1", Min: 0, Max: 10, Step: 0.1, Examples: new[] { "0.5", "1", "1.5" }, IsAdvanced: true, Toggleable: true, ViewType: ParamViewType.SLIDER
             ));
         BatchSize = Register<int>(new("Batch Size", "Batch size - generates more images at once on a single GPU.\nThis increases VRAM usage.\nMay in some cases increase overall speed by a small amount (runs slower to get the images, but slightly faster per-image).",
-            "1", Toggleable: true, Min: 1, Max: 100, Step: 1, IsAdvanced: true, ViewType: ParamViewType.SLIDER, ViewMax: 10
+            "1", IgnoreIf: "1", Min: 1, Max: 100, Step: 1, IsAdvanced: true, ViewType: ParamViewType.SLIDER, ViewMax: 10
             ));
         GroupSwarmInternal = new("Swarm Internal", Open: false, OrderPriority: 0, IsAdvanced: true);
         DoNotSave = Register<bool>(new("Do Not Save", "If checked, tells the server to not save this image.\nUseful for quick test generations, or 'generate forever' usage.",
-            "false", Toggleable: true, IsAdvanced: true, Group: GroupSwarmInternal
+            "false", IgnoreIf: "false", IsAdvanced: true, Group: GroupSwarmInternal
             ));
         BackendType = Register<string>(new("[Internal] Backend Type", "Which StableSwarmUI backend type should be used for this request.",
-            "Any", GetValues: (_) => Program.Backends.BackendTypes.Keys.ToList(), IsAdvanced: true, Permission: "param_backend_type", Toggleable: true, Group: GroupSwarmInternal
+            "Any", IgnoreIf: "Any", GetValues: (_) => new string[] { "Any" }.Concat(Program.Backends.BackendTypes.Keys).ToList(), IsAdvanced: true, Permission: "param_backend_type", Group: GroupSwarmInternal
             ));
         ExactBackendID = Register<int>(new("Exact Backend ID", "Manually force a specific exact backend (by ID #) to be used for this generation.",
             "0", Toggleable: true, IsAdvanced: true, ViewType: ParamViewType.BIG, Permission: "param_backend_id", Group: GroupSwarmInternal
