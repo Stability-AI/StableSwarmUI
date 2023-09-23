@@ -39,14 +39,17 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         if (RawObjectInfo.TryGetValue("CheckpointLoaderSimple", out JToken modelLoader))
         {
             string[] models = modelLoader["input"]["required"]["ckpt_name"][0].Select(t => (string)t).ToArray();
-            if (models.Any(m => m.Contains('/')))
+            string[] forwardSlash = models.Where(m => m.Contains('/')).ToArray();
+            string[] backSlash = models.Where(m => m.Contains('\\')).ToArray();
+            if (forwardSlash.Any())
             {
                 ModelFolderFormat = "/";
             }
-            else if (models.Any(m => m.Contains('\\')))
+            if (backSlash.Any())
             {
                 ModelFolderFormat = "\\";
             }
+            Logs.Debug($"Comfy model folder format: {ModelFolderFormat} ... forward slash: {forwardSlash.Length} ({forwardSlash.Take(3).JoinString(", ")}), back slash: {backSlash.Length} ({backSlash.Take(3).JoinString(", ")})");
         }
         ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
     }
