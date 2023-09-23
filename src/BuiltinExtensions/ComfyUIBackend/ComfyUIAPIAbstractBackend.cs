@@ -13,6 +13,7 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Web;
 using Newtonsoft.Json;
+using System.Buffers.Binary;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -121,7 +122,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             throw;
         }
         int nodesDone = 0;
-        float curPercent;
+        float curPercent = 0;
         void yieldProgressUpdate()
         {
             takeOutput(new JObject()
@@ -198,8 +199,16 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     }
                     else
                     {
-                        long format = BitConverter.ToInt64(output, 0);
+                        int eventId = BinaryPrimitives.ReverseEndianness(BitConverter.ToInt32(output, 0));
+                        int format = BinaryPrimitives.ReverseEndianness(BitConverter.ToInt32(output, 4));
+                        int index = 0;
+                        if (format > 2)
+                        {
+                            index = (format >> 4) & 0xffff;
+                            format &= 7;
+                        }
                         string formatLabel = format switch { 1 => "jpeg", 2 => "png", _ => "jpeg" };
+                        Logs.Verbose($"ComfyUI Websocket sent: {output.Length} bytes of image data as event {eventId} in format {format} ({formatLabel}) to index {index}");
                         if (isReceivingOutputs)
                         {
                             takeOutput(new Image(output[8..]));
@@ -208,8 +217,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                         {
                             takeOutput(new JObject()
                             {
-                                ["batch_index"] = batchId,
-                                ["preview"] = $"data:image/{formatLabel};base64," + Convert.ToBase64String(output, 8, output.Length - 8)
+                                ["batch_index"] = index == 0 || !int.TryParse(batchId, out int batchInt) ? batchId : batchInt + index,
+                                ["preview"] = $"data:image/{formatLabel};base64," + Convert.ToBase64String(output, 8, output.Length - 8),
+                                ["overall_percent"] = nodesDone / (float)expectedNodes,
+                                ["current_percent"] = curPercent
                             });
                         }
                     }

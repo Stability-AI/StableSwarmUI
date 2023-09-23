@@ -363,25 +363,28 @@ function doGenerate(input_overrides = {}) {
                     batch_div.prepend(progress_bars);
                 }
                 let imgHolder = images[data.gen_progress.batch_index];
-                imgHolder.overall_percent = data.gen_progress.overall_percent;
-                imgHolder.current_percent = data.gen_progress.current_percent;
-                imgHolder.div.querySelector('.image-preview-progress-overall').style.width = `${imgHolder.overall_percent * 100}%`;
-                imgHolder.div.querySelector('.image-preview-progress-current').style.width = `${imgHolder.current_percent * 100}%`;
-                let curImgElem = document.getElementById('current_image_img');
-                if (data.gen_progress.preview && (!imgHolder.image || data.gen_progress.preview != imgHolder.image)) {
-                    if (curImgElem && curImgElem.dataset.batch_id == data.gen_progress.batch_index) {
-                        curImgElem.onload = () => {
-                            curImgElem.width = curImgElem.naturalWidth * 8;
-                            curImgElem.height = curImgElem.naturalHeight * 8;
-                        };
-                        curImgElem.src = data.gen_progress.preview;
-                        let metadata = getRequiredElementById('current_image').querySelector('.current-image-data');
-                        if (metadata) {
-                            metadata.remove();
+                let overall = imgHolder.div.querySelector('.image-preview-progress-overall');
+                if (overall && data.gen_progress.overall_percent) {
+                    imgHolder.overall_percent = data.gen_progress.overall_percent;
+                    imgHolder.current_percent = data.gen_progress.current_percent;
+                    overall.style.width = `${imgHolder.overall_percent * 100}%`;
+                    imgHolder.div.querySelector('.image-preview-progress-current').style.width = `${imgHolder.current_percent * 100}%`;
+                    let curImgElem = document.getElementById('current_image_img');
+                    if (data.gen_progress.preview && (!imgHolder.image || data.gen_progress.preview != imgHolder.image)) {
+                        if (curImgElem && curImgElem.dataset.batch_id == data.gen_progress.batch_index) {
+                            curImgElem.onload = () => {
+                                curImgElem.width = curImgElem.naturalWidth * 8;
+                                curImgElem.height = curImgElem.naturalHeight * 8;
+                            };
+                            curImgElem.src = data.gen_progress.preview;
+                            let metadata = getRequiredElementById('current_image').querySelector('.current-image-data');
+                            if (metadata) {
+                                metadata.remove();
+                            }
                         }
+                        imgHolder.div.querySelector('img').src = data.gen_progress.preview;
+                        imgHolder.image = data.gen_progress.preview;
                     }
-                    imgHolder.div.querySelector('img').src = data.gen_progress.preview;
-                    imgHolder.image = data.gen_progress.preview;
                 }
             }
             if (data.discard_indices) {

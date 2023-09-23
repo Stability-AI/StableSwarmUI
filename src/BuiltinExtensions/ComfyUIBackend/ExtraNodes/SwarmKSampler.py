@@ -1,6 +1,9 @@
 import torch
+import struct
+from io import BytesIO
 import latent_preview
 import comfy
+from server import PromptServer
 
 def slerp(val, low, high):
     low_norm = low / torch.norm(low, dim=1, keepdim=True)
@@ -28,6 +31,16 @@ def swarm_fixed_noise(seed, latent_image, var_seed, var_seed_strength):
             noise = swarm_partial_noise(seed + i, latent_image[i])
         noises.append(noise)
     return torch.stack(noises, axis=0)
+
+def swarm_send_extra_preview(id, image):
+    server = PromptServer.instance
+    bytesIO = BytesIO()
+    num_data = 1 + (id * 16)
+    header = struct.pack(">I", num_data)
+    bytesIO.write(header)
+    image.save(bytesIO, format="JPEG", quality=95, compress_level=4)
+    preview_bytes = bytesIO.getvalue()
+    server.send_sync(1, preview_bytes, sid=server.client_id)
 
 class SwarmKSampler:
     @classmethod
@@ -67,10 +80,14 @@ class SwarmKSampler:
 
         pbar = comfy.utils.ProgressBar(steps)
         def callback(step, x0, x, total_steps):
-            preview_bytes = None
+            preview_img = None
             if previewer:
-                preview_bytes = previewer.decode_latent_to_preview_image("JPEG", x0)
-            pbar.update_absolute(step + 1, total_steps, preview_bytes)
+                preview_img = previewer.decode_latent_to_preview_image("JPEG", x0)
+            pbar.update_absolute(step + 1, total_steps, preview_img)
+            if previewer and x0.shape[0] > 1:
+                for i in range(1, x0.shape[0]):
+                    preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[i:i+1])
+                    swarm_send_extra_preview(i, preview_img[1])
 
         samples = comfy.sample.sample(model, noise, steps, cfg, sampler_name, scheduler, positive, negative, latent_samples,
                                     denoise=1.0, disable_noise=False, start_step=start_at_step, last_step=end_at_step,
