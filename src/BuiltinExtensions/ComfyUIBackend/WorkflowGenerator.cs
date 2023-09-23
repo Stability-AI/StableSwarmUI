@@ -390,7 +390,7 @@ public class WorkflowGenerator
                     n["inputs"] = new JObject()
                     {
                         ["model"] = g.FinalModel,
-                        ["keep_loaded"] = "disable" // TODO: Optional? On high-end cards it's faster to keep it loaded, on low end cards it can run out of VRAM
+                        ["keep_loaded"] = "disable"
                     };
                 });
                 g.FinalModel = new() { $"{aitLoad}", 0 };
@@ -486,6 +486,18 @@ public class WorkflowGenerator
                         };
                     }, "22");
                     negPrompt = new() { "22", 0 };
+                }
+                if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
+                {
+                    string aitLoad = g.CreateNode("AITemplateLoader", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["model"] = refinedModel,
+                            ["keep_loaded"] = "disable"
+                        };
+                    });
+                    refinedModel = new() { $"{aitLoad}", 0 };
                 }
                 bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale > 1;
                 // TODO: Better same-VAE check
