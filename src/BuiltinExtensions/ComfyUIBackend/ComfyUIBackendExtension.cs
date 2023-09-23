@@ -31,7 +31,8 @@ public class ComfyUIBackendExtension : Extension
         ["SwarmLoadImageB64"] = "comfy_loadimage_b64",
         ["SwarmSaveImageWS"] = "comfy_saveimage_ws",
         ["SwarmKSampler"] = "variation_seed",
-        ["FreeU"] = "freeu"
+        ["FreeU"] = "freeu",
+        ["AITemplateLoader"] = "aitemplate"
     };
 
     public override void OnPreInit()
@@ -181,6 +182,8 @@ public class ComfyUIBackendExtension : Extension
 
     public static T2IRegisteredParam<string> WorkflowParam, CustomWorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod, ControlNetPreprocessorParam;
 
+    public static T2IRegisteredParam<bool> AITemplateParam;
+
     public static List<string> UpscalerModels = new() { "latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic" },
         Samplers = new() { "euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2" },
         Schedulers = new() { "normal", "karras", "exponential", "simple", "ddim_uniform" };
@@ -213,6 +216,9 @@ public class ComfyUIBackendExtension : Extension
         SchedulerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Scheduler", "Scheduler type (for ComfyUI)",
             "normal", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup,
             GetValues: (_) => Schedulers
+            ));
+        AITemplateParam = T2IParamTypes.Register<bool>(new("Enable AITemplate", "If checked, enables AITemplate for ComfyUI generations (UNet only). Only compatible with some GPUs.",
+            "false", IgnoreIf: "false", FeatureFlag: "aitemplate", Group: ComfyGroup
             ));
         RefinerUpscaleMethod = T2IParamTypes.Register<string>(new("Refiner Upscale Method", "How to upscale the image, if upscaling is used.",
             "pixel-bilinear", Group: T2IParamTypes.GroupRefiners, OrderPriority: 1, FeatureFlag: "comfyui",

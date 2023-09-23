@@ -383,7 +383,19 @@ public class WorkflowGenerator
                 });
                 g.FinalModel = new() { $"{freeU}", 0 };
             }
-        }, -5.1);
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
+            {
+                string aitLoad = g.CreateNode("AITemplateLoader", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["model"] = g.FinalModel,
+                        ["keep_loaded"] = "enable" // TODO: Optional? Probably harmful to VRAM. It takes really long to load when disabled though.
+                    };
+                });
+                g.FinalModel = new() { $"{aitLoad}", 0 };
+            }
+        }, -5.3);
         #endregion
         #region Sampler
         AddStep(g =>
