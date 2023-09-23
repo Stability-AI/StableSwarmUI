@@ -132,7 +132,12 @@ function genInputs(delay_final = false) {
                     }
                 }
                 if (param.group) {
+                    let infoButton = '';
                     let groupId = param.group.id;
+                    if (param.group.description) {
+                        html += `<div class="sui-popover" id="popover_group_${groupId}"><b>${escapeHtml(param.group.name)}</b>:<br>&emsp;${escapeHtml(param.group.description)}</div>`;
+                        infoButton = `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('group_${groupId}')">?</span>`;
+                    }
                     let shouldOpen = getCookie(`group_open_auto-group-${groupId}`) || (param.group.open ? 'open' : 'closed');
                     if (shouldOpen == 'closed') {
                         groupsClose.push(groupId);
@@ -144,7 +149,7 @@ function genInputs(delay_final = false) {
                         }
                     }
                     let toggler = getToggleHtml(param.group.toggles, `input_group_content_${groupId}`, escapeHtml(param.group.name), ' group-toggler-switch', 'doToggleGroup');
-                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header"><span onclick="toggleGroupOpen(this)"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${escapeHtml(param.group.name)}</span></span>${toggler}</span><div class="input-group-content" id="input_group_content_${groupId}">`;
+                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header"><span onclick="toggleGroupOpen(this)"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${escapeHtml(param.group.name)}</span></span>${toggler}${infoButton}</span><div class="input-group-content" id="input_group_content_${groupId}">`;
                     if (presetArea) {
                         presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header"><span class="auto-symbol">&#x2B9F;</span>${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
                     }
