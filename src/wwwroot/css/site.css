@@ -368,6 +368,7 @@ textarea, input, select {
 }
 .input-group-content {
     max-width: calc(100% - 6px);
+    padding-left: 0.5rem;
 }
 .input-group-header {
     position: relative;
