@@ -167,22 +167,21 @@ function comfyBuildParams(callback) {
             }
         }
         let hasSaves = false;
+        let previewNodes = [];
         for (let nodeId of Object.keys(prompt)) {
             let node = prompt[nodeId];
             if (node.class_type == 'PreviewImage') {
-                delete prompt[nodeId];
+                previewNodes.push(nodeId);
                 continue;
             }
             if (node.class_type == 'SaveImage') {
-                if ('SwarmSaveImageWS' in comfyObjectData)
-                {
+                if ('SwarmSaveImageWS' in comfyObjectData) {
                     node.class_type = 'SwarmSaveImageWS';
                     delete node.inputs['filename_prefix'];
                 }
                 hasSaves = true;
             }
-            else if (node.class_type == 'SwarmSaveImageWS')
-            {
+            else if (node.class_type == 'SwarmSaveImageWS') {
                 hasSaves = true;
             }
             if (node.inputs) {
@@ -198,6 +197,14 @@ function comfyBuildParams(callback) {
                     }
                 }
             }
+        }
+        if (!hasSaves && previewNodes.length > 0) {
+            prompt[previewNodes[0]].class_type = 'SwarmSaveImageWS';
+            hasSaves = true;
+            previewNodes = previewNodes.slice(1);
+        }
+        for (let preview of previewNodes) {
+            delete prompt[preview];
         }
         // Special case: propagate label alterations to conditioning nodes, for ReVision workflows
         let hasFixes = true;
