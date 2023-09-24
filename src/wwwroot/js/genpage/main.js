@@ -340,7 +340,7 @@ function doGenerate(input_overrides = {}) {
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides), data => {
             if (data.image) {
                 if (!(data.batch_index in images)) {
-                    let batch_div = gotImageResult(data.image, data.metadata, `${batch_id}_${data.gen_progress.batch_index}`);
+                    let batch_div = gotImageResult(data.image, data.metadata, `${batch_id}_${data.batch_index}`);
                     images[data.batch_index] = {div: batch_div, image: data.image, metadata: data.metadata, overall_percent: 0, current_percent: 0};
                 }
                 else {
