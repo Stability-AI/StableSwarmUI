@@ -5,9 +5,11 @@ import torch, base64, io
 class SwarmLoadImageB64:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required":
-                    {"image_base64": ("STRING", {"multiline": True})},
-                }
+        return {
+            "required": {
+                "image_base64": ("STRING", {"multiline": True})
+            }
+        }
 
     CATEGORY = "StableSwarmUI"
     RETURN_TYPES = ("IMAGE",)

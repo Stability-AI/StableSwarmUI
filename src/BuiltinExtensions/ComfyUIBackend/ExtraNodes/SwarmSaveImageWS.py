@@ -6,9 +6,11 @@ import time
 class SwarmSaveImageWS:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required":
-                    {"images": ("IMAGE", ),}
-                }
+        return {
+            "required": {
+                "images": ("IMAGE", )
+            }
+        }
 
     CATEGORY = "StableSwarmUI"
     RETURN_TYPES = ()
