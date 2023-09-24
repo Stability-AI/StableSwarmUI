@@ -44,6 +44,7 @@ function comfyOnLoadCallback() {
         getJsonDirect('/ComfyBackendDirect/object_info', (_, data) => {
             comfyObjectData = data;
         });
+        comfyReconfigureQuickload();
     }
 }
 
@@ -574,6 +575,7 @@ function comfySaveWorkflowNow() {
         prompt_text = JSON.stringify(prompt_text).replaceAll("\"%%_COMFYFIXME_${", "${").replaceAll("}_ENDFIXME_%%\"", "}");
         genericRequest('ComfySaveWorkflow', { 'name': name, 'workflow': JSON.stringify(workflow), 'prompt': prompt_text, 'custom_params': params }, (data) => {
             comfyNoticeMessage("Saved!");
+            comfyReconfigureQuickload();
         });
     });
 }
@@ -586,6 +588,7 @@ function comfyLoadWorkflowNow() {
     let selector = getRequiredElementById('comfy_load_modal_selector');
     selector.innerHTML = '<option></option>';
     genericRequest('ComfyListWorkflows', {}, (data) => {
+        comfyFillQuickLoad(data.workflows);
         for (let workflow of data.workflows) {
             let option = document.createElement('option');
             option.innerText = workflow;
@@ -595,6 +598,17 @@ function comfyLoadWorkflowNow() {
     });
 }
 
+function comfyLoadByName(name) {
+    comfyNoticeMessage("Loading...");
+    genericRequest('ComfyReadWorkflow', { 'name': name }, (data) => {
+        let workflow = data.result.workflow;
+        // Note: litegraph does some dumb prototype hacks so this clone forces it to work properly
+        comfyFrame().contentWindow.app.loadGraphData(comfyFrame().contentWindow.LiteGraph.cloneObject(JSON.parse(workflow)));
+        comfyNoticeMessage("Loaded.");
+    });
+    comfyHideLoadModal();
+}
+
 /** Load button in the Load modal. */
 function comfyLoadModalLoadNow() {
     let selector = getRequiredElementById('comfy_load_modal_selector');
@@ -602,14 +616,7 @@ function comfyLoadModalLoadNow() {
     if (!selected) {
         return;
     }
-    comfyNoticeMessage("Loading...");
-    genericRequest('ComfyReadWorkflow', { 'name': selected }, (data) => {
-        let workflow = data.result.workflow;
-        // Note: litegraph does some dumb prototype hacks so this clone forces it to work properly
-        comfyFrame().contentWindow.app.loadGraphData(comfyFrame().contentWindow.LiteGraph.cloneObject(JSON.parse(workflow)));
-        comfyNoticeMessage("Loaded.");
-    });
-    comfyHideLoadModal();
+    comfyLoadByName(selected);
 }
 
 /** Delete button in the Load modal. */
@@ -634,19 +641,45 @@ function comfyHideLoadModal() {
     $('#comfy_workflow_load_modal').modal('hide');
 }
 
+/** Fills the quick-load selector with the provided values. */
+function comfyFillQuickLoad(vals) {
+    let selector = getRequiredElementById('comfy_quickload_select');
+    selector.innerHTML = '<option value="" selected>-- Quick Load --</option>';
+    for (let workflow of vals) {
+        let option = document.createElement('option');
+        option.innerText = workflow;
+        selector.appendChild(option);
+    }
+}
+
+/** Ensures the quick-load list is up-to-date. */
+function comfyReconfigureQuickload() {
+    genericRequest('ComfyListWorkflows', {}, (data) => {
+        comfyFillQuickLoad(data.workflows);
+    });
+}
+
+/** Triggered when the quick-load selector changes, to cause a load if needed. */
+function comfyQuickloadSelectChanged() {
+    let selector = getRequiredElementById('comfy_quickload_select');
+    let opt = selector.options[selector.selectedIndex].value;
+    if (!opt) {
+        return;
+    }
+    comfyLoadByName(opt);
+    selector.selectedIndex = 0;
+}
+
 /** Button to get the buttons out of the way. */
 function comfyToggleButtonsVisible() {
     let button = getRequiredElementById('comfy_buttons_closer');
-    let left = getRequiredElementById('comfy_workflow_buttons_left');
-    let right = getRequiredElementById('comfy_workflow_buttons_right');
-    if (left.style.display == 'none') {
-        left.style.display = '';
-        right.style.display = '';
+    let area = getRequiredElementById('comfy_buttons_closeable_area');
+    if (area.style.display == 'none') {
+        area.style.display = '';
         button.innerHTML = '&#x2B9D;';
     }
     else {
-        left.style.display = 'none';
-        right.style.display = 'none';
+        area.style.display = 'none';
         button.innerHTML = '&#x2B9F;';
     }
 }

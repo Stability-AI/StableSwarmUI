@@ -64,3 +64,12 @@
     background-color: var(--button-background-hover);
     color: var(--button-foreground-hover);
 }
+.comfy_quickload {
+    font-size: 80%;
+}
+.comfy_quickload select {
+    border: none;
+    padding: 0;
+    margin: 0;
+    float: right;
+}
