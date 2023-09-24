@@ -236,7 +236,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 {
                     hasInterrupted = true;
                     Logs.Debug("ComfyUI Interrupt requested");
-                    await HttpClient.PostAsync($"{Address}/interrupt", new StringContent(""), interrupt);
+                    await HttpClient.PostAsync($"{Address}/interrupt", new StringContent(""), Program.GlobalProgramCancel);
                 }
             }
             endloop:
@@ -477,8 +477,9 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         {
             await AwaitJobLive(workflow, batchId, takeOutput, user_input.InterruptToken);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logs.Verbose($"Error: {ex}");
             Logs.Debug($"Failed to process comfy workflow: {workflow} for inputs {user_input}");
             throw;
         }
