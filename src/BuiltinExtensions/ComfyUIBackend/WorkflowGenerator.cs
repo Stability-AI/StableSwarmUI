@@ -123,35 +123,7 @@ public class WorkflowGenerator
         #region Positive Prompt
         AddStep(g =>
         {
-            if (g.UserInput.TryGet(T2IParamTypes.Model, out T2IModel model) && model.ModelClass is not null && model.ModelClass.ID == "stable-diffusion-xl-v1-base")
-            {
-                g.CreateNode("CLIPTextEncodeSDXL", (_, n) =>
-                {
-                    n["inputs"] = new JObject()
-                    {
-                        ["clip"] = g.FinalClip,
-                        ["text_g"] = g.UserInput.Get(T2IParamTypes.Prompt),
-                        ["text_l"] = g.UserInput.Get(T2IParamTypes.Prompt),
-                        ["crop_w"] = 0,
-                        ["crop_h"] = 0,
-                        ["width"] = g.UserInput.Get(T2IParamTypes.Width, 1024),
-                        ["height"] = g.UserInput.GetImageHeight(),
-                        ["target_width"] = g.UserInput.Get(T2IParamTypes.Width, 1024),
-                        ["target_height"] = g.UserInput.GetImageHeight()
-                    };
-                }, "6");
-            }
-            else
-            {
-                g.CreateNode("CLIPTextEncode", (_, n) =>
-                {
-                    n["inputs"] = new JObject()
-                    {
-                        ["clip"] = g.FinalClip,
-                        ["text"] = g.UserInput.Get(T2IParamTypes.Prompt)
-                    };
-                }, "6");
-            }
+            g.FinalPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model));
         }, -8);
         #endregion
         #region ReVision/UnCLIP
@@ -253,14 +225,7 @@ public class WorkflowGenerator
         #region Negative Prompt
         AddStep(g =>
         {
-            g.CreateNode("CLIPTextEncode", (_, n) =>
-            {
-                n["inputs"] = new JObject()
-                {
-                    ["clip"] = g.FinalClip,
-                    ["text"] = g.UserInput.Get(T2IParamTypes.NegativePrompt)
-                };
-            }, "7");
+            g.FinalNegativePrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model));
         }, -7);
         #endregion
         #region ControlNet
@@ -728,5 +693,191 @@ public class WorkflowGenerator
             step.Action(this);
         }
         return Workflow;
+    }
+
+    /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input.</summary>
+    public JArray CreateConditioningDirect(string prompt, JArray clip, T2IModel model)
+    {
+        string node;
+        if (model is not null && model.ModelClass is not null && model.ModelClass.ID == "stable-diffusion-xl-v1-base")
+        {
+            node = CreateNode("CLIPTextEncodeSDXL", (_, n) =>
+            {
+                n["inputs"] = new JObject()
+                {
+                    ["clip"] = clip,
+                    ["text_g"] = prompt,
+                    ["text_l"] = prompt,
+                    ["crop_w"] = 0,
+                    ["crop_h"] = 0,
+                    ["width"] = UserInput.Get(T2IParamTypes.Width, 1024),
+                    ["height"] = UserInput.GetImageHeight(),
+                    ["target_width"] = UserInput.Get(T2IParamTypes.Width, 1024),
+                    ["target_height"] = UserInput.GetImageHeight()
+                };
+            });
+        }
+        else
+        {
+            node = CreateNode("CLIPTextEncode", (_, n) =>
+            {
+                n["inputs"] = new JObject()
+                {
+                    ["clip"] = clip,
+                    ["text"] = prompt
+                };
+            }, "6");
+        }
+        return new() { node, 0 };
+    }
+
+    public record struct RegionHelper(JArray PartCond, JArray Mask);
+
+    /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input, applying prompt-given conditioning modifiers as relevant.</summary>
+    public JArray CreateConditioning(string prompt, JArray clip, T2IModel model)
+    {
+        PromptRegion regionalizer = new(prompt);
+        JArray globalCond = CreateConditioningDirect(regionalizer.GlobalPrompt, clip, model);
+        if (regionalizer.Parts.IsEmpty())
+        {
+            return globalCond;
+        }
+        double globalStrength = UserInput.Get(T2IParamTypes.GlobalRegionFactor, 0.5);
+        List<RegionHelper> regions = new();
+        JArray lastMergedMask = null;
+        foreach (PromptRegion.Part part in regionalizer.Parts)
+        {
+            JArray partCond = CreateConditioningDirect(part.Prompt, clip, model);
+            string regionNode = CreateNode("SwarmSquareMaskFromPercent", (_, n) =>
+            {
+                n["inputs"] = new JObject()
+                {
+                    ["x"] = part.X,
+                    ["y"] = part.Y,
+                    ["width"] = part.Width,
+                    ["height"] = part.Height,
+                    ["strength"] = part.Strength
+                };
+            });
+            RegionHelper region = new(partCond, new() { regionNode, 0 });
+            regions.Add(region);
+            if (lastMergedMask is null)
+            {
+                lastMergedMask = region.Mask;
+            }
+            else
+            {
+                string overlapped = CreateNode("SwarmOverMergeMasksForOverlapFix", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["mask_a"] = lastMergedMask,
+                        ["mask_b"] = region.Mask
+                    };
+                });
+                lastMergedMask = new() { overlapped, 0 };
+            }
+        }
+        string globalMask = CreateNode("SwarmSquareMaskFromPercent", (_, n) =>
+        {
+            n["inputs"] = new JObject()
+            {
+                ["x"] = 0,
+                ["y"] = 0,
+                ["width"] = 1,
+                ["height"] = 1,
+                ["strength"] = 1
+            };
+        });
+        string maskBackground = CreateNode("SwarmExcludeFromMask", (_, n) =>
+        {
+            n["inputs"] = new JObject()
+            {
+                ["main_mask"] = new JArray() { globalMask, 0 },
+                ["exclude_mask"] = lastMergedMask
+            };
+        });
+        string backgroundPrompt = string.IsNullOrWhiteSpace(regionalizer.BackgroundPrompt) ? regionalizer.GlobalPrompt : regionalizer.BackgroundPrompt;
+        JArray backgroundCond = CreateConditioningDirect(backgroundPrompt, clip, model);
+        string mainConditioning = CreateNode("ConditioningSetMask", (_, n) =>
+        {
+            n["inputs"] = new JObject()
+            {
+                ["conditioning"] = backgroundCond,
+                ["mask"] = new JArray() { maskBackground, 0 },
+                ["strength"] = 1 - globalStrength,
+                ["set_cond_area"] = "default"
+            };
+        });
+        DebugMask(new() { maskBackground, 0 });
+        void DebugMask(JArray mask)
+        {
+            if (UserInput.Get(ComfyUIBackendExtension.DebugRegionalPrompting))
+            {
+                string imgNode = CreateNode("MaskToImage", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["mask"] = mask
+                    };
+                });
+                CreateNode("SwarmSaveImageWS", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["images"] = new JArray() { imgNode, 0 }
+                    };
+                });
+            }
+        }
+        foreach (RegionHelper region in regions)
+        {
+            string overlapped = CreateNode("SwarmCleanOverlapMasksExceptSelf", (_, n) =>
+            {
+                n["inputs"] = new JObject()
+                {
+                    ["mask_self"] = region.Mask,
+                    ["mask_merged"] = lastMergedMask
+                };
+            });
+            DebugMask(new() { overlapped, 0 });
+            string regionCond = CreateNode("ConditioningSetMask", (_, n) =>
+            {
+                n["inputs"] = new JObject()
+                {
+                    ["conditioning"] = region.PartCond,
+                    ["mask"] = new JArray() { overlapped, 0 },
+                    ["strength"] = 1 - globalStrength,
+                    ["set_cond_area"] = "default"
+                };
+            });
+            mainConditioning = CreateNode("ConditioningCombine", (_, n) =>
+            {
+                n["inputs"] = new JObject()
+                {
+                    ["conditioning_1"] = new JArray() { mainConditioning, 0 },
+                    ["conditioning_2"] = new JArray() { regionCond, 0 }
+                };
+            });
+        }
+        string globalCondApplied = CreateNode("ConditioningSetMask", (_, n) =>
+        {
+            n["inputs"] = new JObject()
+            {
+                ["conditioning"] = globalCond,
+                ["mask"] = new JArray() { globalMask, 0 },
+                ["strength"] = globalStrength,
+                ["set_cond_area"] = "default"
+            };
+        });
+        string finalCond = CreateNode("ConditioningCombine", (_, n) =>
+        {
+            n["inputs"] = new JObject()
+            {
+                ["conditioning_1"] = new JArray() { mainConditioning, 0 },
+                ["conditioning_2"] = new JArray() { globalCondApplied, 0 }
+            };
+        });
+        return new(finalCond, 0);
     }
 }
