@@ -94,6 +94,15 @@ function comfyBuildParams(callback) {
             while (inputId in params) {
                 inputId = `${inputIdDirect}${numberToLetters(counter++)}`;
             }
+            let groupObj = groupId == 'primitives' ? null : {
+                name: groupName,
+                id: groupId,
+                open: false,
+                priority: priority,
+                advanced: groupId != 'primitives',
+                toggles: false,
+                do_not_save: false
+            };
             params[inputId] = {
                 name: name,
                 default: defVal,
@@ -107,21 +116,13 @@ function comfyBuildParams(callback) {
                 step: step,
                 visible: visible,
                 toggleable: toggles,
-                priority: 5,
+                priority: priority,
                 advanced: false,
                 feature_flag: null,
                 do_not_save: false,
                 revalueGetter: revalueGetter,
                 no_popover: true,
-                group: {
-                    name: groupName,
-                    id: groupId,
-                    open: false,
-                    priority: priority,
-                    advanced: groupId != 'primitives',
-                    toggles: false,
-                    do_not_save: false
-                }
+                group: groupObj
             };
         }
         let labelAlterations = {};
@@ -376,7 +377,7 @@ function comfyBuildParams(callback) {
                 }
                 if (!idsUsed.includes(inputIdDirect)) {
                     idsUsed.push(inputIdDirect);
-                    addSimpleParam(inputLabel, val, type, groupLabel, values, view_type, min, max, step, inputIdDirect, groupId, priority, true, true, revalueGetter);
+                    addSimpleParam(inputLabel, val, type, groupLabel, values, view_type, min, max, step, inputIdDirect, groupId, groupId == 'primitives' ? -200 : priority, true, true, revalueGetter);
                 }
                 return inputIdDirect;
             }
@@ -520,10 +521,9 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
             }
         }
     }
-    let gn = (p) => p.group.id == "primitives" ? "!primitives" : p.group.id; // Bias primitives to the top
-    for (let param of Object.values(params).sort((a, b) => gn(a).localeCompare(gn(b)))) {
-        actualParams.push(param);
-    }
+    let prims = Object.values(params).filter(p => p.group == null);
+    let others = Object.values(params).filter(p => p.group != null).sort((a, b) => a.group.id.localeCompare(b.group.id));
+    actualParams = prims.concat(actualParams).concat(others);
     gen_param_types = actualParams;
     genInputs(true);
     let area = getRequiredElementById('main_inputs_area');
