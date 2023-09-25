@@ -64,6 +64,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("If true, if the port is already in use, the server will try to find another port to use instead.\nIf false, the server will fail to start if the port is already in use.")]
         public bool PortCanChange = true;
+
+        [ConfigComment("Backends are automatically assigned unique ports. This value selects which port number to start the assignment from.\nDefault is '7820'.")]
+        public int BackendStartingPort = 7820;
     }
 
     /// <summary>Settings related to file paths.</summary>

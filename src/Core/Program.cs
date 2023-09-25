@@ -339,6 +339,11 @@ public class Program
             }
         }
         WebServer.SetHost(host, port);
+        NetworkBackendUtils.NextPort = ServerSettings.Network.BackendStartingPort;
+        if (NetworkBackendUtils.NextPort < 1000)
+        {
+              Logs.Warning($"BackendStartingPort setting {NetworkBackendUtils.NextPort} is a low-range value (below 1000), which may cause it to conflict with the OS or other programs. You may want to change it.");
+        }
         WebServer.LogLevel = Enum.Parse<LogLevel>(GetCommandLineFlag("asp_loglevel", "warning"), true);
         SessionHandler.LocalUserID = GetCommandLineFlag("user_id", SessionHandler.LocalUserID);
         LockSettings = GetCommandLineFlagAsBool("lock_settings", false);
