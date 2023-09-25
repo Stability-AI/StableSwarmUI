@@ -357,9 +357,7 @@ function comfyBuildParams(callback) {
                             };
                         }
                         else {
-                            if (node.class_type.includes('CLIP')) {
-                                view_type = 'prompt';
-                            }
+                            view_type = 'prompt';
                             type = 'text';
                         }
                     }
