@@ -29,9 +29,9 @@ public static class ImageMetadataTracker
     /// <summary>Returns the database corresponding to the given folder path.</summary>
     public static ImageDatabase GetDatabaseForFolder(string folder)
     {
-        return Databases.GetOrCreate(folder, () =>
+        return Databases.GetOrAdd(folder, f =>
         {
-            LiteDatabase ldb = new(folder + "/image_metadata.ldb");
+            LiteDatabase ldb = new(f + "/image_metadata.ldb");
             return new(new(), ldb, ldb.GetCollection<ImageMetadataEntry>("image_metadata"));
         });
     }
