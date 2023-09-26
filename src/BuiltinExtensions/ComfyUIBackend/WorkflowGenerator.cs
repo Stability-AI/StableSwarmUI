@@ -723,7 +723,7 @@ public class WorkflowGenerator
                     ["clip"] = clip,
                     ["text"] = prompt
                 };
-            }, "6");
+            });
         }
         return new() { node, 0 };
     }
