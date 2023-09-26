@@ -296,8 +296,8 @@ public class T2IParamTypes
         RefinerControl = Register<double>(new("Refine Control Percentage", "Higher values give the refiner more control, lower values give the base more control.\nThis is similar to 'Init Image Creativity', but for the refiner. This controls how many steps the refiner takes.",
             "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
             ));
-        RefinerMethod = Register<string>(new("Refiner Method", "How to apply the refiner. Different methods create different results.\n'StepSwap' swaps the model after x steps during generation. 'PostApply' runs the base in full, then runs the refiner with an Init Image.",
-            "StepSwap", GetValues: (_) => new() { "StepSwap", "PostApply" }, OrderPriority: -3, Group: GroupRefiners, FeatureFlag: "refiners"
+        RefinerMethod = Register<string>(new("Refiner Method", "How to apply the refiner. Different methods create different results.\n'PostApply' runs the base in full, then runs the refiner with an Init Image.\n'StepSwap' swaps the model after x steps during generation.\n'StepSwapNoisy' is StepSwap but with first-stage noise only.",
+            "PostApply", GetValues: (_) => new() { "PostApply", "StepSwap", "StepSwapNoisy" }, OrderPriority: -3, Group: GroupRefiners, FeatureFlag: "refiners"
             ));
         RefinerUpscale = Register<double>(new("Refiner Upscale", "Optional upscale of the image between the base and refiner stage.\nSometimes referred to as 'high-res fix'.\nSetting to '1' disables the upscale.",
             "1", IgnoreIf: "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
