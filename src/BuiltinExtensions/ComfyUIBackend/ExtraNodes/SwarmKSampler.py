@@ -61,7 +61,8 @@ class SwarmKSampler:
                 "var_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "var_seed_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.05, "round": 0.001}),
                 "add_noise": (["enable", "disable"], ),
-                "return_with_leftover_noise": (["disable", "enable"], )
+                "return_with_leftover_noise": (["disable", "enable"], ),
+                "previews": (["default", "none"], )
             }
         }
 
@@ -69,7 +70,7 @@ class SwarmKSampler:
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "sample"
 
-    def sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, add_noise, return_with_leftover_noise):
+    def sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, add_noise, return_with_leftover_noise, previews):
         device = comfy.model_management.get_torch_device()
         latent_samples = latent_image["samples"]
         disable_noise = add_noise == "disable"
@@ -83,7 +84,7 @@ class SwarmKSampler:
         if "noise_mask" in latent_image:
             noise_mask = latent_image["noise_mask"]
 
-        previewer = latent_preview.get_previewer(device, model.model.latent_format)
+        previewer = latent_preview.get_previewer(device, model.model.latent_format) if previews == "default" else None
 
         pbar = comfy.utils.ProgressBar(steps)
         def callback(step, x0, x, total_steps):
