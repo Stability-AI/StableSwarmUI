@@ -123,7 +123,7 @@ public class WorkflowGenerator
         #region Positive Prompt
         AddStep(g =>
         {
-            g.FinalPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model));
+            g.FinalPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model), true);
         }, -8);
         #endregion
         #region ReVision/UnCLIP
@@ -225,7 +225,7 @@ public class WorkflowGenerator
         #region Negative Prompt
         AddStep(g =>
         {
-            g.FinalNegativePrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model));
+            g.FinalNegativePrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model), false);
         }, -7);
         #endregion
         #region ControlNet
@@ -434,8 +434,8 @@ public class WorkflowGenerator
                     {
                         g.FinalVae = new() { "20", 2 };
                     }
-                    prompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), new JArray() { "20", 1 }, refineModel);
-                    negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), new JArray() { "20", 1 }, refineModel);
+                    prompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), new JArray() { "20", 1 }, refineModel, true);
+                    negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), new JArray() { "20", 1 }, refineModel, false);
                 }
                 if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
                 {
@@ -695,11 +695,14 @@ public class WorkflowGenerator
     }
 
     /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input.</summary>
-    public JArray CreateConditioningDirect(string prompt, JArray clip, T2IModel model)
+    public JArray CreateConditioningDirect(string prompt, JArray clip, T2IModel model, bool isPositive)
     {
         string node;
         if (model is not null && model.ModelClass is not null && model.ModelClass.ID == "stable-diffusion-xl-v1-base")
         {
+            double mult = isPositive ? 1.5 : 0.8;
+            int width = UserInput.Get(T2IParamTypes.Width, 1024);
+            int height = UserInput.GetImageHeight();
             node = CreateNode("CLIPTextEncodeSDXL", (_, n) =>
             {
                 n["inputs"] = new JObject()
@@ -709,10 +712,10 @@ public class WorkflowGenerator
                     ["text_l"] = prompt,
                     ["crop_w"] = 0,
                     ["crop_h"] = 0,
-                    ["width"] = UserInput.Get(T2IParamTypes.Width, 1024),
-                    ["height"] = UserInput.GetImageHeight(),
-                    ["target_width"] = UserInput.Get(T2IParamTypes.Width, 1024),
-                    ["target_height"] = UserInput.GetImageHeight()
+                    ["width"] = (int)(width * mult),
+                    ["height"] = (int)(height * mult),
+                    ["target_width"] = width,
+                    ["target_height"] = height
                 };
             });
         }
@@ -733,10 +736,10 @@ public class WorkflowGenerator
     public record struct RegionHelper(JArray PartCond, JArray Mask);
 
     /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input, applying prompt-given conditioning modifiers as relevant.</summary>
-    public JArray CreateConditioning(string prompt, JArray clip, T2IModel model)
+    public JArray CreateConditioning(string prompt, JArray clip, T2IModel model, bool isPositive)
     {
         PromptRegion regionalizer = new(prompt);
-        JArray globalCond = CreateConditioningDirect(regionalizer.GlobalPrompt, clip, model);
+        JArray globalCond = CreateConditioningDirect(regionalizer.GlobalPrompt, clip, model, isPositive);
         if (regionalizer.Parts.IsEmpty())
         {
             return globalCond;
@@ -746,7 +749,7 @@ public class WorkflowGenerator
         JArray lastMergedMask = null;
         foreach (PromptRegion.Part part in regionalizer.Parts)
         {
-            JArray partCond = CreateConditioningDirect(part.Prompt, clip, model);
+            JArray partCond = CreateConditioningDirect(part.Prompt, clip, model, isPositive);
             string regionNode = CreateNode("SwarmSquareMaskFromPercent", (_, n) =>
             {
                 n["inputs"] = new JObject()
@@ -797,7 +800,7 @@ public class WorkflowGenerator
             };
         });
         string backgroundPrompt = string.IsNullOrWhiteSpace(regionalizer.BackgroundPrompt) ? regionalizer.GlobalPrompt : regionalizer.BackgroundPrompt;
-        JArray backgroundCond = CreateConditioningDirect(backgroundPrompt, clip, model);
+        JArray backgroundCond = CreateConditioningDirect(backgroundPrompt, clip, model, isPositive);
         string mainConditioning = CreateNode("ConditioningSetMask", (_, n) =>
         {
             n["inputs"] = new JObject()
