@@ -53,7 +53,7 @@
                         <div style="position: relative; width: 0; height: 0;">
                             <div class="auto-clear-batch-box" title="If enabled, automatically clears out the image batch when generating a new one. If disabled, leaves history to grow until you refresh the page.">
                                 <span class="form-check form-switch display-inline-block">
-                                    <input type="checkbox" class="form-check-input" id="auto_clear_batch_checkbox" onchange="toggleAutoClearBatch()" checked=""> <label class="form-check-label" for="import_presets_overwrite">Auto Clear Batch</label>
+                                    <input type="checkbox" class="form-check-input" id="auto_clear_batch_checkbox" onchange="toggleAutoClearBatch()" checked=""> <label class="form-check-label" for="auto_clear_batch_checkbox">Auto Clear Batch</label>
                                 </span>
                             </div>
                         </div>
@@ -158,7 +158,7 @@
                     @WebUtil.ModalHeader("import_presets_modal", "Import Presets")
                         <div class="modal-body">
                             <div id="import_preset_upload_container">
-                                <input type="file" id="import_preset_uploader" /> <label for="import_preset_uploader" oninput=":importPresetUpload()"></i>&nbsp; Upload Preset File (JSON or CSV)</label>
+                                <input type="file" id="import_preset_uploader" oninput="importPresetUpload()" /> <label for="import_preset_uploader"></i>&nbsp; Upload Preset File (JSON or CSV)</label>
                                 <textarea id="import_presets_textarea" style="width: 100%;" rows="10" oninput="importPresetsCheck()"></textarea>
                             </div>
                             <span class="form-check form-switch display-inline-block">
