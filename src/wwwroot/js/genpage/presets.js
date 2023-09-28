@@ -31,20 +31,23 @@ function clearPresetView() {
     enableImage.checked = false;
     enableImage.disabled = true;
     for (let type of getPresetTypes()) {
+        let elem = getRequiredElementById('input_' + type.id);
         let presetElem = getRequiredElementById('preset_input_' + type.id);
         if (type.type == "boolean") {
-            presetElem.checked = false;
+            presetElem.checked = elem.checked;
         }
         else if (type.type == "text") {
-            presetElem.value = "{value}";
+            presetElem.value = "{value} " + elem.value;
         }
         else if (type.type == "list" && presetElem.tagName == "SELECT") {
-            $(presetElem).val(null);
+            let selected = [...elem.selectedOptions].map(o => o.value);
+            $(presetElem).val(selected);
             $(presetElem).trigger('change');
         }
         else {
-            presetElem.value = '';
+            presetElem.value = elem.value;
         }
+        triggerChangeFor(presetElem);
         getRequiredElementById(presetElem.id + '_toggle').checked = false;
         doToggleEnable(presetElem.id);
     }
@@ -60,24 +63,6 @@ function create_new_preset_button() {
         let enableImage = getRequiredElementById('new_preset_enable_image');
         enableImage.checked = true;
         enableImage.disabled = false;
-    }
-    for (let type of getPresetTypes()) {
-        let elem = getRequiredElementById('input_' + type.id);
-        let presetElem = getRequiredElementById('preset_input_' + type.id);
-        if (type.type == "boolean") {
-            presetElem.checked = elem.checked;
-        }
-        else if (type.type == "text") {
-            presetElem.value = "{value} " + elem.value;
-        }
-        else if (type.type == "list" && elem.tagName == "SELECT") {
-            let selected = [...elem.selectedOptions].map(o => o.value);
-            $(presetElem).val(selected);
-            $(presetElem).trigger('change');
-        }
-        else {
-            presetElem.value = elem.value;
-        }
     }
     fixPresetParamClickables();
 }
