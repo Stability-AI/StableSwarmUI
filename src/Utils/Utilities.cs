@@ -484,12 +484,7 @@ public static class Utilities
         if (jData is JObject jObj)
         {
             string subSpaces = spaces + "    ";
-            StringBuilder result = new();
-            foreach ((string key, JToken val) in jObj)
-            {
-                result.Append($"\"{key}\": ").Append(val.ToDenseDebugString(partCharLimit, subSpaces)).Append(", ");
-            }
-            string resultStr = result.ToString();
+            string resultStr = jObj.Properties().Select(v => $"\"{v.Name}\": {v.Value.ToDenseDebugString(partCharLimit, subSpaces)}").JoinString(", ");
             if (resultStr.Length <= 50)
             {
                 return "{ " + resultStr + " }";
@@ -499,12 +494,7 @@ public static class Utilities
         else if (jData is JArray jArr)
         {
             string subSpaces = spaces + "    ";
-            StringBuilder result = new();
-            foreach (JToken val in jArr)
-            {
-                result.Append(val.ToDenseDebugString(partCharLimit, subSpaces)).Append(", ");
-            }
-            string resultStr = result.ToString();
+            string resultStr = jArr.Select(v => v.ToDenseDebugString(partCharLimit, subSpaces)).JoinString(", ");
             if (resultStr.Length == 0)
             {
                 return "[ ]";
@@ -513,7 +503,7 @@ public static class Utilities
             {
                 return $"[ {resultStr} ]";
             }
-            return $"[\n{subSpaces}[{result}\n{spaces}]";
+            return $"[\n{subSpaces}[{resultStr}\n{spaces}]";
         }
         else
         {

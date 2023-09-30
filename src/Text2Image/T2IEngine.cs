@@ -74,6 +74,12 @@ namespace StableSwarmUI.Text2Image
         /// <summary>Internal handler route to create an image based on a user request.</summary>
         public static async Task CreateImageTask(T2IParamInput user_input, string batchId, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image, string> saveImages)
         {
+            await CreateImageTask(user_input, batchId, claim, output, setError, isWS, backendTimeoutMin, saveImages, true);
+        }
+
+        /// <summary>Internal handler route to create an image based on a user request.</summary>
+        public static async Task CreateImageTask(T2IParamInput user_input, string batchId, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image, string> saveImages, bool canCallTools)
+        {
             Stopwatch timer = Stopwatch.StartNew();
             void sendStatus()
             {
@@ -85,6 +91,20 @@ namespace StableSwarmUI.Text2Image
             if (claim.ShouldCancel)
             {
                 return;
+            }
+            if (canCallTools)
+            {
+                string prompt = user_input.Get(T2IParamTypes.Prompt);
+                if (prompt.Contains("<object:"))
+                {
+                    Image multiImg = await T2IMultiStepObjectBuilder.CreateFullImage(prompt, user_input, batchId, claim, output, setError, isWS, backendTimeoutMin);
+                    if (multiImg is not null)
+                    {
+                        user_input = user_input.Clone();
+                        user_input.Set(T2IParamTypes.InitImage, multiImg);
+                        user_input.Set(T2IParamTypes.InitImageCreativity, 0.7); // TODO: Configurable
+                    }
+                }
             }
             T2IBackendAccess backend;
             try
@@ -178,7 +198,7 @@ namespace StableSwarmUI.Text2Image
             catch (AbstractT2IBackend.PleaseRedirectException)
             {
                 claim.Extend(gens: 1);
-                await CreateImageTask(user_input, batchId, claim, output, setError, isWS, backendTimeoutMin, saveImages);
+                await CreateImageTask(user_input, batchId, claim, output, setError, isWS, backendTimeoutMin, saveImages, false);
             }
             catch (InvalidOperationException ex)
             {
