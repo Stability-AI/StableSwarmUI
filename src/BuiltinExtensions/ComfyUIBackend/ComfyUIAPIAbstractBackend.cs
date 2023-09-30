@@ -140,7 +140,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             workflow = $"{{\"prompt\": {workflow}, \"client_id\": \"{id}\"}}";
             if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
             {
-                Logs.Verbose($"Will use workflow: {workflow}");
+                Logs.Verbose($"Will use workflow: {JObject.Parse(workflow).ToDenseDebugString()}");
             }
             JObject promptResult = await HttpClient.PostJSONString($"{Address}/prompt", workflow, interrupt);
             if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
@@ -348,7 +348,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         {
             if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
             {
-                Logs.Verbose($"Will fill workflow {workflow}");
+                //Logs.Verbose($"Will fill workflow {workflow}");
+                Logs.Verbose("Will fill a workflow...");
             }
             workflow = StringConversionHelper.QuickSimpleTagFiller(initImageFixer(workflow), "${", "}", (tag) => {
                 string fixedTag = Utilities.UnescapeJsonString(tag);

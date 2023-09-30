@@ -376,6 +376,10 @@ public class WorkflowGenerator
             {
                 endStep = (int)Math.Round(steps * (1 - refinerControl));
             }
+            if (g.UserInput.TryGet(T2IParamTypes.EndStepsEarly, out double endEarly))
+            {
+                endStep = (int)(steps * (1 - endEarly));
+            }
             JObject inputs = new()
             {
                 ["model"] = g.FinalModel,
