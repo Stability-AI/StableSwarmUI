@@ -375,7 +375,7 @@ public static class NetworkBackendUtils
             }
             else
             {
-                Logs.Info($"Self-Start {nameSimple} on port {port} unexpectedly exited (if something failed, launch with `--loglevel debug` to see why!)");
+                Logs.Info($"Self-Start {nameSimple} on port {port} unexpectedly exited (if something failed, change setting `LogLevel` to `Debug` to see why!)");
                 if (errorLog.Length > 0)
                 {
                     Logs.Info($"Self-Start {nameSimple} on port {port} had errors before shutdown:\n{errorLog}");
