@@ -47,16 +47,22 @@ public class T2IMultiStepObjectBuilder
         user_input.Set(T2IParamTypes.EndStepsEarly, 0.2);
         user_input.Set(T2IParamTypes.Seed, user_input.Get(T2IParamTypes.Seed) + 1);
         claim.Extend(1 + objects.Length);
-        Image img = await createImageDirect(user_input);
+        T2IParamInput basicInput = user_input.Clone();
+        basicInput.Remove(T2IParamTypes.ControlNetModel);
+        Image img = await createImageDirect(basicInput);
         if (img is null)
         {
             return null;
         }
         //user_input.Set(T2IParamTypes.EndStepsEarly, 0.6); // TODO: Configurable
         using ISImage liveImg = img.ToIS;
-        float overBound = 0.3f;
+        float overBound = 0.2f;
         foreach (PromptRegion.Part part in objects)
         {
+            if (claim.ShouldCancel)
+            {
+                return null;
+            }
             user_input.Set(T2IParamTypes.Seed, user_input.Get(T2IParamTypes.Seed) + 1);
             T2IParamInput objInput = user_input.Clone();
             objInput.Set(T2IParamTypes.Prompt, part.Prompt);
@@ -69,20 +75,19 @@ public class T2IMultiStepObjectBuilder
             int extraWidth = Math.Min((int)((part.Width + overBound) * liveImg.Width), liveImg.Width - extraX);
             int extraHeight = Math.Min((int)((part.Height + overBound) * liveImg.Height), liveImg.Height - extraY);
             (int fixedWidth, int fixedHeight) = Utilities.ResToModelFit(extraWidth, extraHeight, liveImg.Width * liveImg.Height);
+            double scaleWidth = fixedWidth / (double)extraWidth;
+            double scaleHeight = fixedHeight / (double)extraHeight;
             using ISImage subImage = liveImg.Clone(i => i.Crop(new Rectangle(extraX, extraY, extraWidth, extraHeight)).Resize(fixedWidth, fixedHeight));
-            int borderWidth = (int)(0.075 * fixedWidth);
-            int borderHeight = (int)(0.075 * fixedHeight);
             using ISImage maskImage = ISImage.LoadPixelData<Rgb24>(Enumerable.Repeat(Color.Black.ToPixel<Rgb24>(), 1).ToArray(), 1, 1);
             using ISImage maskInnerImage = ISImage.LoadPixelData<Rgb24>(Enumerable.Repeat(Color.White.ToPixel<Rgb24>(), 1).ToArray(), 1, 1);
-            maskInnerImage.Mutate(i => i.Resize(fixedWidth - borderWidth, fixedHeight - borderHeight));
-            maskImage.Mutate(i => i.Resize(fixedWidth, fixedHeight).DrawImage(maskInnerImage, new Point(borderWidth / 2, borderHeight / 2), 1));
+            maskInnerImage.Mutate(i => i.Resize((int)(pixelWidth * scaleWidth), (int)(pixelHeight * scaleHeight)));
+            maskImage.Mutate(i => i.Resize(fixedWidth, fixedHeight).DrawImage(maskInnerImage, new Point((int)((pixelX - extraX) * scaleWidth), (int)((pixelY - extraY) * scaleHeight)), 1));
             objInput.Set(T2IParamTypes.MaskImage, new(maskImage));
             objInput.Set(T2IParamTypes.Prompt, part.Prompt);
             objInput.Set(T2IParamTypes.InitImage, new Image(subImage));
             objInput.Set(T2IParamTypes.InitImageCreativity, part.Strength2);
             objInput.Set(T2IParamTypes.Width, fixedWidth);
             objInput.Set(T2IParamTypes.Height, fixedHeight);
-            objInput.Remove(T2IParamTypes.ControlNetModel);
             Image objImg = await createImageDirect(objInput);
             if (objImg is null)
             {

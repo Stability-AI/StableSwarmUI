@@ -260,6 +260,7 @@ public class WorkflowGenerator
                 {
                     if (!g.UserInput.TryGet(T2IParamTypes.InitImage, out img))
                     {
+                        Logs.Verbose($"Following error relates to parameters: {g.UserInput.ToJSON().ToDenseDebugString()}");
                         throw new InvalidDataException("Must specify either a ControlNet Image, or Init image. Or turn off ControlNet if not wanted.");
                     }
                     imageInput = "${initimage}";
