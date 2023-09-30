@@ -16,6 +16,7 @@ using System.Security.Cryptography;
 using System;
 using System.Net;
 using System.Diagnostics;
+using StableSwarmUI.Text2Image;
 
 namespace StableSwarmUI.Utils;
 
@@ -447,5 +448,90 @@ public static class Utilities
             return $"{a}{b}";
         }
         return $"{a}{separator}{b}";
+    }
+
+    /// <summary>Rounds a number to the given precision.</summary>
+    public static double RoundToPrecision(double val, double prec)
+    {
+        return Math.Round(val / prec) * prec;
+    }
+
+    /// <summary>Modifies a width/height resolution to get the nearest valid resolution for the model's megapixel target scale, and rounds to a factor of x64.</summary>
+    public static (int, int) ResToModelFit(int width, int height, T2IModel model)
+    {
+        int modelWid = model.StandardWidth <= 0 ? width : model.StandardWidth;
+        int modelHei = model.StandardHeight <= 0 ? height : model.StandardHeight;
+        return ResToModelFit(width, height, modelWid * modelHei);
+    }
+
+    /// <summary>Modifies a width/height resolution to get the nearest valid resolution for the given megapixel target scale, and rounds to a factor of x64.</summary>
+    public static (int, int) ResToModelFit(int width, int height, int mpTarget)
+    {
+        int mp = width * height;
+        double scale = Math.Sqrt(mpTarget / (double)mp);
+        int newWid = (int)RoundToPrecision(width * scale, 64);
+        int newHei = (int)RoundToPrecision(height * scale, 64);
+        return (newWid, newHei);
+    }
+
+    /// <summary>Gets a dense but trimmed string representation of JSON data, for debugging.</summary>
+    public static string ToDenseDebugString(this JToken jData, int partCharLimit = 256, string spaces = "")
+    {
+        if (jData is null)
+        {
+            return null;
+        }
+        if (jData is JObject jObj)
+        {
+            string subSpaces = spaces + "    ";
+            StringBuilder result = new();
+            foreach ((string key, JToken val) in jObj)
+            {
+                result.Append($"\"{key}\": ").Append(val.ToDenseDebugString(partCharLimit, subSpaces)).Append(", ");
+            }
+            string resultStr = result.ToString();
+            if (resultStr.Length <= 50)
+            {
+                return "{ " + resultStr + " }";
+            }
+            return "{\n" + subSpaces + resultStr + "\n" + spaces + "}";
+        }
+        else if (jData is JArray jArr)
+        {
+            string subSpaces = spaces + "    ";
+            StringBuilder result = new();
+            foreach (JToken val in jArr)
+            {
+                result.Append(val.ToDenseDebugString(partCharLimit, subSpaces)).Append(", ");
+            }
+            string resultStr = result.ToString();
+            if (resultStr.Length == 0)
+            {
+                return "[ ]";
+            }
+            if (resultStr.Length <= 50)
+            {
+                return $"[ {resultStr} ]";
+            }
+            return $"[\n{subSpaces}[{result}\n{spaces}]";
+        }
+        else
+        {
+            if (jData.Type == JTokenType.Null)
+            {
+                return "null";
+            }
+            else if (jData.Type == JTokenType.Integer || jData.Type == JTokenType.Float || jData.Type == JTokenType.Boolean)
+            {
+                return jData.ToString();
+            }
+            string val = jData.ToString();
+            if (val.Length > partCharLimit - 3)
+            {
+                val = val[..(partCharLimit - 3)] + "...";
+            }
+            val = val.Replace("\\", "\\\\").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t").Replace("\"", "\\\"");
+            return $"\"{val}\"";
+        }
     }
 }

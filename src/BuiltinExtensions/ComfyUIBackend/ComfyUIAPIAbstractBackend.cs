@@ -145,7 +145,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             JObject promptResult = await HttpClient.PostJSONString($"{Address}/prompt", workflow, interrupt);
             if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
             {
-                Logs.Verbose($"ComfyUI prompt said: {promptResult}");
+                Logs.Verbose($"ComfyUI prompt said: {promptResult.ToDenseDebugString()}");
             }
             if (promptResult.ContainsKey("error"))
             {
@@ -268,14 +268,14 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     {
         if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
         {
-            Logs.Verbose($"ComfyUI history said: {output}");
+            Logs.Verbose($"ComfyUI history said: {output.ToDenseDebugString()}");
         }
         List<Image> outputs = new();
         foreach (JToken outData in output["outputs"].Values())
         {
             if (outData is null || outData["images"] is null)
             {
-                Logs.Error($"Invalid/null/empty output data from ComfyUI server: {outData}");
+                Logs.Error($"Invalid/null/empty output data from ComfyUI server: {outData.ToDenseDebugString()}");
                 continue;
             }
             foreach (JToken outImage in outData["images"])
@@ -289,7 +289,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 byte[] image = await(await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
                 if (image == null || image.Length == 0)
                 {
-                    Logs.Error($"Invalid/null/empty image data from ComfyUI server for '{fname}', under {outData}");
+                    Logs.Error($"Invalid/null/empty image data from ComfyUI server for '{fname}', under {outData.ToDenseDebugString()}");
                     continue;
                 }
                 outputs.Add(new Image(image));
