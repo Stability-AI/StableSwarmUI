@@ -210,7 +210,7 @@ public class T2IParamTypes
     public static T2IRegisteredParam<long> Seed, VariationSeed;
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult,
         FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly;
-    public static T2IRegisteredParam<Image> InitImage, ControlNetImage;
+    public static T2IRegisteredParam<Image> InitImage, MaskImage, ControlNetImage;
     public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
     public static T2IRegisteredParam<List<Image>> PromptImages;
@@ -277,6 +277,9 @@ public class T2IParamTypes
             ));
         InitImageCreativity = Register<double>(new("Init Image Creativity", "Higher values make the generation more creative, lower values follow the init image closer.\nSometimes referred to as 'Denoising Strength' for 'img2img'.",
             "0.6", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, ViewType: ParamViewType.SLIDER, Group: GroupInitImage
+            ));
+        MaskImage = Register<Image>(new("Mask Image", "Mask-image, white pixels are changed, black pixels are not changed, gray pixels are half-changed.",
+            "", OrderPriority: -4, Group: GroupInitImage
             ));
         GroupRefiners = new("Refiner", Toggles: true, Open: false, OrderPriority: -3);
         static List<string> listRefinerModels(Session s)
