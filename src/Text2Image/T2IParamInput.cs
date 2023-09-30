@@ -392,6 +392,12 @@ public class T2IParamInput
         }
         ValuesInput[param.Type.ID] = val;
     }
+    
+    /// <summary>Removes a param.</summary>
+    public void Remove<T>(T2IRegisteredParam<T> param)
+    {
+        ValuesInput.Remove(param.Type.ID);
+    }
 
     /// <summary>Makes sure the input has valid seed inputs.</summary>
     public void NormalizeSeeds()

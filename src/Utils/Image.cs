@@ -32,6 +32,11 @@ public class Image
         ImageData = data;
     }
 
+    /// <summary>Construct an image from an ISImage.</summary>
+    public Image(ISImage img) : this(ISImgToPngBytes(img))
+    {
+    }
+
     /// <summary>Get a Base64 string representation of the raw image data.</summary>
     public string AsBase64 => Convert.ToBase64String(ImageData);
 
