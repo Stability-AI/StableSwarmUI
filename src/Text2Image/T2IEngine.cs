@@ -103,6 +103,7 @@ namespace StableSwarmUI.Text2Image
                         user_input = user_input.Clone();
                         user_input.Set(T2IParamTypes.InitImage, multiImg);
                         user_input.Set(T2IParamTypes.InitImageCreativity, 0.7); // TODO: Configurable
+                        user_input.Remove(T2IParamTypes.ControlNetModel);
                     }
                 }
             }

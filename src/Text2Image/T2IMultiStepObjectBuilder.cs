@@ -56,7 +56,7 @@ public class T2IMultiStepObjectBuilder
         }
         //user_input.Set(T2IParamTypes.EndStepsEarly, 0.6); // TODO: Configurable
         using ISImage liveImg = img.ToIS;
-        float overBound = 0.2f;
+        float overBound = 0.1f;
         foreach (PromptRegion.Part part in objects)
         {
             if (claim.ShouldCancel)
