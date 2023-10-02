@@ -51,11 +51,11 @@ public class BackendHandler
 
     public BackendHandler()
     {
-        RegisterBackendType<SwarmSwarmBackend>("swarmswarmbackend", "Swarm-API-Backend", "Connection StableSwarmUI to another instance of StableSwarmUI as a backend.");
+        RegisterBackendType<SwarmSwarmBackend>("swarmswarmbackend", "Swarm-API-Backend", "Connection StableSwarmUI to another instance of StableSwarmUI as a backend.", true);
     }
 
     /// <summary>Metadata about backend types.</summary>
-    public record class BackendType(string ID, string Name, string Description, Type SettingsClass, AutoConfiguration.Internal.AutoConfigData SettingsInternal, Type BackendClass, JObject NetDescription);
+    public record class BackendType(string ID, string Name, string Description, Type SettingsClass, AutoConfiguration.Internal.AutoConfigData SettingsInternal, Type BackendClass, JObject NetDescription, bool CanLoadFast = false);
 
     /// <summary>Mapping of C# types to network type labels.</summary>
     public static Dictionary<Type, string> NetTypeLabels = new()
@@ -69,7 +69,7 @@ public class BackendHandler
     };
 
     /// <summary>Register a new backend-type by type ref.</summary>
-    public BackendType RegisterBackendType(Type type, string id, string name, string description)
+    public BackendType RegisterBackendType(Type type, string id, string name, string description, bool CanLoadFast = false)
     {
         Type settingsType = type.GetNestedTypes().First(t => t.IsSubclassOf(typeof(AutoConfiguration)));
         AutoConfiguration.Internal.AutoConfigData settingsInternal = (Activator.CreateInstance(settingsType) as AutoConfiguration).InternalData.SharedData;
@@ -90,15 +90,15 @@ public class BackendHandler
             ["description"] = description,
             ["settings"] = JToken.FromObject(fields)
         };
-        BackendType typeObj = new(id, name, description, settingsType, settingsInternal, type, netDesc);
+        BackendType typeObj = new(id, name, description, settingsType, settingsInternal, type, netDesc, CanLoadFast: CanLoadFast);
         BackendTypes.Add(id, typeObj);
         return typeObj;
     }
 
     /// <summary>Register a new backend-type by type ref.</summary>
-    public BackendType RegisterBackendType<T>(string id, string name, string description) where T : AbstractT2IBackend
+    public BackendType RegisterBackendType<T>(string id, string name, string description, bool CanLoadFast = false) where T : AbstractT2IBackend
     {
-        return RegisterBackendType(typeof(T), id, name, description);
+        return RegisterBackendType(typeof(T), id, name, description, CanLoadFast);
     }
 
     /// <summary>Special live data about a registered backend.</summary>
@@ -124,6 +124,8 @@ public class BackendHandler
 
         public long TimeLastRelease;
 
+        public BackendType BackType;
+
         public void Claim()
         {
             Interlocked.Increment(ref Usages);
@@ -137,7 +139,8 @@ public class BackendHandler
         BackendsEdited = true;
         T2IBackendData data = new()
         {
-            Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend
+            Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend,
+            BackType = type
         };
         data.Backend.BackendData = data;
         data.Backend.SettingsRaw = config ?? (Activator.CreateInstance(type.SettingsClass) as AutoConfiguration);
@@ -148,8 +151,7 @@ public class BackendHandler
             data.ID = LastBackendID++;
             T2IBackends.TryAdd(data.ID, data);
         }
-        data.Backend.Status = BackendStatus.WAITING;
-        BackendsToInit.Enqueue(data);
+        DoInitBackend(data);
         NewBackendInitSignal.Set();
         return data;
     }
@@ -159,7 +161,8 @@ public class BackendHandler
     {
         T2IBackendData data = new()
         {
-            Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend
+            Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend,
+            BackType = type
         };
         data.Backend.BackendData = data;
         data.Backend.SettingsRaw = config ?? (Activator.CreateInstance(type.SettingsClass) as AutoConfiguration);
@@ -171,8 +174,7 @@ public class BackendHandler
             data.ID = LastNonrealBackendID--;
             T2IBackends.TryAdd(data.ID, data);
         }
-        data.Backend.Status = BackendStatus.WAITING;
-        BackendsToInit.Enqueue(data);
+        DoInitBackend(data);
         NewBackendInitSignal.Set();
         return data;
     }
@@ -227,8 +229,7 @@ public class BackendHandler
         }
         BackendsEdited = true;
         data.ModCount++;
-        data.Backend.Status = BackendStatus.WAITING;
-        BackendsToInit.Enqueue(data);
+        DoInitBackend(data);
         return data;
     }
 
@@ -238,8 +239,7 @@ public class BackendHandler
         foreach (T2IBackendData data in T2IBackends.Values.ToArray())
         {
             await ShutdownBackendCleanly(data);
-            data.Backend.Status = BackendStatus.WAITING;
-            BackendsToInit.Enqueue(data);
+            DoInitBackend(data);
         }
     }
 
@@ -290,6 +290,7 @@ public class BackendHandler
             T2IBackendData data = new()
             {
                 Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend,
+                BackType = type,
                 ID = int.Parse(idstr)
             };
             data.Backend.BackendData = data;
@@ -300,12 +301,74 @@ public class BackendHandler
             data.Backend.Title = section.GetString("title", "");
             data.Backend.HandlerTypeData = type;
             data.Backend.Handler = this;
-            data.Backend.Status = BackendStatus.WAITING;
-            BackendsToInit.Enqueue(data);
+            DoInitBackend(data);
             lock (CentralLock)
             {
                 T2IBackends.TryAdd(data.ID, data);
             }
+        }
+    }
+
+    /// <summary>Cause a backend to run its initializer, either immediately or in the next available slot.</summary>
+    public void DoInitBackend(T2IBackendData data)
+    {
+        data.Backend.Status = BackendStatus.WAITING;
+        if (data.BackType.CanLoadFast)
+        {
+            Task.Run(() => LoadBackendDirect(data));
+        }
+        else
+        {
+            BackendsToInit.Enqueue(data);
+        }
+    }
+
+    /// <summary>Internal direct immediate backend load call.</summary>
+    public async Task<bool> LoadBackendDirect(T2IBackendData data)
+    {
+        if (!data.Backend.IsEnabled)
+        {
+            data.Backend.Status = BackendStatus.DISABLED;
+            return false;
+        }
+        try
+        {
+            if (data.Backend.IsReal)
+            {
+                Logs.Init($"Initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name}...");
+            }
+            else
+            {
+                Logs.Verbose($"Initializing non-real backend #{data.ID} - {data.Backend.HandlerTypeData.Name}...");
+            }
+            data.InitAttempts++;
+            await data.Backend.Init().WaitAsync(Program.GlobalProgramCancel);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            if (data.InitAttempts <= Program.ServerSettings.Backends.MaxBackendInitAttempts)
+            {
+                data.Backend.Status = BackendStatus.WAITING;
+                Logs.Error($"Error #{data.InitAttempts} while initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name} - will retry");
+                await Task.Delay(TimeSpan.FromSeconds(1)); // Intentionally pause a second to give a chance for external issue to self-resolve.
+                BackendsToInit.Enqueue(data);
+            }
+            else
+            {
+                data.Backend.Status = BackendStatus.ERRORED;
+                if (ex is AggregateException aex)
+                {
+                    ex = aex.InnerException;
+                }
+                string errorMessage = $"{ex}";
+                if (ex is HttpRequestException hrex && hrex.Message.StartsWith("No connection could be made because the target machine actively refused it"))
+                {
+                    errorMessage = $"Connection refused - is the backend running, or is the address correct? (HttpRequestException: {ex.Message})";
+                }
+                Logs.Error($"Final error ({data.InitAttempts}) while initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name}, giving up: {errorMessage}");
+            }
+            return false;
         }
     }
 
@@ -317,49 +380,8 @@ public class BackendHandler
             bool any = false;
             while (BackendsToInit.TryDequeue(out T2IBackendData data) && !HasShutdown)
             {
-                if (!data.Backend.IsEnabled)
-                {
-                    data.Backend.Status = BackendStatus.DISABLED;
-                    continue;
-                }
-                try
-                {
-                    if (data.Backend.IsReal)
-                    {
-                        Logs.Init($"Initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name}...");
-                    }
-                    else
-                    {
-                        Logs.Verbose($"Initializing non-real backend #{data.ID} - {data.Backend.HandlerTypeData.Name}...");
-                    }
-                    data.InitAttempts++;
-                    data.Backend.Init().Wait(Program.GlobalProgramCancel);
-                    any = true;
-                }
-                catch (Exception ex)
-                {
-                    if (data.InitAttempts <= Program.ServerSettings.Backends.MaxBackendInitAttempts)
-                    {
-                        data.Backend.Status = BackendStatus.WAITING;
-                        Logs.Error($"Error #{data.InitAttempts} while initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name} - will retry");
-                        BackendsToInit.Enqueue(data);
-                        Thread.Sleep(TimeSpan.FromSeconds(1)); // Intentionally pause a second to give a chance for external issue to self-resolve.
-                    }
-                    else
-                    {
-                        data.Backend.Status = BackendStatus.ERRORED;
-                        if (ex is AggregateException aex)
-                        {
-                            ex = aex.InnerException;
-                        }
-                        string errorMessage = $"{ex}";
-                        if (ex is HttpRequestException hrex && hrex.Message.StartsWith("No connection could be made because the target machine actively refused it"))
-                        {
-                            errorMessage = $"Connection refused - is the backend running, or is the address correct? (HttpRequestException: {ex.Message})";
-                        }
-                        Logs.Error($"Final error ({data.InitAttempts}) while initializing backend #{data.ID} - {data.Backend.HandlerTypeData.Name}, giving up: {errorMessage}");
-                    }
-                }
+                bool loaded = LoadBackendDirect(data).Result;
+                any = any || loaded;
             }
             if (any)
             {

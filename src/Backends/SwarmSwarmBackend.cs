@@ -52,7 +52,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
     public int LinkedRemoteBackendID;
 
     /// <summary>A list of any non-real backends this instance controls.</summary>
-    public Dictionary<int, BackendHandler.T2IBackendData> ControlledNonrealBackends = new();
+    public ConcurrentDictionary<int, BackendHandler.T2IBackendData> ControlledNonrealBackends = new();
 
     public async Task ValidateAndBuild()
     {
@@ -108,7 +108,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                         Logs.Verbose($"{HandlerTypeData.Name} {BackendData.ID} adding remote backend {id} ({type})");
                         BackendHandler.T2IBackendData newData = Handler.AddNewNonrealBackend(HandlerTypeData, SettingsRaw);
                         (newData.Backend as SwarmSwarmBackend).LinkedRemoteBackendID = id;
-                        ControlledNonrealBackends.Add(id, newData);
+                        ControlledNonrealBackends.TryAdd(id, newData);
                     }
                     if (ControlledNonrealBackends.TryGetValue(id, out BackendHandler.T2IBackendData data))
                     {
