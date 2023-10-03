@@ -375,6 +375,10 @@ public class T2IParamInput
             obj = (float)(double)obj;
         }
         ValuesInput[param.ID] = obj;
+        if (param.FeatureFlag is not null)
+        {
+            RequiredFlags.Add(param.FeatureFlag);
+        }
     }
 
     /// <summary>Sets the direct raw value of a given parameter, without processing.</summary>
@@ -391,6 +395,10 @@ public class T2IParamInput
             return;
         }
         ValuesInput[param.Type.ID] = val;
+        if (param.Type.FeatureFlag is not null)
+        {
+            RequiredFlags.Add(param.Type.FeatureFlag);
+        }
     }
     
     /// <summary>Removes a param.</summary>

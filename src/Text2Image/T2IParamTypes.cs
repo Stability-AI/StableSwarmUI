@@ -533,10 +533,6 @@ public class T2IParamTypes
         {
             value = ValidateParam(type, value, data.SourceSession);
             data.Set(type, value);
-            if (type.FeatureFlag is not null)
-            {
-                data.RequiredFlags.Add(type.FeatureFlag);
-            }
         }
         catch (InvalidDataException ex)
         {
