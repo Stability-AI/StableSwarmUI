@@ -26,9 +26,9 @@ public class BackendAPI
     }
 
     /// <summary>Create a network object to represent a backend cleanly.</summary>
-    public static JObject BackendToNet(BackendHandler.T2IBackendData backend)
+    public static JObject BackendToNet(BackendHandler.T2IBackendData backend, bool full = false)
     {
-        return new JObject()
+        JObject data = new()
         {
             ["type"] = backend.Backend.HandlerTypeData.ID,
             ["status"] = backend.Backend.Status.ToString().ToLowerFast(),
@@ -40,6 +40,11 @@ public class BackendAPI
             ["title"] = backend.Backend.Title,
             ["max_usages"] = backend.Backend.MaxUsages
         };
+        if (full)
+        {
+            data["current_model"] = backend.Backend.CurrentModelName;
+        }
+        return data;
     }
 
     /// <summary>API route to shutdown and delete a registered backend.</summary>
@@ -116,7 +121,7 @@ public class BackendAPI
     }
 
     /// <summary>API route to list currently registered backends.</summary>
-    public static async Task<JObject> ListBackends(bool nonreal = false)
+    public static async Task<JObject> ListBackends(bool nonreal = false, bool full_data = false)
     {
         JObject toRet = new();
         foreach (BackendHandler.T2IBackendData data in Program.Backends.T2IBackends.Values.OrderBy(d => d.ID))
@@ -125,7 +130,7 @@ public class BackendAPI
             {
                 continue;
             }
-            toRet[data.ID.ToString()] = BackendToNet(data);
+            toRet[data.ID.ToString()] = BackendToNet(data, full_data);
         }
         return toRet;
     }
