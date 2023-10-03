@@ -53,10 +53,12 @@ namespace StableSwarmUI.Text2Image
             {
                 if (typeLow != "any" && typeLow != backend.Backend.HandlerTypeData.ID.ToLowerFast())
                 {
+                    Logs.Verbose($"Filter out backend {backend.ID} as the Type is specified as {typeLow}, but the backend type is {backend.Backend.HandlerTypeData.ID.ToLowerFast()}");
                     return false;
                 }
                 if (requireId && backend.ID != reqId)
                 {
+                    Logs.Verbose($"Filter out backend {backend.ID} as the request requires backend ID {reqId}, but the backend ID is {backend.ID}");
                     return false;
                 }
                 HashSet<string> features = backend.Backend.SupportedFeatures.ToHashSet();
@@ -64,6 +66,7 @@ namespace StableSwarmUI.Text2Image
                 {
                     if (!features.Contains(flag))
                     {
+                        Logs.Verbose($"Filter out backend {backend.ID} as the request requires flag {flag}, but the backend does not support it");
                         return false;
                     }
                 }
@@ -113,7 +116,8 @@ namespace StableSwarmUI.Text2Image
                 PreGenerateEvent?.Invoke(new(user_input));
                 claim.Extend(backendWaits: 1);
                 sendStatus();
-                backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Get(T2IParamTypes.Model), filter: BackendMatcherFor(user_input), session: user_input.SourceSession, notifyWillLoad: sendStatus, cancel: claim.InterruptToken);
+                backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Get(T2IParamTypes.Model),
+                    filter: BackendMatcherFor(user_input), session: user_input.SourceSession, notifyWillLoad: sendStatus, cancel: claim.InterruptToken);
             }
             catch (InvalidOperationException ex)
             {

@@ -144,7 +144,6 @@ public class BackendHandler
         };
         data.Backend.BackendData = data;
         data.Backend.SettingsRaw = config ?? (Activator.CreateInstance(type.SettingsClass) as AutoConfiguration);
-        data.Backend.HandlerTypeData = type;
         data.Backend.Handler = this;
         lock (CentralLock)
         {
@@ -166,7 +165,6 @@ public class BackendHandler
         };
         data.Backend.BackendData = data;
         data.Backend.SettingsRaw = config ?? (Activator.CreateInstance(type.SettingsClass) as AutoConfiguration);
-        data.Backend.HandlerTypeData = type;
         data.Backend.Handler = this;
         data.Backend.IsReal = false;
         lock (CentralLock)
@@ -299,7 +297,6 @@ public class BackendHandler
             data.Backend.SettingsRaw.Load(section.GetSection("settings"));
             data.Backend.IsEnabled = section.GetBool("enabled", true).Value;
             data.Backend.Title = section.GetString("title", "");
-            data.Backend.HandlerTypeData = type;
             data.Backend.Handler = this;
             DoInitBackend(data);
             lock (CentralLock)
@@ -630,6 +627,10 @@ public class BackendHandler
                 return;
             }
             List<T2IBackendData> available = possible.Where(b => !b.CheckIsInUse).OrderBy(b => b.Usages).ToList();
+            if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
+            {
+                Logs.Verbose($"Possible: {possible.Select(b => $"{b.ID}/{b.BackType.Name}").JoinString(", ")}, available {available.Select(b => $"{b.ID}/{b.BackType.Name}").JoinString(", ")}");
+            }
             T2IBackendData firstAvail = available.FirstOrDefault();
             if (Model is null && firstAvail is not null)
             {

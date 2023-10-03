@@ -54,7 +54,7 @@ public abstract class AbstractT2IBackend
     public volatile string CurrentModelName;
 
     /// <summary>Backend type data for the internal handler.</summary>
-    public BackendHandler.BackendType HandlerTypeData;
+    public BackendHandler.BackendType HandlerTypeData => BackendData.BackType;
 
     /// <summary>The backing <see cref="BackendHandler"/> instance.</summary>
     public BackendHandler Handler;
