@@ -280,7 +280,6 @@ input[type="range"]::-webkit-slider-thumb, input[type="range"]::-moz-range-thumb
     border-color: transparent;
 }
 .auto-number-seedbox {
-    width: calc(max(10rem, 100%) - 12rem);
     flex-grow: 10;
 }
 .auto-number-small {
