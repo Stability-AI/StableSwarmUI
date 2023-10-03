@@ -72,7 +72,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
     {
         await RunWithSession(async () =>
         {
-            JObject backendData = await HttpClient.PostJson($"{Settings.Address}/API/ListBackends", new() { ["session_id"] = Session, ["nonreal"] = true });
+            JObject backendData = await HttpClient.PostJson($"{Settings.Address}/API/ListBackends", new() { ["session_id"] = Session, ["nonreal"] = true, ["full_data"] = true });
             if (backendData.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
             {
                 throw new SessionInvalidException();
@@ -113,6 +113,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     if (ControlledNonrealBackends.TryGetValue(id, out BackendHandler.T2IBackendData data))
                     {
                         data.Backend.MaxUsages = backend["max_usages"].Value<int>();
+                        data.Backend.CurrentModelName = (string)backend["current_model"];
                     }
                 }
                 else if (status == "loading")
