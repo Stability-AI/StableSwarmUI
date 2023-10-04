@@ -170,11 +170,11 @@ public class User
                 "batch_id" => $"{batchIndex}",
                 "user_name" => UserID,
                 "number" => "[number]",
-                string other => user_input.TryGetRaw(T2IParamTypes.GetType(other, user_input), out object val) ? val.ToString() : null
+                string other => T2IParamTypes.TryGetType(other, out T2IParamType type, user_input) && user_input.TryGetRaw(type, out object val) ? val.ToString() : null
             };
             if (data is null)
             {
-                return null;
+                return $"[{part}]";
             }
             if (data.Length > maxLen)
             {
@@ -184,7 +184,7 @@ public class User
             return data;
         }
         string path = Settings.OutPathBuilder.Format;
-        path = StringConversionHelper.QuickSimpleTagFiller(path, "[", "]", buildPathPart);
+        path = StringConversionHelper.QuickSimpleTagFiller(path, "[", "]", buildPathPart, maxDepth: 1);
         return Utilities.StrictFilenameClean(path);
     }
 }
