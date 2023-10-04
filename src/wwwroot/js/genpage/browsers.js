@@ -37,7 +37,7 @@ class GenPageBrowserClass {
         this.container = getRequiredElementById(container);
         this.listFoldersAndFiles = listFoldersAndFiles;
         this.id = id;
-        this.format = getCookie(`${id}_format`) || defaultFormat;
+        this.format = localStorage.getItem(`browser_${this.id}_format`) || getCookie(`${id}_format`) || defaultFormat; // TODO: Remove the old cookie
         this.describe = describe;
         this.select = select;
         this.folder = '';
@@ -337,7 +337,7 @@ class GenPageBrowserClass {
             }
             formatSelector.addEventListener('change', () => {
                 this.format = formatSelector.value;
-                setCookie(`${this.id}_format`, this.format, 365);
+                localStorage.setItem(`browser_${this.id}_format`, this.format);
                 this.update();
             });
             let buttons = createSpan(`${this.id}-button-container`, 'browser-header-buttons', `
@@ -377,7 +377,7 @@ class GenPageBrowserClass {
                 this.fullContentDiv.style.width = `calc(100vw - ${barSpot}px - 1rem)`;
             }
             this.lastReset = () => {
-                barSpot = parseInt(getCookie(`barspot_browser_${this.id}`) || convertRemToPixels(15));
+                barSpot = parseInt(localStorage.getItem(`barspot_browser_${this.id}`) || getCookie(`barspot_browser_${this.id}`) || convertRemToPixels(15)); // TODO: Remove the old cookie
                 setBar();
             };
             this.lastReset();
@@ -391,7 +391,7 @@ class GenPageBrowserClass {
                 offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
                 if (isDrag) {
                     barSpot = offX - 5;
-                    setCookie(`barspot_browser_${this.id}`, barSpot, 365);
+                    localStorage.setItem(`barspot_browser_${this.id}`, barSpot);
                     setBar();
                 }
             };
@@ -400,7 +400,10 @@ class GenPageBrowserClass {
             };
             document.addEventListener('mousemove', this.lastListen);
             document.addEventListener('mouseup', this.lastListenUp);
-            layoutResets.push(() => this.lastReset());
+            layoutResets.push(() => {
+                localStorage.removeItem(`barspot_browser_${this.id}`);
+                this.lastReset()
+            });
         }
         else {
             this.folderTreeDiv.innerHTML = '';
