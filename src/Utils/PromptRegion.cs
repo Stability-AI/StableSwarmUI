@@ -97,7 +97,7 @@ public class PromptRegion
                 continue;
             }
             double strength = coords.Length > 4 && double.TryParse(coords[4], out double s) ? s : 1.0;
-            double strength2 = coords.Length > 5 && double.TryParse(coords[5], out double s2) ? s2 : 0.9;
+            double strength2 = coords.Length > 5 && double.TryParse(coords[5], out double s2) ? s2 : 1.0;
             x = Math.Clamp(x, 0, 1);
             y = Math.Clamp(y, 0, 1);
             Part p = new()
