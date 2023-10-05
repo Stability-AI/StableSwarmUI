@@ -97,14 +97,48 @@ public class WorkflowGenerator
             if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image img))
             {
                 g.CreateLoadImageNode(img, "${initimage}", true, "15");
-                g.CreateNode("VAEEncode", (_, n) =>
+                if (g.UserInput.TryGet(T2IParamTypes.MaskImage, out Image mask))
                 {
-                    n["inputs"] = new JObject()
+                    string maskNode = g.CreateLoadImageNode(mask, "${maskimage}", true);
+                    string maskImageNode = g.CreateNode("ImageToMask", (_, n) =>
                     {
-                        ["pixels"] = new JArray() { "15", 0 },
-                        ["vae"] = g.FinalVae
-                    };
-                }, "5");
+                        n["inputs"] = new JObject()
+                        {
+                            ["image"] = new JArray() { maskNode, 0 },
+                            ["channel"] = "red"
+                        };
+                    });
+                    g.CreateNode("VAEEncodeForInpaint", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["pixels"] = new JArray() { "15", 0 },
+                            ["vae"] = g.FinalVae,
+                            ["mask"] = new JArray() { maskImageNode, 0 },
+                            ["grow_mask_by"] = 6
+                        };
+                    }, "5");
+                    string appliedNode = g.CreateNode("SetLatentNoiseMask", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["samples"] = new JArray() { "5", 0 },
+                            ["mask"] = new JArray() { maskImageNode, 0 }
+                        };
+                    });
+                    g.FinalLatentImage = new JArray() { appliedNode, 0 };
+                }
+                else
+                {
+                    g.CreateNode("VAEEncode", (_, n) =>
+                    {
+                        n["inputs"] = new JObject()
+                        {
+                            ["pixels"] = new JArray() { "15", 0 },
+                            ["vae"] = g.FinalVae
+                        };
+                    }, "5");
+                }
             }
             else
             {
@@ -117,27 +151,6 @@ public class WorkflowGenerator
                         ["width"] = g.UserInput.Get(T2IParamTypes.Width)
                     };
                 }, "5");
-            }
-            if (g.UserInput.TryGet(T2IParamTypes.MaskImage, out Image mask))
-            {
-                string maskNode = g.CreateLoadImageNode(mask, "${maskimage}", true);
-                string maskImageNode = g.CreateNode("ImageToMask", (_, n) =>
-                {
-                    n["inputs"] = new JObject()
-                    {
-                        ["image"] = new JArray() { maskNode, 0 },
-                        ["channel"] = "red"
-                    };
-                });
-                string appliedNode = g.CreateNode("SetLatentNoiseMask", (_, n) =>
-                {
-                    n["inputs"] = new JObject()
-                    {
-                        ["samples"] = new JArray() { "5", 0 },
-                        ["mask"] = new JArray() { maskImageNode, 0 }
-                    };
-                });
-                g.FinalLatentImage = new JArray() { appliedNode, 0 };
             }
         }, -9);
         #endregion
