@@ -18,6 +18,22 @@ const time_started = Date.now();
 
 let statusBarElem = getRequiredElementById('top_status_bar');
 
+/** Reference to the auto-clear-batch toggle checkbox. */
+let autoClearBatchElem = getRequiredElementById('auto_clear_batch_checkbox');
+autoClearBatchElem.checked = localStorage.getItem('autoClearBatch') != 'false';
+/** Called when the user changes auto-clear-batch toggle to update local storage. */
+function toggleAutoClearBatch() {
+    localStorage.setItem('autoClearBatch', `${autoClearBatchElem.checked}`);
+}
+
+/** Reference to the auto-load-previews toggle checkbox. */
+let autoLoadPreviewsElem = getRequiredElementById('auto_load_previews_checkbox');
+autoLoadPreviewsElem.checked = localStorage.getItem('autoLoadPreviews') == 'true';
+/** Called when the user changes auto-load-previews toggle to update local storage. */
+function toggleAutoLoadPreviews() {
+    localStorage.setItem('autoLoadPreviews', `${autoLoadPreviewsElem.checked}`);
+}
+
 function clickImageInBatch(div) {
     let imgElem = div.getElementsByTagName('img')[0];
     setCurrentImage(imgElem.src, div.dataset.metadata, div.dataset.batch_id || '', imgElem.dataset.previewGrow == 'true');
@@ -278,7 +294,7 @@ function gotImagePreview(image, metadata, batchId) {
     let batch_div = appendImage('current_image_batch', src, batchId, fname, metadata, 'batch', true);
     batch_div.querySelector('img').dataset.previewGrow = 'true';
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
-    if (!document.getElementById('current_image_img')) {
+    if (!document.getElementById('current_image_img') || (autoLoadPreviewsElem.checked && image != 'imgs/model_placeholder.jpg')) {
         setCurrentImage(src, metadata, batchId, true);
     }
     return batch_div;
@@ -417,6 +433,9 @@ function doGenerate(input_overrides = {}) {
                     imgHolder.current_percent = data.gen_progress.current_percent;
                     overall.style.width = `${imgHolder.overall_percent * 100}%`;
                     imgHolder.div.querySelector('.image-preview-progress-current').style.width = `${imgHolder.current_percent * 100}%`;
+                    if (data.gen_progress.preview && autoLoadPreviewsElem.checked && imgHolder.image == null) {
+                        setCurrentImage(data.gen_progress.preview, `{"preview": "${data.gen_progress.current_percent}"}`, `${batch_id}_${data.gen_progress.batch_index}`, true);
+                    }
                     let curImgElem = document.getElementById('current_image_img');
                     if (data.gen_progress.preview && (!imgHolder.image || data.gen_progress.preview != imgHolder.image)) {
                         if (curImgElem && curImgElem.dataset.batch_id == `${batch_id}_${data.gen_progress.batch_index}`) {
@@ -864,14 +883,6 @@ function pageSizer() {
     altPromptSizeHandleFunc = altPromptSizeHandle;
     textPromptAddKeydownHandler(altText);
     addEventListener("resize", setPageBars);
-}
-
-/** Reference to the auto-clear-batch toggle checkbox. */
-let autoClearBatchElem = getRequiredElementById('auto_clear_batch_checkbox');
-autoClearBatchElem.checked = localStorage.getItem('autoClearBatch') != 'false';
-/** Called when the user changes auto-clear-batch toggle to update local storage. */
-function toggleAutoClearBatch() {
-    localStorage.setItem('autoClearBatch', `${autoClearBatchElem.checked}`);
 }
 
 /** Clears out and resets the image-batch view, only if the user wants that. */

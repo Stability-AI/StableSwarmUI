@@ -179,21 +179,22 @@ body {
     min-width: 20rem;
     vertical-align: top;
 }
-.auto-clear-batch-box {
-    color: color-mix(in srgb, var(--text) 70%, var(--background));
-    background-color: color-mix(in srgb, transparent 50%, var(--background));
-    border-radius: 0.3rem;
-    width: 7.5rem;
-    height: 1rem;
+.batch-gear-button {
+    height: 1.4rem;
     position: absolute;
     top: -0.2rem;
     left: 0;
+    width: fit-content;
+    padding: 0.1rem;
+    color: color-mix(in srgb, var(--text) 70%, var(--background));
+    background-color: color-mix(in srgb, transparent 50%, var(--background));
+    border-radius: 0.4rem;
     transition: all 0.5s ease-out;
-    font-size: 80%;
+    cursor: pointer;
 }
-.auto-clear-batch-box:hover {
+.batch-gear-button:hover {
     color: var(--text);
-    background-color: var(--background);
+    background-color: color-mix(in srgb, var(--emphasis) 50%, var(--background));
 }
 .image-block {
     display: inline-block;

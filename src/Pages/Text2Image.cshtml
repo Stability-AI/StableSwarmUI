@@ -51,9 +51,17 @@
                     <div class="current_image" id="current_image"></div><div class="t2i-top-split-bar splitter-bar" id="t2i-top-2nd-split-bar"></div>
                     <div class="current_image_batch" id="current_image_batch_wrapper">
                         <div style="position: relative; width: 0; height: 0;">
-                            <div class="auto-clear-batch-box" title="If enabled, automatically clears out the image batch when generating a new one. If disabled, leaves history to grow until you refresh the page.">
+                            <div class="batch-gear-button" onclick="doPopover('batchgear')">&#9881;</div>
+                        </div>
+                        <div class="sui-popover sui_popover_model" id="popover_batchgear">
+                            <div class="batchgear-toggler" title="If enabled, automatically clears out the image batch when generating a new one. If disabled, leaves history to grow until you refresh the page.">
                                 <span class="form-check form-switch display-inline-block">
                                     <input type="checkbox" class="form-check-input" id="auto_clear_batch_checkbox" onchange="toggleAutoClearBatch()" checked=""> <label class="form-check-label" for="auto_clear_batch_checkbox">Auto Clear Batch</label>
+                                </span>
+                            </div>
+                            <div class="batchgear-toggler" title="If enabled, automatically swaps to previews of new images the moment they're available, before the image itself is done generating.">
+                                <span class="form-check form-switch display-inline-block">
+                                    <input type="checkbox" class="form-check-input" id="auto_load_previews_checkbox" onchange="toggleAutoLoadPreviews()" checked=""> <label class="form-check-label" for="auto_load_previews_checkbox">Auto Swap To Previews</label>
                                 </span>
                             </div>
                         </div>
