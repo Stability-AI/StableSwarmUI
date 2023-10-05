@@ -73,3 +73,7 @@
     margin: 0;
     float: right;
 }
+.comfy-disable-button {
+    margin: auto;
+    display: block;
+}

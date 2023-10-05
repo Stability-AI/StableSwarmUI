@@ -521,13 +521,16 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
             }
         }
     }
+    let isSortTop = p => p.id == 'prompt' || p.id == 'negativeprompt';
+    let prompt = Object.values(actualParams).filter(isSortTop);
+    let otherParams = Object.values(actualParams).filter(p => !isSortTop(p));
     let prims = Object.values(params).filter(p => p.group == null);
     let others = Object.values(params).filter(p => p.group != null).sort((a, b) => a.group.id.localeCompare(b.group.id));
-    actualParams = prims.concat(actualParams).concat(others);
+    actualParams = prompt.concat(prims).concat(otherParams).concat(others);
     gen_param_types = actualParams;
     genInputs(true);
     let area = getRequiredElementById('main_inputs_area');
-    area.innerHTML = '<button class="basic-button" onclick="comfyParamsDisable()">Disable Custom ComfyUI Workflow</button>\n' + area.innerHTML;
+    area.innerHTML = '<button class="basic-button comfy-disable-button" onclick="comfyParamsDisable()">Disable Custom ComfyUI Workflow</button>\n' + area.innerHTML;
 }
 
 /**
