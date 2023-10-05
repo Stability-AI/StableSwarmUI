@@ -194,7 +194,7 @@ body {
 }
 .batch-gear-button:hover {
     color: var(--text);
-    background-color: color-mix(in srgb, var(--emphasis) 50%, var(--background));
+    background-color: var(--emphasis);
 }
 .image-block {
     display: inline-block;
