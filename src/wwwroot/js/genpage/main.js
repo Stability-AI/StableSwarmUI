@@ -142,16 +142,43 @@ window.addEventListener('keydown', function(kbevent) {
     return false;
 });
 
+function alignImageDataFormat() {
+    let curImg = getRequiredElementById('current_image');
+    let img = document.getElementById('current_image_img');
+    if (!img) {
+        return;
+    }
+    let extrasWrapper = curImg.querySelector('.current-image-extras-wrapper');
+    let ratio = img.naturalWidth / img.naturalHeight;
+    let height = Math.min(img.naturalHeight, curImg.offsetHeight);
+    let width = Math.min(img.naturalWidth, height * ratio);
+    let remainingWidth = curImg.offsetWidth - width - 20;
+    console.log(`${curImg.offsetWidth} - ${width} = ${remainingWidth}`)
+    if (remainingWidth > 25 * 16) {
+        extrasWrapper.style.width = `${remainingWidth}px`;
+        extrasWrapper.style.maxWidth = `${remainingWidth}px`;
+        extrasWrapper.style.display = 'inline-block';
+        img.style.maxHeight = `calc(max(15rem, 100%))`;
+    }
+    else {
+        extrasWrapper.style.width = '100%';
+        extrasWrapper.style.maxWidth = `100%`;
+        extrasWrapper.style.display = 'block';
+        img.style.maxHeight = `calc(max(15rem, 100% - 5rem))`;
+    }
+}
+
 function setCurrentImage(src, metadata = '', batchId = '') {
     let curImg = getRequiredElementById('current_image');
     curImg.innerHTML = '';
     let img = document.createElement('img');
+    img.className = 'current-image-img';
     img.id = 'current_image_img';
     img.src = src;
     img.dataset.batch_id = batchId;
     img.onclick = () => expandCurrentImage(src, metadata);
-    curImg.appendChild(img);
     currentMetadataVal = metadata;
+    let extrasWrapper = createDiv(null, 'current-image-extras-wrapper');
     let buttons = createDiv(null, 'current-image-buttons');
     quickAppendButton(buttons, 'Upscale 2x', () => {
         toDataURL(img.src, (url => {
@@ -182,10 +209,13 @@ function setCurrentImage(src, metadata = '', batchId = '') {
         getRequiredElementById('imagehistorytabclickable').click();
         imageHistoryBrowser.navigate(folder);
     });
-    curImg.appendChild(buttons);
+    extrasWrapper.appendChild(buttons);
     let data = createDiv(null, 'current-image-data');
     data.innerHTML = formatMetadata(metadata);
-    curImg.appendChild(data);
+    extrasWrapper.appendChild(data);
+    img.onload = alignImageDataFormat;
+    curImg.appendChild(img);
+    curImg.appendChild(extrasWrapper);
 }
 
 function appendImage(container, imageSrc, batchId, textPreview, metadata = '', type = 'legacy', prepend = true) {
@@ -702,6 +732,7 @@ function pageSizer() {
             topBar.style.height = '';
             bottomBarContent.style.height = '';
         }
+        alignImageDataFormat();
     }
     setPageBarsFunc = setPageBars;
     let cookieA = getCookie('barspot_pageBarTop');
@@ -823,6 +854,7 @@ function pageSizer() {
     new ResizeObserver(altPromptSizeHandle).observe(altText);
     altPromptSizeHandleFunc = altPromptSizeHandle;
     textPromptAddKeydownHandler(altText);
+    addEventListener("resize", setPageBars);
 }
 
 /** Reference to the auto-clear-batch toggle checkbox. */

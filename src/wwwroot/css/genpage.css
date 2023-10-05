@@ -168,6 +168,10 @@ body {
     vertical-align: top;
     white-space: normal;
 }
+.current-image-extras-wrapper {
+    min-width: 20rem;
+    vertical-align: top;
+}
 .auto-clear-batch-box {
     color: color-mix(in srgb, var(--text) 70%, var(--background));
     background-color: color-mix(in srgb, transparent 50%, var(--background));
