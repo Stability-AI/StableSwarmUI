@@ -19,7 +19,8 @@ const time_started = Date.now();
 let statusBarElem = getRequiredElementById('top_status_bar');
 
 function clickImageInBatch(div) {
-    setCurrentImage(div.getElementsByTagName('img')[0].src, div.dataset.metadata);
+    let imgElem = div.getElementsByTagName('img')[0];
+    setCurrentImage(imgElem.src, div.dataset.metadata, div.dataset.batch_id || '', imgElem.dataset.previewGrow == 'true');
 }
 
 let currentMetadataVal = null;
@@ -113,7 +114,7 @@ function shiftToNextImagePreview(next = true, expand = false) {
     }
     let newImg = imgs[newIndex];
     let block = findParentOfClass(newImg, 'image-block');
-    setCurrentImage(newImg.src, block.dataset.metadata, block.dataset.batch_id);
+    setCurrentImage(newImg.src, block.dataset.metadata, block.dataset.batch_id, newImg.dataset.previewGrow == 'true');
     if (expand) {
         expandCurrentImage(newImg.src, block.dataset.metadata);
     }
@@ -149,25 +150,30 @@ function alignImageDataFormat() {
         return;
     }
     let extrasWrapper = curImg.querySelector('.current-image-extras-wrapper');
-    let ratio = img.naturalWidth / img.naturalHeight;
-    let height = Math.min(img.naturalHeight, curImg.offsetHeight);
-    let width = Math.min(img.naturalWidth, height * ratio);
+    let scale = img.dataset.previewGrow == 'true' ? 8 : 1;
+    let imgWidth = img.naturalWidth * scale;
+    let imgHeight = img.naturalHeight * scale;
+    let ratio = imgWidth / imgHeight;
+    let height = Math.min(imgHeight, curImg.offsetHeight);
+    let width = Math.min(imgWidth, height * ratio);
     let remainingWidth = curImg.offsetWidth - width - 20;
     if (remainingWidth > 25 * 16) {
         extrasWrapper.style.width = `${remainingWidth}px`;
         extrasWrapper.style.maxWidth = `${remainingWidth}px`;
         extrasWrapper.style.display = 'inline-block';
+        img.style.maxWidth = `${width}px`;
         img.style.maxHeight = `calc(max(15rem, 100%))`;
     }
     else {
         extrasWrapper.style.width = '100%';
         extrasWrapper.style.maxWidth = `100%`;
         extrasWrapper.style.display = 'block';
+        img.style.maxWidth = `${width}px`;
         img.style.maxHeight = `calc(max(15rem, 100% - 5rem))`;
     }
 }
 
-function setCurrentImage(src, metadata = '', batchId = '') {
+function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false) {
     let curImg = getRequiredElementById('current_image');
     curImg.innerHTML = '';
     let img = document.createElement('img');
@@ -212,7 +218,14 @@ function setCurrentImage(src, metadata = '', batchId = '') {
     let data = createDiv(null, 'current-image-data');
     data.innerHTML = formatMetadata(metadata);
     extrasWrapper.appendChild(data);
-    img.onload = alignImageDataFormat;
+    img.onload = () => {
+        if (previewGrow) {
+            img.width = img.naturalWidth * 8;
+            img.height = img.naturalHeight * 8;
+            img.dataset.previewGrow = 'true';
+        }
+        alignImageDataFormat();
+    }
     curImg.appendChild(img);
     curImg.appendChild(extrasWrapper);
 }
@@ -262,10 +275,11 @@ function gotImagePreview(image, metadata, batchId) {
     updateGenCount();
     let src = image;
     let fname = src && src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
-    let batch_div = appendImage('current_image_batch', src, batchId, fname, metadata, 'batch');
+    let batch_div = appendImage('current_image_batch', src, batchId, fname, metadata, 'batch', true);
+    batch_div.querySelector('img').dataset.previewGrow = 'true';
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
     if (!document.getElementById('current_image_img')) {
-        setCurrentImage(src, metadata, batchId);
+        setCurrentImage(src, metadata, batchId, true);
     }
     return batch_div;
 }
@@ -375,7 +389,9 @@ function doGenerate(input_overrides = {}) {
                 else {
                     let imgHolder = images[data.batch_index];
                     setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`);
-                    imgHolder.div.querySelector('img').src = data.image;
+                    let imgElem = imgHolder.div.querySelector('img');
+                    imgElem.src = data.image;
+                    delete imgElem.dataset.previewGrow;
                     imgHolder.image = data.image;
                     imgHolder.div.dataset.metadata = data.metadata;
                     let progress_bars = imgHolder.div.querySelector('.image-preview-progress-wrapper');
@@ -404,10 +420,6 @@ function doGenerate(input_overrides = {}) {
                     let curImgElem = document.getElementById('current_image_img');
                     if (data.gen_progress.preview && (!imgHolder.image || data.gen_progress.preview != imgHolder.image)) {
                         if (curImgElem && curImgElem.dataset.batch_id == `${batch_id}_${data.gen_progress.batch_index}`) {
-                            curImgElem.onload = () => {
-                                curImgElem.width = curImgElem.naturalWidth * 8;
-                                curImgElem.height = curImgElem.naturalHeight * 8;
-                            };
                             curImgElem.src = data.gen_progress.preview;
                             let metadata = getRequiredElementById('current_image').querySelector('.current-image-data');
                             if (metadata) {
