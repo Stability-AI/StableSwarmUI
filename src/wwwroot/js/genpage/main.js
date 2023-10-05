@@ -153,7 +153,6 @@ function alignImageDataFormat() {
     let height = Math.min(img.naturalHeight, curImg.offsetHeight);
     let width = Math.min(img.naturalWidth, height * ratio);
     let remainingWidth = curImg.offsetWidth - width - 20;
-    console.log(`${curImg.offsetWidth} - ${width} = ${remainingWidth}`)
     if (remainingWidth > 25 * 16) {
         extrasWrapper.style.width = `${remainingWidth}px`;
         extrasWrapper.style.maxWidth = `${remainingWidth}px`;
@@ -694,6 +693,11 @@ function pageSizer() {
     let topDrag2 = false;
     let midDrag = false;
     function setPageBars() {
+        if (altRegion.style.display != 'none') {
+            altText.style.height = 'auto';
+            altText.style.height = `${Math.max(altText.scrollHeight, 15) + 5}px`;
+            altRegion.style.top = `calc(-${altText.offsetHeight + altImageRegion.offsetHeight}px - 2rem)`;
+        }
         setCookie('barspot_pageBarTop', pageBarTop, 365);
         setCookie('barspot_pageBarTop2', pageBarTop2, 365);
         setCookie('barspot_pageBarMidPx', pageBarMid, 365);
@@ -708,7 +712,7 @@ function pageSizer() {
         currentImageBatch.style.width = `${barTopRight}`;
         topSplitButton.innerHTML = leftShut ? '&#x21DB;' : '&#x21DA;';
         midSplitButton.innerHTML = midForceToBottom ? '&#x290A;' : '&#x290B;';
-        let altHeight = `(${altText.offsetHeight + altImageRegion.offsetHeight}px + 2rem)`;
+        let altHeight = altRegion.style.display == 'none' ? '0px' : `(${altText.offsetHeight + altImageRegion.offsetHeight}px + 2rem)`;
         if (pageBarMid != -1 || midForceToBottom) {
             let fixed = midForceToBottom ? `8rem` : `${pageBarMid}px`;
             topSplit.style.height = `calc(100vh - ${fixed})`;
@@ -835,17 +839,10 @@ function pageSizer() {
         setCookie(`lastparam_input_prompt`, altText.value, 0.25);
         textPromptDoCount(altText);
     });
-    function altTextSize() {
-        altText.style.height = 'auto';
-        altText.style.height = `${Math.max(altText.scrollHeight, 15) + 5}px`;
-        altRegion.style.top = `calc(-${altText.offsetHeight + altImageRegion.offsetHeight}px - 2rem)`;
-    }
     altText.addEventListener('input', () => {
-        altTextSize();
         setCookie(`lastparam_input_prompt`, altText.value, 0.25);
         setPageBars();
     });
-    altTextSize();
     function altPromptSizeHandle() {
         altRegion.style.top = `calc(-${altText.offsetHeight + altImageRegion.offsetHeight}px - 2rem)`;
         setPageBars();

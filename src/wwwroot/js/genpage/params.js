@@ -113,6 +113,7 @@ function genInputs(delay_final = false) {
     let runnables = [];
     let groupsClose = [];
     let groupsEnable = [];
+    let defaultPromptVisible = false;
     for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => (p.visible || p.id == 'prompt') && !isParamAdvanced(p), true],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p), false],
             ['main_inputs_area_hidden', 'new_preset_modal_hidden_inputs', (p) => (!p.visible || p.id == 'prompt'), false]]) {
@@ -157,8 +158,9 @@ function genInputs(delay_final = false) {
                 lastGroup = groupName;
             }
             if (param.id == 'prompt' && param.visible && isMain) {
-                html += `<button class="generate-button" id="generate_button" onclick="getRequiredElementById('alt_generate_button').click()">Generate Image</button>
-                <br><span class="interrupt_line"><button class="interrupt-button interrupt-button-none" id="interrupt_button" onclick="getRequiredElementById('alt_interrupt_button').click()">Interrupt</button></span>`;
+                defaultPromptVisible = true;
+                html += `<button class="generate-button" id="generate_button" onclick="getRequiredElementById('alt_generate_button').click()" oncontextmenu="return getRequiredElementById('alt_generate_button').oncontextmenu()">Generate</button>
+                <button class="interrupt-button legacy-interrupt interrupt-button-none" id="interrupt_button" onclick="getRequiredElementById('alt_interrupt_button').click()" oncontextmenu="return getRequiredElementById('alt_interrupt_button').oncontextmenu()">&times;</button>`;
             }
             if (param.id == 'prompt' ? param.visible == isMain : true) {
                 let newData = getHtmlForParam(param, "input_");
@@ -273,6 +275,13 @@ function genInputs(delay_final = false) {
             };
             inputPrompt.addEventListener('input', update);
             inputPrompt.addEventListener('change', update);
+        }
+        let altPromptArea = getRequiredElementById('alt_prompt_region');
+        if (defaultPromptVisible) {
+            altPromptArea.style.display = 'none';
+        }
+        else {
+            altPromptArea.style.display = 'block';
         }
         let inputLoras = document.getElementById('input_loras');
         if (inputLoras) {
@@ -414,6 +423,14 @@ function getGenInput(input_overrides = {}) {
         }
         else {
             input[type.id] = elem.value;
+        }
+        if (type.id == 'prompt') {
+            let container = findParentOfClass(elem, 'auto-input');
+            let addedImageArea = container.querySelector('.added-image-area');
+            let imgs = [...addedImageArea.children].filter(c => c.tagName == "IMG");
+            if (imgs.length > 0) {
+                input["promptimages"] = imgs.map(img => img.dataset.filedata).join('|');
+            }
         }
     }
     let revisionImageArea = getRequiredElementById('alt_prompt_image_area');

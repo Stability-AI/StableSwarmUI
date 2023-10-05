@@ -70,14 +70,14 @@
                             <button class="alt-prompt-buttons basic-button" id="alt_generate_button" oncontextmenu="doPopover('generate'); return false;" onclick="doGenerate()">Generate</button>
                             <button class="alt-prompt-buttons interrupt-button interrupt-button-none alt-interrupt" id="alt_interrupt_button" oncontextmenu="doPopover('interrupt'); return false;" onclick="doInterrupt()">&times;</button>
                         </div>
-                        <div class="sui-popover sui_popover_model" id="popover_generate">
-                            <div class="sui_popover_model_button" onclick="doGenerate()">Generate</div>
-                            <div class="sui_popover_model_button" id="generate_forever_button" onclick="toggleGenerateForever()">Generate Forever</div>
-                        </div>
-                        <div class="sui-popover sui_popover_model" id="popover_interrupt">
-                            <div class="sui_popover_model_button" onclick="doInterrupt()">Interrupt Current Session</div>
-                            <div class="sui_popover_model_button" onclick="doInterrupt(true)">Interrupt All Sessions</div>
-                        </div>
+                    </div>
+                    <div class="sui-popover sui_popover_model" id="popover_generate">
+                        <div class="sui_popover_model_button" onclick="doGenerate()">Generate</div>
+                        <div class="sui_popover_model_button" id="generate_forever_button" onclick="toggleGenerateForever()">Generate Forever</div>
+                    </div>
+                    <div class="sui-popover sui_popover_model" id="popover_interrupt">
+                        <div class="sui_popover_model_button" onclick="doInterrupt()">Interrupt Current Session</div>
+                        <div class="sui_popover_model_button" onclick="doInterrupt(true)">Interrupt All Sessions</div>
                     </div>
                 </div>
                 <div class="model-block-menu-button t2i-area-quicktools" onclick="doPopover('quicktools')">Quick Tools</div>

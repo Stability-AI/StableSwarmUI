@@ -14,15 +14,22 @@ body {
     background-color: var(--button-background);
     color: var(--button-text);
     border: 1px solid var(--button-border);
-    font-size: 200%;
+    font-size: 150%;
     font-weight: bold;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
     text-align: center;
     border-radius: 1rem;
     width: calc(90% - 2rem);
     margin-left: 5%;
-    height: 5rem;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+}
+.legacy-interrupt {
+    font-size: 150%;
+    font-weight: bold;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
     margin-bottom: 0.5rem;
     margin-top: 0.5rem;
 }
