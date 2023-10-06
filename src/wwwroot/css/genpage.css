@@ -553,7 +553,7 @@ body {
     height: 100%;
     width: 100%;
     max-height: calc(min(100vw, 100vh - 5em));
-    max-width: 90vw;
+    max-width: 95vw;
     position: relative;
     margin: auto;
     object-fit: contain;
@@ -563,7 +563,7 @@ body {
     overflow-wrap: break-word;
 }
 .imageview_modal_inner_div {
-    max-width: 90vw;
+    max-width: 95vw;
     margin: auto;
 }
 .browser-folder-tree-container {
