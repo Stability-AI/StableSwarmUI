@@ -304,12 +304,10 @@ function setCookie(name, value, expirationDays, sameSite = 'Lax') {
  */
 function getCookie(name) {
     name = name + "=";
-    let decodedCookie = decodeURIComponent(document.cookie);
-    let ca = decodedCookie.split(';');
-    for(let i = 0; i < ca.length; i++) {
-        let c = ca[i].trim();
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
+    for(let part of document.cookie.split(';')) {
+        let clean = part.trimStart();
+        if (clean.startsWith(name)) {
+            return decodeURIComponent(clean.substring(name.length));
         }
     }
     return "";
