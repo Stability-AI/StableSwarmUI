@@ -418,7 +418,7 @@ public class T2IModelHandler
                     Logs.Warning($"Failed to load metadata for {fullFilename}:\n{ex}");
                 }
             }
-            else if (fn.EndsWith(".ckpt") || fn.EndsWith(".pt"))
+            else if (fn.EndsWith(".ckpt") || fn.EndsWith(".pt") || fn.EndsWith(".pth"))
             {
                 T2IModel model = new()
                 {
