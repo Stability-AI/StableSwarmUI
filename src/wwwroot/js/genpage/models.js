@@ -22,6 +22,8 @@ function editModel(model, browser) {
     let curImg = document.getElementById('current_image_img');
     if (curImg) {
         let newImg = curImg.cloneNode(true);
+        newImg.id = 'edit_model_image_img';
+        newImg.style.maxWidth = '100%';
         imageInput.appendChild(newImg);
         enableImage.checked = true;
         enableImage.disabled = false;
