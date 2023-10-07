@@ -98,7 +98,7 @@ namespace StableSwarmUI.Text2Image
             if (canCallTools)
             {
                 string prompt = user_input.Get(T2IParamTypes.Prompt);
-                if (prompt.Contains("<object:"))
+                if (prompt is not null && prompt.Contains("<object:"))
                 {
                     Image multiImg = await T2IMultiStepObjectBuilder.CreateFullImage(prompt, user_input, batchId, claim, output, setError, isWS, backendTimeoutMin);
                     if (multiImg is not null)
