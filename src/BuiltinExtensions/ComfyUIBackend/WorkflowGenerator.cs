@@ -97,6 +97,14 @@ public class WorkflowGenerator
             if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image img))
             {
                 g.CreateLoadImageNode(img, "${initimage}", true, "15");
+                g.CreateNode("VAEEncode", (_, n) =>
+                {
+                    n["inputs"] = new JObject()
+                    {
+                        ["pixels"] = new JArray() { "15", 0 },
+                        ["vae"] = g.FinalVae
+                    };
+                }, "5");
                 if (g.UserInput.TryGet(T2IParamTypes.MaskImage, out Image mask))
                 {
                     string maskNode = g.CreateLoadImageNode(mask, "${maskimage}", true);
@@ -108,16 +116,6 @@ public class WorkflowGenerator
                             ["channel"] = "red"
                         };
                     });
-                    g.CreateNode("VAEEncodeForInpaint", (_, n) =>
-                    {
-                        n["inputs"] = new JObject()
-                        {
-                            ["pixels"] = new JArray() { "15", 0 },
-                            ["vae"] = g.FinalVae,
-                            ["mask"] = new JArray() { maskImageNode, 0 },
-                            ["grow_mask_by"] = 6
-                        };
-                    }, "5");
                     string appliedNode = g.CreateNode("SetLatentNoiseMask", (_, n) =>
                     {
                         n["inputs"] = new JObject()
@@ -127,17 +125,6 @@ public class WorkflowGenerator
                         };
                     });
                     g.FinalLatentImage = new JArray() { appliedNode, 0 };
-                }
-                else
-                {
-                    g.CreateNode("VAEEncode", (_, n) =>
-                    {
-                        n["inputs"] = new JObject()
-                        {
-                            ["pixels"] = new JArray() { "15", 0 },
-                            ["vae"] = g.FinalVae
-                        };
-                    }, "5");
                 }
             }
             else
