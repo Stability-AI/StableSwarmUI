@@ -383,10 +383,15 @@ public static class NetworkBackendUtils
             }
         }
         new Thread(MonitorErrLoop) { Name = $"SelfStart{nameSimple}_{port}_MonitorErr" }.Start();
+        int checks = 0;
         while (status == BackendStatus.LOADING)
         {
+            checks++;
             await Task.Delay(TimeSpan.FromSeconds(1));
-            Logs.Debug($"{nameSimple} port {port} checking for server...");
+            if (checks % 10 == 0)
+            {
+                Logs.Debug($"{nameSimple} port {port} waiting for server...");
+            }
             bool alive = await initInternal(true);
             if (alive)
             {
