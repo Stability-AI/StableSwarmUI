@@ -208,18 +208,18 @@ class GenPageBrowserClass {
             if (this.filter && !desc.searchable.toLowerCase().includes(this.filter)) {
                 continue;
             }
+            let div = createDiv(null, `${desc.className}`);
             let popoverId = `${this.id}-${id}`;
             if (desc.buttons.length > 0) {
                 let menuDiv = createDiv(`popover_${popoverId}`, 'sui-popover sui_popover_model');
                 for (let button of desc.buttons) {
                     let buttonElem = createDiv(null, 'sui_popover_model_button');
                     buttonElem.innerText = button.label;
-                    buttonElem.onclick = button.onclick;
+                    buttonElem.onclick = () => button.onclick(div);
                     menuDiv.appendChild(buttonElem);
                 }
                 container.appendChild(menuDiv);
             }
-            let div = createDiv(null, `${desc.className}`);
             let img = document.createElement('img');
             img.addEventListener('click', () => {
                 this.select(file);

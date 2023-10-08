@@ -489,9 +489,9 @@ function describeImage(image) {
     let buttons = [
         {
             label: 'Delete',
-            onclick: () => {
+            onclick: (e) => {
                 genericRequest('DeleteImage', {'path': image.data.src.substring("Output/".length)}, data => {
-                    imageHistoryBrowser.refresh();
+                    e.remove();
                 });
             }
         }
