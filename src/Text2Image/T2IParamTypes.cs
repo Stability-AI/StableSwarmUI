@@ -370,13 +370,13 @@ public class T2IParamTypes
             "0", Toggleable: true, IgnoreIf: "0", VisibleNormally: false, Min: 0, Max: 1, FeatureFlag: "endstepsearly"
             ));
         GroupAdvancedSampling = new("Advanced Sampling", Open: false, OrderPriority: 10, IsAdvanced: true);
-        SamplerSigmaMin = Register<double>(new("Sampler Sigma Min", "Minimum sigma value for the sampler.",
+        SamplerSigmaMin = Register<double>(new("Sampler Sigma Min", "Minimum sigma value for the sampler.\nOnly applies to Karras/Exponential schedulers.",
             "0", Min: 0, Max: 1000, Step: 0.01, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
             ));
-        SamplerSigmaMax = Register<double>(new("Sampler Sigma Max", "Maximum sigma value for the sampler.",
+        SamplerSigmaMax = Register<double>(new("Sampler Sigma Max", "Maximum sigma value for the sampler.\nOnly applies to Karras/Exponential schedulers.",
             "10", Min: 0, Max: 1000, Step: 0.01, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
             ));
-        SamplerRho = Register<double>(new("Sampler Rho", "Rho value for the sampler.",
+        SamplerRho = Register<double>(new("Sampler Rho", "Rho value for the sampler.\nOnly applies to Karras/Exponential schedulers.",
             "7", Min: 0, Max: 1000, Step: 0.01, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
             ));
     }

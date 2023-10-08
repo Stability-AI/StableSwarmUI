@@ -603,6 +603,9 @@ public class WorkflowGenerator
                     {
                         inputs["var_seed"] = g.UserInput.Get(T2IParamTypes.VariationSeed, 0);
                         inputs["var_seed_strength"] = g.UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
+                        inputs["sigma_min"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
+                        inputs["sigma_max"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
+                        inputs["rho"] = g.UserInput.Get(T2IParamTypes.SamplerRho, 7);
                         inputs["previews"] = "default";
                         n["inputs"] = inputs;
                     }, "23");
