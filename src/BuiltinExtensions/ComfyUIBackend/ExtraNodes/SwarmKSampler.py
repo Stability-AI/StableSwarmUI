@@ -107,7 +107,7 @@ class SwarmKSampler:
                     swarm_send_extra_preview(i, preview_img[1])
 
         sigmas = None
-        if (sigma_min >= 0 or sigma_max >= 0) and scheduler in ["karras", "exponential"]:
+        if sigma_min >= 0 and sigma_max >= 0 and scheduler in ["karras", "exponential"]:
             real_model, _, _, _, _ = comfy.sample.prepare_sampling(model, noise.shape, positive, negative, noise_mask)
             if sampler_name in ['dpm_2', 'dpm_2_ancestral']:
                 sigmas = calculate_sigmas_scheduler(real_model, scheduler, steps + 1, sigma_min, sigma_max, rho)
