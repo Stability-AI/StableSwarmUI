@@ -1,6 +1,18 @@
 @echo off
 
-cd "%~dp0"
+echo Where do you want to install StableSwarmUI?
+set /p installDir=Enter the installation path: 
+
+echo You've chosen to install at: "%installDir%"
+
+if not exist "%installDir%" (
+    echo The specified directory does not exist. Please rerun this script
+    pause
+    exit
+)
+
+cd "%installDir%"
+
 
 if exist StableSwarmUI (
     echo StableSwarmUI is already installed in this folder. If this is incorrect, delete the 'StableSwarmUI' folder and try again.
