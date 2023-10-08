@@ -209,14 +209,14 @@ public class T2IParamTypes
     public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID;
     public static T2IRegisteredParam<long> Seed, VariationSeed;
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult,
-        FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly;
+        FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly, SamplerSigmaMin, SamplerSigmaMax, SamplerRho;
     public static T2IRegisteredParam<Image> InitImage, MaskImage, ControlNetImage;
     public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel, RegionalObjectInpaintingModel;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
     public static T2IRegisteredParam<List<Image>> PromptImages;
     public static T2IRegisteredParam<bool> DoNotSave, ControlNetPreviewOnly;
 
-    public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, GroupControlNet, GroupAdvancedModelAddons, GroupSwarmInternal, GroupFreeU, GroupRegionalPrompting;
+    public static T2IParamGroup GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, GroupControlNet, GroupAdvancedModelAddons, GroupSwarmInternal, GroupFreeU, GroupRegionalPrompting, GroupAdvancedSampling;
 
     /// <summary>(For extensions) list of functions that provide fake types for given type names.</summary>
     public static List<Func<string, T2IParamInput, T2IParamType>> FakeTypeProviders = new();
@@ -367,7 +367,18 @@ public class T2IParamTypes
             "", Toggleable: true, Subtype: "Stable-Diffusion", Group: GroupRegionalPrompting
             ));
         EndStepsEarly = Register<double>(new("End Steps Early", "Percentage of steps to cut off before the image is done generation.",
-            "0", Toggleable: true, IgnoreIf: "0", VisibleNormally: false, Min: 0, Max: 1, FeatureFlag: "endstepsearly"));
+            "0", Toggleable: true, IgnoreIf: "0", VisibleNormally: false, Min: 0, Max: 1, FeatureFlag: "endstepsearly"
+            ));
+        GroupAdvancedSampling = new("Advanced Sampling", Open: false, OrderPriority: 10, IsAdvanced: true);
+        SamplerSigmaMin = Register<double>(new("Sampler Sigma Min", "Minimum sigma value for the sampler.",
+            "0", Min: 0, Max: 1000, Step: 0.01, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
+            ));
+        SamplerSigmaMax = Register<double>(new("Sampler Sigma Max", "Maximum sigma value for the sampler.",
+            "10", Min: 0, Max: 1000, Step: 0.01, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
+            ));
+        SamplerRho = Register<double>(new("Sampler Rho", "Rho value for the sampler.",
+            "7", Min: 0, Max: 1000, Step: 0.01, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
+            ));
     }
 
     /// <summary>Gets the value in the list that best matches the input text (for user input handling).</summary>

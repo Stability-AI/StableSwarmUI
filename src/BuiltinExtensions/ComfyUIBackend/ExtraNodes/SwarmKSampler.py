@@ -42,6 +42,15 @@ def swarm_send_extra_preview(id, image):
     preview_bytes = bytesIO.getvalue()
     server.send_sync(1, preview_bytes, sid=server.client_id)
 
+def calculate_sigmas_scheduler(model, scheduler_name, steps, sigma_min, sigma_max, rho):
+    model_wrap = comfy.samplers.wrap_model(model)
+    if scheduler_name == "karras":
+        return comfy.k_diffusion.sampling.get_sigmas_karras(n=steps, sigma_min=sigma_min if sigma_min >= 0 else float(model_wrap.sigma_min), sigma_max=sigma_max if sigma_max >= 0 else float(model_wrap.sigma_max), rho=rho)
+    elif scheduler_name == "exponential":
+        return comfy.k_diffusion.sampling.get_sigmas_exponential(n=steps, sigma_min=sigma_min if sigma_min >= 0 else float(model_wrap.sigma_min), sigma_max=sigma_max if sigma_max >= 0 else float(model_wrap.sigma_max))
+    else:
+        return None
+
 class SwarmKSampler:
     @classmethod
     def INPUT_TYPES(s):
@@ -60,6 +69,9 @@ class SwarmKSampler:
                 "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
                 "var_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "var_seed_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.05, "round": 0.001}),
+                "sigma_max": ("FLOAT", {"default": -1, "min": -1.0, "max": 1000.0, "step":0.01, "round": False}),
+                "sigma_min": ("FLOAT", {"default": -1, "min": -1.0, "max": 1000.0, "step":0.01, "round": False}),
+                "rho": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 100.0, "step":0.01, "round": False}),
                 "add_noise": (["enable", "disable"], ),
                 "return_with_leftover_noise": (["disable", "enable"], ),
                 "previews": (["default", "none"], )
@@ -70,7 +82,7 @@ class SwarmKSampler:
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "sample"
 
-    def sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, add_noise, return_with_leftover_noise, previews):
+    def sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews):
         device = comfy.model_management.get_torch_device()
         latent_samples = latent_image["samples"]
         disable_noise = add_noise == "disable"
@@ -94,9 +106,19 @@ class SwarmKSampler:
                     preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[i:i+1])
                     swarm_send_extra_preview(i, preview_img[1])
 
+        sigmas = None
+        if (sigma_min >= 0 or sigma_max >= 0) and scheduler in ["karras", "exponential"]:
+            real_model, _, _, _, _ = comfy.sample.prepare_sampling(model, noise.shape, positive, negative, noise_mask)
+            if sampler_name in ['dpm_2', 'dpm_2_ancestral']:
+                sigmas = calculate_sigmas_scheduler(real_model, scheduler, steps + 1, sigma_min, sigma_max, rho)
+                sigmas = torch.cat([sigmas[:-2], sigmas[-1:]])
+            else:
+                sigmas = calculate_sigmas_scheduler(real_model, scheduler, steps, sigma_min, sigma_max, rho)
+            sigmas = sigmas.to(device)
+
         samples = comfy.sample.sample(model, noise, steps, cfg, sampler_name, scheduler, positive, negative, latent_samples,
                                     denoise=1.0, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step,
-                                    force_full_denoise=return_with_leftover_noise == "disable", noise_mask=noise_mask, callback=callback, seed=noise_seed)
+                                    force_full_denoise=return_with_leftover_noise == "disable", noise_mask=noise_mask, sigmas=sigmas, callback=callback, seed=noise_seed)
         out = latent_image.copy()
         out["samples"] = samples
         return (out, )
