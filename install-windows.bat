@@ -1,6 +1,6 @@
 @echo off
 
-cd "%~dp0"
+cd /d "%~dp0"
 
 if exist StableSwarmUI (
     echo StableSwarmUI is already installed in this folder. If this is incorrect, delete the 'StableSwarmUI' folder and try again.
