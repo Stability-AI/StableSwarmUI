@@ -338,13 +338,13 @@ public class T2IParamTypes
             ));
         GroupSwarmInternal = new("Swarm Internal", Open: false, OrderPriority: 0, IsAdvanced: true);
         DoNotSave = Register<bool>(new("Do Not Save", "If checked, tells the server to not save this image.\nUseful for quick test generations, or 'generate forever' usage.",
-            "false", IgnoreIf: "false", IsAdvanced: true, Group: GroupSwarmInternal
+            "false", IgnoreIf: "false", IsAdvanced: true, Group: GroupSwarmInternal, AlwaysRetain: true
             ));
         BackendType = Register<string>(new("[Internal] Backend Type", "Which StableSwarmUI backend type should be used for this request.",
-            "Any", IgnoreIf: "Any", GetValues: (_) => new string[] { "Any" }.Concat(Program.Backends.BackendTypes.Keys).ToList(), IsAdvanced: true, Permission: "param_backend_type", Group: GroupSwarmInternal
+            "Any", IgnoreIf: "Any", GetValues: (_) => new string[] { "Any" }.Concat(Program.Backends.BackendTypes.Keys).ToList(), IsAdvanced: true, Permission: "param_backend_type", Group: GroupSwarmInternal, AlwaysRetain: true
             ));
         ExactBackendID = Register<int>(new("Exact Backend ID", "Manually force a specific exact backend (by ID #) to be used for this generation.",
-            "0", Toggleable: true, IsAdvanced: true, ViewType: ParamViewType.BIG, Permission: "param_backend_id", Group: GroupSwarmInternal
+            "0", Toggleable: true, IsAdvanced: true, ViewType: ParamViewType.BIG, Permission: "param_backend_id", Group: GroupSwarmInternal, AlwaysRetain: true
             ));
         GroupFreeU = new("FreeU", Open: false, OrderPriority: 10, IsAdvanced: true, Toggles: true, Description: "Implements 'FreeU: Free Lunch in Diffusion U-Net' https://arxiv.org/abs/2309.11497");
         FreeUBlock1 = Register<double>(new("[FreeU] Block One", "Block1 multiplier value for FreeU.\nPaper recommends 1.1.",
