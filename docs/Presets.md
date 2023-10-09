@@ -6,7 +6,7 @@
 
 These are the presets used on DreamStudio.
 
-- Download this file: [SDXL Official Presets.json](https://gist.githubusercontent.com/mcmonkey4eva/b63c786871e2b75cdf2622a2052620aa/raw/76be3fded8ff9b242509a50326ae4c723fd781c6/SDXL%2520Official%2520Presets.json) and save it somewhere (anywhere, desktop is fine)
+- Download this file: [SDXL Official Presets.json](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.5.6-Alpha/SDXL.Official.Presets.json) and save it somewhere (anywhere, desktop is fine)
 - Open StableSwarmUI and open the `Presets` tab at the bottom
 - Click on the `Import Presets` button
 - drag the presets file in to the box that appears
