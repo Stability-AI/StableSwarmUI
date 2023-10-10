@@ -42,24 +42,18 @@ public class WorkflowGenerator
         #region Model
         AddStep(g =>
         {
-            g.CreateNode("CheckpointLoaderSimple", (_, n) =>
+            g.CreateNode("CheckpointLoaderSimple", new JObject()
             {
-                n["inputs"] = new JObject()
-                {
-                    ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).ToString(g.ModelFolderFormat)
-                };
+                ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).ToString(g.ModelFolderFormat)
             }, "4");
         }, -15);
         AddStep(g =>
         {
             if (g.UserInput.TryGet(T2IParamTypes.VAE, out T2IModel vae))
             {
-                g.CreateNode("VAELoader", (_, n) =>
+                g.CreateNode("VAELoader", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["vae_name"] = vae.ToString(g.ModelFolderFormat)
-                    };
+                    ["vae_name"] = vae.ToString(g.ModelFolderFormat)
                 }, "3");
                 g.FinalVae = new JArray() { "3", 0 };
             }
@@ -74,16 +68,13 @@ public class WorkflowGenerator
                 {
                     T2IModel lora = loraHandler.Models[loras[i]];
                     float weight = weights == null ? 1 : float.Parse(weights[i]);
-                    string newId = g.CreateNode("LoraLoader", (_, n) =>
+                    string newId = g.CreateNode("LoraLoader", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["model"] = g.FinalModel,
-                            ["clip"] = g.FinalClip,
-                            ["lora_name"] = lora.ToString(g.ModelFolderFormat),
-                            ["strength_model"] = weight,
-                            ["strength_clip"] = weight
-                        };
+                        ["model"] = g.FinalModel,
+                        ["clip"] = g.FinalClip,
+                        ["lora_name"] = lora.ToString(g.ModelFolderFormat),
+                        ["strength_model"] = weight,
+                        ["strength_clip"] = weight
                     });
                     g.FinalModel = new JArray() { $"{newId}", 0 };
                     g.FinalClip = new JArray() { $"{newId}", 1 };
@@ -97,46 +88,34 @@ public class WorkflowGenerator
             if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image img))
             {
                 g.CreateLoadImageNode(img, "${initimage}", true, "15");
-                g.CreateNode("VAEEncode", (_, n) =>
+                g.CreateNode("VAEEncode", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["pixels"] = new JArray() { "15", 0 },
-                        ["vae"] = g.FinalVae
-                    };
+                    ["pixels"] = new JArray() { "15", 0 },
+                    ["vae"] = g.FinalVae
                 }, "5");
                 if (g.UserInput.TryGet(T2IParamTypes.MaskImage, out Image mask))
                 {
                     string maskNode = g.CreateLoadImageNode(mask, "${maskimage}", true);
-                    string maskImageNode = g.CreateNode("ImageToMask", (_, n) =>
+                    string maskImageNode = g.CreateNode("ImageToMask", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["image"] = new JArray() { maskNode, 0 },
-                            ["channel"] = "red"
-                        };
+                        ["image"] = new JArray() { maskNode, 0 },
+                        ["channel"] = "red"
                     });
-                    string appliedNode = g.CreateNode("SetLatentNoiseMask", (_, n) =>
+                    string appliedNode = g.CreateNode("SetLatentNoiseMask", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["samples"] = new JArray() { "5", 0 },
-                            ["mask"] = new JArray() { maskImageNode, 0 }
-                        };
+                        ["samples"] = new JArray() { "5", 0 },
+                        ["mask"] = new JArray() { maskImageNode, 0 }
                     });
                     g.FinalLatentImage = new JArray() { appliedNode, 0 };
                 }
             }
             else
             {
-                g.CreateNode("EmptyLatentImage", (_, n) =>
+                g.CreateNode("EmptyLatentImage", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["batch_size"] = g.UserInput.Get(T2IParamTypes.BatchSize, 1),
-                        ["height"] = g.UserInput.GetImageHeight(),
-                        ["width"] = g.UserInput.Get(T2IParamTypes.Width)
-                    };
+                    ["batch_size"] = g.UserInput.Get(T2IParamTypes.BatchSize, 1),
+                    ["height"] = g.UserInput.GetImageHeight(),
+                    ["width"] = g.UserInput.Get(T2IParamTypes.Width)
                 }, "5");
             }
         }, -9);
@@ -158,85 +137,70 @@ public class WorkflowGenerator
                 }
                 if (g.UserInput.TryGet(T2IParamTypes.Prompt, out string promptText) && string.IsNullOrWhiteSpace(promptText))
                 {
-                    string zeroed = g.CreateNode("ConditioningZeroOut", (_, n) =>
+                    string zeroed = g.CreateNode("ConditioningZeroOut", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["conditioning"] = g.FinalPrompt
-                        };
+                        ["conditioning"] = g.FinalPrompt
                     });
                     g.FinalPrompt = new JArray() { $"{zeroed}", 0 };
                 }
                 if (g.UserInput.TryGet(T2IParamTypes.NegativePrompt, out string negPromptText) && string.IsNullOrWhiteSpace(negPromptText))
                 {
-                    string zeroed = g.CreateNode("ConditioningZeroOut", (_, n) =>
+                    string zeroed = g.CreateNode("ConditioningZeroOut", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["conditioning"] = g.FinalNegativePrompt
-                        };
+                        ["conditioning"] = g.FinalNegativePrompt
                     });
                     g.FinalNegativePrompt = new JArray() { $"{zeroed}", 0 };
                 }
-                string visionLoader = g.CreateNode("CLIPVisionLoader", (_, n) =>
+                string visModelName = "clip_vision_g.safetensors";
+                if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
                 {
-                    string model = "clip_vision_g.safetensors";
-                    if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
+                    visModelName = visionModel.ToString(g.ModelFolderFormat);
+                }
+                else
+                {
+                    string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, "clip_vision_g.safetensors");
+                    if (!File.Exists(filePath))
                     {
-                        model = visionModel.ToString(g.ModelFolderFormat);
-                    }
-                    else
-                    {
-                        string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, "clip_vision_g.safetensors");
-                        if (!File.Exists(filePath))
+                        lock (ModelDownloaderLock)
                         {
-                            lock (ModelDownloaderLock)
+                            if (!File.Exists(filePath)) // Double-check in case another thread downloaded it
                             {
-                                if (!File.Exists(filePath)) // Double-check in case another thread downloaded it
+                                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                                Logs.Info($"Downloading clip_vision_g.safetensors to {filePath}...");
+                                long total = 3_689_911_098L;
+                                double nextPerc = 0.05;
+                                Utilities.DownloadFile("https://huggingface.co/stabilityai/control-lora/resolve/main/revision/clip_vision_g.safetensors", filePath, (bytes) =>
                                 {
-                                    Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                                    Logs.Info($"Downloading clip_vision_g.safetensors to {filePath}...");
-                                    long total = 3_689_911_098L;
-                                    double nextPerc = 0.05;
-                                    Utilities.DownloadFile("https://huggingface.co/stabilityai/control-lora/resolve/main/revision/clip_vision_g.safetensors", filePath, (bytes) =>
+                                    double perc = bytes / (double)total;
+                                    if (perc >= nextPerc)
                                     {
-                                        double perc = bytes / (double)total;
-                                        if (perc >= nextPerc)
-                                        {
-                                            Logs.Info($"clip_vision_g.safetensors download at {perc * 100:0.0}%...");
-                                            nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
-                                        }
-                                    }).Wait();
-                                    Logs.Info($"Downloading complete, continuing.");
-                                }
+                                        Logs.Info($"clip_vision_g.safetensors download at {perc * 100:0.0}%...");
+                                        nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
+                                    }
+                                }).Wait();
+                                Logs.Info($"Downloading complete, continuing.");
                             }
                         }
                     }
-                    n["inputs"] = new JObject()
-                    {
-                        ["clip_name"] = model
-                    };
+                }
+                string visionLoader = g.CreateNode("CLIPVisionLoader", new JObject()
+                {
+                    ["clip_name"] = visModelName
                 });
                 for (int i = 0; i < images.Count; i++)
                 {
                     string imageLoader = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", false);
-                    string encoded = g.CreateNode("CLIPVisionEncode", (_, n) =>
+                    string encoded = g.CreateNode("CLIPVisionEncode", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["clip_vision"] = new JArray($"{visionLoader}", 0),
-                            ["image"] = new JArray($"{imageLoader}", 0)
-                        };
+                        ["clip_vision"] = new JArray($"{visionLoader}", 0),
+                        ["image"] = new JArray($"{imageLoader}", 0)
                     });
-                    string unclipped = g.CreateNode("unCLIPConditioning", (_, n) =>
+                    string unclipped = g.CreateNode("unCLIPConditioning", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["conditioning"] = g.FinalPrompt,
-                            ["clip_vision_output"] = new JArray($"{encoded}", 0),
-                            ["strength"] = g.UserInput.Get(T2IParamTypes.ReVisionStrength, 1),
-                            ["noise_augmentation"] = 0
-                        };
+                        ["conditioning"] = g.FinalPrompt,
+                        ["clip_vision_output"] = new JArray($"{encoded}", 0),
+                        ["strength"] = g.UserInput.Get(T2IParamTypes.ReVisionStrength, 1),
+                        ["noise_augmentation"] = 0
                     });
                     g.FinalPrompt = new JArray() { $"{unclipped}", 0 };
                 }
@@ -331,22 +295,16 @@ public class WorkflowGenerator
                     imageNode = preProcNode;
                 }
                 // TODO: Preprocessor
-                string controlModelNode = g.CreateNode("ControlNetLoader", (_, n) =>
+                string controlModelNode = g.CreateNode("ControlNetLoader", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["control_net_name"] = controlModel.ToString(g.ModelFolderFormat)
-                    };
+                    ["control_net_name"] = controlModel.ToString(g.ModelFolderFormat)
                 });
-                string applyNode = g.CreateNode("ControlNetApply", (_, n) =>
+                string applyNode = g.CreateNode("ControlNetApply", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["conditioning"] = g.FinalPrompt,
-                        ["control_net"] = new JArray() { $"{controlModelNode}", 0 },
-                        ["image"] = new JArray() { $"{imageNode}", 0 },
-                        ["strength"] = controlStrength
-                    };
+                    ["conditioning"] = g.FinalPrompt,
+                    ["control_net"] = new JArray() { $"{controlModelNode}", 0 },
+                    ["image"] = new JArray() { $"{imageNode}", 0 },
+                    ["strength"] = controlStrength
                 });
                 g.FinalPrompt = new() { $"{applyNode}", 0 };
             }
@@ -357,28 +315,22 @@ public class WorkflowGenerator
         {
             if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && g.UserInput.TryGet(T2IParamTypes.FreeUBlock1, out double block1))
             {
-                string freeU = g.CreateNode("FreeU", (_, n) =>
+                string freeU = g.CreateNode("FreeU", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["model"] = g.FinalModel,
-                        ["b1"] = block1,
-                        ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
-                        ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
-                        ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
-                    };
+                    ["model"] = g.FinalModel,
+                    ["b1"] = block1,
+                    ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
+                    ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
+                    ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
                 });
                 g.FinalModel = new() { $"{freeU}", 0 };
             }
             if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
             {
-                string aitLoad = g.CreateNode("AITemplateLoader", (_, n) =>
+                string aitLoad = g.CreateNode("AITemplateLoader", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["model"] = g.FinalModel,
-                        ["keep_loaded"] = "disable"
-                    };
+                    ["model"] = g.FinalModel,
+                    ["keep_loaded"] = "disable"
                 });
                 g.FinalModel = new() { $"{aitLoad}", 0 };
             }
@@ -421,23 +373,17 @@ public class WorkflowGenerator
             };
             if (ComfyUIBackendExtension.FeaturesSupported.Contains("variation_seed") && !RestrictCustomNodes)
             {
-                g.CreateNode("SwarmKSampler", (_, n) =>
-                {
-                    inputs["var_seed"] = g.UserInput.Get(T2IParamTypes.VariationSeed, 0);
-                    inputs["var_seed_strength"] = g.UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
-                    inputs["sigma_min"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
-                    inputs["sigma_max"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
-                    inputs["rho"] = g.UserInput.Get(T2IParamTypes.SamplerRho, 7);
-                    inputs["previews"] = "default";
-                    n["inputs"] = inputs;
-                }, "10");
+                inputs["var_seed"] = g.UserInput.Get(T2IParamTypes.VariationSeed, 0);
+                inputs["var_seed_strength"] = g.UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
+                inputs["sigma_min"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
+                inputs["sigma_max"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
+                inputs["rho"] = g.UserInput.Get(T2IParamTypes.SamplerRho, 7);
+                inputs["previews"] = "default";
+                g.CreateNode("SwarmKSampler", inputs, "10");
             }
             else
             {
-                g.CreateNode("KSamplerAdvanced", (_, n) =>
-                {
-                    n["inputs"] = inputs;
-                }, "10");
+                g.CreateNode("KSamplerAdvanced", inputs, "10");
             }
         }, -5);
         #endregion
@@ -451,12 +397,9 @@ public class WorkflowGenerator
                 JArray origVae = g.FinalVae, refinedModel = g.FinalModel, prompt = g.FinalPrompt, negPrompt = g.FinalNegativePrompt;
                 if (g.UserInput.TryGet(T2IParamTypes.RefinerModel, out T2IModel refineModel) && refineModel is not null)
                 {
-                    g.CreateNode("CheckpointLoaderSimple", (_, n) =>
+                    g.CreateNode("CheckpointLoaderSimple", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["ckpt_name"] = refineModel.ToString(g.ModelFolderFormat)
-                        };
+                        ["ckpt_name"] = refineModel.ToString(g.ModelFolderFormat)
                     }, "20");
                     refinedModel = new() { "20", 0 };
                     if (!g.UserInput.TryGet(T2IParamTypes.VAE, out _))
@@ -468,13 +411,10 @@ public class WorkflowGenerator
                 }
                 if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
                 {
-                    string aitLoad = g.CreateNode("AITemplateLoader", (_, n) =>
+                    string aitLoad = g.CreateNode("AITemplateLoader", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["model"] = refinedModel,
-                            ["keep_loaded"] = "disable"
-                        };
+                        ["model"] = refinedModel,
+                        ["keep_loaded"] = "disable"
                     });
                     refinedModel = new() { $"{aitLoad}", 0 };
                 }
@@ -484,56 +424,41 @@ public class WorkflowGenerator
                 bool doPixelUpscale = doUspcale && (upscaleMethod.StartsWith("pixel-") || upscaleMethod.StartsWith("model-"));
                 if (modelMustReencode || doPixelUpscale)
                 {
-                    g.CreateNode("VAEDecode", (_, n) =>
+                    g.CreateNode("VAEDecode", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["samples"] = g.FinalSamples,
-                            ["vae"] = origVae
-                        };
+                        ["samples"] = g.FinalSamples,
+                        ["vae"] = origVae
                     }, "24");
                     string pixelsNode = "24";
                     if (doPixelUpscale)
                     {
                         if (upscaleMethod.StartsWith("pixel-"))
                         {
-                            g.CreateNode("ImageScaleBy", (_, n) =>
+                            g.CreateNode("ImageScaleBy", new JObject()
                             {
-                                n["inputs"] = new JObject()
-                                {
-                                    ["image"] = new JArray() { "24", 0 },
-                                    ["upscale_method"] = upscaleMethod.After("pixel-"),
-                                    ["scale_by"] = refineUpscale
-                                };
+                                ["image"] = new JArray() { "24", 0 },
+                                ["upscale_method"] = upscaleMethod.After("pixel-"),
+                                ["scale_by"] = refineUpscale
                             }, "26");
                         }
                         else
                         {
-                            g.CreateNode("UpscaleModelLoader", (_, n) =>
+                            g.CreateNode("UpscaleModelLoader", new JObject()
                             {
-                                n["inputs"] = new JObject()
-                                {
-                                    ["model_name"] = upscaleMethod.After("model-")
-                                };
+                                ["model_name"] = upscaleMethod.After("model-")
                             }, "27");
-                            g.CreateNode("ImageUpscaleWithModel", (_, n) =>
+                            g.CreateNode("ImageUpscaleWithModel", new JObject()
                             {
-                                n["inputs"] = new JObject()
-                                {
-                                    ["upscale_model"] = new JArray() { "27", 0 },
-                                    ["image"] = new JArray() { "24", 0 }
-                                };
+                                ["upscale_model"] = new JArray() { "27", 0 },
+                                ["image"] = new JArray() { "24", 0 }
                             }, "28");
-                            g.CreateNode("ImageScale", (_, n) =>
+                            g.CreateNode("ImageScale", new JObject()
                             {
-                                n["inputs"] = new JObject()
-                                {
-                                    ["image"] = new JArray() { "28", 0 },
-                                    ["width"] = (int)Math.Round(g.UserInput.Get(T2IParamTypes.Width) * refineUpscale),
-                                    ["height"] = (int)Math.Round(g.UserInput.GetImageHeight() * refineUpscale),
-                                    ["upscale_method"] = "bilinear",
-                                    ["crop"] = "disabled"
-                                };
+                                ["image"] = new JArray() { "28", 0 },
+                                ["width"] = (int)Math.Round(g.UserInput.Get(T2IParamTypes.Width) * refineUpscale),
+                                ["height"] = (int)Math.Round(g.UserInput.GetImageHeight() * refineUpscale),
+                                ["upscale_method"] = "bilinear",
+                                ["crop"] = "disabled"
                             }, "26");
                         }
                         pixelsNode = "26";
@@ -543,26 +468,20 @@ public class WorkflowGenerator
                             return;
                         }
                     }
-                    g.CreateNode("VAEEncode", (_, n) =>
+                    g.CreateNode("VAEEncode", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["pixels"] = new JArray() { pixelsNode, 0 },
-                            ["vae"] = g.FinalVae
-                        };
+                        ["pixels"] = new JArray() { pixelsNode, 0 },
+                        ["vae"] = g.FinalVae
                     }, "25");
                     g.FinalSamples = new() { "25", 0 };
                 }
                 if (doUspcale && upscaleMethod.StartsWith("latent-"))
                 {
-                    g.CreateNode("LatentUpscaleBy", (_, n) =>
+                    g.CreateNode("LatentUpscaleBy", new JObject()
                     {
-                        n["inputs"] = new JObject()
-                        {
-                            ["samples"] = g.FinalSamples,
-                            ["upscale_method"] = upscaleMethod.After("latent-"),
-                            ["scale_by"] = refineUpscale
-                        };
+                        ["samples"] = g.FinalSamples,
+                        ["upscale_method"] = upscaleMethod.After("latent-"),
+                        ["scale_by"] = refineUpscale
                     }, "26");
                     g.FinalSamples = new() { "26", 0 };
                 }
@@ -586,23 +505,17 @@ public class WorkflowGenerator
                 };
                 if (ComfyUIBackendExtension.FeaturesSupported.Contains("variation_seed") && !RestrictCustomNodes)
                 {
-                    g.CreateNode("SwarmKSampler", (_, n) =>
-                    {
-                        inputs["var_seed"] = g.UserInput.Get(T2IParamTypes.VariationSeed, 0);
-                        inputs["var_seed_strength"] = g.UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
-                        inputs["sigma_min"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
-                        inputs["sigma_max"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
-                        inputs["rho"] = g.UserInput.Get(T2IParamTypes.SamplerRho, 7);
-                        inputs["previews"] = "default";
-                        n["inputs"] = inputs;
-                    }, "23");
+                    inputs["var_seed"] = g.UserInput.Get(T2IParamTypes.VariationSeed, 0);
+                    inputs["var_seed_strength"] = g.UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
+                    inputs["sigma_min"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
+                    inputs["sigma_max"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
+                    inputs["rho"] = g.UserInput.Get(T2IParamTypes.SamplerRho, 7);
+                    inputs["previews"] = "default";
+                    g.CreateNode("SwarmKSampler", inputs, "23");
                 }
                 else
                 {
-                    g.CreateNode("KSamplerAdvanced", (_, n) =>
-                    {
-                        n["inputs"] = inputs;
-                    }, "23");
+                    g.CreateNode("KSamplerAdvanced", inputs, "23");
                 }
                 g.FinalSamples = new() { "23", 0 };
             }
@@ -612,13 +525,10 @@ public class WorkflowGenerator
         #region VAEDecode
         AddStep(g =>
         {
-            g.CreateNode("VAEDecode", (_, n) =>
+            g.CreateNode("VAEDecode", new JObject()
             {
-                n["inputs"] = new JObject()
-                {
-                    ["samples"] = g.FinalSamples,
-                    ["vae"] = g.FinalVae
-                };
+                ["samples"] = g.FinalSamples,
+                ["vae"] = g.FinalVae
             }, "8");
         }, 9);
         #endregion
@@ -632,23 +542,17 @@ public class WorkflowGenerator
             }
             if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_saveimage_ws") && !RestrictCustomNodes)
             {
-                g.CreateNode("SwarmSaveImageWS", (_, n) =>
+                g.CreateNode("SwarmSaveImageWS", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["images"] = g.FinalImageOut
-                    };
+                    ["images"] = g.FinalImageOut
                 }, "9");
             }
             else
             {
-                g.CreateNode("SaveImage", (_, n) =>
+                g.CreateNode("SaveImage", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["filename_prefix"] = $"StableSwarmUI_{Random.Shared.Next():X4}_",
-                        ["images"] = g.FinalImageOut
-                    };
+                    ["filename_prefix"] = $"StableSwarmUI_{Random.Shared.Next():X4}_",
+                    ["images"] = g.FinalImageOut
                 }, "9");
             }
         }, 10);
@@ -690,27 +594,27 @@ public class WorkflowGenerator
         return id;
     }
 
+    /// <summary>Creates a new node with the given class type and input data, and optional manual ID.</summary>
+    public string CreateNode(string classType, JObject input, string id = null)
+    {
+        return CreateNode(classType, (_, n) => n["inputs"] = input, id);
+    }
+
     /// <summary>Creates a new node to load an image.</summary>
     public string CreateLoadImageNode(Image img, string param, bool resize, string nodeId = null)
     {
         if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_loadimage_b64") && !RestrictCustomNodes)
         {
-            return CreateNode("SwarmLoadImageB64", (_, n) =>
+            return CreateNode("SwarmLoadImageB64", new JObject()
             {
-                n["inputs"] = new JObject()
-                {
-                    ["image_base64"] = (resize ? img.Resize(UserInput.Get(T2IParamTypes.Width), UserInput.GetImageHeight()) : img).AsBase64
-                };
+                ["image_base64"] = (resize ? img.Resize(UserInput.Get(T2IParamTypes.Width), UserInput.GetImageHeight()) : img).AsBase64
             }, nodeId);
         }
         else
         {
-            return CreateNode("LoadImage", (_, n) =>
+            return CreateNode("LoadImage", new JObject()
             {
-                n["inputs"] = new JObject()
-                {
-                    ["image"] = param
-                };
+                ["image"] = param
             }, nodeId);
         }
     }
@@ -735,31 +639,25 @@ public class WorkflowGenerator
             double mult = isPositive ? 1.5 : 0.8;
             int width = UserInput.Get(T2IParamTypes.Width, 1024);
             int height = UserInput.GetImageHeight();
-            node = CreateNode("CLIPTextEncodeSDXL", (_, n) =>
+            node = CreateNode("CLIPTextEncodeSDXL", new JObject()
             {
-                n["inputs"] = new JObject()
-                {
-                    ["clip"] = clip,
-                    ["text_g"] = prompt,
-                    ["text_l"] = prompt,
-                    ["crop_w"] = 0,
-                    ["crop_h"] = 0,
-                    ["width"] = (int)(width * mult),
-                    ["height"] = (int)(height * mult),
-                    ["target_width"] = width,
-                    ["target_height"] = height
-                };
+                ["clip"] = clip,
+                ["text_g"] = prompt,
+                ["text_l"] = prompt,
+                ["crop_w"] = 0,
+                ["crop_h"] = 0,
+                ["width"] = (int)(width * mult),
+                ["height"] = (int)(height * mult),
+                ["target_width"] = width,
+                ["target_height"] = height
             });
         }
         else
         {
-            node = CreateNode("CLIPTextEncode", (_, n) =>
+            node = CreateNode("CLIPTextEncode", new JObject()
             {
-                n["inputs"] = new JObject()
-                {
-                    ["clip"] = clip,
-                    ["text"] = prompt
-                };
+                ["clip"] = clip,
+                ["text"] = prompt
             });
         }
         return new() { node, 0 };
@@ -782,16 +680,13 @@ public class WorkflowGenerator
         foreach (PromptRegion.Part part in regionalizer.Parts)
         {
             JArray partCond = CreateConditioningDirect(part.Prompt, clip, model, isPositive);
-            string regionNode = CreateNode("SwarmSquareMaskFromPercent", (_, n) =>
+            string regionNode = CreateNode("SwarmSquareMaskFromPercent", new JObject()
             {
-                n["inputs"] = new JObject()
-                {
-                    ["x"] = part.X,
-                    ["y"] = part.Y,
-                    ["width"] = part.Width,
-                    ["height"] = part.Height,
-                    ["strength"] = part.Strength
-                };
+                ["x"] = part.X,
+                ["y"] = part.Y,
+                ["width"] = part.Width,
+                ["height"] = part.Height,
+                ["strength"] = part.Strength
             });
             RegionHelper region = new(partCond, new() { regionNode, 0 });
             regions.Add(region);
@@ -801,116 +696,83 @@ public class WorkflowGenerator
             }
             else
             {
-                string overlapped = CreateNode("SwarmOverMergeMasksForOverlapFix", (_, n) =>
+                string overlapped = CreateNode("SwarmOverMergeMasksForOverlapFix", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["mask_a"] = lastMergedMask,
-                        ["mask_b"] = region.Mask
-                    };
+                    ["mask_a"] = lastMergedMask,
+                    ["mask_b"] = region.Mask
                 });
                 lastMergedMask = new() { overlapped, 0 };
             }
         }
-        string globalMask = CreateNode("SwarmSquareMaskFromPercent", (_, n) =>
+        string globalMask = CreateNode("SwarmSquareMaskFromPercent", new JObject()
         {
-            n["inputs"] = new JObject()
-            {
-                ["x"] = 0,
-                ["y"] = 0,
-                ["width"] = 1,
-                ["height"] = 1,
-                ["strength"] = 1
-            };
+            ["x"] = 0,
+            ["y"] = 0,
+            ["width"] = 1,
+            ["height"] = 1,
+            ["strength"] = 1
         });
-        string maskBackground = CreateNode("SwarmExcludeFromMask", (_, n) =>
+        string maskBackground = CreateNode("SwarmExcludeFromMask", new JObject()
         {
-            n["inputs"] = new JObject()
-            {
-                ["main_mask"] = new JArray() { globalMask, 0 },
-                ["exclude_mask"] = lastMergedMask
-            };
+            ["main_mask"] = new JArray() { globalMask, 0 },
+            ["exclude_mask"] = lastMergedMask
         });
         string backgroundPrompt = string.IsNullOrWhiteSpace(regionalizer.BackgroundPrompt) ? regionalizer.GlobalPrompt : regionalizer.BackgroundPrompt;
         JArray backgroundCond = CreateConditioningDirect(backgroundPrompt, clip, model, isPositive);
-        string mainConditioning = CreateNode("ConditioningSetMask", (_, n) =>
+        string mainConditioning = CreateNode("ConditioningSetMask", new JObject()
         {
-            n["inputs"] = new JObject()
-            {
-                ["conditioning"] = backgroundCond,
-                ["mask"] = new JArray() { maskBackground, 0 },
-                ["strength"] = 1 - globalStrength,
-                ["set_cond_area"] = "default"
-            };
+            ["conditioning"] = backgroundCond,
+            ["mask"] = new JArray() { maskBackground, 0 },
+            ["strength"] = 1 - globalStrength,
+            ["set_cond_area"] = "default"
         });
         DebugMask(new() { maskBackground, 0 });
         void DebugMask(JArray mask)
         {
             if (UserInput.Get(ComfyUIBackendExtension.DebugRegionalPrompting))
             {
-                string imgNode = CreateNode("MaskToImage", (_, n) =>
+                string imgNode = CreateNode("MaskToImage", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["mask"] = mask
-                    };
+                    ["mask"] = mask
                 });
-                CreateNode("SwarmSaveImageWS", (_, n) =>
+                CreateNode("SwarmSaveImageWS", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["images"] = new JArray() { imgNode, 0 }
-                    };
+                    ["images"] = new JArray() { imgNode, 0 }
                 });
             }
         }
         foreach (RegionHelper region in regions)
         {
-            string overlapped = CreateNode("SwarmCleanOverlapMasksExceptSelf", (_, n) =>
+            string overlapped = CreateNode("SwarmCleanOverlapMasksExceptSelf", new JObject()
             {
-                n["inputs"] = new JObject()
-                {
-                    ["mask_self"] = region.Mask,
-                    ["mask_merged"] = lastMergedMask
-                };
+                ["mask_self"] = region.Mask,
+                ["mask_merged"] = lastMergedMask
             });
             DebugMask(new() { overlapped, 0 });
-            string regionCond = CreateNode("ConditioningSetMask", (_, n) =>
+            string regionCond = CreateNode("ConditioningSetMask", new JObject()
             {
-                n["inputs"] = new JObject()
-                {
-                    ["conditioning"] = region.PartCond,
-                    ["mask"] = new JArray() { overlapped, 0 },
-                    ["strength"] = 1 - globalStrength,
-                    ["set_cond_area"] = "default"
-                };
-            });
-            mainConditioning = CreateNode("ConditioningCombine", (_, n) =>
-            {
-                n["inputs"] = new JObject()
-                {
-                    ["conditioning_1"] = new JArray() { mainConditioning, 0 },
-                    ["conditioning_2"] = new JArray() { regionCond, 0 }
-                };
-            });
-        }
-        string globalCondApplied = CreateNode("ConditioningSetMask", (_, n) =>
-        {
-            n["inputs"] = new JObject()
-            {
-                ["conditioning"] = globalCond,
-                ["mask"] = new JArray() { globalMask, 0 },
-                ["strength"] = globalStrength,
+                ["conditioning"] = region.PartCond,
+                ["mask"] = new JArray() { overlapped, 0 },
+                ["strength"] = 1 - globalStrength,
                 ["set_cond_area"] = "default"
-            };
-        });
-        string finalCond = CreateNode("ConditioningCombine", (_, n) =>
-        {
-            n["inputs"] = new JObject()
+            });
+            mainConditioning = CreateNode("ConditioningCombine", new JObject()
             {
                 ["conditioning_1"] = new JArray() { mainConditioning, 0 },
-                ["conditioning_2"] = new JArray() { globalCondApplied, 0 }
-            };
+                ["conditioning_2"] = new JArray() { regionCond, 0 }
+            });
+        }
+        string globalCondApplied = CreateNode("ConditioningSetMask", new JObject()
+        {
+            ["conditioning"] = globalCond,
+            ["mask"] = new JArray() { globalMask, 0 },
+            ["strength"] = globalStrength,
+            ["set_cond_area"] = "default"
+        });
+        string finalCond = CreateNode("ConditioningCombine", new JObject()
+        {
+            ["conditioning_1"] = new JArray() { mainConditioning, 0 },
+            ["conditioning_2"] = new JArray() { globalCondApplied, 0 }
         });
         return new(finalCond, 0);
     }

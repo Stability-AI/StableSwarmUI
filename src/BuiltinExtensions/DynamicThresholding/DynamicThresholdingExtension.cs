@@ -65,23 +65,20 @@ public class DynamicThresholdingExtension : Extension
         {
             if (ComfyUIBackendExtension.FeaturesSupported.Contains("dynamic_thresholding") && g.UserInput.TryGet(MimicScale, out double mimicScale))
             {
-                string newNode = g.CreateNode("DynamicThresholdingFull", (_, n) =>
+                string newNode = g.CreateNode("DynamicThresholdingFull", new JObject()
                 {
-                    n["inputs"] = new JObject()
-                    {
-                        ["model"] = g.FinalModel,
-                        ["mimic_scale"] = mimicScale,
-                        ["threshold_percentile"] = g.UserInput.Get(ThresholdPercentile),
-                        ["mimic_mode"] = g.UserInput.Get(MimicScaleMode),
-                        ["mimic_scale_min"] = g.UserInput.Get(MimicScaleMin),
-                        ["cfg_mode"] = g.UserInput.Get(CFGScaleMode),
-                        ["cfg_scale_min"] = g.UserInput.Get(CFGScaleMin),
-                        ["sched_val"] = g.UserInput.Get(SchedulerValue),
-                        ["separate_feature_channels"] = g.UserInput.Get(SeparateFeatureChannels) ? "enable" : "disable",
-                        ["scaling_startpoint"] = g.UserInput.Get(ScalingStartpoint),
-                        ["variability_measure"] = g.UserInput.Get(VariabilityMeasure),
-                        ["interpolate_phi"] = g.UserInput.Get(InterpolatePhi)
-                    };
+                    ["model"] = g.FinalModel,
+                    ["mimic_scale"] = mimicScale,
+                    ["threshold_percentile"] = g.UserInput.Get(ThresholdPercentile),
+                    ["mimic_mode"] = g.UserInput.Get(MimicScaleMode),
+                    ["mimic_scale_min"] = g.UserInput.Get(MimicScaleMin),
+                    ["cfg_mode"] = g.UserInput.Get(CFGScaleMode),
+                    ["cfg_scale_min"] = g.UserInput.Get(CFGScaleMin),
+                    ["sched_val"] = g.UserInput.Get(SchedulerValue),
+                    ["separate_feature_channels"] = g.UserInput.Get(SeparateFeatureChannels) ? "enable" : "disable",
+                    ["scaling_startpoint"] = g.UserInput.Get(ScalingStartpoint),
+                    ["variability_measure"] = g.UserInput.Get(VariabilityMeasure),
+                    ["interpolate_phi"] = g.UserInput.Get(InterpolatePhi)
                 });
                 g.FinalModel = new() { $"{newNode}", 0 };
             }
