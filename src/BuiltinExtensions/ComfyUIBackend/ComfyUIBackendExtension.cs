@@ -32,7 +32,8 @@ public class ComfyUIBackendExtension : Extension
         ["SwarmSaveImageWS"] = "comfy_saveimage_ws",
         ["SwarmKSampler"] = "variation_seed",
         ["FreeU"] = "freeu",
-        ["AITemplateLoader"] = "aitemplate"
+        ["AITemplateLoader"] = "aitemplate",
+        ["IPAdapter"] = "ipadapter"
     };
 
     public override void OnPreInit()
@@ -160,6 +161,10 @@ public class ComfyUIBackendExtension : Extension
                 Samplers = Samplers.Concat(ksampler["input"]["required"]["sampler_name"][0].Select(u => $"{u}")).Distinct().ToList();
                 Schedulers = Schedulers.Concat(ksampler["input"]["required"]["scheduler"][0].Select(u => $"{u}")).Distinct().ToList();
             }
+            if (rawObjectInfo.TryGetValue("IPAdapter", out JToken ipadapter))
+            {
+                IPAdapterModels = IPAdapterModels.Concat(ipadapter["input"]["required"]["model_name"][0].Select(m => $"{m}")).Distinct().ToList();
+            }
             foreach ((string key, JToken data) in rawObjectInfo)
             {
                 if (data["category"].ToString() == "image/preprocessors")
@@ -180,13 +185,17 @@ public class ComfyUIBackendExtension : Extension
 
     public static LockObject ValueAssignmentLocker = new();
 
-    public static T2IRegisteredParam<string> WorkflowParam, CustomWorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod, ControlNetPreprocessorParam;
+    public static T2IRegisteredParam<string> WorkflowParam, CustomWorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod, ControlNetPreprocessorParam, UseIPAdapterForRevision;
 
     public static T2IRegisteredParam<bool> AITemplateParam, DebugRegionalPrompting;
+
+    public static T2IRegisteredParam<double> IPAdapterWeight;
 
     public static List<string> UpscalerModels = new() { "latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic" },
         Samplers = new() { "euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2" },
         Schedulers = new() { "normal", "karras", "exponential", "simple", "ddim_uniform" };
+
+    public static List<string> IPAdapterModels = new() { "None" };
 
     public static ConcurrentDictionary<string, JToken> ControlNetPreprocessors = new() { ["None"] = null };
 
@@ -197,6 +206,12 @@ public class ComfyUIBackendExtension : Extension
 
     public override void OnInit()
     {
+        UseIPAdapterForRevision = T2IParamTypes.Register<string>(new("Use IP-Adapter", "Use IP-Adapter for ReVision input handling.",
+            "None", IgnoreIf: "None", FeatureFlag: "ipadapter", GetValues: _ => IPAdapterModels, Group: T2IParamTypes.GroupRevision, OrderPriority: 15
+            ));
+        IPAdapterWeight = T2IParamTypes.Register<double>(new("IP-Adapter Weight", "Weight to use with IP-Adapter (if enabled).",
+            "1", Min: -1, Max: 3, Step: 0.05, IgnoreIf: "1", FeatureFlag: "ipadapter", Group: T2IParamTypes.GroupRevision, ViewType: ParamViewType.SLIDER, OrderPriority: 16
+            ));
         ComfyGroup = new("ComfyUI", Toggles: false, Open: false);
         ComfyAdvancedGroup = new("ComfyUI Advanced", Toggles: false, IsAdvanced: true, Open: false);
         WorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Workflow", "What hand-written specialty workflow to use in ComfyUI (files in 'Workflows' folder within the ComfyUI extension)",

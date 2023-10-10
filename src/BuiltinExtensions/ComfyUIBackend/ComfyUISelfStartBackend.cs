@@ -87,6 +87,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     ESRGAN
                     RealESRGAN
                     SwinIR
+                    upscale-models
+                    upscale_models
                 embeddings: |
                     {Program.ServerSettings.Paths.SDEmbeddingFolder}
                     embeddings

@@ -64,10 +64,14 @@ function getHtmlForParam(param, prefix) {
     }
 }
 
-function toggleGroupOpen(elem) {
+function toggleGroupOpen(elem, shouldOpen = null) {
     let parent = findParentOfClass(elem, 'input-group');
     let group = parent.querySelector('.input-group-content');
-    if (group.style.display == 'none') {
+    let isClosed = group.style.display == 'none';
+    if (shouldOpen != null && shouldOpen != isClosed) {
+        return;
+    }
+    if (isClosed) {
         group.style.display = 'block';
         parent.classList.remove('input-group-closed');
         parent.querySelector('.auto-symbol').innerHTML = '&#x2B9F;';
@@ -260,11 +264,14 @@ function genInputs(delay_final = false) {
             });
             resTrick();
         }
-        let inputRevisionStrength = document.getElementById('input_revisionstrength');
-        if (inputRevisionStrength) {
-            let parent = findParentOfClass(inputRevisionStrength, 'auto-input');
-            parent.style.display = 'none';
-            parent.dataset.visible_controlled = true;
+        let revisionGroup = document.getElementById('input_group_content_revision');
+        if (revisionGroup) {
+            let revisionToggler = document.getElementById('input_group_content_revision_toggle');
+            if (revisionToggler) {
+                revisionToggler.checked = false;
+                triggerChangeFor(revisionToggler);
+            }
+            revisionGroup.style.display = 'none';
         }
         let inputPrompt = document.getElementById('input_prompt');
         if (inputPrompt) {

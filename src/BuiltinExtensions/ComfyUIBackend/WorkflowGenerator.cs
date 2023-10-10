@@ -188,22 +188,46 @@ public class WorkflowGenerator
                 {
                     ["clip_name"] = visModelName
                 });
+                List<string> loaders = new();
                 for (int i = 0; i < images.Count; i++)
                 {
                     string imageLoader = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", false);
+                    loaders.Add(imageLoader);
                     string encoded = g.CreateNode("CLIPVisionEncode", new JObject()
                     {
-                        ["clip_vision"] = new JArray($"{visionLoader}", 0),
-                        ["image"] = new JArray($"{imageLoader}", 0)
+                        ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
+                        ["image"] = new JArray() { $"{imageLoader}", 0 }
                     });
                     string unclipped = g.CreateNode("unCLIPConditioning", new JObject()
                     {
                         ["conditioning"] = g.FinalPrompt,
-                        ["clip_vision_output"] = new JArray($"{encoded}", 0),
+                        ["clip_vision_output"] = new JArray() { $"{encoded}", 0 },
                         ["strength"] = g.UserInput.Get(T2IParamTypes.ReVisionStrength, 1),
                         ["noise_augmentation"] = 0
                     });
                     g.FinalPrompt = new JArray() { $"{unclipped}", 0 };
+                }
+                if (g.UserInput.TryGet(ComfyUIBackendExtension.UseIPAdapterForRevision, out string ipAdapter) && ipAdapter != "None")
+                {
+                    string lastImage = loaders[0];
+                    for (int i = 1; i < loaders.Count; i++)
+                    {
+                        lastImage = g.CreateNode("ImageBatch", new JObject()
+                        {
+                            ["image1"] = new JArray() { lastImage, 0 },
+                            ["image2"] = new JArray() { loaders[i], 0 }
+                        });
+                    }
+                    string ipAdapterNode = g.CreateNode("IPAdapter", new JObject()
+                    {
+                        ["model"] = g.FinalModel,
+                        ["image"] = new JArray() { lastImage, 0 },
+                        ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
+                        ["weight"] = g.UserInput.Get(ComfyUIBackendExtension.IPAdapterWeight, 1),
+                        ["model_name"] = ipAdapter,
+                        ["dtype"] = "fp16" // TODO: ...???
+                    });
+                    g.FinalModel = new JArray() { $"{ipAdapterNode}", 0 };
                 }
             }
         }, -7);

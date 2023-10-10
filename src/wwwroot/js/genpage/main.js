@@ -943,11 +943,12 @@ function revisionInputHandler() {
     clearButton.addEventListener('click', () => {
         promptImageArea.innerHTML = '';
         clearButton.style.display = 'none';
-        let revisionStrengthToggler = document.getElementById('input_revisionstrength_toggle');
-        if (revisionStrengthToggler) {
-            findParentOfClass(revisionStrengthToggler, 'auto-input').style.display = 'none';
-            revisionStrengthToggler.checked = false;
-            doToggleEnable('input_revisionstrength');
+        let revisionGroup = document.getElementById('input_group_revision');
+        let revisionToggler = document.getElementById('input_group_content_revision_toggle');
+        if (revisionGroup) {
+            revisionToggler.checked = false;
+            triggerChangeFor(revisionToggler);
+            revisionGroup.style.display = 'none';
         }
         altPromptSizeHandleFunc();
     });
@@ -966,11 +967,13 @@ function revisionInputHandler() {
                     imageObject.className = 'alt-prompt-image';
                     imageObject.dataset.filedata = data;
                     clearButton.style.display = '';
-                    let revisionStrengthToggler = document.getElementById('input_revisionstrength_toggle');
-                    if (revisionStrengthToggler) {
-                        findParentOfClass(revisionStrengthToggler, 'auto-input').style.display = '';
-                        revisionStrengthToggler.checked = true;
-                        doToggleEnable('input_revisionstrength');
+                    let revisionGroup = document.getElementById('input_group_revision');
+                    let revisionToggler = document.getElementById('input_group_content_revision_toggle');
+                    if (revisionGroup) {
+                        toggleGroupOpen(revisionGroup, true);
+                        revisionToggler.checked = true;
+                        triggerChangeFor(revisionToggler);
+                        revisionGroup.style.display = '';
                     }
                     promptImageArea.appendChild(imageObject);
                     altPromptSizeHandleFunc();

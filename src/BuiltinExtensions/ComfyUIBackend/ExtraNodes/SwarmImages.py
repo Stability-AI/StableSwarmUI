@@ -10,7 +10,7 @@ class SwarmImageScaleForMP:
                 "image": ("IMAGE",),
                 "width": ("INT", {"default": 0, "min": 0, "max": 8192}),
                 "height": ("INT", {"default": 0, "min": 0, "max": 8192}),
-                "can_shrink": ("BOOL", {"default": True}),
+                "can_shrink": ("BOOLEAN", {"default": True}),
             }
         }
 
