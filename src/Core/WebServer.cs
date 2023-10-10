@@ -92,7 +92,11 @@ public class WebServer
     public void Prep()
     {
         Utilities.LoadTimer timer = new();
+        // I don't know who's to blame, probably half Microsoft half AWS, but if this is enabled (which it is by default on all profiles, even production?!),
+        // it creates a persistent filewatcher which locks up hard. So, forcibly disable it. Which it should be disabled anyway. Obviously.
+        Environment.SetEnvironmentVariable("ASPNETCORE_hostBuilder:reloadConfigOnChange", "false");
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "src/wwwroot" });
+        timer.Check("[Web] WebApp builder prep");
         builder.Services.AddRazorPages();
         builder.Logging.SetMinimumLevel(LogLevel);
         WebApp = builder.Build();
