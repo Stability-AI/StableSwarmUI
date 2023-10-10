@@ -136,7 +136,8 @@ public class WorkflowGenerator
                 {
                     throw new InvalidDataException($"Model type must be stable-diffusion-xl-v1-base for ReVision (currently is {model?.ModelClass?.ID ?? "Unknown"})");
                 }
-                if (g.UserInput.TryGet(T2IParamTypes.Prompt, out string promptText) && string.IsNullOrWhiteSpace(promptText))
+                bool autoZero = g.UserInput.Get(T2IParamTypes.RevisionZeroPrompt, false);
+                if ((g.UserInput.TryGet(T2IParamTypes.Prompt, out string promptText) && string.IsNullOrWhiteSpace(promptText)) || autoZero)
                 {
                     string zeroed = g.CreateNode("ConditioningZeroOut", new JObject()
                     {
@@ -144,7 +145,7 @@ public class WorkflowGenerator
                     });
                     g.FinalPrompt = new JArray() { $"{zeroed}", 0 };
                 }
-                if (g.UserInput.TryGet(T2IParamTypes.NegativePrompt, out string negPromptText) && string.IsNullOrWhiteSpace(negPromptText))
+                if ((g.UserInput.TryGet(T2IParamTypes.NegativePrompt, out string negPromptText) && string.IsNullOrWhiteSpace(negPromptText)) || autoZero)
                 {
                     string zeroed = g.CreateNode("ConditioningZeroOut", new JObject()
                     {
