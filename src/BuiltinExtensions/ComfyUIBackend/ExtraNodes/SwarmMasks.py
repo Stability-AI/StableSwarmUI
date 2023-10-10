@@ -119,10 +119,82 @@ class SwarmExcludeFromMask:
         return (main_mask,)
 
 
+class SwarmMaskBounds:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "mask": ("MASK",),
+                "grow": ("INT", {"default": 0, "min": 0, "max": 1024})
+            }
+        }
+
+    CATEGORY = "StableSwarmUI"
+    RETURN_TYPES = ("INT", "INT", "INT", "INT")
+    RETURN_NAMES = ("x", "y", "width", "height")
+    FUNCTION = "get_bounds"
+    OUTPUT_NODE = True
+
+    def get_bounds(self, mask, grow):
+        sum_x = (torch.sum(mask, dim=0) != 0).to(dtype=torch.int)
+        sum_y = (torch.sum(mask, dim=1) != 0).to(dtype=torch.int)
+        def getval(arr, direction):
+            val = torch.argmax(arr).item()
+            val += grow * direction
+            val = max(0, min(val, arr.shape[0] - 1))
+            return val
+        x_start = getval(sum_x, -1)
+        x_end = mask.shape[1] - getval(sum_x.flip(0), 1)
+        y_start = getval(sum_y, -1)
+        y_end = mask.shape[0] - getval(sum_y.flip(0), 1)
+        print(f"\n\ndebug: {x_start}, {y_start}, {x_end}, {y_end} for shape {mask.size()}\n\n")
+        return (int(x_start), int(y_start), int(x_end - x_start), int(y_end - y_start))
+
+
+# Blur code is copied out of ComfyUI's default ImageBlur
+def gaussian_kernel(kernel_size: int, sigma: float, device=None):
+    x, y = torch.meshgrid(torch.linspace(-1, 1, kernel_size, device=device), torch.linspace(-1, 1, kernel_size, device=device), indexing="ij")
+    d = torch.sqrt(x * x + y * y)
+    g = torch.exp(-(d * d) / (2.0 * sigma * sigma))
+    return g / g.sum()
+
+class SwarmMaskBlur:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "mask": ("MASK",),
+                "blur_radius": ("INT", { "default": 1, "min": 1, "max": 31, "step": 1 }),
+                "sigma": ("FLOAT", { "default": 1.0, "min": 0.1, "max": 10.0, "step": 0.1 }),
+            },
+        }
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "blur"
+
+    CATEGORY = "StableSwarmUI"
+
+    def blur(self, mask, blur_radius, sigma):
+        if blur_radius == 0:
+            return (mask,)
+        kernel_size = blur_radius * 2 + 1
+        kernel = gaussian_kernel(kernel_size, sigma, device=mask.device).repeat(1, 1, 1).unsqueeze(1)
+        mask = mask.unsqueeze(0).unsqueeze(0)
+        padded_mask = torch.nn.functional.pad(mask, (blur_radius,blur_radius,blur_radius,blur_radius), 'reflect')
+        blurred = torch.nn.functional.conv2d(padded_mask, kernel, padding=kernel_size // 2, groups=1)[:,:,blur_radius:-blur_radius, blur_radius:-blur_radius]
+        blurred = blurred.squeeze(0).squeeze(0)
+        return (blurred,)
+
+
 NODE_CLASS_MAPPINGS = {
     "SwarmSquareMaskFromPercent": SwarmSquareMaskFromPercent,
     "SwarmCleanOverlapMasks": SwarmCleanOverlapMasks,
     "SwarmCleanOverlapMasksExceptSelf": SwarmCleanOverlapMasksExceptSelf,
     "SwarmExcludeFromMask": SwarmExcludeFromMask,
     "SwarmOverMergeMasksForOverlapFix": SwarmOverMergeMasksForOverlapFix,
+    "SwarmMaskBounds": SwarmMaskBounds,
+    "SwarmMaskBlur": SwarmMaskBlur,
 }
