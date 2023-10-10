@@ -188,11 +188,9 @@ public class WorkflowGenerator
                 {
                     ["clip_name"] = visModelName
                 });
-                List<string> loaders = new();
                 for (int i = 0; i < images.Count; i++)
                 {
                     string imageLoader = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", false);
-                    loaders.Add(imageLoader);
                     string encoded = g.CreateNode("CLIPVisionEncode", new JObject()
                     {
                         ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
@@ -209,13 +207,14 @@ public class WorkflowGenerator
                 }
                 if (g.UserInput.TryGet(ComfyUIBackendExtension.UseIPAdapterForRevision, out string ipAdapter) && ipAdapter != "None")
                 {
-                    string lastImage = loaders[0];
-                    for (int i = 1; i < loaders.Count; i++)
+                    string lastImage = g.CreateLoadImageNode(images[0], "${promptimages.0}", true);
+                    for (int i = 1; i < images.Count; i++)
                     {
+                        string newImg = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", true);
                         lastImage = g.CreateNode("ImageBatch", new JObject()
                         {
                             ["image1"] = new JArray() { lastImage, 0 },
-                            ["image2"] = new JArray() { loaders[i], 0 }
+                            ["image2"] = new JArray() { newImg, 0 }
                         });
                     }
                     string ipAdapterNode = g.CreateNode("IPAdapter", new JObject()
