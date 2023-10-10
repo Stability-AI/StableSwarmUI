@@ -337,18 +337,23 @@ public class WorkflowGenerator
         #region FreeU
         AddStep(g =>
         {
-            if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && g.UserInput.TryGet(T2IParamTypes.FreeUBlock1, out double block1))
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && g.UserInput.TryGet(T2IParamTypes.FreeUApplyTo, out string applyTo) && applyTo != "Refiner")
             {
                 string freeU = g.CreateNode("FreeU", new JObject()
                 {
                     ["model"] = g.FinalModel,
-                    ["b1"] = block1,
+                    ["b1"] = g.UserInput.Get(T2IParamTypes.FreeUBlock1),
                     ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
                     ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
                     ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
                 });
                 g.FinalModel = new() { $"{freeU}", 0 };
             }
+        }, -5.3);
+        #endregion
+        #region AITemplate
+        AddStep(g =>
+        {
             if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
             {
                 string aitLoad = g.CreateNode("AITemplateLoader", new JObject()
@@ -358,7 +363,7 @@ public class WorkflowGenerator
                 });
                 g.FinalModel = new() { $"{aitLoad}", 0 };
             }
-        }, -5.3);
+        }, -5.2);
         #endregion
         #region Sampler
         AddStep(g =>
@@ -405,6 +410,18 @@ public class WorkflowGenerator
                     g.FinalClip = new JArray() { "20", 1 };
                     prompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, refineModel, true);
                     negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, refineModel, false);
+                }
+                if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && g.UserInput.TryGet(T2IParamTypes.FreeUApplyTo, out string applyTo) && applyTo != "Base")
+                {
+                    string freeU = g.CreateNode("FreeU", new JObject()
+                    {
+                        ["model"] = g.FinalModel,
+                        ["b1"] = g.UserInput.Get(T2IParamTypes.FreeUBlock1),
+                        ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
+                        ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
+                        ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
+                    });
+                    g.FinalModel = new() { $"{freeU}", 0 };
                 }
                 if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
                 {

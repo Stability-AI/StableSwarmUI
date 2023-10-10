@@ -205,7 +205,7 @@ public class T2IParamTypes
         return update;
     }
 
-    public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod;
+    public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod, FreeUApplyTo;
     public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID;
     public static T2IRegisteredParam<long> Seed, VariationSeed;
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult,
@@ -349,6 +349,9 @@ public class T2IParamTypes
             "0", Toggleable: true, IsAdvanced: true, ViewType: ParamViewType.BIG, Permission: "param_backend_id", Group: GroupSwarmInternal, AlwaysRetain: true
             ));
         GroupFreeU = new("FreeU", Open: false, OrderPriority: 10, IsAdvanced: true, Toggles: true, Description: "Implements 'FreeU: Free Lunch in Diffusion U-Net' https://arxiv.org/abs/2309.11497");
+        FreeUApplyTo = Register<string>(new("[FreeU] Apply To", "Which models to apply FreeU to, as base, refiner, or both. Irrelevant when not using refiner.",
+            "Both", GetValues: (_) => new() { "Both", "Base", "Refiner" }, IsAdvanced: true, Group: GroupFreeU, FeatureFlag: "freeu"
+            ));
         FreeUBlock1 = Register<double>(new("[FreeU] Block One", "Block1 multiplier value for FreeU.\nPaper recommends 1.1.",
             "1.1", Min: 0, Max: 10, Step: 0.05, IsAdvanced: true, Group: GroupFreeU, FeatureFlag: "freeu"
             ));
