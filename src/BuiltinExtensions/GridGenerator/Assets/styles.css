@@ -76,6 +76,7 @@ table tr td:first-child {
 .advanced_settings_section {
     max-width: calc(max(1000px, 60em));
     text-align: left;
+    margin: auto;
 }
 .timer_range {
     vertical-align: bottom;
@@ -108,9 +109,27 @@ table tr td:first-child {
 .accordion-button {
     padding: 0.5rem;
 }
+.save_image_area {
+    text-align: center;
+}
 .save_image_area img {
     margin-right: 1rem;
     margin-left: 1rem;
     border: 2px solid orange;
     border-radius: 0.5rem;
+}
+.content_box {
+    display: inline-block;
+}
+.top_nav_bar {
+    position: sticky;
+    left: 2.5vw;
+    width: 95vw;
+}
+.image_table_box {
+    display: inline-block;
+    min-width: 100%;
+}
+.image_table {
+    margin: auto;
 }

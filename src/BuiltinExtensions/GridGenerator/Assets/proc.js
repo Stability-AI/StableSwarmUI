@@ -42,8 +42,7 @@ function loadData() {
     document.getElementById('stickyLabels').checked = rawData.defaults.sticky_labels;
     document.getElementById('score_display').addEventListener('click', fillTable);
     document.getElementById('score_setting').style.display = typeof getScoreFor == 'undefined' ? 'none' : 'inline-block';
-    toggleTopSticky();
-    toggleLabelSticky();
+    updateStylesToMatchInputs();
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
             document.getElementById(axis + '_' + rawData.defaults[axis]).click();
@@ -56,6 +55,11 @@ function loadData() {
     if (rawData.will_run) {
         setTimeout(checkForUpdates, 5000);
     }
+}
+
+function updateStylesToMatchInputs() {
+    toggleTopSticky();
+    toggleLabelSticky();
 }
 
 function getAxisById(id) {
@@ -948,6 +952,7 @@ function applyHash(hash) {
         }
         target.click();
     }
+    updateStylesToMatchInputs();
 }
 
 let lastUpdateObj = null;
