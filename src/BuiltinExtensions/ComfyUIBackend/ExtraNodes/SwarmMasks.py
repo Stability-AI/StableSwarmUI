@@ -147,7 +147,6 @@ class SwarmMaskBounds:
         x_end = mask.shape[1] - getval(sum_x.flip(0), 1)
         y_start = getval(sum_y, -1)
         y_end = mask.shape[0] - getval(sum_y.flip(0), 1)
-        print(f"\n\ndebug: {x_start}, {y_start}, {x_end}, {y_end} for shape {mask.size()}\n\n")
         return (int(x_start), int(y_start), int(x_end - x_start), int(y_end - y_start))
 
 

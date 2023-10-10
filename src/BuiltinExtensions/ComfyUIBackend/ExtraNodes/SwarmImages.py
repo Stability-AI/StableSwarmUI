@@ -51,7 +51,6 @@ class SwarmImageCrop:
         to_x = width + x
         to_y = height + y
         img = image[:, y:to_y, x:to_x, :]
-        print(f"debug image was {image.shape} and img is {img.shape}")
         return (img,)
 
 NODE_CLASS_MAPPINGS = {
