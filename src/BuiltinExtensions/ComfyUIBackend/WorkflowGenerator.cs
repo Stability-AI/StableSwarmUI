@@ -354,37 +354,8 @@ public class WorkflowGenerator
             {
                 endStep = (int)(steps * (1 - endEarly));
             }
-            JObject inputs = new()
-            {
-                ["model"] = g.FinalModel,
-                ["noise_seed"] = g.UserInput.Get(T2IParamTypes.Seed),
-                ["steps"] = steps,
-                ["cfg"] = g.UserInput.Get(T2IParamTypes.CFGScale),
-                // TODO: proper sampler input, and intelligent default scheduler per sampler
-                ["sampler_name"] = g.UserInput.Get(ComfyUIBackendExtension.SamplerParam, "euler"),
-                ["scheduler"] = g.UserInput.Get(ComfyUIBackendExtension.SchedulerParam, "normal"),
-                ["positive"] = g.FinalPrompt,
-                ["negative"] = g.FinalNegativePrompt,
-                ["latent_image"] = g.FinalLatentImage,
-                ["start_at_step"] = startStep,
-                ["end_at_step"] = endStep,
-                ["return_with_leftover_noise"] = g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy" ? "enable" : "disable",
-                ["add_noise"] = "enable"
-            };
-            if (ComfyUIBackendExtension.FeaturesSupported.Contains("variation_seed") && !RestrictCustomNodes)
-            {
-                inputs["var_seed"] = g.UserInput.Get(T2IParamTypes.VariationSeed, 0);
-                inputs["var_seed_strength"] = g.UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
-                inputs["sigma_min"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
-                inputs["sigma_max"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
-                inputs["rho"] = g.UserInput.Get(T2IParamTypes.SamplerRho, 7);
-                inputs["previews"] = "default";
-                g.CreateNode("SwarmKSampler", inputs, "10");
-            }
-            else
-            {
-                g.CreateNode("KSamplerAdvanced", inputs, "10");
-            }
+            g.CreateKSampler(g.FinalModel, g.FinalPrompt, g.FinalNegativePrompt, g.FinalLatentImage, steps, startStep, endStep,
+                g.UserInput.Get(T2IParamTypes.Seed), g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy", true, "10");
         }, -5);
         #endregion
         #region Refiner
@@ -394,29 +365,30 @@ public class WorkflowGenerator
                 && g.UserInput.TryGet(T2IParamTypes.RefinerControl, out double refinerControl)
                 && g.UserInput.TryGet(ComfyUIBackendExtension.RefinerUpscaleMethod, out string upscaleMethod))
             {
-                JArray origVae = g.FinalVae, refinedModel = g.FinalModel, prompt = g.FinalPrompt, negPrompt = g.FinalNegativePrompt;
+                JArray origVae = g.FinalVae, prompt = g.FinalPrompt, negPrompt = g.FinalNegativePrompt;
                 if (g.UserInput.TryGet(T2IParamTypes.RefinerModel, out T2IModel refineModel) && refineModel is not null)
                 {
                     g.CreateNode("CheckpointLoaderSimple", new JObject()
                     {
                         ["ckpt_name"] = refineModel.ToString(g.ModelFolderFormat)
                     }, "20");
-                    refinedModel = new() { "20", 0 };
+                    g.FinalModel = new() { "20", 0 };
                     if (!g.UserInput.TryGet(T2IParamTypes.VAE, out _))
                     {
                         g.FinalVae = new() { "20", 2 };
                     }
-                    prompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), new JArray() { "20", 1 }, refineModel, true);
-                    negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), new JArray() { "20", 1 }, refineModel, false);
+                    g.FinalClip = new JArray() { "20", 1 };
+                    prompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, refineModel, true);
+                    negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, refineModel, false);
                 }
                 if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
                 {
                     string aitLoad = g.CreateNode("AITemplateLoader", new JObject()
                     {
-                        ["model"] = refinedModel,
+                        ["model"] = g.FinalModel,
                         ["keep_loaded"] = "disable"
                     });
-                    refinedModel = new() { $"{aitLoad}", 0 };
+                    g.FinalModel = new() { $"{aitLoad}", 0 };
                 }
                 bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale > 1;
                 // TODO: Better same-VAE check
@@ -486,37 +458,8 @@ public class WorkflowGenerator
                     g.FinalSamples = new() { "26", 0 };
                 }
                 int steps = g.UserInput.Get(T2IParamTypes.Steps);
-                JObject inputs = new()
-                {
-                    ["model"] = refinedModel,
-                    ["noise_seed"] = g.UserInput.Get(T2IParamTypes.Seed) + 1,
-                    ["steps"] = steps,
-                    ["cfg"] = g.UserInput.Get(T2IParamTypes.CFGScale),
-                    // TODO: proper sampler input, and intelligent default scheduler per sampler
-                    ["sampler_name"] = g.UserInput.Get(ComfyUIBackendExtension.SamplerParam, "euler"),
-                    ["scheduler"] = g.UserInput.Get(ComfyUIBackendExtension.SchedulerParam, "normal"),
-                    ["positive"] = prompt,
-                    ["negative"] = negPrompt,
-                    ["latent_image"] = g.FinalSamples,
-                    ["start_at_step"] = (int)Math.Round(steps * (1 - refinerControl)),
-                    ["end_at_step"] = 10000,
-                    ["add_noise"] = method == "StepSwapNoisy" ? "disable" : "enable",
-                    ["return_with_leftover_noise"] = "disable"
-                };
-                if (ComfyUIBackendExtension.FeaturesSupported.Contains("variation_seed") && !RestrictCustomNodes)
-                {
-                    inputs["var_seed"] = g.UserInput.Get(T2IParamTypes.VariationSeed, 0);
-                    inputs["var_seed_strength"] = g.UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
-                    inputs["sigma_min"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
-                    inputs["sigma_max"] = g.UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
-                    inputs["rho"] = g.UserInput.Get(T2IParamTypes.SamplerRho, 7);
-                    inputs["previews"] = "default";
-                    g.CreateNode("SwarmKSampler", inputs, "23");
-                }
-                else
-                {
-                    g.CreateNode("KSamplerAdvanced", inputs, "23");
-                }
+                g.CreateKSampler(g.FinalModel, prompt, negPrompt, g.FinalSamples, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
+                    g.UserInput.Get(T2IParamTypes.Seed) + 1, method == "StepSwapNoisy", false, "23");
                 g.FinalSamples = new() { "23", 0 };
             }
             // TODO: Refiner
@@ -628,6 +571,42 @@ public class WorkflowGenerator
             step.Action(this);
         }
         return Workflow;
+    }
+
+    /// <summary>Creates a KSampler and returns its node ID.</summary>
+    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, string id)
+    {
+        JObject inputs = new()
+        {
+            ["model"] = model,
+            ["noise_seed"] = seed,
+            ["steps"] = steps,
+            ["cfg"] = UserInput.Get(T2IParamTypes.CFGScale),
+            // TODO: proper sampler input, and intelligent default scheduler per sampler
+            ["sampler_name"] = UserInput.Get(ComfyUIBackendExtension.SamplerParam, "euler"),
+            ["scheduler"] = UserInput.Get(ComfyUIBackendExtension.SchedulerParam, "normal"),
+            ["positive"] = pos,
+            ["negative"] = neg,
+            ["latent_image"] = latent,
+            ["start_at_step"] = startStep,
+            ["end_at_step"] = endStep,
+            ["return_with_leftover_noise"] = returnWithLeftoverNoise ? "enable" : "disable",
+            ["add_noise"] = addNoise ? "enable" : "disable"
+        };
+        if (ComfyUIBackendExtension.FeaturesSupported.Contains("variation_seed") && !RestrictCustomNodes)
+        {
+            inputs["var_seed"] = UserInput.Get(T2IParamTypes.VariationSeed, 0);
+            inputs["var_seed_strength"] = UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
+            inputs["sigma_min"] = UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
+            inputs["sigma_max"] = UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
+            inputs["rho"] = UserInput.Get(T2IParamTypes.SamplerRho, 7);
+            inputs["previews"] = "default";
+            return CreateNode("SwarmKSampler", inputs, id);
+        }
+        else
+        {
+            return CreateNode("KSamplerAdvanced", inputs, id);
+        }
     }
 
     /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input.</summary>
