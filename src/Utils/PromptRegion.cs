@@ -117,7 +117,7 @@ public class PromptRegion
                 }
                 else
                 {
-                    p.Strength2 = 0.5;
+                    p.Strength2 = 0.6;
                 }
             }
             else

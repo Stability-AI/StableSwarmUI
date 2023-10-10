@@ -754,14 +754,15 @@ public class WorkflowGenerator
     {
         PromptRegion regionalizer = new(prompt);
         JArray globalCond = CreateConditioningDirect(regionalizer.GlobalPrompt, clip, model, isPositive);
-        if (regionalizer.Parts.IsEmpty())
+        PromptRegion.Part[] parts = regionalizer.Parts.Where(p => p.Type != PromptRegion.PartType.Segment).ToArray();
+        if (parts.IsEmpty())
         {
             return globalCond;
         }
         double globalStrength = UserInput.Get(T2IParamTypes.GlobalRegionFactor, 0.5);
         List<RegionHelper> regions = new();
         JArray lastMergedMask = null;
-        foreach (PromptRegion.Part part in regionalizer.Parts)
+        foreach (PromptRegion.Part part in parts)
         {
             JArray partCond = CreateConditioningDirect(part.Prompt, clip, model, isPositive);
             string regionNode = CreateNode("SwarmSquareMaskFromPercent", new JObject()
