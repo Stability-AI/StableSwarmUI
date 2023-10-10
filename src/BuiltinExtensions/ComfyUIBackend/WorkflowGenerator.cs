@@ -461,7 +461,7 @@ public class WorkflowGenerator
                 }
                 int steps = g.UserInput.Get(T2IParamTypes.Steps);
                 g.CreateKSampler(g.FinalModel, prompt, negPrompt, g.FinalSamples, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
-                    g.UserInput.Get(T2IParamTypes.Seed) + 1, method == "StepSwapNoisy", false, "23");
+                    g.UserInput.Get(T2IParamTypes.Seed) + 1, false, method != "StepSwapNoisy", "23");
                 g.FinalSamples = new() { "23", 0 };
             }
             // TODO: Refiner
@@ -531,7 +531,8 @@ public class WorkflowGenerator
                     {
                         ["image"] = new JArray() { croppedImage, 0 },
                         ["width"] = g.UserInput.Get(T2IParamTypes.Width, 1024),
-                        ["height"] = g.UserInput.GetImageHeight()
+                        ["height"] = g.UserInput.GetImageHeight(),
+                        ["can_shrink"] = false
                     });
                     string vaeEncoded = g.CreateNode("VAEEncode", new JObject()
                     {

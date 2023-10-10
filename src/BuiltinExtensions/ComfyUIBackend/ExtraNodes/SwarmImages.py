@@ -10,6 +10,7 @@ class SwarmImageScaleForMP:
                 "image": ("IMAGE",),
                 "width": ("INT", {"default": 0, "min": 0, "max": 8192}),
                 "height": ("INT", {"default": 0, "min": 0, "max": 8192}),
+                "can_shrink": ("BOOL", {"default": True}),
             }
         }
 
@@ -17,12 +18,14 @@ class SwarmImageScaleForMP:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "scale"
 
-    def scale(self, image, width, height):
+    def scale(self, image, width, height, can_shrink):
         mpTarget = width * height
         oldWidth = image.shape[2]
         oldHeight = image.shape[1]
 
         scale = math.sqrt(mpTarget / (oldWidth * oldHeight))
+        if not can_shrink and scale < 1:
+            return s
         newWid = int(round(oldWidth * scale / 64) * 64)
         newHei = int(round(oldHeight * scale / 64) * 64)
         samples = image.movedim(-1, 1)
