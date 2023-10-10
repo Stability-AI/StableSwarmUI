@@ -25,7 +25,7 @@ class SwarmImageScaleForMP:
 
         scale = math.sqrt(mpTarget / (oldWidth * oldHeight))
         if not can_shrink and scale < 1:
-            return s
+            return image
         newWid = int(round(oldWidth * scale / 64) * 64)
         newHei = int(round(oldHeight * scale / 64) * 64)
         samples = image.movedim(-1, 1)
