@@ -11,7 +11,7 @@ public class PromptRegion
 
     public enum PartType
     {
-        Region, Object
+        Region, Object, Segment
     }
 
     public class Part
@@ -20,9 +20,11 @@ public class PromptRegion
 
         public float X, Y, Width, Height;
 
-        public double Strength;
+        public double Strength = 1;
 
-        public double Strength2;
+        public double Strength2 = 1;
+
+        public string DataText;
 
         public PartType Type;
     }
@@ -35,7 +37,7 @@ public class PromptRegion
 
     public PromptRegion(string prompt)
     {
-        if (!prompt.Contains("<region:") && !prompt.Contains("<object:"))
+        if (!prompt.Contains("<region:") && !prompt.Contains("<object:") && !prompt.Contains("<segment:"))
         {
             GlobalPrompt = prompt;
             return;
@@ -69,6 +71,10 @@ public class PromptRegion
             {
                 type = PartType.Object;
             }
+            else if (prefix == "segment")
+            {
+                type = PartType.Segment;
+            }
             else
             {
                 addMore($"<{piece}");
@@ -86,31 +92,56 @@ public class PromptRegion
                 addMore = s => BackgroundPrompt += s;
                 continue;
             }
-            string[] coords = regionData.Split(',');
-            if (coords.Length < 4 || coords.Length > 6
-                || !float.TryParse(coords[0], out float x)
-                || !float.TryParse(coords[1], out float y)
-                || !float.TryParse(coords[2], out float width)
-                || !float.TryParse(coords[3], out float height))
-            {
-                addMore($"<{piece}");
-                continue;
-            }
-            double strength = coords.Length > 4 && double.TryParse(coords[4], out double s) ? s : 1.0;
-            double strength2 = coords.Length > 5 && double.TryParse(coords[5], out double s2) ? s2 : 1.0;
-            x = Math.Clamp(x, 0, 1);
-            y = Math.Clamp(y, 0, 1);
             Part p = new()
             {
                 Prompt = content,
-                Strength = Math.Clamp(strength, 0, 1),
-                Strength2 = Math.Clamp(strength2, 0, 1),
-                X = x,
-                Y = y,
-                Width = Math.Clamp(width, 0, 1 - x),
-                Height = Math.Clamp(height, 0, 1 - y),
                 Type = type
             };
+            string[] coords = regionData.Split(',');
+            if (type == PartType.Segment)
+            {
+                p.DataText = regionData;
+                if (coords.Length > 1 && float.TryParse(coords[^1], out float x))
+                {
+                    p.Strength = Math.Clamp(x, 0, 1);
+                    p.DataText = coords.SkipLast(1).JoinString(",");
+                }
+                else
+                {
+                    p.Strength = 0.5;
+                }
+                if (coords.Length > 2 && float.TryParse(coords[^2], out float y))
+                {
+                    p.Strength2 = Math.Clamp(y, 0, 1);
+                    p.DataText = coords.SkipLast(2).JoinString(",");
+                }
+                else
+                {
+                    p.Strength2 = 0.5;
+                }
+            }
+            else
+            {
+                if (coords.Length < 4 || coords.Length > 6
+                    || !float.TryParse(coords[0], out float x)
+                    || !float.TryParse(coords[1], out float y)
+                    || !float.TryParse(coords[2], out float width)
+                    || !float.TryParse(coords[3], out float height))
+                {
+                    addMore($"<{piece}");
+                    continue;
+                }
+                double strength = coords.Length > 4 && double.TryParse(coords[4], out double s) ? s : 1.0;
+                double strength2 = coords.Length > 5 && double.TryParse(coords[5], out double s2) ? s2 : 1.0;
+                x = Math.Clamp(x, 0, 1);
+                y = Math.Clamp(y, 0, 1);
+                p.Strength = Math.Clamp(strength, 0, 1);
+                p.Strength2 = Math.Clamp(strength2, 0, 1);
+                p.X = x;
+                p.Y = y;
+                p.Width = Math.Clamp(width, 0, 1 - x);
+                p.Height = Math.Clamp(height, 0, 1 - y);
+            }
             Parts.Add(p);
             addMore = s => p.Prompt += s;
         }

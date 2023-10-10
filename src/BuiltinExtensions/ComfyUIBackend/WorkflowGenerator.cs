@@ -42,9 +42,10 @@ public class WorkflowGenerator
         #region Model
         AddStep(g =>
         {
+            g.FinalLoadedModel = g.UserInput.Get(T2IParamTypes.Model);
             g.CreateNode("CheckpointLoaderSimple", new JObject()
             {
-                ["ckpt_name"] = g.UserInput.Get(T2IParamTypes.Model).ToString(g.ModelFolderFormat)
+                ["ckpt_name"] = g.FinalLoadedModel.ToString(g.ModelFolderFormat)
             }, "4");
         }, -15);
         AddStep(g =>
@@ -368,9 +369,10 @@ public class WorkflowGenerator
                 JArray origVae = g.FinalVae, prompt = g.FinalPrompt, negPrompt = g.FinalNegativePrompt;
                 if (g.UserInput.TryGet(T2IParamTypes.RefinerModel, out T2IModel refineModel) && refineModel is not null)
                 {
+                    g.FinalLoadedModel = refineModel;
                     g.CreateNode("CheckpointLoaderSimple", new JObject()
                     {
-                        ["ckpt_name"] = refineModel.ToString(g.ModelFolderFormat)
+                        ["ckpt_name"] = g.FinalLoadedModel.ToString(g.ModelFolderFormat)
                     }, "20");
                     g.FinalModel = new() { "20", 0 };
                     if (!g.UserInput.TryGet(T2IParamTypes.VAE, out _))
@@ -473,7 +475,107 @@ public class WorkflowGenerator
                 ["samples"] = g.FinalSamples,
                 ["vae"] = g.FinalVae
             }, "8");
-        }, 9);
+        }, 1);
+        #endregion
+        #region Segmentation Processing
+        AddStep(g =>
+        {
+            PromptRegion.Part[] parts = new PromptRegion(g.UserInput.Get(T2IParamTypes.Prompt, "")).Parts.Where(p => p.Type == PromptRegion.PartType.Segment).ToArray();
+            if (parts.Any())
+            {
+                PromptRegion negativeRegion = new(g.UserInput.Get(T2IParamTypes.NegativePrompt, ""));
+                PromptRegion.Part[] negativeParts = negativeRegion.Parts.Where(p => p.Type == PromptRegion.PartType.Segment).ToArray();
+                for (int i = 0; i < parts.Length; i++)
+                {
+                    PromptRegion.Part part = parts[i];
+                    string segmentNode = g.CreateNode("SwarmClipSeg", new JObject()
+                    {
+                        ["images"] = g.FinalImageOut,
+                        ["match_text"] = part.DataText,
+                        ["threshold"] = part.Strength
+                    });
+                    string blurNode = g.CreateNode("SwarmMaskBlur", new JObject()
+                    {
+                        ["mask"] = new JArray() { segmentNode, 0 },
+                        ["blur_radius"] = 10,
+                        ["sigma"] = 1
+                    });
+                    string growNode = g.CreateNode("GrowMask", new JObject()
+                    {
+                        ["mask"] = new JArray() { blurNode, 0 },
+                        ["expand"] = 16,
+                        ["tapered_corners"] = true
+                    });
+                    string boundsNode = g.CreateNode("SwarmMaskBounds", new JObject()
+                    {
+                        ["mask"] = new JArray() { growNode, 0 },
+                        ["grow"] = 8
+                    });
+                    string croppedImage = g.CreateNode("SwarmImageCrop", new JObject()
+                    {
+                        ["image"] = g.FinalImageOut,
+                        ["x"] = new JArray() { boundsNode, 0 },
+                        ["y"] = new JArray() { boundsNode, 1 },
+                        ["width"] = new JArray() { boundsNode, 2 },
+                        ["height"] = new JArray() { boundsNode, 3 }
+                    });
+                    string croppedMask = g.CreateNode("CropMask", new JObject()
+                    {
+                        ["mask"] = new JArray() { growNode, 0 },
+                        ["x"] = new JArray() { boundsNode, 0 },
+                        ["y"] = new JArray() { boundsNode, 1 },
+                        ["width"] = new JArray() { boundsNode, 2 },
+                        ["height"] = new JArray() { boundsNode, 3 }
+                    });
+                    string scaledImage = g.CreateNode("SwarmImageScaleForMP", new JObject()
+                    {
+                        ["image"] = new JArray() { croppedImage, 0 },
+                        ["width"] = g.UserInput.Get(T2IParamTypes.Width, 1024),
+                        ["height"] = g.UserInput.GetImageHeight()
+                    });
+                    string vaeEncoded = g.CreateNode("VAEEncode", new JObject()
+                    {
+                        ["pixels"] = new JArray() { scaledImage, 0 },
+                        ["vae"] = g.FinalVae
+                    });
+                    string masked = g.CreateNode("SetLatentNoiseMask", new JObject()
+                    {
+                        ["samples"] = new JArray() { vaeEncoded, 0 },
+                        ["mask"] = new JArray() { croppedMask, 0 }
+                    });
+                    JArray prompt = g.CreateConditioning(part.Prompt, g.FinalClip, g.FinalLoadedModel, true);
+                    string neg = negativeParts.FirstOrDefault(p => p.DataText == part.DataText)?.Prompt ?? negativeRegion.GlobalPrompt;
+                    JArray negPrompt = g.CreateConditioning(neg, g.FinalClip, g.FinalLoadedModel, false);
+                    int steps = g.UserInput.Get(T2IParamTypes.Steps);
+                    int startStep = (int)Math.Round(steps * (1 - part.Strength2));
+                    long seed = g.UserInput.Get(T2IParamTypes.Seed) + 2 + i;
+                    string sampler = g.CreateKSampler(g.FinalModel, prompt, negPrompt, new() { masked, 0 }, steps, startStep, 10000, seed, false, true);
+                    string decoded = g.CreateNode("VAEDecode", new JObject()
+                    {
+                        ["samples"] = new JArray() { sampler, 0 },
+                        ["vae"] = g.FinalVae
+                    });
+                    string scaledBack = g.CreateNode("ImageScale", new JObject()
+                    {
+                        ["image"] = new JArray() { decoded, 0 },
+                        ["width"] = new JArray() { boundsNode, 2 },
+                        ["height"] = new JArray() { boundsNode, 3 },
+                        ["upscale_method"] = "bilinear",
+                        ["crop"] = "disabled"
+                    });
+                    string composited = g.CreateNode("ImageCompositeMasked", new JObject()
+                    {
+                        ["destination"] = g.FinalImageOut,
+                        ["source"] = new JArray() { scaledBack, 0 },
+                        ["mask"] = new JArray() { croppedMask, 0 },
+                        ["x"] = new JArray() { boundsNode, 0 },
+                        ["y"] = new JArray() { boundsNode, 1 },
+                        ["resize_source"] = false
+                    });
+                    g.FinalImageOut = new() { composited, 0 };
+                }
+            }
+        }, 5);
         #endregion
         #region SaveImage
         AddStep(g =>
@@ -517,6 +619,9 @@ public class WorkflowGenerator
         FinalNegativePrompt = new() { "7", 0 },
         FinalSamples = new() { "10", 0 },
         FinalImageOut = new() { "8", 0 };
+
+    /// <summary>What model currently matches <see cref="FinalModel"/>.</summary>
+    public T2IModel FinalLoadedModel;
 
     /// <summary>Mapping of any extra nodes to keep track of, Name->ID, eg "MyNode" -> "15".</summary>
     public Dictionary<string, string> NodeHelpers = new();
@@ -574,7 +679,7 @@ public class WorkflowGenerator
     }
 
     /// <summary>Creates a KSampler and returns its node ID.</summary>
-    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, string id)
+    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, string id = null)
     {
         JObject inputs = new()
         {

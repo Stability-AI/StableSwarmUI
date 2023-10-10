@@ -133,7 +133,6 @@ class SwarmMaskBounds:
     RETURN_TYPES = ("INT", "INT", "INT", "INT")
     RETURN_NAMES = ("x", "y", "width", "height")
     FUNCTION = "get_bounds"
-    OUTPUT_NODE = True
 
     def get_bounds(self, mask, grow):
         sum_x = (torch.sum(mask, dim=0) != 0).to(dtype=torch.int)
