@@ -240,7 +240,6 @@ body {
     height: 25rem;
 }
 .image-block-batch {
-    max-height: calc(10rem + 2px);
     width: calc(10rem + 2px);
     padding: 1px;
     display: inline-block;
