@@ -164,7 +164,7 @@ body {
     max-width: 100%;
     max-height: calc(max(15rem, 100% - 5rem));
     object-fit: contain;
-    object-position: left;
+    object-position: top left;
 }
 .current_image_batch {
     display: inline-block;
