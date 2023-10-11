@@ -255,9 +255,9 @@ function appendImage(container, imageSrc, batchId, textPreview, metadata = '', t
     div.dataset.metadata = metadata;
     let img = document.createElement('img');
     img.addEventListener('load', () => {
-        let ratio = img.width / img.height;
+        let ratio = img.naturalWidth / img.naturalHeight;
         if (batchId != "folder") {
-            div.style.width = `calc(${roundTo(ratio * 10, 0.1)}rem + 2px)`;
+            div.style.width = `calc(${roundTo(ratio * 10, 0.01)}rem + 2px)`;
         }
     });
     img.src = imageSrc;
