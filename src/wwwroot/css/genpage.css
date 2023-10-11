@@ -247,7 +247,7 @@ body {
 }
 .image-block-batch img {
     max-height: 100%;
-    max-width: 100%;
+    width: 100%;
 }
 .image-block:hover {
     background-color: var(--emphasis);

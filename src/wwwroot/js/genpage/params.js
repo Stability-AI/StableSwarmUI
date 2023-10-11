@@ -264,7 +264,7 @@ function genInputs(delay_final = false) {
             });
             resTrick();
         }
-        let revisionGroup = document.getElementById('input_group_content_revision');
+        let revisionGroup = document.getElementById('input_group_revision');
         if (revisionGroup) {
             let revisionToggler = document.getElementById('input_group_content_revision_toggle');
             if (revisionToggler) {
