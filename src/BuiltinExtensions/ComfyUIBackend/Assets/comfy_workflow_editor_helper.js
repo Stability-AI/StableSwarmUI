@@ -308,6 +308,9 @@ function comfyBuildParams(callback) {
                             min = paramDataRaw[1].min;
                             max = paramDataRaw[1].max;
                             step = 1;
+                            if (inputId == 'batch_size' && getUserSetting('resetbatchsizetoone')) {
+                                val = 1;
+                            }
                         }
                         else if (paramDataRaw && paramDataRaw[0] == 'FLOAT' && paramDataRaw.length == 2) {
                             type = 'decimal';

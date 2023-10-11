@@ -301,6 +301,12 @@ function genInputs(delay_final = false) {
         if (inputLoraWeights) {
             inputLoraWeights.addEventListener('change', reapplyLoraWeights);
         }
+        let inputBatchSize = document.getElementById('input_batchsize');
+        let shouldResetBatch = getUserSetting('resetbatchsizetoone', false);
+        if (inputBatchSize && shouldResetBatch) {
+            inputBatchSize.value = 1;
+            triggerChangeFor(inputBatchSize);
+        }
         shouldApplyDefault = true;
         for (let param of gen_param_types) {
             let elem = getRequiredElementById(`input_${param.id}`);

@@ -177,6 +177,9 @@ public class Settings : AutoConfiguration
         [ConfigComment("What theme to use. Default is 'dark_dreams'.")]
         [SettingsOptions(Impl = typeof(ThemesImpl))]
         public string Theme = "dark_dreams";
+
+        [ConfigComment("If enabled, batch size will be reset to 1 when parameters are loaded.\nThis can prevent accidents that might thrash your GPU or cause compatibility issues, especially for example when importing a comfy workflow.\nYou can still set the batch size at will in the GUI.")]
+        public bool ResetBatchSizeToOne = false;
     }
 }
 

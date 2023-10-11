@@ -68,6 +68,23 @@ function buildSettingsMenu(container, data, prefix, tracker) {
     }
 }
 
+/** Returns the current value of the specified user setting (by ID). */
+function getUserSetting(id, def = 'require') {
+    let elem = document.getElementById(`usersettings_${id}`);
+    if (!elem) {
+        if (def == 'require') {
+            throw new Error(`Unknown user setting: ${id}`);
+        }
+        return def;
+    }
+    if (elem.type == 'checkbox') {
+        return elem.checked;
+    }
+    else {
+        return elem.value;
+    }
+}
+
 function applyThemeSetting(theme_info) {
     setTimeout(() => {
         let themeSelectorElement = getRequiredElementById('usersettings_theme');
@@ -83,10 +100,13 @@ function applyThemeSetting(theme_info) {
     }, 1);
 }
 
-function loadUserSettings() {
+function loadUserSettings(callback = null) {
     genericRequest('GetUserSettings', {}, data => {
         buildSettingsMenu(userSettingsContainer, data.settings, 'usersettings_', userSettingsData);
         applyThemeSetting(data.themes);
+        if (callback) {
+            callback();
+        }
     });
 }
 
@@ -99,7 +119,14 @@ function loadServerSettings() {
 function loadSettingsEditor() {
     // TODO: Permission check
     loadServerSettings();
-    loadUserSettings();
+    loadUserSettings(() => {
+        let inputBatchSize = document.getElementById('input_batchsize');
+        let shouldResetBatch = getUserSetting('resetbatchsizetoone', false);
+        if (inputBatchSize && shouldResetBatch) {
+            inputBatchSize.value = 1;
+            triggerChangeFor(inputBatchSize);
+        }
+    });
 }
 
 document.getElementById('serverconfigtabbutton').addEventListener('click', loadServerSettings);
