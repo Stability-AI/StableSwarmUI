@@ -130,7 +130,7 @@ function loadSettingsEditor() {
 }
 
 document.getElementById('serverconfigtabbutton').addEventListener('click', loadServerSettings);
-document.getElementById('usersettingstabbutton').addEventListener('click', loadUserSettings);
+document.getElementById('usersettingstabbutton').addEventListener('click', () => loadUserSettings());
 
 sessionReadyCallbacks.push(loadSettingsEditor);
 
