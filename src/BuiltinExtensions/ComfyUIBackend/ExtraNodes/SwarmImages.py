@@ -51,6 +51,8 @@ class SwarmImageCrop:
     FUNCTION = "crop"
 
     def crop(self, image, x, y, width, height):
+        if width <= 0 or height <= 0:
+            return (image,)
         to_x = width + x
         to_y = height + y
         img = image[:, y:to_y, x:to_x, :]

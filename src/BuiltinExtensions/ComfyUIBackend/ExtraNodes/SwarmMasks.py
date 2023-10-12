@@ -143,9 +143,9 @@ class SwarmMaskBounds:
             val = max(0, min(val, arr.shape[0] - 1))
             return val
         x_start = getval(sum_x, -1)
-        x_end = mask.shape[1] - getval(sum_x.flip(0), 1)
+        x_end = mask.shape[1] - getval(sum_x.flip(0), -1)
         y_start = getval(sum_y, -1)
-        y_end = mask.shape[0] - getval(sum_y.flip(0), 1)
+        y_end = mask.shape[0] - getval(sum_y.flip(0), -1)
         return (int(x_start), int(y_start), int(x_end - x_start), int(y_end - y_start))
 
 

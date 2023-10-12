@@ -29,7 +29,9 @@ class SwarmClipSeg:
             mask = model(**processor(text=match_text, images=img, return_tensors="pt", padding=True))[0]
         mask = torch.nn.functional.threshold(mask.sigmoid(), threshold, 0)
         mask -= mask.min()
-        mask /= mask.max()
+        max = mask.max()
+        if max > 0:
+            mask /= max
         mask = torch.nn.functional.interpolate(mask.unsqueeze(0).unsqueeze(0), size=(images.shape[1], images.shape[2]), mode="bilinear").squeeze(0).squeeze(0)
         return (mask,)
 
