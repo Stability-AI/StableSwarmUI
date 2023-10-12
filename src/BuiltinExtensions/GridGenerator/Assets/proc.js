@@ -494,6 +494,12 @@ function toggleShowVal(axis, val) {
     var show = canShowVal(axis, val);
     var element = document.getElementById('clicktab_' + axis + '__' + val);
     element.classList.toggle('tab_hidden', !show);
+    if (!show && element.classList.contains('active')) {
+        var next = [...element.parentElement.parentElement.getElementsByClassName('nav-link')].filter(e => !e.classList.contains('tab_hidden'));
+        if (next.length > 0) {
+            next[0].click();
+        }
+    }
     fillTable();
 }
 
@@ -839,6 +845,9 @@ function makeGif() {
         oldImage.remove();
     }
     let axisId = document.getElementById('makegif_axis').value;
+    if (axisId == 'x-axis') {
+        axisId = getCurrentSelectedAxis('x');
+    }
     let sizeMult = parseFloat(document.getElementById('makegif_size').value.replaceAll('x', ''));
     let speed = parseFloat(document.getElementById('makegif_speed').value.replaceAll('/s', ''));
     let axis = getAxisById(axisId);
