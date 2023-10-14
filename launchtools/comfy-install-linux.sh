@@ -10,9 +10,9 @@ cd ComfyUI
 
 if [ -z "${SWARM_NO_VENV}" ]; then
 
-    python3 -m venv venv
+    python3 -s -m venv venv
 
     . venv/bin/activate
 fi
 
-pip install -r requirements.txt
+python3 -s -m pip install -r requirements.txt
