@@ -15,4 +15,5 @@ if [ -z "${SWARM_NO_VENV}" ]; then
     . venv/bin/activate
 fi
 
+python3 -s -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
 python3 -s -m pip install -r requirements.txt
