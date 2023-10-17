@@ -524,7 +524,7 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
             }
         }
     }
-    let isSortTop = p => p.id == 'prompt' || p.id == 'negativeprompt';
+    let isSortTop = p => p.id == 'prompt' || p.id == 'negativeprompt' || p.id == 'comfyworkflowraw';
     let prompt = Object.values(actualParams).filter(isSortTop);
     let otherParams = Object.values(actualParams).filter(p => !isSortTop(p));
     let prims = Object.values(params).filter(p => p.group == null);
