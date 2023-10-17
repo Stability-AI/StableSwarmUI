@@ -24,6 +24,9 @@ public class WorkflowGenerator
     /// <summary>Callable steps for modifying workflows as they go.</summary>
     public static List<WorkflowGenStep> Steps = new();
 
+    /// <summary>Callable steps for configuring model generation.</summary>
+    public static List<WorkflowGenStep> ModelGenSteps = new();
+
     /// <summary>Can be set to globally block custom nodes, if needed.</summary>
     public static volatile bool RestrictCustomNodes = false;
 
@@ -34,32 +37,36 @@ public class WorkflowGenerator
         Steps = Steps.OrderBy(s => s.Priority).ToList();
     }
 
+    /// <summary>Register a new step to the workflow generator.</summary>
+    public static void AddModelGenStep(Action<WorkflowGenerator> step, double priority)
+    {
+        ModelGenSteps.Add(new(step, priority));
+        ModelGenSteps = ModelGenSteps.OrderBy(s => s.Priority).ToList();
+    }
+
     /// <summary>Lock for when ensuring the backend has valid models.</summary>
     public static LockObject ModelDownloaderLock = new();
 
     static WorkflowGenerator()
     {
-        #region Model
+        #region Model Loader
         AddStep(g =>
         {
             g.FinalLoadedModel = g.UserInput.Get(T2IParamTypes.Model);
-            g.CreateNode("CheckpointLoaderSimple", new JObject()
-            {
-                ["ckpt_name"] = g.FinalLoadedModel.ToString(g.ModelFolderFormat)
-            }, "4");
+            (g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(g.FinalLoadedModel, "4");
         }, -15);
-        AddStep(g =>
+        AddModelGenStep(g =>
         {
             if (g.UserInput.TryGet(T2IParamTypes.VAE, out T2IModel vae))
             {
-                g.CreateNode("VAELoader", new JObject()
+                string vaeNode = g.CreateNode("VAELoader", new JObject()
                 {
                     ["vae_name"] = vae.ToString(g.ModelFolderFormat)
-                }, "3");
-                g.FinalVae = new JArray() { "3", 0 };
+                });
+                g.LoadingVAE = new() { $"{vaeNode}", 0 };
             }
-        }, -13);
-        AddStep(g =>
+        }, -15);
+        AddModelGenStep(g =>
         {
             if (g.UserInput.TryGet(T2IParamTypes.Loras, out List<string> loras))
             {
@@ -71,17 +78,55 @@ public class WorkflowGenerator
                     float weight = weights == null ? 1 : float.Parse(weights[i]);
                     string newId = g.CreateNode("LoraLoader", new JObject()
                     {
-                        ["model"] = g.FinalModel,
-                        ["clip"] = g.FinalClip,
+                        ["model"] = g.LoadingModel,
+                        ["clip"] = g.LoadingClip,
                         ["lora_name"] = lora.ToString(g.ModelFolderFormat),
                         ["strength_model"] = weight,
                         ["strength_clip"] = weight
                     });
-                    g.FinalModel = new JArray() { $"{newId}", 0 };
-                    g.FinalClip = new JArray() { $"{newId}", 1 };
+                    g.LoadingModel = new JArray() { $"{newId}", 0 };
+                    g.LoadingClip = new JArray() { $"{newId}", 1 };
                 }
             }
-        }, -11);
+        }, -10);
+        AddModelGenStep(g =>
+        {
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && g.UserInput.TryGet(T2IParamTypes.FreeUApplyTo, out string applyTo) && applyTo != "Refiner")
+            {
+                string freeU = g.CreateNode("FreeU", new JObject()
+                {
+                    ["model"] = g.LoadingModel,
+                    ["b1"] = g.UserInput.Get(T2IParamTypes.FreeUBlock1),
+                    ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
+                    ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
+                    ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
+                });
+                g.LoadingModel = new() { $"{freeU}", 0 };
+            }
+        }, -8);
+        AddModelGenStep(g =>
+        {
+            if (g.UserInput.Get(T2IParamTypes.SeamlessTileable))
+            {
+                string tiling = g.CreateNode("SwarmModelTiling", new JObject()
+                {
+                    ["model"] = g.LoadingModel
+                });
+                g.LoadingModel = new() { $"{tiling}", 0 };
+            }
+        }, -6);
+        AddModelGenStep(g =>
+        {
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
+            {
+                string aitLoad = g.CreateNode("AITemplateLoader", new JObject()
+                {
+                    ["model"] = g.LoadingModel,
+                    ["keep_loaded"] = "disable"
+                });
+                g.LoadingModel = new() { $"{aitLoad}", 0 };
+            }
+        }, -3);
         #endregion
         #region Base Image
         AddStep(g =>
@@ -335,50 +380,6 @@ public class WorkflowGenerator
             }
         }, -6);
         #endregion
-        #region FreeU
-        AddStep(g =>
-        {
-            if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && g.UserInput.TryGet(T2IParamTypes.FreeUApplyTo, out string applyTo) && applyTo != "Refiner")
-            {
-                string freeU = g.CreateNode("FreeU", new JObject()
-                {
-                    ["model"] = g.FinalModel,
-                    ["b1"] = g.UserInput.Get(T2IParamTypes.FreeUBlock1),
-                    ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
-                    ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
-                    ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
-                });
-                g.FinalModel = new() { $"{freeU}", 0 };
-            }
-        }, -5.7);
-        #endregion
-        #region Seamless
-        AddStep(g =>
-        {
-            if (g.UserInput.Get(T2IParamTypes.SeamlessTileable))
-            {
-                string tiling = g.CreateNode("SwarmModelTiling", new JObject()
-                {
-                    ["model"] = g.FinalModel
-                });
-                g.FinalModel = new() { $"{tiling}", 0 };
-            }
-        }, -5.7);
-        #endregion
-        #region AITemplate
-        AddStep(g =>
-        {
-            if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
-            {
-                string aitLoad = g.CreateNode("AITemplateLoader", new JObject()
-                {
-                    ["model"] = g.FinalModel,
-                    ["keep_loaded"] = "disable"
-                });
-                g.FinalModel = new() { $"{aitLoad}", 0 };
-            }
-        }, -5.2);
-        #endregion
         #region Sampler
         AddStep(g =>
         {
@@ -412,47 +413,9 @@ public class WorkflowGenerator
                 if (g.UserInput.TryGet(T2IParamTypes.RefinerModel, out T2IModel refineModel) && refineModel is not null)
                 {
                     g.FinalLoadedModel = refineModel;
-                    g.CreateNode("CheckpointLoaderSimple", new JObject()
-                    {
-                        ["ckpt_name"] = g.FinalLoadedModel.ToString(g.ModelFolderFormat)
-                    }, "20");
-                    g.FinalModel = new() { "20", 0 };
-                    if (!g.UserInput.TryGet(T2IParamTypes.VAE, out _))
-                    {
-                        g.FinalVae = new() { "20", 2 };
-                    }
-                    g.FinalClip = new JArray() { "20", 1 };
+                    (g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(refineModel, "20");
                     prompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, refineModel, true);
                     negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, refineModel, false);
-                }
-                if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && g.UserInput.TryGet(T2IParamTypes.FreeUApplyTo, out string applyTo) && applyTo != "Base")
-                {
-                    string freeU = g.CreateNode("FreeU", new JObject()
-                    {
-                        ["model"] = g.FinalModel,
-                        ["b1"] = g.UserInput.Get(T2IParamTypes.FreeUBlock1),
-                        ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
-                        ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
-                        ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
-                    });
-                    g.FinalModel = new() { $"{freeU}", 0 };
-                }
-                if (g.UserInput.Get(T2IParamTypes.SeamlessTileable))
-                {
-                    string tiling = g.CreateNode("SwarmModelTiling", new JObject()
-                    {
-                        ["model"] = g.FinalModel
-                    });
-                    g.FinalModel = new() { $"{tiling}", 0 };
-                }
-                if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
-                {
-                    string aitLoad = g.CreateNode("AITemplateLoader", new JObject()
-                    {
-                        ["model"] = g.FinalModel,
-                        ["keep_loaded"] = "disable"
-                    });
-                    g.FinalModel = new() { $"{aitLoad}", 0 };
                 }
                 bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale > 1;
                 // TODO: Better same-VAE check
@@ -673,7 +636,8 @@ public class WorkflowGenerator
         FinalPrompt = new() { "6", 0 },
         FinalNegativePrompt = new() { "7", 0 },
         FinalSamples = new() { "10", 0 },
-        FinalImageOut = new() { "8", 0 };
+        FinalImageOut = new() { "8", 0 },
+        LoadingModel = null, LoadingClip = null, LoadingVAE = null;
 
     /// <summary>What model currently matches <see cref="FinalModel"/>.</summary>
     public T2IModel FinalLoadedModel;
@@ -731,6 +695,23 @@ public class WorkflowGenerator
             step.Action(this);
         }
         return Workflow;
+    }
+
+    /// <summary>Creates a model loader and adapts it with any registered model adapters, and returns (Model, Clip, VAE).</summary>
+    public (JArray, JArray, JArray) CreateStandardModelLoader(T2IModel model, string id = null)
+    {
+        string modelNode = CreateNode("CheckpointLoaderSimple", new JObject()
+        {
+            ["ckpt_name"] = model.ToString(ModelFolderFormat)
+        }, id);
+        LoadingModel = new() { modelNode, 0 };
+        LoadingClip = new() { modelNode, 1 };
+        LoadingVAE = new() { modelNode, 2 };
+        foreach (WorkflowGenStep step in ModelGenSteps)
+        {
+            step.Action(this);
+        }
+        return (LoadingModel, LoadingClip, LoadingVAE);
     }
 
     /// <summary>Creates a VAEDecode node and returns its node ID.</summary>
