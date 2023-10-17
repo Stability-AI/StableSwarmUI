@@ -350,7 +350,20 @@ public class WorkflowGenerator
                 });
                 g.FinalModel = new() { $"{freeU}", 0 };
             }
-        }, -5.3);
+        }, -5.7);
+        #endregion
+        #region Seamless
+        AddStep(g =>
+        {
+            if (g.UserInput.Get(T2IParamTypes.SeamlessTileable))
+            {
+                string tiling = g.CreateNode("SwarmModelTiling", new JObject()
+                {
+                    ["model"] = g.FinalModel
+                });
+                g.FinalModel = new() { $"{tiling}", 0 };
+            }
+        }, -5.7);
         #endregion
         #region AITemplate
         AddStep(g =>
@@ -424,6 +437,14 @@ public class WorkflowGenerator
                     });
                     g.FinalModel = new() { $"{freeU}", 0 };
                 }
+                if (g.UserInput.Get(T2IParamTypes.SeamlessTileable))
+                {
+                    string tiling = g.CreateNode("SwarmModelTiling", new JObject()
+                    {
+                        ["model"] = g.FinalModel
+                    });
+                    g.FinalModel = new() { $"{tiling}", 0 };
+                }
                 if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
                 {
                     string aitLoad = g.CreateNode("AITemplateLoader", new JObject()
@@ -439,11 +460,7 @@ public class WorkflowGenerator
                 bool doPixelUpscale = doUspcale && (upscaleMethod.StartsWith("pixel-") || upscaleMethod.StartsWith("model-"));
                 if (modelMustReencode || doPixelUpscale)
                 {
-                    g.CreateNode("VAEDecode", new JObject()
-                    {
-                        ["samples"] = g.FinalSamples,
-                        ["vae"] = origVae
-                    }, "24");
+                    g.CreateVAEDecode(origVae, g.FinalSamples, "24");
                     string pixelsNode = "24";
                     if (doPixelUpscale)
                     {
@@ -511,11 +528,7 @@ public class WorkflowGenerator
         #region VAEDecode
         AddStep(g =>
         {
-            g.CreateNode("VAEDecode", new JObject()
-            {
-                ["samples"] = g.FinalSamples,
-                ["vae"] = g.FinalVae
-            }, "8");
+            g.CreateVAEDecode(g.FinalVae, g.FinalSamples, "8");
         }, 1);
         #endregion
         #region Segmentation Processing
@@ -718,6 +731,17 @@ public class WorkflowGenerator
             step.Action(this);
         }
         return Workflow;
+    }
+
+    /// <summary>Creates a VAEDecode node and returns its node ID.</summary>
+    public string CreateVAEDecode(JArray vae, JArray latent, string id = null)
+    {
+        string className = UserInput.Get(T2IParamTypes.SeamlessTileable) ? "SwarmTileableVAEDecode" : "VAEDecode";
+        return CreateNode(className, new JObject()
+        {
+            ["vae"] = vae,
+            ["samples"] = latent
+        }, id);
     }
 
     /// <summary>Creates a KSampler and returns its node ID.</summary>

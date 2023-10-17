@@ -23,7 +23,7 @@ public class ComfyUIBackendExtension : Extension
     public static Dictionary<string, string> Workflows;
 
     /// <summary>Set of all feature-ids supported by ComfyUI backends.</summary>
-    public static HashSet<string> FeaturesSupported = new() { "comfyui", "refiners", "controlnet", "endstepsearly" };
+    public static HashSet<string> FeaturesSupported = new() { "comfyui", "refiners", "controlnet", "endstepsearly", "seamless" };
 
     /// <summary>Extensible map of ComfyUI Node IDs to supported feature IDs.</summary>
     public static Dictionary<string, string> NodeToFeatureMap = new()
