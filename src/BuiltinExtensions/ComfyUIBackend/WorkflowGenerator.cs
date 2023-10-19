@@ -91,9 +91,9 @@ public class WorkflowGenerator
         }, -10);
         AddModelGenStep(g =>
         {
-            if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu"))
+            string applyTo = g.UserInput.Get(T2IParamTypes.FreeUApplyTo, null);
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && applyTo is not null)
             {
-                string applyTo = g.UserInput.Get(T2IParamTypes.FreeUApplyTo, "Both");
                 if (applyTo == "Both" || applyTo == g.LoadingModelType)
                 {
                     string freeU = g.CreateNode("FreeU", new JObject()
