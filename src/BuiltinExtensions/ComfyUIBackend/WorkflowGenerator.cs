@@ -53,7 +53,7 @@ public class WorkflowGenerator
         AddStep(g =>
         {
             g.FinalLoadedModel = g.UserInput.Get(T2IParamTypes.Model);
-            (g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(g.FinalLoadedModel, "4");
+            (g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(g.FinalLoadedModel, "Base", "4");
         }, -15);
         AddModelGenStep(g =>
         {
@@ -91,17 +91,21 @@ public class WorkflowGenerator
         }, -10);
         AddModelGenStep(g =>
         {
-            if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu") && g.UserInput.TryGet(T2IParamTypes.FreeUApplyTo, out string applyTo) && applyTo != "Refiner")
+            if (ComfyUIBackendExtension.FeaturesSupported.Contains("freeu"))
             {
-                string freeU = g.CreateNode("FreeU", new JObject()
+                string applyTo = g.UserInput.Get(T2IParamTypes.FreeUApplyTo, "Both");
+                if (applyTo == "Both" || applyTo == g.LoadingModelType)
                 {
-                    ["model"] = g.LoadingModel,
-                    ["b1"] = g.UserInput.Get(T2IParamTypes.FreeUBlock1),
-                    ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
-                    ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
-                    ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
-                });
-                g.LoadingModel = new() { $"{freeU}", 0 };
+                    string freeU = g.CreateNode("FreeU", new JObject()
+                    {
+                        ["model"] = g.LoadingModel,
+                        ["b1"] = g.UserInput.Get(T2IParamTypes.FreeUBlock1),
+                        ["b2"] = g.UserInput.Get(T2IParamTypes.FreeUBlock2),
+                        ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
+                        ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
+                    });
+                    g.LoadingModel = new() { $"{freeU}", 0 };
+                }
             }
         }, -8);
         AddModelGenStep(g =>
@@ -413,7 +417,7 @@ public class WorkflowGenerator
                 if (g.UserInput.TryGet(T2IParamTypes.RefinerModel, out T2IModel refineModel) && refineModel is not null)
                 {
                     g.FinalLoadedModel = refineModel;
-                    (g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(refineModel, "20");
+                    (g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(refineModel, "Refiner", "20");
                     prompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, refineModel, true);
                     negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, refineModel, false);
                 }
@@ -651,6 +655,9 @@ public class WorkflowGenerator
     /// <summary>Model folder separator format, if known.</summary>
     public string ModelFolderFormat;
 
+    /// <summary>Type id ('Base', 'Refiner') of the current loading model.</summary>
+    public string LoadingModelType;
+
     /// <summary>Creates a new node with the given class type and configuration action, and optional manual ID.</summary>
     public string CreateNode(string classType, Action<string, JObject> configure, string id = null)
     {
@@ -698,8 +705,9 @@ public class WorkflowGenerator
     }
 
     /// <summary>Creates a model loader and adapts it with any registered model adapters, and returns (Model, Clip, VAE).</summary>
-    public (JArray, JArray, JArray) CreateStandardModelLoader(T2IModel model, string id = null)
+    public (JArray, JArray, JArray) CreateStandardModelLoader(T2IModel model, string type, string id = null)
     {
+        LoadingModelType = type;
         string modelNode = CreateNode("CheckpointLoaderSimple", new JObject()
         {
             ["ckpt_name"] = model.ToString(ModelFolderFormat)
