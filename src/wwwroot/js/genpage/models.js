@@ -211,6 +211,14 @@ class ModelBrowserWrapper {
         else if (this.subType == 'LoRA') {
             isSelected = [...selectorElem.selectedOptions].map(option => option.value).filter(value => value == model.data.name).length > 0;
         }
+        else if (this.subType == 'Embedding') {
+            let promptBox = getRequiredElementById('alt_prompt_textbox');
+            isSelected = promptBox.value.includes(`<embed:${model.data.name}>`);
+            let negativePrompt = document.getElementById('input_negativeprompt');
+            if (negativePrompt) {
+                isSelected = isSelected || negativePrompt.value.includes(`<embed:${model.data.name}>`);
+            }
+        }
         else {
             isSelected = selectorElem.value == model.data.name;
         }
@@ -228,8 +236,41 @@ class ModelBrowserWrapper {
 let sdModelBrowser = new ModelBrowserWrapper('Stable-Diffusion', 'model_list', 'modelbrowser', (model) => { directSetModel(model.data); });
 let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => { directSetVae(vae.data); });
 let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data.name); });
-let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => {});
+let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => { selectEmbedding(embed.data); });
 let sdControlnetBrowser = new ModelBrowserWrapper('ControlNet', 'controlnet_list', 'sdcontrolnetbrowser', (controlnet) => { setControlNet(controlnet.data); });
+
+function selectEmbedding(model) {
+    let promptBox = getRequiredElementById('alt_prompt_textbox');
+    let chunk = `<embed:${model.name}>`;
+    if (promptBox.value.endsWith(chunk)) {
+        promptBox.value = promptBox.value.substring(0, promptBox.value.length - chunk.length).trim();
+    }
+    else {
+        promptBox.value += ` ${chunk}`;
+    }
+    triggerChangeFor(promptBox);
+    sdEmbedBrowser.browser.rerender();
+}
+
+let lastPromptForEmbedMonitor = {};
+
+function monitorPromptChangeForEmbed(promptText, type) {
+    let last = lastPromptForEmbedMonitor[type];
+    if (!last) {
+        last = "";
+    }
+    console.log(`changed from ${last} to ${promptText} for ${type}`)
+    if (promptText == last) {
+        return;
+    }
+    lastPromptForEmbedMonitor[type] = promptText;
+    let countNew = promptText.split(`<embed:`).length - 1;
+    let countOld = last.split(`<embed:`).length - 1;
+    if (countNew == countOld) {
+        return;
+    }
+    sdEmbedBrowser.browser.rerender();
+}
 
 function setControlNet(model) {
     let input = document.getElementById('input_controlnetmodel');

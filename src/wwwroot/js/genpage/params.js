@@ -290,6 +290,12 @@ function genInputs(delay_final = false) {
         else {
             altPromptArea.style.display = 'block';
         }
+        let inputNegativePrompt = document.getElementById('input_negativeprompt');
+        if (inputNegativePrompt) {
+            inputNegativePrompt.addEventListener('input', () => {
+                monitorPromptChangeForEmbed(inputNegativePrompt.value, 'negative');
+            });
+        }
         let inputLoras = document.getElementById('input_loras');
         if (inputLoras) {
             inputLoras.addEventListener('change', () => {

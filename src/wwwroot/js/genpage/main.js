@@ -868,6 +868,7 @@ function pageSizer() {
         }
         setCookie(`lastparam_input_prompt`, altText.value, 0.25);
         textPromptDoCount(altText);
+        monitorPromptChangeForEmbed(altText.value, 'positive');
     });
     altText.addEventListener('input', () => {
         setCookie(`lastparam_input_prompt`, altText.value, 0.25);
