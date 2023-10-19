@@ -19,10 +19,22 @@ public class T2IParamInput
         public T2IParamInput Input;
 
         public string Param;
+
+        public Func<string, string> EmbedFormatter;
+
+        public string[] Embeds, Loras;
+
+        public string Parse(string text)
+        {
+            return Input.ProcessPromptLike(text, this);
+        }
     }
 
     /// <summary>Mapping of prompt tag prefixes, to allow for registration of custom prompt tags.</summary>
     public static Dictionary<string, Func<string, PromptTagContext, string>> PromptTagProcessors = new();
+
+    /// <summary>Mapping of prompt tag prefixes, to allow for registration of custom prompt tags - specifically post-processing like lora (which remove from prompt and get read elsewhere).</summary>
+    public static Dictionary<string, Func<string, PromptTagContext, string>> PromptTagPostProcessors = new();
 
     static T2IParamInput()
     {
@@ -34,11 +46,11 @@ public class T2IParamInput
             {
                 return null;
             }
-            return vals[context.Random.Next(vals.Length)];
+            return context.Parse(vals[context.Random.Next(vals.Length)]);
         };
         PromptTagProcessors["preset"] = (data, context) =>
         {
-            T2IPreset preset = context.Input.SourceSession.User.GetPreset(data);
+            T2IPreset preset = context.Input.SourceSession.User.GetPreset(context.Parse(data));
             if (preset is null)
             {
                 return null;
@@ -50,7 +62,50 @@ public class T2IParamInput
             }
             return "";
         };
-        // TODO: Wildcards
+        PromptTagProcessors["embed"] = (data, context) =>
+        {
+            data = context.Parse(data);
+            if (context.Embeds is not null)
+            {
+                string want = data.ToLowerFast().Replace('\\', '/');
+                string matched = context.Embeds.FirstOrDefault(e => e.ToLowerFast().StartsWith(want)) ?? context.Embeds.FirstOrDefault(e => e.ToLowerFast().Contains(want));
+                if (matched is not null)
+                {
+                    data = matched;
+                }
+            }
+            return context.EmbedFormatter(data.Replace('/', Path.DirectorySeparatorChar));
+        };
+        PromptTagProcessors["embedding"] = PromptTagProcessors["embed"];
+        PromptTagPostProcessors["lora"] = (data, context) =>
+        {
+            data = context.Parse(data);
+            string lora = data.ToLowerFast().Replace('\\', '/');
+            int colonIndex = lora.IndexOf(':');
+            double strength = 1;
+            if (colonIndex != -1 && double.TryParse(lora[(colonIndex + 1)..], out strength))
+            {
+                lora = lora[..colonIndex];
+            }
+            string matched = context.Loras.FirstOrDefault(e => e.ToLowerFast().StartsWith(lora)) ?? context.Loras.FirstOrDefault(e => e.ToLowerFast().Contains(lora));
+            if (matched is not null)
+            {
+                List<string> loraList = context.Input.Get(T2IParamTypes.Loras);
+                List<string> weights = context.Input.Get(T2IParamTypes.LoraWeights);
+                if (loraList is null)
+                {
+                    loraList = new();
+                    weights = new();
+                }
+                loraList.Add(matched);
+                weights.Add(strength.ToString());
+                context.Input.Set(T2IParamTypes.Loras, loraList);
+                context.Input.Set(T2IParamTypes.LoraWeights, weights);
+                return "";
+            }
+            return null;
+        };
+        // TODO: Wildcards (random by user-editable listing files)
     }
 
     /// <summary>The raw values in this input. Do not use this directly, instead prefer:
@@ -190,89 +245,52 @@ public class T2IParamInput
         string lowRef = val.ToLowerFast();
         string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelsFor(SourceSession).Select(m => m.Name).ToArray() : null;
         string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelsFor(SourceSession).Select(m => m.Name.ToLowerFast()).ToArray() : null;
-        PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID };
-        string addBefore = "", addAfter = "";
-        string fixedVal = StringConversionHelper.QuickSimpleTagFiller(val, "<", ">", tag =>
-        {
-            (string prefix, string data) = tag.BeforeAndAfter(':');
-            if (string.IsNullOrWhiteSpace(data))
-            {
-                return $"<{tag}>";
-            }
-            switch (prefix.ToLowerFast())
-            {
-                case "embed":
-                case "embedding":
-                    {
-                        if (embeds is not null)
-                        {
-                            string want = data.ToLowerFast().Replace('\\', '/');
-                            string matched = embeds.FirstOrDefault(e => e.ToLowerFast().StartsWith(want)) ?? embeds.FirstOrDefault(e => e.ToLowerFast().Contains(want));
-                            if (matched is not null)
-                            {
-                                data = matched;
-                            }
-                        }
-                        return embedFormatter(data.Replace('/', Path.DirectorySeparatorChar));
-                    }
-                case "lora":
-                    {
-                        string lora = data.ToLowerFast().Replace('\\', '/');
-                        int colonIndex = lora.IndexOf(':');
-                        double strength = 1;
-                        if (colonIndex != -1 && double.TryParse(lora[(colonIndex + 1)..], out strength))
-                        {
-                            lora = lora[..colonIndex];
-                        }
-                        string matched = loras.FirstOrDefault(e => e.ToLowerFast().StartsWith(lora)) ?? loras.FirstOrDefault(e => e.ToLowerFast().Contains(lora));
-                        if (matched is not null)
-                        {
-                            List<string> loraList = Get(T2IParamTypes.Loras);
-                            List<string> weights = Get(T2IParamTypes.LoraWeights);
-                            if (loraList is null)
-                            {
-                                loraList = new();
-                                weights = new();
-                            }
-                            loraList.Add(matched);
-                            weights.Add(strength.ToString());
-                            Set(T2IParamTypes.Loras, loraList);
-                            Set(T2IParamTypes.LoraWeights, weights);
-                            return "";
-                        }
-                        else
-                        {
-                            return $"<{tag}>";
-                        }
-                    }
-                default:
-                    if (PromptTagProcessors.TryGetValue(prefix, out Func<string, PromptTagContext, string> proc))
-                    {
-                        string result = proc(data, context);
-                        if (result is not null)
-                        {
-                            if (result.StartsWithNull()) // Special case for preset tag modifying the current value
-                            {
-                                result = result[1..];
-                                if (result.Contains("{value}"))
-                                {
-                                    addBefore += result.Before("{value}");
-                                }
-                                addAfter += result.After("{value}");
-                                return "";
-                            }
-                            return result;
-                        }
-                    }
-                    return $"<{tag}>";
-            }
-        });
-        fixedVal = addBefore + fixedVal + addAfter;
+        PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID, EmbedFormatter = embedFormatter, Embeds = embeds, Loras = loras };
+        string fixedVal = ProcessPromptLike(val, context);
         if (fixedVal != val)
         {
             ExtraMeta[$"original_{param.Type.ID}"] = val;
         }
         return fixedVal;
+    }
+
+    /// <summary>Special utility to process prompt inputs before the request is executed (to parse wildcards, embeddings, etc).</summary>
+    public string ProcessPromptLike(string val, PromptTagContext context)
+    {
+        if (val is null)
+        {
+            return null;
+        }
+        string addBefore = "", addAfter = "";
+        void processSet(Dictionary<string, Func<string, PromptTagContext, string>> set)
+        {
+            val = StringConversionHelper.QuickSimpleTagFiller(val, "<", ">", tag =>
+            {
+                (string prefix, string data) = tag.BeforeAndAfter(':');
+                if (!string.IsNullOrWhiteSpace(data) && set.TryGetValue(prefix, out Func<string, PromptTagContext, string> proc))
+                {
+                    string result = proc(data, context);
+                    if (result is not null)
+                    {
+                        if (result.StartsWithNull()) // Special case for preset tag modifying the current value
+                        {
+                            result = result[1..];
+                            if (result.Contains("{value}"))
+                            {
+                                addBefore += result.Before("{value}");
+                            }
+                            addAfter += result.After("{value}");
+                            return "";
+                        }
+                        return result;
+                    }
+                }
+                return $"<{tag}>";
+            }, false, 0);
+        }
+        processSet(PromptTagProcessors);
+        processSet(PromptTagPostProcessors);
+        return addBefore + val + addAfter;
     }
 
     /// <summary>Gets the raw value of the parameter, if it is present, or null if not.</summary>

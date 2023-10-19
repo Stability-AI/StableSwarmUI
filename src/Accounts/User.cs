@@ -184,7 +184,7 @@ public class User
             return data;
         }
         string path = Settings.OutPathBuilder.Format;
-        path = StringConversionHelper.QuickSimpleTagFiller(path, "[", "]", buildPathPart, maxDepth: 1);
+        path = StringConversionHelper.QuickSimpleTagFiller(path, "[", "]", buildPathPart, false);
         return Utilities.StrictFilenameClean(path);
     }
 }
