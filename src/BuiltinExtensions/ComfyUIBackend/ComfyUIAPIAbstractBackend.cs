@@ -374,6 +374,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     {
                         return image.AsBase64;
                     }
+                    else if (val is List<string> list)
+                    {
+                        return list.JoinString(",");
+                    }
                     return val.ToString();
                 }
                 long fixSeed(long input)
