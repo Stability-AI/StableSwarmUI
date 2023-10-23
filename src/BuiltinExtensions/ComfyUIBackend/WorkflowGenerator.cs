@@ -725,6 +725,15 @@ public class WorkflowGenerator
     /// <summary>Creates a VAEDecode node and returns its node ID.</summary>
     public string CreateVAEDecode(JArray vae, JArray latent, string id = null)
     {
+        if (UserInput.TryGet(T2IParamTypes.VAETileSize, out int tileSize))
+        {
+            return CreateNode("VAEDecodeTiled", new JObject()
+            {
+                ["vae"] = vae,
+                ["samples"] = latent,
+                ["tile_size"] = tileSize
+            }, id);
+        }
         string className = UserInput.Get(T2IParamTypes.SeamlessTileable) ? "SwarmTileableVAEDecode" : "VAEDecode";
         return CreateNode(className, new JObject()
         {
