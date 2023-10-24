@@ -108,7 +108,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
         }
         JObject result = await SendPost<JObject>(route, toSend);
         // TODO: Error handlers
-        return result["images"].Select(i => new Image((string)i)).ToArray();
+        return result["images"].Select(i => new Image((string)i, Image.ImageType.IMAGE)).ToArray();
     }
 
     public async Task<JType> SendGet<JType>(string url) where JType : class

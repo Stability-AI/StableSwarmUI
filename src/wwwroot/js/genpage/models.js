@@ -259,7 +259,6 @@ function monitorPromptChangeForEmbed(promptText, type) {
     if (!last) {
         last = "";
     }
-    console.log(`changed from ${last} to ${promptText} for ${type}`)
     if (promptText == last) {
         return;
     }

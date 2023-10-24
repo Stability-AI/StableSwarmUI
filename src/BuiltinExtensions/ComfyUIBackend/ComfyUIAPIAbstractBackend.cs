@@ -214,7 +214,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                         Logs.Verbose($"ComfyUI Websocket sent: {output.Length} bytes of image data as event {eventId} in format {format} ({formatLabel}) to index {index}");
                         if (isReceivingOutputs)
                         {
-                            takeOutput(new Image(output[8..]));
+                            takeOutput(new Image(output[8..], Image.ImageType.IMAGE));
                         }
                         else
                         {
@@ -273,27 +273,45 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         List<Image> outputs = new();
         foreach (JToken outData in output["outputs"].Values())
         {
-            if (outData is null || outData["images"] is null)
+            if (outData is null)
             {
-                Logs.Error($"Invalid/null/empty output data from ComfyUI server: {outData.ToDenseDebugString()}");
+                Logs.Error($"null output data from ComfyUI server: {output.ToDenseDebugString()}");
                 continue;
             }
-            foreach (JToken outImage in outData["images"])
+            async Task LoadImage(JToken outImage, Image.ImageType type)
             {
                 string fname = outImage["filename"].ToString();
                 if ($"{outImage["type"]}" == "temp")
                 {
                     Logs.Debug($"Comfy - Skip temp image '{fname}'");
-                    continue;
+                    return;
                 }
                 byte[] image = await(await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
                 if (image == null || image.Length == 0)
                 {
                     Logs.Error($"Invalid/null/empty image data from ComfyUI server for '{fname}', under {outData.ToDenseDebugString()}");
-                    continue;
+                    return;
                 }
-                outputs.Add(new Image(image));
+                outputs.Add(new Image(image, type));
                 PostResultCallback(fname);
+            }
+            if (outData["images"] is not null)
+            {
+                foreach (JToken outImage in outData["images"])
+                {
+                    await LoadImage(outImage, Image.ImageType.IMAGE);
+                }
+            }
+            else if (outData["gifs"] is not null)
+            {
+                foreach (JToken outGif in outData["gifs"])
+                {
+                    await LoadImage(outGif, Image.ImageType.ANIMATION);
+                }
+            }
+            else
+            {
+                Logs.Error($"invalid/empty output data from ComfyUI server: {outData.ToDenseDebugString()}");
             }
         }
         return outputs.ToArray();

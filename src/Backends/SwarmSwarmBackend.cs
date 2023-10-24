@@ -332,7 +332,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             {
                 throw new SessionInvalidException();
             }
-            images = generated["images"].Select(img => new Image(img.ToString().After(";base64,"))).ToArray();
+            images = generated["images"].Select(img => Image.FromDataString(img.ToString())).ToArray();
         });
         return images;
     }
@@ -370,7 +370,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     else if (response.TryGetValue("image", out val))
                     {
                         Logs.Verbose($"[{HandlerTypeData.Name}] Got image from websocket");
-                        takeOutput(new Image(val.ToString().After(";base64,")));
+                        takeOutput(Image.FromDataString(val.ToString()));
                     }
                     else
                     {
