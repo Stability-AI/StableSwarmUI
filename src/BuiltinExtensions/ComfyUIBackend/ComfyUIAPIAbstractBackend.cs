@@ -286,6 +286,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     Logs.Debug($"Comfy - Skip temp image '{fname}'");
                     return;
                 }
+                if (fname.EndsWith(".gif"))
+                {
+                    type = Image.ImageType.ANIMATION;
+                }
                 byte[] image = await(await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
                 if (image == null || image.Length == 0)
                 {

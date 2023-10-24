@@ -10,6 +10,8 @@ let comfyObjectData = {};
 
 let comfyHasTriedToLoad = false;
 
+let comfyAltSaveNodes = ['ADE_AnimateDiffCombine', 'VHS_VideoCombine'];
+
 /**
  * Tries to load the ComfyUI workflow frame.
  */
@@ -184,6 +186,9 @@ function comfyBuildParams(callback) {
                 hasSaves = true;
             }
             else if (node.class_type == 'SwarmSaveImageWS') {
+                hasSaves = true;
+            }
+            else if (comfyAltSaveNodes.includes(node.class_type)) {
                 hasSaves = true;
             }
             if (node.inputs) {
