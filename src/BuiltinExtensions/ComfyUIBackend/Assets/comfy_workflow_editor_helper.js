@@ -189,7 +189,10 @@ function comfyBuildParams(callback) {
             if (node.inputs) {
                 for (let inputId of Object.keys(node.inputs)) {
                     let val = node.inputs[inputId];
-                    if (typeof val == 'object' && val.length == 2) {
+                    if (val == null) {
+                        console.log(`Null input ${inputId} on node ${nodeId} (${JSON.stringify(node)})`);
+                    }
+                    else if (typeof val == 'object' && val.length == 2) {
                         if (inputId == 'negative' && val[1] == 0) {
                             labelAlterations[val[0]] = 'Negative Prompt';
                         }
