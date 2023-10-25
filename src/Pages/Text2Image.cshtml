@@ -183,7 +183,7 @@
                         <div class="modal-body">
                             <textarea class="auto-text auto-text-block" id="preset_description" rows="3" placeholder="Preset description text..."></textarea>
                             <span class="form-check form-switch display-inline-block">
-                                <input class="auto-slider-toggle form-check-input" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick=":doToggleEnable('new_preset_image')"> Use Image
+                                <input class="auto-slider-toggle form-check-input" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick="doToggleEnable('new_preset_image')"> Use Image
                             </span>
                             <div id="new_preset_image" class="new_preset_image"></div>
                             <hr>
@@ -191,7 +191,7 @@
                             <p>Select the checkbox next to inputs you want included in the preset.<br>Use <code>{value}</code> in text inputs for the preset to use the UI value.</p>
                             <div id="new_preset_modal_inputs"></div>
                             <div class="advanced_input_checkbox">
-                                <input type="checkbox" id="preset_advanced_options_checkbox" onclick=":preset_toggle_advanced()"/>
+                                <input type="checkbox" id="preset_advanced_options_checkbox" onclick="preset_toggle_advanced()"/>
                                 <span onclick="preset_toggle_advanced_checkbox_manual()">Display Advanced Options?</span>
                             </div>
                             <div id="new_preset_modal_advanced_inputs" style="display:none;"></div>

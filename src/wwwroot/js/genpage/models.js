@@ -25,7 +25,9 @@ function editModel(model, browser) {
         newImg.id = 'edit_model_image_img';
         newImg.style.maxWidth = '100%';
         imageInput.appendChild(newImg);
-        enableImage.checked = true;
+        if (!model.preview_image || model.preview_image == 'imgs/model_placeholder.jpg') {
+            enableImage.checked = true;
+        }
         enableImage.disabled = false;
     }
     getRequiredElementById('edit_model_name').value = model.title || model.name;
