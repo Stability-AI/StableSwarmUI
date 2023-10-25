@@ -378,8 +378,8 @@ public class T2IParamInput
             T2IParamDataType.DECIMAL => param.SharpType == typeof(double) ? double.Parse(val) : float.Parse(val),
             T2IParamDataType.BOOLEAN => bool.Parse(val),
             T2IParamDataType.TEXT or T2IParamDataType.DROPDOWN => val,
-            T2IParamDataType.IMAGE => new Image(val, Image.ImageType.IMAGE),
-            T2IParamDataType.IMAGE_LIST => val.Split('|').Select(v => new Image(v, Image.ImageType.IMAGE)).ToList(),
+            T2IParamDataType.IMAGE => new Image(val, Image.ImageType.IMAGE, "png"),
+            T2IParamDataType.IMAGE_LIST => val.Split('|').Select(v => new Image(v, Image.ImageType.IMAGE, "png")).ToList(),
             T2IParamDataType.MODEL => getModel(val),
             T2IParamDataType.LIST => val.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
             _ => throw new NotImplementedException()

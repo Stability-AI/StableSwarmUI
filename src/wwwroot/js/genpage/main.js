@@ -191,21 +191,44 @@ function alignImageDataFormat() {
 function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false) {
     let curImg = getRequiredElementById('current_image');
     curImg.innerHTML = '';
-    let img = document.createElement('img');
+    let isVideo = src.endsWith(".mp4") || src.endsWith(".webm");
+    let img;
+    if (isVideo) {
+        img = document.createElement('video');
+        img.loop = true;
+        img.autoplay = true;
+        img.muted = true;
+        let sourceObj = document.createElement('source');
+        sourceObj.src = src;
+        sourceObj.type = `video/${src.substring(src.lastIndexOf('.') + 1)}`;
+        img.appendChild(sourceObj);
+    }
+    else {
+        img = document.createElement('img');
+        img.src = src;
+    }
     img.className = 'current-image-img';
     img.id = 'current_image_img';
-    img.src = src;
     img.dataset.batch_id = batchId;
     img.onclick = () => expandCurrentImage(src, metadata);
     currentMetadataVal = metadata;
     let extrasWrapper = createDiv(null, 'current-image-extras-wrapper');
     let buttons = createDiv(null, 'current-image-buttons');
+    function naturalDim() {
+        if (isVideo) {
+            return [img.videoWidth, img.videoHeight];
+        }
+        else {
+            return [img.naturalWidth, img.naturalHeight];
+        }
+    }
     quickAppendButton(buttons, 'Upscale 2x', () => {
         toDataURL(img.src, (url => {
+            let [width, height] = naturalDim();
             let input_overrides = {
                 'initimage': url,
-                'width': img.naturalWidth * 2,
-                'height': img.naturalHeight * 2
+                'width': width * 2,
+                'height': height * 2
             };
             doGenerate(input_overrides);
         }));
@@ -234,9 +257,10 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false) 
     data.innerHTML = formatMetadata(metadata);
     extrasWrapper.appendChild(data);
     img.onload = () => {
+        let [width, height] = naturalDim();
         if (previewGrow) {
-            img.width = img.naturalWidth * 8;
-            img.height = img.naturalHeight * 8;
+            img.width = width * 8;
+            img.height = height * 8;
             img.dataset.previewGrow = 'true';
         }
         alignImageDataFormat();

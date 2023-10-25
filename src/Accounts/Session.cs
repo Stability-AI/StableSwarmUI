@@ -122,7 +122,7 @@ public class Session : IEquatable<Session>
     /// <summary>Returns a properly web-formatted base64 encoding of an image, per the user's file format preference.</summary>
     public string GetImageB64(Image image)
     {
-        return "data:image/" + (User.Settings.FileFormat.ImageFormat == "PNG" ? "png" : "jpeg") + ";base64," + image.AsBase64;
+        return image.AsDataString();
     }
 
     /// <summary>Save an image as this user, and returns the new URL. If user has disabled saving, returns a data URL.</summary>
@@ -136,6 +136,11 @@ public class Session : IEquatable<Session>
         string rawImagePath = User.BuildImageOutputPath(user_input, batchIndex);
         string imagePath = rawImagePath.Replace("[number]", "1");
         string extension = (User.Settings.FileFormat.ImageFormat == "PNG" ? "png" : "jpg");
+        if (image.Type != Image.ImageType.IMAGE)
+        {
+            Logs.Verbose($"Image is type {image.Type} and will save with extension '{image.Extension}'.");
+            extension = image.Extension;
+        }
         string fullPath = $"{User.OutputDirectory}/{imagePath}.{extension}";
         lock (User.UserLock)
         {

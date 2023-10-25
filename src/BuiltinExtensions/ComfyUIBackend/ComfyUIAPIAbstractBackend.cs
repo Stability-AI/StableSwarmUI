@@ -214,7 +214,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                         Logs.Verbose($"ComfyUI Websocket sent: {output.Length} bytes of image data as event {eventId} in format {format} ({formatLabel}) to index {index}");
                         if (isReceivingOutputs)
                         {
-                            takeOutput(new Image(output[8..], Image.ImageType.IMAGE));
+                            takeOutput(new Image(output[8..], Image.ImageType.IMAGE, formatLabel == "jpeg" ? "jpg" : formatLabel));
                         }
                         else
                         {
@@ -286,9 +286,14 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     Logs.Debug($"Comfy - Skip temp image '{fname}'");
                     return;
                 }
-                if (fname.EndsWith(".gif"))
+                string ext = fname.AfterLast('.');
+                if (ext == "gif")
                 {
                     type = Image.ImageType.ANIMATION;
+                }
+                else if (ext == "mp4" || ext == "webm" || (outImage["format"].ToString() ?? "").StartsWith("video/"))
+                {
+                    type = Image.ImageType.VIDEO;
                 }
                 byte[] image = await(await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
                 if (image == null || image.Length == 0)
@@ -296,7 +301,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     Logs.Error($"Invalid/null/empty image data from ComfyUI server for '{fname}', under {outData.ToDenseDebugString()}");
                     return;
                 }
-                outputs.Add(new Image(image, type));
+                outputs.Add(new Image(image, type, ext));
                 PostResultCallback(fname);
             }
             if (outData["images"] is not null)

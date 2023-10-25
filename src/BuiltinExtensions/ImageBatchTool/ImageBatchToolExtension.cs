@@ -122,7 +122,7 @@ public class ImageBatchToolExtension : Extension
             {
                 break;
             }
-            Image image = new(File.ReadAllBytes(file), Image.ImageType.IMAGE);
+            Image image = new(File.ReadAllBytes(file), Image.ImageType.IMAGE, file.AfterLast('.'));
             T2IParamInput param = baseParams.Clone();
             if (init_image)
             {

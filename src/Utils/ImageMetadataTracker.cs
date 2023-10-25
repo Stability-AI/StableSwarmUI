@@ -102,7 +102,7 @@ public static class ImageMetadataTracker
             {
                 return null;
             }
-            string fileData = new Image(data, Image.ImageType.IMAGE).GetMetadata();
+            string fileData = new Image(data, Image.ImageType.IMAGE, file.AfterLast('.')).GetMetadata();
             lock (metadata.Lock)
             {
                 ImageMetadataEntry entry = new() { FileName = filename, Metadata = fileData, LastVerified = timeNow, FileTime = fileTime };

@@ -179,7 +179,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
                 }
                 else
                 {
-                    images.Add(new(img["base64"].ToString(), Image.ImageType.IMAGE));
+                    images.Add(new(img["base64"].ToString(), Image.ImageType.IMAGE, "png"));
                 }
             }
             _ = Task.Run(() => UpdateBalance().Wait());

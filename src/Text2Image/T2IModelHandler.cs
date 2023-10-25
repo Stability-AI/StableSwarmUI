@@ -248,7 +248,7 @@ public class T2IModelHandler
         {
             if (File.Exists(prefix + suffix))
             {
-                return new Image(File.ReadAllBytes(prefix + suffix), Image.ImageType.IMAGE).ToMetadataFormat();
+                return new Image(File.ReadAllBytes(prefix + suffix), Image.ImageType.IMAGE, suffix.AfterLast('.')).ToMetadataFormat();
             }
         }
         return null;
