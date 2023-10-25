@@ -1,3 +1,7 @@
+/*
+ If you want to customize your stylesheet, please edit 'styles-user.css' instead of this.
+*/
+
 .sel_table tr td {
     border: 1px solid black;
     padding-right: 16px;
@@ -132,4 +136,11 @@ table tr td:first-child {
 }
 .image_table {
     margin: auto;
+} 
+.save_image_output {
+    text-align: center;
+}
+.save_image_output_img {
+    max-width: 100%;
+    max-height: 70vh;
 }

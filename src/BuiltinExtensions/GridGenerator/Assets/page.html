@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="bootstrap.min.css" media="screen">
     <link rel="stylesheet" href="styles.css?vary={VERSION}" media="screen">
+    <link rel="stylesheet" href="styles-user.css?vary={VERSION}" media="screen">
     <title>{TITLE}</title>
     <meta name="description" content="{CLEAN_DESCRIPTION}" />
     <script src="jquery.min.js"></script>
@@ -51,7 +52,7 @@
             </div>
             <div id="save_image_helper" class="save_image_area">
                 <button onclick="makeImage()">Save Image Of Current View</button> <select title="Image Type" id="makeimage_type"><option>jpeg</option><option>png</option></select>
-                <button onclick="makeGif()">Create Axis GIF Animation</button> <select title="Axis" id="makegif_axis"><option value="x-axis">X Axis</option></select> <select title="GIF Size" id="makegif_size"><option>1x</option><option>0.75x</option><option selected>0.5x</option><option>0.25x</option></select> <select title="GIF Speed" id="makegif_speed"><option>1/s</option><option>2/s</option><option>3/s</option><option selected>4/s</option><option>5/s</option><option>10/s</option></select>
+                <button onclick="makeGif()">Create Axis GIF Animation</button> <select title="Axis" id="makegif_axis"><option value="x-axis">X Axis</option></select> <select title="GIF Size" id="makegif_size"><option>1x</option><option>0.75x</option><option selected>0.5x</option><option>0.25x</option></select> <select title="GIF Speed" id="makegif_speed"><option>1/s</option><option>2/s</option><option>3/s</option><option selected>4/s</option><option>5/s</option><option>10/s</option></select><select title="GIF Direction" id="makegif_direction"><option>Forwards</option><option>Backwards</option></select>
                 <div id="save_image_info" style="display: none;">Here's your image! To share it, just use right click -> Copy image or Save Image As</div>
             </div>
         </div>
@@ -61,6 +62,20 @@
         </div>
     </div>
     <div class="modal modal-fullscreen popup_modal_background" id="image_info_modal"></div>
+    <div class="modal" tabindex="-1" id="save_image_output_modal">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Here's your image!</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>To share it, just use right click -> Copy image or Save Image As.</p>
+                    <div id="save_image_output" class="save_image_output"></div>
+                </div>
+            </div>
+        </div>
+    </div>
     <br><div style="width:256px;height:512px;"></div> <!-- Spacer to reduce screen-jumping if images load while you're scrolled down -->
     <footer>
         <center>

@@ -464,6 +464,7 @@ public partial class GridGenCore
                     JObject jVal = new()
                     {
                         ["key"] = val.Key.ToLowerFast(),
+                        ["path"] = val.Key.ToLowerFast(),
                         ["title"] = val.Title,
                         ["description"] = val.Description ?? "",
                         ["show"] = val.Show
@@ -579,7 +580,7 @@ public partial class GridGenCore
                 File.WriteAllText(path + "/last.js", "window.lastUpdated = []");
             }
             File.WriteAllText(path + "/data.js", "rawData = " + json);
-            foreach (string f in EXTRA_ASSETS.Union(new string[] { "bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "jsgif.js", "styles.css", "placeholder.png" }))
+            foreach (string f in EXTRA_ASSETS.Union(new string[] { "bootstrap.min.css", "bootstrap.bundle.min.js", "proc.js", "jquery.min.js", "jsgif.js", "styles.css", "styles-user.css", "placeholder.png" }))
             {
                 string target = $"{path}/{f}";
                 if (File.Exists(target))
