@@ -252,11 +252,29 @@ public partial class GridGenCore
             GridCallInitHook?.Invoke(this);
         }
 
+        public bool CanSkip()
+        {
+            if (Skip)
+            {
+                return true;
+            }
+            if (Grid.Runner.DoOverwrite)
+            {
+                return false;
+            }
+            if (File.Exists($"{Grid.Runner.BasePath}/{BaseFilepath}.{Grid.Format}")
+                || File.Exists($"{Grid.Runner.BasePath}/{BaseFilepath}.metadata.js"))
+            {
+                return true;
+            }
+            return false;
+        }
+
         public void BuildBasePaths()
         {
             BaseFilepath = string.Join("/", Values.Select(v => T2IParamTypes.CleanNameGeneric(v.Key)).Reverse());
             Data = string.Join(", ", Values.Select(v => $"{v.Axis.Title}={v.Title}"));
-            Skip = Skip || (!Grid.Runner.DoOverwrite && File.Exists($"{Grid.Runner.BasePath}/{BaseFilepath}.{Grid.Format}"));
+            Skip = CanSkip();
         }
 
         public void FlattenParams(Grid grid)

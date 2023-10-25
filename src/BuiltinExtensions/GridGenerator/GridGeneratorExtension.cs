@@ -134,7 +134,14 @@ public class GridGeneratorExtension : Extension
                 {
                     Logs.Info($"Completed gen #{iteration} (of {runner.TotalRun}) ... Set: '{set.Data}', file '{set.BaseFilepath}'");
                     string mainpath = $"{set.Grid.Runner.BasePath}/{set.BaseFilepath}";
-                    string targetPath = $"{mainpath}.{set.Grid.Format}";
+                    string ext = set.Grid.Format;
+                    string metaExtra = "";
+                    if (image.Type != Image.ImageType.IMAGE)
+                    {
+                        ext = image.Extension;
+                        metaExtra += $"file_extensions_alt[\"{set.BaseFilepath}\"] = \"{ext}\"\nfix_video(\"{set.BaseFilepath}\")";
+                    }
+                    string targetPath = $"{mainpath}.{ext}";
                     string dir = targetPath.Replace('\\', '/').BeforeLast('/');
                     if (!Directory.Exists(dir))
                     {
@@ -145,10 +152,10 @@ public class GridGeneratorExtension : Extension
                     {
                         if (!string.IsNullOrWhiteSpace(metadata))
                         {
-                            File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata}".EncodeUTF8());
+                            File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata}\n{metaExtra}".EncodeUTF8());
                         }
                     }
-                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{set.Grid.Format}", ["metadata"] = metadata });
+                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{ext}", ["metadata"] = metadata });
                 }));
             lock (data.UpdateLock)
             {
