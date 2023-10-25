@@ -932,6 +932,22 @@ function setTitles() {
 }
 setTitles();
 
+function hideRevisionInputs() {
+    let promptImageArea = getRequiredElementById('alt_prompt_image_area');
+    promptImageArea.innerHTML = '';
+    let clearButton = getRequiredElementById('alt_prompt_image_clear_button');
+    clearButton.style.display = 'none';
+    let revisionGroup = document.getElementById('input_group_revision');
+    let revisionToggler = document.getElementById('input_group_content_revision_toggle');
+    if (revisionGroup) {
+        revisionToggler.checked = false;
+        triggerChangeFor(revisionToggler);
+        toggleGroupOpen(revisionGroup, false);
+        revisionGroup.style.display = 'none';
+    }
+    altPromptSizeHandleFunc();
+}
+
 function revisionInputHandler() {
     let dragArea = getRequiredElementById('alt_prompt_region');
     dragArea.addEventListener('dragover', (e) => {
@@ -941,16 +957,7 @@ function revisionInputHandler() {
     let clearButton = getRequiredElementById('alt_prompt_image_clear_button');
     let promptImageArea = getRequiredElementById('alt_prompt_image_area');
     clearButton.addEventListener('click', () => {
-        promptImageArea.innerHTML = '';
-        clearButton.style.display = 'none';
-        let revisionGroup = document.getElementById('input_group_revision');
-        let revisionToggler = document.getElementById('input_group_content_revision_toggle');
-        if (revisionGroup) {
-            revisionToggler.checked = false;
-            triggerChangeFor(revisionToggler);
-            revisionGroup.style.display = 'none';
-        }
-        altPromptSizeHandleFunc();
+        hideRevisionInputs();
     });
     dragArea.addEventListener('drop', (e) => {
         e.preventDefault();
