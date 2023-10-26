@@ -62,7 +62,7 @@ for file in files:
             for k, v in dict(tens).items():
                 if k.startswith("loss."): # VAE stray data
                     del tens[k]
-                if k.startswith("model_ema."): # Stable-Diffusion checkpoint model stray data
+                elif k.startswith("model_ema."): # Stable-Diffusion checkpoint model stray data
                     del tens[k]
                 elif type(v) != torch.Tensor:
                     raw_data = str(v)
