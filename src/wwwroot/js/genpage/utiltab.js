@@ -67,8 +67,10 @@ function pickle2safetensor_run(type) {
     notif.innerText = "Running, please wait ... monitor debug console for details...";
     genericRequest('Pickle2SafeTensor', { type: type, fp16: fp16 }, data => {
         notif.innerText = "Done!";
-        genericRequest('ListT2IParams', {}, data => {
-            pickle2safetensor_load(data.models);
+        genericRequest('TriggerRefresh', {}, data => {
+            genericRequest('ListT2IParams', {}, data => {
+                pickle2safetensor_load(data.models);
+            });
         });
     });
 }
