@@ -24,7 +24,7 @@ function utilClipTokenize() {
                     title = "This token is a word-piece (as opposed to a word-end), meaning there is no word-break after it, it directly connects to the next token.";
                 }
                 let weightActual = roundTo(token.weight, 0.01);
-                let weightInfo = weightActual == 1 ? '' : `<span class="clip-tokenization-weight" title="Token weight">${weightActual}</span>`;
+                let weightInfo = weightActual == 1 ? '' : `<span class="clip-tokenization-weight" title="Token weight = ${weightActual}">${weightActual}</span>`;
                 html += `<span class="clip-tokenization-block${tweak}" title="${title}">${escapeHtml(text)}${postText}<br>${token.id}${weightInfo}</span>`;
             }
             resultLine.innerHTML = html;

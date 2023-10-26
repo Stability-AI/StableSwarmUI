@@ -179,7 +179,7 @@ public partial class CliplikeTokenizer
                         {
                             subWeight = weight * 1.1f;
                         }
-                        output.AddRange(EncodeWithWeighting(paren, weight * subWeight));
+                        output.AddRange(EncodeWithWeighting(paren, subWeight));
                         start = i + 1;
                     }
                 }
