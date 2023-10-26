@@ -397,7 +397,7 @@ public class T2IParamTypes
     }
 
     /// <summary>Gets the value in the list that best matches the input text (for user input handling).</summary>
-    public static string GetBestInList(string name, List<string> list)
+    public static string GetBestInList(string name, IEnumerable<string> list)
     {
         string backup = null;
         int bestLen = 999;

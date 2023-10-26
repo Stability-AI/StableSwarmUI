@@ -65,16 +65,17 @@ public class T2IParamInput
         PromptTagProcessors["embed"] = (data, context) =>
         {
             data = context.Parse(data);
-            if (context.Embeds is not null)
+            if (context.Embeds is null)
             {
-                string want = data.ToLowerFast().Replace('\\', '/');
-                string matched = context.Embeds.FirstOrDefault(e => e.ToLowerFast().StartsWith(want)) ?? context.Embeds.FirstOrDefault(e => e.ToLowerFast().Contains(want));
-                if (matched is not null)
-                {
-                    data = matched;
-                }
+                return "";
             }
-            return context.EmbedFormatter(data.Replace('/', Path.DirectorySeparatorChar));
+            string want = data.ToLowerFast().Replace('\\', '/');
+            string matched = T2IParamTypes.GetBestInList(want, context.Embeds);
+            if (matched is null)
+            {
+                return "";
+            }
+            return context.EmbedFormatter(matched.Replace('/', Path.DirectorySeparatorChar));
         };
         PromptTagProcessors["embedding"] = PromptTagProcessors["embed"];
         PromptTagPostProcessors["lora"] = (data, context) =>
@@ -87,7 +88,7 @@ public class T2IParamInput
             {
                 lora = lora[..colonIndex];
             }
-            string matched = context.Loras.FirstOrDefault(e => e.ToLowerFast().StartsWith(lora)) ?? context.Loras.FirstOrDefault(e => e.ToLowerFast().Contains(lora));
+            string matched = T2IParamTypes.GetBestInList(lora, context.Loras);
             if (matched is not null)
             {
                 List<string> loraList = context.Input.Get(T2IParamTypes.Loras);
@@ -241,17 +242,20 @@ public class T2IParamInput
         {
             return "";
         }
+        string fixedVal = val.Replace('\0', '\a').Replace("\a", "");
         Random rand = new((int)Get(T2IParamTypes.Seed) + (int)Get(T2IParamTypes.VariationSeed, 0) + param.Type.Name.Length);
-        string lowRef = val.ToLowerFast();
+        string lowRef = fixedVal.ToLowerFast();
         string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelsFor(SourceSession).Select(m => m.Name).ToArray() : null;
         string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelsFor(SourceSession).Select(m => m.Name.ToLowerFast()).ToArray() : null;
         PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID, EmbedFormatter = embedFormatter, Embeds = embeds, Loras = loras };
-        string fixedVal = ProcessPromptLike(val, context);
+        fixedVal = ProcessPromptLike(fixedVal, context);
+        // Special trick to break handwritten comfy embeds as gently as possible (ie require Swarm syntax for embeds, as comfy's raw syntax has unwanted behaviors)
+        fixedVal = fixedVal.Replace("embedding:", "noembed:", StringComparison.OrdinalIgnoreCase).Replace("\aswarm_comfy_embed:", "embedding:");
         if (fixedVal != val)
         {
             ExtraMeta[$"original_{param.Type.ID}"] = val;
         }
-        return fixedVal;
+        return fixedVal.Replace("\a", "");
     }
 
     /// <summary>Special utility to process prompt inputs before the request is executed (to parse wildcards, embeddings, etc).</summary>

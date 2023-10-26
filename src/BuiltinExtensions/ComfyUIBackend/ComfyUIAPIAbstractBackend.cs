@@ -370,7 +370,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
             }
         }
-        user_input.PreparsePromptLikes(x => $"embedding:{x}");
+        user_input.PreparsePromptLikes(x => $"\aswarm_comfy_embed:{x}");
         if (workflow is not null && !user_input.Get(T2IParamTypes.ControlNetPreviewOnly))
         {
             if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
