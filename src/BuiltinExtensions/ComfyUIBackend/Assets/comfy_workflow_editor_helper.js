@@ -133,6 +133,7 @@ function comfyBuildParams(callback) {
         let nodeStaticUnique = [];
         let nodeLabelPaths = {};
         let nodeIsRandomize = {};
+        let claimedByPrimitives = [];
         for (let node of workflow.nodes) {
             if (node.title) {
                 labelAlterations[`${node.id}`] = node.title;
@@ -142,6 +143,13 @@ function comfyBuildParams(callback) {
                 nodeIsRandomize[`${node.id}`] = true;
             }
             if (node.type == 'PrimitiveNode' && node.title) {
+                let colon = node.title.indexOf(':');
+                if (colon > 0) {
+                    let before = node.title.substring(0, colon).trim().toLowerCase();
+                    if (before == "swarmui") {
+                        claimedByPrimitives.push(cleanParamName(node.title.substring(colon + 1)));
+                    }
+                }
                 let cleanTitle = cleanParamName(node.title);
                 let cleaned = inputPrefix + cleanTitle;
                 let id = cleaned;
@@ -316,7 +324,7 @@ function comfyBuildParams(callback) {
                             min = paramDataRaw[1].min;
                             max = paramDataRaw[1].max;
                             step = 1;
-                            if (inputId == 'batch_size' && getUserSetting('resetbatchsizetoone')) {
+                            if (inputId == 'batch_size' && getUserSetting('resetbatchsizetoone') && !claimedByPrimitives.includes('batchsize')) {
                                 val = 1;
                             }
                         }
@@ -347,7 +355,7 @@ function comfyBuildParams(callback) {
                         return inputIdDirect;
                     }
                     else if (node.class_type == 'CheckpointLoaderSimple' && inputId == 'ckpt_name') {
-                        if (!('model' in defaultParamValue)) {
+                        if (!('model' in defaultParamValue) && !claimedByPrimitives.includes('model')) {
                             defaultParamValue['model'] = node.inputs[inputId];
                             node.inputs[inputId] = "${model:error_missing_model}";
                             return inputIdDirect;
@@ -393,6 +401,9 @@ function comfyBuildParams(callback) {
                 return inputIdDirect;
             }
             function claimOnce(classType, paramName, fieldName, numeric) {
+                if (claimedByPrimitives.includes(cleanParamName(paramName))) {
+                    return false;
+                }
                 if (node.class_type != classType) {
                     return false;
                 }
