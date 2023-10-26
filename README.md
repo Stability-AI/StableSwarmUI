@@ -69,22 +69,15 @@ The installation starts now and downloads the Stable Diffusion models from the i
 > **Important**: During the StableSwarmUI installation, you are prompted for the type of backend you want to use. For Mac computers with M1 or M2, you can safely choose the ComfyUI backend and choose the Stable Diffusion XL Base and Refiner models in the Download Models screen.
 
 # Running with Docker
-0. Clone this repo and cd into it
 
-1. Build your image
-
-```
-docker build -t stableswarmui .
-```
-2. Run your image
-
-```
-docker run --rm -it --gpus=all -p 7801:7801 stableswarmui StableSwarmUI.dll $@ --launch_mode none --host "*"
-```
-3. Use this command to exec into the container's shell for troubleshooting (or curiosity)
-```
-docker run --rm -it --gpus=all -p 7801:7801 --entrypoint bash stableswarmui
-```
+- To forward an Nvidia GPU, you must have the Nvidia Container Toolkit installed: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+- Open a shell terminal and `cd` to a directory you want to install into
+- Run shell commands:
+    - `git clone https://github.com/Stability-AI/StableSwarmUI`
+    - cd `StableSwarmUI`
+    - `./launch-docker.sh`
+    - Open your browser to `localhost:7801`
+- Note that it will forward the `Models` and `Output` directory, and will mount `Data` and `dlbackend` as independent persistent volumes.
 
 # Documentation
 
