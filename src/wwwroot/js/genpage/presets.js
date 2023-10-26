@@ -16,7 +16,7 @@ function getPresetByTitle(title) {
 }
 
 function getPresetTypes() {
-    return gen_param_types.filter(type => !type.toggleable || getRequiredElementById(`input_${type.id}_toggle`).checked);
+    return gen_param_types.filter(type => !type.toggleable || getRequiredElementById(`preset_input_${type.id}_toggle`).checked);
 }
 
 function clearPresetView() {
