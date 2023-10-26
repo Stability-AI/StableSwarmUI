@@ -497,3 +497,12 @@ textarea, input, select {
 .disabled-input {
     opacity: 0.5;
 }
+.card-center-container {
+    width: fit-content;
+    margin: auto;
+    margin-top: 1rem;
+}
+.spaced_util_table tr td, .spaced_util_table tr th {
+    padding: 0.5rem;
+    border: 1px solid var(--shadow);
+}

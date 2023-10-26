@@ -946,6 +946,7 @@ function updateAllModels(models) {
         option.innerText = model;
         selector.appendChild(option);
     }
+    pickle2safetensor_load();
 }
 
 /** Set some element titles via JavaScript (to allow '\n'). */

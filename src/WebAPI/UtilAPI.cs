@@ -1,6 +1,9 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
+using StableSwarmUI.Core;
+using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
+using System.Diagnostics;
 using System.IO;
 
 namespace StableSwarmUI.WebAPI;
@@ -12,6 +15,7 @@ public static class UtilAPI
     {
         API.RegisterAPICall(CountTokens);
         API.RegisterAPICall(TokenizeInDetail);
+        API.RegisterAPICall(Pickle2SafeTensor);
     }
 
     public static ConcurrentDictionary<string, CliplikeTokenizer> Tokenizers = new();
@@ -73,5 +77,17 @@ public static class UtilAPI
         {
             ["tokens"] = new JArray(tokens.Select(t => new JObject() { ["id"] = t.ID, ["weight"] = t.Weight, ["text"] = tokenizer.Tokens[t.ID] }).ToArray())
         };
+    }
+
+    /// <summary>API route to trigger bulk conversion of models from pickle format to safetensors.</summary>
+    public static async Task<JObject> Pickle2SafeTensor(string type, bool fp16)
+    {
+        if (!Program.T2IModelSets.TryGetValue(type, out T2IModelHandler models))
+        {
+            return new JObject() { ["error"] = $"Invalid type '{type}'." };
+        }
+        Process p = PythonLaunchHelper.LaunchGeneric("launchtools/pickle-to-safetensors.py", true, new[] { models.FolderPath, fp16 ? "true" : "false" });
+        await p.WaitForExitAsync(Program.GlobalProgramCancel);
+        return new JObject() { ["success"] = true };
     }
 }

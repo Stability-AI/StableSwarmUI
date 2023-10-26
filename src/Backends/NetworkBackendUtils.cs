@@ -177,27 +177,6 @@ public static class NetworkBackendUtils
         return true;
     }
 
-    /// <summary>Clean up a <see cref="ProcessStartInfo"/> environment of python env vars that cause problems.</summary>
-    public static void CleanEnvironmentOfPythonMess(ProcessStartInfo start, string prefix)
-    {
-        void RemoveEnvLoudly(string key)
-        {
-            if (start.Environment.TryGetValue(key, out string val))
-            {
-                start.Environment.Remove(key);
-                Logs.Debug($"{prefix}Removing environment variable {key} which was {val}");
-            }
-        }
-        RemoveEnvLoudly("PYTHONHOME");
-        RemoveEnvLoudly("PYTHONPATH");
-        if (start.Environment.TryGetValue("LIB", out string libVal) && libVal.Contains("python"))
-        {
-            start.Environment.Remove("LIB");
-            Logs.Debug($"{prefix}Removing environment variable LIB due to being a python-lib val which was {libVal}");
-        }
-        start.Environment["PYTHONUNBUFFERED"] = "true";
-    }
-
     /// <summary>Internal tracking value of what port to use next.</summary>
     public static volatile int NextPort = 7820;
 
@@ -243,28 +222,21 @@ public static class NetworkBackendUtils
             RedirectStandardError = true,
             WorkingDirectory = dir
         };
-        CleanEnvironmentOfPythonMess(start, $"({nameSimple} launch) ");
+        PythonLaunchHelper.CleanEnvironmentOfPythonMess(start, $"({nameSimple} launch) ");
         start.Environment["CUDA_VISIBLE_DEVICES"] = $"{gpuId}";
         string preArgs = "";
         string postArgs = extraArgs.Replace("{PORT}", $"{port}").Trim();
         if (path.EndsWith(".py"))
         {
             preArgs = "-s " + path.AfterLast("/");
+            void AddPath(string path)
+            {
+                string above = Path.GetFullPath($"{path}/..");
+                start.Environment["PATH"] = PythonLaunchHelper.ReworkPythonPaths(path);
+                Logs.Debug($"({nameSimple} launch) Adding path {path}");
+            }
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                void AddPath(string path)
-                {
-                    string above = Path.GetFullPath($"{path}/..");
-                    // Strip python but be a little cautious about it
-                    string[] paths = Environment.GetEnvironmentVariable("PATH").Split(';').Where(p => !p.Contains("Python3") && !p.Contains("Programs\\Python") && !p.Contains("Python\\Python")).ToArray();
-                    string[] python = paths.Where(p => p.ToLowerFast().Contains("python")).ToArray();
-                    if (python.Any())
-                    {
-                        Logs.Debug($"Python paths left: {python.JoinString("; ")}");
-                    }
-                    start.Environment["PATH"] = $"{path};{path}\\Scripts;{path}\\Lib;{path}\\Lib\\site-packages;{above};{paths.JoinString(";")}";
-                    Logs.Debug($"({nameSimple} launch) Adding path {path}");
-                }
                 if (File.Exists($"{dir}/venv/Scripts/python.exe"))
                 {
                     start.FileName = Path.GetFullPath($"{dir}/venv/Scripts/python.exe");
@@ -284,14 +256,6 @@ public static class NetworkBackendUtils
             }
             else
             {
-                void AddPath(string path)
-                {
-                    string above = Path.GetFullPath($"{path}/..");
-                    string libFolder = Directory.GetDirectories(path, "lib").FirstOrDefault();
-                    string libPath = libFolder == null ? "" : Path.GetFullPath(Utilities.CombinePathWithAbsolute(path, "lib", libFolder));
-                    start.Environment["PATH"] = $"{path}:{path}/bin:{path}/lib:{libPath}:{libPath}/site-packages:{above}:{Environment.GetEnvironmentVariable("PATH")}";
-                    Logs.Debug($"({nameSimple} launch) Adding path {path} and {libPath}");
-                }
                 if (File.Exists($"{dir}/venv/bin/python3"))
                 {
                     start.FileName = Path.GetFullPath($"{dir}/venv/bin/python3");

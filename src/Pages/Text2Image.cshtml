@@ -271,19 +271,63 @@
             <li class="nav-item" role="presentation">
                 <a class="nav-link" data-bs-toggle="tab" href="#Utilities-CLIP-Token-Tab" aria-selected="false" tabindex="-1" role="tab">CLIP Tokenization</a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#Utilities-Pickle2Safetensor-Tab" aria-selected="false" tabindex="-1" role="tab">Pickle To Safetensors</a>
+            </li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane show active" id="Utilities-Info-Tab" role="tabpanel">
                 The "Utilities" tab provides a variety of general utilities and tools in the subtabs above.
             </div>
             <div class="tab-pane" id="Utilities-CLIP-Token-Tab" role="tabpanel">
-                This is a tool to analyze CLIP tokenization for Stable Diffusion models.
-                <br>All current Stable Diffusion models use the same CLIP token set, so this applies to them all.
-                <br>Simply type some text in the box below to see how it gets tokenized.
-                <br>It will show each text-piece, and its numerical ID.
+                <div class="card border-secondary mb-3 card-center-container">
+                    <div class="card-header">Pickle To Safetensors</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            This is a tool to analyze CLIP tokenization for Stable Diffusion models.
+                            <br>All current Stable Diffusion models use the same CLIP token set, so this applies to them all.
+                            <br>Simply type some text in the box below to see how it gets tokenized.
+                            <br>It will show each text-piece, and its numerical ID.
+                        </p>
+                    </div>
+                </div>
                 <br><textarea class="auto-text clip-tokenization-input-box" id="clip_tokenization_test_textarea" rows="2" oninput="utilClipTokenize()"></textarea>
                 <br>
                 <br><span class="tokenizer-output-area" id="clip_tokenization_result_line"></span>
+            </div>
+            <div class="tab-pane" id="Utilities-Pickle2Safetensor-Tab" role="tabpanel">
+                <div class="card border-secondary mb-3 card-center-container">
+                    <div class="card-header">Pickle To Safetensors</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            This is a tool to quickle convert legacy Pickle (.pt, .ckpt, .bin) files to modern Safetensors files.
+                            <br><b>WARNING:</b> Pickle files may contain malicious code. Do not use this tool or otherwise load pickle files unless you trust their source.
+                            <br>The pickle files will be moved to a "backups" folder, and the safetensors files left in place where the pickles originally were.
+                            <br>You may delete the backups folder after confirming the new safetensors files work as intended.
+                            <br>Be aware that this may temporarily use a large amount of filespace.
+                            <br>This may take some time to process.
+                            <br>(You can continue using the UI as normal while this runs)
+                        </p>
+                    </div>
+                </div>
+                <div class="card-center-container">
+                    <input type="checkbox" id="pickle2safetensor_fp16" checked> <label for="pickle2safetensor_fp16">Convert to FP16?</label> (This will save filespace with minimal side effects, highly recommended)
+                </div>
+                <div class="card-center-container" id="pickle2safetensor_text_area">
+                </div>
+                <div class="card-center-container">
+                    <table class="spaced_util_table">
+                        <tr>
+                            <th>Type</th><th>Count</th><th>Convert</th>
+                        </tr>
+                        <tr><td>Models</td><td><span id="pickle2safetensor_stable-diffusion_count">?</span></td><td><button id="pickle2safetensor_stable-diffusion_button" class="basic-button" onclick="pickle2safetensor_run('Stable-Diffusion')">Convert Models</button></td></tr>
+                        <tr><td>LoRAs</td><td><span id="pickle2safetensor_lora_count">?</span></td><td><button id="pickle2safetensor_lora_button" class="basic-button" onclick="pickle2safetensor_run('LoRA')">Convert LoRAs</button></td></tr>
+                        <tr><td>VAEs</td><td><span id="pickle2safetensor_vae_count">?</span></td><td><button id="pickle2safetensor_vae_button" class="basic-button" onclick="pickle2safetensor_run('VAE')">Convert VAEs</button></td></tr>
+                        <tr><td>Embeddings</td><td><span id="pickle2safetensor_embedding_count">?</span></td><td><button id="pickle2safetensor_embedding_button" class="basic-button" onclick="pickle2safetensor_run('Embedding')">Convert Embeddings</button></td></tr>
+                        <tr><td>ControlNets</td><td><span id="pickle2safetensor_controlnet_count">?</span></td><td><button id="pickle2safetensor_controlnet_button" class="basic-button" onclick="pickle2safetensor_run('ControlNet')">Convert ControlNets</button></td></tr>
+                    </table>
+                </div>
+                <br>
             </div>
         </div>
         <div style="height: 10rem"></div> <!-- Spacer -->

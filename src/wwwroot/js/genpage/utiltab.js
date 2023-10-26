@@ -42,3 +42,33 @@ function utilClipTokenize() {
         process();
     }
 }
+
+/** Preloads conversion data. */
+function pickle2safetensor_load(mapping = null) {
+    if (mapping == null) {
+        mapping = coreModelMap;
+    }
+    for (let type of ['Stable-Diffusion', 'LoRA', 'VAE', 'Embedding', 'ControlNet']) {
+        let modelSet = mapping[type];
+        let count = modelSet.filter(x => !x.startsWith("backup") && !x.endsWith('.safetensors')).length;
+        let counter = getRequiredElementById(`pickle2safetensor_${type.toLowerCase()}_count`);
+        counter.innerText = count;
+        let button = getRequiredElementById(`pickle2safetensor_${type.toLowerCase()}_button`);
+        button.disabled = count == 0;
+    }
+}
+
+/** Triggers the actual conversion process. */
+function pickle2safetensor_run(type) {
+    let fp16 = getRequiredElementById(`pickle2safetensor_fp16`).checked;
+    let button = getRequiredElementById(`pickle2safetensor_${type.toLowerCase()}_button`);
+    button.disabled = true;
+    let notif = getRequiredElementById('pickle2safetensor_text_area');
+    notif.innerText = "Running, please wait ... monitor debug console for details...";
+    genericRequest('Pickle2SafeTensor', { type: type, fp16: fp16 }, data => {
+        notif.innerText = "Done!";
+        genericRequest('ListT2IParams', {}, data => {
+            pickle2safetensor_load(data.models);
+        });
+    });
+}
