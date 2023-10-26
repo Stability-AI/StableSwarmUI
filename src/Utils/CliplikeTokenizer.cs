@@ -114,16 +114,80 @@ public partial class CliplikeTokenizer
     /// <summary>Special regex (matches OpenCLIP source) for where '/w' splitters should apply.</summary>
     public static Regex Splitter = GenSplitter();
 
+    /// <summary>Holds the data for an encoded token.</summary>
+    /// <param name="ID">The token ID.</param>
+    /// <param name="Weight">The token weight.</param>
+    public record struct Token(int ID, float Weight);
+
     /// <summary>Encodes a given chunk of text, and returns the raw encoded token set.</summary>
-    public int[] Encode(string text)
+    public Token[] Encode(string text, float weight = 1)
     {
-        List<int> output = new();
+        List<Token> output = new();
         foreach (string word in Splitter.Matches(text.ToLowerInvariant()).Select(m => m.Value))
         {
             if (!string.IsNullOrWhiteSpace(word))
             {
-                output.AddRange(EncodeWord(word + "</w>"));
+                foreach (int token in EncodeWord(word + "</w>"))
+                {
+                    output.Add(new(token, weight));
+                }
             }
+        }
+        return output.ToArray();
+    }
+
+    /// <summary>Encodes a given chunk of text (with parenthetical weight parsing), and returns the raw encoded token set.
+    /// <para>Uses ComfyUI-style weighting.</para></summary>
+    public Token[] EncodeWithWeighting(string text, float weight = 1)
+    {
+        int depth = 0;
+        char[] data = text.ToArray();
+        int start = 0;
+        int parenStart = 0;
+        List<Token> output = new();
+        for (int i = 0; i < data.Length; i++)
+        {
+            char c = data[i];
+            if (c == '(')
+            {
+                depth++;
+                if (depth == 1)
+                {
+                    parenStart = i;
+                }
+            }
+            else if (c == ')' && depth > 0)
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    string prefix = text[start..parenStart];
+                    if (!string.IsNullOrWhiteSpace(prefix))
+                    {
+                        output.AddRange(Encode(prefix, weight));
+                    }
+                    start = parenStart;
+                    string paren = text[(start + 1)..i];
+                    if (!string.IsNullOrWhiteSpace(paren))
+                    {
+                        int lastColon = paren.LastIndexOf(':');
+                        if (lastColon != -1 && float.TryParse(paren[(lastColon + 1)..], out float subWeight))
+                        {
+                            paren = paren[..lastColon];
+                        }
+                        else
+                        {
+                            subWeight = weight * 1.1f;
+                        }
+                        output.AddRange(EncodeWithWeighting(paren, weight * subWeight));
+                        start = i + 1;
+                    }
+                }
+            }
+        }
+        if (start < text.Length)
+        {
+            output.AddRange(Encode(text[start..], weight));
         }
         return output.ToArray();
     }

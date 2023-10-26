@@ -49,29 +49,29 @@ public static class UtilAPI
     }
 
     /// <summary>API route to count the CLIP-like tokens in a given text prompt.</summary>
-    public static async Task<JObject> CountTokens(string text, string tokenset = "clip")
+    public static async Task<JObject> CountTokens(string text, string tokenset = "clip", bool weighting = true)
     {
         (JObject error, CliplikeTokenizer tokenizer) = GetTokenizerForAPI(text, tokenset);
         if (error != null)
         {
             return error;
         }
-        int count = tokenizer.Encode(text).Length;
-        return new JObject() { ["count"] = count };
+        CliplikeTokenizer.Token[] tokens = weighting ? tokenizer.EncodeWithWeighting(text) : tokenizer.Encode(text);
+        return new JObject() { ["count"] = tokens.Length };
     }
 
     /// <summary>API route to tokenize some prompt text and get thorough detail about it.</summary>
-    public static async Task<JObject> TokenizeInDetail(string text, string tokenset = "clip")
+    public static async Task<JObject> TokenizeInDetail(string text, string tokenset = "clip", bool weighting = true)
     {
         (JObject error, CliplikeTokenizer tokenizer) = GetTokenizerForAPI(text, tokenset);
         if (error != null)
         {
             return error;
         }
-        int[] tokens = tokenizer.Encode(text);
+        CliplikeTokenizer.Token[] tokens = weighting ? tokenizer.EncodeWithWeighting(text) : tokenizer.Encode(text);
         return new JObject()
         {
-            ["tokens"] = new JArray(tokens.Select(t => new JObject() { ["id"] = t, ["text"] = tokenizer.Tokens[t] }).ToArray())
+            ["tokens"] = new JArray(tokens.Select(t => new JObject() { ["id"] = t.ID, ["weight"] = t.Weight, ["text"] = tokenizer.Tokens[t.ID] }).ToArray())
         };
     }
 }

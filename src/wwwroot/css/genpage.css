@@ -780,6 +780,13 @@ body {
     font-size: 80%;
     color: var(--text-soft);
 }
+.clip-tokenization-weight {
+    font-size: 70%;
+    color: var(--text-soft);
+    float: right;
+    padding-top: 0.15rem;
+    padding-left: 0.1rem;
+}
 .image-preview-progress-wrapper {
     position: relative;
     top: 0;
