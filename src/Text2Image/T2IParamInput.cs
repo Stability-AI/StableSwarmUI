@@ -4,7 +4,6 @@ using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
-using System;
 using System.IO;
 
 namespace StableSwarmUI.Text2Image;
@@ -44,15 +43,18 @@ public class T2IParamInput
             string[] vals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (vals.Length == 0)
             {
+                Logs.Warning($"Random input '{data}' is empty and will be ignored");
                 return null;
             }
             return context.Parse(vals[context.Random.Next(vals.Length)]);
         };
         PromptTagProcessors["preset"] = (data, context) =>
         {
-            T2IPreset preset = context.Input.SourceSession.User.GetPreset(context.Parse(data));
+            string name = context.Parse(data);
+            T2IPreset preset = context.Input.SourceSession.User.GetPreset(name);
             if (preset is null)
             {
+                Logs.Warning($"Preset '{name}' does not exist and will be ignored");
                 return null;
             }
             preset.ApplyTo(context.Input);
@@ -67,12 +69,14 @@ public class T2IParamInput
             data = context.Parse(data);
             if (context.Embeds is null)
             {
+                Logs.Warning($"Embedding '{data}' ignored because the engine has not loaded the embeddings list");
                 return "";
             }
             string want = data.ToLowerFast().Replace('\\', '/');
             string matched = T2IParamTypes.GetBestInList(want, context.Embeds);
             if (matched is null)
             {
+                Logs.Warning($"Embedding '{want}' does not exist and will be ignored");
                 return "";
             }
             return context.EmbedFormatter(matched.Replace('/', Path.DirectorySeparatorChar));
@@ -87,6 +91,11 @@ public class T2IParamInput
             if (colonIndex != -1 && double.TryParse(lora[(colonIndex + 1)..], out strength))
             {
                 lora = lora[..colonIndex];
+            }
+            if (context.Loras is null)
+            {
+                Logs.Warning($"Lora '{data}' ignored because the engine has not loaded the lora list");
+                return "";
             }
             string matched = T2IParamTypes.GetBestInList(lora, context.Loras);
             if (matched is not null)
@@ -104,6 +113,7 @@ public class T2IParamInput
                 context.Input.Set(T2IParamTypes.LoraWeights, weights);
                 return "";
             }
+            Logs.Warning($"Lora '{lora}' does not exist and will be ignored");
             return null;
         };
         // TODO: Wildcards (random by user-editable listing files)

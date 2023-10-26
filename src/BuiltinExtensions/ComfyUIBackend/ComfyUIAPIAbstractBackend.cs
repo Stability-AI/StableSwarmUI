@@ -342,6 +342,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     public static string CreateWorkflow(T2IParamInput user_input, Func<string, string> initImageFixer, string ModelFolderFormat = null)
     {
         string workflow = null;
+        user_input.PreparsePromptLikes(x => $"\aswarm_comfy_embed:{x}");
         if (user_input.TryGet(ComfyUIBackendExtension.CustomWorkflowParam, out string customWorkflowName))
         {
             if (customWorkflowName.StartsWith("PARSED%"))
@@ -370,7 +371,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
             }
         }
-        user_input.PreparsePromptLikes(x => $"\aswarm_comfy_embed:{x}");
         if (workflow is not null && !user_input.Get(T2IParamTypes.ControlNetPreviewOnly))
         {
             if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
