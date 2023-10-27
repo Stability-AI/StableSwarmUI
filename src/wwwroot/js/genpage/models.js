@@ -152,6 +152,7 @@ class ModelBrowserWrapper {
                         'description': 'Use the VAE built-in to your Stable Diffusion model',
                         'preview_image': '/imgs/none.jpg',
                         'is_safetensors': true,
+                        'local': true,
                         standard_width: 0,
                         standard_height: 0
                     }
