@@ -532,7 +532,7 @@ public static class T2IAPI
         JObject modelData = new();
         foreach (T2IModelHandler handler in Program.T2IModelSets.Values)
         {
-            modelData[handler.ModelType] = new JArray(handler.ListModelsFor(session).Select(m => m.Name).Order().ToArray());
+            modelData[handler.ModelType] = new JArray(handler.ListModelNamesFor(session).Order().ToArray());
         }
         return new JObject()
         {

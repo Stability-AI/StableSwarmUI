@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
+using StableSwarmUI.WebAPI;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -141,6 +142,13 @@ public class T2IModelHandler
         }
         Regex allowed = new(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         return Models.Values.Where(m => allowed.IsMatch(m.Name)).ToList();
+    }
+
+    public List<string> ListModelNamesFor(Session session)
+    {
+        HashSet<string> list = ListModelsFor(session).Select(m => m.Name).ToHashSet();
+        list.UnionWith(T2IAPI.InternalExtraModels(ModelType).Keys);
+        return list.ToList();
     }
 
     /// <summary>Refresh the model list.</summary>

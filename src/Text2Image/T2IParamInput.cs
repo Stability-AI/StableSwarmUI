@@ -255,8 +255,8 @@ public class T2IParamInput
         string fixedVal = val.Replace('\0', '\a').Replace("\a", "");
         Random rand = new((int)Get(T2IParamTypes.Seed) + (int)Get(T2IParamTypes.VariationSeed, 0) + param.Type.Name.Length);
         string lowRef = fixedVal.ToLowerFast();
-        string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelsFor(SourceSession).Select(m => m.Name).ToArray() : null;
-        string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelsFor(SourceSession).Select(m => m.Name.ToLowerFast()).ToArray() : null;
+        string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelNamesFor(SourceSession).ToArray() : null;
+        string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelNamesFor(SourceSession).Select(m => m.ToLowerFast()).ToArray() : null;
         PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID, EmbedFormatter = embedFormatter, Embeds = embeds, Loras = loras };
         fixedVal = ProcessPromptLike(fixedVal, context);
         // Special trick to break handwritten comfy embeds as gently as possible (ie require Swarm syntax for embeds, as comfy's raw syntax has unwanted behaviors)
@@ -379,7 +379,7 @@ public class T2IParamInput
         {
             T2IModelHandler handler = Program.T2IModelSets[param.Subtype ?? "Stable-Diffusion"];
             string best = T2IParamTypes.GetBestInList(name.Replace('\\', '/'), handler.Models.Keys.ToList());
-            return handler.Models[best];
+            return handler.Models.TryGetValue(best ?? name, out T2IModel actualModel) ? actualModel : new T2IModel() { Name = name };
         }
         if (param.IgnoreIf is not null && param.IgnoreIf == val)
         {

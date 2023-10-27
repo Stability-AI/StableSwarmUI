@@ -7,6 +7,7 @@ using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection.Emit;
 using static StableSwarmUI.Backends.BackendHandler;
 using static StableSwarmUI.Core.Settings.User;
@@ -68,6 +69,41 @@ namespace StableSwarmUI.Text2Image
                     {
                         Logs.Verbose($"Filter out backend {backend.ID} as the request requires flag {flag}, but the backend does not support it");
                         return false;
+                    }
+                }
+                if (backend.Backend.Models is not null && backend.Backend.Models.TryGetValue("Stable-Diffusion", out List<string> sdModels) && user_input.TryGet(T2IParamTypes.Model, out T2IModel model))
+                {
+                    if (!sdModels.Contains(model.Name))
+                    {
+                        Logs.Verbose($"Filter out backend {backend.ID} as the request requires model {model.Name}, but the backend does not have that model");
+                        return false;
+                    }
+                    if (user_input.TryGet(T2IParamTypes.Loras, out List<string> loras) && backend.Backend.Models.TryGetValue("LoRA", out List<string> loraModels))
+                    {
+                        foreach (string lora in loras)
+                        {
+                            if (!loraModels.Contains(lora))
+                            {
+                                Logs.Verbose($"Filter out backend {backend.ID} as the request requires lora {lora}, but the backend does not have that lora");
+                                return false;
+                            }
+                        }
+                    }
+                    if (user_input.TryGet(T2IParamTypes.VAE, out T2IModel vae) && backend.Backend.Models.TryGetValue("VAE", out List<string> vaes))
+                    {
+                        if (!vaes.Contains(vae.Name))
+                        {
+                            Logs.Verbose($"Filter out backend {backend.ID} as the request requires VAE {vae.Name}, but the backend does not have that VAE");
+                            return false;
+                        }
+                    }
+                    if (user_input.TryGet(T2IParamTypes.ControlNetModel, out T2IModel controlnet) && backend.Backend.Models.TryGetValue("ControlNet", out List<string> controlnetModels))
+                    {
+                        if (!controlnetModels.Contains(controlnet.Name))
+                        {
+                            Logs.Verbose($"Filter out backend {backend.ID} as the request requires controlnet {controlnet.Name}, but the backend does not have that controlnet");
+                            return false;
+                        }
                     }
                 }
                 return true;

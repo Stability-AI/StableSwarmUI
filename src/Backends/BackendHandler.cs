@@ -838,6 +838,7 @@ public class BackendHandler
                 long timeWait = timeRel - highestPressure.TimeFirstRequest;
                 if (availableLoaders.Count == 1 || timeWait > 1500)
                 {
+                    Logs.Verbose($"Selecting backends outside of refusal set: {highestPressure.BadBackends.JoinString(", ")}");
                     List<T2IBackendData> valid = availableLoaders.Where(b => !highestPressure.BadBackends.Contains(b.ID)).ToList();
                     if (valid.IsEmpty())
                     {
@@ -845,7 +846,7 @@ public class BackendHandler
                         ReleasePressure();
                         throw new InvalidOperationException("All available backends failed to load the model.");
                     }
-                    valid = availableLoaders.Where(b => b.Backend.CurrentModelName != highestPressure.Model.Name).ToList();
+                    valid = valid.Where(b => b.Backend.CurrentModelName != highestPressure.Model.Name).ToList();
                     if (valid.IsEmpty())
                     {
                         Logs.Verbose("$[BackendHandler] Cancelling highest-pressure load, model is already loaded on all available backends.");
@@ -895,6 +896,7 @@ public class BackendHandler
                                 lock (highestPressure.Locker)
                                 {
                                     highestPressure.BadBackends.Add(availableBackend.ID);
+                                    Logs.Debug($"Will deny backends: {highestPressure.BadBackends.JoinString(", ")}");
                                 }
                             }
                             highestPressure.IsLoading = false;
