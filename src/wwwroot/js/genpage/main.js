@@ -47,6 +47,9 @@ function copy_current_image_params() {
         return;
     }
     let metadata = JSON.parse(currentMetadataVal).sui_image_params;
+    if ('original_prompt' in metadata) {
+        metadata.prompt = metadata.original_prompt;
+    }
     for (let param of gen_param_types) {
         let elem = document.getElementById(`input_${param.id}`);
         if (elem && metadata[param.id]) {
