@@ -180,6 +180,14 @@ public class T2IParamInput
             {
                 result[key] = imgList.Select(img => img.AsBase64).JoinString("|");
             }
+            else if (val is List<string> strList)
+            {
+                result[key] = strList.JoinString(",");
+            }
+            else if (val is List<T2IModel> modelList)
+            {
+                result[key] = modelList.Select(m => m.Name).JoinString(",");
+            }
             else if (val is T2IModel model)
             {
                 result[key] = model.Name;
