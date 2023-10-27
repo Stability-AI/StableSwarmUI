@@ -362,6 +362,10 @@ body {
 .model-unavailable {
     opacity: 0.3;
 }
+.model-remote {
+    opacity: 0.75;
+    background-color: var(--background-gray);
+}
 .sui_popover_model {
     white-space: normal;
 }

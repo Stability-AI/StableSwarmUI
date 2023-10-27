@@ -6,7 +6,6 @@ using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
-using System.Net;
 using System.Net.Http;
 using System.Net.WebSockets;
 
@@ -54,6 +53,8 @@ public class SwarmSwarmBackend : AbstractT2IBackend
     /// <summary>A list of any non-real backends this instance controls.</summary>
     public ConcurrentDictionary<int, BackendHandler.T2IBackendData> ControlledNonrealBackends = new();
 
+    public Dictionary<string, Dictionary<string, JObject>> RemoteModels = null;
+
     public async Task ValidateAndBuild()
     {
         JObject sessData = await HttpClient.PostJson($"{Settings.Address}/API/GetNewSession", new());
@@ -68,14 +69,41 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         await ReviseRemoteDataList();
     }
 
+    public static void ThrowIfSessionInvalid(JObject data)
+    {
+        if (data.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
+        {
+            throw new SessionInvalidException();
+        }
+    }
+
     public async Task ReviseRemoteDataList()
     {
         await RunWithSession(async () =>
         {
             JObject backendData = await HttpClient.PostJson($"{Settings.Address}/API/ListBackends", new() { ["session_id"] = Session, ["nonreal"] = true, ["full_data"] = true });
-            if (backendData.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
+            ThrowIfSessionInvalid(backendData);
+            if (IsReal)
             {
-                throw new SessionInvalidException();
+                List<Task> tasks = new();
+                RemoteModels ??= new();
+                foreach (string type in Program.T2IModelSets.Keys)
+                {
+                    string runType = type;
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        JObject modelsData = await HttpClient.PostJson($"{Settings.Address}/API/ListModels", new() { ["session_id"] = Session, ["path"] = "", ["depth"] = 10, ["subtype"] = runType });
+                        Dictionary<string, JObject> remoteModelsParsed = new();
+                        foreach (JToken x in modelsData["files"].ToList())
+                        {
+                            JObject data = x.DeepClone() as JObject;
+                            data["local"] = false;
+                            remoteModelsParsed[data["name"].ToString()] = data;
+                        }
+                        RemoteModels[runType] = remoteModelsParsed;
+                    }));
+                }
+                await Task.WhenAll(tasks);
             }
             HashSet<string> features = new(), types = new();
             bool isLoading = false;
@@ -107,7 +135,10 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     {
                         Logs.Verbose($"{HandlerTypeData.Name} {BackendData.ID} adding remote backend {id} ({type})");
                         BackendHandler.T2IBackendData newData = Handler.AddNewNonrealBackend(HandlerTypeData, SettingsRaw);
-                        (newData.Backend as SwarmSwarmBackend).LinkedRemoteBackendID = id;
+                        SwarmSwarmBackend newSwarm = newData.Backend as SwarmSwarmBackend;
+                        newSwarm.LinkedRemoteBackendID = id;
+                        newSwarm.Models = Models;
+                        newSwarm.Loras = Loras;
                         ControlledNonrealBackends.TryAdd(id, newData);
                     }
                     if (ControlledNonrealBackends.TryGetValue(id, out BackendHandler.T2IBackendData data))
@@ -168,6 +199,8 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         if (IsReal)
         {
             CanLoadModels = false;
+            Models = new();
+            Loras = new();
         }
         if (string.IsNullOrWhiteSpace(Settings.Address))
         {
@@ -292,10 +325,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                 ["backendId"] = LinkedRemoteBackendID
             };
             JObject response = await HttpClient.PostJson($"{Settings.Address}/API/SelectModel", req);
-            if (response.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
-            {
-                throw new SessionInvalidException();
-            }
+            ThrowIfSessionInvalid(response);
             success = response.TryGetValue("success", out JToken successTok) && successTok.Value<bool>();
         });
         if (!success)
@@ -328,10 +358,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         await RunWithSession(async () =>
         {
             JObject generated = await HttpClient.PostJson($"{Settings.Address}/API/GenerateText2Image", BuildRequest(user_input));
-            if (generated.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
-            {
-                throw new SessionInvalidException();
-            }
+            ThrowIfSessionInvalid(generated);
             images = generated["images"].Select(img => Image.FromDataString(img.ToString())).ToArray();
         });
         return images;
@@ -349,12 +376,8 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                 JObject response = await websocket.ReceiveJson(1024 * 1024 * 100, true);
                 if (response is not null)
                 {
-                    if (response.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
-                    {
-                        Logs.Verbose($"[{HandlerTypeData.Name}] Got error from websocket: {response}");
-                        throw new SessionInvalidException();
-                    }
-                    else if (response.TryGetValue("gen_progress", out JToken val) && val is JObject objVal)
+                    ThrowIfSessionInvalid(response);
+                    if (response.TryGetValue("gen_progress", out JToken val) && val is JObject objVal)
                     {
                         if (objVal.ContainsKey("preview"))
                         {

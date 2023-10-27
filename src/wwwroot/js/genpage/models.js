@@ -165,7 +165,7 @@ class ModelBrowserWrapper {
     describeModel(model) {
         let description = '';
         let buttons = [];
-        if (this.subType == 'Stable-Diffusion') {
+        if (this.subType == 'Stable-Diffusion' && model.data.local) {
             let buttonLoad = () => {
                 directSetModel(model.data);
                 makeWSRequestT2I('SelectModelWS', {'model': model.data.name}, data => {
@@ -188,8 +188,13 @@ class ModelBrowserWrapper {
             if (this.subType == 'LoRA' || this.subType == 'Stable-Diffusion') {
                 interject += `${getLine("Resolution", `${model.data.standard_width}x${model.data.standard_height}`)}`;
             }
+            if (!model.data.local) {
+                interject += `<b>(This model is only available on some backends.)</b><br>`;
+            }
             description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getOptLine("Author", model.data.author)}${getLine("Type", model.data.class)}${interject}${getOptLine('Trigger Phrase', model.data.trigger_phrase)}${getOptLine('Usage Hint', model.data.usage_hint)}${getLine("Description", model.data.description)}`;
-            buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
+            if (model.data.local) {
+                buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
+            }
         }
         else {
             let ext = model.data.name.substring(model.data.name.lastIndexOf('.') + 1);
@@ -225,6 +230,9 @@ class ModelBrowserWrapper {
             isSelected = selectorElem.value == model.data.name;
         }
         let className = isSelected ? 'model-selected' : (model.data.loaded ? 'model-loaded' : (!isCorrect ? 'model-unavailable' : ''));
+        if (!model.data.local) {
+            className += ' model-remote';
+        }
         let searchable = `${model.data.name}, ${description}, ${model.data.license}, ${model.data.architecture||'no-arch'}, ${model.data.usage_hint}, ${model.data.trigger_phrase}, ${model.data.merged_from}, ${model.data.tags}`;
         return { name, description, buttons, 'image': model.data.preview_image, className, searchable };
     }

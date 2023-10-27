@@ -1,9 +1,11 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
+using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
+using System.Data;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text.RegularExpressions;
@@ -306,6 +308,17 @@ public static class T2IAPI
         }, depth);
     }
 
+    public static Dictionary<string, JObject> InternalExtraModels(string subtype)
+    {
+        SwarmSwarmBackend[] backends = Program.Backends.T2IBackends.Values.Select(b => b.Backend as SwarmSwarmBackend).Where(b => b is not null && b.RemoteModels is not null && b.Status == BackendStatus.RUNNING).ToArray();
+        IEnumerable<Dictionary<string, JObject>> sets = backends.Select(b => b.RemoteModels.GetValueOrDefault(subtype)).Where(b => b is not null);
+        if (sets.IsEmpty())
+        {
+            return new();
+        }
+        return sets.Aggregate((a, b) => a.Union(b).ToDictionary(k => k.Key, v => v.Value));
+    }
+
     /// <summary>API route to describe a single model.</summary>
     public static async Task<JObject> DescribeModel(Session session, string modelName, string subtype = "Stable-Diffusion")
     {
@@ -320,9 +333,16 @@ public static class T2IAPI
         }
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        if ((allowed is null || allowed.IsMatch(modelName)) && handler.Models.TryGetValue(modelName, out T2IModel model))
+        if (allowed is null || allowed.IsMatch(modelName))
         {
-            return new JObject() { ["model"] = model.ToNetObject() };
+            if (handler.Models.TryGetValue(modelName, out T2IModel model))
+            {
+                return new JObject() { ["model"] = model.ToNetObject() };
+            }
+            else if (InternalExtraModels(subtype).TryGetValue(modelName, out JObject remoteModel))
+            {
+                return new JObject() { ["model"] = remoteModel };
+            }
         }
         Logs.Debug($"Request for model {modelName} rejected as not found.");
         return new JObject() { ["error"] = "Model not found." };
@@ -347,12 +367,16 @@ public static class T2IAPI
         }
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        List<T2IModel> matches = handler.Models.Values.Where(m => m.Name.StartsWith(path) && m.Name.Length > path.Length && (allowed is null || allowed.IsMatch(m.Name))).ToList();
         HashSet<string> folders = new();
         List<JObject> files = new();
-        foreach (T2IModel possible in matches)
+        HashSet<string> dedup = new();
+        bool tryMatch(string name)
         {
-            string part = possible.Name[path.Length..];
+            if (!name.StartsWith(path) || name.Length <= path.Length || (allowed is not null && !allowed.IsMatch(name)))
+            {
+                return false;
+            }
+            string part = name[path.Length..];
             int slashes = part.CountCharacter('/');
             if (slashes > 0)
             {
@@ -363,9 +387,20 @@ public static class T2IAPI
                     folders.Add(string.Join('/', subfolders[..i]));
                 }
             }
-            if (slashes < depth)
+            return slashes < depth && dedup.Add(name);
+        }
+        foreach (T2IModel possible in handler.Models.Values)
+        {
+            if (tryMatch(possible.Name))
             {
                 files.Add(possible.ToNetObject());
+            }
+        }
+        foreach ((string name, JObject possible) in InternalExtraModels(subtype))
+        {
+            if (tryMatch(name))
+            {
+                files.Add(possible);
             }
         }
         return new JObject()

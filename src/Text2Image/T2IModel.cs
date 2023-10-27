@@ -56,7 +56,8 @@ public class T2IModel
             ["trigger_phrase"] = Metadata?.TriggerPhrase,
             ["merged_from"] = Metadata?.MergedFrom,
             ["tags"] = Metadata?.Tags is null ? null : new JArray(Metadata.Tags),
-            ["is_safetensors"] = RawFilePath.EndsWith(".safetensors")
+            ["is_safetensors"] = RawFilePath.EndsWith(".safetensors"),
+            ["local"] = true
         };
     }
 
