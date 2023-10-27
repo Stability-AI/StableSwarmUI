@@ -427,6 +427,7 @@ public class T2IParamTypes
     /// <summary>Converts a parameter value in a valid input for that parameter, or throws <see cref="InvalidDataException"/> if it can't.</summary>
     public static string ValidateParam(T2IParamType type, string val, Session session)
     {
+        string origVal = val;
         if (type is null)
         {
             throw new InvalidDataException("Unknown parameter type");
@@ -436,26 +437,26 @@ public class T2IParamTypes
             case T2IParamDataType.INTEGER:
                 if (!long.TryParse(val, out long valInt))
                 {
-                    throw new InvalidDataException($"Invalid integer value for param {type.Name} - must be a valid integer (eg '0', '3', '-5', etc)");
+                    throw new InvalidDataException($"Invalid integer value for param {type.Name} - '{val}' - must be a valid integer (eg '0', '3', '-5', etc)");
                 }
                 if (type.Min != 0 || type.Max != 0)
                 {
                     if (valInt < type.Min || valInt > type.Max)
                     {
-                        throw new InvalidDataException($"Invalid integer value for param {type.Name} - must be between {type.Min} and {type.Max}");
+                        throw new InvalidDataException($"Invalid integer value for param {type.Name} - '{val}' - must be between {type.Min} and {type.Max}");
                     }
                 }
                 return valInt.ToString();
             case T2IParamDataType.DECIMAL:
                 if (!double.TryParse(val, out double valDouble))
                 {
-                    throw new InvalidDataException($"Invalid decimal value for param {type.Name} - must be a valid decimal (eg '0.0', '3.5', '-5.2', etc)");
+                    throw new InvalidDataException($"Invalid decimal value for param {type.Name} - '{val}' - must be a valid decimal (eg '0.0', '3.5', '-5.2', etc)");
                 }
                 if (type.Min != 0 || type.Max != 0)
                 {
                     if (valDouble < type.Min || valDouble > type.Max)
                     {
-                        throw new InvalidDataException($"Invalid decimal value for param {type.Name} - must be between {type.Min} and {type.Max}");
+                        throw new InvalidDataException($"Invalid decimal value for param {type.Name} - '{val}' - must be between {type.Min} and {type.Max}");
                     }
                 }
                 return valDouble.ToString();
@@ -463,7 +464,7 @@ public class T2IParamTypes
                 val = val.ToLowerFast();
                 if (val != "true" && val != "false")
                 {
-                    throw new InvalidDataException($"Invalid boolean value for param {type.Name} - must be exactly 'true' or 'false'");
+                    throw new InvalidDataException($"Invalid boolean value for param {type.Name} - '{val}' - must be exactly 'true' or 'false'");
                 }
                 return val;
             case T2IParamDataType.TEXT:
@@ -473,7 +474,7 @@ public class T2IParamTypes
                     val = GetBestInList(val, type.GetValues(session));
                     if (val is null)
                     {
-                        throw new InvalidDataException($"Invalid value for param {type.Name} - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
+                        throw new InvalidDataException($"Invalid value for param {type.Name} - '{val}' - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
                     }
                 }
                 return val;
@@ -487,7 +488,7 @@ public class T2IParamTypes
                         vals[i] = GetBestInList(vals[i], possible);
                         if (vals[i] is null)
                         {
-                            throw new InvalidDataException($"Invalid value for param {type.Name} - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
+                            throw new InvalidDataException($"Invalid value for param {type.Name} - '{val}' - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
                         }
                     }
                     return vals.JoinString(",");
@@ -505,7 +506,7 @@ public class T2IParamTypes
                 if (!ValidBase64Matcher.IsOnlyMatches(val) || val.Length < 10)
                 {
                     string shortText = val.Length > 10 ? val[..10] + "..." : val;
-                    throw new InvalidDataException($"Invalid image value for param {type.Name} - must be a valid base64 string - got '{shortText}'");
+                    throw new InvalidDataException($"Invalid image value for param {type.Name} - '{val}' - must be a valid base64 string - got '{shortText}'");
                 }
                 return val;
             case T2IParamDataType.IMAGE_LIST:
@@ -524,7 +525,7 @@ public class T2IParamTypes
                     if (!ValidBase64Matcher.IsOnlyMatches(partVal) || partVal.Length < 10)
                     {
                         string shortText = partVal.Length > 10 ? partVal[..10] + "..." : partVal;
-                        throw new InvalidDataException($"Invalid image-list value for param {type.Name} - must be a valid base64 string - got '{shortText}'");
+                        throw new InvalidDataException($"Invalid image-list value for param {type.Name} - '{val}' - must be a valid base64 string - got '{shortText}'");
                     }
                     parts.Add(partVal);
                 }
@@ -537,7 +538,7 @@ public class T2IParamTypes
                 val = GetBestInList(val, handler.ListModelNamesFor(session).ToList());
                 if (val is null)
                 {
-                    throw new InvalidDataException($"Invalid model value for param {type.Name} - are you sure that model name is correct?");
+                    throw new InvalidDataException($"Invalid model value for param {type.Name} - '{val}' - are you sure that model name is correct?");
                 }
                 return val;
         }
