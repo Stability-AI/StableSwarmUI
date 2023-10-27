@@ -36,6 +36,21 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             throw new Exception($"Remote error: {errorToken}");
         }
         RawObjectInfo = result;
+        Models ??= new();
+        void trackModels(string subtype, string node, string param)
+        {
+            if (RawObjectInfo.TryGetValue(node, out JToken loaderNode))
+            {
+                string[] modelList = loaderNode["input"]["required"][param][0].Select(t => (string)t).ToArray();
+                Models[subtype] = modelList.Select(m => m.Replace('\\', '/')).ToList();
+            }
+        }
+        trackModels("Stable-Diffusion", "CheckpointLoaderSimple", "ckpt_name");
+        trackModels("LoRA", "LoraLoader", "lora_name");
+        trackModels("VAE", "VAELoader", "vae_name");
+        trackModels("ControlNet", "ControlNetLoader", "control_net_name");
+        trackModels("ClipVision", "CLIPVisionLoader", "clip_name");
+        trackModels("Embedding", "SwarmEmbedLoaderListProvider", "embed_name");
         if (RawObjectInfo.TryGetValue("CheckpointLoaderSimple", out JToken modelLoader))
         {
             string[] models = modelLoader["input"]["required"]["ckpt_name"][0].Select(t => (string)t).ToArray();

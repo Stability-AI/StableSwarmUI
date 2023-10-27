@@ -101,6 +101,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                             remoteModelsParsed[data["name"].ToString()] = data;
                         }
                         RemoteModels[runType] = remoteModelsParsed;
+                        Models[runType] = remoteModelsParsed.Keys.ToList();
                     }));
                 }
                 await Task.WhenAll(tasks);
@@ -138,7 +139,6 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                         SwarmSwarmBackend newSwarm = newData.Backend as SwarmSwarmBackend;
                         newSwarm.LinkedRemoteBackendID = id;
                         newSwarm.Models = Models;
-                        newSwarm.Loras = Loras;
                         ControlledNonrealBackends.TryAdd(id, newData);
                     }
                     if (ControlledNonrealBackends.TryGetValue(id, out BackendHandler.T2IBackendData data))
@@ -200,7 +200,6 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         {
             CanLoadModels = false;
             Models = new();
-            Loras = new();
         }
         if (string.IsNullOrWhiteSpace(Settings.Address))
         {

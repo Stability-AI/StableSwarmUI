@@ -89,6 +89,9 @@ public abstract class AbstractT2IBackend
     /// <summary>Whether this backend has the capability to load a model.</summary>
     public bool CanLoadModels = true;
 
+    /// <summary>The list of all model names this server has (key=model subtype, value=list of filenames), or null if untracked.</summary>
+    public Dictionary<string, List<string>> Models = null;
+
     /// <summary>Exception can be thrown to indicate the backend cannot fulfill the request, but for temporary reasons, and another backend should be used instead.</summary>
     public class PleaseRedirectException : Exception
     {
