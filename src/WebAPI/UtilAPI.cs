@@ -16,6 +16,7 @@ public static class UtilAPI
         API.RegisterAPICall(CountTokens);
         API.RegisterAPICall(TokenizeInDetail);
         API.RegisterAPICall(Pickle2SafeTensor);
+        API.RegisterAPICall(WipeMetadata);
     }
 
     public static ConcurrentDictionary<string, CliplikeTokenizer> Tokenizers = new();
@@ -88,6 +89,17 @@ public static class UtilAPI
         }
         Process p = PythonLaunchHelper.LaunchGeneric("launchtools/pickle-to-safetensors.py", true, new[] { models.FolderPath, fp16 ? "true" : "false" });
         await p.WaitForExitAsync(Program.GlobalProgramCancel);
+        return new JObject() { ["success"] = true };
+    }
+
+    /// <summary>API route to trigger a mass metadata reset.</summary>
+    public static async Task<JObject> WipeMetadata()
+    {
+        foreach (T2IModelHandler handler in Program.T2IModelSets.Values)
+        {
+            handler.MassRemoveMetadata();
+        }
+        ImageMetadataTracker.MassRemoveMetadata();
         return new JObject() { ["success"] = true };
     }
 }

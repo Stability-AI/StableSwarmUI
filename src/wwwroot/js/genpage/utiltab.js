@@ -74,3 +74,16 @@ function pickle2safetensor_run(type) {
         });
     });
 }
+
+function util_massMetadataClear() {
+    let button = getRequiredElementById('util_massmetadataclear_button');
+    button.disabled = true;
+    genericRequest('WipeMetadata', {}, data => {
+        genericRequest('TriggerRefresh', {}, data => {
+            button.disabled = false;
+            for (let browser of allModelBrowsers) {
+                browser.browser.refresh();
+            }
+        });
+    });
+}

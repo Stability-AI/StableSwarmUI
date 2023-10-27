@@ -241,6 +241,8 @@ let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser'
 let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => { selectEmbedding(embed.data); });
 let sdControlnetBrowser = new ModelBrowserWrapper('ControlNet', 'controlnet_list', 'sdcontrolnetbrowser', (controlnet) => { setControlNet(controlnet.data); });
 
+let allModelBrowsers = [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser];
+
 function selectEmbedding(model) {
     let promptBox = getRequiredElementById('alt_prompt_textbox');
     let chunk = `<embed:${model.name}>`;
@@ -286,7 +288,7 @@ function setControlNet(model) {
 }
 
 function initialModelListLoad() {
-    for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser]) {
+    for (let browser of allModelBrowsers) {
         browser.browser.navigate('');
     }
 }
@@ -421,7 +423,7 @@ function directSetModel(model) {
     if (aspect) {
         aspect.dispatchEvent(new Event('change'));
     }
-    for (let browser of [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser]) {
+    for (let browser of allModelBrowsers) {
         browser.browser.update();
     }
 }

@@ -98,6 +98,36 @@ public class T2IModelHandler
         }
     }
 
+
+    /// <summary>Utility to destroy all stored metadata files.</summary>
+    public void MassRemoveMetadata()
+    {
+        lock (MetadataLock)
+        {
+            foreach ((LiteDatabase ldb, _) in ModelMetadataCachePerFolder.Values)
+            {
+                ldb.Dispose();
+            }
+            ModelMetadataCachePerFolder.Clear();
+            static void ClearFolder(string folder)
+            {
+                if (File.Exists($"{folder}/model_metadata.ldb"))
+                {
+                    try
+                    {
+                        File.Delete($"{folder}/model_metadata.ldb");
+                    }
+                    catch (IOException) { }
+                }
+                foreach (string subFolder in Directory.GetDirectories(folder))
+                {
+                    ClearFolder(subFolder);
+                }
+            }
+            ClearFolder(FolderPath);
+        }
+    }
+
     public List<T2IModel> ListModelsFor(Session session)
     {
         if (IsShutdown)
