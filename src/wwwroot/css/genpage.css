@@ -379,6 +379,11 @@ body {
 .sui_popover_model_button_selected {
     background-color: color-mix(in srgb, var(--emphasis) 50%, var(--background));
 }
+.sui_popover_model_button_add_all {
+    padding-bottom: 0.1rem;
+    border-bottom: 1px solid var(--light-border);
+    margin-bottom: 0.1rem;
+}
 .sui_popover_model_button:hover {
     background-color: var(--emphasis);
 }

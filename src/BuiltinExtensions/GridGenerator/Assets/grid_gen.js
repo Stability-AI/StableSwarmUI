@@ -116,6 +116,24 @@ class GridGenClass {
                     if (possible.length > 0 && possible.filter(e => e.toLowerCase() == searchPre).length == 0) {
                         this.popover = createDiv('popover_grid_search', 'sui-popover sui_popover_model sui_popover_scrollable');
                         let isFirst = true;
+                        if (possible.length > 1) {
+                            let button = createDiv(null, 'sui_popover_model_button_selected sui_popover_model_button_add_all sui_popover_model_button');
+                            isFirst = false;
+                            button.innerText = "(Add All)";
+                            let combined = possible.join(', ');
+                            if (combined.includes('||') || separator == '||') {
+                                combined = possible.join(' || ');
+                            }
+                            button.addEventListener('click', () => {
+                                hidePopover('grid_search');
+                                this.popover.remove();
+                                this.popover = null;
+                                inputBox.innerText = areaPre + combined + areaPost;
+                                setSelectionRange(inputBox, areaPre.length + combined.length, areaPre.length + combined.length);
+                                updateInput();
+                            });
+                            this.popover.appendChild(button);
+                        }
                         for (let val of possible) {
                             let button = createDiv(null, (isFirst ? 'sui_popover_model_button_selected ' : '') + 'sui_popover_model_button');
                             isFirst = false;
