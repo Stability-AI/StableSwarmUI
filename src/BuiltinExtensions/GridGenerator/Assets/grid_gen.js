@@ -277,7 +277,8 @@ class GridGenClass {
                 'fastSkip': getOpt('fast-skip'),
                 'generatePage': getOpt('generate-page'),
                 'publishGenMetadata': getOpt('publish-metadata'),
-                'dryRun': getOpt('dry-run')
+                'dryRun': getOpt('dry-run'),
+                'weightOrder': getOpt('weight-order')
             };
             let axisData = [];
             for (let axis of this.axisDiv.getElementsByClassName('grid-gen-axis-wrapper')) {
@@ -332,6 +333,7 @@ class GridGenClass {
             + makeCheckboxInput(null, 'grid-gen-opt-generate-page', 'Generate Page', 'If unchecked, will prevent regenerating the page for the grid.', true, false, true)
             + makeCheckboxInput(null, 'grid-gen-opt-publish-metadata', 'Publish Generation Metadata', 'If unchecked, will hide the image generation metadata.', true, false, true)
             + makeCheckboxInput(null, 'grid-gen-opt-dry-run', 'Dry Run', 'If checked, will not actually generate any images - useful to validate your grid.', false, false, true)
+            + makeCheckboxInput(null, 'grid-gen-opt-weight-order', 'Allow Reordering', 'If checked, the grid generator will reorder processing order of axes to maximize generation speed.', true, false, true)
             + '</div>';
         this.mainDiv.appendChild(this.settingsDiv);
         this.mainDiv.appendChild(this.axisDiv);

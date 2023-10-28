@@ -138,6 +138,9 @@ public partial class GridGenCore
 
         public T2IParamType Mode;
 
+        /// <summary>Index of the axis within the axis list, used to maintain user-intended ordering.</summary>
+        public int Index;
+
         public void BuildFromListStr(string id, Grid grid, string listStr)
         {
             RawID = id;
@@ -323,6 +326,8 @@ public partial class GridGenCore
 
         public int Iteration = 0;
 
+        public bool WeightOrder = true;
+
         public void UpdateLiveFile(string newFile)
         {
             lock (Grid.LastUpdatLock)
@@ -334,11 +339,17 @@ public partial class GridGenCore
             }
         }
 
-        public List<SingleGridCall> BuildValueSetList(List<Axis> axisList)
+        public List<SingleGridCall> BuildValueSetList(List<Axis> axisList, bool topmost = true)
         {
             if (axisList.Count == 0)
             {
                 return new();
+            }
+            if (WeightOrder && topmost)
+            {
+                Logs.Verbose($"Axis list ordered by index: {string.Join(", ", axisList.Select(a => a.Title))}");
+                axisList = axisList.OrderBy(a => a.Mode.ChangeWeight).ToList();
+                Logs.Verbose($"Axis list ordered by weight: {string.Join(", ", axisList.Select(a => a.Title))}");
             }
             Axis curAxis = axisList[0];
             if (axisList.Count == 1)
@@ -347,7 +358,7 @@ public partial class GridGenCore
             }
             List<SingleGridCall> result = new();
             List<Axis> nextAxisList = axisList.GetRange(1, axisList.Count - 1);
-            foreach (SingleGridCall obj in BuildValueSetList(nextAxisList))
+            foreach (SingleGridCall obj in BuildValueSetList(nextAxisList, false))
             {
                 foreach (AxisValue val in curAxis.Values)
                 {
@@ -357,6 +368,13 @@ public partial class GridGenCore
                         newList.Add(val);
                         result.Add(new SingleGridCall(Grid, newList));
                     }
+                }
+            }
+            if (WeightOrder && topmost)
+            {
+                foreach (SingleGridCall obj in result)
+                {
+                    obj.Values = obj.Values.OrderBy(v => v.Axis.Index).ToList();
                 }
             }
             return result;
@@ -616,7 +634,7 @@ public partial class GridGenCore
 
     // TODO: Clever model logic switching so this doesn't spam-switch
 
-    public static Grid Run(T2IParamInput baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, string footerExtra = "")
+    public static Grid Run(T2IParamInput baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string footerExtra = "")
     {
         Grid grid = new()
         {
@@ -630,6 +648,7 @@ public partial class GridGenCore
             LocalData = LocalData,
             PublishMetadata = publishGenMetadata
         };
+        int axisIndex = 0;
         foreach (JToken axis in axes)
         {
             string id = axis["mode"].ToString().ToLowerFast().Trim();
@@ -645,7 +664,7 @@ public partial class GridGenCore
                         id = $"{rawid}_{c}";
                         c++;
                     }
-                    Axis newAxis = new();
+                    Axis newAxis = new() { Index = axisIndex++ };
                     newAxis.BuildFromListStr(id, grid, axis["vals"].ToString());
                     grid.Axes.Add(newAxis);
                 }
@@ -673,7 +692,8 @@ public partial class GridGenCore
             BasePath = folder,
             URLBase = urlBase + "/" + outputFolderName,
             Params = baseParams,
-            FastSkip = fastSkip
+            FastSkip = fastSkip,
+            WeightOrder = weightOrder
         };
         grid.Runner = runner;
         runner.Preprocess();
