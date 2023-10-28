@@ -77,6 +77,29 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         }
     }
 
+    public void TriggerRefresh()
+    {
+        if (!IsReal)
+        {
+            return;
+        }
+        _ = RunWithSession(async () =>
+        {
+            Logs.Verbose($"Trigger refresh on remote swarm {Settings.Address}");
+            await HttpClient.PostJson($"{Settings.Address}/TriggerRefresh", new() { ["session_id"] = Session });
+            await ReviseRemoteDataList();
+            List<Task> tasks = new()
+            {
+                ReviseRemoteDataList()
+            };
+            foreach (BackendHandler.T2IBackendData backend in ControlledNonrealBackends.Values)
+            {
+                tasks.Add((backend.Backend as SwarmSwarmBackend).ReviseRemoteDataList());
+            }
+            await Task.WhenAll(tasks);
+        });
+    }
+
     public async Task ReviseRemoteDataList()
     {
         await RunWithSession(async () =>
