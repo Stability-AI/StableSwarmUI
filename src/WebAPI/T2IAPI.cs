@@ -316,7 +316,7 @@ public static class T2IAPI
         {
             return new();
         }
-        return sets.Aggregate((a, b) => a.Union(b).PairsToDictionary());
+        return sets.Aggregate((a, b) => a.Union(b).PairsToDictionary(false));
     }
 
     /// <summary>API route to describe a single model.</summary>
