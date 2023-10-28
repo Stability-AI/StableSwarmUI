@@ -18,6 +18,11 @@ const time_started = Date.now();
 
 let statusBarElem = getRequiredElementById('top_status_bar');
 
+/** Called when the user clicks the clear batch button. */
+function clearBatch() {
+    getRequiredElementById('current_image_batch').innerHTML = '';
+}
+
 /** Reference to the auto-clear-batch toggle checkbox. */
 let autoClearBatchElem = getRequiredElementById('auto_clear_batch_checkbox');
 autoClearBatchElem.checked = localStorage.getItem('autoClearBatch') != 'false';
