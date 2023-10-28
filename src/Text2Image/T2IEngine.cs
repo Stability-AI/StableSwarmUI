@@ -7,10 +7,6 @@ using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection.Emit;
-using static StableSwarmUI.Backends.BackendHandler;
-using static StableSwarmUI.Core.Settings.User;
 
 namespace StableSwarmUI.Text2Image
 {
@@ -45,7 +41,7 @@ namespace StableSwarmUI.Text2Image
         public record class ImageInBatch(Image Image, Action RefuseImage);
 
         /// <summary>Helper to create a function to match a backend to a user input request.</summary>
-        public static Func<T2IBackendData, bool> BackendMatcherFor(T2IParamInput user_input)
+        public static Func<BackendHandler.T2IBackendData, bool> BackendMatcherFor(T2IParamInput user_input)
         {
             string type = user_input.Get(T2IParamTypes.BackendType, "any");
             bool requireId = user_input.TryGet(T2IParamTypes.ExactBackendID, out int reqId);
@@ -71,11 +67,20 @@ namespace StableSwarmUI.Text2Image
                         return false;
                     }
                 }
-                if (backend.Backend.Models is not null && backend.Backend.Models.TryGetValue("Stable-Diffusion", out List<string> sdModels) && user_input.TryGet(T2IParamTypes.Model, out T2IModel model))
+                if (backend.Backend.Models is not null)
                 {
-                    if (!sdModels.Contains(model.Name))
+                    bool requireModel(T2IRegisteredParam<T2IModel> param, string type)
                     {
-                        Logs.Verbose($"Filter out backend {backend.ID} as the request requires model {model.Name}, but the backend does not have that model");
+                        if (user_input.TryGet(param, out T2IModel model) && backend.Backend.Models.TryGetValue(type, out List<string> models) && !models.Contains(model.Name))
+                        {
+                            Logs.Verbose($"Filter out backend {backend.ID} as the request requires {type} model {model.Name}, but the backend does not have that model");
+                            return false;
+                        }
+                        return true;
+                    }
+                    if (!requireModel(T2IParamTypes.Model, "Stable-Diffusion") || !requireModel(T2IParamTypes.RefinerModel, "Stable-Diffusion")
+                        || !requireModel(T2IParamTypes.VAE, "VAE") || !requireModel(T2IParamTypes.ControlNetModel, "ControlNet"))
+                    {
                         return false;
                     }
                     if (user_input.TryGet(T2IParamTypes.Loras, out List<string> loras) && backend.Backend.Models.TryGetValue("LoRA", out List<string> loraModels))
@@ -87,22 +92,6 @@ namespace StableSwarmUI.Text2Image
                                 Logs.Verbose($"Filter out backend {backend.ID} as the request requires lora {lora}, but the backend does not have that lora");
                                 return false;
                             }
-                        }
-                    }
-                    if (user_input.TryGet(T2IParamTypes.VAE, out T2IModel vae) && backend.Backend.Models.TryGetValue("VAE", out List<string> vaes))
-                    {
-                        if (!vaes.Contains(vae.Name))
-                        {
-                            Logs.Verbose($"Filter out backend {backend.ID} as the request requires VAE {vae.Name}, but the backend does not have that VAE");
-                            return false;
-                        }
-                    }
-                    if (user_input.TryGet(T2IParamTypes.ControlNetModel, out T2IModel controlnet) && backend.Backend.Models.TryGetValue("ControlNet", out List<string> controlnetModels))
-                    {
-                        if (!controlnetModels.Contains(controlnet.Name))
-                        {
-                            Logs.Verbose($"Filter out backend {backend.ID} as the request requires controlnet {controlnet.Name}, but the backend does not have that controlnet");
-                            return false;
                         }
                     }
                 }
