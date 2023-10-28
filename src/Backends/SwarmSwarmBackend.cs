@@ -352,7 +352,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
-        user_input.PreparsePromptLikes(x => $"<embedding:{x}>");
+        user_input.ProcessPromptEmbeds(x => $"<embedding:{x}>");
         Image[] images = null;
         await RunWithSession(async () =>
         {
@@ -365,7 +365,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
     public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
     {
-        user_input.PreparsePromptLikes(x => $"<embedding:{x}>");
+        user_input.ProcessPromptEmbeds(x => $"<embedding:{x}>");
         await RunWithSession(async () =>
         {
             ClientWebSocket websocket = await NetworkBackendUtils.ConnectWebsocket(Settings.Address, "API/GenerateText2ImageWS");

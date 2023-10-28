@@ -19,8 +19,6 @@ public class T2IParamInput
 
         public string Param;
 
-        public Func<string, string> EmbedFormatter;
-
         public string[] Embeds, Loras;
 
         public string Parse(string text)
@@ -60,7 +58,7 @@ public class T2IParamInput
             preset.ApplyTo(context.Input);
             if (preset.ParamMap.TryGetValue(context.Param, out string prompt))
             {
-                return "\0" + prompt;
+                return "\0preset:" + prompt;
             }
             return "";
         };
@@ -79,7 +77,9 @@ public class T2IParamInput
                 Logs.Warning($"Embedding '{want}' does not exist and will be ignored");
                 return "";
             }
-            return context.EmbedFormatter(matched.Replace('/', Path.DirectorySeparatorChar));
+            List<string> usedEmbeds = context.Input.ExtraMeta.GetOrCreate("used_embeddings", () => new List<string>()) as List<string>;
+            usedEmbeds.Add(matched);
+            return "\0swarmembed:" + matched + "\0end";
         };
         PromptTagProcessors["embedding"] = PromptTagProcessors["embed"];
         PromptTagPostProcessors["lora"] = (data, context) =>
@@ -192,6 +192,10 @@ public class T2IParamInput
             {
                 result[key] = model.Name;
             }
+            else if (val is string str)
+            {
+                result[key] = FillEmbedsInString(str, e => $"<embed:{e}>");
+            }
             else
             {
                 result[key] = JToken.FromObject(val);
@@ -207,6 +211,19 @@ public class T2IParamInput
         foreach ((string key, object origVal) in ValuesInput.Union(ExtraMeta))
         {
             object val = origVal;
+            if (val is null)
+            {
+                Logs.Warning($"Null parameter {key} in T2I parameters?");
+                continue;
+            }
+            if (val is Image)
+            {
+                continue;
+            }
+            if (val is string str)
+            {
+                val = FillEmbedsInString(str, e => $"<embed:{e}>");
+            }
             if (T2IParamTypes.TryGetType(key, out T2IParamType type, this))
             {
                 if (type.HideFromMetadata)
@@ -218,22 +235,15 @@ public class T2IParamInput
                     val = type.MetadataFormat($"{val}");
                 }
             }
-            if (val is Image)
-            {
-                continue;
-            }
             if (val is T2IModel model)
             {
-                output[key] = model.Name;
+                val = model.Name;
             }
-            else if (val is null)
-            {
-                Logs.Warning($"Null parameter {key} in T2I parameters?");
-            }
-            else
-            {
-                output[key] = JToken.FromObject(val);
-            }
+            output[key] = JToken.FromObject(val);
+        }
+        if (output.TryGetValue("original_prompt", out JToken origPrompt) && output.TryGetValue("prompt", out JToken prompt) && origPrompt == prompt)
+        {
+            output.Remove("original_prompt");
         }
         return output;
     }
@@ -246,14 +256,34 @@ public class T2IParamInput
     }
 
     /// <summary>Special utility to process prompt inputs before the request is executed (to parse wildcards, embeddings, etc).</summary>
-    public void PreparsePromptLikes(Func<string, string> embedFormatter)
+    public void PreparsePromptLikes()
     {
-        ValuesInput["prompt"] = ProcessPromptLike(T2IParamTypes.Prompt, embedFormatter);
-        ValuesInput["negativeprompt"] = ProcessPromptLike(T2IParamTypes.NegativePrompt, embedFormatter);
+        ValuesInput["prompt"] = ProcessPromptLike(T2IParamTypes.Prompt);
+        ValuesInput["negativeprompt"] = ProcessPromptLike(T2IParamTypes.NegativePrompt);
+    }
+
+    /// <summary>Formats embeddings in a prompt string and returns the cleaned string.</summary>
+    public static string FillEmbedsInString(string str, Func<string, string> format)
+    {
+        return StringConversionHelper.QuickSimpleTagFiller(str, "\0swarmembed:", "\0end", format, false);
+    }
+
+    /// <summary>Format embedding text in prompts.</summary>
+    public void ProcessPromptEmbeds(Func<string, string> formatEmbed, Func<string, string> generalPreproc = null)
+    {
+        void proc(T2IRegisteredParam<string> param)
+        {
+            string val = Get(param) ?? "";
+            val = generalPreproc is null ? val : generalPreproc(val);
+            val = FillEmbedsInString(val, formatEmbed);
+            ValuesInput[param.Type.ID] = val;
+        }
+        proc(T2IParamTypes.Prompt);
+        proc(T2IParamTypes.NegativePrompt);
     }
 
     /// <summary>Special utility to process prompt inputs before the request is executed (to parse wildcards, embeddings, etc).</summary>
-    public string ProcessPromptLike(T2IRegisteredParam<string> param, Func<string, string> embedFormatter)
+    public string ProcessPromptLike(T2IRegisteredParam<string> param)
     {
         string val = Get(param);
         if (val is null)
@@ -265,10 +295,8 @@ public class T2IParamInput
         string lowRef = fixedVal.ToLowerFast();
         string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelNamesFor(SourceSession).ToArray() : null;
         string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelNamesFor(SourceSession).Select(m => m.ToLowerFast()).ToArray() : null;
-        PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID, EmbedFormatter = embedFormatter, Embeds = embeds, Loras = loras };
+        PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID, Embeds = embeds, Loras = loras };
         fixedVal = ProcessPromptLike(fixedVal, context);
-        // Special trick to break handwritten comfy embeds as gently as possible (ie require Swarm syntax for embeds, as comfy's raw syntax has unwanted behaviors)
-        fixedVal = fixedVal.Replace("embedding:", "noembed:", StringComparison.OrdinalIgnoreCase).Replace("\aswarm_comfy_embed:", "embedding:");
         if (fixedVal != val)
         {
             ExtraMeta[$"original_{param.Type.ID}"] = val;
@@ -296,13 +324,17 @@ public class T2IParamInput
                     {
                         if (result.StartsWithNull()) // Special case for preset tag modifying the current value
                         {
-                            result = result[1..];
-                            if (result.Contains("{value}"))
+                            string cleanResult = result[1..];
+                            if (cleanResult.StartsWith("preset:"))
                             {
-                                addBefore += result.Before("{value}");
+                                cleanResult = cleanResult["preset:".Length..];
+                                if (cleanResult.Contains("{value}"))
+                                {
+                                    addBefore += cleanResult.Before("{value}");
+                                }
+                                addAfter += cleanResult.After("{value}");
+                                return "";
                             }
-                            addAfter += result.After("{value}");
-                            return "";
                         }
                         return result;
                     }

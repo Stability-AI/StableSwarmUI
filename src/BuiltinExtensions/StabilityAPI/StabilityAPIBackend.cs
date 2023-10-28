@@ -112,7 +112,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
-        user_input.PreparsePromptLikes(x => x);
+        user_input.ProcessPromptEmbeds(x => throw new InvalidDataException("Cannot use embeddings with StabilityAPI")); 
         if (user_input.TryGet(T2IParamTypes.InitImage, out Image initImg))
         {
             // TODO: img2img

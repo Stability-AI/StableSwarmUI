@@ -72,7 +72,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
 
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
-        user_input.PreparsePromptLikes(x => x.BeforeLast('.'));
+        user_input.ProcessPromptEmbeds(x => x.BeforeLast('.'));
         string promptAdd = "";
         if (user_input.TryGet(T2IParamTypes.Loras, out List<string> loras) && user_input.TryGet(T2IParamTypes.LoraWeights, out List<string> loraWeights) && loras.Count > 0 && loras.Count == loraWeights.Count)
         {

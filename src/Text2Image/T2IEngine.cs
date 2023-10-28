@@ -138,6 +138,7 @@ namespace StableSwarmUI.Text2Image
             T2IBackendAccess backend;
             try
             {
+                user_input.PreparsePromptLikes();
                 PreGenerateEvent?.Invoke(new(user_input));
                 claim.Extend(backendWaits: 1);
                 sendStatus();
