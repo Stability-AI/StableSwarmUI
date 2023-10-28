@@ -120,7 +120,7 @@ public class T2IModelClassSorter
             return shape.ToArray()[^1].Value<long>() == 1024;
         }
         });
-        Register(new() { ID = "stable-diffusion-v2xl-v1-base/textual-inverison", CompatClass = "stable-diffusion-xl-v1", Name = "Stable Diffusion XL 1.0-Base Embedding", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
+        Register(new() { ID = "stable-diffusion-xl-v1-base/textual-inverison", CompatClass = "stable-diffusion-xl-v1", Name = "Stable Diffusion XL 1.0-Base Embedding", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) =>
         {
             return h.TryGetValue("clip_g", out JToken clip_g) && (clip_g as JObject).TryGetValue("shape", out JToken shape_g) && shape_g[1].Value<long>() == 1280
                 && h.TryGetValue("clip_l", out JToken clip_l) && (clip_l as JObject).TryGetValue("shape", out JToken shape_l) && shape_l[1].Value<long>() == 768;
@@ -134,6 +134,7 @@ public class T2IModelClassSorter
         {
             return isControlLora(h);
         }});
+        Register(new() { ID = "segmind-stable-diffusion-1b", CompatClass = "segmind-stable-diffusion-1b", Name = "Segmind Stable Diffusion 1B (SSD-1B)", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; } });
     }
 
     /// <summary>Returns the model class that matches this model, or null if none.</summary>
