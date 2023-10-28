@@ -37,11 +37,13 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         RawObjectInfo = result;
         Models ??= new();
+        string firstBackSlash = null;
         void trackModels(string subtype, string node, string param)
         {
             if (RawObjectInfo.TryGetValue(node, out JToken loaderNode))
             {
                 string[] modelList = loaderNode["input"]["required"][param][0].Select(t => (string)t).ToArray();
+                firstBackSlash ??= modelList.FirstOrDefault(m => m.Contains('\\'));
                 Models[subtype] = modelList.Select(m => m.Replace('\\', '/')).ToList();
             }
         }
@@ -51,20 +53,15 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         trackModels("ControlNet", "ControlNetLoader", "control_net_name");
         trackModels("ClipVision", "CLIPVisionLoader", "clip_name");
         trackModels("Embedding", "SwarmEmbedLoaderListProvider", "embed_name");
-        if (RawObjectInfo.TryGetValue("CheckpointLoaderSimple", out JToken modelLoader))
+        if (firstBackSlash is not null)
         {
-            string[] models = modelLoader["input"]["required"]["ckpt_name"][0].Select(t => (string)t).ToArray();
-            string[] forwardSlash = models.Where(m => m.Contains('/')).ToArray();
-            string[] backSlash = models.Where(m => m.Contains('\\')).ToArray();
-            if (forwardSlash.Any())
-            {
-                ModelFolderFormat = "/";
-            }
-            if (backSlash.Any())
-            {
-                ModelFolderFormat = "\\";
-            }
-            Logs.Debug($"Comfy model folder format: {ModelFolderFormat} ... forward slash: {forwardSlash.Length} ({forwardSlash.Take(2).JoinString(", ")}), back slash: {backSlash.Length} ({backSlash.Take(2).JoinString(", ")})");
+            ModelFolderFormat = "\\";
+            Logs.Debug($"Comfy backend {BackendData.ID} using model folder format: backslash \\ due to model {firstBackSlash}");
+        }
+        else
+        {
+            ModelFolderFormat = "/";
+            Logs.Debug($"Comfy backend {BackendData.ID} using model folder format: forward slash / as no backslash was found");
         }
         ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
     }
@@ -358,7 +355,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     {
         string workflow = null;
         // note: gently break any standard embed with a space, *require* swarm format embeds, as comfy's raw syntax has unwanted behaviors
-        user_input.ProcessPromptEmbeds(x => $"embedding:{x}", p => p.Replace("embedding:", "embedding :", StringComparison.OrdinalIgnoreCase));
+        user_input.ProcessPromptEmbeds(x => $"embedding:{x.Replace("/", ModelFolderFormat)}", p => p.Replace("embedding:", "embedding :", StringComparison.OrdinalIgnoreCase));
         if (user_input.TryGet(ComfyUIBackendExtension.CustomWorkflowParam, out string customWorkflowName))
         {
             if (customWorkflowName.StartsWith("PARSED%"))

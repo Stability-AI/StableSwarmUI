@@ -94,6 +94,17 @@ namespace StableSwarmUI.Text2Image
                             }
                         }
                     }
+                    if (user_input.ExtraMeta.TryGetValue("used_embeddings", out object usedEmbeds) && backend.Backend.Models.TryGetValue("Embedding", out List<string> embedModels))
+                    {
+                        foreach (string embed in (List<string>)usedEmbeds)
+                        {
+                            if (!embedModels.Contains(embed))
+                            {
+                                Logs.Verbose($"Filter out backend {backend.ID} as the request requires embedding {embed}, but the backend does not have that embedding");
+                                return false;
+                            }
+                        }
+                    }
                 }
                 return true;
             };
