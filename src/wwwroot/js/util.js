@@ -118,7 +118,7 @@ function linearToPot(val, max, min, step) {
     let discardIncr = min == 0 ? 0 : Math.log2(min);
     let normIncr = norm * (increments - discardIncr) + discardIncr;
     if (shiftMonitor) {
-        return Math.round(2 ** normIncr);
+        return roundTo(Math.round(2 ** normIncr), step);
     }
     let incrLow = Math.floor(normIncr);
     let incrHigh = Math.ceil(normIncr);
