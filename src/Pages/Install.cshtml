@@ -141,7 +141,7 @@ You agree not to use the Model or Derivatives of the Model:
         <br>
         <fieldset class="form-group" id="installed_for_selection_field">
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="installed_for_radio" id="installed_for_radio_yourself" value="just_self">
+                <input class="form-check-input" type="radio" name="installed_for_radio" id="installed_for_radio_yourself" value="just_self" checked="">
                 <label class="form-check-label" for="installed_for_radio_yourself">Just Yourself On This PC</label>
                 <div class="install_hint">Disables external access entirely, sets you as always a full administrator of the installation.</div>
             </div>
@@ -188,7 +188,7 @@ You agree not to use the Model or Derivatives of the Model:
             <h3>For New Users: Install One Now</h3>
             <br>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="backend_radio" id="backend_radio_comfy" value="comfyui">
+                <input class="form-check-input" type="radio" name="backend_radio" id="backend_radio_comfy" value="comfyui" checked="">
                 <label class="form-check-label" for="backend_radio_comfy">ComfyUI (Local)</label>
                 <div class="install_hint">ComfyUI is a powerful node-based Stable Diffusion engine that runs entirely on your local PC. This option is best if you have a powerful GPU.
                     <a href="#" onclick="javascript:$('#gpu_check_modal').modal('show')">Do I?</a> You can learn more about <a href="https://github.com/comfyanonymous/ComfyUI">ComfyUI here</a>.
@@ -231,7 +231,7 @@ You agree not to use the Model or Derivatives of the Model:
                 <div class="install_hint">The second release of SD, v2.1 has the same requirements as 1.5 but is able to generate 768x768 images, with higher quality results.</div>
             </div>
             <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="downloadmodel_sdxl1">
+                <input class="form-check-input" type="checkbox" id="downloadmodel_sdxl1" checked="">
                 <label class="form-check-label" for="downloadmodel_sdxl1">Stable Diffusion XL 1.0 (Base)</label>
                 <div class="install_hint">SDXL is the latest-and-greatest SD version (from July 2023), requiring 6.5 GiB of drive space and a more powerful GPU, but able to generate at 1024x1024, with noticably much higher quality results than past versions.</div>
             </div>
