@@ -231,6 +231,12 @@ public class BackendHandler
         return data;
     }
 
+    /// <summary>Gets a set of all currently running backends of the given type.</summary>
+    public IEnumerable<T> RunningBackendsOfType<T>() where T : AbstractT2IBackend
+    {
+        return T2IBackends.Values.Select(b => b.Backend as T).Where(b => b is not null && b.Status == BackendStatus.RUNNING);
+    }
+
     /// <summary>Causes all backends to restart.</summary>
     public async Task ReloadAllBackends()
     {
@@ -652,7 +658,7 @@ public class BackendHandler
             if (Pressure is null && Model is not null)
             {
                 Logs.Verbose($"[BackendHandler] Backend request #{ID} is creating pressure for model {Model.Name}...");
-                Pressure = Handler.ModelRequests.GetOrCreate(Model.Name, () => new() { Model = Model });
+                Pressure = Handler.ModelRequests.GetOrAdd(Model.Name, _ => new() { Model = Model });
                 lock (Pressure.Locker)
                 {
                     Pressure.Count++;

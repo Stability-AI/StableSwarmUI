@@ -144,6 +144,11 @@ namespace StableSwarmUI.Text2Image
                 backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Get(T2IParamTypes.Model),
                     filter: BackendMatcherFor(user_input), session: user_input.SourceSession, notifyWillLoad: sendStatus, cancel: claim.InterruptToken);
             }
+            catch (InvalidDataException ex)
+            {
+                setError($"Invalid data: {ex.Message}");
+                return;
+            }
             catch (InvalidOperationException ex)
             {
                 setError($"Invalid operation: {ex.Message}");

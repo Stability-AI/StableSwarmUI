@@ -103,9 +103,7 @@ public class ComfyUIBackendExtension : Extension
         return null;
     }
 
-    public static IEnumerable<ComfyUIAPIAbstractBackend> RunningComfyBackends => Program.Backends.T2IBackends.Values
-            .Select(b => b.Backend as ComfyUIAPIAbstractBackend)
-            .Where(b => b is not null && b.Status == BackendStatus.RUNNING);
+    public static IEnumerable<ComfyUIAPIAbstractBackend> RunningComfyBackends => Program.Backends.RunningBackendsOfType<ComfyUIAPIAbstractBackend>();
 
     public void LoadWorkflowFiles()
     {

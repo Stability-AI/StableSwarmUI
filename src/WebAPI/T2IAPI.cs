@@ -310,13 +310,13 @@ public static class T2IAPI
 
     public static Dictionary<string, JObject> InternalExtraModels(string subtype)
     {
-        SwarmSwarmBackend[] backends = Program.Backends.T2IBackends.Values.Select(b => b.Backend as SwarmSwarmBackend).Where(b => b is not null && b.RemoteModels is not null && b.Status == BackendStatus.RUNNING).ToArray();
+        SwarmSwarmBackend[] backends = Program.Backends.RunningBackendsOfType<SwarmSwarmBackend>().Where(b => b.RemoteModels is not null).ToArray();
         IEnumerable<Dictionary<string, JObject>> sets = backends.Select(b => b.RemoteModels.GetValueOrDefault(subtype)).Where(b => b is not null);
         if (sets.IsEmpty())
         {
             return new();
         }
-        return sets.Aggregate((a, b) => a.Union(b).ToDictionary(k => k.Key, v => v.Value));
+        return sets.Aggregate((a, b) => a.Union(b).PairsToDictionary());
     }
 
     /// <summary>API route to describe a single model.</summary>

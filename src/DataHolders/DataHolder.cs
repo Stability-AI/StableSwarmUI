@@ -18,7 +18,7 @@ public interface IDataHolder
 
     public static DataHolderHelper GetHelper(Type t)
     {
-        return Helpers.GetOrCreate(t, () => Activator.CreateInstance(typeof(DataHolderHelper<>).MakeGenericType(t)) as DataHolderHelper);
+        return Helpers.GetOrAdd(t, t2 => Activator.CreateInstance(typeof(DataHolderHelper<>).MakeGenericType(t2)) as DataHolderHelper);
     }
 
     IDataHolder Clone();
