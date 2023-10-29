@@ -290,7 +290,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 Logs.Error($"null output data from ComfyUI server: {output.ToDenseDebugString()}");
                 continue;
             }
-            async Task LoadImage(JToken outImage, Image.ImageType type)
+            async Task LoadImage(JObject outImage, Image.ImageType type)
             {
                 string fname = outImage["filename"].ToString();
                 if ($"{outImage["type"]}" == "temp")
@@ -299,11 +299,12 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     return;
                 }
                 string ext = fname.AfterLast('.');
+                string format = (outImage.TryGetValue("format", out JToken formatTok) ? formatTok.ToString() : "") ?? "";
                 if (ext == "gif")
                 {
                     type = Image.ImageType.ANIMATION;
                 }
-                else if (ext == "mp4" || ext == "webm" || (outImage["format"].ToString() ?? "").StartsWith("video/"))
+                else if (ext == "mp4" || ext == "webm" || format.StartsWith("video/"))
                 {
                     type = Image.ImageType.VIDEO;
                 }
@@ -320,14 +321,14 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             {
                 foreach (JToken outImage in outData["images"])
                 {
-                    await LoadImage(outImage, Image.ImageType.IMAGE);
+                    await LoadImage(outImage as JObject, Image.ImageType.IMAGE);
                 }
             }
             else if (outData["gifs"] is not null)
             {
                 foreach (JToken outGif in outData["gifs"])
                 {
-                    await LoadImage(outGif, Image.ImageType.ANIMATION);
+                    await LoadImage(outGif as JObject, Image.ImageType.ANIMATION);
                 }
             }
             else
