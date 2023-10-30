@@ -409,6 +409,9 @@ function comfyBuildParams(callback) {
                 }
                 let val = node.inputs[fieldName];
                 if (typeof val == (numeric ? 'number' : 'string')) {
+                    if (paramName == 'seed' && nodeId in nodeIsRandomize) {
+                        val = -1;
+                    }
                     let redirId = nodeStatics[nodeLabelPaths[`${nodeId}.${fieldName}`]];
                     let useParamName = paramName;
                     let paramNameClean = cleanParamName(paramName);
