@@ -115,6 +115,8 @@ body {
     margin-top: 1rem;
     margin-bottom: 1.5rem;
     cursor: pointer;
+    position: relative;
+    bottom: 3.5rem;
 }
 .main_inputs_area_wrapper {
     overflow-x: hidden;
