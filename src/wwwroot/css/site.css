@@ -293,7 +293,6 @@ input[type="range"]::-webkit-slider-thumb, input[type="range"]::-moz-range-thumb
     width: calc(max(5rem, 100% - 12rem));
 }
 .auto-dropdown {
-    appearance: none;
     width: fit-content;
     border-radius: 0.5rem;
     margin-bottom: 0px;
