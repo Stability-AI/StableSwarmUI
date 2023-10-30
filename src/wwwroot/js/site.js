@@ -357,11 +357,56 @@ function makeGenericPopover(id, name, type, description, example) {
     return `<div class="sui-popover" id="popover_${id}"><b>${escapeHtml(name)}</b> (${type}):<br>&emsp;${escapeHtml(description)}${example}</div>`;
 }
 
+function doPopoverHover(id) {
+    let input = getRequiredElementById(id);
+    let parent = findParentOfClass(input, 'auto-input');
+    let pop = getRequiredElementById(`popover_${id}`);
+    if (pop.dataset.visible != "true") {
+        let targetX = parent.getBoundingClientRect().right;
+        let targetY = parent.getBoundingClientRect().top;
+        pop.classList.add('sui-popover-visible');
+        pop.style.width = '200px';
+        pop.dataset.visible = "true";
+        let x = Math.min(targetX, window.innerWidth - pop.offsetWidth - 10);
+        let y = Math.min(targetY, window.innerHeight - pop.offsetHeight);
+        pop.style.left = `${x}px`;
+        pop.style.top = `${y}px`;
+        pop.style.width = '';
+    }
+}
+
+function hidePopoverHover(id) {
+    let pop = getRequiredElementById(`popover_${id}`);
+    if (pop.dataset.visible == "true") {
+        pop.classList.remove('sui-popover-visible');
+        pop.dataset.visible = "false";
+    }
+}
+
+function getPopoverElemsFor(id, popover_button) {
+    if (!popover_button) {
+        return ['', ''];
+    }
+    let settingElem = document.getElementById('usersettings_hintformat');
+    let format = 'BUTTON';
+    if (settingElem) {
+        format = settingElem.value;
+    }
+    if (format == 'BUTTON') {
+        return [`<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>`, ''];
+    }
+    else if (format == 'HOVER') {
+        return ['', ` onmouseover="doPopoverHover('${id}')" onmouseout="hidePopoverHover('${id}')"`];
+    }
+    return ['', ''];
+}
+
 function makeSliderInput(featureid, id, name, description, value, min, max, view_max = 0, step = 1, isPot = false, toggles = false, popover_button = true) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let rangeVal = isPot ? potToLinear(value, max, min, step) : value;
-    let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
+    let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
+    featureid += featureid2;
     return `
     <div class="slider-auto-container">
     <div class="auto-input auto-slider-box"${featureid}>
@@ -375,7 +420,8 @@ function makeSliderInput(featureid, id, name, description, value, min, max, view
 function makeNumberInput(featureid, id, name, description, value, min, max, step = 1, format = 'big', toggles = false, popover_button = true) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
-    let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
+    let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
+    featureid += featureid2;
     if (format == 'seed') {
         return `
             <div class="auto-input auto-number-box auto-input-flex"${featureid}>
@@ -397,7 +443,8 @@ function makeTextInput(featureid, id, name, description, value, isPrompt, placeh
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let onInp = isPrompt ? ' oninput="textPromptInputHandle(this)"' : '';
     let tokenCounter = isPrompt ? '<span class="auto-input-prompt-tokencount" title="Text-Encoder token count / chunk-size">0/75</span>' : '';
-    let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
+    let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
+    featureid += featureid2;
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-text-box${(isPrompt ? "" : " auto-input-flex")}"${featureid}>
@@ -413,7 +460,8 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let checked = `${value}` == "true" ? ' checked="true"' : '';
-    let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
+    let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
+    featureid += featureid2;
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-checkbox-box auto-input-flex"${featureid}>
@@ -425,7 +473,8 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
 function makeDropdownInput(featureid, id, name, description, values, defaultVal, toggles = false, popover_button = true) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
-    let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
+    let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
+    featureid += featureid2;
     let html = `
     <div class="auto-input auto-dropdown-box auto-input-flex"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
@@ -443,7 +492,8 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
 function makeMultiselectInput(featureid, id, name, description, values, defaultVal, placeholder, toggles = false, popover_button = true) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
-    let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
+    let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
+    featureid += featureid2;
     let html = `
     <div class="auto-input auto-dropdown-box"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
@@ -461,7 +511,8 @@ function makeMultiselectInput(featureid, id, name, description, values, defaultV
 function makeImageInput(featureid, id, name, description, toggles = false, popover_button = true) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
-    let popover = popover_button ? `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>` : '';
+    let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
+    featureid += featureid2;
     let html = `
     <div class="auto-input auto-file-box"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>

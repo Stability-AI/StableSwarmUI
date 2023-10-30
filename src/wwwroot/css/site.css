@@ -67,6 +67,9 @@ body {
     max-height: 10rem;
     margin: auto;
 }
+.auto-checkbox {
+    margin-left: 0.2rem;
+}
 .backend_add_button_container {
     margin: 0.5rem;
 }
@@ -335,13 +338,20 @@ textarea, input, select {
     border: 1px solid gray;
     border-radius: 0.5rem;
     padding: 0.5rem;
-    display: none;
+    visibility: hidden;
+    opacity: 0;
     position: fixed;
     left: 0;
     top: 0;
     width: fit-content;
     z-index: 1000;
     white-space: pre-wrap;
+    transition: visibility 0s, opacity 0.5s linear;
+}
+.sui-popover-visible {
+    visibility: visible;
+    opacity: 1;
+    transition: visibility 0s, opacity 0.5s linear;
 }
 .auto-slider-toggle {
     position: relative;

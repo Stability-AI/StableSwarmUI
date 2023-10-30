@@ -613,7 +613,7 @@ function doPopHideCleanup(target) {
         if (pop.contains(target) && !target.classList.contains('sui_popover_model_button')) {
             continue;
         }
-        pop.style.display = 'none';
+        pop.classList.remove('sui-popover-visible');
         pop.dataset.visible = "false";
         popHide.splice(x, 1);
     }
@@ -641,7 +641,7 @@ document.addEventListener('click', (e) => {
 function hidePopover(id) {
     let pop = getRequiredElementById(`popover_${id}`);
     if (pop.dataset.visible == "true") {
-        pop.style.display = 'none';
+        pop.classList.remove('sui-popover-visible');
         pop.dataset.visible = "false";
         popHide.splice(popHide.indexOf(id), 1);
     }
@@ -653,7 +653,7 @@ function showPopover(id, targetX = mouseX, targetY = mouseY) {
     if (pop.dataset.visible == "true") {
         hidePopover(id); // Hide to reset before showing again.
     }
-    pop.style.display = 'block';
+    pop.classList.add('sui-popover-visible');
     pop.style.width = '200px';
     pop.dataset.visible = "true";
     let x = Math.min(targetX, window.innerWidth - pop.offsetWidth - 10);

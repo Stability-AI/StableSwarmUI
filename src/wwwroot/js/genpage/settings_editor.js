@@ -12,7 +12,6 @@ let serverSettingsData = {
 };
 
 function buildSettingsMenu(container, data, prefix, tracker) {
-    container.innerHTML = '';
     let content = '';
     let runnables = [];
     let keys = [];
@@ -104,6 +103,8 @@ function loadUserSettings(callback = null) {
     genericRequest('GetUserSettings', {}, data => {
         buildSettingsMenu(userSettingsContainer, data.settings, 'usersettings_', userSettingsData);
         applyThemeSetting(data.themes);
+        // Build a second time to self-apply settings
+        buildSettingsMenu(userSettingsContainer, data.settings, 'usersettings_', userSettingsData);
         if (callback) {
             callback();
         }
@@ -126,6 +127,7 @@ function loadSettingsEditor() {
             inputBatchSize.value = 1;
             triggerChangeFor(inputBatchSize);
         }
+        genInputs(true);
     });
 }
 

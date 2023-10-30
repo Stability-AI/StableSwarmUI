@@ -180,6 +180,15 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("If enabled, batch size will be reset to 1 when parameters are loaded.\nThis can prevent accidents that might thrash your GPU or cause compatibility issues, especially for example when importing a comfy workflow.\nYou can still set the batch size at will in the GUI.")]
         public bool ResetBatchSizeToOne = false;
+
+        public enum HintFormatOptions
+        {
+            BUTTON, HOVER, NONE
+        }
+
+        [ConfigComment("The format for parameter hints to display as.\nDefault is 'BUTTON'.")]
+        [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<HintFormatOptions>))]
+        public string HintFormat = "BUTTON";
     }
 }
 
