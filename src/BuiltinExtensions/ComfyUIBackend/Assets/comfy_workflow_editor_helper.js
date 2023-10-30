@@ -530,6 +530,8 @@ function replaceParamsToComfy() {
     });
 }
 
+let comfyInfoSpanNotice = '<b>(Using a custom ComfyUI workflow <button class="basic-button interrupt-button" onclick="comfyParamsDisable()">Disable</button>)</b>';
+
 function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
     localStorage.setItem('last_comfy_workflow_input', JSON.stringify({params, retained, paramVal}));
     let actualParams = [];
@@ -562,8 +564,12 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
     actualParams = prompt.concat(prims).concat(otherParams).concat(others);
     gen_param_types = actualParams;
     genInputs(true);
-    let area = getRequiredElementById('main_inputs_area');
-    area.innerHTML = '<button class="basic-button comfy-disable-button" onclick="comfyParamsDisable()">Disable Custom ComfyUI Workflow</button>\n' + area.innerHTML;
+    let buttonHolder = getRequiredElementById('comfy_workflow_disable_button');
+    buttonHolder.style.display = 'block';
+    if (!otherInfoSpanContent.includes(comfyInfoSpanNotice)) {
+        otherInfoSpanContent.push(comfyInfoSpanNotice);
+        updateOtherInfoSpan();
+    }
 }
 
 /**
@@ -573,6 +579,12 @@ function comfyParamsDisable() {
     localStorage.removeItem('last_comfy_workflow_input');
     gen_param_types = rawGenParamTypesFromServer;
     genInputs(true);
+    let buttonHolder = getRequiredElementById('comfy_workflow_disable_button');
+    buttonHolder.style.display = 'none';
+    if (otherInfoSpanContent.includes(comfyInfoSpanNotice)) {
+        otherInfoSpanContent.splice(otherInfoSpanContent.indexOf(comfyInfoSpanNotice), 1);
+        updateOtherInfoSpan();
+    }
 }
 
 /**

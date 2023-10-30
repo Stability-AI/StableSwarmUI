@@ -14,6 +14,13 @@ let allModels = [];
 
 let coreModelMap = {};
 
+let otherInfoSpanContent = [];
+
+function updateOtherInfoSpan() {
+    let span = getRequiredElementById('other_info_span');
+    span.innerHTML = otherInfoSpanContent.join(' ');
+}
+
 const time_started = Date.now();
 
 let statusBarElem = getRequiredElementById('top_status_bar');
