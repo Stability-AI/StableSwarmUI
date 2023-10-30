@@ -563,6 +563,9 @@ function forceSetDropdownValue(elem, val) {
         elem.value = val;
     }
     elem.dispatchEvent(new Event('change'));
+    if (elem.onchange) {
+        elem.onchange();
+    }
 }
 
 /**

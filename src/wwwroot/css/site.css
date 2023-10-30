@@ -53,6 +53,7 @@ body {
 .auto-input-flex {
     display: flex;
     flex-wrap: wrap;
+    align-items: baseline;
 }
 .auto-input-image-preview {
     width: fit-content;
