@@ -117,7 +117,7 @@ function genInputs(delay_final = false) {
     let runnables = [];
     let groupsClose = [];
     let groupsEnable = [];
-    let defaultPromptVisible = false;
+    let defaultPromptVisible = rawGenParamTypesFromServer.find(p => p.id == 'prompt').visible;
     for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => (p.visible || p.id == 'prompt') && !isParamAdvanced(p), true],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p), false],
             ['main_inputs_area_hidden', 'new_preset_modal_hidden_inputs', (p) => (!p.visible || p.id == 'prompt'), false]]) {
@@ -127,6 +127,10 @@ function genInputs(delay_final = false) {
         let html = '', presetHtml = '';
         let lastGroup = null;
         let isMain = areaData[3];
+        if (defaultPromptVisible) {
+            html += `<button class="generate-button" id="generate_button" onclick="getRequiredElementById('alt_generate_button').click()" oncontextmenu="return getRequiredElementById('alt_generate_button').oncontextmenu()">Generate</button>
+            <button class="interrupt-button legacy-interrupt interrupt-button-none" id="interrupt_button" onclick="getRequiredElementById('alt_interrupt_button').click()" oncontextmenu="return getRequiredElementById('alt_interrupt_button').oncontextmenu()">&times;</button>`;
+        }
         for (let param of gen_param_types.filter(areaData[2])) {
             let groupName = param.group ? param.group.name : null;
             if (groupName != lastGroup) {
@@ -160,11 +164,6 @@ function genInputs(delay_final = false) {
                     }
                 }
                 lastGroup = groupName;
-            }
-            if (param.id == 'prompt' && param.visible && isMain) {
-                defaultPromptVisible = true;
-                html += `<button class="generate-button" id="generate_button" onclick="getRequiredElementById('alt_generate_button').click()" oncontextmenu="return getRequiredElementById('alt_generate_button').oncontextmenu()">Generate</button>
-                <button class="interrupt-button legacy-interrupt interrupt-button-none" id="interrupt_button" onclick="getRequiredElementById('alt_interrupt_button').click()" oncontextmenu="return getRequiredElementById('alt_interrupt_button').oncontextmenu()">&times;</button>`;
             }
             if (param.id == 'prompt' ? param.visible == isMain : true) {
                 let newData = getHtmlForParam(param, "input_");

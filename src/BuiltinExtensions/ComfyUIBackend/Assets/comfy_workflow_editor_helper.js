@@ -530,7 +530,7 @@ function replaceParamsToComfy() {
     });
 }
 
-let comfyInfoSpanNotice = '<b>(Using a custom ComfyUI workflow <button class="basic-button interrupt-button" onclick="comfyParamsDisable()">Disable</button>)</b>';
+let comfyInfoSpanNotice = '<b>(Custom Comfy Workflow <button class="basic-button interrupt-button" onclick="comfyParamsDisable()">Disable</button>)</b>';
 
 function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
     localStorage.setItem('last_comfy_workflow_input', JSON.stringify({params, retained, paramVal}));
