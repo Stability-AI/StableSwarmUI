@@ -178,6 +178,7 @@ body {
 .current-image-extras-wrapper {
     min-width: 20rem;
     vertical-align: top;
+    margin-left: 0.5rem;
 }
 .batch-gear-button {
     height: 1.4rem;
