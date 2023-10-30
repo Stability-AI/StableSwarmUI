@@ -368,6 +368,9 @@ function comfyBuildParams(callback) {
                         type = 'dropdown';
                         values = ['enable', 'disable'];
                     }
+                    else if (node.class_type == 'SwarmLoadImageB64' || node.class_type == 'LoadImage') {
+                        type = 'image';
+                    }
                     else {
                         if (paramDataRaw && paramDataRaw.length == 1 && paramDataRaw[0].length > 1) {
                             type = 'dropdown';
@@ -479,6 +482,9 @@ function comfyBuildParams(callback) {
                 continue;
             }
             for (let inputId of Object.keys(node.inputs)) {
+                if (inputId == 'choose file to upload' || inputId == 'image_upload') {
+                    continue;
+                }
                 let val = node.inputs[inputId];
                 if (`${val}`.startsWith('${') || `${val}`.startsWith('%%_COMFYFIXME_${')) {
                     continue;

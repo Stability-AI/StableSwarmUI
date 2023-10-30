@@ -471,6 +471,12 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         {
             void TryApply(string key, Image img, bool resize)
             {
+                Image fixedImage = resize ? img.Resize(user_input.Get(T2IParamTypes.Width), user_input.GetImageHeight()) : img;
+                if (key.Contains("swarmloadimageb"))
+                {
+                    user_input.ValuesInput[key] = fixedImage;
+                    return;
+                }
                 int index = workflow.IndexOf("${" + key);
                 while (index != -1)
                 {
@@ -483,7 +489,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     Logs.Debug($"Uploading image for '{key}' to Comfy server's file folder... are you missing the Swarm-Comfy nodes?");
                     int id = Interlocked.Increment(ref ImageIDDedup);
                     string fname = $"init_image_sui_backend_{BackendData.ID}_{id}.png";
-                    Image fixedImage = resize ? img.Resize(user_input.Get(T2IParamTypes.Width), user_input.GetImageHeight()) : img;
                     MultipartFormDataContent content = new()
                     {
                         { new ByteArrayContent(fixedImage.ImageData), "image", fname },
