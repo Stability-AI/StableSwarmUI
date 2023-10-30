@@ -353,6 +353,14 @@ function load_image_file(e) {
     }
 }
 
+function autoSelectWidth(elem) {
+    let span = document.createElement('span');
+    span.innerText = elem.value;
+    document.body.appendChild(span);
+    elem.style.width = `${span.offsetWidth + 30}px`;
+    span.remove();
+}
+
 function makeGenericPopover(id, name, type, description, example) {
     return `<div class="sui-popover" id="popover_${id}"><b>${escapeHtml(name)}</b> (${type}):<br>&emsp;${escapeHtml(description)}${example}</div>`;
 }
@@ -478,7 +486,7 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
     let html = `
     <div class="auto-input auto-dropdown-box auto-input-flex"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
-        <select class="auto-dropdown" id="${id}" autocomplete="false">`;
+        <select class="auto-dropdown" id="${id}" autocomplete="false" onchange="autoSelectWidth(this)">`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
         html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
