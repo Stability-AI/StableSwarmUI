@@ -357,7 +357,8 @@ function autoSelectWidth(elem) {
     let span = document.createElement('span');
     span.innerText = elem.value;
     document.body.appendChild(span);
-    elem.style.width = `${span.offsetWidth + 30}px`;
+    let width = Math.max(50, span.offsetWidth + 30);
+    elem.style.width = `${width}px`;
     span.remove();
 }
 

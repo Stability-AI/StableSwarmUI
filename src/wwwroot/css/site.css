@@ -346,12 +346,12 @@ textarea, input, select {
     width: fit-content;
     z-index: 1000;
     white-space: pre-wrap;
-    transition: visibility 0s, opacity 0.5s linear;
+    transition: visibility 0s, opacity 0.3s linear;
 }
 .sui-popover-visible {
     visibility: visible;
     opacity: 1;
-    transition: visibility 0s, opacity 0.5s linear;
+    transition: visibility 0s, opacity 0.3s linear;
 }
 .auto-slider-toggle {
     position: relative;

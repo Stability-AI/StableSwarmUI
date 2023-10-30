@@ -172,9 +172,22 @@ class ModelBrowserWrapper {
                 makeWSRequestT2I('SelectModelWS', {'model': model.data.name}, data => {
                     this.browser.navigate(lastModelDir);
                 });
+            };
+            let buttonRefiner = () => {
+                let refinerInput = document.getElementById('input_refinermodel');
+                if (!refinerInput) {
+                    return;
+                }
+                forceSetDropdownValue(refinerInput, model.data.name);
+                let toggler = document.getElementById('input_group_content_refiner_toggle');
+                if (toggler && !toggler.checked) {
+                    toggler.click();
+                    toggleGroupOpen(toggler, true);
+                }
             }
             buttons = [
-                { label: 'Load Now', onclick: buttonLoad }
+                { label: 'Load Now', onclick: buttonLoad },
+                { label: 'Set as Refiner', onclick: buttonRefiner }
             ];
         }
         let name = cleanModelName(model.data.name);
