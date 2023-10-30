@@ -222,11 +222,11 @@ public class ComfyUIBackendExtension : Extension
             Clean: ((_, val) => CustomWorkflows.ContainsKey(val) ? $"PARSED%{val}%{ReadCustomWorkflow(val)["prompt"]}" : val),
             MetadataFormat: v => v.StartsWith("PARSED%") ? v.After("%").Before("%") : v
             ));
-        SamplerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Sampler", "Sampler type (for ComfyUI)",
+        SamplerParam = T2IParamTypes.Register<string>(new("Sampler", "Sampler type (for ComfyUI)",
             "euler", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup,
             GetValues: (_) => Samplers
             ));
-        SchedulerParam = T2IParamTypes.Register<string>(new("[ComfyUI] Scheduler", "Scheduler type (for ComfyUI)",
+        SchedulerParam = T2IParamTypes.Register<string>(new("Scheduler", "Scheduler type (for ComfyUI)",
             "normal", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup,
             GetValues: (_) => Schedulers
             ));

@@ -458,13 +458,13 @@ function comfyBuildParams(callback) {
             }
             claimOnce('KSampler', 'seed', 'seed', true);
             claimOnce('KSampler', 'steps', 'steps', true);
-            claimOnce('KSampler', 'comfyui_sampler', 'sampler_name', false);
-            claimOnce('KSampler', 'comfyui_scheduler', 'scheduler', false);
+            claimOnce('KSampler', 'sampler', 'sampler_name', false);
+            claimOnce('KSampler', 'scheduler', 'scheduler', false);
             claimOnce('KSampler', 'cfg_scale', 'cfg', true);
             claimOnce('KSamplerAdvanced', 'seed', 'noise_seed', true);
             claimOnce('KSamplerAdvanced', 'steps', 'steps', true);
-            claimOnce('KSamplerAdvanced', 'comfyui_sampler', 'sampler_name', false);
-            claimOnce('KSamplerAdvanced', 'comfyui_scheduler', 'scheduler', false);
+            claimOnce('KSamplerAdvanced', 'sampler', 'sampler_name', false);
+            claimOnce('KSamplerAdvanced', 'scheduler', 'scheduler', false);
             claimOnce('KSamplerAdvanced', 'cfg_scale', 'cfg', true);
             claimOnce('LoadImage', 'initimage', 'image', false);
             claimOnce('SwarmLoraLoader', 'loras', 'lora_names', false);

@@ -438,8 +438,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "subseed_strength" => user_input.GetString(T2IParamTypes.VariationSeedStrength),
                     "init_image" => user_input.Get(T2IParamTypes.InitImage)?.AsBase64,
                     "init_image_strength" => user_input.GetString(T2IParamTypes.InitImageCreativity),
-                    "comfy_sampler" or "comfyui_sampler" => user_input.GetString(ComfyUIBackendExtension.SamplerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "euler" : defVal),
-                    "comfy_scheduler" or "comfyui_scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "normal" : defVal),
+                    "comfy_sampler" or "comfyui_sampler" or "sampler" => user_input.GetString(ComfyUIBackendExtension.SamplerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "euler" : defVal),
+                    "comfy_scheduler" or "comfyui_scheduler" or "scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "normal" : defVal),
                     "model" => user_input.Get(T2IParamTypes.Model).ToString(ModelFolderFormat),
                     "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
                     _ => fillDynamic()
