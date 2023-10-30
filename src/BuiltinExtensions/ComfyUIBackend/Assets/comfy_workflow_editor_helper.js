@@ -740,6 +740,18 @@ function comfyCheckPrep() {
         let {params, retained, paramVal} = JSON.parse(lastComfyWorkflowInput);
         setComfyWorkflowInput(params, retained, paramVal, false);
     }
+    metadataKeyFormatCleaners.push(key => {
+        if (key.startsWith('comfyrawworkflowinput')) {
+            key = key.substring('comfyrawworkflowinput'.length);
+            for (let type of ['decimal', 'seed', 'integer', 'string']) {
+                if (key.startsWith(type)) {
+                    key = key.substring(type.length);
+                    break;
+                }
+            }
+        }
+        return key;
+    });
 }
 
 sessionReadyCallbacks.push(comfyCheckPrep);

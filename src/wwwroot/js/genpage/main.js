@@ -73,6 +73,8 @@ function copy_current_image_params() {
     }
 }
 
+let metadataKeyFormatCleaners = [];
+
 function formatMetadata(metadata) {
     if (!metadata) {
         return '';
@@ -91,6 +93,9 @@ function formatMetadata(metadata) {
             for (let key of Object.keys(obj)) {
                 let val = obj[key];
                 if (val) {
+                    for (let cleaner of metadataKeyFormatCleaners) {
+                        key = cleaner(key);
+                    }
                     if (typeof val == 'object') {
                         result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: `;
                         appendObject(val);
