@@ -170,7 +170,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             bool isReceivingOutputs = false;
             while (true)
             {
-                byte[] output = await socket.ReceiveData(32 * 1024 * 1024, Program.GlobalProgramCancel);
+                byte[] output = await socket.ReceiveData(100 * 1024 * 1024, Program.GlobalProgramCancel);
                 if (output is not null)
                 {
                     if (Encoding.ASCII.GetString(output, 0, 8) == "{\"type\":")
