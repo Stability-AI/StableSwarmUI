@@ -6,6 +6,7 @@ using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
+using System.IO;
 using System.Net.Http;
 using System.Net.WebSockets;
 
@@ -72,11 +73,27 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         await ReviseRemoteDataList();
     }
 
-    public static void ThrowIfSessionInvalid(JObject data)
+    public static void AutoThrowException(JObject data)
     {
         if (data.TryGetValue("error_id", out JToken errorId) && errorId.ToString() == "invalid_session_id")
         {
             throw new SessionInvalidException();
+        }
+        if (data.TryGetValue("error", out JToken error))
+        {
+            string err = error.ToString();
+            if (err.StartsWith("Invalid data: "))
+            {
+                throw new InvalidDataException(err["Invalid data: ".Length..]);
+            }
+            else if (err.StartsWith("Invalid operation: "))
+            {
+                throw new InvalidOperationException(err["Invalid operation: ".Length..]);
+            }
+            else
+            {
+                throw new InvalidDataException($"Remote swarm gave error: {err}");
+            }
         }
     }
 
@@ -108,7 +125,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         await RunWithSession(async () =>
         {
             JObject backendData = await HttpClient.PostJson($"{Address}/API/ListBackends", new() { ["session_id"] = Session, ["nonreal"] = true, ["full_data"] = true });
-            ThrowIfSessionInvalid(backendData);
+            AutoThrowException(backendData);
             if (IsReal)
             {
                 List<Task> tasks = new();
@@ -350,7 +367,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                 ["backendId"] = LinkedRemoteBackendID
             };
             JObject response = await HttpClient.PostJson($"{Address}/API/SelectModel", req);
-            ThrowIfSessionInvalid(response);
+            AutoThrowException(response);
             success = response.TryGetValue("success", out JToken successTok) && successTok.Value<bool>();
         });
         if (!success)
@@ -383,7 +400,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         await RunWithSession(async () =>
         {
             JObject generated = await HttpClient.PostJson($"{Address}/API/GenerateText2Image", BuildRequest(user_input));
-            ThrowIfSessionInvalid(generated);
+            AutoThrowException(generated);
             images = generated["images"].Select(img => Image.FromDataString(img.ToString())).ToArray();
         });
         return images;
@@ -398,10 +415,19 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             await websocket.SendJson(BuildRequest(user_input), API.WebsocketTimeout);
             while (true)
             {
+                if (user_input.InterruptToken.IsCancellationRequested)
+                {
+                    // TODO: This will require separate remote sessions per-user for multiuser support
+                    HttpClient.PostJson($"{Address}/API/InterruptAll", new JObject()
+                    {
+                        ["session_id"] = Session,
+                        ["other_sessions"] = false
+                    }).Wait();
+                }
                 JObject response = await websocket.ReceiveJson(1024 * 1024 * 100, true);
                 if (response is not null)
                 {
-                    ThrowIfSessionInvalid(response);
+                    AutoThrowException(response);
                     if (response.TryGetValue("gen_progress", out JToken val) && val is JObject objVal)
                     {
                         if (objVal.ContainsKey("preview"))
