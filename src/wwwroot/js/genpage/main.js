@@ -352,6 +352,10 @@ function updateCurrentStatusDirect(data) {
     }
     let total = num_current_gens + num_models_loading + num_live_gens + num_backends_waiting;
     getRequiredElementById('alt_interrupt_button').classList.toggle('interrupt-button-none', total == 0);
+    let oldInterruptButton = document.getElementById('interrupt_button');
+    if (oldInterruptButton) {
+        oldInterruptButton.classList.toggle('interrupt-button-none', total == 0);
+    }
     let elem = getRequiredElementById('num_jobs_span');
     function autoBlock(num, text) {
         if (num == 0) {
@@ -680,6 +684,7 @@ let toolContainer = getRequiredElementById('tool_container');
 
 function genToolsList() {
     let altGenerateButton = getRequiredElementById('alt_generate_button');
+    let oldGenerateButton = document.getElementById('generate_button');
     let altGenerateButtonRawText = altGenerateButton.innerText;
     let altGenerateButtonRawOnClick = altGenerateButton.onclick;
     toolSelector.value = '';
@@ -690,6 +695,9 @@ function genToolsList() {
         }
         altGenerateButton.innerText = altGenerateButtonRawText;
         altGenerateButton.onclick = altGenerateButtonRawOnClick;
+        if (oldGenerateButton) {
+            oldGenerateButton.innerText = altGenerateButtonRawText;
+        }
         let tool = toolSelector.value;
         if (tool == '') {
             return;
@@ -700,6 +708,9 @@ function genToolsList() {
         if (override) {
             altGenerateButton.innerText = override.text;
             altGenerateButton.onclick = override.run;
+            if (oldGenerateButton) {
+                oldGenerateButton.innerText = override.text;
+            }
         }
     });
 }
@@ -974,6 +985,11 @@ function setTitles() {
     getRequiredElementById('alt_prompt_textbox').title = "Tell the AI what you want to see, then press Enter to submit.\nConsider 'a photo of a cat', or 'cartoonish drawing of an astronaut'";
     getRequiredElementById('alt_interrupt_button').title = "Interrupt current generation(s)\nRight-click for advanced options.";
     getRequiredElementById('alt_generate_button').title = "Start generating images\nRight-click for advanced options.";
+    let oldGenerateButton = document.getElementById('generate_button');
+    if (oldGenerateButton) {
+        oldGenerateButton.title = getRequiredElementById('alt_generate_button').title;
+        getRequiredElementById('interrupt_button').title = getRequiredElementById('alt_interrupt_button').title;
+    }
 }
 setTitles();
 

@@ -55,7 +55,6 @@ function getHtmlForParam(param, prefix) {
                 return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop};
             case 'image_list':
                 return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop};
-
         }
         console.log(`Cannot generate input for param ${param.id} of type ${param.type} - unknown type`);
         return null;
@@ -129,7 +128,7 @@ function genInputs(delay_final = false) {
         let html = '', presetHtml = '';
         let lastGroup = null;
         let isMain = areaData[3];
-        if (defaultPromptVisible) {
+        if (isMain && defaultPromptVisible) {
             html += `<button class="generate-button" id="generate_button" onclick="getRequiredElementById('alt_generate_button').click()" oncontextmenu="return getRequiredElementById('alt_generate_button').oncontextmenu()">Generate</button>
             <button class="interrupt-button legacy-interrupt interrupt-button-none" id="interrupt_button" onclick="getRequiredElementById('alt_interrupt_button').click()" oncontextmenu="return getRequiredElementById('alt_interrupt_button').oncontextmenu()">&times;</button>`;
         }
