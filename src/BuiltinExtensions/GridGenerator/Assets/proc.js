@@ -718,6 +718,7 @@ function makeImage(minRow = 0, doClear = true) {
     var rowData = [];
     var pad_x = 64, pad_y = 64;
     let count = 0;
+    let sizeMult = parseFloat(document.getElementById('makeimage_size').value.replaceAll('x', ''));
     for (var row of rows) {
         count++;
         if (count < minRow) {
@@ -725,8 +726,8 @@ function makeImage(minRow = 0, doClear = true) {
         }
         var images = Array.from(row.getElementsByTagName('img'));
         var real_images = images.filter(i => i.src != 'placeholder.png');
-        widest_width = Math.max(widest_width, ...real_images.map(i => i.naturalWidth));
-        var height = Math.max(...real_images.map(i => i.naturalHeight));
+        widest_width = Math.max(widest_width, ...real_images.map(i => i.naturalWidth * sizeMult));
+        var height = Math.max(...real_images.map(i => i.naturalHeight * sizeMult));
         var y = pad_y + total_height;
         if (total_height + height > 30000) { // 32,767 is max canvas size
             setTimeout(() => makeImage(count, false), 100);
@@ -861,7 +862,7 @@ function makeImage(minRow = 0, doClear = true) {
         var x = pad_x;
         for (var image of row.images) {
             if (image.src != 'placeholder.png') {
-                ctx.drawImage(image, x, row.y);
+                ctx.drawImage(image, x, row.y, image.naturalWidth * sizeMult, image.naturalHeight * sizeMult);
                 x += widest_width + 1;
             }
         }
