@@ -33,6 +33,7 @@ public class AutoWebUISelfStartBackend : AutoWebUIAPIAbstractBackend
     public override async Task Init()
     {
         AutoWebUISelfStartSettings settings = SettingsRaw as AutoWebUISelfStartSettings;
+        settings.StartScript = settings.StartScript.Trim(' ', '"', '\'', '\n', '\r', '\t');
         if (settings.StartScript.AfterLast('/').BeforeLast('.') == "webui-user" && File.Exists(settings.StartScript))
         {
             if (settings.StartScript.EndsWith(".sh")) // On Linux, webui-user.sh is not a valid launcher at all

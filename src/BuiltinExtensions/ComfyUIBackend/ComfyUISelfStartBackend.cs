@@ -127,6 +127,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 addedArgs += " --preview-method latent2rgb";
             }
         }
+        settings.StartScript = settings.StartScript.Trim(' ', '"', '\'', '\n', '\r', '\t');
         if (!settings.StartScript.EndsWith("main.py") && !string.IsNullOrWhiteSpace(settings.StartScript))
         {
             Logs.Warning($"ComfyUI start script is '{settings.StartScript}', which looks wrong - did you forget to append 'main.py' on the end?");
