@@ -320,6 +320,7 @@ public static class Utilities
         return result;
     }
 
+    /// <summary>Runs a task async with an exception check.</summary>
     public static Task RunCheckedTask(Action action)
     {
         return Task.Run(() =>

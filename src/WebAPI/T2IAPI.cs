@@ -522,7 +522,7 @@ public static class T2IAPI
             actualModel.Metadata.Tags = string.IsNullOrWhiteSpace(tags) ? null : tags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         }
         handler.ResetMetadataFrom(actualModel);
-        _ = Task.Run(() => handler.ApplyNewMetadataDirectly(actualModel));
+        _ = Utilities.RunCheckedTask(() => handler.ApplyNewMetadataDirectly(actualModel));
         return new JObject() { ["success"] = true };
     }
 
