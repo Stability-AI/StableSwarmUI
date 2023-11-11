@@ -138,7 +138,8 @@ function comfyBuildParams(callback) {
             if (node.title) {
                 labelAlterations[`${node.id}`] = node.title;
             }
-            let isRandom = node.widgets_values && node.widgets_values.includes('randomize');
+            // This is weird edge case hacking. There's a lot of weird values this key can hold for some reason.
+            let isRandom = node.widgets_values && "includes" in node.widgets_values && node.widgets_values.includes('randomize');
             if (isRandom) {
                 nodeIsRandomize[`${node.id}`] = true;
             }
@@ -614,7 +615,7 @@ function comfyNoticeMessage(message) {
 function comfySaveWorkflowNow() {
     comfyBuildParams((params, prompt_text, retained, paramVal, workflow) => {
         let name = prompt("Enter name to save workflow as:");
-        if (!name.trim()) {
+        if (!name || !name.trim()) {
             return;
         }
         comfyNoticeMessage("Saving...");
