@@ -135,7 +135,9 @@ class SwarmMaskBounds:
     FUNCTION = "get_bounds"
 
     def get_bounds(self, mask, grow):
-        sum_x = (torch.sum(mask, dim=0) != 0).to(dtype=torch.int)
+        if len(mask.shape) == 2:
+            mask = mask.unsqueeze(0)
+        sum_x = (torch.sum(mask, dim=2) != 0).to(dtype=torch.int)
         sum_y = (torch.sum(mask, dim=1) != 0).to(dtype=torch.int)
         def getval(arr, direction):
             val = torch.argmax(arr).item()
@@ -143,9 +145,9 @@ class SwarmMaskBounds:
             val = max(0, min(val, arr.shape[0] - 1))
             return val
         x_start = getval(sum_x, -1)
-        x_end = mask.shape[1] - getval(sum_x.flip(0), -1)
+        x_end = mask.shape[2] - getval(sum_x.flip(0), -1)
         y_start = getval(sum_y, -1)
-        y_end = mask.shape[0] - getval(sum_y.flip(0), -1)
+        y_end = mask.shape[1] - getval(sum_y.flip(0), -1)
         return (int(x_start), int(y_start), int(x_end - x_start), int(y_end - y_start))
 
 
