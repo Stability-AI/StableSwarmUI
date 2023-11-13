@@ -283,6 +283,18 @@ function roundTo(val, step) {
 }
 
 /**
+ * Returns a string of the given value rounded to have the given max number of digits after the decimal.
+ */
+function roundToStr(val, decimals) {
+    let valStr = `${roundTo(val, 10 ** -decimals)}`;
+    let dot = valStr.indexOf('.');
+    if (dot < 0) {
+        return valStr;
+    }
+    return valStr.substring(0, dot + 1 + 2);
+}
+
+/**
  * Mini-helper for English text gen, returns "s" if num is not 1, "" otherwise.
  */
 function autoS(num) {

@@ -552,9 +552,9 @@ function describeAspectRatio(width, height) {
         }
     }
     if (wh > 1) {
-        return `${roundTo(wh, 0.01)}:1`;
+        return `${roundToStr(wh, 2)}:1`;
     }
-    return `1:${roundTo(hw, 0.01)}`;
+    return `1:${roundToStr(hw, 2)}`;
 }
 
 function quickAppendButton(div, name, func) {

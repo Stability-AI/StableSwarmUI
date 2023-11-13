@@ -301,7 +301,7 @@ function appendImage(container, imageSrc, batchId, textPreview, metadata = '', t
     img.addEventListener('load', () => {
         let ratio = img.naturalWidth / img.naturalHeight;
         if (batchId != "folder") {
-            div.style.width = `calc(${roundTo(ratio * 10, 0.01)}rem + 2px)`;
+            div.style.width = `calc(${roundToStr(ratio * 10, 2)}rem + 2px)`;
         }
     });
     img.src = imageSrc;
