@@ -110,6 +110,18 @@ public class WorkflowGenerator
         }, -8);
         AddModelGenStep(g =>
         {
+            if (g.UserInput.TryGet(T2IParamTypes.ClipStopAtLayer, out int layer))
+            {
+                string clipSkip = g.CreateNode("CLIPSetLastLayer", new JObject()
+                {
+                    ["clip"] = g.LoadingClip,
+                    ["stop_at_clip_layer"] = layer
+                });
+                g.LoadingClip = new() { $"{clipSkip}", 0 };
+            }
+        }, -6);
+        AddModelGenStep(g =>
+        {
             if (g.UserInput.Get(T2IParamTypes.SeamlessTileable))
             {
                 string tiling = g.CreateNode("SwarmModelTiling", new JObject()
@@ -118,7 +130,7 @@ public class WorkflowGenerator
                 });
                 g.LoadingModel = new() { $"{tiling}", 0 };
             }
-        }, -6);
+        }, -5);
         AddModelGenStep(g =>
         {
             if (ComfyUIBackendExtension.FeaturesSupported.Contains("aitemplate") && g.UserInput.Get(ComfyUIBackendExtension.AITemplateParam))
