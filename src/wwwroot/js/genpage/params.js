@@ -464,6 +464,9 @@ function refreshParameterValues(callback = null) {
                 origParam.values = param.values;
             }
         }
+        genericRequest('ListT2IParams', {}, data => {
+            updateAllModels(data.models);
+        });
         let promises = [Promise.resolve(true)];
         for (let extra of refreshParamsExtra) {
             let promise = extra();

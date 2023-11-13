@@ -966,6 +966,7 @@ function updateAllModels(models) {
     coreModelMap = models;
     allModels = models['Stable-Diffusion'];
     let selector = getRequiredElementById('current_model');
+    let selectorVal = selector.value;
     selector.innerHTML = '';
     let emptyOption = document.createElement('option');
     emptyOption.value = '';
@@ -977,6 +978,7 @@ function updateAllModels(models) {
         option.innerText = model;
         selector.appendChild(option);
     }
+    selector.value = selectorVal;
     pickle2safetensor_load();
 }
 
