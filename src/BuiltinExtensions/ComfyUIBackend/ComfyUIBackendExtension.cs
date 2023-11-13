@@ -9,6 +9,7 @@ using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Xml.Linq;
@@ -317,6 +318,81 @@ public class ComfyUIBackendExtension : Extension
         WebServer.WebApp.Map("/ComfyBackendDirect/{*Path}", ComfyBackendDirectHandler);
     }
 
+    public static IEnumerable<(HttpClient, string, AbstractT2IBackend)> ComfyBackendsDirect()
+    {
+        foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends)
+        {
+            yield return (backend.HttpClient, backend.Address, backend);
+        }
+        foreach (SwarmSwarmBackend swarmBackend in Program.Backends.RunningBackendsOfType<SwarmSwarmBackend>().Where(b => b.RemoteBackendTypes.Any(b => b.StartsWith("comfyui_"))))
+        {
+            yield return (swarmBackend.HttpClient, $"{swarmBackend.Settings.Address}/ComfyBackendDirect", swarmBackend);
+        }
+    }
+
+    public class ComfyUser
+    {
+        public ConcurrentDictionary<ComfyClientData, ComfyClientData> Clients = new();
+
+        public string MasterSID;
+
+        public int TotalQueue => Clients.Values.Sum(c => c.QueueRemaining);
+
+        public SemaphoreSlim Lock = new(1, 1);
+    }
+
+    public class ComfyClientData
+    {
+        public ClientWebSocket Socket;
+
+        public string SID;
+
+        public volatile int QueueRemaining;
+
+        public string LastNode;
+
+        public JObject LastExecuting, LastProgress;
+
+        public string Address;
+
+        public AbstractT2IBackend Backend;
+
+        public static HashSet<string> ModelNameInputNames = new() { "ckpt_name", "vae_name", "lora_name", "clip_name", "control_net_name", "style_model_name", "model_path", "lora_names" };
+
+        public void FixUpPrompt(JObject prompt)
+        {
+            bool isBackSlash = Backend.SupportedFeatures.Contains("folderbackslash");
+            Logs.Debug($"Has remote {Backend.SupportedFeatures.JoinString(", ")}");
+            foreach (JProperty node in prompt.Properties())
+            {
+                //string classType = node["class_type"]?.ToString();
+                JObject inputs = node.Value["inputs"] as JObject;
+                if (inputs is not null)
+                {
+                    foreach (JProperty input in inputs.Properties())
+                    {
+                        if (ModelNameInputNames.Contains(input.Name) && input.Value.Type == JTokenType.String)
+                        {
+                            string val = input.Value.ToString();
+                            if (isBackSlash)
+                            {
+                                val = val.Replace("/", "\\");
+                            }
+                            else
+                            {
+                                val = val.Replace("\\", "/");
+                            }
+                            input.Value = val;
+                            Logs.Debug($"Fixed up prompt input {input.Name} to {val}.");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public ConcurrentDictionary<string, ComfyUser> Users = new();
+
     /// <summary>Web route for viewing output images. This just works as a simple proxy.</summary>
     public async Task ComfyBackendDirectHandler(HttpContext context)
     {
@@ -324,31 +400,19 @@ public class ComfyUIBackendExtension : Extension
         {
             return;
         }
-        HttpClient client;
-        string address;
-        ComfyUIAPIAbstractBackend backend = RunningComfyBackends.FirstOrDefault();
-        if (backend is null)
+        List<(HttpClient, string, AbstractT2IBackend)> allBackends = ComfyBackendsDirect().ToList();
+        (HttpClient webClient, string address, AbstractT2IBackend backend) = allBackends.FirstOrDefault();
+        if (webClient is null)
         {
-            SwarmSwarmBackend altBack = Program.Backends.T2IBackends.Values.Select(b => b.Backend as SwarmSwarmBackend)
-                .Where(b => b is not null && b.Status == BackendStatus.RUNNING && b.RemoteBackendTypes.Any(b => b.StartsWith("comfyui_"))).FirstOrDefault();
-            if (altBack is not null)
-            {
-                client = altBack.HttpClient;
-                address = $"{altBack.Settings.Address}/ComfyBackendDirect";
-            }
-            else
-            {
-                context.Response.ContentType = "text/html";
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsync("<!DOCTYPE html><html><head><stylesheet>body{background-color:#101010;color:#eeeeee;}</stylesheet></head><body><span class=\"comfy-failed-to-load\">No ComfyUI backend available, loading failed.</span></body></html>");
-                await context.Response.CompleteAsync();
-                return;
-            }
+            context.Response.ContentType = "text/html";
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsync("<!DOCTYPE html><html><head><stylesheet>body{background-color:#101010;color:#eeeeee;}</stylesheet></head><body><span class=\"comfy-failed-to-load\">No ComfyUI backend available, loading failed.</span></body></html>");
+            await context.Response.CompleteAsync();
+            return;
         }
-        else
+        if (!context.Request.Cookies.TryGetValue("comfy_domulti", out string doMultiStr) || doMultiStr != "true")
         {
-            client = backend.HttpClient;
-            address = backend.Address;
+            allBackends = new() { (webClient, address, backend) };
         }
         string path = context.Request.Path.Value;
         path = path.After("/ComfyBackendDirect");
@@ -363,12 +427,125 @@ public class ComfyUIBackendExtension : Extension
         if (context.WebSockets.IsWebSocketRequest)
         {
             WebSocket socket = await context.WebSockets.AcceptWebSocketAsync();
-            ClientWebSocket outSocket = new();
-            outSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
-            string scheme = address.BeforeAndAfter("://", out string addr);
-            scheme = scheme == "http" ? "ws" : "wss";
-            await outSocket.ConnectAsync(new Uri($"{scheme}://{addr}/{path}"), Program.GlobalProgramCancel);
-            Task a = Task.Run(async () =>
+            List<Task> tasks = new();
+            ComfyUser user = new();
+            foreach ((_, string addressLocal, AbstractT2IBackend backendLocal) in allBackends)
+            {
+                string scheme = addressLocal.BeforeAndAfter("://", out string addr);
+                scheme = scheme == "http" ? "ws" : "wss";
+                ClientWebSocket outSocket = new();
+                outSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
+                await outSocket.ConnectAsync(new Uri($"{scheme}://{addr}/{path}"), Program.GlobalProgramCancel);
+                ComfyClientData client = new() { Address = addressLocal, Backend = backendLocal };
+                user.Clients.TryAdd(client, client);
+                tasks.Add(Task.Run(async () =>
+                {
+                    try
+                    {
+                        byte[] recvBuf = new byte[10 * 1024 * 1024];
+                        while (true)
+                        {
+                            WebSocketReceiveResult received = await outSocket.ReceiveAsync(recvBuf, Program.GlobalProgramCancel);
+                            if (received.MessageType != WebSocketMessageType.Close)
+                            {
+                                Memory<byte> toSend = recvBuf.AsMemory(0, received.Count);
+                                bool isJson = received.MessageType == WebSocketMessageType.Text && received.EndOfMessage && received.Count < 8192 * 10 && recvBuf[0] == '{';
+                                if (isJson)
+                                {
+                                    try
+                                    {
+                                        JObject parsed = StringConversionHelper.UTF8Encoding.GetString(recvBuf[0..received.Count]).ParseToJson();
+                                        JToken typeTok = parsed["type"];
+                                        if (typeTok is not null)
+                                        {
+                                            string type = typeTok.ToString();
+                                            if (type == "executing")
+                                            {
+                                                client.LastExecuting = parsed;
+                                            }
+                                            else if (type == "progress")
+                                            {
+                                                client.LastProgress = parsed;
+                                            }
+                                        }
+                                        JToken dataTok = parsed["data"];
+                                        if (dataTok is JObject dataObj)
+                                        {
+                                            if (dataObj.TryGetValue("sid", out JToken sidTok))
+                                            {
+                                                if (client.SID is not null)
+                                                {
+                                                    Users.TryRemove(client.SID, out _);
+                                                }
+                                                client.SID = sidTok.ToString();
+                                                Users.TryAdd(client.SID, user);
+                                                if (user.MasterSID is null)
+                                                {
+                                                    user.MasterSID = client.SID;
+                                                }
+                                                else
+                                                {
+                                                    parsed["data"]["sid"] = user.MasterSID;
+                                                    toSend = Encoding.UTF8.GetBytes(parsed.ToString());
+                                                }
+                                            }
+                                            if (dataObj.TryGetValue("node", out JToken nodeTok))
+                                            {
+                                                client.LastNode = nodeTok.ToString();
+                                            }
+                                            JToken queueRemTok = dataObj["status"]?["exec_info"]?["queue_remaining"];
+                                            if (queueRemTok is not null)
+                                            {
+                                                client.QueueRemaining = queueRemTok.Value<int>();
+                                                dataObj["status"]["exec_info"]["queue_remaining"] = user.TotalQueue;
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logs.Error($"Failed to parse ComfyUI message: {ex}");
+                                    }
+                                }
+                                await user.Lock.WaitAsync();
+                                try
+                                {
+                                    if (!isJson)
+                                    {
+                                        if (client.LastExecuting is not null)
+                                        {
+                                            await socket.SendAsync(StringConversionHelper.UTF8Encoding.GetBytes(client.LastExecuting.ToString()), WebSocketMessageType.Text, true, Program.GlobalProgramCancel);
+                                        }
+                                        if (client.LastProgress is not null)
+                                        {
+                                            await socket.SendAsync(StringConversionHelper.UTF8Encoding.GetBytes(client.LastProgress.ToString()), WebSocketMessageType.Text, true, Program.GlobalProgramCancel);
+                                        }
+                                    }
+                                    await socket.SendAsync(toSend, received.MessageType, received.EndOfMessage, Program.GlobalProgramCancel);
+                                }
+                                finally
+                                {
+                                    user.Lock.Release();
+                                }
+                            }
+                            if (socket.CloseStatus.HasValue)
+                            {
+                                await socket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, Program.GlobalProgramCancel);
+                                return;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logs.Debug($"ComfyUI redirection failed: {ex}");
+                    }
+                    finally
+                    {
+                        Users.TryRemove(client.SID, out _);
+                        user.Clients.TryRemove(client, out _);
+                    }
+                }));
+            }
+            tasks.Add(Task.Run(async () =>
             {
                 try
                 {
@@ -377,38 +554,17 @@ public class ComfyUIBackendExtension : Extension
                     {
                         // TODO: Should this input be allowed to remain open forever? Need a timeout, but the ComfyUI websocket doesn't seem to keepalive properly.
                         WebSocketReceiveResult received = await socket.ReceiveAsync(recvBuf, Program.GlobalProgramCancel);
-                        if (received.MessageType != WebSocketMessageType.Close)
+                        foreach (ComfyClientData client in user.Clients.Values)
                         {
-                            await outSocket.SendAsync(recvBuf.AsMemory(0, received.Count), received.MessageType, received.EndOfMessage, Program.GlobalProgramCancel);
-                        }
-                        if (socket.CloseStatus.HasValue)
-                        {
-                            await outSocket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, Program.GlobalProgramCancel);
-                            return;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logs.Debug($"ComfyUI redirection failed: {ex}");
-                }
-            });
-            Task b = Task.Run(async () =>
-            {
-                try
-                {
-                    byte[] recvBuf = new byte[10 * 1024 * 1024];
-                    while (true)
-                    {
-                        WebSocketReceiveResult received = await outSocket.ReceiveAsync(recvBuf, Program.GlobalProgramCancel);
-                        if (received.MessageType != WebSocketMessageType.Close)
-                        {
-                            await socket.SendAsync(recvBuf.AsMemory(0, received.Count), received.MessageType, received.EndOfMessage, Program.GlobalProgramCancel);
-                        }
-                        if (socket.CloseStatus.HasValue)
-                        {
-                            await socket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, Program.GlobalProgramCancel);
-                            return;
+                            if (received.MessageType != WebSocketMessageType.Close)
+                            {
+                                await client.Socket.SendAsync(recvBuf.AsMemory(0, received.Count), received.MessageType, received.EndOfMessage, Program.GlobalProgramCancel);
+                            }
+                            if (socket.CloseStatus.HasValue)
+                            {
+                                await client.Socket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, Program.GlobalProgramCancel);
+                                return;
+                            }
                         }
                     }
                 }
@@ -416,21 +572,73 @@ public class ComfyUIBackendExtension : Extension
                 {
                     Logs.Debug($"ComfyUI redirection failed: {ex}");
                 }
-            });
-            await Task.WhenAll(a, b);
+                finally
+                {
+                    Users.TryRemove(user.MasterSID, out _);
+                }
+            }));
+            await Task.WhenAll(tasks);
             return;
         }
         // This code is utterly silly, but it's incredibly fragile, don't touch without significant testing
         HttpResponseMessage response;
         if (context.Request.Method == "POST")
         {
-            HttpRequestMessage request = new(new HttpMethod("POST"), $"{address}/{path}") { Content = new StreamContent(context.Request.Body) };
-            request.Content.Headers.Add("Content-Type", context.Request.ContentType);
-            response = await client.SendAsync(request);
+            HttpContent content = null;
+            if (path == "prompt")
+            {
+                try
+                {
+                    using MemoryStream memStream = new();
+                    await context.Request.Body.CopyToAsync(memStream);
+                    byte[] data = memStream.ToArray();
+                    JObject parsed = StringConversionHelper.UTF8Encoding.GetString(data).ParseToJson();
+                    if (parsed.TryGetValue("client_id", out JToken clientIdTok))
+                    {
+                        string sid = clientIdTok.ToString();
+                        if (Users.TryGetValue(sid, out ComfyUser user))
+                        {
+                            ComfyClientData client = user.Clients.Values.MinBy(c => c.QueueRemaining);
+                            if (client?.SID is not null)
+                            {
+                                client.QueueRemaining++;
+                                address = client.Address;
+                                parsed["client_id"] = client.SID;
+                                client.FixUpPrompt(parsed["prompt"] as JObject);
+                                content = Utilities.JSONContent(parsed);
+                                Logs.Debug($"Send prompt to comfy {client.Address} for {sid} (queue: {client.QueueRemaining})");
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logs.Debug($"ComfyUI redirection failed - prompt json parse: {ex}");
+                }
+            }
+            HttpRequestMessage request = new(new HttpMethod("POST"), $"{address}/{path}") { Content = content ?? new StreamContent(context.Request.Body) };
+            if (content is null)
+            {
+                request.Content.Headers.Add("Content-Type", context.Request.ContentType);
+            }
+            response = await webClient.SendAsync(request);
         }
         else
         {
-            response = await client.SendAsync(new(new(context.Request.Method), $"{address}/{path}"));
+            if (path.StartsWith("view?filename="))
+            {
+                List<Task<HttpResponseMessage>> requests = new();
+                foreach ((HttpClient clientLocal, string addressLocal, AbstractT2IBackend backendLocal) in allBackends)
+                {
+                    requests.Add(clientLocal.SendAsync(new(new(context.Request.Method), $"{addressLocal}/{path}")));
+                }
+                await Task.WhenAll(requests);
+                response = requests.Select(r => r.Result).FirstOrDefault(r => r.StatusCode == HttpStatusCode.OK) ?? requests.First().Result;
+            }
+            else
+            {
+                response = await webClient.SendAsync(new(new(context.Request.Method), $"{address}/{path}"));
+            }
         }
         int code = (int)response.StatusCode;
         if (code != 200)

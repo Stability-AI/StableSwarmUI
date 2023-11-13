@@ -73,6 +73,16 @@
     margin: 0;
     float: right;
 }
+.comfy_multigpu {
+    font-size: 80%;
+}
+.comfy_multigpu select {
+    border: none;
+    padding: 0;
+    margin: 0;
+    float: left;
+    margin-left: 1rem;
+}
 .comfy-disable-button {
     margin: auto;
     display: block;

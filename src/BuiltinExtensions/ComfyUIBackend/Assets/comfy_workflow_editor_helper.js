@@ -717,6 +717,22 @@ function comfyQuickloadSelectChanged() {
     selector.selectedIndex = 0;
 }
 
+/** Triggered when the multi-GPU selector changes, to change the setting. */
+function comfyMultiGPUSelectChanged() {
+    let multiGpuSelector = getRequiredElementById('comfy_multigpu_select');
+    if (multiGpuSelector.value == 'all') {
+        setCookie('comfy_domulti', 'true', 365);
+    }
+    else if (multiGpuSelector.value == 'none') {
+        deleteCookie('comfy_domulti');
+    }
+    multiGpuSelector.selectedIndex = 0;
+    let container = getRequiredElementById('comfy_workflow_frameholder');
+    container.innerHTML = '';
+    hasComfyLoaded = false;
+    comfyTryToLoad();
+}
+
 /** Button to get the buttons out of the way. */
 function comfyToggleButtonsVisible() {
     let button = getRequiredElementById('comfy_buttons_closer');
