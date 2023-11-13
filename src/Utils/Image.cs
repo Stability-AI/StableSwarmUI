@@ -170,7 +170,13 @@ public class Image
     {
         try
         {
-            if (ToIS.Metadata?.ExifProfile?.TryGetValue(ExifTag.Model, out var data) ?? false)
+            ISImage img = ToIS;
+            string pngMetadata = img.Metadata?.GetPngMetadata()?.TextData?.FirstOrDefault(t => t.Keyword.ToLowerFast() == "prompt").Value;
+            if (pngMetadata is not null)
+            {
+                return pngMetadata;
+            }
+            if (img.Metadata?.ExifProfile?.TryGetValue(ExifTag.Model, out var data) ?? false)
             {
                 return data.Value;
             }
@@ -199,11 +205,9 @@ public class Image
         using MemoryStream ms = new();
         ISImage img = ToIS;
         img.Metadata.XmpProfile = null;
+        img.Metadata.ExifProfile = null;
         ExifProfile prof = new();
-        if (metadata is not null)
-        {
-            prof.SetValue(ExifTag.Model, metadata); // TODO: More appropriate metadata method?
-        }
+        bool useExif = false;
         if (dpi > 0)
         {
             prof.SetValue(ExifTag.XResolution, new Rational((uint)dpi, 1));
@@ -211,8 +215,21 @@ public class Image
             prof.SetValue(ExifTag.ResolutionUnit, (ushort)2);
             img.Metadata.HorizontalResolution = dpi;
             img.Metadata.VerticalResolution = dpi;
+            useExif = true;
         }
-        img.Metadata.ExifProfile = prof;
+        if (format == "PNG")
+        {
+            img.Metadata.GetPngMetadata().TextData.Add(new("prompt", metadata, null, null));
+        }
+        else
+        {
+            prof.SetValue(ExifTag.UserComment, metadata);
+            useExif = true;
+        }
+        if (useExif)
+        {
+            img.Metadata.ExifProfile = prof;
+        }
         string ext = "jpg";
         switch (format)
         {

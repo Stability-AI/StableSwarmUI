@@ -252,7 +252,7 @@ public class T2IParamInput
     public string GenRawMetadata()
     {
         JObject obj = GenMetadataObject();
-        return new JObject() { ["sui_image_params"] = obj }.ToString(Newtonsoft.Json.Formatting.Indented);
+        return new JObject() { ["sui_image_params"] = obj }.ToString(Newtonsoft.Json.Formatting.Indented).Replace("\r\n", "\n");
     }
 
     /// <summary>Special utility to process prompt inputs before the request is executed (to parse wildcards, embeddings, etc).</summary>
