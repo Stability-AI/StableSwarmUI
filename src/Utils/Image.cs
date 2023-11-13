@@ -219,7 +219,7 @@ public class Image
         }
         if (format == "PNG")
         {
-            img.Metadata.GetPngMetadata().TextData.Add(new("Parameters", metadata, null, null));
+            img.Metadata.GetPngMetadata().TextData.Add(new("parameters", metadata, null, null));
         }
         else
         {

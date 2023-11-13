@@ -1121,11 +1121,13 @@ function imageInputHandler() {
                 reader.onload = (e) => {
                     let data = e.target.result;
                     exifr.parse(data).then(parsed => {
-                        console.log(parsed);
                         let metadata = null;
                         if (parsed) {
                             if (parsed.parameters) {
                                 metadata = parsed.parameters;
+                            }
+                            else if (parsed.Parameters) {
+                                metadata = parsed.Parameters;
                             }
                             else if (parsed.prompt) {
                                 metadata = parsed.prompt;
