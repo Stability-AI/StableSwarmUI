@@ -512,12 +512,14 @@ public class ComfyUIBackendExtension : Extension
                                     }
                                     if (!isJson)
                                     {
-                                        if (client.LastExecuting is not null && client.LastExecuting != user.LastExecuting)
+                                        if (client.LastExecuting is not null && (client.LastExecuting != user.LastExecuting || client.LastProgress != user.LastProgress))
                                         {
+                                            user.LastExecuting = client.LastExecuting;
                                             await socket.SendAsync(StringConversionHelper.UTF8Encoding.GetBytes(client.LastExecuting.ToString()), WebSocketMessageType.Text, true, Program.GlobalProgramCancel);
                                         }
-                                        if (client.LastProgress is not null && client.LastProgress != user.LastProgress)
+                                        if (client.LastProgress is not null && (client.LastExecuting != user.LastExecuting || client.LastProgress != user.LastProgress))
                                         {
+                                            user.LastProgress = client.LastProgress;
                                             await socket.SendAsync(StringConversionHelper.UTF8Encoding.GetBytes(client.LastProgress.ToString()), WebSocketMessageType.Text, true, Program.GlobalProgramCancel);
                                         }
                                     }
