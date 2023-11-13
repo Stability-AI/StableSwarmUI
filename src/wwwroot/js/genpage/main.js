@@ -1053,6 +1053,122 @@ function revisionInputHandler() {
 }
 revisionInputHandler();
 
+function upvertAutoWebuiMetadataToSwarm(lines) {
+    let realData = {};
+    realData['prompt'] = lines[0];
+    if (lines.length == 3) {
+        realData['negativeprompt'] = lines[1];
+    }
+    let dataParts = lines[lines.length - 1].split(',').map(x => x.split(':').map(y => y.trim()));
+    for (let part of dataParts) {
+        if (part.length == 2) {
+            let clean = cleanParamName(part[0]);
+            if (rawGenParamTypesFromServer.find(x => x.id == clean)) {
+                realData[clean] = part[1];
+            }
+            else if (clean == "size") {
+                let sizeParts = part[1].split('x').map(x => parseInt(x));
+                if (sizeParts.length == 2) {
+                    realData['width'] = sizeParts[0];
+                    realData['height'] = sizeParts[1];
+                }
+            }
+            else {
+                realData[part[0]] = part[1];
+            }
+        }
+    }
+    return JSON.stringify({ 'sui_image_params': realData });
+}
+
+let fooocusMetadataMap = [
+    ['Prompt', 'prompt'],
+    ['Negative', 'negativeprompt'],
+    ['cfg', 'cfgscale'],
+    ['sampler_name', 'sampler'],
+    ['base_model_name', 'model'],
+    ['denoise', 'imageinitcreativity']
+];
+
+function remapMetadataKeys(metadata, keymap) {
+    for (let pair of keymap) {
+        if (pair[0] in metadata) {
+            metadata[pair[1]] = metadata[pair[0]];
+            delete metadata[pair[0]];
+        }
+    }
+    for (let key in metadata) {
+        if (metadata[key] == null) { // Why does Fooocus emit nulls?
+            delete metadata[key];
+        }
+    }
+    return metadata;
+}
+
+function imageInputHandler() {
+    let imageArea = getRequiredElementById('current_image');
+    imageArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    imageArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            let file = e.dataTransfer.files[0];
+            if (file.type.startsWith('image/')) {
+                let reader = new FileReader();
+                reader.onload = (e) => {
+                    let data = e.target.result;
+                    exifr.parse(data).then(parsed => {
+                        console.log(parsed);
+                        let metadata = null;
+                        if (parsed) {
+                            if (parsed.parameters) {
+                                metadata = parsed.parameters;
+                            }
+                            else if (parsed.prompt) {
+                                metadata = parsed.prompt;
+                            }
+                        }
+                        if (metadata) {
+                            metadata = metadata.trim();
+                            if (metadata.startsWith('{')) {
+                                let json = JSON.parse(metadata);
+                                if ('sui_image_params' in json) {
+                                    // It's swarm, we're good
+                                }
+                                else if ("Prompt" in json) {
+                                    // Fooocus
+                                    json = remapMetadataKeys(json, fooocusMetadataMap);
+                                    metadata = JSON.stringify({ 'sui_image_params': json });
+                                }
+                                else {
+                                    // Don't know - discard for now.
+                                    metadata = null;
+                                }
+                            }
+                            else {
+                                let lines = metadata.split('\n');
+                                if (lines.length > 1) {
+                                    metadata = upvertAutoWebuiMetadataToSwarm(lines);
+                                }
+                                else {
+                                    // ???
+                                    metadata = null;
+                                }
+                            }
+                        }
+                        setCurrentImage(data, metadata);
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    });
+}
+imageInputHandler();
+
 function genpageLoad() {
     console.log('Load page...');
     pageSizer();

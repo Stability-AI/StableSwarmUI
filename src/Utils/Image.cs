@@ -171,7 +171,7 @@ public class Image
         try
         {
             ISImage img = ToIS;
-            string pngMetadata = img.Metadata?.GetPngMetadata()?.TextData?.FirstOrDefault(t => t.Keyword.ToLowerFast() == "prompt").Value;
+            string pngMetadata = img.Metadata?.GetPngMetadata()?.TextData?.FirstOrDefault(t => t.Keyword.ToLowerFast() == "parameters").Value;
             if (pngMetadata is not null)
             {
                 return pngMetadata;
@@ -219,7 +219,7 @@ public class Image
         }
         if (format == "PNG")
         {
-            img.Metadata.GetPngMetadata().TextData.Add(new("prompt", metadata, null, null));
+            img.Metadata.GetPngMetadata().TextData.Add(new("Parameters", metadata, null, null));
         }
         else
         {
