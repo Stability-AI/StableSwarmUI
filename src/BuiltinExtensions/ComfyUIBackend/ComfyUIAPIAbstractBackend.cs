@@ -561,5 +561,5 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return true;
     }
 
-    public override IEnumerable<string> SupportedFeatures => ComfyUIBackendExtension.FeaturesSupported;
+    public override IEnumerable<string> SupportedFeatures => ComfyUIBackendExtension.FeaturesSupported.Append(ModelFolderFormat == "/" ? "folderslash" : "folderbackslash");
 }
