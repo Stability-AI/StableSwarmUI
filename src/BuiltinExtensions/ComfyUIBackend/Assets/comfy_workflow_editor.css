@@ -72,6 +72,7 @@
     padding: 0;
     margin: 0;
     float: right;
+    text-align: right;
 }
 .comfy_multigpu {
     font-size: 80%;
@@ -80,10 +81,17 @@
     border: none;
     padding: 0;
     margin: 0;
-    float: left;
+    float: right;
     margin-left: 1rem;
 }
 .comfy-disable-button {
     margin: auto;
     display: block;
+}
+.comfy-second-button-row {
+    height: 1.5rem;
+    width: 100%;
+}
+.comfy-left-button {
+    float: left;
 }

@@ -816,6 +816,17 @@ function comfyToggleButtonsVisible() {
     }
 }
 
+/** Triggered when the 'import from generate tab' button is clicked. */
+function comfyImportWorkflow() {
+    genericRequest('ComfyGetGeneratedWorkflow', getGenInput(), (data) => {
+        if (!data.workflow) {
+            showError('No workflow found.');
+            return;
+        }
+        comfyFrame().contentWindow.app.loadApiJson(comfyFrame().contentWindow.LiteGraph.cloneObject(JSON.parse(data.workflow)));
+    });
+}
+
 getRequiredElementById('maintab_comfyworkfloweditor').addEventListener('click', comfyTryToLoad);
 
 backendsRevisedCallbacks.push(() => {

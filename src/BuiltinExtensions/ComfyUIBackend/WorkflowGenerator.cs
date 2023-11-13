@@ -806,8 +806,8 @@ public class WorkflowGenerator
                 ["text_l"] = prompt,
                 ["crop_w"] = 0,
                 ["crop_h"] = 0,
-                ["width"] = (int)(width * mult),
-                ["height"] = (int)(height * mult),
+                ["width"] = (int)Utilities.RoundToPrecision(width * mult, 64),
+                ["height"] = (int)Utilities.RoundToPrecision(height * mult, 64),
                 ["target_width"] = width,
                 ["target_height"] = height
             });

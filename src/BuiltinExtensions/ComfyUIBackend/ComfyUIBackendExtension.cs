@@ -3,6 +3,7 @@ using FreneticUtilities.FreneticToolkit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
+using StableSwarmUI.Accounts;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
@@ -250,6 +251,7 @@ public class ComfyUIBackendExtension : Extension
         API.RegisterAPICall(ComfyReadWorkflow);
         API.RegisterAPICall(ComfyListWorkflows);
         API.RegisterAPICall(ComfyDeleteWorkflow);
+        API.RegisterAPICall(ComfyGetGeneratedWorkflow);
     }
 
     /// <summary>API route to save a comfy workflow object to persistent file.</summary>
@@ -311,6 +313,27 @@ public class ComfyUIBackendExtension : Extension
         }
         File.Delete(path);
         return new JObject() { ["success"] = true };
+    }
+
+    /// <summary>API route to get a generated workflow for a T2I input.</summary>
+    public async Task<JObject> ComfyGetGeneratedWorkflow(Session session, JObject rawInput)
+    {
+        T2IParamInput input;
+        try
+        {
+            input = T2IAPI.RequestToParams(session, rawInput);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new JObject() { ["error"] = ex.Message };
+        }
+        catch (InvalidDataException ex)
+        {
+            return new JObject() { ["error"] = ex.Message };
+        }
+        string format = ComfyBackendsDirect().FirstOrDefault().Item3.SupportedFeatures.Contains("folderbackslash") ? "\\" : "/";
+        string flow = ComfyUIAPIAbstractBackend.CreateWorkflow(input, w => w, format);
+        return new JObject() { ["workflow"] = flow };
     }
 
     public override void OnPreLaunch()

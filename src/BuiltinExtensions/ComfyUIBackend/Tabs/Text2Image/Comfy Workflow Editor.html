@@ -9,15 +9,18 @@
                 <br><button id="comfy_workflow_load_button" onclick="comfyLoadWorkflowNow()" class="basic-button comfy-small-button">Load Workflow</button>
                 <br>
             </div>
+            <div class="comfy-second-button-row">
+                <button class="basic-button comfy-small-button comfy-left-button" onclick="comfyImportWorkflow()">Import From Generate Tab</button>
+                <div id="comfy_multigpu" class="comfy_multigpu">
+                    <select id="comfy_multigpu_select" onchange="comfyMultiGPUSelectChanged()">
+                        <option value="" selected>-- MultiGPU --</option>
+                        <option value="all">Use All</option>
+                        <option value="none">Use One</option>
+                    </select>
+                </div>
+            </div>
             <div id="comfy_workflow_disable_button" style="display: none;">
                 <button class="basic-button interrupt-button" onclick="comfyParamsDisable()">Remove Workflow From Generate Tab</button>
-            </div>
-            <div id="comfy_multigpu" class="comfy_multigpu">
-                <select id="comfy_multigpu_select" onchange="comfyMultiGPUSelectChanged()">
-                    <option value="" selected>-- MultiGPU --</option>
-                    <option value="all">Use All</option>
-                    <option value="none">Use One</option>
-                </select>
             </div>
             <div id="comfy_quickload" class="comfy_quickload">
                 <select id="comfy_quickload_select" onchange="comfyQuickloadSelectChanged()">
