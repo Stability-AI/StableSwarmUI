@@ -66,8 +66,6 @@ function comfyOnLoadCallback() {
                 comfyEnableInterval = null;
                 let origQueuePrompt = api.queuePrompt.bind(api);
                 async function swarmQueuePrompt(number, { output, workflow }) {
-                    console.log(`Swarm queue prompt ${number} ${JSON.stringify(output)}`);
-                    //console.log(`Swarm queue workflow ${number} ${JSON.stringify(workflow, null, 2)}`);
                     let nodeColorMap = {};
                     for (let node of workflow.nodes) {
                         let color = node.color || 'none';
@@ -98,7 +96,7 @@ function comfyOnLoadCallback() {
                         for (let nodeId of ids) {
                             addAncestors(nodeId);
                         }
-                        console.log(`queue a prompt ${number} == ${promises.length} == ${Object.keys(newPrompt).length} == ${JSON.stringify(newPrompt)}}`)
+                        newPrompt['swarm_prefer'] = promises.length;
                         let newPromise = origQueuePrompt(number, { output: newPrompt, workflow: workflow });
                         promises.push(newPromise);
                     }

@@ -598,7 +598,15 @@ public class ComfyUIBackendExtension : Extension
                             await user.Lock.WaitAsync();
                             try
                             {
+                                JObject prompt = parsed["prompt"] as JObject;
+                                int preferredBackendIndex = prompt["swarm_prefer"]?.Value<int>() ?? -1;
+                                prompt.Remove("swarm_prefer");
+                                List<ComfyClientData> available = user.Clients.Values.ToList();
                                 ComfyClientData client = user.Clients.Values.MinBy(c => c.QueueRemaining);
+                                if (preferredBackendIndex >= 0)
+                                {
+                                    client = available[preferredBackendIndex % available.Count];
+                                }
                                 if (client?.SID is not null)
                                 {
                                     client.QueueRemaining++;
