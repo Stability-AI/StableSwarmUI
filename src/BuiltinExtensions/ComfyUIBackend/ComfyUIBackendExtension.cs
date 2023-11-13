@@ -339,6 +339,8 @@ public class ComfyUIBackendExtension : Extension
         public int TotalQueue => Clients.Values.Sum(c => c.QueueRemaining);
 
         public SemaphoreSlim Lock = new(1, 1);
+
+        public volatile JObject LastExecuting, LastProgress;
     }
 
     public class ComfyClientData
@@ -351,7 +353,7 @@ public class ComfyUIBackendExtension : Extension
 
         public string LastNode;
 
-        public JObject LastExecuting, LastProgress;
+        public volatile JObject LastExecuting, LastProgress;
 
         public string Address;
 
@@ -446,73 +448,75 @@ public class ComfyUIBackendExtension : Extension
                             if (received.MessageType != WebSocketMessageType.Close)
                             {
                                 Memory<byte> toSend = recvBuf.AsMemory(0, received.Count);
-                                bool isJson = received.MessageType == WebSocketMessageType.Text && received.EndOfMessage && received.Count < 8192 * 10 && recvBuf[0] == '{';
-                                if (isJson)
-                                {
-                                    try
-                                    {
-                                        JObject parsed = StringConversionHelper.UTF8Encoding.GetString(recvBuf[0..received.Count]).ParseToJson();
-                                        JToken typeTok = parsed["type"];
-                                        if (typeTok is not null)
-                                        {
-                                            string type = typeTok.ToString();
-                                            if (type == "executing")
-                                            {
-                                                client.LastExecuting = parsed;
-                                            }
-                                            else if (type == "progress")
-                                            {
-                                                client.LastProgress = parsed;
-                                            }
-                                        }
-                                        JToken dataTok = parsed["data"];
-                                        if (dataTok is JObject dataObj)
-                                        {
-                                            if (dataObj.TryGetValue("sid", out JToken sidTok))
-                                            {
-                                                if (client.SID is not null)
-                                                {
-                                                    Users.TryRemove(client.SID, out _);
-                                                }
-                                                client.SID = sidTok.ToString();
-                                                Users.TryAdd(client.SID, user);
-                                                if (user.MasterSID is null)
-                                                {
-                                                    user.MasterSID = client.SID;
-                                                }
-                                                else
-                                                {
-                                                    parsed["data"]["sid"] = user.MasterSID;
-                                                    toSend = Encoding.UTF8.GetBytes(parsed.ToString());
-                                                }
-                                            }
-                                            if (dataObj.TryGetValue("node", out JToken nodeTok))
-                                            {
-                                                client.LastNode = nodeTok.ToString();
-                                            }
-                                            JToken queueRemTok = dataObj["status"]?["exec_info"]?["queue_remaining"];
-                                            if (queueRemTok is not null)
-                                            {
-                                                client.QueueRemaining = queueRemTok.Value<int>();
-                                                dataObj["status"]["exec_info"]["queue_remaining"] = user.TotalQueue;
-                                            }
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Logs.Error($"Failed to parse ComfyUI message: {ex}");
-                                    }
-                                }
                                 await user.Lock.WaitAsync();
                                 try
                                 {
+                                    bool isJson = received.MessageType == WebSocketMessageType.Text && received.EndOfMessage && received.Count < 8192 * 10 && recvBuf[0] == '{';
+                                    if (isJson)
+                                    {
+                                        try
+                                        {
+                                            JObject parsed = StringConversionHelper.UTF8Encoding.GetString(recvBuf[0..received.Count]).ParseToJson();
+                                            JToken typeTok = parsed["type"];
+                                            if (typeTok is not null)
+                                            {
+                                                string type = typeTok.ToString();
+                                                if (type == "executing")
+                                                {
+                                                    client.LastExecuting = parsed;
+                                                    user.LastExecuting = parsed;
+                                                }
+                                                else if (type == "progress")
+                                                {
+                                                    client.LastProgress = parsed;
+                                                    user.LastProgress = parsed;
+                                                }
+                                            }
+                                            JToken dataTok = parsed["data"];
+                                            if (dataTok is JObject dataObj)
+                                            {
+                                                if (dataObj.TryGetValue("sid", out JToken sidTok))
+                                                {
+                                                    if (client.SID is not null)
+                                                    {
+                                                        Users.TryRemove(client.SID, out _);
+                                                    }
+                                                    client.SID = sidTok.ToString();
+                                                    Users.TryAdd(client.SID, user);
+                                                    if (user.MasterSID is null)
+                                                    {
+                                                        user.MasterSID = client.SID;
+                                                    }
+                                                    else
+                                                    {
+                                                        parsed["data"]["sid"] = user.MasterSID;
+                                                        toSend = Encoding.UTF8.GetBytes(parsed.ToString());
+                                                    }
+                                                }
+                                                if (dataObj.TryGetValue("node", out JToken nodeTok))
+                                                {
+                                                    client.LastNode = nodeTok.ToString();
+                                                }
+                                                JToken queueRemTok = dataObj["status"]?["exec_info"]?["queue_remaining"];
+                                                if (queueRemTok is not null)
+                                                {
+                                                    client.QueueRemaining = queueRemTok.Value<int>();
+                                                    dataObj["status"]["exec_info"]["queue_remaining"] = user.TotalQueue;
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Logs.Error($"Failed to parse ComfyUI message: {ex}");
+                                        }
+                                    }
                                     if (!isJson)
                                     {
-                                        if (client.LastExecuting is not null)
+                                        if (client.LastExecuting is not null && client.LastExecuting != user.LastExecuting)
                                         {
                                             await socket.SendAsync(StringConversionHelper.UTF8Encoding.GetBytes(client.LastExecuting.ToString()), WebSocketMessageType.Text, true, Program.GlobalProgramCancel);
                                         }
-                                        if (client.LastProgress is not null)
+                                        if (client.LastProgress is not null && client.LastProgress != user.LastProgress)
                                         {
                                             await socket.SendAsync(StringConversionHelper.UTF8Encoding.GetBytes(client.LastProgress.ToString()), WebSocketMessageType.Text, true, Program.GlobalProgramCancel);
                                         }
