@@ -362,10 +362,8 @@ public class ComfyUIBackendExtension : Extension
         public void FixUpPrompt(JObject prompt)
         {
             bool isBackSlash = Backend.SupportedFeatures.Contains("folderbackslash");
-            Logs.Debug($"Has remote {Backend.SupportedFeatures.JoinString(", ")}");
             foreach (JProperty node in prompt.Properties())
             {
-                //string classType = node["class_type"]?.ToString();
                 JObject inputs = node.Value["inputs"] as JObject;
                 if (inputs is not null)
                 {
@@ -383,7 +381,6 @@ public class ComfyUIBackendExtension : Extension
                                 val = val.Replace("\\", "/");
                             }
                             input.Value = val;
-                            Logs.Debug($"Fixed up prompt input {input.Name} to {val}.");
                         }
                     }
                 }
@@ -598,18 +595,25 @@ public class ComfyUIBackendExtension : Extension
                         string sid = clientIdTok.ToString();
                         if (Users.TryGetValue(sid, out ComfyUser user))
                         {
-                            ComfyClientData client = user.Clients.Values.MinBy(c => c.QueueRemaining);
-                            if (client?.SID is not null)
+                            await user.Lock.WaitAsync();
+                            try
                             {
-                                client.QueueRemaining++;
-                                address = client.Address;
-                                parsed["client_id"] = client.SID;
-                                client.FixUpPrompt(parsed["prompt"] as JObject);
-                                content = Utilities.JSONContent(parsed);
-                                Logs.Debug($"Send prompt to comfy {client.Address} for {sid} (queue: {client.QueueRemaining})");
+                                ComfyClientData client = user.Clients.Values.MinBy(c => c.QueueRemaining);
+                                if (client?.SID is not null)
+                                {
+                                    client.QueueRemaining++;
+                                    address = client.Address;
+                                    parsed["client_id"] = client.SID;
+                                    client.FixUpPrompt(parsed["prompt"] as JObject);
+                                }
+                            }
+                            finally
+                            {
+                                user.Lock.Release();
                             }
                         }
                     }
+                    content = Utilities.JSONContent(parsed);
                 }
                 catch (Exception ex)
                 {

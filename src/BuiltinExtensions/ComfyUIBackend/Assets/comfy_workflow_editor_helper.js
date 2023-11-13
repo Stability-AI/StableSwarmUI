@@ -8,6 +8,8 @@ let comfyButtonsArea = getRequiredElementById('comfy_workflow_buttons');
 
 let comfyObjectData = {};
 
+let comfyIsOutputNodeMap = {};
+
 let comfyHasTriedToLoad = false;
 
 let comfyAltSaveNodes = ['ADE_AnimateDiffCombine', 'VHS_VideoCombine'];
@@ -32,6 +34,8 @@ function comfyFrame() {
     return getRequiredElementById('comfy_workflow_frame');
 }
 
+let comfyEnableInterval = null;
+
 /**
  * Callback triggered when the ComfyUI workflow frame loads.
  */
@@ -45,8 +49,71 @@ function comfyOnLoadCallback() {
     else {
         getJsonDirect('/ComfyBackendDirect/object_info', (_, data) => {
             comfyObjectData = data;
+            for (let key of Object.keys(data)) {
+                if (data[key].output_node) {
+                    comfyIsOutputNodeMap[key] = true;
+                }
+            }
         });
         comfyReconfigureQuickload();
+        if (getCookie('comfy_domulti') == 'true') {
+            comfyEnableInterval = setInterval(() => {
+                let api = comfyFrame().contentWindow.swarmApiDirect;
+                if (!api) {
+                    return;
+                }
+                clearInterval(comfyEnableInterval);
+                comfyEnableInterval = null;
+                let origQueuePrompt = api.queuePrompt.bind(api);
+                async function swarmQueuePrompt(number, { output, workflow }) {
+                    console.log(`Swarm queue prompt ${number} ${JSON.stringify(output)}`);
+                    //console.log(`Swarm queue workflow ${number} ${JSON.stringify(workflow, null, 2)}`);
+                    let nodeColorMap = {};
+                    for (let node of workflow.nodes) {
+                        let color = node.color || 'none';
+                        if (comfyIsOutputNodeMap[node.type]) {
+                            let set = nodeColorMap[color] || [];
+                            set.push(node.id);
+                            nodeColorMap[color] = set;
+                        }
+                    }
+                    if (Object.keys(nodeColorMap).length == 1) {
+                        return await origQueuePrompt(number, { output, workflow });
+                    }
+                    let promises = [];
+                    for (let color of Object.keys(nodeColorMap)) {
+                        let ids = nodeColorMap[color];
+                        let newPrompt = {};
+                        function addAncestors(nodeId) {
+                            if (newPrompt[nodeId]) {
+                                return;
+                            }
+                            newPrompt[nodeId] = output[nodeId];
+                            for (let input of Object.values(output[nodeId].inputs || {})) {
+                                if (typeof input == 'object' && input.length == 2) {
+                                    addAncestors(input[0]);
+                                }
+                            }
+                        }
+                        for (let nodeId of ids) {
+                            addAncestors(nodeId);
+                        }
+                        console.log(`queue a prompt ${number} == ${promises.length} == ${Object.keys(newPrompt).length} == ${JSON.stringify(newPrompt)}}`)
+                        let newPromise = origQueuePrompt(number, { output: newPrompt, workflow: workflow });
+                        promises.push(newPromise);
+                    }
+                    let results = await Promise.all(promises);
+                    let newOutput = results[0];
+                    for (let result of results.slice(1)) {
+                        if (result.node_errors && result.node_errors.length > 0) {
+                            newOutput.node_errors = newOutput.node_errors.concat(result.node_errors);
+                        }
+                    }
+                    return newOutput;
+                }
+                api.queuePrompt = swarmQueuePrompt;
+            }, 500);
+        }
     }
 }
 
@@ -730,6 +797,10 @@ function comfyMultiGPUSelectChanged() {
     let container = getRequiredElementById('comfy_workflow_frameholder');
     container.innerHTML = '';
     hasComfyLoaded = false;
+    if (comfyEnableInterval != null) {
+        clearInterval(comfyEnableInterval);
+        comfyEnableInterval = null;
+    }
     comfyTryToLoad();
 }
 
