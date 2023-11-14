@@ -282,9 +282,12 @@ input[type="range"]::-webkit-slider-thumb, input[type="range"]::-moz-range-thumb
     margin-bottom: 0px;
     background-color: transparent;
     border-color: transparent;
+    flex-grow: 10;
+    width: 1rem;
 }
 .auto-number-seedbox {
     flex-grow: 10;
+    width: 1rem;
 }
 .auto-number-small {
     border-radius: 0.5rem;
