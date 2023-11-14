@@ -326,7 +326,7 @@ class GridGenClass {
         this.settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
         this.settingsDiv.innerHTML =
             '<br><div id="grid-gen-info-box">...</div>'
-            + makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.', '', false, 'Output folder name...', false, true)
+            + makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.', '', 'normal', 'Output folder name...', false, true)
             + '<br><div class="grid-gen-checkboxes">'
             + makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false, false, true)
             + makeCheckboxInput(null, 'grid-gen-opt-fast-skip', 'Fast Skip', 'If checked, uses faster skipping algorithm (prevents validation of skipped axes).', false, false, true)

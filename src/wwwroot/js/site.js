@@ -447,19 +447,20 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
         </div>`;
 }
 
-function makeTextInput(featureid, id, name, description, value, isPrompt, placeholder, toggles = false, genPopover = false, popover_button = true) {
+function makeTextInput(featureid, id, name, description, value, format, placeholder, toggles = false, genPopover = false, popover_button = true) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
-    let onInp = isPrompt ? ' oninput="textPromptInputHandle(this)"' : '';
-    let tokenCounter = isPrompt ? '<span class="auto-input-prompt-tokencount" title="Text-Encoder token count / chunk-size">0/75</span>' : '';
+    let onInp = format == "prompt" ? ' oninput="textPromptInputHandle(this)"' : '';
+    let tokenCounter = format == "prompt" ? '<span class="auto-input-prompt-tokencount" title="Text-Encoder token count / chunk-size">0/75</span>' : '';
     let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
     featureid += featureid2;
+    let isBig = format == "prompt" || format == "big";
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
-    <div class="auto-input auto-text-box${(isPrompt ? "" : " auto-input-flex")}"${featureid}>
+    <div class="auto-input auto-text-box${(isBig ? "" : " auto-input-flex")}"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
         ${tokenCounter}
-        <textarea class="auto-text${(isPrompt ? " auto-text-block" : "")}" id="${id}" rows="${isPrompt ? 2 : 1}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
+        <textarea class="auto-text${(isBig ? " auto-text-block" : "")}" id="${id}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
         <button class="interrupt-button image-clear-button" style="display: none;">Clear Images</button>
         <div class="added-image-area"></div>
     </div>`;
