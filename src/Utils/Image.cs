@@ -216,9 +216,7 @@ public class Image
         using MemoryStream ms = new();
         ISImage img = ToIS;
         img.Metadata.XmpProfile = null;
-        img.Metadata.ExifProfile = null;
         ExifProfile prof = new();
-        bool useExif = false;
         if (dpi > 0)
         {
             prof.SetValue(ExifTag.XResolution, new Rational((uint)dpi, 1));
@@ -226,21 +224,19 @@ public class Image
             prof.SetValue(ExifTag.ResolutionUnit, (ushort)2);
             img.Metadata.HorizontalResolution = dpi;
             img.Metadata.VerticalResolution = dpi;
-            useExif = true;
         }
-        if (format == "PNG")
+        if (metadata is not null)
         {
-            img.Metadata.GetPngMetadata().TextData.Add(new("parameters", metadata, null, null));
+            if (format == "PNG")
+            {
+                img.Metadata.GetPngMetadata().TextData.Add(new("parameters", metadata, null, null));
+            }
+            else
+            {
+                prof.SetValue(ExifTag.UserComment, metadata);
+            }
         }
-        else
-        {
-            prof.SetValue(ExifTag.UserComment, metadata);
-            useExif = true;
-        }
-        if (useExif)
-        {
-            img.Metadata.ExifProfile = prof;
-        }
+        img.Metadata.ExifProfile = prof;
         string ext = "jpg";
         switch (format)
         {
