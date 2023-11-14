@@ -208,7 +208,7 @@ public class T2IParamTypes
 
     public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod, FreeUApplyTo, PersonalNote;
     public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID, VAETileSize, ClipStopAtLayer;
-    public static T2IRegisteredParam<long> Seed, VariationSeed;
+    public static T2IRegisteredParam<long> Seed, VariationSeed, WildcardSeed;
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult,
         FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly, SamplerSigmaMin, SamplerSigmaMax, SamplerRho;
     public static T2IRegisteredParam<Image> InitImage, MaskImage, ControlNetImage;
@@ -353,6 +353,9 @@ public class T2IParamTypes
         ExactBackendID = Register<int>(new("Exact Backend ID", "Manually force a specific exact backend (by ID #) to be used for this generation.",
             "0", Toggleable: true, IsAdvanced: true, ViewType: ParamViewType.BIG, Permission: "param_backend_id", Group: GroupSwarmInternal, AlwaysRetain: true
             ));
+        WildcardSeed = Register<long>(new("Wildcard Seed", "Wildcard selection seed.\nIf enabled, this seed will be used for selecting entries from wildcards.\nIf disabled, the image seed will be used.\n-1 = random.",
+            "-1", Min: -1, Max: uint.MaxValue, Step: 1, Toggleable: true, Examples: new[] { "1", "2", "...", "10" }, ViewType: ParamViewType.SEED, Group: GroupSwarmInternal, AlwaysRetain: true, ChangeWeight: -4
+            ));
         PersonalNote = Register<string>(new("Personal Note", "Optional field to type in any personal text note you want.\nThis will be stored in the image metadata.",
             "", IgnoreIf: "", IsAdvanced: true, Group: GroupSwarmInternal, ViewType: ParamViewType.BIG, AlwaysRetain: true
             ));
@@ -403,7 +406,7 @@ public class T2IParamTypes
             ));
     }
 
-    /// <summary>Gets the value in the list that best matches the input text (for user input handling).</summary>
+    /// <summary>Gets the value in the list that best matches the input text (for user input handling), or null if no match.</summary>
     public static string GetBestInList(string name, IEnumerable<string> list)
     {
         string backup = null;

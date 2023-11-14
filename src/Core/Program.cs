@@ -129,6 +129,7 @@ public class Program
         {
             handler.Refresh();
         }
+        WildcardsHelper.Init();
         timer.Check("Model listing");
         Logs.Init("Loading backends...");
         Backends.Load();

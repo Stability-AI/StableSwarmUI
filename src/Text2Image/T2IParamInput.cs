@@ -21,9 +21,19 @@ public class T2IParamInput
 
         public string[] Embeds, Loras;
 
+        public int Depth = 0;
+
         public string Parse(string text)
         {
-            return Input.ProcessPromptLike(text, this);
+            if (Depth > 1000)
+            {
+                Logs.Error("Recursive prompt tags - infinite loop, cannot return valid result.");
+                return text;
+            }
+            Depth++;
+            string result = Input.ProcessPromptLike(text, this);
+            Depth--;
+            return result;
         }
     }
 
@@ -41,10 +51,23 @@ public class T2IParamInput
             string[] vals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (vals.Length == 0)
             {
-                Logs.Warning($"Random input '{data}' is empty and will be ignored");
+                Logs.Warning($"Random input '{data}' is empty and will be ignored.");
                 return null;
             }
             return context.Parse(vals[context.Random.Next(vals.Length)]);
+        };
+        PromptTagProcessors["wildcard"] = (data, context) =>
+        {
+            string card = T2IParamTypes.GetBestInList(data, WildcardsHelper.ListFiles);
+            if (card is null)
+            {
+                Logs.Warning($"Wildcard input '{data}' does not match any wildcard file and will be ignored.");
+                return null;
+            }
+            List<string> usedWildcards = context.Input.ExtraMeta.GetOrCreate("used_wildcards", () => new List<string>()) as List<string>;
+            usedWildcards.Add(card);
+            string choice = WildcardsHelper.PickRandom(card, context.Random);
+            return context.Parse(choice);
         };
         PromptTagProcessors["preset"] = (data, context) =>
         {
@@ -52,7 +75,7 @@ public class T2IParamInput
             T2IPreset preset = context.Input.SourceSession.User.GetPreset(name);
             if (preset is null)
             {
-                Logs.Warning($"Preset '{name}' does not exist and will be ignored");
+                Logs.Warning($"Preset '{name}' does not exist and will be ignored.");
                 return null;
             }
             preset.ApplyTo(context.Input);
@@ -67,14 +90,14 @@ public class T2IParamInput
             data = context.Parse(data);
             if (context.Embeds is null)
             {
-                Logs.Warning($"Embedding '{data}' ignored because the engine has not loaded the embeddings list");
+                Logs.Warning($"Embedding '{data}' ignored because the engine has not loaded the embeddings list.");
                 return "";
             }
             string want = data.ToLowerFast().Replace('\\', '/');
             string matched = T2IParamTypes.GetBestInList(want, context.Embeds);
             if (matched is null)
             {
-                Logs.Warning($"Embedding '{want}' does not exist and will be ignored");
+                Logs.Warning($"Embedding '{want}' does not exist and will be ignored.");
                 return "";
             }
             List<string> usedEmbeds = context.Input.ExtraMeta.GetOrCreate("used_embeddings", () => new List<string>()) as List<string>;
@@ -94,7 +117,7 @@ public class T2IParamInput
             }
             if (context.Loras is null)
             {
-                Logs.Warning($"Lora '{data}' ignored because the engine has not loaded the lora list");
+                Logs.Warning($"Lora '{data}' ignored because the engine has not loaded the lora list.");
                 return "";
             }
             string matched = T2IParamTypes.GetBestInList(lora, context.Loras);
@@ -113,10 +136,9 @@ public class T2IParamInput
                 context.Input.Set(T2IParamTypes.LoraWeights, weights);
                 return "";
             }
-            Logs.Warning($"Lora '{lora}' does not exist and will be ignored");
+            Logs.Warning($"Lora '{lora}' does not exist and will be ignored.");
             return null;
         };
-        // TODO: Wildcards (random by user-editable listing files)
     }
 
     /// <summary>The raw values in this input. Do not use this directly, instead prefer:
@@ -291,7 +313,17 @@ public class T2IParamInput
             return "";
         }
         string fixedVal = val.Replace('\0', '\a').Replace("\a", "");
-        Random rand = new((int)Get(T2IParamTypes.Seed) + (int)Get(T2IParamTypes.VariationSeed, 0) + param.Type.Name.Length);
+        long backupSeed = Get(T2IParamTypes.Seed) + Get(T2IParamTypes.VariationSeed, 0) + param.Type.Name.Length;
+        long wildcardSeed = Get(T2IParamTypes.WildcardSeed, backupSeed);
+        if (wildcardSeed > int.MaxValue)
+        {
+            wildcardSeed %= int.MaxValue;
+        }
+        if (wildcardSeed == -1)
+        {
+            wildcardSeed = Random.Shared.Next(int.MaxValue);
+        }
+        Random rand = new((int)wildcardSeed);
         string lowRef = fixedVal.ToLowerFast();
         string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelNamesFor(SourceSession).ToArray() : null;
         string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelNamesFor(SourceSession).Select(m => m.ToLowerFast()).ToArray() : null;

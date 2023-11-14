@@ -99,6 +99,9 @@ public class Settings : AutoConfiguration
         [ConfigComment("Root path for output files (images, etc).\nDefaults to 'Output'")]
         public string OutputPath = "Output";
 
+        [ConfigComment("The folder for wildcard (.txt) files, under Data.\nDefaults to 'Wildcards'")]
+        public string WildcardsFolder = "Wildcards";
+
         [ConfigComment("When true, output paths always have the username as a folder.\nWhen false, this will be skipped.\nKeep this on in multi-user environments.")]
         public bool AppendUserNameToOutputPath = true;
     }
