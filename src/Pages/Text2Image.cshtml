@@ -133,6 +133,9 @@
                     <a class="nav-link" data-bs-toggle="tab" href="#ControlNets-Tab" aria-selected="false" tabindex="-1" role="tab">ControlNets</a>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <a class="nav-link" data-bs-toggle="tab" href="#Wildcards-Tab" aria-selected="false" tabindex="-1" role="tab">Wildcards</a>
+                </li>
+                <li class="nav-item" role="presentation">
                     <a class="nav-link" data-bs-toggle="tab" href="#Tools-Tab" aria-selected="false" tabindex="-1" role="tab">Tools</a>
                 </li>
             </ul>
@@ -233,6 +236,10 @@
                 <div class="tab-pane genpage-bottom-tab" id="ControlNets-Tab" role="tabpanel">
                     <div class="browser_container" id="controlnet_list"></div>
                 </div>
+                <div class="tab-pane genpage-bottom-tab" id="Wildcards-Tab" role="tabpanel">
+                    <button id="wildcards_list_create_new_button" class="refresh-button" onclick="create_new_wildcard_button()">Create New Wildcard</button>
+                    <div class="browser_container" id="wildcard_list"></div>
+                </div>
                 <div class="tab-pane genpage-bottom-tab" id="Tools-Tab" role="tabpanel">
                     <select class="tool-selector" id="tool_selector">
                         <option value="" selected></option>
@@ -260,9 +267,32 @@
                     <div id="edit_model_image" class="new_preset_image"></div>
                 </div>
                 <div class="modal-footer">
-                    <span id="edit_model_modal_error" class="edit_model_modal_error"></span>
                     <button type="button" class="btn btn-primary basic-button" onclick="save_edit_model()">Save</button>
                     <button type="button" class="btn btn-secondary" onclick="close_edit_model()">Cancel</button>
+                </div>
+            @WebUtil.ModalFooter()
+            @WebUtil.ModalHeader("edit_wildcard_modal", """Edit Wildcard: <input type="text" class="modal_text_extra" id="edit_wildcard_name" placeholder="Wildcard Name" />""")
+                <div class="modal-body">
+                    <p>Wildcards are lists of random prompt segments. One entry per line. Prompt sub-syntax is allowed (eg you can link another wildcard, or use <code>&lt;random:...&gt;</code>, or <code>&lt;preset:...&gt;</code> or anything else you want).</p>
+                    <p>Prefix a line with <code>#</code> to make it a comment (ie won't be counted as an option).</p>
+                    Options: <textarea class="auto-text auto-text-block" id="edit_wildcard_contents" rows="15" placeholder="Wildcard options (1 per line)"></textarea>
+                    <span class="form-check form-switch display-inline-block">
+                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_wildcard_enable_image" title="Enable/disable image" onclick="doToggleEnable('edit_wildcard_image')"> Use Image
+                    </span>
+                    <div id="edit_wildcard_image" class="new_preset_image"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary basic-button" onclick="save_edit_wildcard()">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="close_edit_wildcard()">Cancel</button>
+                </div>
+            @WebUtil.ModalFooter()
+            @WebUtil.ModalHeader("test_wildcard_modal", """Test Wildcard: <span id="test_wildcard_name"></span>""")
+                <div class="modal-body">
+                    Result: <textarea class="auto-text auto-text-block" id="test_wildcard_result" rows="3" placeholder="Result here..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="test_wildcard_again_button" class="btn btn-primary basic-button" onclick="test_wildcard_again()">Test Again</button>
+                    <button type="button" class="btn btn-secondary" onclick="close_test_wildcard()">Cancel</button>
                 </div>
             @WebUtil.ModalFooter()
         </div>

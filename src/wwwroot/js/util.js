@@ -636,3 +636,20 @@ function formatNumberClean(num, maxDigits) {
     let fixed = num.toFixed(maxDigits);
     return parseFloat(fixed);
 }
+
+/**
+ * Gets a data image URL from an image src.
+ */
+function imageToData(src, callback) {
+    var image = new Image();
+    image.crossOrigin = 'Anonymous';
+    image.onload = () => {
+        let canvas = document.createElement('canvas');
+        let context = canvas.getContext('2d');
+        canvas.height = 256;
+        canvas.width = 256;
+        context.drawImage(image, 0, 0, 256, 256);
+        callback(canvas.toDataURL('image/jpeg'));
+    };
+    image.src = src;
+}

@@ -4,9 +4,113 @@ let cur_model = null;
 let curModelWidth = 0, curModelHeight = 0;
 let curModelArch = '';
 let curModelCompatClass = '';
+let curWildcardMenuWildcard = null;
 let curModelMenuModel = null;
 let curModelMenuBrowser = null;
 let loraWeightPref = {};
+
+function test_wildcard_again() {
+    let card = curWildcardMenuWildcard;
+    if (card == null) {
+        console.log("Wildcard do test: no wildcard");
+        return;
+    }
+    testWildcard(card);
+}
+
+function testWildcard(card) {
+    if (card == null) {
+        return;
+    }
+    curWildcardMenuWildcard = card;
+    getRequiredElementById('test_wildcard_name').innerText = card.name;
+    let choice = Math.floor(Math.random() * card.options.length);
+    let val = card.options[choice];
+    getRequiredElementById('test_wildcard_result').value = val;
+    let button = getRequiredElementById('test_wildcard_again_button');
+    if (val.includes('<')) {
+        button.disabled = true;
+        genericRequest('TestPromptFill', {'prompt': val}, data => {
+            button.disabled = false;
+            getRequiredElementById('test_wildcard_result').value = data.result;
+            $('#test_wildcard_modal').modal('show');
+        });
+    }
+    else {
+        button.disabled = false;
+        $('#test_wildcard_modal').modal('show');
+    }
+}
+
+function close_test_wildcard() {
+    $('#test_wildcard_modal').modal('hide');
+}
+
+function create_new_wildcard_button() {
+    let card = {
+        name: '',
+        raw: ''
+    };
+    editWildcard(card);
+}
+
+function editWildcard(card) {
+    if (card == null) {
+        return;
+    }
+    curWildcardMenuWildcard = card;
+    let imageInput = getRequiredElementById('edit_wildcard_image');
+    imageInput.innerHTML = '';
+    let enableImage = getRequiredElementById('edit_wildcard_enable_image');
+    enableImage.checked = false;
+    enableImage.disabled = true;
+    let curImg = document.getElementById('current_image_img');
+    if (curImg) {
+        let newImg = curImg.cloneNode(true);
+        newImg.id = 'edit_wildcard_image_img';
+        newImg.style.maxWidth = '100%';
+        imageInput.appendChild(newImg);
+        if (!card.preview_image || card.preview_image == 'imgs/model_placeholder.jpg') {
+            enableImage.checked = true;
+        }
+        enableImage.disabled = false;
+    }
+    getRequiredElementById('edit_wildcard_name').value = card.name;
+    getRequiredElementById('edit_wildcard_contents').value = card.raw;
+    $('#edit_wildcard_modal').modal('show');
+}
+
+function save_edit_wildcard() {
+    let card = curWildcardMenuWildcard;
+    if (card == null) {
+        console.log("Wildcard do save: no wildcard");
+        return;
+    }
+    let data = {
+        'card': getRequiredElementById('edit_wildcard_name').value,
+        'options': getRequiredElementById('edit_wildcard_contents').value.trim() + '\n',
+        'preview_image': ''
+    };
+    function complete() {
+        genericRequest('EditWildcard', data, data => {
+            wildcardsBrowser.browser.refresh();
+        });
+        $('#edit_wildcard_modal').modal('hide');
+    }
+    if (getRequiredElementById('edit_wildcard_enable_image').checked) {
+        imageToData(getRequiredElementById('edit_wildcard_image').getElementsByTagName('img')[0].src, (dataURL) => {
+            data['preview_image'] = dataURL;
+            complete();
+        });
+    }
+    else {
+        complete();
+    }
+}
+
+function close_edit_wildcard() {
+    $('#edit_wildcard_modal').modal('hide');
+}
 
 function editModel(model, browser) {
     if (model == null) {
@@ -64,19 +168,10 @@ function save_edit_model() {
         $('#edit_model_modal').modal('hide');
     }
     if (getRequiredElementById('edit_model_enable_image').checked) {
-        var image = new Image();
-        image.crossOrigin = 'Anonymous';
-        image.onload = () => {
-            let canvas = document.createElement('canvas');
-            let context = canvas.getContext('2d');
-            canvas.height = 256;
-            canvas.width = 256;
-            context.drawImage(image, 0, 0, 256, 256);
-            let dataURL = canvas.toDataURL('image/jpeg');
+        imageToData(getRequiredElementById('edit_model_image').getElementsByTagName('img')[0].src, (dataURL) => {
             data['preview_image'] = dataURL;
             complete();
-        };
-        image.src = getRequiredElementById('edit_model_image').getElementsByTagName('img')[0].src;
+        });
     }
     else {
         complete();
@@ -133,7 +228,8 @@ class ModelBrowserWrapper {
     constructor(subType, container, id, selectOne) {
         this.subType = subType;
         this.selectOne = selectOne;
-        this.browser = new GenPageBrowserClass(container, this.listModelFolderAndFiles.bind(this), id, 'Cards', this.describeModel.bind(this), this.selectModel.bind(this));
+        let format = subType == 'Wildcards' ? 'Small Cards' : 'Cards';
+        this.browser = new GenPageBrowserClass(container, this.listModelFolderAndFiles.bind(this), id, format, this.describeModel.bind(this), this.selectModel.bind(this));
     }
 
     listModelFolderAndFiles(path, isRefresh, callback, depth) {
@@ -164,6 +260,7 @@ class ModelBrowserWrapper {
     }
 
     describeModel(model) {
+        let promptBox = getRequiredElementById('alt_prompt_textbox');
         let description = '';
         let buttons = [];
         if (this.subType == 'Stable-Diffusion' && model.data.local) {
@@ -191,6 +288,24 @@ class ModelBrowserWrapper {
             ];
         }
         let name = cleanModelName(model.data.name);
+        if (this.subType == 'Wildcards') {
+            buttons = [
+                { label: 'Edit Wildcard', onclick: () => editWildcard(model.data) },
+                { label: 'Test Wildcard', onclick: () => testWildcard(model.data) },
+                { label: 'Delete Wildcard', onclick: () => {
+                    if (confirm("Are you sure want to delete that wildcard?")) {
+                        genericRequest('DeleteWildcard', { card: model.data.name }, data => {
+                            wildcardsBrowser.browser.refresh();
+                        });
+                    }
+                } }
+            ];
+            description = `<span class="wildcard_title">${escapeHtml(name)}</span><br>${escapeHtml(model.data.raw)}`;
+            let isSelected = promptBox.value.includes(`<wildcard:${model.data.name}>`);
+            let className = isSelected ? 'model-selected' : '';
+            let searchable = `${model.data.name}, ${description}`;
+            return { name, description, buttons, className, searchable, 'image': model.data.image };
+        }
         let isCorrect = isModelArchCorrect(model.data);
         let interject = '';
         if (!isCorrect && this.subType != 'Stable-Diffusion') {
@@ -233,7 +348,6 @@ class ModelBrowserWrapper {
             isSelected = [...selectorElem.selectedOptions].map(option => option.value).filter(value => value == model.data.name).length > 0;
         }
         else if (this.subType == 'Embedding') {
-            let promptBox = getRequiredElementById('alt_prompt_textbox');
             isSelected = promptBox.value.includes(`<embed:${model.data.name}>`);
             let negativePrompt = document.getElementById('input_negativeprompt');
             if (negativePrompt) {
@@ -262,8 +376,22 @@ let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (v
 let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data.name); });
 let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => { selectEmbedding(embed.data); });
 let sdControlnetBrowser = new ModelBrowserWrapper('ControlNet', 'controlnet_list', 'sdcontrolnetbrowser', (controlnet) => { setControlNet(controlnet.data); });
+let wildcardsBrowser = new ModelBrowserWrapper('Wildcards', 'wildcard_list', 'wildcardsbrowser', (wildcard) => { selectWildcard(wildcard.data); });
 
-let allModelBrowsers = [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser];
+let allModelBrowsers = [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser, wildcardsBrowser];
+
+function selectWildcard(model) {
+    let promptBox = getRequiredElementById('alt_prompt_textbox');
+    let chunk = `<wildcard:${model.name}>`;
+    if (promptBox.value.endsWith(chunk)) {
+        promptBox.value = promptBox.value.substring(0, promptBox.value.length - chunk.length).trim();
+    }
+    else {
+        promptBox.value += ` ${chunk}`;
+    }
+    triggerChangeFor(promptBox);
+    wildcardsBrowser.browser.rerender();
+}
 
 function selectEmbedding(model) {
     let promptBox = getRequiredElementById('alt_prompt_textbox');

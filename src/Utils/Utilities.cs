@@ -55,7 +55,7 @@ public static class Utilities
             name = name.Replace("//", "/");
         }
         name = name.Trim();
-        string[] parts = name.Split('/');
+        string[] parts = name.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         for (int i = 0; i < parts.Length; i++)
         {
             if (ReservedFilenames.Contains(parts[i].ToLowerFast()))

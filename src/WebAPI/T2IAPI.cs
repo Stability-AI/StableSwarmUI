@@ -1,4 +1,5 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Backends;
@@ -29,6 +30,9 @@ public static class T2IAPI
         API.RegisterAPICall(TriggerRefresh);
         API.RegisterAPICall(SelectModel);
         API.RegisterAPICall(SelectModelWS);
+        API.RegisterAPICall(DeleteWildcard);
+        API.RegisterAPICall(TestPromptFill);
+        API.RegisterAPICall(EditWildcard);
         API.RegisterAPICall(EditModelMetadata);
         API.RegisterAPICall(ListT2IParams);
     }
@@ -344,7 +348,7 @@ public static class T2IAPI
     /// <summary>API route to describe a single model.</summary>
     public static async Task<JObject> DescribeModel(Session session, string modelName, string subtype = "Stable-Diffusion")
     {
-        if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler))
+        if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler) && subtype != "Wildcards")
         {
             return new JObject() { ["error"] = "Invalid sub-type." };
         }
@@ -357,7 +361,15 @@ public static class T2IAPI
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         if (allowed is null || allowed.IsMatch(modelName))
         {
-            if (handler.Models.TryGetValue(modelName, out T2IModel model))
+            if (subtype == "Wildcards")
+            {
+                WildcardsHelper.Wildcard card = WildcardsHelper.GetWildcard(modelName);
+                if (card is not null)
+                {
+                    return card.GetNetObject();
+                }
+            }
+            else if (handler.Models.TryGetValue(modelName, out T2IModel model))
             {
                 return new JObject() { ["model"] = model.ToNetObject() };
             }
@@ -366,14 +378,14 @@ public static class T2IAPI
                 return new JObject() { ["model"] = remoteModel };
             }
         }
-        Logs.Debug($"Request for model {modelName} rejected as not found.");
+        Logs.Debug($"Request for {subtype} model {modelName} rejected as not found.");
         return new JObject() { ["error"] = "Model not found." };
     }
 
     /// <summary>API route to get a list of available models.</summary>
     public static async Task<JObject> ListModels(Session session, string path, int depth, string subtype = "Stable-Diffusion")
     {
-        if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler))
+        if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler) && subtype != "Wildcards")
         {
             return new JObject() { ["error"] = "Invalid sub-type." };
         }
@@ -411,11 +423,25 @@ public static class T2IAPI
             }
             return slashes < depth && dedup.Add(name);
         }
-        foreach (T2IModel possible in handler.Models.Values)
+        if (subtype == "Wildcards")
         {
-            if (tryMatch(possible.Name))
+            foreach (string file in WildcardsHelper.ListFiles)
             {
-                files.Add(possible.ToNetObject());
+                if (tryMatch(file))
+                {
+                    WildcardsHelper.Wildcard card = WildcardsHelper.GetWildcard(file);
+                    files.Add(card.GetNetObject());
+                }
+            }
+        }
+        else
+        {
+            foreach (T2IModel possible in handler.Models.Values)
+            {
+                if (tryMatch(possible.Name))
+                {
+                    files.Add(possible.ToNetObject());
+                }
             }
         }
         foreach ((string name, JObject possible) in InternalExtraModels(subtype))
@@ -466,18 +492,36 @@ public static class T2IAPI
         return null;
     }
 
+    public static bool TryGetRefusalForModel(Session session, string name, out JObject refusal)
+    {
+        if (!session.User.Restrictions.CanChangeModels)
+        {
+            refusal = new JObject() { ["error"] = "You are not allowed to change models." };
+            return true;
+        }
+        // TODO: model-metadata-edit permission check
+        string allowedStr = session.User.Restrictions.AllowedModels;
+        Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        if ((allowed != null && !allowed.IsMatch(name)) || string.IsNullOrWhiteSpace(name))
+        {
+            Logs.Warning($"Rejected model access for model '{name}' from user {session.User.UserID}");
+            refusal = new JObject() { ["error"] = "Model not found." };
+            return true;
+        }
+        refusal = null;
+        return false;
+    }
+
     /// <summary>Internal handler of the stable-diffusion model-load API route.</summary>
     public static async Task SelectModelInternal(Session session, (string, string) data, Action<JObject> output, bool isWS)
     {
         (string model, string backendId) = data;
-        if (!session.User.Restrictions.CanChangeModels)
+        if (TryGetRefusalForModel(session, model, out JObject refusal))
         {
-            output(new JObject() { ["error"] = "You are not allowed to change models." });
+            output(refusal);
             return;
         }
-        string allowedStr = session.User.Restrictions.AllowedModels;
-        Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        if (allowed != null && !allowed.IsMatch(model) || !Program.MainSDModels.Models.TryGetValue(model, out T2IModel actualModel))
+        if (!Program.MainSDModels.Models.TryGetValue(model, out T2IModel actualModel))
         {
             output(new JObject() { ["error"] = "Model not found." });
             return;
@@ -495,6 +539,58 @@ public static class T2IAPI
         output(new JObject() { ["success"] = true });
     }
 
+    /// <summary>API route to delete a wildcard.</summary>
+    public static async Task<JObject> DeleteWildcard(Session session, string card)
+    {
+        card = Utilities.StrictFilenameClean(card);
+        if (TryGetRefusalForModel(session, card, out JObject refusal))
+        {
+            return refusal;
+        }
+        if (!File.Exists($"{WildcardsHelper.Folder}/{card}.txt"))
+        {
+            return new JObject() { ["error"] = "Model not found." };
+        }
+        File.Delete($"{WildcardsHelper.Folder}/{card}.txt");
+        if (File.Exists($"{WildcardsHelper.Folder}/{card}.jpg"))
+        {
+            File.Delete($"{WildcardsHelper.Folder}/{card}.jpg");
+        }
+        return new JObject() { ["success"] = true };
+    }
+
+    /// <summary>API route to test how a prompt fills.</summary>
+    public static async Task<JObject> TestPromptFill(Session session, string prompt)
+    {
+        T2IParamInput input = new(session);
+        input.Set(T2IParamTypes.Seed, Random.Shared.Next(int.MaxValue));
+        input.Set(T2IParamTypes.Prompt, prompt);
+        input.Set(T2IParamTypes.NegativePrompt, "");
+        input.PreparsePromptLikes();
+        return new JObject() { ["result"] = input.Get(T2IParamTypes.Prompt) };
+    }
+
+    /// <summary>API route to modify a wildcard.</summary>
+    public static async Task<JObject> EditWildcard(Session session, string card, string options, string preview_image)
+    {
+        card = Utilities.StrictFilenameClean(card);
+        if (TryGetRefusalForModel(session, card, out JObject refusal))
+        {
+            return refusal;
+        }
+        string path = $"{WildcardsHelper.Folder}/{card}.txt";
+        string folder = Path.GetDirectoryName(path);
+        Directory.CreateDirectory(folder);
+        File.WriteAllBytes(path, StringConversionHelper.UTF8Encoding.GetBytes(options));
+        if (!string.IsNullOrWhiteSpace(preview_image))
+        {
+            Image img = Image.FromDataString(preview_image);
+            File.WriteAllBytes($"{WildcardsHelper.Folder}/{card}.jpg", img.ToMetadataJpg().ImageData);
+            WildcardsHelper.WildcardFiles[card] = new WildcardsHelper.Wildcard() { Name = card };
+        }
+        return new JObject() { ["success"] = true };
+    }
+
     /// <summary>API route to modify the metadata of a model.</summary>
     public static async Task<JObject> EditModelMetadata(Session session, string model, string title, string author, string type, string description,
         int standard_width, int standard_height, string preview_image, string usage_hint, string date, string license, string trigger_phrase, string tags, string subtype = "Stable-Diffusion")
@@ -503,14 +599,11 @@ public static class T2IAPI
         {
             return new JObject() { ["error"] = "Invalid sub-type." };
         }
-        if (!session.User.Restrictions.CanChangeModels)
+        if (TryGetRefusalForModel(session, model, out JObject refusal))
         {
-            return new JObject() { ["error"] = "You are not allowed to change models." };
+            return refusal;
         }
-        // TODO: model-metadata-edit permission check
-        string allowedStr = session.User.Restrictions.AllowedModels;
-        Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        if (allowed != null && !allowed.IsMatch(model) || !handler.Models.TryGetValue(model, out T2IModel actualModel))
+        if (!handler.Models.TryGetValue(model, out T2IModel actualModel))
         {
             return new JObject() { ["error"] = "Model not found." };
         }

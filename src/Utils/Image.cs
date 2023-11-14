@@ -114,16 +114,27 @@ public class Image
     }
 
     /// <summary>Returns a metadata-format of the image.</summary>
-    public string ToMetadataFormat()
+    public Image ToMetadataJpg()
     {
         if (Type != ImageType.IMAGE)
         {
-            return AsDataString();
+            return null;
         }
         ISImage img = ToIS;
         float factor = 256f / Math.Min(img.Width, img.Height);
         img.Mutate(i => i.Resize((int)(img.Width * factor), (int)(img.Height * factor)));
-        return "data:image/jpeg;base64," + new Image(ISImgToJpgBytes(img), Type, "jpg").AsBase64;
+        return new Image(ISImgToJpgBytes(img), Type, "jpg");
+    }
+
+    /// <summary>Returns a metadata-format of the image.</summary>
+    public string ToMetadataFormat()
+    {
+        Image conv = ToMetadataJpg();
+        if (conv is null)
+        {
+            return AsDataString();
+        }
+        return "data:image/jpeg;base64," + conv.AsBase64;
     }
 
     /// <summary>Resizes the given image directly and returns a png formatted copy of it.</summary>

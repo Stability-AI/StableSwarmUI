@@ -840,3 +840,7 @@ body {
     max-height: 200px;
     margin-left: 2rem;
 }
+.wildcard_title {
+    font-weight: bold;
+    font-size: 150%;
+}

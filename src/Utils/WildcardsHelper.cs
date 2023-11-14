@@ -1,4 +1,6 @@
 ﻿using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
+using Newtonsoft.Json.Linq;
 using StableSwarmUI.Core;
 using System.IO;
 
@@ -7,8 +9,30 @@ namespace StableSwarmUI.Utils;
 /// <summary>Central class for processing wildcard files.</summary>
 public class WildcardsHelper
 {
+    public class Wildcard
+    {
+        public string Name;
+
+        public string[] Options;
+
+        public string Image;
+
+        public string Raw;
+
+        public JObject GetNetObject()
+        {
+            return new()
+            {
+                ["name"] = Name,
+                ["options"] = JArray.FromObject(Options),
+                ["raw"] = Raw,
+                ["image"] = Image ?? "imgs/model_placeholder.jpg"
+            };
+        }
+    }
+
     /// <summary>Internal tracker of all currently known wildcard files. Values populate on first read.</summary>
-    public static ConcurrentDictionary<string, string[]> WildcardFiles = new();
+    public static ConcurrentDictionary<string, Wildcard> WildcardFiles = new();
 
     public static string Folder => Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.DataPath, Program.ServerSettings.Paths.WildcardsFolder);
 
@@ -30,36 +54,41 @@ public class WildcardsHelper
         foreach (string str in Directory.EnumerateFiles(Folder, "*.txt", SearchOption.AllDirectories))
         {
             string path = Path.GetRelativePath(Folder, str).Replace("\\", "/").TrimStart('/').BeforeLast('.');
-            WildcardFiles.TryAdd(path, null);
+            WildcardFiles.TryAdd(path, new() { Name = path });
         }
     }
 
-    /// <summary>Gets all possible options for the specified exact wildcard name.</summary>
-    public static string[] GetOptions(string card)
+    /// <summary>Gets the wildcard data for the specified exact wildcard name.</summary>
+    public static Wildcard GetWildcard(string name)
     {
-        if (!WildcardFiles.TryGetValue(card, out string[] options))
+        if (!WildcardFiles.TryGetValue(name, out Wildcard wildcard))
         {
             return null;
         }
-        if (options is null)
+        if (wildcard.Options is null)
         {
-            options = File.ReadAllText($"{Folder}/{card}.txt").Replace("\r\n", "\n").Replace("\r", "").Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-            WildcardFiles[card] = options;
+            string rawText = StringConversionHelper.UTF8Encoding.GetString(File.ReadAllBytes($"{Folder}/{name}.txt")).Replace("\r\n", "\n").Replace("\r", "");
+            wildcard.Raw = rawText;
+            wildcard.Options = rawText.Split('\n').Select(card => card.Before('#').Trim()).Where(card => !string.IsNullOrWhiteSpace(card)).ToArray();
+            if (wildcard.Image is null && File.Exists($"{Folder}/{name}.jpg"))
+            {
+                wildcard.Image = new Image(File.ReadAllBytes($"{Folder}/{name}.jpg"), Image.ImageType.IMAGE, "jpg").AsDataString();
+            }
         }
-        return options;
+        return wildcard;
     }
 
     /// <summary>Picks a random entry from the given wildcard name, for the given random provider.</summary>
-    /// <param name="card">The exact wildcard name.</param>
+    /// <param name="name">The exact wildcard name.</param>
     /// <param name="random">The random provider.</param>
     /// <returns>The random value, or null if invalid.</returns>
-    public static string PickRandom(string card, Random random)
+    public static string PickRandom(string name, Random random)
     {
-        string[] options = GetOptions(card);
-        if (options is null)
+        Wildcard wildcard = GetWildcard(name);
+        if (wildcard is null)
         {
             return null;
         }
-        return options[random.Next(options.Length)];
+        return wildcard.Options[random.Next(wildcard.Options.Length)];
     }
 }
