@@ -72,9 +72,10 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 }
             }
             EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding");
+            string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.ModelRoot);
             string yaml = $"""
             stableswarmui:
-                base_path: {Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.ModelRoot)}
+                base_path: {root}
                 checkpoints: {Program.ServerSettings.Paths.SDModelFolder}
                 vae: |
                     {Program.ServerSettings.Paths.SDVAEFolder}
@@ -103,6 +104,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     {nodePath}
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/ExtraNodes")}
             """;
+            Directory.CreateDirectory($"{root}/upscale_models");
             File.WriteAllText("Data/comfy-auto-model.yaml", yaml);
             IsComfyModelFileEmitted = true;
         }
