@@ -535,6 +535,12 @@ function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
 function describeImage(image) {
     let buttons = [
         {
+            label: 'Open In Folder',
+            onclick: (e) => {
+                genericRequest('OpenImageFolder', {'path': image.data.src.substring("Output/".length)}, data => {});
+            }
+        },
+        {
             label: 'Delete',
             onclick: (e) => {
                 genericRequest('DeleteImage', {'path': image.data.src.substring("Output/".length)}, data => {

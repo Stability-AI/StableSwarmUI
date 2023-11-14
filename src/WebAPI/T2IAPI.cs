@@ -6,6 +6,7 @@ using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text.RegularExpressions;
@@ -20,6 +21,7 @@ public static class T2IAPI
         API.RegisterAPICall(GenerateText2Image);
         API.RegisterAPICall(GenerateText2ImageWS);
         API.RegisterAPICall(ListImages);
+        API.RegisterAPICall(OpenImageFolder);
         API.RegisterAPICall(DeleteImage);
         API.RegisterAPICall(ListModels);
         API.RegisterAPICall(DescribeModel);
@@ -274,6 +276,26 @@ public static class T2IAPI
                 return new JObject() { ["error"] = "Error reading file list." };
             }
         }
+    }
+
+    /// <summary>API route to cause an image folder to open.</summary>
+    public static async Task<JObject> OpenImageFolder(Session session, string path)
+    {
+        string origPath = path;
+        string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, session.User.OutputDirectory);
+        (path, string consoleError, string userError) = WebServer.CheckFilePath(root, path);
+        if (consoleError is not null)
+        {
+            Logs.Error(consoleError);
+            return new JObject() { ["error"] = userError };
+        }
+        if (!File.Exists(path))
+        {
+            Logs.Warning($"User {session.User.UserID} tried to open image path '{origPath}' which maps to '{path}', but cannot as the image does not exist.");
+            return new JObject() { ["error"] = "That file does not exist, cannot open." };
+        }
+        Process.Start("explorer.exe", $"/select,\"{Path.GetFullPath(path)}\"");
+        return new JObject() { ["success"] = true };
     }
 
     /// <summary>API route to delete an image.</summary>
