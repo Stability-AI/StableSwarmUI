@@ -118,6 +118,9 @@ body {
     position: relative;
     bottom: 3.5rem;
 }
+.advanced_input_checkbox_presets {
+    bottom: 0rem;
+}
 .main_inputs_area_wrapper {
     overflow-x: hidden;
     overflow-y: auto;
