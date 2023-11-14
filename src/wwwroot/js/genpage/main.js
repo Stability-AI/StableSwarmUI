@@ -541,6 +541,11 @@ function describeImage(image) {
             }
         },
         {
+            label: 'Download',
+            href: image.data.src,
+            is_download: true
+        },
+        {
             label: 'Delete',
             onclick: (e) => {
                 genericRequest('DeleteImage', {'path': image.data.src.substring("Output/".length)}, data => {
@@ -548,7 +553,7 @@ function describeImage(image) {
                 });
             }
         }
-    ]; // TODO: download button, etc.
+    ];
     let description = image.data.name + "\n" + formatMetadata(image.data.metadata);
     let name = image.data.name;
     let imageSrc = image.data.src.endsWith('.html') ? 'imgs/html.jpg' : image.data.src;

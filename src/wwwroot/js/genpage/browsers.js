@@ -213,9 +213,22 @@ class GenPageBrowserClass {
             if (desc.buttons.length > 0) {
                 let menuDiv = createDiv(`popover_${popoverId}`, 'sui-popover sui_popover_model');
                 for (let button of desc.buttons) {
-                    let buttonElem = createDiv(null, 'sui_popover_model_button');
+                    let buttonElem;
+                    if (button.href) {
+                        buttonElem = document.createElement('a');
+                        buttonElem.href = button.href;
+                        if (button.is_download) {
+                            buttonElem.download = '';
+                        }
+                    }
+                    else {
+                        buttonElem = document.createElement('div');
+                    }
+                    buttonElem.className = 'sui_popover_model_button';
                     buttonElem.innerText = button.label;
-                    buttonElem.onclick = () => button.onclick(div);
+                    if (button.onclick) {
+                        buttonElem.onclick = () => button.onclick(div);
+                    }
                     menuDiv.appendChild(buttonElem);
                 }
                 container.appendChild(menuDiv);
