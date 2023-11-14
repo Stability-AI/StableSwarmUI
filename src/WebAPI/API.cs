@@ -42,7 +42,7 @@ public class API
             if (context.WebSockets.IsWebSocketRequest)
             {
                 socket = await context.WebSockets.AcceptWebSocketAsync();
-                input = await socket.ReceiveJson(TimeSpan.FromMinutes(1), 10 * 1024 * 1024); // TODO: Configurable limits
+                input = await socket.ReceiveJson(TimeSpan.FromMinutes(1), 100 * 1024 * 1024); // TODO: Configurable limits
             }
             else if (context.Request.Method == "POST")
             {
@@ -52,7 +52,7 @@ public class API
                     context.Response.Redirect("/Error/BasicAPI");
                     return;
                 }
-                if (context.Request.ContentLength <= 0 || context.Request.ContentLength >= 10 * 1024 * 1024) // TODO: Configurable limits
+                if (context.Request.ContentLength <= 0 || context.Request.ContentLength >= 100 * 1024 * 1024) // TODO: Configurable limits
                 {
                     Error($"Request has invalid content length: {context.Request.ContentLength}");
                     context.Response.Redirect("/Error/BasicAPI");
