@@ -419,10 +419,14 @@ function monitorPromptChangeForEmbed(promptText, type) {
     lastPromptForEmbedMonitor[type] = promptText;
     let countNew = promptText.split(`<embed:`).length - 1;
     let countOld = last.split(`<embed:`).length - 1;
-    if (countNew == countOld) {
-        return;
+    if (countNew != countOld) {
+        sdEmbedBrowser.browser.rerender();
     }
-    sdEmbedBrowser.browser.rerender();
+    let countNewWc = promptText.split(`<wildcard:`).length - 1;
+    let countOldWc = last.split(`<wildcard:`).length - 1;
+    if (countNewWc != countOldWc) {
+        wildcardsBrowser.browser.rerender();
+    }
 }
 
 function setControlNet(model) {
