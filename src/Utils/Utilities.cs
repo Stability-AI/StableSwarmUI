@@ -438,7 +438,7 @@ public static class Utilities
     /// <summary>Smart clean combination of two paths in a way that allows B to be an absolute path.</summary>
     public static string CombinePathWithAbsolute(string a, string b)
     {
-        if (b.StartsWith("/") || (b.Length > 2 && b[1] == ':'))
+        if (b.StartsWith("/") || (b.Length > 2 && b[1] == ':') || b.StartsWith("\\\\"))
         {
             return b;
         }
