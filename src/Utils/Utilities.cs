@@ -26,6 +26,9 @@ public static class Utilities
     /// <summary>StableSwarmUI's current version.</summary>
     public static readonly string Version = Assembly.GetEntryAssembly()?.GetName().Version.ToString();
 
+    /// <summary>Current git commit (if known -- empty if unknown).</summary>
+    public static string GitCommit = "";
+
     /// <summary>Used by linked pages to prevent cache errors when data changes.</summary>
     public static string VaryID = Version;
 
@@ -39,6 +42,11 @@ public static class Utilities
 
     static Utilities()
     {
+        if (File.Exists("./.git/refs/heads/master"))
+        {
+            GitCommit = File.ReadAllText("./.git/refs/heads/master").Trim()[0..8];
+            VaryID += ".GIT-" + GitCommit;
+        }
         for (int i = 0; i <= 9; i++)
         {
             ReservedFilenames.Add($"com{i}");
