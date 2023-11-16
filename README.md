@@ -1,6 +1,6 @@
 # StableSwarmUI
 
-**StableSwarmUI 0.5.8 Alpha**.
+**StableSwarmUI 0.5.9 Alpha**.
 
 A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powertools easily accessible, high performance, and extensibility.
 
