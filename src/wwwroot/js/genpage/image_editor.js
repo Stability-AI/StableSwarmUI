@@ -1,17 +1,82 @@
 
+class ImageEditorTool {
+    constructor(editor, id, icon, name, description) {
+        this.editor = editor;
+        this.id = id;
+        this.icon = icon;
+        this.iconImg = new Image();
+        this.iconImg.src = `/imgs/${icon}.png`;
+        this.name = name;
+        this.description = description;
+        this.active = false;
+        this.y = editor.lastToolY;
+        this.cursor = 'crosshair';
+        editor.lastToolY += 40;
+    }
+
+    isMouseOver() {
+        return this.editor.isMouseInBox(10, this.y, 32, 32);
+    }
+
+    draw() {
+        let color = this.editor.toolBoxColor;
+        if (this.editor.isMouseInBox(10, this.y, 32, 32)) {
+            color = this.editor.toolBoxHoverColor;
+            this.editor.drawTextBubble(`${this.name}\n${this.description}`, '12px sans-serif', 10 + 32 + 5, this.y, 300);
+            this.editor.canvas.style.cursor = 'pointer';
+        }
+        else if (this.active) {
+            color = this.editor.toolBoxActivecolor;
+        }
+        this.editor.drawBox(10, this.y, 32, 32, color, this.editor.uiBorderColor);
+        if (this.iconImg.complete && this.iconImg.naturalWidth > 0) {
+            this.editor.ctx.drawImage(this.iconImg, 10, this.y, 32, 32);
+        }
+    }
+}
+
 class ImageEditor {
     constructor() {
         // Configurables:
         this.zoomRate = 1.1;
         this.gridScale = 4;
+        this.backgroundColor = '#202020';
+        this.gridColor = '#404040';
+        this.uiColor = '#808080';
+        this.uiBorderColor = '#b0b0b0';
+        this.toolBoxColor = '#606060';
+        this.toolBoxHoverColor = '#a0a0a0';
+        this.toolBoxActivecolor = '#202020';
+        this.textColor = '#ffffff';
         // Data:
         this.active = false;
         this.inputDiv = getRequiredElementById('image_editor_input');
         this.zoomLevel = 1;
         this.offsetX = 0;
         this.offsetY = 0;
-        this.backgroundColor = '#202020';
-        this.gridColor = '#404040';
+        this.tools = {};
+        this.mouseX = 0;
+        this.mouseY = 0;
+        this.lastToolY = 10;
+        this.leftUiWidth = 52;
+        // Tools:
+        this.addTool(new ImageEditorTool(this, 'navigate', 'mouse', 'Navigate', 'Pure navigation tool, just moves around, no funny business.'));
+        this.activateTool('navigate');
+        this.addTool(new ImageEditorTool(this, 'select', 'select', 'Select', 'Select a region of the image.'));
+        this.addTool(new ImageEditorTool(this, 'brush', 'paintbrush', 'Paintbrush', 'Draw on the image.'));
+        this.addTool(new ImageEditorTool(this, 'eraser', 'eraser', 'Eraser', 'Erase parts of the image.'));
+    }
+
+    addTool(tool) {
+        this.tools[tool.id] = tool;
+    }
+
+    activateTool(id) {
+        if (this.activeTool) {
+            this.activeTool.active = false;
+        }
+        this.tools[id].active = true;
+        this.activeTool = this.tools[id];
     }
 
     createCanvas() {
@@ -23,8 +88,10 @@ class ImageEditor {
         canvas.addEventListener('wheel', (e) => this.mouseWheelEvent(e));
         canvas.addEventListener('mousedown', (e) => this.mouseDownEvent(e));
         document.addEventListener('mouseup', (e) => this.globalMouseUpEvent(e));
+        canvas.addEventListener('mouseup', (e) => this.localMouseUpEvent(e));
         canvas.addEventListener('mousemove', (e) => this.mouseMoveEvent(e));
         this.ctx = canvas.getContext('2d');
+        canvas.style.cursor = 'none';
         this.redraw();
     }
 
@@ -49,9 +116,28 @@ class ImageEditor {
     }
 
     mouseDownEvent(e) {
-        this.dragStartX = e.clientX;
-        this.dragStartY = e.clientY;
-        this.dragging = true;
+        this.mouseClickedTool = null;
+        if (this.isMouseInBox(0, 0, this.leftUiWidth, this.canvas.height)) {
+            for (let tool of Object.values(this.tools)) {
+                if (tool.isMouseOver()) {
+                    this.mouseClickedTool = tool;
+                }
+            }
+        }
+        else {
+            this.dragStartX = this.mouseX;
+            this.dragStartY = this.mouseY;
+            this.dragging = true;
+        }
+        this.redraw();
+    }
+
+    localMouseUpEvent(e) {
+        if (this.mouseClickedTool && this.mouseClickedTool.isMouseOver()) {
+            this.activateTool(this.mouseClickedTool.id);
+        }
+        this.mouseClickedTool = null;
+        this.redraw();
     }
 
     globalMouseUpEvent(e) {
@@ -59,13 +145,19 @@ class ImageEditor {
     }
 
     mouseMoveEvent(e) {
+        this.mouseX = e.clientX - this.canvas.offsetLeft;
+        this.mouseY = e.clientY - this.canvas.offsetTop;
         if (this.dragging) {
-            this.offsetX += (e.clientX - this.dragStartX) / this.zoomLevel;
-            this.offsetY += (e.clientY - this.dragStartY) / this.zoomLevel;
-            this.dragStartX = e.clientX;
-            this.dragStartY = e.clientY;
-            this.redraw();
+            this.offsetX += (this.mouseX - this.dragStartX) / this.zoomLevel;
+            this.offsetY += (this.mouseY - this.dragStartY) / this.zoomLevel;
+            this.dragStartX = this.mouseX;
+            this.dragStartY = this.mouseY;
         }
+        this.redraw();
+    }
+
+    isMouseInBox(x, y, width, height) {
+        return this.mouseX >= x && this.mouseX < x + width && this.mouseY >= y && this.mouseY < y + height;
     }
 
     activate() {
@@ -141,7 +233,67 @@ class ImageEditor {
         this.ctx.stroke();
     }
 
+    autoWrapText(text, maxWidth) {
+        let lines = [];
+        let rawLines = text.split('\n');
+        for (let rawLine of rawLines) {
+            let words = rawLine.split(' ');
+            let line = '';
+            for (let word of words) {
+                let newLine = line + word + ' ';
+                if (this.ctx.measureText(newLine).width > maxWidth) {
+                    lines.push(line);
+                    line = word + ' ';
+                }
+                else {
+                    line = newLine;
+                }
+            }
+            lines.push(line);
+        }
+        return lines;
+    }
+
+    drawTextBubble(text, font, x, y, maxWidth) {
+        let lines = this.autoWrapText(text, maxWidth - 10);
+        let widest = lines.map(line => this.ctx.measureText(line).width).reduce((a, b) => Math.max(a, b));
+        let metrics = this.ctx.measureText(text);
+        let fontHeight = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+        this.drawBox(x - 1, y - 1, widest + 10, (fontHeight * lines.length) + 10, this.toolBoxColor, this.uiBorderColor);
+        let currentY = y;
+        this.ctx.font = font;
+        this.ctx.fillStyle = this.textColor;
+        this.ctx.textBaseline = 'top';
+        for (let line of lines) {
+            this.ctx.fillText(line, x + 5, currentY + 5);
+            currentY += fontHeight;
+        }
+    }
+
+    drawBox(x, y, width, height, color, borderColor) {
+        this.ctx.fillStyle = color;
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+        this.ctx.lineTo(x + width, y);
+        this.ctx.lineTo(x + width, y + height);
+        this.ctx.lineTo(x, y + height);
+        this.ctx.closePath();
+        this.ctx.fill();
+        if (borderColor) {
+            this.ctx.strokeStyle = borderColor;
+            this.ctx.stroke();
+        }
+    }
+
     redraw() {
+        if (this.isMouseInBox(0, 0, this.leftUiWidth, this.canvas.height)) {
+            this.canvas.style.cursor = 'default';
+        }
+        else {
+            this.canvas.style.cursor = this.activeTool.cursor;
+        }
+        // Background:
         this.ctx.fillStyle = this.backgroundColor;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         let gridScale = this.gridScale;
@@ -154,8 +306,14 @@ class ImageEditor {
             this.renderFullGrid(gridScale / 8, 1, `color-mix(in srgb, ${this.gridColor} ${frac}%, ${this.backgroundColor})`);
         }
         this.renderFullGrid(gridScale, 3, this.gridColor);
+        // Image:
         if (this.baseImage) {
             this.ctx.drawImage(this.baseImage, this.offsetX * this.zoomLevel, this.offsetY * this.zoomLevel, this.baseImage.naturalWidth * this.zoomLevel, this.baseImage.naturalHeight * this.zoomLevel);
+        }
+        // UI:
+        this.drawBox(1, 1, this.leftUiWidth, this.canvas.height - 1, this.uiColor, this.uiBorderColor);
+        for (let tool of Object.values(this.tools)) {
+            tool.draw();
         }
     }
 
