@@ -373,6 +373,9 @@ function genInputs(delay_final = false) {
         if (loras) {
             reapplyLoraWeights();
         }
+        if (imageEditor.active) {
+            imageEditor.doParamHides();
+        }
     };
     if (delay_final) {
         setTimeout(() => {
@@ -445,9 +448,22 @@ function getGenInput(input_overrides = {}) {
         }
     }
     let revisionImageArea = getRequiredElementById('alt_prompt_image_area');
-    let imgs = [...revisionImageArea.children].filter(c => c.tagName == "IMG");
-    if (imgs.length > 0) {
-        input["promptimages"] = imgs.map(img => img.dataset.filedata).join('|');
+    let revisionImages = [...revisionImageArea.children].filter(c => c.tagName == "IMG");
+    if (revisionImages.length > 0) {
+        input["promptimages"] = revisionImages.map(img => img.dataset.filedata).join('|');
+    }
+    if (imageEditor.active) {
+        input["initimage"] = imageEditor.getFinalImageData();
+        input["maskimage"] = imageEditor.getFinalMaskData();
+        if (!input["initimagecreativity"]) {
+            let param = document.getElementById('input_initimagecreativity');
+            if (param) {
+                input["initimagecreativity"] = param.value;
+            }
+            else {
+                input["initimagecreativity"] = 0.6;
+            }
+        }
     }
     input["presets"] = currentPresets.map(p => p.title);
     for (let key in input_overrides) {

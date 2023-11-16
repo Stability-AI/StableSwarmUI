@@ -844,3 +844,6 @@ body {
     font-weight: bold;
     font-size: 150%;
 }
+.image_editor_input {
+    vertical-align: top;
+}
