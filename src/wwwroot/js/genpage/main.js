@@ -1086,6 +1086,19 @@ function revisionInputHandler() {
 }
 revisionInputHandler();
 
+function openEmptyEditor() {
+    let canvas = document.createElement('canvas');
+    canvas.width = document.getElementById('input_width').value;
+    canvas.height = document.getElementById('input_height').value;
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    let image = new Image();
+    image.src = canvas.toDataURL();
+    imageEditor.setBaseImage(image);
+    imageEditor.activate();
+}
+
 function upvertAutoWebuiMetadataToSwarm(lines) {
     let realData = {};
     realData['prompt'] = lines[0];

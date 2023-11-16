@@ -178,7 +178,12 @@ class ImageEditor {
     }
 
     setBaseImage(img) {
-        this.baseImage = img;
+        if (img) {
+            this.baseImage = img.cloneNode();
+        }
+        else {
+            this.baseImage = null;
+        }
         if (this.active) {
             this.redraw();
         }
@@ -315,6 +320,7 @@ class ImageEditor {
         for (let tool of Object.values(this.tools)) {
             tool.draw();
         }
+        this.drawTextBubble("SWARM IMAGE EDITOR - DEVELOPMENT PREVIEW\nIt doesn't work yet. Those icons are placeholders. This is just a preview.", '12px sans-serif', this.canvas.width / 4, 10, this.canvas.width / 2);
     }
 
     getFinalImageData() {
