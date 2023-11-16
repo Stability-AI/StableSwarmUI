@@ -1118,7 +1118,7 @@ function remapMetadataKeys(metadata, keymap) {
     return metadata;
 }
 
-const imageMetadataKeys = ['prompt', 'Prompt', 'parameters', 'Parameters', 'userComment', 'UserComment'];
+const imageMetadataKeys = ['prompt', 'Prompt', 'parameters', 'Parameters', 'userComment', 'UserComment', 'model', 'Model'];
 
 function imageInputHandler() {
     let imageArea = getRequiredElementById('current_image');
@@ -1158,6 +1158,12 @@ function imageInputHandler() {
                             }
                             else if (parsed.userComment) {
                                 metadata = parsed.userComment;
+                            }
+                            else if (parsed.model) {
+                                metadata = parsed.model;
+                            }
+                            else if (parsed.Model) {
+                                metadata = parsed.Model;
                             }
                         }
                         if (metadata instanceof Uint8Array) {
