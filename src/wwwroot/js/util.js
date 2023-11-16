@@ -653,3 +653,14 @@ function imageToData(src, callback) {
     };
     image.src = src;
 }
+
+/**
+ * Takes a UTF-16 Uint8Array and returns a string.
+ */
+function decodeUtf16(data) {
+    let output = [];
+    for (let i = 0; i < data.length; i += 2) {
+        output.push(String.fromCharCode((data[i + 1] << 8) + data[i]));
+    }
+    return output.join('');
+}

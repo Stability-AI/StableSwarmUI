@@ -1118,6 +1118,8 @@ function remapMetadataKeys(metadata, keymap) {
     return metadata;
 }
 
+const imageMetadataKeys = ['prompt', 'Prompt', 'parameters', 'Parameters', 'userComment', 'UserComment'];
+
 function imageInputHandler() {
     let imageArea = getRequiredElementById('current_image');
     imageArea.addEventListener('dragover', (e) => {
@@ -1134,6 +1136,12 @@ function imageInputHandler() {
                 reader.onload = (e) => {
                     let data = e.target.result;
                     exifr.parse(data).then(parsed => {
+                        // check any of imageMetadataKeys are present
+                        if (parsed && imageMetadataKeys.some(key => key in parsed)) {
+                            return parsed;
+                        }
+                        return exifr.parse(data, imageMetadataKeys);
+                    }).then(parsed => {
                         let metadata = null;
                         if (parsed) {
                             if (parsed.parameters) {
@@ -1145,6 +1153,18 @@ function imageInputHandler() {
                             else if (parsed.prompt) {
                                 metadata = parsed.prompt;
                             }
+                            else if (parsed.UserComment) {
+                                metadata = parsed.UserComment;
+                            }
+                            else if (parsed.userComment) {
+                                metadata = parsed.userComment;
+                            }
+                        }
+                        if (metadata instanceof Uint8Array) {
+                            let prefix = metadata.slice(0, 8);
+                            let data = metadata.slice(8);
+                            let encodeType = new TextDecoder().decode(prefix);
+                            metadata = encodeType.startsWith('UNICODE') ? decodeUtf16(data) : new TextDecoder().decode(data);
                         }
                         if (metadata) {
                             metadata = metadata.trim();

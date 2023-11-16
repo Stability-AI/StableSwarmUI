@@ -191,6 +191,10 @@ public class Image
             {
                 return data.Value;
             }
+            if (img.Metadata?.ExifProfile?.TryGetValue(ExifTag.UserComment, out var data2) ?? false)
+            {
+                return data2.Value.Text;
+            }
         }
         catch (ArgumentNullException ex)
         {
