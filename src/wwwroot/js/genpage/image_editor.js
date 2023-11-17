@@ -14,8 +14,7 @@ class ImageEditorTool {
     }
 
     makeDivs() {
-        this.infoBubble = document.createElement('div');
-        this.infoBubble.className = 'image-editor-info-bubble';
+        this.infoBubble = createDiv(null, 'sui-popover');
         this.infoBubble.innerHTML = `<div class="image-editor-info-bubble-title">${escapeHtml(this.name)}</div><div class="image-editor-info-bubble-description">${escapeHtml(this.description)}</div>`;
         this.div = document.createElement('div');
         this.div.className = 'image-editor-tool';
@@ -24,10 +23,10 @@ class ImageEditorTool {
         this.div.addEventListener('mouseenter', () => {
             this.infoBubble.style.top = `${this.div.offsetTop}px`;
             this.infoBubble.style.left = `${this.div.offsetLeft + this.div.clientWidth + 5}px`;
-            this.infoBubble.classList.add('image-editor-info-bubble-visible');
+            this.infoBubble.classList.add('sui-popover-visible');
         });
         this.div.addEventListener('mouseleave', () => {
-            this.infoBubble.classList.remove('image-editor-info-bubble-visible');
+            this.infoBubble.classList.remove('sui-popover-visible');
         });
         this.editor.leftBar.appendChild(this.infoBubble);
         this.editor.leftBar.appendChild(this.div);
@@ -81,6 +80,9 @@ class ImageEditorTool {
     onMouseMove() {
     }
 
+    onMouseWheel(e) {
+    }
+
     onGlobalMouseMove() {
         return false;
     }
@@ -95,8 +97,20 @@ class ImageEditorToolNavigate extends ImageEditorTool {
         super(editor, 'navigate', 'mouse', 'Navigate', 'Pure navigation tool, just moves around, no funny business.');
     }
 
-    draw() {
+    fixCursor() {
         this.cursor = this.editor.mouseDown ? 'grabbing' : 'crosshair';
+    }
+
+    draw() {
+        this.fixCursor();
+    }
+
+    onMouseDown() {
+        this.fixCursor();
+    }
+
+    onMouseUp() {
+        this.fixCursor();
     }
 
     onGlobalMouseMove() {
@@ -124,12 +138,12 @@ class ImageEditorToolBrush extends ImageEditorTool {
             <input type="text" class="auto-number id-col1" style="width:75px;flex-grow:0;" value="#ffffff">
             <input type="color" class="id-col2" value="#ffffff">
         </div>`;
-        let radiusHtml = `<div class="image-editor-tool-block">
+        let radiusHtml = `<div class="image-editor-tool-block id-rad-block">
                 <label>Radius:&nbsp;</label>
-                <input type="number" style="width: 40px;" class="auto-number id-rad1" min="1" max="512" step="1" value="10">
-                <input type="range" style="flex-grow: 2" class="auto-slider-range id-rad2" min="1" max="512" step="1" value="10">
+                <input type="number" style="width: 40px;" class="auto-number id-rad1" min="1" max="1024" step="1" value="10">
+                <input type="range" style="flex-grow: 2" data-ispot="true" class="auto-slider-range id-rad2" min="1" max="1024" step="1" value="10">
             </div>`
-        let opacityHtml = `<div class="image-editor-tool-block">
+        let opacityHtml = `<div class="image-editor-tool-block id-opac-block">
                 <label>Opacity:&nbsp;</label>
                 <input type="number" style="width: 40px;" class="auto-number id-opac1" min="1" max="100" step="1" value="100">
                 <input type="range" style="flex-grow: 2" class="auto-slider-range id-opac2" min="1" max="100" step="1" value="100">
@@ -150,28 +164,14 @@ class ImageEditorToolBrush extends ImageEditorTool {
                 this.onConfigChange();
             });
         }
+        enableSliderForBox(this.configDiv.querySelector('.id-rad-block'));
+        enableSliderForBox(this.configDiv.querySelector('.id-opac-block'));
         this.radiusNumber = this.configDiv.querySelector('.id-rad1');
         this.radiusSelector = this.configDiv.querySelector('.id-rad2');
         this.opacityNumber = this.configDiv.querySelector('.id-opac1');
         this.opacitySelector = this.configDiv.querySelector('.id-opac2');
-        this.radiusNumber.addEventListener('input', () => {
-            this.radiusSelector.value = this.radiusNumber.value;
-            this.onConfigChange();
-        });
-        this.radiusSelector.addEventListener('input', () => {
-            this.radiusNumber.value = this.radiusSelector.value;
-            this.onConfigChange();
-        });
-        this.radiusNumber.dispatchEvent(new Event('input'));
-        this.opacityNumber.addEventListener('input', () => {
-            this.opacitySelector.value = this.opacityNumber.value;
-            this.onConfigChange();
-        });
-        this.opacitySelector.addEventListener('input', () => {
-            this.opacityNumber.value = this.opacitySelector.value;
-            this.onConfigChange();
-        });
-        this.opacityNumber.dispatchEvent(new Event('input'));
+        this.radiusNumber.addEventListener('change', () => { this.onConfigChange(); });
+        this.opacityNumber.addEventListener('change', () => { this.onConfigChange(); });
     }
 
     onConfigChange() {
@@ -212,6 +212,19 @@ class ImageEditorToolBrush extends ImageEditorTool {
     onMouseMove() {
         if (this.brushing) {
             this.brush();
+        }
+    }
+
+    onMouseWheel(e) {
+        if (e.ctrlKey) {
+            e.preventDefault();
+            let newRadius = parseInt(this.radius * Math.pow(1.1, -e.deltaY / 100));
+            if (newRadius == this.radius) {
+                newRadius += e.deltaY > 0 ? -1 : 1;
+            }
+            this.radiusNumber.value = Math.max(1, Math.min(1024, newRadius));
+            this.radiusNumber.dispatchEvent(new Event('input'));
+            this.radiusNumber.dispatchEvent(new Event('change'));
         }
     }
 
@@ -316,9 +329,52 @@ class ImageEditor {
         // Data:
         this.active = false;
         this.inputDiv = getRequiredElementById('image_editor_input');
-        this.leftBar = createDiv('image_editor_leftbar', 'image_editor_leftbar');
+        this.leftBar = createDiv(null, 'image_editor_leftbar');
         this.inputDiv.appendChild(this.leftBar);
-        this.bottomBar = createDiv('image_editor_bottombar', 'image_editor_bottombar');
+        this.rightBar = createDiv(null, 'image_editor_rightbar');
+        this.rightBar.innerHTML = `<div class="image_editor_newlayer_button basic-button">+</div>`;
+        this.inputDiv.appendChild(this.rightBar);
+        this.rightBar.firstChild.addEventListener('click', () => {
+            this.addEmptyLayer();
+        });
+        this.canvasList = createDiv(null, 'image_editor_canvaslist');
+        // canvas entries can be dragged
+        this.canvasList.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        this.canvasList.addEventListener('drop', (e) => {
+            let target = findParentOfClass(e.target, 'image_editor_layer_preview');
+            if (!target) {
+                return;
+            }
+            let dragIndex = this.layers.indexOf(this.draggingLayer);
+            let targetIndex = this.layers.indexOf(target.layer);
+            if (dragIndex < 0 || targetIndex < 0 || dragIndex == targetIndex) {
+                return;
+            }
+            this.layers.splice(dragIndex, 1);
+            targetIndex = this.layers.indexOf(target.layer);
+            if (e.offsetY > target.clientHeight / 2) {
+                if (target.nextSibling) {
+                    this.canvasList.insertBefore(this.draggingLayer.div, target.nextSibling);
+                }
+                else {
+                    this.canvasList.appendChild(this.draggingLayer.div);
+                }
+            }
+            else {
+                targetIndex++;
+                this.canvasList.insertBefore(this.draggingLayer.div, target);
+            }
+            this.layers.splice(targetIndex, 0, this.draggingLayer);
+            this.redraw();
+        });
+        this.canvasList.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+        });
+        this.rightBar.appendChild(this.canvasList);
+        this.bottomBar = createDiv(null, 'image_editor_bottombar');
         this.inputDiv.appendChild(this.bottomBar);
         this.zoomLevel = 1;
         this.offsetX = 0;
@@ -359,7 +415,7 @@ class ImageEditor {
         let canvas = document.createElement('canvas');
         canvas.tabIndex = 1; // Force to be selectable
         canvas.className = 'image-editor-canvas';
-        this.inputDiv.insertBefore(canvas, this.bottomBar);
+        this.inputDiv.insertBefore(canvas, this.rightBar);
         this.canvas = canvas;
         canvas.addEventListener('wheel', (e) => this.onMouseWheel(e));
         canvas.addEventListener('mousedown', (e) => this.onMouseDown(e));
@@ -412,14 +468,17 @@ class ImageEditor {
     }
 
     onMouseWheel(e) {
-        let zoom = Math.pow(this.zoomRate, -e.deltaY / 100);
-        let mouseX = e.clientX - this.canvas.offsetLeft;
-        let mouseY = e.clientY - this.canvas.offsetTop;
-        let [origX, origY] = this.canvasCoordToImageCoord(mouseX, mouseY);
-        this.zoomLevel *= zoom;
-        let [newX, newY] = this.canvasCoordToImageCoord(mouseX, mouseY);
-        this.offsetX += newX - origX;
-        this.offsetY += newY - origY;
+        this.activeTool.onMouseWheel(e);
+        if (!e.defaultPrevented) {
+            let zoom = Math.pow(this.zoomRate, -e.deltaY / 100);
+            let mouseX = e.clientX - this.canvas.offsetLeft;
+            let mouseY = e.clientY - this.canvas.offsetTop;
+            let [origX, origY] = this.canvasCoordToImageCoord(mouseX, mouseY);
+            this.zoomLevel *= zoom;
+            let [newX, newY] = this.canvasCoordToImageCoord(mouseX, mouseY);
+            this.offsetX += newX - origX;
+            this.offsetY += newY - origY;
+        }
         this.redraw();
     }
 
@@ -496,15 +555,119 @@ class ImageEditor {
         setPageBarsFunc();
     }
 
-    setBaseImage(img) {
-        let layer = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
-        layer.ctx.drawImage(img, 0, 0);
-        this.layers = [layer];
+    setActiveLayer(layer) {
+        if (this.activeLayer && this.activeLayer.div) {
+            this.activeLayer.div.classList.remove('image_editor_layer_preview-active');
+        }
+        if (this.layers.indexOf(layer) == -1) {
+            throw new Error(`layer not found, ${layer}`);
+        }
         this.activeLayer = layer;
-        this.realWidth = img.naturalWidth;
-        this.realHeight = img.naturalHeight;
+        if (layer && layer.div) {
+            layer.div.classList.add('image_editor_layer_preview-active');
+        }
+        this.redraw();
+    }
+
+    clearLayers() {
+        this.layers = [];
+        this.activeLayer = null;
+        this.realWidth = 512;
+        this.realHeight = 512;
         this.finalOffsetX = 0;
         this.finalOffsetY = 0;
+        this.canvasList.innerHTML = '';
+    }
+
+    addEmptyLayer() {
+        let layer = new ImageEditorLayer(this, this.realWidth, this.realHeight);
+        this.addLayer(layer);
+    }
+
+    removeLayer(layer) {
+        let index = this.layers.indexOf(layer);
+        if (index >= 0) {
+            this.layers.splice(index, 1);
+            this.canvasList.removeChild(layer.div);
+            this.canvasList.removeChild(layer.menuPopover);
+            if (this.activeLayer == layer) {
+                this.setActiveLayer(this.layers[Math.max(0, index - 1)]);
+            }
+            this.redraw();
+        }
+    }
+
+    addLayer(layer) {
+        this.layers.push(layer);
+        layer.div = createDiv(null, 'image_editor_layer_preview');
+        layer.div.appendChild(layer.canvas);
+        layer.div.addEventListener('click', (e) => {
+            if (e.defaultPrevented) {
+                return;
+            }
+            this.setActiveLayer(layer);
+            this.redraw();
+        }, true);
+        // the div is draggable to re-order:
+        layer.div.draggable = true;
+        layer.div.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', 'dummy');
+            e.dataTransfer.effectAllowed = 'move';
+            this.draggingLayer = layer;
+        });
+        layer.div.addEventListener('dragend', (e) => {
+            this.draggingLayer = null;
+        });
+        layer.div.layer = layer;
+        let popId = `image_editor_layer_preview_${this.layers.length - 1}`;
+        let menuPopover = createDiv(`popover_${popId}`, 'sui-popover');
+        layer.menuPopover = menuPopover;
+        let buttonDelete = createDiv(null, 'sui_popover_model_button');
+        buttonDelete.innerText = 'Delete Layer';
+        buttonDelete.addEventListener('click', (e) => {
+            e.preventDefault();
+            hidePopover(popId);
+            this.removeLayer(layer);
+        }, true);
+        menuPopover.appendChild(buttonDelete);
+        let opacitySlider = document.createElement('input');
+        opacitySlider.type = 'range';
+        opacitySlider.min = '0';
+        opacitySlider.max = '100';
+        opacitySlider.step = '1';
+        opacitySlider.value = layer.opacity * 100;
+        opacitySlider.addEventListener('input', () => {
+            layer.opacity = parseInt(opacitySlider.value) / 100;
+            layer.canvas.style.opacity = layer.opacity;
+            this.redraw();
+        });
+        let opacityLabel = document.createElement('label');
+        opacityLabel.innerHTML = 'Opacity&nbsp;';
+        let opacityDiv = createDiv(null, 'sui-popover-inline-block');
+        opacityDiv.appendChild(opacityLabel);
+        opacityDiv.appendChild(opacitySlider);
+        menuPopover.appendChild(opacityDiv);
+        layer.canvas.style.opacity = layer.opacity;
+        layer.div.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            menuPopover.style.top = `${e.clientY}px`;
+            menuPopover.style.left = `${e.clientX}px`;
+            showPopover(popId);
+        });
+        this.canvasList.appendChild(menuPopover);
+        this.canvasList.insertBefore(layer.div, this.canvasList.firstChild);
+        this.setActiveLayer(layer);
+    }
+
+    setBaseImage(img) {
+        this.clearLayers();
+        let layer = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
+        layer.ctx.drawImage(img, 0, 0);
+        this.addLayer(layer);
+        let layer2 = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
+        this.addLayer(layer2);
+        this.realWidth = img.naturalWidth;
+        this.realHeight = img.naturalHeight;
         if (this.active) {
             this.redraw();
         }
@@ -581,13 +744,13 @@ class ImageEditor {
     }
 
     drawTextBubble(text, font, x, y, maxWidth) {
+        this.ctx.font = font;
         let lines = this.autoWrapText(text, maxWidth - 10);
         let widest = lines.map(line => this.ctx.measureText(line).width).reduce((a, b) => Math.max(a, b));
         let metrics = this.ctx.measureText(text);
         let fontHeight = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
         this.drawBox(x - 1, y - 1, widest + 10, (fontHeight * lines.length) + 10, this.uiColor, this.uiBorderColor);
         let currentY = y;
-        this.ctx.font = font;
         this.ctx.fillStyle = this.textColor;
         this.ctx.textBaseline = 'top';
         for (let line of lines) {
@@ -614,10 +777,9 @@ class ImageEditor {
 
     resize() {
         if (this.canvas) {
-            this.canvas.width = Math.max(100, this.inputDiv.clientWidth - this.leftBar.clientWidth);
+            this.canvas.width = Math.max(100, this.inputDiv.clientWidth - this.leftBar.clientWidth - this.rightBar.clientWidth);
             this.canvas.height = Math.max(100, this.inputDiv.clientHeight - this.bottomBar.clientHeight);
             this.redraw();
-            setTimeout(() => this.redraw(), 1); // Freshly resized canvas forgets how sizes work and looks wonky, so redraw an extra time to clean it up.
         }
     }
 
@@ -636,6 +798,9 @@ class ImageEditor {
     }
 
     redraw() {
+        if (!this.canvas) {
+            return;
+        }
         this.ctx.save();
         this.canvas.style.cursor = this.activeTool.cursor;
         // Background:

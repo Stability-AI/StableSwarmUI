@@ -394,6 +394,16 @@ body {
 .sui_popover_model_button:hover {
     background-color: var(--emphasis);
 }
+.sui-popover-inline-block {
+    white-space: nowrap;
+    max-width: 100%;
+    display: flex;
+    align-items: baseline;
+}
+.sui-popover-inline-block input {
+    flex-shrink: 1;
+    flex-grow: 1;
+}
 .sui_popover_scrollable {
     max-height: 15rem;
     overflow-y: auto;
@@ -854,9 +864,16 @@ body {
     width: 52px;
     height: calc(100% - 52px);
 }
+.image_editor_rightbar {
+    margin: 0;
+    display: inline-block;
+    vertical-align: top;
+    width: 52px;
+    height: calc(100% - 52px);
+}
 .image_editor_bottombar {
     margin: 0;
-    height: 52px;
+    height: 32px;
     display: block;
     width: 100%;
 }
@@ -886,24 +903,6 @@ body {
 .image-editor-tool-selected:hover {
     background-color: var(--danger-button-background-hover);
 }
-.image-editor-info-bubble {
-    position: fixed;
-    background-color: var(--popup-back);
-    color: var(--popup-front);
-    border: 1px solid gray;
-    padding: 0.5rem;
-    width: fit-content;
-    z-index: 1000;
-    white-space: pre-wrap;
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 0s, opacity 0.3s linear;
-}
-.image-editor-info-bubble-visible {
-    visibility: visible;
-    opacity: 1;
-    transition: visibility 0s, opacity 0.3s linear;
-}
 .image-editor-info-bubble-title {
     font-weight: bold;
 }
@@ -926,4 +925,47 @@ body {
     align-items: baseline;
     border: 1px solid var(--light-border);
     height: 32px;
+}
+.image_editor_canvaslist {
+    display: block;
+    margin: 0;
+    width: 52px;
+}
+.image_editor_layer_preview {
+    display: block;
+    width: 50px;
+    height: 50px;
+    border: 1px solid var(--light-border);
+    margin-bottom: 5px;
+    margin-top: 1px;
+    cursor: pointer;
+}
+.image_editor_layer_preview canvas {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    object-position: center;
+}
+.image_editor_layer_preview-active {
+    border: 2px solid var(--box-selected-border);
+}
+.image_editor_layer_preview-active canvas {
+    width: 46px;
+    height: 46px;
+}
+.image_editor_layer_preview:hover {
+    border: 2px solid var(--box-selected-border-stronger);
+}
+.image_editor_layer_preview:hover canvas {
+    width: 46px;
+    height: 46px;
+}
+.image_editor_newlayer_button {
+    margin: auto;
+    text-align: center;
+    display: block;
+    width: 80%;
+    padding: 5px;
+    border-radius: 16px;
+    margin-bottom: 5px;
 }
