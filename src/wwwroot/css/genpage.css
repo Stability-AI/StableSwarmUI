@@ -847,3 +847,83 @@ body {
 .image_editor_input {
     vertical-align: top;
 }
+.image_editor_leftbar {
+    margin: 0;
+    display: inline-block;
+    vertical-align: top;
+    width: 52px;
+    height: calc(100% - 52px);
+}
+.image_editor_bottombar {
+    margin: 0;
+    height: 52px;
+    display: block;
+    width: 100%;
+}
+.image-editor-canvas {
+    margin: 0;
+    display: inline-block;
+    vertical-align: top;
+}
+.image-editor-tool {
+    margin: 6px;
+    width: 32px;
+    height: 32px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px 32px;
+    background-color: var(--button-background);
+    cursor: pointer;
+    border: 1px solid var(--button-border);
+    border-radius: 8px;
+}
+.image-editor-tool:hover {
+    background-color: var(--button-background-hover);
+}
+.image-editor-tool-selected {
+    background-color: var(--danger-button-background-hover);
+}
+.image-editor-tool-selected:hover {
+    background-color: var(--danger-button-background-hover);
+}
+.image-editor-info-bubble {
+    position: fixed;
+    background-color: var(--popup-back);
+    color: var(--popup-front);
+    border: 1px solid gray;
+    padding: 0.5rem;
+    width: fit-content;
+    z-index: 1000;
+    white-space: pre-wrap;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.3s linear;
+}
+.image-editor-info-bubble-visible {
+    visibility: visible;
+    opacity: 1;
+    transition: visibility 0s, opacity 0.3s linear;
+}
+.image-editor-info-bubble-title {
+    font-weight: bold;
+}
+.image-editor-info-bubble-description {
+    max-width: 400px;
+}
+.image-editor-tool-bottombar {
+    padding-left: 52px;
+    margin: 0;
+    height: 32px;
+    display: flex;
+    width: 100%;
+    flex-wrap: nowrap;
+    justify-content: space-evenly;
+    font-size: 14px;
+}
+.image-editor-tool-block {
+    display: flex;
+    flex-grow: 2;
+    align-items: baseline;
+    border: 1px solid var(--light-border);
+    height: 32px;
+}

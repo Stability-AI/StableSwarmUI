@@ -789,7 +789,6 @@ function pageSizer() {
     let altRegion = getRequiredElementById('alt_prompt_region');
     let altText = getRequiredElementById('alt_prompt_textbox');
     let altImageRegion = getRequiredElementById('alt_prompt_extra_area');
-    let editorInput = getRequiredElementById('image_editor_input');
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
@@ -812,7 +811,7 @@ function pageSizer() {
         let curImgWidth = `100vw - ${barTopLeft} - ${barTopRight} - 10px`;
         if (imageEditor.active) {
             currentImage.style.width = `calc((${curImgWidth}) / 2)`;
-            editorInput.style.width = `calc((${curImgWidth}) / 2)`;
+            imageEditor.inputDiv.style.width = `calc((${curImgWidth}) / 2)`;
         }
         else {
             currentImage.style.width = `calc(${curImgWidth})`;
@@ -829,7 +828,7 @@ function pageSizer() {
             mainInputsAreaWrapper.style.height = `calc(100vh - ${fixed})`;
             mainImageArea.style.height = `calc(100vh - ${fixed})`;
             currentImage.style.height = `calc(100vh - ${fixed} - ${altHeight})`;
-            editorInput.style.height = `calc(100vh - ${fixed} - ${altHeight})`;
+            imageEditor.inputDiv.style.height = `calc(100vh - ${fixed} - ${altHeight})`;
             currentImageBatch.style.height = `calc(100vh - ${fixed})`;
             topBar.style.height = `calc(100vh - ${fixed})`;
             bottomBarContent.style.height = `calc(${fixed} - 2rem)`;
@@ -841,17 +840,12 @@ function pageSizer() {
             mainInputsAreaWrapper.style.height = '';
             mainImageArea.style.height = '';
             currentImage.style.height = `calc(49vh - ${altHeight})`;
-            editorInput.style.height = `calc(49vh - ${altHeight})`;
+            imageEditor.inputDiv.style.height = `calc(49vh - ${altHeight})`;
             currentImageBatch.style.height = '';
             topBar.style.height = '';
             bottomBarContent.style.height = '';
         }
-        let subCanvas = imageEditor.active ? imageEditor.canvas : null;
-        if (subCanvas) {
-            subCanvas.width = editorInput.clientWidth;
-            subCanvas.height = editorInput.clientHeight;
-            imageEditor.redraw();
-        }
+        imageEditor.resize();
         alignImageDataFormat();
     }
     setPageBarsFunc = setPageBars;
