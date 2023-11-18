@@ -14,6 +14,7 @@ using System.Net.WebSockets;
 using System.Web;
 using Newtonsoft.Json;
 using System.Buffers.Binary;
+using System.Net.Sockets;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -27,6 +28,12 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     public JObject RawObjectInfo;
 
     public string ModelFolderFormat = null;
+
+    public record class ReusableSocket(string ID, ClientWebSocket Socket);
+
+    public ConcurrentQueue<ReusableSocket> ReusableSockets = new();
+
+    public string WSID;
 
     public async Task LoadValueSet()
     {
@@ -103,6 +110,21 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     public override async Task Shutdown()
     {
         Logs.Info($"ComfyUI backend {BackendData.ID} shutting down...");
+        while (ReusableSockets.TryDequeue(out ReusableSocket socket))
+        {
+            try
+            {
+                if (socket.Socket.State == WebSocketState.Open)
+                {
+                    await socket.Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Done", Utilities.TimedCancel(TimeSpan.FromSeconds(5)));
+                }
+                socket.Socket.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Logs.Verbose($"ComfyUI backend {BackendData.ID} failed to close websocket: {ex}");
+            }
+        }
         Idler.Stop();
         Status = BackendStatus.DISABLED;
     }
@@ -118,13 +140,35 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     /// <param name="interrupt">Interrupt token to use.</param>
     public async Task AwaitJobLive(string workflow, string batchId, Action<object> takeOutput, CancellationToken interrupt)
     {
+        Logs.Verbose("Will await a job, do parse...");
         JObject workflowJson = Utilities.ParseToJson(workflow);
+        Logs.Verbose("JSON parsed.");
         int expectedNodes = workflowJson.Count;
-        string id = Guid.NewGuid().ToString();
-        ClientWebSocket socket;
+        string id = null;
+        ClientWebSocket socket = null;
         try
         {
-            socket = await NetworkBackendUtils.ConnectWebsocket(Address, $"ws?clientId={id}");
+            while (ReusableSockets.TryDequeue(out ReusableSocket oldSocket))
+            {
+                if (oldSocket.Socket.State == WebSocketState.Open)
+                {
+                    Logs.Verbose("Reuse existing websocket");
+                    id = oldSocket.ID;
+                    socket = oldSocket.Socket;
+                    break;
+                }
+                else
+                {
+                    oldSocket.Socket.Dispose();
+                }
+            }
+            if (socket is null)
+            {
+                Logs.Verbose("Need to connect a websocket...");
+                id = Guid.NewGuid().ToString();
+                socket = await NetworkBackendUtils.ConnectWebsocket(Address, $"ws?clientId={id}");
+                Logs.Verbose("Connected.");
+            }
         }
         catch (Exception ex)
         {
@@ -260,7 +304,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     takeOutput(image);
                 }
             }
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Done", interrupt);
         }
         catch (Exception)
         {
@@ -272,7 +315,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         finally
         {
-            socket.Dispose();
+            ReusableSockets.Enqueue(new(id, socket));
         }
     }
 
@@ -387,11 +430,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         if (workflow is not null && !user_input.Get(T2IParamTypes.ControlNetPreviewOnly))
         {
-            if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
-            {
-                //Logs.Verbose($"Will fill workflow {workflow}");
-                Logs.Verbose("Will fill a workflow...");
-            }
+            Logs.Verbose("Will fill a workflow...");
             workflow = StringConversionHelper.QuickSimpleTagFiller(initImageFixer(workflow), "${", "}", (tag) => {
                 string fixedTag = Utilities.UnescapeJsonString(tag);
                 string tagName = fixedTag.BeforeAndAfter(':', out string defVal);
@@ -446,7 +485,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 };
                 filled ??= defVal;
                 return Utilities.EscapeJsonString(filled);
-            });
+            }, false);
+            Logs.Verbose("Workflow filled.");
         }
         else
         {

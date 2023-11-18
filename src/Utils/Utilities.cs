@@ -248,9 +248,16 @@ public static class Utilities
         return JObject.Parse("{ \"value\": \"" + input + "\" }")["value"].ToString();
     }
 
+    /// <summary>Accelerator trick to speed up <see cref="EscapeJsonString(string)"/>.</summary>
+    public static AsciiMatcher NeedsJsonEscapeMatcher = new(c => c < 32 || "\\\"\n\r\b\t\f/".Contains(c, StringComparison.Ordinal));
+
     /// <summary>Takes a string that may contain unpredictable content, and escapes it to fit safely within a JSON string section.</summary>
     public static string EscapeJsonString(string input)
     {
+        if (!NeedsJsonEscapeMatcher.ContainsAnyMatch(input))
+        {
+            return input;
+        }
         string cleaned = input.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\b", "\\b").Replace("\t", "\\t").Replace("\f", "\\f").Replace("/", "\\/");
         StringBuilder output = new(input.Length);
         foreach (char c in cleaned)

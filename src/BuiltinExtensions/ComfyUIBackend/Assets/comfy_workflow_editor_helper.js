@@ -477,45 +477,45 @@ function comfyBuildParams(callback) {
                     return false;
                 }
                 let val = node.inputs[fieldName];
-                if (typeof val == (numeric ? 'number' : 'string')) {
-                    if (paramName == 'seed' && nodeId in nodeIsRandomize) {
-                        val = -1;
-                    }
-                    let redirId = nodeStatics[nodeLabelPaths[`${nodeId}.${fieldName}`]];
-                    let useParamName = paramName;
-                    let paramNameClean = cleanParamName(paramName);
-                    let actualId = useParamName;
-                    let result = false;
-                    if (redirId) {
-                        useParamName = redirId;
-                        actualId = redirId;
-                        let title = nodeIdToClean[redirId] || redirId.substring(inputPrefix.length);
-                        let colon = title.indexOf(':');
-                        if (colon > 0 && cleanParamName(title.substring(0, colon)) == 'swarmui') {
-                            let reuseParam = cleanParamName(title.substring(colon + 1));
-                            if (rawGenParamTypesFromServer.filter(x => x.id == reuseParam).length > 0) {
-                                if (!defaultParamsRetain.includes(reuseParam)) {
-                                    defaultParamsRetain.push(reuseParam);
-                                    defaultParamValue[reuseParam] = val;
-                                }
-                                node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + reuseParam + ":" + val + "}_ENDFIXME_%%" : "${" + reuseParam + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
-                                return true;
-                            }
-                        }
-                        actualId = addParam(fieldName, actualId, title, val, 'primitives', 'Primitives', false);
-                    }
-                    else if (defaultParamsRetain.includes(paramNameClean)) {
-                        return false;
-                    }
-                    else {
-                        defaultParamsRetain.push(paramNameClean);
-                        defaultParamValue[paramNameClean] = val;
-                        result = true;
-                    }
-                    node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + actualId + ":" + val + "}_ENDFIXME_%%" : "${" + actualId + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
-                    return result;
+                if (typeof val != (numeric ? 'number' : 'string')) {
+                    return false;
                 }
-                return false;
+                if (paramName == 'seed' && nodeId in nodeIsRandomize) {
+                    val = -1;
+                }
+                let redirId = nodeStatics[nodeLabelPaths[`${nodeId}.${fieldName}`]];
+                let useParamName = paramName;
+                let paramNameClean = cleanParamName(paramName);
+                let actualId = useParamName;
+                let result = false;
+                if (redirId) {
+                    useParamName = redirId;
+                    actualId = redirId;
+                    let title = nodeIdToClean[redirId] || redirId.substring(inputPrefix.length);
+                    let colon = title.indexOf(':');
+                    if (colon > 0 && cleanParamName(title.substring(0, colon)) == 'swarmui') {
+                        let reuseParam = cleanParamName(title.substring(colon + 1));
+                        if (rawGenParamTypesFromServer.filter(x => x.id == reuseParam).length > 0) {
+                            if (!defaultParamsRetain.includes(reuseParam)) {
+                                defaultParamsRetain.push(reuseParam);
+                                defaultParamValue[reuseParam] = val;
+                            }
+                            node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + reuseParam + ":" + val + "}_ENDFIXME_%%" : "${" + reuseParam + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
+                            return true;
+                        }
+                    }
+                    actualId = addParam(fieldName, actualId, title, val, 'primitives', 'Primitives', false);
+                }
+                else if (defaultParamsRetain.includes(paramNameClean)) {
+                    return false;
+                }
+                else {
+                    defaultParamsRetain.push(paramNameClean);
+                    defaultParamValue[paramNameClean] = val;
+                    result = true;
+                }
+                node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + actualId + ":" + val + "}_ENDFIXME_%%" : "${" + actualId + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
+                return result;
             }
             if (claimOnce('EmptyLatentImage', 'width', 'width', true) && claimOnce('EmptyLatentImage', 'height', 'height', true) && claimOnce('EmptyLatentImage', 'batchsize', 'batch_size', true)) {
                 defaultParamsRetain.push('aspectratio');
@@ -532,6 +532,7 @@ function comfyBuildParams(callback) {
             claimOnce('KSamplerAdvanced', 'sampler', 'sampler_name', false);
             claimOnce('KSamplerAdvanced', 'scheduler', 'scheduler', false);
             claimOnce('KSamplerAdvanced', 'cfg_scale', 'cfg', true);
+            claimOnce('SwarmLoadImageB64', 'init_image', 'image_base64', false);
             claimOnce('LoadImage', 'initimage', 'image', false);
             claimOnce('SwarmLoraLoader', 'loras', 'lora_names', false);
             claimOnce('SwarmLoraLoader', 'loraweights', 'lora_weights', false);
