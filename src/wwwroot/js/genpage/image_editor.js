@@ -241,7 +241,6 @@ class ImageEditorToolBrush extends ImageEditorTool {
     onGlobalMouseUp() {
         if (this.brushing) {
             this.editor.activeLayer.childLayers.pop();
-            this.editor.activeLayer.ctx.globalAlpha = this.opacity;
             this.bufferLayer.drawToBackDirect(this.editor.activeLayer.ctx, 0, 0, 1);
             this.bufferLayer = null;
             this.brushing = false;
@@ -316,7 +315,10 @@ class ImageEditorLayer {
             }
             this.buffer.opacity = this.opacity;
             this.buffer.globalCompositeOperation = this.globalCompositeOperation;
-            this.drawToBackDirect(this.buffer.ctx, -this.offsetX, -this.offsetY, 1);
+            this.buffer.ctx.globalAlpha = 1;
+            this.buffer.ctx.globalCompositeOperation = 'source-over';
+            this.buffer.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.buffer.ctx.drawImage(this.canvas, 0, 0);
             for (let layer of this.childLayers) {
                 layer.drawToBack(this.buffer.ctx, 0, 0, 1);
             }
