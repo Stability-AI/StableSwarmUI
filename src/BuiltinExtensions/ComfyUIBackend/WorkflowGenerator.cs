@@ -155,6 +155,40 @@ public class WorkflowGenerator
                     ["pixels"] = new JArray() { "15", 0 },
                     ["vae"] = g.FinalVae
                 }, "5");
+                if (g.UserInput.TryGet(T2IParamTypes.BatchSize, out int batchSize) && batchSize > 1)
+                {
+                    string batchNode = g.CreateNode("RepeatLatentBatch", new JObject()
+                    {
+                        ["samples"] = new JArray() { g.FinalLatentImage, 0 },
+                        ["amount"] = batchSize
+                    });
+                    g.FinalLatentImage = new() { batchNode, 0 };
+                }
+                if (g.UserInput.TryGet(T2IParamTypes.InitImageResetToNorm, out double resetFactor))
+                {
+                    string emptyImg = g.CreateNode("EmptyLatentImage", new JObject()
+                    {
+                        ["batch_size"] = g.UserInput.Get(T2IParamTypes.BatchSize, 1),
+                        ["height"] = g.UserInput.GetImageHeight(),
+                        ["width"] = g.UserInput.Get(T2IParamTypes.Width)
+                    });
+                    string emptyMultiplied = g.CreateNode("LatentMultiply", new JObject()
+                    {
+                        ["samples"] = new JArray() { emptyImg, 0 },
+                        ["multiplier"] = resetFactor
+                    });
+                    string originalMultiplied = g.CreateNode("LatentMultiply", new JObject()
+                    {
+                        ["samples"] = g.FinalLatentImage,
+                        ["multiplier"] = 1 - resetFactor
+                    });
+                    string added = g.CreateNode("LatentAdd", new JObject()
+                    {
+                        ["samples1"] = new JArray() { emptyMultiplied, 0 },
+                        ["samples2"] = new JArray() { originalMultiplied, 0 }
+                    });
+                    g.FinalLatentImage = new() { added, 0 };
+                }
                 if (g.UserInput.TryGet(T2IParamTypes.MaskImage, out Image mask))
                 {
                     string maskNode = g.CreateLoadImageNode(mask, "${maskimage}", true);
@@ -165,7 +199,7 @@ public class WorkflowGenerator
                     });
                     string appliedNode = g.CreateNode("SetLatentNoiseMask", new JObject()
                     {
-                        ["samples"] = new JArray() { "5", 0 },
+                        ["samples"] = g.FinalLatentImage,
                         ["mask"] = new JArray() { maskImageNode, 0 }
                     });
                     g.FinalLatentImage = new JArray() { appliedNode, 0 };
