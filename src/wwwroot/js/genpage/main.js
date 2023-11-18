@@ -282,6 +282,11 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false) 
     extrasWrapper.appendChild(data);
     img.onload = () => {
         let [width, height] = naturalDim();
+        let widthParam = document.getElementById('input_width');
+        let targetWidth = widthParam ? widthParam.value : 512;
+        if (width > targetWidth / 2) {
+            previewGrow = false;
+        }
         if (previewGrow) {
             img.width = width * 8;
             img.height = height * 8;
