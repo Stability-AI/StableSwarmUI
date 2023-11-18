@@ -16,6 +16,8 @@ let coreModelMap = {};
 
 let otherInfoSpanContent = [];
 
+let isGeneratingForever = false, isGeneratingPreviews = false;
+
 function updateOtherInfoSpan() {
     let span = getRequiredElementById('other_info_span');
     span.innerHTML = otherInfoSpanContent.join(' ');
@@ -208,7 +210,15 @@ function alignImageDataFormat() {
     }
 }
 
-function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false) {
+function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, smoothAdd = false) {
+    if (smoothAdd) {
+        let image = new Image();
+        image.src = src;
+        image.onload = () => {
+            setCurrentImage(src, metadata, batchId, previewGrow);
+        };
+        return;
+    }
     let curImg = getRequiredElementById('current_image');
     curImg.innerHTML = '';
     let isVideo = src.endsWith(".mp4") || src.endsWith(".webm");
@@ -360,6 +370,9 @@ function updateCurrentStatusDirect(data) {
         num_backends_waiting = data.waiting_backends;
     }
     let total = num_current_gens + num_models_loading + num_live_gens + num_backends_waiting;
+    if (isGeneratingPreviews && num_current_gens == 1) {
+        total = 0;
+    }
     getRequiredElementById('alt_interrupt_button').classList.toggle('interrupt-button-none', total == 0);
     let oldInterruptButton = document.getElementById('interrupt_button');
     if (oldInterruptButton) {
@@ -372,7 +385,7 @@ function updateCurrentStatusDirect(data) {
         }
         return `<span class="interrupt-line-part">${num} ${text.replaceAll('%', autoS(num))},</span> `;
     }
-    elem.innerHTML = total == 0 ? '' : `${autoBlock(num_current_gens, 'current generation%')}${autoBlock(num_live_gens, 'running')}${autoBlock(num_backends_waiting, 'queued')}${autoBlock(num_models_loading, 'waiting on model load')} ...`;
+    elem.innerHTML = total == 0 ? (isGeneratingPreviews ? 'Generating live previews...' : '') : `${autoBlock(num_current_gens, 'current generation%')}${autoBlock(num_live_gens, 'running')}${autoBlock(num_backends_waiting, 'queued')}${autoBlock(num_models_loading, 'waiting on model load')} ...`;
 }
 
 let doesHaveGenCountUpdateQueued = false;
@@ -402,8 +415,6 @@ function makeWSRequestT2I(url, in_data, callback) {
     });
 }
 
-let isGeneratingForever = false;
-
 function doInterrupt(allSessions = false) {
     genericRequest('InterruptAll', {'other_sessions': allSessions}, data => {
         updateGenCount();
@@ -412,7 +423,7 @@ function doInterrupt(allSessions = false) {
         toggleGenerateForever();
     }
 }
-let genForeverInterval;
+let genForeverInterval, genPreviewsInterval;
 
 function toggleGenerateForever() {
     let button = getRequiredElementById('generate_forever_button');
@@ -431,6 +442,23 @@ function toggleGenerateForever() {
     }
 }
 
+function toggleGeneratePreviews() {
+    let button = getRequiredElementById('generate_previews_button');
+    isGeneratingPreviews = !isGeneratingPreviews;
+    if (isGeneratingPreviews) {
+        button.innerText = 'Stop Generating Previews';
+        genPreviewsInterval = setInterval(() => {
+            if (num_current_gens == 0) {
+                doGenerate({'donotsave': true, '_preview': true});
+            }
+        }, 100);
+    }
+    else {
+        button.innerText = 'Generate Previews';
+        clearInterval(genPreviewsInterval);
+    }
+}
+
 let batchesEver = 0;
 
 function doGenerate(input_overrides = {}) {
@@ -443,6 +471,10 @@ function doGenerate(input_overrides = {}) {
         }
         return;
     }
+    let isPreview = '_preview' in input_overrides;
+    if (isPreview) {
+        delete input_overrides['_preview'];
+    }
     num_current_gens += parseInt(getRequiredElementById('input_images').value);
     setCurrentModel(() => {
         if (getRequiredElementById('current_model').value == '') {
@@ -453,6 +485,12 @@ function doGenerate(input_overrides = {}) {
         let images = {};
         let batch_id = batchesEver++;
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides), data => {
+            if (isPreview) {
+                if (data.image) {
+                    setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`, false, true);
+                }
+                return;
+            }
             if (data.image) {
                 if (!(data.batch_index in images)) {
                     let batch_div = gotImageResult(data.image, data.metadata, `${batch_id}_${data.batch_index}`);
