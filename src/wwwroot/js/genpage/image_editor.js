@@ -1,4 +1,7 @@
 
+/**
+ * Base class for an image editor tool, such as Paintbrush or the Navigation tool.
+ */
 class ImageEditorTool {
     constructor(editor, id, icon, name, description) {
         this.editor = editor;
@@ -92,6 +95,9 @@ class ImageEditorTool {
     }
 }
 
+/**
+ * The generic navigation tool (can be activated freely with the Alt key).
+ */
 class ImageEditorToolNavigate extends ImageEditorTool {
     constructor(editor) {
         super(editor, 'navigate', 'mouse', 'Navigate', 'Pure navigation tool, just moves around, no funny business.');
@@ -123,6 +129,9 @@ class ImageEditorToolNavigate extends ImageEditorTool {
     }
 }
 
+/**
+ * The Paintbrush tool (also the base used for other brush-likes, such as the Eraser).
+ */
 class ImageEditorToolBrush extends ImageEditorTool {
     constructor(editor, id, icon, name, description, isEraser) {
         super(editor, id, icon, name, description);
@@ -180,6 +189,7 @@ class ImageEditorToolBrush extends ImageEditorTool {
         }
         this.radius = parseInt(this.radiusNumber.value);
         this.opacity = parseInt(this.opacityNumber.value) / 100;
+        this.editor.redraw();
     }
 
     draw() {
@@ -241,6 +251,10 @@ class ImageEditorToolBrush extends ImageEditorTool {
     }
 }
 
+/**
+ * A single layer within an image editing interface.
+ * This can be real (user-controlled) OR sub-layers (sometimes user-controlled) OR temporary buffers.
+ */
 class ImageEditorLayer {
     constructor(editor, width, height) {
         this.editor = editor;
@@ -315,6 +329,9 @@ class ImageEditorLayer {
     }
 }
 
+/**
+ * The central class managing the image editor interface.
+ */
 class ImageEditor {
     constructor() {
         // Configurables:
@@ -332,7 +349,7 @@ class ImageEditor {
         this.leftBar = createDiv(null, 'image_editor_leftbar');
         this.inputDiv.appendChild(this.leftBar);
         this.rightBar = createDiv(null, 'image_editor_rightbar');
-        this.rightBar.innerHTML = `<div class="image_editor_newlayer_button basic-button">+</div>`;
+        this.rightBar.innerHTML = `<div class="image_editor_newlayer_button basic-button" title="New Layer">+</div>`;
         this.inputDiv.appendChild(this.rightBar);
         this.rightBar.firstChild.addEventListener('click', () => {
             this.addEmptyLayer();
@@ -668,14 +685,15 @@ class ImageEditor {
         this.addLayer(layer2);
         this.realWidth = img.naturalWidth;
         this.realHeight = img.naturalHeight;
+        console.log(`setBaseImage ${this.realWidth}x${this.realHeight}`);
         if (this.active) {
             this.redraw();
         }
     }
 
     doParamHides() {
-        let initImage = getRequiredElementById('input_initimage');
-        let maskImage = getRequiredElementById('input_maskimage');
+        let initImage = document.getElementById('input_initimage');
+        let maskImage = document.getElementById('input_maskimage');
         if (initImage) {
             let parent = findParentOfClass(initImage, 'auto-input');
             parent.style.display = 'none';
@@ -689,8 +707,8 @@ class ImageEditor {
     }
 
     unhideParams() {
-        let initImage = getRequiredElementById('input_initimage');
-        let maskImage = getRequiredElementById('input_maskimage');
+        let initImage = document.getElementById('input_initimage');
+        let maskImage = document.getElementById('input_maskimage');
         if (initImage) {
             let parent = findParentOfClass(initImage, 'auto-input');
             parent.style.display = '';
@@ -833,8 +851,9 @@ class ImageEditor {
         let canvas = document.createElement('canvas');
         canvas.width = this.realWidth;
         canvas.height = this.realHeight;
+        let ctx = canvas.getContext('2d');
         for (let layer of this.layers) {
-            layer.drawToBack(this.ctx, this.finalOffsetX, this.finalOffsetY, 1);
+            layer.drawToBack(ctx, this.finalOffsetX, this.finalOffsetY, 1);
         }
         this.ctx.globalAlpha = 1;
         this.ctx.globalCompositeOperation = 'source-over';
