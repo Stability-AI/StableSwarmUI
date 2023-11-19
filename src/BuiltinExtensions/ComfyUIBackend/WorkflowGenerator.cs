@@ -30,6 +30,8 @@ public class WorkflowGenerator
     /// <summary>Can be set to globally block custom nodes, if needed.</summary>
     public static volatile bool RestrictCustomNodes = false;
 
+    public HashSet<string> Features = new();
+
     /// <summary>Register a new step to the workflow generator.</summary>
     public static void AddStep(Action<WorkflowGenerator> step, double priority)
     {
@@ -313,16 +315,37 @@ public class WorkflowGenerator
                             ["image2"] = new JArray() { newImg, 0 }
                         });
                     }
-                    string ipAdapterNode = g.CreateNode("IPAdapter", new JObject()
+                    if (g.Features.Contains("cubiqipadapter"))
                     {
-                        ["model"] = g.FinalModel,
-                        ["image"] = new JArray() { lastImage, 0 },
-                        ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
-                        ["weight"] = g.UserInput.Get(ComfyUIBackendExtension.IPAdapterWeight, 1),
-                        ["model_name"] = ipAdapter,
-                        ["dtype"] = "fp16" // TODO: ...???
-                    });
-                    g.FinalModel = new JArray() { $"{ipAdapterNode}", 0 };
+                        string ipAdapterLoader = g.CreateNode("IPAdapterModelLoader", new JObject()
+                        {
+                            ["ipadapter_file"] = ipAdapter
+                        });
+                        string ipAdapterNode = g.CreateNode("IPAdapterApply", new JObject()
+                        {
+                            ["ipadapter"] = new JArray() { ipAdapterLoader, 0 },
+                            ["model"] = g.FinalModel,
+                            ["image"] = new JArray() { lastImage, 0 },
+                            ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
+                            ["weight"] = g.UserInput.Get(ComfyUIBackendExtension.IPAdapterWeight, 1),
+                            ["noise"] = 0,
+                            ["weight_type"] = "original" // TODO: ...???
+                        });
+                        g.FinalModel = new JArray() { $"{ipAdapterNode}", 0 };
+                    }
+                    else
+                    {
+                        string ipAdapterNode = g.CreateNode("IPAdapter", new JObject()
+                        {
+                            ["model"] = g.FinalModel,
+                            ["image"] = new JArray() { lastImage, 0 },
+                            ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
+                            ["weight"] = g.UserInput.Get(ComfyUIBackendExtension.IPAdapterWeight, 1),
+                            ["model_name"] = ipAdapter,
+                            ["dtype"] = "fp16" // TODO: ...???
+                        });
+                        g.FinalModel = new JArray() { $"{ipAdapterNode}", 0 };
+                    }
                 }
             }
         }, -7);

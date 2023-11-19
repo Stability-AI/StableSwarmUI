@@ -35,7 +35,9 @@ public class ComfyUIBackendExtension : Extension
         ["SwarmKSampler"] = "variation_seed",
         ["FreeU"] = "freeu",
         ["AITemplateLoader"] = "aitemplate",
-        ["IPAdapter"] = "ipadapter"
+        ["IPAdapter"] = "ipadapter",
+        ["IPAdapterApply"] = "ipadapter",
+        ["IPAdapterModelLoader"] = "cubiqipadapter"
     };
 
     public override void OnPreInit()
@@ -164,6 +166,10 @@ public class ComfyUIBackendExtension : Extension
             if (rawObjectInfo.TryGetValue("IPAdapter", out JToken ipadapter))
             {
                 IPAdapterModels = IPAdapterModels.Concat(ipadapter["input"]["required"]["model_name"][0].Select(m => $"{m}")).Distinct().ToList();
+            }
+            if (rawObjectInfo.TryGetValue("IPAdapterModelLoader", out JToken ipadapterCubiq))
+            {
+                IPAdapterModels = IPAdapterModels.Concat(ipadapterCubiq["input"]["required"]["ipadapter_file"][0].Select(m => $"{m}")).Distinct().ToList();
             }
             foreach ((string key, JToken data) in rawObjectInfo)
             {

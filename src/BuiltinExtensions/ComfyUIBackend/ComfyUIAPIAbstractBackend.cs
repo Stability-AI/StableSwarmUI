@@ -395,7 +395,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return images.ToArray();
     }
 
-    public static string CreateWorkflow(T2IParamInput user_input, Func<string, string> initImageFixer, string ModelFolderFormat = null)
+    public static string CreateWorkflow(T2IParamInput user_input, Func<string, string> initImageFixer, string ModelFolderFormat = null, HashSet<string> features = null)
     {
         string workflow = null;
         // note: gently break any standard embed with a space, *require* swarm format embeds, as comfy's raw syntax has unwanted behaviors
@@ -490,7 +490,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         else
         {
-            workflow = new WorkflowGenerator() { UserInput = user_input, ModelFolderFormat = ModelFolderFormat }.Generate().ToString();
+            workflow = new WorkflowGenerator() { UserInput = user_input, ModelFolderFormat = ModelFolderFormat, Features = features ?? new() }.Generate().ToString();
             workflow = initImageFixer(workflow);
         }
         return workflow;
@@ -563,7 +563,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             return workflow;
         }
-        string workflow = CreateWorkflow(user_input, initImageFixer, ModelFolderFormat);
+        string workflow = CreateWorkflow(user_input, initImageFixer, ModelFolderFormat, SupportedFeatures.ToHashSet());
         try
         {
             await AwaitJobLive(workflow, batchId, takeOutput, user_input.InterruptToken);
