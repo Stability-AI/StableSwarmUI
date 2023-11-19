@@ -131,6 +131,11 @@ public class WorkflowGenerator
                     ["model"] = g.LoadingModel
                 });
                 g.LoadingModel = new() { $"{tiling}", 0 };
+                string tilingVae = g.CreateNode("SwarmTileableVAE", new JObject()
+                {
+                    ["vae"] = g.LoadingVAE
+                });
+                g.LoadingVAE = new() { $"{tilingVae}", 0 };
             }
         }, -5);
         AddModelGenStep(g =>
@@ -803,8 +808,7 @@ public class WorkflowGenerator
                 ["tile_size"] = tileSize
             }, id);
         }
-        string className = UserInput.Get(T2IParamTypes.SeamlessTileable) ? "SwarmTileableVAEDecode" : "VAEDecode";
-        return CreateNode(className, new JObject()
+        return CreateNode("VAEDecode", new JObject()
         {
             ["vae"] = vae,
             ["samples"] = latent

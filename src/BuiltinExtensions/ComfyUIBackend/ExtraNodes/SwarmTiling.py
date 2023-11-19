@@ -22,27 +22,25 @@ class SwarmModelTiling:
         m.model.apply(make_circular)
         return (m,)
 
-class SwarmTileableVAEDecode:
+class SwarmTileableVAE:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
-                "samples": ("LATENT", ),
                 "vae": ("VAE", )
             }
         }
 
     CATEGORY = "StableSwarmUI"
-    RETURN_TYPES = ("IMAGE",)
+    RETURN_TYPES = ("VAE",)
     FUNCTION = "decode"
 
-    def decode(self, vae, samples):
+    def decode(self, vae):
         vae = copy.deepcopy(vae)
         vae.first_stage_model.apply(make_circular)
-        decoded = vae.decode(samples["samples"])
-        return (decoded,)
+        return (vae,)
 
 NODE_CLASS_MAPPINGS = {
     "SwarmModelTiling": SwarmModelTiling,
-    "SwarmTileableVAEDecode": SwarmTileableVAEDecode,
+    "SwarmTileableVAE": SwarmTileableVAE,
 }
