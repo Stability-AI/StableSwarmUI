@@ -17,6 +17,7 @@ public class BackendAPI
         API.RegisterAPICall(ToggleBackend);
         API.RegisterAPICall(EditBackend);
         API.RegisterAPICall(AddNewBackend);
+        API.RegisterAPICall(RestartBackends);
     }
 
     /// <summary>API route to list currently available backend-types.</summary>
@@ -148,5 +149,23 @@ public class BackendAPI
         }
         BackendHandler.T2IBackendData data = Program.Backends.AddNewOfType(type);
         return BackendToNet(data);
+    }
+
+    /// <summary>API route to restart all backends.</summary>
+    public static async Task<JObject> RestartBackends()
+    {
+        if (Program.LockSettings)
+        {
+            return new() { ["error"] = "Settings are locked." };
+        }
+        foreach (BackendHandler.T2IBackendData data in Program.Backends.T2IBackends.Values)
+        {
+            if (data.Backend.Status == BackendStatus.RUNNING || data.Backend.Status == BackendStatus.ERRORED)
+            {
+                await Program.Backends.ShutdownBackendCleanly(data);
+                Program.Backends.DoInitBackend(data);
+            }
+        }
+        return new JObject() { ["result"] = "Success." };
     }
 }

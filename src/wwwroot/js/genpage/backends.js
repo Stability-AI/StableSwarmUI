@@ -207,7 +207,7 @@ function isVisible(element) {
 function backendLoopUpdate() {
     let loading = countBackendsByStatus('loading') + countBackendsByStatus('waiting');
     if (loading > 0 || isVisible(backendsListView)) {
-        if (backendsCheckRateCounter++ % 5 == 0) {
+        if (backendsCheckRateCounter++ % 3 == 0) {
             loadBackendsList(); // TODO: only if have permission
         }
     }
@@ -217,5 +217,13 @@ function backendLoopUpdate() {
             refreshParameterValues();
         }
         backendsCheckRateCounter = 0;
+    }
+}
+
+function restart_all_backends() {
+    if (confirm('Are you sure you want to restart all backends?')) {
+        genericRequest('RestartBackends', {}, data => {
+            loadBackendsList();
+        });
     }
 }
