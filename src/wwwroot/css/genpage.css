@@ -62,16 +62,25 @@ body {
 }
 .splitter-bar:hover {
     background-color: var(--emphasis);
+    box-shadow:
+      -0.5rem 0 0.5rem 0 color-mix(in srgb, transparent 50%, var(--emphasis)),
+      0.5rem 0 0.5rem 0 color-mix(in srgb, transparent 50%, var(--emphasis));
 }
 .t2i-top-split-bar {
     height: 50vh;
-    width: 7px;
+    width: 5px;
     cursor: col-resize;
 }
 .t2i-mid-split-bar {
     width: 100vw;
-    height: 7px;
+    height: 5px;
     cursor: row-resize;
+}
+.t2i-mid-split-bar:hover {
+    background-color: var(--emphasis);
+    box-shadow:
+      0 -0.5rem 0.5rem 0 color-mix(in srgb, transparent 50%, var(--emphasis)),
+      0 0.5rem 0.5rem 0 color-mix(in srgb, transparent 50%, var(--emphasis));
 }
 .t2i-split-quickbutton {
     position: relative;
@@ -700,7 +709,7 @@ body {
     border-radius: 0.2rem;
 }
 .genpage-bottom-tab {
-    height: calc(100% - 7rem);
+    height: calc(100% - 5rem);
     overflow: auto;
 }
 .alt-interrupt {
