@@ -4,6 +4,7 @@ using FreneticUtilities.FreneticToolkit;
 using LiteDB;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SixLabors.ImageSharp;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Text2Image;
@@ -412,7 +413,15 @@ public class Program
     public static string GetCommandLineFlag(string key, string def)
     {
         CommandLineFlagsRead.Add(key);
-        return CommandLineFlags.GetValueOrDefault(key, def);
+        if (CommandLineFlags.TryGetValue(key, out string value))
+        {
+            return value;
+        }
+        if (key.Contains('_'))
+        {
+            return GetCommandLineFlag(key.Replace("_", ""), def);
+        }
+        return def;
     }
 
     /// <summary>Gets the command line flag for the given key as a boolean.</summary>

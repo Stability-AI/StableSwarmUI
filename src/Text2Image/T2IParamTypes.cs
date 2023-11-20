@@ -237,14 +237,14 @@ public class T2IParamTypes
             "", IgnoreIf: "", Clean: ApplyStringEdit, Examples: new[] { "ugly, bad, gross", "lowres, low quality" }, OrderPriority: -90, ViewType: ParamViewType.PROMPT, ChangeWeight: -5
             ));
         GroupRevision = new("ReVision", Open: false, Toggles: true, OrderPriority: -70);
-        ReVisionStrength = Register<double>(new("ReVision Strength", "How strong to apply ReVision image inputs.",
+        ReVisionStrength = Register<double>(new("ReVision Strength", "How strong to apply ReVision image inputs.\nSet to 0 to disable ReVision processing.",
             "1", OrderPriority: -70, Min: 0, Max: 10, Step: 0.1, ViewType: ParamViewType.SLIDER, Group: GroupRevision
             ));
         RevisionZeroPrompt = Register<bool>(new("ReVision Zero Prompt", "Zeroes the prompt and negative prompt for ReVision inputs.\nApplies only to the base, the refiner will still get prompts.\nIf you want zeros on both, just delete your prompt text."
             + "\nIf not checked, empty prompts will be zeroed regardless.",
             "false", IgnoreIf: "false", Group: GroupRevision
             ));
-        ReVisionModel = Register<T2IModel>(new("ReVision Model", "The CLIP Vision model to use for ReVision inputs.",
+        ReVisionModel = Register<T2IModel>(new("ReVision Model", "The CLIP Vision model to use for ReVision inputs.\nThis will also override IPAdapter (if IPAdapter-G is in use).",
             "", Subtype: "ClipVision", IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons
             ));
         GroupCore = new("Core Parameters", Toggles: false, Open: true, OrderPriority: -50);

@@ -230,7 +230,8 @@ namespace StableSwarmUI.Text2Image
                     });
                     if (numImagesGenned == 0)
                     {
-                        Logs.Info($"No images were generated (all refused, or failed).");
+                        Logs.Info("No images were generated (all refused, or failed).");
+                        setError("No images were generated (all refused, or failed - check server logs for details).");
                     }
                     else if (numImagesGenned == 1)
                     {

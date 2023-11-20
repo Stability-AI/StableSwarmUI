@@ -30,7 +30,11 @@ public class WorkflowGenerator
     /// <summary>Can be set to globally block custom nodes, if needed.</summary>
     public static volatile bool RestrictCustomNodes = false;
 
+    /// <summary>Supported Features of the comfy backend.</summary>
     public HashSet<string> Features = new();
+
+    /// <summary>Helper tracker for Vision Models that are loaded (to skip a datadrive read from being reused every time).</summary>
+    public static HashSet<string> VisionModelsValid = new();
 
     /// <summary>Register a new step to the workflow generator.</summary>
     public static void AddStep(Action<WorkflowGenerator> step, double priority)
@@ -229,40 +233,18 @@ public class WorkflowGenerator
             g.FinalPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model), true);
         }, -8);
         #endregion
-        #region ReVision/UnCLIP
+        #region ReVision/UnCLIP/IPAdapter
         AddStep(g =>
         {
             if (g.UserInput.TryGet(T2IParamTypes.PromptImages, out List<Image> images) && images.Any())
             {
-                if (!g.UserInput.TryGet(T2IParamTypes.Model, out T2IModel model) || model.ModelClass is null || model.ModelClass.ID != "stable-diffusion-xl-v1-base")
+                void requireVisionModel(string name, string url)
                 {
-                    throw new InvalidDataException($"Model type must be stable-diffusion-xl-v1-base for ReVision (currently is {model?.ModelClass?.ID ?? "Unknown"})");
-                }
-                bool autoZero = g.UserInput.Get(T2IParamTypes.RevisionZeroPrompt, false);
-                if ((g.UserInput.TryGet(T2IParamTypes.Prompt, out string promptText) && string.IsNullOrWhiteSpace(promptText)) || autoZero)
-                {
-                    string zeroed = g.CreateNode("ConditioningZeroOut", new JObject()
+                    if (!VisionModelsValid.Add(name))
                     {
-                        ["conditioning"] = g.FinalPrompt
-                    });
-                    g.FinalPrompt = new JArray() { $"{zeroed}", 0 };
-                }
-                if ((g.UserInput.TryGet(T2IParamTypes.NegativePrompt, out string negPromptText) && string.IsNullOrWhiteSpace(negPromptText)) || autoZero)
-                {
-                    string zeroed = g.CreateNode("ConditioningZeroOut", new JObject()
-                    {
-                        ["conditioning"] = g.FinalNegativePrompt
-                    });
-                    g.FinalNegativePrompt = new JArray() { $"{zeroed}", 0 };
-                }
-                string visModelName = "clip_vision_g.safetensors";
-                if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
-                {
-                    visModelName = visionModel.ToString(g.ModelFolderFormat);
-                }
-                else
-                {
-                    string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, "clip_vision_g.safetensors");
+                        return;
+                    }
+                    string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, name);
                     if (!File.Exists(filePath))
                     {
                         lock (ModelDownloaderLock)
@@ -270,15 +252,15 @@ public class WorkflowGenerator
                             if (!File.Exists(filePath)) // Double-check in case another thread downloaded it
                             {
                                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                                Logs.Info($"Downloading clip_vision_g.safetensors to {filePath}...");
+                                Logs.Info($"Downloading {name} to {filePath}...");
                                 long total = 3_689_911_098L;
                                 double nextPerc = 0.05;
-                                Utilities.DownloadFile("https://huggingface.co/stabilityai/control-lora/resolve/main/revision/clip_vision_g.safetensors", filePath, (bytes) =>
+                                Utilities.DownloadFile(url, filePath, (bytes) =>
                                 {
                                     double perc = bytes / (double)total;
                                     if (perc >= nextPerc)
                                     {
-                                        Logs.Info($"clip_vision_g.safetensors download at {perc * 100:0.0}%...");
+                                        Logs.Info($"{name} download at {perc * 100:0.0}%...");
                                         nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
                                     }
                                 }).Wait();
@@ -287,29 +269,73 @@ public class WorkflowGenerator
                         }
                     }
                 }
+                string visModelName = "clip_vision_g.safetensors";
+                if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
+                {
+                    visModelName = visionModel.ToString(g.ModelFolderFormat);
+                }
+                else
+                {
+                    requireVisionModel(visModelName, "https://huggingface.co/stabilityai/control-lora/resolve/main/revision/clip_vision_g.safetensors");
+                }
                 string visionLoader = g.CreateNode("CLIPVisionLoader", new JObject()
                 {
                     ["clip_name"] = visModelName
                 });
-                for (int i = 0; i < images.Count; i++)
+                double revisionStrength = g.UserInput.Get(T2IParamTypes.ReVisionStrength, 1);
+                if (revisionStrength > 0)
                 {
-                    string imageLoader = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", false);
-                    string encoded = g.CreateNode("CLIPVisionEncode", new JObject()
+                    bool autoZero = g.UserInput.Get(T2IParamTypes.RevisionZeroPrompt, false);
+                    if ((g.UserInput.TryGet(T2IParamTypes.Prompt, out string promptText) && string.IsNullOrWhiteSpace(promptText)) || autoZero)
                     {
-                        ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
-                        ["image"] = new JArray() { $"{imageLoader}", 0 }
-                    });
-                    string unclipped = g.CreateNode("unCLIPConditioning", new JObject()
+                        string zeroed = g.CreateNode("ConditioningZeroOut", new JObject()
+                        {
+                            ["conditioning"] = g.FinalPrompt
+                        });
+                        g.FinalPrompt = new JArray() { $"{zeroed}", 0 };
+                    }
+                    if ((g.UserInput.TryGet(T2IParamTypes.NegativePrompt, out string negPromptText) && string.IsNullOrWhiteSpace(negPromptText)) || autoZero)
                     {
-                        ["conditioning"] = g.FinalPrompt,
-                        ["clip_vision_output"] = new JArray() { $"{encoded}", 0 },
-                        ["strength"] = g.UserInput.Get(T2IParamTypes.ReVisionStrength, 1),
-                        ["noise_augmentation"] = 0
-                    });
-                    g.FinalPrompt = new JArray() { $"{unclipped}", 0 };
+                        string zeroed = g.CreateNode("ConditioningZeroOut", new JObject()
+                        {
+                            ["conditioning"] = g.FinalNegativePrompt
+                        });
+                        g.FinalNegativePrompt = new JArray() { $"{zeroed}", 0 };
+                    }
+                    if (!g.UserInput.TryGet(T2IParamTypes.Model, out T2IModel model) || model.ModelClass is null || model.ModelClass.ID != "stable-diffusion-xl-v1-base")
+                    {
+                        throw new InvalidDataException($"Model type must be stable-diffusion-xl-v1-base for ReVision (currently is {model?.ModelClass?.ID ?? "Unknown"}). Set ReVision Strength to 0 if you just want IP-Adapter.");
+                    }
+                    for (int i = 0; i < images.Count; i++)
+                    {
+                        string imageLoader = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", false);
+                        string encoded = g.CreateNode("CLIPVisionEncode", new JObject()
+                        {
+                            ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
+                            ["image"] = new JArray() { $"{imageLoader}", 0 }
+                        });
+                        string unclipped = g.CreateNode("unCLIPConditioning", new JObject()
+                        {
+                            ["conditioning"] = g.FinalPrompt,
+                            ["clip_vision_output"] = new JArray() { $"{encoded}", 0 },
+                            ["strength"] = revisionStrength,
+                            ["noise_augmentation"] = 0
+                        });
+                        g.FinalPrompt = new JArray() { $"{unclipped}", 0 };
+                    }
                 }
                 if (g.UserInput.TryGet(ComfyUIBackendExtension.UseIPAdapterForRevision, out string ipAdapter) && ipAdapter != "None")
                 {
+                    string ipAdapterVisionLoader = visionLoader;
+                    if ((ipAdapter.Contains("sd15") && !ipAdapter.Contains("vit-G")) || ipAdapter.Contains("vit-h"))
+                    {
+                        string targetName = "clip_vision_h.safetensors";
+                        requireVisionModel(targetName, "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors");
+                        ipAdapterVisionLoader = g.CreateNode("CLIPVisionLoader", new JObject()
+                        {
+                            ["clip_name"] = targetName
+                        });
+                    }
                     string lastImage = g.CreateLoadImageNode(images[0], "${promptimages.0}", true);
                     for (int i = 1; i < images.Count; i++)
                     {
@@ -331,7 +357,7 @@ public class WorkflowGenerator
                             ["ipadapter"] = new JArray() { ipAdapterLoader, 0 },
                             ["model"] = g.FinalModel,
                             ["image"] = new JArray() { lastImage, 0 },
-                            ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
+                            ["clip_vision"] = new JArray() { $"{ipAdapterVisionLoader}", 0 },
                             ["weight"] = g.UserInput.Get(ComfyUIBackendExtension.IPAdapterWeight, 1),
                             ["noise"] = 0,
                             ["weight_type"] = "original" // TODO: ...???
@@ -344,7 +370,7 @@ public class WorkflowGenerator
                         {
                             ["model"] = g.FinalModel,
                             ["image"] = new JArray() { lastImage, 0 },
-                            ["clip_vision"] = new JArray() { $"{visionLoader}", 0 },
+                            ["clip_vision"] = new JArray() { $"{ipAdapterVisionLoader}", 0 },
                             ["weight"] = g.UserInput.Get(ComfyUIBackendExtension.IPAdapterWeight, 1),
                             ["model_name"] = ipAdapter,
                             ["dtype"] = "fp16" // TODO: ...???
