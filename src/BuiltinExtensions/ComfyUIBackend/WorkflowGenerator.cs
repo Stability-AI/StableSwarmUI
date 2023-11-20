@@ -465,8 +465,15 @@ public class WorkflowGenerator
                     if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
                     {
                         g.FinalImageOut = new() { $"{preProcNode}", 0 };
+                        g.CreateImageSaveNode(g.FinalImageOut, "9");
+                        g.SkipFurtherSteps = true;
+                        return;
                     }
                     imageNode = preProcNode;
+                }
+                else if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
+                {
+                    throw new InvalidDataException("Cannot preview a ControlNet preprocessor without any preprocessor enabled.");
                 }
                 // TODO: Preprocessor
                 string controlModelNode = g.CreateNode("ControlNetLoader", new JObject()
@@ -702,26 +709,7 @@ public class WorkflowGenerator
         #region SaveImage
         AddStep(g =>
         {
-            // Should already be set correct, but make sure (in case eg overwritten by refiner)
-            if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly) && g.NodeHelpers.TryGetValue("controlnet_preprocessor", out string preproc))
-            {
-                g.FinalImageOut = new() { preproc, 0 };
-            }
-            if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_saveimage_ws") && !RestrictCustomNodes)
-            {
-                g.CreateNode("SwarmSaveImageWS", new JObject()
-                {
-                    ["images"] = g.FinalImageOut
-                }, "9");
-            }
-            else
-            {
-                g.CreateNode("SaveImage", new JObject()
-                {
-                    ["filename_prefix"] = $"StableSwarmUI_{Random.Shared.Next():X4}_",
-                    ["images"] = g.FinalImageOut
-                }, "9");
-            }
+            g.CreateImageSaveNode(g.FinalImageOut, "9");
         }, 10);
         #endregion
     }
@@ -742,6 +730,9 @@ public class WorkflowGenerator
         FinalSamples = new() { "10", 0 },
         FinalImageOut = new() { "8", 0 },
         LoadingModel = null, LoadingClip = null, LoadingVAE = null;
+
+    /// <summary>If true, something has required the workflow stop now.</summary>
+    public bool SkipFurtherSteps = false;
 
     /// <summary>What model currently matches <see cref="FinalModel"/>.</summary>
     public T2IModel FinalLoadedModel;
@@ -800,8 +791,32 @@ public class WorkflowGenerator
         foreach (WorkflowGenStep step in Steps)
         {
             step.Action(this);
+            if (SkipFurtherSteps)
+            {
+                break;
+            }
         }
         return Workflow;
+    }
+
+    /// <summary>Creates a node to save an image output.</summary>
+    public string CreateImageSaveNode(JArray image, string id = null)
+    {
+        if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_saveimage_ws") && !RestrictCustomNodes)
+        {
+            return CreateNode("SwarmSaveImageWS", new JObject()
+            {
+                ["images"] = image
+            }, id);
+        }
+        else
+        {
+            return CreateNode("SaveImage", new JObject()
+            {
+                ["filename_prefix"] = $"StableSwarmUI_{Random.Shared.Next():X4}_",
+                ["images"] = image
+            }, id);
+        }
     }
 
     /// <summary>Creates a model loader and adapts it with any registered model adapters, and returns (Model, Clip, VAE).</summary>

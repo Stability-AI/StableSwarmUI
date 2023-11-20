@@ -704,13 +704,12 @@ function controlnetShowPreview() {
         delete genData['batchsize'];
         genData['donotsave'] = true;
         genData['controlnetpreviewonly'] = true;
-        genericRequest('GenerateText2Image', genData, data => {
-            if (data.images.length < 1) {
-                showError("Could not generate preview, something went wrong.");
+        makeWSRequestT2I('GenerateText2ImageWS', genData, data => {
+            if (!data.image) {
                 return;
             }
             let imgElem = document.createElement('img');
-            imgElem.src = data.images[0];
+            imgElem.src = data.image;
             let resultBox = createDiv(null, 'controlnet-preview-result');
             resultBox.append(imgElem);
             clearPreview();
