@@ -70,6 +70,10 @@ public class ScorersExtension : Extension
     /// <summary>Does not return until the backend process is ready.</summary>
     public void EnsureActive()
     {
+        if (!Directory.Exists($"{FilePath}/venv"))
+        {
+            throw new InvalidOperationException("Scoring parameter is enabled, but Scorers extension is not installed.\nThe scorers extension is experimental, you'll probably want to just uncheck the parameter.");
+        }
         while (Status == BackendStatus.LOADING)
         {
             Task.Delay(TimeSpan.FromSeconds(0.5)).Wait(Program.GlobalProgramCancel);

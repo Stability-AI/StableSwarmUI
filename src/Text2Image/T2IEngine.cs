@@ -243,30 +243,41 @@ namespace StableSwarmUI.Text2Image
                     }
                 }
             }
-            catch (AbstractT2IBackend.PleaseRedirectException)
-            {
-                claim.Extend(gens: 1);
-                await CreateImageTask(user_input, batchId, claim, output, setError, isWS, backendTimeoutMin, saveImages, false);
-            }
-            catch (InvalidOperationException ex)
-            {
-                setError($"Invalid operation: {ex.Message}");
-                return;
-            }
-            catch (InvalidDataException ex)
-            {
-                setError($"Invalid data: {ex.Message}");
-                return;
-            }
-            catch (TaskCanceledException)
-            {
-                return;
-            }
             catch (Exception ex)
             {
-                Logs.Error($"Internal error processing T2I request: {ex}");
-                setError("Something went wrong while generating images.");
-                return;
+                if (ex is AggregateException ae)
+                {
+                    while (ae.InnerException is AggregateException e2 && e2 != ex && e2 != ae)
+                    {
+                        ae = e2;
+                        ex = e2;
+                    }
+                }
+                if (ex is AbstractT2IBackend.PleaseRedirectException)
+                {
+                    claim.Extend(gens: 1);
+                    await CreateImageTask(user_input, batchId, claim, output, setError, isWS, backendTimeoutMin, saveImages, false);
+                }
+                else if (ex.InnerException is InvalidOperationException ioe)
+                {
+                    setError($"Invalid operation: {ioe.Message}");
+                    return;
+                }
+                else if (ex.InnerException is InvalidDataException ide)
+                {
+                    setError($"Invalid data: {ide.Message}");
+                    return;
+                }
+                else if (ex is TaskCanceledException)
+                {
+                    return;
+                }
+                else
+                {
+                    Logs.Error($"Internal error processing T2I request: {ex}");
+                    setError("Something went wrong while generating images.");
+                    return;
+                }
             }
             finally
             {
