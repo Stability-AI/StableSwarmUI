@@ -104,6 +104,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     {nodePath}
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/ExtraNodes")}
             """;
+            Directory.CreateDirectory(Utilities.CombinePathWithAbsolute(root, Program.ServerSettings.Paths.SDClipVisionFolder));
             Directory.CreateDirectory($"{root}/upscale_models");
             File.WriteAllText("Data/comfy-auto-model.yaml", yaml);
             IsComfyModelFileEmitted = true;
