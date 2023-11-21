@@ -974,7 +974,9 @@ body {
     text-align: center;
     display: block;
     width: 80%;
-    padding: 5px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     border-radius: 16px;
     margin-bottom: 5px;
+    font-size: 9px;
 }

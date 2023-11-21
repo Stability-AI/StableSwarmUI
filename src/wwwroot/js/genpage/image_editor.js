@@ -287,6 +287,7 @@ class ImageEditorLayer {
         this.globalCompositeOperation = 'source-over';
         this.childLayers = [];
         this.buffer = null;
+        this.isMask = false;
     }
 
     getOffset() {
@@ -389,10 +390,14 @@ class ImageEditor {
         this.leftBar = createDiv(null, 'image_editor_leftbar');
         this.inputDiv.appendChild(this.leftBar);
         this.rightBar = createDiv(null, 'image_editor_rightbar');
-        this.rightBar.innerHTML = `<div class="image_editor_newlayer_button basic-button" title="New Layer">+</div>`;
+        this.rightBar.innerHTML = `<div class="image_editor_newlayer_button basic-button new-image-layer-button" title="New Image Layer">+Image</div>`
+            + `<div class="image_editor_newlayer_button basic-button new-mask-layer-button" title="New Mask Layer">+Mask</div>`;
         this.inputDiv.appendChild(this.rightBar);
-        this.rightBar.firstChild.addEventListener('click', () => {
+        this.rightBar.querySelector('.new-image-layer-button').addEventListener('click', () => {
             this.addEmptyLayer();
+        });
+        this.rightBar.querySelector('.new-mask-layer-button').addEventListener('click', () => {
+            this.addEmptyMaskLayer();
         });
         this.canvasList = createDiv(null, 'image_editor_canvaslist');
         // canvas entries can be dragged
@@ -635,6 +640,12 @@ class ImageEditor {
         this.finalOffsetX = 0;
         this.finalOffsetY = 0;
         this.canvasList.innerHTML = '';
+    }
+
+    addEmptyMaskLayer() {
+        let layer = new ImageEditorLayer(this, this.realWidth, this.realHeight);
+        layer.isMask = true;
+        this.addLayer(layer);
     }
 
     addEmptyLayer() {
@@ -898,7 +909,9 @@ class ImageEditor {
         canvas.height = this.realHeight;
         let ctx = canvas.getContext('2d');
         for (let layer of this.layers) {
-            layer.drawToBack(ctx, this.finalOffsetX, this.finalOffsetY, 1);
+            if (!layer.isMask) {
+                layer.drawToBack(ctx, this.finalOffsetX, this.finalOffsetY, 1);
+            }
         }
         this.ctx.globalAlpha = 1;
         this.ctx.globalCompositeOperation = 'source-over';
@@ -910,9 +923,13 @@ class ImageEditor {
         canvas.width = this.realWidth;
         canvas.height = this.realHeight;
         let ctx = canvas.getContext('2d');
-        // TODO: Actual mask
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        for (let layer of this.layers) {
+            if (layer.isMask) {
+                layer.drawToBack(ctx, this.finalOffsetX, this.finalOffsetY, 1);
+            }
+        }
         return canvas.toDataURL('image/png');
     }
 }
