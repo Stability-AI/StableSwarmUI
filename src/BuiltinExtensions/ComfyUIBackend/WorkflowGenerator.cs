@@ -354,7 +354,7 @@ public class WorkflowGenerator
                             ["clip_name"] = targetName
                         });
                     }
-                    string lastImage = g.CreateLoadImageNode(images[0], "${promptimages.0}", true);
+                    string lastImage = g.CreateLoadImageNode(images[0], "${promptimages.0}", false);
                     for (int i = 1; i < images.Count; i++)
                     {
                         string newImg = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", false);
