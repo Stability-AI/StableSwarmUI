@@ -1094,29 +1094,30 @@ function revisionInputHandler() {
         e.preventDefault();
         e.stopPropagation();
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            let file = e.dataTransfer.files[0];
-            if (file.type.startsWith('image/')) {
-                let reader = new FileReader();
-                reader.onload = (e) => {
-                    let data = e.target.result;
-                    let imageObject = new Image();
-                    imageObject.src = data;
-                    imageObject.height = 128;
-                    imageObject.className = 'alt-prompt-image';
-                    imageObject.dataset.filedata = data;
-                    clearButton.style.display = '';
-                    let revisionGroup = document.getElementById('input_group_revision');
-                    let revisionToggler = document.getElementById('input_group_content_revision_toggle');
-                    if (revisionGroup) {
-                        toggleGroupOpen(revisionGroup, true);
-                        revisionToggler.checked = true;
-                        triggerChangeFor(revisionToggler);
-                        revisionGroup.style.display = '';
-                    }
-                    promptImageArea.appendChild(imageObject);
-                    altPromptSizeHandleFunc();
-                };
-                reader.readAsDataURL(file);
+            for (let file of e.dataTransfer.files) {
+                if (file.type.startsWith('image/')) {
+                    let reader = new FileReader();
+                    reader.onload = (e) => {
+                        let data = e.target.result;
+                        let imageObject = new Image();
+                        imageObject.src = data;
+                        imageObject.height = 128;
+                        imageObject.className = 'alt-prompt-image';
+                        imageObject.dataset.filedata = data;
+                        clearButton.style.display = '';
+                        let revisionGroup = document.getElementById('input_group_revision');
+                        let revisionToggler = document.getElementById('input_group_content_revision_toggle');
+                        if (revisionGroup) {
+                            toggleGroupOpen(revisionGroup, true);
+                            revisionToggler.checked = true;
+                            triggerChangeFor(revisionToggler);
+                            revisionGroup.style.display = '';
+                        }
+                        promptImageArea.appendChild(imageObject);
+                        altPromptSizeHandleFunc();
+                    };
+                    reader.readAsDataURL(file);
+                }
             }
         }
     });
