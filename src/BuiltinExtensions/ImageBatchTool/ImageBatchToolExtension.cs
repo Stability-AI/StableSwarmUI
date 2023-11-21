@@ -140,7 +140,17 @@ public class ImageBatchToolExtension : Extension
             tasks.Add(T2IEngine.CreateImageTask(param, $"{imageIndex}", claim, output, setError, isWS, Program.ServerSettings.Backends.PerRequestTimeoutMinutes,
                 (image, metadata) =>
                 {
-                    File.WriteAllBytes($"{output_folder}/{fname}", image.ImageData);
+                    (string preExt, string ext) = fname.BeforeAndAfterLast('.');
+                    string properExt = image.Extension;
+                    if (ext == "png" && properExt != "png")
+                    {
+                        ext = "png";
+                    }
+                    else if (ext == "jpg" && properExt != "jpg" && properExt != "jpeg")
+                    {
+                        ext = "jpg";
+                    }
+                    File.WriteAllBytes($"{output_folder}/{preExt}.{ext}", image.ImageData);
                     output(new JObject() { ["image"] = session.GetImageB64(image), ["batch_index"] = $"{imageIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
                 }));
         }
