@@ -286,7 +286,7 @@ public class T2IParamTypes
             "0.6", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, ViewType: ParamViewType.SLIDER, Group: GroupInitImage
             ));
         InitImageResetToNorm = Register<double>(new("Init Image Reset To Norm", "Merges the init image towards the latent norm.\nThis essentially lets you boost 'init image creativity' past 1.0.\nSet to 0 to disable.",
-            "0.1", IgnoreIf: "0", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, ViewType: ParamViewType.SLIDER, Group: GroupInitImage
+            "0", IgnoreIf: "0", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, ViewType: ParamViewType.SLIDER, Group: GroupInitImage
             ));
         MaskImage = Register<Image>(new("Mask Image", "Mask-image, white pixels are changed, black pixels are not changed, gray pixels are half-changed.",
             "", OrderPriority: -4, Group: GroupInitImage, ChangeWeight: 2
