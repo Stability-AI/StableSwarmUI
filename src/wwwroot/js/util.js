@@ -598,6 +598,28 @@ function fileSizeStringify(size) {
 }
 
 /**
+ * Returns a string representing the given duration in a human-readable format.
+ * For example "1h 23m"
+ */
+function durationStringify(seconds) {
+    let hours = Math.floor(seconds / 3600);
+    seconds -= hours * 3600;
+    let minutes = Math.floor(seconds / 60);
+    seconds -= minutes * 60;
+    let result = '';
+    if (hours > 0) {
+        result += `${hours}h `;
+    }
+    if (minutes > 0) {
+        result += `${minutes}m `;
+    }
+    if (hours == 0) {
+        result += `${Math.floor(seconds)}s`;
+    }
+    return result;
+}
+
+/**
  * Filters the array to only contain values for which the map function returns a distinct (unique) value.
  */
 function filterDistinctBy(array, map) {

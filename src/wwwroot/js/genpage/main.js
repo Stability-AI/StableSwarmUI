@@ -362,6 +362,23 @@ function gotImagePreview(image, metadata, batchId) {
     return batch_div;
 }
 
+let totalGensThisRun = 0;
+let totalGenRunTime = 0;
+
+function appendGenTimeFrom(metadata) {
+    if (!metadata) {
+        return;
+    }
+    metadata = JSON.parse(metadata);
+    if (!metadata || !metadata.sui_image_params || !metadata.sui_image_params.generation_time) {
+        return;
+    }
+    let time = metadata.sui_image_params.generation_time;
+    let genTime = parseFloat(time.substring(time.lastIndexOf('and') + 3, time.lastIndexOf('(gen)')).trim());
+    totalGensThisRun++;
+    totalGenRunTime += genTime;
+}
+
 function updateCurrentStatusDirect(data) {
     if (data) {
         num_current_gens = data.waiting_gens;
@@ -385,7 +402,13 @@ function updateCurrentStatusDirect(data) {
         }
         return `<span class="interrupt-line-part">${num} ${text.replaceAll('%', autoS(num))},</span> `;
     }
-    elem.innerHTML = total == 0 ? (isGeneratingPreviews ? 'Generating live previews...' : '') : `${autoBlock(num_current_gens, 'current generation%')}${autoBlock(num_live_gens, 'running')}${autoBlock(num_backends_waiting, 'queued')}${autoBlock(num_models_loading, 'waiting on model load')} ...`;
+    let timeEstimate = '';
+    if (total > 0 && totalGensThisRun > 0) {
+        let avgGenTime = totalGenRunTime / totalGensThisRun;
+        let estTime = avgGenTime * total;
+        timeEstimate = ` (est. ${durationStringify(estTime)})`;
+    }
+    elem.innerHTML = total == 0 ? (isGeneratingPreviews ? 'Generating live previews...' : '') : `${autoBlock(num_current_gens, 'current generation%')}${autoBlock(num_live_gens, 'running')}${autoBlock(num_backends_waiting, 'queued')}${autoBlock(num_models_loading, 'waiting on model load')} ${timeEstimate}...`;
 }
 
 let doesHaveGenCountUpdateQueued = false;
@@ -492,6 +515,7 @@ function doGenerate(input_overrides = {}) {
                 return;
             }
             if (data.image) {
+                appendGenTimeFrom(data.metadata);
                 if (!(data.batch_index in images)) {
                     let batch_div = gotImageResult(data.image, data.metadata, `${batch_id}_${data.batch_index}`);
                     images[data.batch_index] = {div: batch_div, image: data.image, metadata: data.metadata, overall_percent: 0, current_percent: 0};

@@ -295,6 +295,7 @@ class GridGenClass {
             data['gridAxes'] = axisData;
             makeWSRequestT2I('GridGenRun', data, data => {
                 if (data.image) {
+                    appendGenTimeFrom(data.metadata);
                     gotImageResult(data.image, data.metadata);
                     generatedCount++;
                     let timeProgress = Math.round((Date.now() - startTime) / 1000);
