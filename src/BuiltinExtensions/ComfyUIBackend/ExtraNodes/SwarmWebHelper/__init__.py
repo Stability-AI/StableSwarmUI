@@ -1,2 +1,0 @@
-
-WEB_DIRECTORY = "./web"
