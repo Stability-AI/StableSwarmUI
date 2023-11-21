@@ -762,6 +762,14 @@ public class WorkflowGenerator
                 });
                 g.FinalImageOut = new() { joined, 0 };
             }
+            if (g.UserInput.Get(T2IParamTypes.RemoveBackground, false))
+            {
+                string removed = g.CreateNode("SwarmRemBg", new JObject()
+                {
+                    ["images"] = g.FinalImageOut
+                });
+                g.FinalImageOut = new() { removed, 0 };
+            }
             g.CreateImageSaveNode(g.FinalImageOut, "9");
         }, 10);
         #endregion
