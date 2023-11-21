@@ -220,10 +220,11 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         return;
     }
     let curImg = getRequiredElementById('current_image');
-    curImg.innerHTML = '';
     let isVideo = src.endsWith(".mp4") || src.endsWith(".webm");
     let img;
+    let isReuse = false;
     if (isVideo) {
+        curImg.innerHTML = '';
         img = document.createElement('video');
         img.loop = true;
         img.autoplay = true;
@@ -234,7 +235,14 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         img.appendChild(sourceObj);
     }
     else {
-        img = document.createElement('img');
+        img = document.getElementById('current_image_img');
+        if (!img) {
+            curImg.innerHTML = '';
+            img = document.createElement('img');
+        }
+        else {
+            isReuse = true;
+        }
         img.src = src;
     }
     img.className = 'current-image-img';
@@ -242,7 +250,8 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
     img.dataset.batch_id = batchId;
     img.onclick = () => expandCurrentImage(src, metadata);
     currentMetadataVal = metadata;
-    let extrasWrapper = createDiv(null, 'current-image-extras-wrapper');
+    let extrasWrapper = isReuse ? document.getElementById('current-image-extras-wrapper') : createDiv('current-image-extras-wrapper', 'current-image-extras-wrapper');
+    extrasWrapper.innerHTML = '';
     let buttons = createDiv(null, 'current-image-buttons');
     function naturalDim() {
         if (isVideo) {
@@ -304,8 +313,13 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         }
         alignImageDataFormat();
     }
-    curImg.appendChild(img);
-    curImg.appendChild(extrasWrapper);
+    if (isReuse) {
+
+    }
+    else {
+        curImg.appendChild(img);
+        curImg.appendChild(extrasWrapper);
+    }
 }
 
 function appendImage(container, imageSrc, batchId, textPreview, metadata = '', type = 'legacy', prepend = true) {
@@ -345,7 +359,7 @@ function gotImageResult(image, metadata, batchId) {
     let fname = src && src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
     let batch_div = appendImage('current_image_batch', src, batchId, fname, metadata, 'batch');
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
-    setCurrentImage(src, metadata, batchId);
+    setCurrentImage(src, metadata, batchId, false, true);
     return batch_div;
 }
 
@@ -522,7 +536,7 @@ function doGenerate(input_overrides = {}) {
                 }
                 else {
                     let imgHolder = images[data.batch_index];
-                    setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`);
+                    setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`, false, true);
                     let imgElem = imgHolder.div.querySelector('img');
                     imgElem.src = data.image;
                     delete imgElem.dataset.previewGrow;
