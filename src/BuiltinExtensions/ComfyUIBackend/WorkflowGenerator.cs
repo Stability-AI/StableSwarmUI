@@ -478,6 +478,13 @@ public class WorkflowGenerator
                                 n["inputs"][key] = defaultValue;
                             }
                         }
+                        foreach ((string key, JToken data) in (JObject)objectData["input"]["optional"])
+                        {
+                            if (data.Count() == 2 && data[1] is JObject settings && settings.TryGetValue("default", out JToken defaultValue))
+                            {
+                                n["inputs"][key] = defaultValue;
+                            }
+                        }
                     });
                     g.NodeHelpers["controlnet_preprocessor"] = $"{preProcNode}";
                     if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
