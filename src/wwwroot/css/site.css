@@ -21,16 +21,16 @@ body {
     100% {background-color: #dddd55;}
 }
 @keyframes status_glow-error {
-    0% {background-color: #dd5555;}
+    0% {background-color: #bb2020;}
     50% {background-color: #880000;}
-    100% {background-color: #dd5555;}
+    100% {background-color: #bb2020;}
 }
 .top-status-bar {
     position: sticky;
     color: #000000;
     top: 0px;
     z-index: 100;
-    animation-duration: 2s;
+    animation-duration: 5s;
     animation-iteration-count: infinite;
     padding-left: 1rem;
 }

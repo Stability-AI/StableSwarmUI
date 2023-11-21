@@ -159,8 +159,10 @@ function getSession(callback) {
             lastServerVersion = data.version;
         }
         else if (lastServerVersion != data.version) {
-            versionIsWrong = true;
-            showError(`The server has updated since you opened the page, please refresh.`);
+            if (!versionIsWrong) {
+                versionIsWrong = true;
+                showError(`The server has updated since you opened the page, please refresh.`);
+            }
             if (typeof reviseStatusBar != 'undefined') {
                 reviseStatusBar();
             }
