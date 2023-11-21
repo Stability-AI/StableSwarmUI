@@ -197,8 +197,8 @@ public class WorkflowGenerator
                     {
                         string blended = g.CreateNode("SwarmLatentBlendMasked", new JObject()
                         {
-                            ["samples1"] = g.FinalLatentImage,
-                            ["samples2"] = new JArray() { emptyImg, 0 },
+                            ["samples0"] = g.FinalLatentImage,
+                            ["samples1"] = new JArray() { emptyImg, 0 },
                             ["mask"] = new JArray() { maskImageNode, 0 },
                             ["blend_factor"] = resetFactor
                         });
