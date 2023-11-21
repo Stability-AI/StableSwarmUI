@@ -357,7 +357,7 @@ public class WorkflowGenerator
                     string lastImage = g.CreateLoadImageNode(images[0], "${promptimages.0}", true);
                     for (int i = 1; i < images.Count; i++)
                     {
-                        string newImg = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", true);
+                        string newImg = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", false);
                         lastImage = g.CreateNode("ImageBatch", new JObject()
                         {
                             ["image1"] = new JArray() { lastImage, 0 },
