@@ -13,7 +13,7 @@ class SwarmSquareMaskFromPercent:
             }
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/masks"
     RETURN_TYPES = ("MASK",)
     FUNCTION = "mask_from_perc"
 
@@ -48,7 +48,7 @@ class SwarmOverMergeMasksForOverlapFix:
             }
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/masks"
     RETURN_TYPES = ("MASK",)
     FUNCTION = "mask_overmerge"
 
@@ -68,7 +68,7 @@ class SwarmCleanOverlapMasks:
             }
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/masks"
     RETURN_TYPES = ("MASK","MASK",)
     FUNCTION = "mask_overlap"
 
@@ -91,7 +91,7 @@ class SwarmCleanOverlapMasksExceptSelf:
             }
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/masks"
     RETURN_TYPES = ("MASK",)
     FUNCTION = "mask_clean"
 
@@ -112,7 +112,7 @@ class SwarmExcludeFromMask:
             }
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/masks"
     RETURN_TYPES = ("MASK",)
     FUNCTION = "mask_exclude"
 
@@ -133,7 +133,7 @@ class SwarmMaskBounds:
             }
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/masks"
     RETURN_TYPES = ("INT", "INT", "INT", "INT")
     RETURN_NAMES = ("x", "y", "width", "height")
     FUNCTION = "get_bounds"
@@ -162,6 +162,7 @@ def gaussian_kernel(kernel_size: int, sigma: float, device=None):
     g = torch.exp(-(d * d) / (2.0 * sigma * sigma))
     return g / g.sum()
 
+
 class SwarmMaskBlur:
     def __init__(self):
         pass
@@ -179,7 +180,7 @@ class SwarmMaskBlur:
     RETURN_TYPES = ("MASK",)
     FUNCTION = "blur"
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/masks"
 
     def blur(self, mask, blur_radius, sigma):
         if blur_radius == 0:
@@ -193,6 +194,32 @@ class SwarmMaskBlur:
         return (blurred,)
 
 
+class SwarmMaskThreshold:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "mask": ("MASK",),
+                "min": ("FLOAT", { "default": 0.2, "min": 0, "max": 1, "step": 0.01 }),
+                "max": ("FLOAT", { "default": 0.8, "min": 0, "max": 1, "step": 0.01 }),
+            },
+        }
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "threshold"
+
+    CATEGORY = "StableSwarmUI/masks"
+
+    def threshold(self, mask, min, max):
+        mask = mask.clamp(min, max)
+        mask = mask - min
+        mask = mask / (max - min)
+        return (mask,)
+
+
 NODE_CLASS_MAPPINGS = {
     "SwarmSquareMaskFromPercent": SwarmSquareMaskFromPercent,
     "SwarmCleanOverlapMasks": SwarmCleanOverlapMasks,
@@ -201,4 +228,5 @@ NODE_CLASS_MAPPINGS = {
     "SwarmOverMergeMasksForOverlapFix": SwarmOverMergeMasksForOverlapFix,
     "SwarmMaskBounds": SwarmMaskBounds,
     "SwarmMaskBlur": SwarmMaskBlur,
+    "SwarmMaskThreshold": SwarmMaskThreshold,
 }

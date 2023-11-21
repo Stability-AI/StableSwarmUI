@@ -88,6 +88,8 @@ Prompting is, primarily, just text input. However, there are some special option
 - You can use `<segment:texthere>` to automatically refine part of the image using CLIP Segmentation.
     - Or `<segment:texthere,creativity,threshold>` - where creativity is inpaint strength, and threshold is segmentation minimum threshold - for example, `<segment:face,0.8,0.5>` - defaults to 0.6 creativity, 0.5 threshold.
     - See [the feature announcement](https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7236821) for details.
+- You can use `<clear:texthere>` to automatically clear parts of an image to transparent. This uses the same input format as `segment` (above) (for obvious reasons, this requires PNG not JPG).
+    - For example, `<clear:background>` to clear the background.
 
 ## We Gotta Go Faster: Add More Backends
 

@@ -734,6 +734,34 @@ public class WorkflowGenerator
         #region SaveImage
         AddStep(g =>
         {
+            PromptRegion.Part[] parts = new PromptRegion(g.UserInput.Get(T2IParamTypes.Prompt, "")).Parts.Where(p => p.Type == PromptRegion.PartType.ClearSegment).ToArray();
+            foreach (PromptRegion.Part part in parts)
+            {
+                string segmentNode = g.CreateNode("SwarmClipSeg", new JObject()
+                {
+                    ["images"] = g.FinalImageOut,
+                    ["match_text"] = part.DataText,
+                    ["threshold"] = part.Strength
+                });
+                string blurNode = g.CreateNode("SwarmMaskBlur", new JObject()
+                {
+                    ["mask"] = new JArray() { segmentNode, 0 },
+                    ["blur_radius"] = 10,
+                    ["sigma"] = 1
+                });
+                string thresholded = g.CreateNode("SwarmMaskThreshold", new JObject()
+                {
+                    ["mask"] = new JArray() { blurNode, 0 },
+                    ["min"] = 0.2,
+                    ["max"] = 0.6
+                });
+                string joined = g.CreateNode("JoinImageWithAlpha", new JObject()
+                {
+                    ["image"] = g.FinalImageOut,
+                    ["alpha"] = new JArray() { thresholded, 0 }
+                });
+                g.FinalImageOut = new() { joined, 0 };
+            }
             g.CreateImageSaveNode(g.FinalImageOut, "9");
         }, 10);
         #endregion
@@ -957,7 +985,7 @@ public class WorkflowGenerator
     {
         PromptRegion regionalizer = new(prompt);
         JArray globalCond = CreateConditioningDirect(regionalizer.GlobalPrompt, clip, model, isPositive);
-        PromptRegion.Part[] parts = regionalizer.Parts.Where(p => p.Type != PromptRegion.PartType.Segment).ToArray();
+        PromptRegion.Part[] parts = regionalizer.Parts.Where(p => p.Type == PromptRegion.PartType.Object || p.Type == PromptRegion.PartType.Region).ToArray();
         if (parts.IsEmpty())
         {
             return globalCond;
