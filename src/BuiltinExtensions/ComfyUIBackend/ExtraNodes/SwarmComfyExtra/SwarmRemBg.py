@@ -30,8 +30,8 @@ class SwarmRemBg:
         # TODO: Batch support?
         i = 255.0 * images[0].cpu().numpy()
         img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+        img = img.convert("RGBA")
         output = remove(img)
-        output = output.convert("RGB")
         output = np.array(output).astype(np.float32) / 255.0
         output = torch.from_numpy(output)[None,]
         return (output,)
