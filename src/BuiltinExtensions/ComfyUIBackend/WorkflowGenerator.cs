@@ -175,6 +175,16 @@ public class WorkflowGenerator
                     });
                     g.FinalLatentImage = new() { batchNode, 0 };
                 }
+                string maskImageNode = null;
+                if (g.UserInput.TryGet(T2IParamTypes.MaskImage, out Image mask))
+                {
+                    string maskNode = g.CreateLoadImageNode(mask, "${maskimage}", true);
+                    maskImageNode = g.CreateNode("ImageToMask", new JObject()
+                    {
+                        ["image"] = new JArray() { maskNode, 0 },
+                        ["channel"] = "red"
+                    });
+                }
                 if (g.UserInput.TryGet(T2IParamTypes.InitImageResetToNorm, out double resetFactor))
                 {
                     string emptyImg = g.CreateNode("EmptyLatentImage", new JObject()
@@ -183,31 +193,39 @@ public class WorkflowGenerator
                         ["height"] = g.UserInput.GetImageHeight(),
                         ["width"] = g.UserInput.Get(T2IParamTypes.Width)
                     });
-                    string emptyMultiplied = g.CreateNode("LatentMultiply", new JObject()
+                    if (g.Features.Contains("comfy_latent_blend_masked") && maskImageNode is not null)
                     {
-                        ["samples"] = new JArray() { emptyImg, 0 },
-                        ["multiplier"] = resetFactor
-                    });
-                    string originalMultiplied = g.CreateNode("LatentMultiply", new JObject()
+                        string blended = g.CreateNode("SwarmLatentBlendMasked", new JObject()
+                        {
+                            ["samples1"] = g.FinalLatentImage,
+                            ["samples2"] = new JArray() { emptyImg, 0 },
+                            ["mask"] = new JArray() { maskImageNode, 0 },
+                            ["blend_factor"] = resetFactor
+                        });
+                        g.FinalLatentImage = new() { blended, 0 };
+                    }
+                    else
                     {
-                        ["samples"] = g.FinalLatentImage,
-                        ["multiplier"] = 1 - resetFactor
-                    });
-                    string added = g.CreateNode("LatentAdd", new JObject()
-                    {
-                        ["samples1"] = new JArray() { emptyMultiplied, 0 },
-                        ["samples2"] = new JArray() { originalMultiplied, 0 }
-                    });
-                    g.FinalLatentImage = new() { added, 0 };
+                        string emptyMultiplied = g.CreateNode("LatentMultiply", new JObject()
+                        {
+                            ["samples"] = new JArray() { emptyImg, 0 },
+                            ["multiplier"] = resetFactor
+                        });
+                        string originalMultiplied = g.CreateNode("LatentMultiply", new JObject()
+                        {
+                            ["samples"] = g.FinalLatentImage,
+                            ["multiplier"] = 1 - resetFactor
+                        });
+                        string added = g.CreateNode("LatentAdd", new JObject()
+                        {
+                            ["samples1"] = new JArray() { emptyMultiplied, 0 },
+                            ["samples2"] = new JArray() { originalMultiplied, 0 }
+                        });
+                        g.FinalLatentImage = new() { added, 0 };
+                    }
                 }
-                if (g.UserInput.TryGet(T2IParamTypes.MaskImage, out Image mask))
+                if (maskImageNode is not null)
                 {
-                    string maskNode = g.CreateLoadImageNode(mask, "${maskimage}", true);
-                    string maskImageNode = g.CreateNode("ImageToMask", new JObject()
-                    {
-                        ["image"] = new JArray() { maskNode, 0 },
-                        ["channel"] = "red"
-                    });
                     string appliedNode = g.CreateNode("SetLatentNoiseMask", new JObject()
                     {
                         ["samples"] = g.FinalLatentImage,

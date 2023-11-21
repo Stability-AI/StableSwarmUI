@@ -25,12 +25,16 @@ class SwarmSquareMaskFromPercent:
 
 
 def mask_size_match(mask_a, mask_b):
-    height = max(mask_a.shape[0], mask_b.shape[0])
-    width = max(mask_a.shape[1], mask_b.shape[1])
-    if mask_a.shape[0] != height or mask_a.shape[1] != width:
-        mask_a = torch.nn.functional.interpolate(mask_a, size=(height, width), mode="linear")
-    if mask_b.shape[0] != height or mask_b.shape[1] != width:
-        mask_b = torch.nn.functional.interpolate(mask_b, size=(height, width), mode="linear")
+    if len(mask_a.shape) == 2:
+        mask_a = mask_a.unsqueeze(0)
+    if len(mask_b.shape) == 2:
+        mask_b = mask_b.unsqueeze(0)
+    height = max(mask_a.shape[1], mask_b.shape[1])
+    width = max(mask_a.shape[2], mask_b.shape[2])
+    if mask_a.shape[1] != height or mask_a.shape[2] != width:
+        mask_a = torch.nn.functional.interpolate(mask_a.unsqueeze(0), size=(height, width), mode="bicubic")[0]
+    if mask_b.shape[1] != height or mask_b.shape[2] != width:
+        mask_b = torch.nn.functional.interpolate(mask_b.unsqueeze(0), size=(height, width), mode="bicubic")[0]
     return (mask_a, mask_b)
 
 
