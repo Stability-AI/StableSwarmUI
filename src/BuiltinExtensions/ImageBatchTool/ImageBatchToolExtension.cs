@@ -142,11 +142,11 @@ public class ImageBatchToolExtension : Extension
                 {
                     (string preExt, string ext) = fname.BeforeAndAfterLast('.');
                     string properExt = image.Extension;
-                    if (ext == "png" && properExt != "png")
+                    if (properExt == "png" && ext != "png")
                     {
                         ext = "png";
                     }
-                    else if (ext == "jpg" && properExt != "jpg" && properExt != "jpeg")
+                    else if (properExt == "jpg" && ext != "jpg" && ext != "jpeg")
                     {
                         ext = "jpg";
                     }
