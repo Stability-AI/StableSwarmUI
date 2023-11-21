@@ -160,8 +160,9 @@ public class Session : IEquatable<Session>
                     File.WriteAllBytes(fullPath.BeforeLast('.') + ".txt", metadata.EncodeUTF8());
                 }
             }
-            catch (Exception)
+            catch (Exception e1)
             {
+                string pathA = fullPath;
                 try
                 {
                     imagePath = "image_name_error/" + Utilities.SecureRandomHex(10);
@@ -171,7 +172,7 @@ public class Session : IEquatable<Session>
                 }
                 catch (Exception ex)
                 {
-                    Logs.Error($"Could not save user image: {ex.Message}");
+                    Logs.Error($"Could not save user image (to '{pathA}' nor to '{fullPath}': first error '{e1.Message}', second error '{ex.Message}'");
                     return ("ERROR", null);
                 }
             }
