@@ -130,6 +130,24 @@ class ImageEditorToolNavigate extends ImageEditorTool {
 }
 
 /**
+ * The layer-move tool.
+ */
+class ImageEditorToolMove extends ImageEditorTool {
+    constructor(editor) {
+        super(editor, 'move', 'move', 'Move', 'Free-move the current layer.');
+    }
+
+    onGlobalMouseMove() {
+        if (this.editor.mouseDown) {
+            this.editor.activeLayer.offsetX += (this.editor.mouseX - this.editor.lastMouseX) / this.editor.zoomLevel;
+            this.editor.activeLayer.offsetY += (this.editor.mouseY - this.editor.lastMouseY) / this.editor.zoomLevel;
+            return true;
+        }
+        return false;
+    }
+}
+
+/**
  * The Paintbrush tool (also the base used for other brush-likes, such as the Eraser).
  */
 class ImageEditorToolBrush extends ImageEditorTool {
@@ -210,7 +228,7 @@ class ImageEditorToolBrush extends ImageEditorTool {
         }
         this.brushing = true;
         let target = this.editor.activeLayer;
-        this.bufferLayer = new ImageEditorLayer(this.editor, target.canvas.width, target.canvas.height);
+        this.bufferLayer = new ImageEditorLayer(this.editor, target.canvas.width, target.canvas.height, target);
         this.bufferLayer.opacity = this.opacity;
         if (this.isEraser) {
             this.bufferLayer.globalCompositeOperation = 'destination-out';
@@ -241,7 +259,8 @@ class ImageEditorToolBrush extends ImageEditorTool {
     onGlobalMouseUp() {
         if (this.brushing) {
             this.editor.activeLayer.childLayers.pop();
-            this.bufferLayer.drawToBackDirect(this.editor.activeLayer.ctx, 0, 0, 1);
+            let offset = this.editor.activeLayer.getOffset();
+            this.bufferLayer.drawToBackDirect(this.editor.activeLayer.ctx, -offset[0], -offset[1], 1);
             this.bufferLayer = null;
             this.brushing = false;
             return true;
@@ -255,8 +274,9 @@ class ImageEditorToolBrush extends ImageEditorTool {
  * This can be real (user-controlled) OR sub-layers (sometimes user-controlled) OR temporary buffers.
  */
 class ImageEditorLayer {
-    constructor(editor, width, height) {
+    constructor(editor, width, height, parent = null) {
         this.editor = editor;
+        this.parent = parent;
         this.canvas = document.createElement('canvas');
         this.canvas.width = width;
         this.canvas.height = height;
@@ -269,13 +289,27 @@ class ImageEditorLayer {
         this.buffer = null;
     }
 
+    getOffset() {
+        let offseter = this;
+        let [x, y] = [0, 0];
+        while (offseter) {
+            x += offseter.offsetX;
+            y += offseter.offsetY;
+            offseter = offseter.parent;
+        }
+        return [x, y];
+    }
+
     canvasCoordToLayerCoord(x, y) {
         let [x2, y2] = this.editor.canvasCoordToImageCoord(x, y);
-        return [x2 - this.offsetX, y2 - this.offsetY];
+        let offset = this.getOffset();
+        return [x2 - offset[0], y2 - offset[1]];
     }
 
     layerCoordToCanvasCoord(x, y) {
-        return this.editor.imageCoordToCanvasCoord(x + this.offsetX, y + this.offsetY);
+        let [x2, y2] = this.editor.imageCoordToCanvasCoord(x, y);
+        let offset = this.getOffset();
+        return [x2 + offset[0], y2 + offset[1]];
     }
 
     drawFilledCircle(x, y, radius, color) {
@@ -299,8 +333,9 @@ class ImageEditorLayer {
     }
 
     drawToBackDirect(ctx, offsetX, offsetY, zoom) {
-        let x = offsetX + this.offsetX;
-        let y = offsetY + this.offsetY;
+        let offset = this.getOffset();
+        let x = offsetX + offset[0];
+        let y = offsetY + offset[1];
         ctx.globalAlpha = this.opacity;
         ctx.globalCompositeOperation = this.globalCompositeOperation;
         ctx.drawImage(this.canvas, x * zoom, y * zoom, this.canvas.width * zoom, this.canvas.height * zoom);
@@ -313,6 +348,9 @@ class ImageEditorLayer {
             if (this.buffer == null) {
                 this.buffer = new ImageEditorLayer(this.editor, this.canvas.width, this.canvas.height);
             }
+            let offset = this.getOffset();
+            this.buffer.offsetX = this.offsetX;
+            this.buffer.offsetY = this.offsetY;
             this.buffer.opacity = this.opacity;
             this.buffer.globalCompositeOperation = this.globalCompositeOperation;
             this.buffer.ctx.globalAlpha = 1;
@@ -320,7 +358,7 @@ class ImageEditorLayer {
             this.buffer.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.buffer.ctx.drawImage(this.canvas, 0, 0);
             for (let layer of this.childLayers) {
-                layer.drawToBack(this.buffer.ctx, 0, 0, 1);
+                layer.drawToBack(this.buffer.ctx, -offset[0], -offset[1], 1);
             }
             this.buffer.drawToBackDirect(ctx, offsetX, offsetY, zoom);
         }
@@ -413,6 +451,7 @@ class ImageEditor {
         // Tools:
         this.addTool(new ImageEditorToolNavigate(this));
         this.activateTool('navigate');
+        this.addTool(new ImageEditorToolMove(this));
         this.addTool(new ImageEditorTool(this, 'select', 'select', 'Select', 'Select a region of the image.'));
         this.addTool(new ImageEditorToolBrush(this, 'brush', 'paintbrush', 'Paintbrush', 'Draw on the image.', false));
         this.addTool(new ImageEditorToolBrush(this, 'eraser', 'eraser', 'Eraser', 'Erase parts of the image.', true));
@@ -844,6 +883,10 @@ class ImageEditor {
         // UI:
         let [boundaryX, boundaryY] = this.imageCoordToCanvasCoord(this.finalOffsetX, this.finalOffsetY);
         this.drawSelectionBox(boundaryX, boundaryY, this.realWidth * this.zoomLevel, this.realHeight * this.zoomLevel, this.boundaryColor);
+        if (this.activeLayer.offsetX != 0 || this.activeLayer.offsetY != 0) {
+            let [offsetX, offsetY] = this.imageCoordToCanvasCoord(this.activeLayer.offsetX, this.activeLayer.offsetY);
+            this.drawSelectionBox(offsetX, offsetY, this.activeLayer.canvas.width * this.zoomLevel, this.activeLayer.canvas.height * this.zoomLevel, this.uiBorderColor);
+        }
         this.activeTool.draw();
         this.drawTextBubble("SWARM IMAGE EDITOR - DEVELOPMENT PREVIEW\nIt doesn't work yet. Those icons are placeholders. This is just a preview.", '12px sans-serif', this.canvas.width / 4, 10, this.canvas.width / 2);
         this.ctx.restore();
