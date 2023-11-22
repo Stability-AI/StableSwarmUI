@@ -174,7 +174,7 @@ body {
     white-space: pre-wrap;
     font-size: 80%;
 }
-.current_image img {
+.current-image-img {
     max-width: 100%;
     max-height: calc(max(15rem, 100% - 5rem));
     object-fit: contain;
