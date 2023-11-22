@@ -505,14 +505,18 @@ public class WorkflowGenerator
                 {
                     ["control_net_name"] = controlModel.ToString(g.ModelFolderFormat)
                 });
-                string applyNode = g.CreateNode("ControlNetApply", new JObject()
+                string applyNode = g.CreateNode("ControlNetApplyAdvanced", new JObject()
                 {
-                    ["conditioning"] = g.FinalPrompt,
+                    ["positive"] = g.FinalPrompt,
+                    ["negative"] = g.FinalNegativePrompt,
                     ["control_net"] = new JArray() { $"{controlModelNode}", 0 },
                     ["image"] = new JArray() { $"{imageNode}", 0 },
-                    ["strength"] = controlStrength
+                    ["strength"] = controlStrength,
+                    ["start_percent"] = g.UserInput.Get(T2IParamTypes.ControlNetStart, 0),
+                    ["end_percent"] = g.UserInput.Get(T2IParamTypes.ControlNetEnd, 1)
                 });
                 g.FinalPrompt = new() { $"{applyNode}", 0 };
+                g.FinalNegativePrompt = new() { $"{applyNode}", 1 };
             }
         }, -6);
         #endregion
