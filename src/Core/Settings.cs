@@ -192,6 +192,20 @@ public class Settings : AutoConfiguration
         [ConfigComment("The format for parameter hints to display as.\nDefault is 'BUTTON'.")]
         [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<HintFormatOptions>))]
         public string HintFormat = "BUTTON";
+
+        public class VAEsData : AutoConfiguration
+        {
+            [ConfigComment("What VAE to use with SDXL models by default. Use 'None' to use the one in the model.")]
+            [ManualSettingsOptions(Impl = null, Vals = new string[] { "None" })]
+            public string DefaultSDXLVAE = "None";
+
+            [ConfigComment("What VAE to use with SDv1 models by default. Use 'None' to use the one in the model.")]
+            [ManualSettingsOptions(Impl = null, Vals = new string[] { "None" })]
+            public string DefaultSDv1VAE = "None";
+        }
+
+        [ConfigComment("Options to override default VAEs with.")]
+        public VAEsData VAEs = new();
     }
 }
 

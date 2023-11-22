@@ -338,7 +338,7 @@ public class T2IParamTypes
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion", ChangeWeight: 10
             ));
         VAE = Register<T2IModel>(new("VAE", "The VAE (Variational Auto-Encoder) controls the translation between images and latent space.\nIf your images look faded out, or glitched, you may have the wrong VAE.\nAll models have a VAE baked in by default, this option lets you swap to a different one if you want to.",
-            "", IgnoreIf: "", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE", Group: GroupAdvancedModelAddons, ChangeWeight: 7
+            "None", IgnoreIf: "None", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE", Group: GroupAdvancedModelAddons, ChangeWeight: 7
             ));
         Loras = Register<List<string>>(new("LoRAs", "LoRAs (Low-Rank-Adaptation Models) are a way to customize the content of a model without totally replacing it.\nYou can enable one or several LoRAs over top of one model.",
             "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelNamesFor(session).Order().ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false, ChangeWeight: 8

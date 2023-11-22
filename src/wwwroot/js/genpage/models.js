@@ -242,6 +242,22 @@ class ModelBrowserWrapper {
         genericRequest('ListModels', {'path': path, 'depth': depth, 'subtype': this.subType}, data => {
             let files = data.files.sort(sortModelName).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; });
             if (this.subType == 'VAE') {
+                let autoFile = {
+                    'name': `Automatic`,
+                    'data': {
+                        'name': 'Automatic',
+                        'title': 'Automatic',
+                        'author': '(Internal)',
+                        'architecture': 'VAE',
+                        'class': 'VAE',
+                        'description': 'Use the VAE sepcified in your User Settings, or use the VAE built-in to your Stable Diffusion model',
+                        'preview_image': '/imgs/automatic.jpg',
+                        'is_safetensors': true,
+                        'local': true,
+                        standard_width: 0,
+                        standard_height: 0
+                    }
+                };
                 let noneFile = {
                     'name': `None`,
                     'data': {
@@ -258,7 +274,7 @@ class ModelBrowserWrapper {
                         standard_height: 0
                     }
                 };
-                files = [noneFile].concat(files);
+                files = [autoFile, noneFile].concat(files);
             }
             callback(data.folders.sort((a, b) => a.localeCompare(b)), files);
         });
@@ -354,7 +370,7 @@ class ModelBrowserWrapper {
             isSelected = false;
         }
         else if (this.subType == 'VAE' && !document.getElementById('input_vae_toggle').checked) {
-            isSelected = model.data.name == 'None';
+            isSelected = model.data.name == 'Automatic';
         }
         else if (this.subType == 'LoRA') {
             isSelected = [...selectorElem.selectedOptions].map(option => option.value).filter(value => value == model.data.name).length > 0;
@@ -567,7 +583,7 @@ function toggleSelectLora(lora) {
 
 function directSetVae(vae) {
     let toggler = getRequiredElementById('input_vae_toggle');
-    if (!vae || vae.name == 'None') {
+    if (!vae) {
         toggler.checked = false;
         doToggleEnable('input_vae');
         return;
@@ -599,6 +615,19 @@ function directSetModel(model) {
         curModelHeight = parseInt(height);
         curModelArch = arch;
         curModelCompatClass = compatClass;
+    }
+    currentAutomaticVae = 'None';
+    if (curModelArch) {
+        let setting = null;
+        if (curModelArch.startsWith('stable-diffusion-xl-v1')) {
+            setting = document.getElementById('usersettings_vaes.defaultsdxlvae');
+        }
+        else if (curModelArch.startsWith('stable-diffusion-v1')) {
+            setting = document.getElementById('usersettings_vaes.defaultsdv1vae');
+        }
+        if (setting) {
+            currentAutomaticVae = setting.value;
+        }
     }
     let aspect = document.getElementById('input_aspectratio');
     if (aspect) {
