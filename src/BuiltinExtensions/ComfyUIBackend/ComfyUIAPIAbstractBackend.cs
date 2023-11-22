@@ -326,11 +326,13 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             Logs.Verbose($"ComfyUI history said: {output.ToDenseDebugString()}");
         }
         List<Image> outputs = new();
+        List<string> outputFailures = new();
         foreach (JToken outData in output["outputs"].Values())
         {
             if (outData is null)
             {
-                Logs.Error($"null output data from ComfyUI server: {output.ToDenseDebugString()}");
+                Logs.Debug($"null output data from ComfyUI server: {output.ToDenseDebugString()}");
+                outputFailures.Add($"Null output block (???)");
                 continue;
             }
             async Task LoadImage(JObject outImage, Image.ImageType type)
@@ -376,7 +378,19 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             else
             {
-                Logs.Error($"invalid/empty output data from ComfyUI server: {outData.ToDenseDebugString()}");
+                Logs.Debug($"invalid/empty output data from ComfyUI server: {outData.ToDenseDebugString()}");
+                outputFailures.Add($"Invalid/empty output block");
+            }
+        }
+        if (output.IsEmpty())
+        {
+            if (outputFailures.Any())
+            {
+                Logs.Warning($"Comfy backend gave no valid output, but did give unrecognized outputs (enable Debug logs for more details): {outputFailures.JoinString(", ")}");
+            }
+            else
+            {
+                Logs.Warning($"Comfy backend gave no valid output");
             }
         }
         return outputs.ToArray();
