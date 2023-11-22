@@ -61,6 +61,8 @@ public class T2IModelHandler
 
         public int StandardHeight { get; set; }
 
+        public bool IsNegativeEmbedding { get; set; }
+
         public string License { get; set; }
 
         public string UsageHint { get; set; }
@@ -260,6 +262,10 @@ public class T2IModelHandler
             specSet("date", model.Metadata.Date);
             specSet("preprocessor", model.Metadata.Preprocesor);
             specSet("resolution", $"{model.Metadata.StandardWidth}x{model.Metadata.StandardHeight}");
+            if (model.Metadata.IsNegativeEmbedding)
+            {
+                specSet("is_negative_embedding", "true");
+            }
             json["__metadata__"] = metaHeader;
             {
                 using FileStream writer = File.OpenWrite(model.RawFilePath + ".tmp");
@@ -380,6 +386,7 @@ public class T2IModelHandler
                 Date = metaHeader?.Value<string>("modelspec.date"),
                 Preprocesor = metaHeader?.Value<string>("modelspec.preprocessor"),
                 Tags = metaHeader?.Value<string>("modelspec.tags")?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
+                IsNegativeEmbedding = metaHeader?.Value<string>("modelspec.is_negative_embedding") == "true"
             };
             lock (MetadataLock)
             {

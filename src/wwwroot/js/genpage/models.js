@@ -140,6 +140,8 @@ function editModel(model, browser) {
     for (let val of ['description', 'author', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags']) {
         getRequiredElementById(`edit_model_${val}`).value = model[val] || '';
     }
+    getRequiredElementById('edit_model_is_negative').checked = model.is_negative_embedding || false;
+    getRequiredElementById('edit_model_is_negative_div').style.display = model.architecture.endsWith('/textual-inversion') ? 'block' : 'none';
     $('#edit_model_modal').modal('show');
 }
 
@@ -159,6 +161,9 @@ function save_edit_model() {
     };
     for (let val of ['author', 'type', 'description', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags']) {
         data[val] = getRequiredElementById(`edit_model_${val}`).value;
+    }
+    if (model.architecture.endsWith('/textual-inversion')) {
+        data['is_negative_embedding'] = getRequiredElementById('edit_model_is_negative').checked;
     }
     data.subtype = curModelMenuBrowser.subType;
     function complete() {
@@ -416,7 +421,7 @@ function embedAddToPrompt(model, element) {
 }
 
 function selectEmbedding(model) {
-    let promptBox = getRequiredElementById('alt_prompt_textbox');
+    let promptBox = getRequiredElementById(model.is_negative_embedding ? 'input_negativeprompt' : 'alt_prompt_textbox');
     let chunk = `<embed:${model.name}>`;
     if (promptBox.value.endsWith(chunk)) {
         promptBox.value = promptBox.value.substring(0, promptBox.value.length - chunk.length).trim();

@@ -57,6 +57,7 @@ public class T2IModel
             ["merged_from"] = Metadata?.MergedFrom,
             ["tags"] = Metadata?.Tags is null ? null : new JArray(Metadata.Tags),
             ["is_safetensors"] = RawFilePath.EndsWith(".safetensors"),
+            ["is_negative_embedding"] = Metadata?.IsNegativeEmbedding ?? false,
             ["local"] = true
         };
     }

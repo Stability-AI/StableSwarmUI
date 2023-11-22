@@ -592,7 +592,7 @@ public static class T2IAPI
     }
 
     /// <summary>API route to modify the metadata of a model.</summary>
-    public static async Task<JObject> EditModelMetadata(Session session, string model, string title, string author, string type, string description,
+    public static async Task<JObject> EditModelMetadata(Session session, string model, string title, string author, string type, string description, bool is_negative_embedding,
         int standard_width, int standard_height, string preview_image, string usage_hint, string date, string license, string trigger_phrase, string tags, string subtype = "Stable-Diffusion")
     {
         if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler))
@@ -635,6 +635,7 @@ public static class T2IAPI
             actualModel.Metadata.License = string.IsNullOrWhiteSpace(license) ? null : license;
             actualModel.Metadata.TriggerPhrase = string.IsNullOrWhiteSpace(trigger_phrase) ? null : trigger_phrase;
             actualModel.Metadata.Tags = string.IsNullOrWhiteSpace(tags) ? null : tags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            actualModel.Metadata.IsNegativeEmbedding = is_negative_embedding;
         }
         handler.ResetMetadataFrom(actualModel);
         _ = Utilities.RunCheckedTask(() => handler.ApplyNewMetadataDirectly(actualModel));
