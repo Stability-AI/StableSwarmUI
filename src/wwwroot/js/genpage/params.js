@@ -396,6 +396,7 @@ function toggle_advanced() {
             doToggleEnable(`input_${param.id}`);
         }
     }
+    hideUnsupportableParams();
 }
 
 function toggle_advanced_checkbox_manual() {
@@ -573,21 +574,20 @@ function hideUnsupportableParams() {
         return;
     }
     let groups = {};
+    let toggler = getRequiredElementById('advanced_options_checkbox');
     for (let param of gen_param_types) {
         let elem = document.getElementById(`input_${param.id}`);
         if (elem) {
             let box = findParentOfClass(elem, 'auto-input');
-            let show = param.feature_flag == null || Object.values(backends_loaded).filter(b => b.features.includes(param.feature_flag)).length > 0;
-            param.feature_missing = !show;
-            if (box.dataset.visible_controlled) {
+            let supported = param.feature_flag == null || Object.values(backends_loaded).filter(b => b.features.includes(param.feature_flag)).length > 0;
+            param.feature_missing = !supported;
+            let show = supported;
+            if (param.advanced && !toggler.checked) {
+                show = false;
             }
-            else if (show) {
-                box.style.display = '';
-                box.dataset.disabled = 'false';
-            }
-            else {
-                box.style.display = 'none';
-                box.dataset.disabled = 'true';
+            if (!box.dataset.visible_controlled) {
+                box.style.display = show ? '' : 'none';
+                box.dataset.disabled = supported ? 'false' : 'true';
             }
             let group = findParentOfClass(elem, 'input-group');
             if (group) {
