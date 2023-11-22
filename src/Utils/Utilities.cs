@@ -540,4 +540,36 @@ public static class Utilities
             return $"\"{val}\"";
         }
     }
+
+    /// <summary>Quick helper to nuke old pycaches, because python leaves them lying around and does not clean up after itself :(
+    /// Useful for removing old python folders that have been removed from git.</summary>
+    public static void RemoveBadPycacheFrom(string path)
+    {
+        try
+        {
+            string potentialCache = $"{path}/__pycache__/";
+            if (!Directory.Exists(potentialCache))
+            {
+                return;
+            }
+            string[] files = Directory.GetFileSystemEntries(potentialCache);
+            if (files.Any(f => !f.EndsWith(".pyc"))) // Safety backup: if this cache has non-pycache files, we can't safely delete it.
+            {
+                return;
+            }
+            foreach (string file in files)
+            {
+                File.Delete(file);
+            }
+            Directory.Delete(potentialCache);
+            if (Directory.EnumerateFileSystemEntries(path).IsEmpty())
+            {
+                Directory.Delete(path);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logs.Debug($"Failed to remove bad pycache from {path}: {ex}");
+        }
+    }
 }

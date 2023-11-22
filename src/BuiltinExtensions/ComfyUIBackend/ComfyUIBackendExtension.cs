@@ -49,6 +49,9 @@ public class ComfyUIBackendExtension : Extension
         ScriptFiles.Add("Assets/comfy_workflow_editor_helper.js");
         StyleSheetFiles.Add("Assets/comfy_workflow_editor.css");
         T2IParamTypes.FakeTypeProviders.Add(DynamicParamGenerator);
+        // Temporary: remove old pycache files where we used to have python files, to prevent Comfy boot errors
+        Utilities.RemoveBadPycacheFrom($"{Folder}/ExtraNodes");
+        Utilities.RemoveBadPycacheFrom($"{Folder}/ExtraNodes/SwarmWebHelper");
     }
 
     public override void OnShutdown()
