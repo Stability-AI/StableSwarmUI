@@ -287,6 +287,13 @@ class ModelBrowserWrapper {
                 { label: 'Set as Refiner', onclick: buttonRefiner }
             ];
         }
+        else if (this.subType == 'Embedding') {
+            buttons = [
+                { label: 'Add To Prompt', onclick: () => embedAddToPrompt(model.data, 'alt_prompt_textbox') },
+                { label: 'Add To Negative', onclick: () => embedAddToPrompt(model.data, 'input_negativeprompt') },
+                { label: 'Remove All Usages', onclick: () => { embedClearFromPrompt(model.data, 'alt_prompt_textbox'); embedClearFromPrompt(model.data, 'input_negativeprompt'); } }
+            ];
+        }
         let name = cleanModelName(model.data.name);
         if (this.subType == 'Wildcards') {
             buttons = [
@@ -391,6 +398,21 @@ function selectWildcard(model) {
     }
     triggerChangeFor(promptBox);
     wildcardsBrowser.browser.rerender();
+}
+
+function embedClearFromPrompt(model, element) {
+    let box = getRequiredElementById(element);
+    let chunk = `<embed:${model.name}>`;
+    box.value = box.value.replace(` ${chunk}`, '').replace(chunk, '').trim();
+    triggerChangeFor(box);
+    sdEmbedBrowser.browser.rerender();
+}
+
+function embedAddToPrompt(model, element) {
+    let box = getRequiredElementById(element);
+    box.value += ` <embed:${model.name}>`;
+    triggerChangeFor(box);
+    sdEmbedBrowser.browser.rerender();
 }
 
 function selectEmbedding(model) {
