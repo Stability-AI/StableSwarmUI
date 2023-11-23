@@ -387,7 +387,7 @@ class GenPageBrowserClass {
             let barSpot;
             let setBar = () => {
                 this.folderTreeDiv.style.width = `${barSpot}px`;
-                this.fullContentDiv.style.width = `calc(100vw - ${barSpot}px - 1rem)`;
+                this.fullContentDiv.style.width = `calc(100vw - ${barSpot}px - 2rem)`;
             }
             this.lastReset = () => {
                 barSpot = parseInt(localStorage.getItem(`barspot_browser_${this.id}`) || getCookie(`barspot_browser_${this.id}`) || convertRemToPixels(15)); // TODO: Remove the old cookie
