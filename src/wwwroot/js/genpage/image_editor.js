@@ -1,6 +1,6 @@
 
 /**
- * Base class for an image editor tool, such as Paintbrush or the Navigation tool.
+ * Base class for an image editor tool, such as Paintbrush or the General tool.
  */
 class ImageEditorTool {
     constructor(editor, id, icon, name, description) {
@@ -74,55 +74,225 @@ class ImageEditorTool {
         this.editor.ctx.globalCompositeOperation = 'source-over';
     }
 
-    onMouseDown() {
+    onMouseDown(e) {
     }
 
-    onMouseUp() {
+    onMouseUp(e) {
     }
 
-    onMouseMove() {
+    onMouseMove(e) {
     }
 
     onMouseWheel(e) {
     }
 
-    onGlobalMouseMove() {
+    onGlobalMouseMove(e) {
         return false;
     }
 
-    onGlobalMouseUp() {
+    onGlobalMouseUp(e) {
         return false;
     }
 }
 
 /**
- * The generic navigation tool (can be activated freely with the Alt key).
+ * The generic common tool (can be activated freely with the Alt key).
  */
-class ImageEditorToolNavigate extends ImageEditorTool {
+class ImageEditorToolGeneral extends ImageEditorTool {
     constructor(editor) {
-        super(editor, 'navigate', 'mouse', 'Navigate', 'Pure navigation tool, just moves around, no funny business.');
+        super(editor, 'general', 'mouse', 'General', 'General tool. Lets you move around the canvas, or adjust size of current layer.\nCan be activated freely with the Alt key.');
+        this.currentDragCircle = null;
+        this.rotateIcon = new Image();
+        this.rotateIcon.src = '/imgs/rotate.png';
+        this.moveIcon = new Image();
+        this.moveIcon.src = '/imgs/move.png';
     }
 
     fixCursor() {
         this.cursor = this.editor.mouseDown ? 'grabbing' : 'crosshair';
     }
 
+    activeLayerControlCircles() {
+        let [offsetX, offsetY] = this.editor.imageCoordToCanvasCoord(this.editor.activeLayer.offsetX, this.editor.activeLayer.offsetY);
+        let [width, height] = [this.editor.activeLayer.width * this.editor.zoomLevel, this.editor.activeLayer.height * this.editor.zoomLevel];
+        let circles = [];
+        let radius = 4;
+        circles.push({name: 'top-left', radius: radius, x: offsetX - radius / 2, y: offsetY - radius / 2});
+        circles.push({name: 'top-right', radius: radius, x: offsetX + width + radius / 2, y: offsetY - radius / 2});
+        circles.push({name: 'bottom-left', radius: radius, x: offsetX - radius / 2, y: offsetY + height + radius / 2});
+        circles.push({name: 'bottom-right', radius: radius, x: offsetX + width + radius / 2, y: offsetY + height + radius / 2});
+        circles.push({name: 'center-top', radius: radius, x: offsetX + width / 2, y: offsetY - radius / 2});
+        circles.push({name: 'center-bottom', radius: radius, x: offsetX + width / 2, y: offsetY + height + radius / 2});
+        circles.push({name: 'center-left', radius: radius, x: offsetX - radius / 2, y: offsetY + height / 2});
+        circles.push({name: 'center-right', radius: radius, x: offsetX + width + radius / 2, y: offsetY + height / 2});
+        circles.push({name: 'positioner', radius: radius * 2, x: offsetX + width / 2, y: offsetY - radius * 8, icon: this.moveIcon});
+        circles.push({name: 'rotator', radius: radius * 2, x: offsetX + width / 2, y: offsetY - radius * 16, icon: this.rotateIcon});
+        for (let circle of circles) {
+            circle.x = Math.round(circle.x);
+            circle.y = Math.round(circle.y);
+            let angle = this.editor.activeLayer.rotation;
+            let [cx, cy] = [offsetX + width / 2, offsetY + height / 2];
+            let [x, y] = [circle.x - cx, circle.y - cy];
+            [x, y] = [x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle)];
+            [circle.x, circle.y] = [x + cx, y + cy];
+        }
+        return circles;
+    }
+
+    getControlCircle(name) {
+        return this.activeLayerControlCircles().find(c => c.name == name);
+    }
+
     draw() {
         this.fixCursor();
+        for (let circle of this.activeLayerControlCircles()) {
+            this.editor.ctx.strokeStyle = '#ffffff';
+            this.editor.ctx.fillStyle = '#000000';
+            if (this.editor.isMouseInCircle(circle.x, circle.y, circle.radius)) {
+                this.editor.canvas.style.cursor = 'grab';
+                this.editor.ctx.strokeStyle = '#000000';
+                this.editor.ctx.fillStyle = '#ffffff';
+            }
+            this.editor.ctx.lineWidth = 1;
+            if (circle.icon) {
+                this.editor.ctx.save();
+                this.editor.ctx.filter = 'invert(1)';
+                for (let offset of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+                    this.editor.ctx.drawImage(circle.icon, circle.x - circle.radius + offset[0], circle.y - circle.radius + offset[1], circle.radius * 2, circle.radius * 2);
+                }
+                this.editor.ctx.restore();
+                this.editor.ctx.drawImage(circle.icon, circle.x - circle.radius, circle.y - circle.radius, circle.radius * 2, circle.radius * 2);
+            }
+            else {
+                this.editor.ctx.beginPath();
+                this.editor.ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
+                this.editor.ctx.fill();
+                this.editor.ctx.stroke();
+            }
+        }
     }
 
-    onMouseDown() {
+    onMouseDown(e) {
         this.fixCursor();
+        this.currentDragCircle = null;
+        for (let circle of this.activeLayerControlCircles()) {
+            if (this.editor.isMouseInCircle(circle.x, circle.y, circle.radius)) {
+                this.currentDragCircle = circle.name;
+                break;
+            }
+        }
     }
 
-    onMouseUp() {
+    onMouseUp(e) {
         this.fixCursor();
+        this.currentDragCircle = null;
     }
 
-    onGlobalMouseMove() {
+    onGlobalMouseMove(e) {
         if (this.editor.mouseDown) {
-            this.editor.offsetX += (this.editor.mouseX - this.editor.lastMouseX) / this.editor.zoomLevel;
-            this.editor.offsetY += (this.editor.mouseY - this.editor.lastMouseY) / this.editor.zoomLevel;
+            let dx = (this.editor.mouseX - this.editor.lastMouseX) / this.editor.zoomLevel;
+            let dy = (this.editor.mouseY - this.editor.lastMouseY) / this.editor.zoomLevel;
+            let target = this.editor.activeLayer;
+            let [mouseX, mouseY] = this.editor.canvasCoordToImageCoord(this.editor.mouseX, this.editor.mouseY);
+            if (this.currentDragCircle == 'rotator') {
+                let centerX = target.offsetX + target.width / 2;
+                let centerY = target.offsetY + target.height / 2;
+                target.rotation = Math.atan2(mouseY - centerY, mouseX - centerX) + Math.PI / 2;
+                if (e.ctrlKey) {
+                    target.rotation = Math.round(target.rotation / (Math.PI / 16)) * (Math.PI / 16);
+                }
+            }
+            else if (this.currentDragCircle) {
+                let circles = this.activeLayerControlCircles();
+                let current = circles.find(c => c.name == this.currentDragCircle);
+                let [circleX, circleY] = this.editor.canvasCoordToImageCoord(current.x, current.y);
+                let angle = target.rotation;
+                let roundFactor = 1;
+                if (e.ctrlKey) {
+                    roundFactor = 8;
+                    while (roundFactor * this.editor.zoomLevel < 16) {
+                        roundFactor *= 4;
+                    }
+                }
+                if (current.name != 'positioner') {
+                    //[mouseX, mouseY] = [mouseX * Math.cos(angle) - mouseY * Math.sin(angle), mouseX * Math.sin(angle) + mouseY * Math.cos(angle)];
+                    //[circleX, circleY] = [circleX * Math.cos(angle) - circleY * Math.sin(angle), circleX * Math.sin(angle) + circleY * Math.cos(angle)];
+                }
+                let dx = Math.round(mouseX / roundFactor) * roundFactor - circleX;
+                let dy = Math.round(mouseY / roundFactor) * roundFactor - circleY;
+                if (current.name == 'positioner') {
+                    target.offsetX += dx;
+                    target.offsetY += dy;
+                }
+                else {
+                    [dx, dy] = [Math.min(dx, 1024), Math.min(dy, 1024)]; // Backup to reduce explosive growth if rotation goes weird
+                    let topLeft = circles.find(c => c.name == 'top-left');
+                    let topRight = circles.find(c => c.name == 'top-right');
+                    let bottomLeft = circles.find(c => c.name == 'bottom-left');
+                    let bottomRight = circles.find(c => c.name == 'bottom-right');
+                    for (let circle of circles) {
+                        [circle.x, circle.y] = this.editor.canvasCoordToImageCoord(circle.x, circle.y);
+                    }
+                    switch (current.name) {
+                        case 'top-left':
+                            topLeft.x += dx;
+                            topLeft.y += dy;
+                            topRight.y += dy;
+                            bottomLeft.x += dx;
+                            break;
+                        case 'top-right':
+                            topRight.x += dx;
+                            topRight.y += dy;
+                            topLeft.y += dy;
+                            bottomRight.x += dx;
+                            break;
+                        case 'bottom-left':
+                            bottomLeft.x += dx;
+                            bottomLeft.y += dy;
+                            topLeft.x += dx;
+                            bottomRight.y += dy;
+                            break;
+                        case 'bottom-right':
+                            bottomRight.x += dx;
+                            bottomRight.y += dy;
+                            topRight.x += dx;
+                            bottomLeft.y += dy;
+                            break;
+                        case 'center-top':
+                            topLeft.y += dy;
+                            topRight.y += dy;
+                            break;
+                        case 'center-bottom':
+                            bottomLeft.y += dy;
+                            bottomRight.y += dy;
+                            break;
+                        case 'center-left':
+                            topLeft.x += dx;
+                            bottomLeft.x += dx;
+                            break;
+                        case 'center-right':
+                            topRight.x += dx;
+                            bottomRight.x += dx;
+                            break;
+                    }
+                    // TODO: This goes wonky with rotated blocks, need to redo
+                    let [widthDX, widthDY] = [topRight.x - topLeft.x, topRight.y - topLeft.y];
+                    let [heightDX, heightDY] = [bottomLeft.x - topLeft.x, bottomLeft.y - topLeft.y];
+                    let offsetGuide = 2 / this.editor.zoomLevel;
+                    let [width, height] = [Math.sqrt(widthDX * widthDX + widthDY * widthDY) - offsetGuide * 2, Math.sqrt(heightDX * heightDX + heightDY * heightDY) - offsetGuide * 2];
+                    let [widthRotated, heightRotated] = [width * Math.cos(angle) - height * Math.sin(angle), width * Math.sin(angle) + height * Math.cos(angle)];
+                    [widthRotated, heightRotated] = [Math.abs(widthRotated), Math.abs(heightRotated)];
+                    let [centerX, centerY] = [topLeft.x + offsetGuide + widthRotated / 2, topLeft.y + offsetGuide + heightRotated / 2];
+                    target.width = Math.round(width);
+                    target.height = Math.round(height);
+                    target.offsetX = Math.round(centerX - width / 2);
+                    target.offsetY = Math.round(centerY - height / 2);
+                }
+            }
+            else {
+                this.editor.offsetX += dx;
+                this.editor.offsetY += dy;
+            }
             return true;
         }
         return false;
@@ -137,7 +307,7 @@ class ImageEditorToolMove extends ImageEditorTool {
         super(editor, 'move', 'move', 'Move', 'Free-move the current layer.');
     }
 
-    onGlobalMouseMove() {
+    onGlobalMouseMove(e) {
         if (this.editor.mouseDown) {
             this.editor.activeLayer.offsetX += (this.editor.mouseX - this.editor.lastMouseX) / this.editor.zoomLevel;
             this.editor.activeLayer.offsetY += (this.editor.mouseY - this.editor.lastMouseY) / this.editor.zoomLevel;
@@ -215,14 +385,14 @@ class ImageEditorToolBrush extends ImageEditorTool {
     }
 
     brush() {
-        let [lastX, lastY] = this.bufferLayer.canvasCoordToLayerCoord(this.editor.lastMouseX, this.editor.lastMouseY);
-        let [x, y] = this.bufferLayer.canvasCoordToLayerCoord(this.editor.mouseX, this.editor.mouseY);
+        let [lastX, lastY] = this.editor.activeLayer.canvasCoordToLayerCoord(this.editor.lastMouseX, this.editor.lastMouseY);
+        let [x, y] = this.editor.activeLayer.canvasCoordToLayerCoord(this.editor.mouseX, this.editor.mouseY);
         this.bufferLayer.drawFilledCircle(lastX, lastY, this.radius, this.color);
         this.bufferLayer.drawFilledCircleStrokeBetween(lastX, lastY, x, y, this.radius, this.color);
         this.bufferLayer.drawFilledCircle(x, y, this.radius, this.color);
     }
 
-    onMouseDown() {
+    onMouseDown(e) {
         if (this.brushing) {
             return;
         }
@@ -233,11 +403,11 @@ class ImageEditorToolBrush extends ImageEditorTool {
         if (this.isEraser) {
             this.bufferLayer.globalCompositeOperation = 'destination-out';
         }
-        this.editor.activeLayer.childLayers.push(this.bufferLayer);
+        target.childLayers.push(this.bufferLayer);
         this.brush();
     }
 
-    onMouseMove() {
+    onMouseMove(e) {
         if (this.brushing) {
             this.brush();
         }
@@ -256,7 +426,7 @@ class ImageEditorToolBrush extends ImageEditorTool {
         }
     }
 
-    onGlobalMouseUp() {
+    onGlobalMouseUp(e) {
         if (this.brushing) {
             this.editor.activeLayer.childLayers.pop();
             let offset = this.editor.activeLayer.getOffset();
@@ -278,11 +448,14 @@ class ImageEditorLayer {
         this.editor = editor;
         this.parent = parent;
         this.canvas = document.createElement('canvas');
+        this.width = width;
+        this.height = height;
         this.canvas.width = width;
         this.canvas.height = height;
         this.ctx = this.canvas.getContext('2d');
         this.offsetX = 0;
         this.offsetY = 0;
+        this.rotation = 0;
         this.opacity = 1;
         this.globalCompositeOperation = 'source-over';
         this.childLayers = [];
@@ -301,16 +474,46 @@ class ImageEditorLayer {
         return [x, y];
     }
 
+    ensureSize() {
+        if (this.canvas.width != this.width || this.canvas.height != this.height) {
+            this.resize(this.width, this.height);
+        }
+    }
+
+    resize(width, height) {
+        let newCanvas = document.createElement('canvas');
+        newCanvas.width = width;
+        newCanvas.height = height;
+        let newCtx = newCanvas.getContext('2d');
+        newCtx.drawImage(this.canvas, 0, 0, width, height);
+        this.canvas = newCanvas;
+        this.ctx = newCtx;
+        this.width = width;
+        this.height = height;
+    }
+
     canvasCoordToLayerCoord(x, y) {
         let [x2, y2] = this.editor.canvasCoordToImageCoord(x, y);
-        let offset = this.getOffset();
-        return [x2 - offset[0], y2 - offset[1]];
+        let [offsetX, offsetY] = this.getOffset();
+        let relWidth = this.width / this.canvas.width;
+        let relHeight = this.height / this.canvas.height;
+        [x2, y2] = [x2 - offsetX, y2 - offsetY];
+        let angle = -this.rotation;
+        let [cx, cy] = [this.width / 2, this.height / 2];
+        let [x3, y3] = [x2 - cx, y2 - cy];
+        [x3, y3] = [x3 * Math.cos(angle) - y3 * Math.sin(angle), x3 * Math.sin(angle) + y3 * Math.cos(angle)];
+        [x2, y2] = [x3 + cx, y3 + cy];
+        [x2, y2] = [x2 / relWidth, y2 / relHeight];
+        return [x2, y2];
     }
 
     layerCoordToCanvasCoord(x, y) {
         let [x2, y2] = this.editor.imageCoordToCanvasCoord(x, y);
-        let offset = this.getOffset();
-        return [x2 + offset[0], y2 + offset[1]];
+        let [offsetX, offsetY] = this.getOffset();
+        let relWidth = this.width / this.canvas.width;
+        let relHeight = this.height / this.canvas.height;
+        [x2, y2] = [x2 * relWidth + offsetX, y2 * relHeight + offsetY];
+        return [x2, y2];
     }
 
     drawFilledCircle(x, y, radius, color) {
@@ -334,20 +537,25 @@ class ImageEditorLayer {
     }
 
     drawToBackDirect(ctx, offsetX, offsetY, zoom) {
-        let offset = this.getOffset();
-        let x = offsetX + offset[0];
-        let y = offsetY + offset[1];
+        ctx.save();
+        let [thisOffsetX, thisOffsetY] = this.getOffset();
+        let x = offsetX + thisOffsetX;
+        let y = offsetY + thisOffsetY;
         ctx.globalAlpha = this.opacity;
         ctx.globalCompositeOperation = this.globalCompositeOperation;
-        ctx.drawImage(this.canvas, x * zoom, y * zoom, this.canvas.width * zoom, this.canvas.height * zoom);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
+        ctx.translate((x + this.width / 2) * zoom, (y + this.height / 2) * zoom);
+        ctx.rotate(this.rotation);
+        ctx.drawImage(this.canvas, -this.width / 2 * zoom, -this.height / 2 * zoom, this.width * zoom, this.height * zoom);
+        ctx.restore();
     }
 
     drawToBack(ctx, offsetX, offsetY, zoom) {
         if (this.childLayers.length > 0) {
             if (this.buffer == null) {
                 this.buffer = new ImageEditorLayer(this.editor, this.canvas.width, this.canvas.height);
+                this.buffer.width = this.width;
+                this.buffer.height = this.height;
+                this.buffer.rotation = this.rotation;
             }
             let offset = this.getOffset();
             this.buffer.offsetX = this.offsetX;
@@ -454,8 +662,8 @@ class ImageEditor {
         this.finalOffsetX = 0;
         this.finalOffsetY = 0;
         // Tools:
-        this.addTool(new ImageEditorToolNavigate(this));
-        this.activateTool('navigate');
+        this.addTool(new ImageEditorToolGeneral(this));
+        this.activateTool('general');
         this.addTool(new ImageEditorToolMove(this));
         this.addTool(new ImageEditorTool(this, 'select', 'select', 'Select', 'Select a region of the image.'));
         this.addTool(new ImageEditorToolBrush(this, 'brush', 'paintbrush', 'Paintbrush', 'Draw on the image.', false));
@@ -497,7 +705,7 @@ class ImageEditor {
     handleAltDown() {
         if (!this.preAltTool) {
             this.preAltTool = this.activeTool;
-            this.activateTool('navigate');
+            this.activateTool('general');
             this.redraw();
         }
     }
@@ -550,20 +758,20 @@ class ImageEditor {
             this.handleAltDown();
         }
         this.mouseDown = true;
-        this.activeTool.onMouseDown();
+        this.activeTool.onMouseDown(e);
         this.redraw();
     }
 
     onMouseUp(e) {
         this.mouseDown = false;
-        this.activeTool.onMouseUp();
+        this.activeTool.onMouseUp(e);
         this.redraw();
     }
 
     onGlobalMouseUp(e) {
         let wasDown = this.mouseDown;
         this.mouseDown = false;
-        if (this.activeTool.onGlobalMouseUp() || wasDown) {
+        if (this.activeTool.onGlobalMouseUp(e) || wasDown) {
             this.redraw();
         }
     }
@@ -573,10 +781,10 @@ class ImageEditor {
         this.mouseY = e.clientY - this.canvas.offsetTop;
         let draw = false;
         if (this.isMouseInBox(0, 0, this.canvas.width, this.canvas.height)) {
-            this.activeTool.onMouseMove();
+            this.activeTool.onMouseMove(e);
             draw = true;
         }
-        if (this.activeTool.onGlobalMouseMove()) {
+        if (this.activeTool.onGlobalMouseMove(e)) {
             draw = true;
         }
         if (draw) {
@@ -596,6 +804,12 @@ class ImageEditor {
 
     isMouseInBox(x, y, width, height) {
         return this.mouseX >= x && this.mouseX < x + width && this.mouseY >= y && this.mouseY < y + height;
+    }
+
+    isMouseInCircle(x, y, radius) {
+        let dx = this.mouseX - x;
+        let dy = this.mouseY - y;
+        return dx * dx + dy * dy < radius * radius;
     }
 
     activate() {
@@ -737,7 +951,6 @@ class ImageEditor {
         this.addLayer(layer2);
         this.realWidth = img.naturalWidth;
         this.realHeight = img.naturalHeight;
-        console.log(`setBaseImage ${this.realWidth}x${this.realHeight}`);
         if (this.active) {
             this.redraw();
         }
@@ -853,18 +1066,21 @@ class ImageEditor {
         }
     }
 
-    drawSelectionBox(x, y, width, height, color) {
+    drawSelectionBox(x, y, width, height, color, spacing, angle) {
+        this.ctx.save();
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = 1;
         this.ctx.beginPath();
-        this.ctx.setLineDash([5, 5]);
-        this.ctx.moveTo(x - 1, y - 1);
-        this.ctx.lineTo(x + width + 1, y - 1);
-        this.ctx.lineTo(x + width + 1, y + height + 1);
-        this.ctx.lineTo(x - 1, y + height + 1);
+        this.ctx.setLineDash([spacing, spacing]);
+        this.ctx.translate(x + width / 2, y + height / 2);
+        this.ctx.rotate(angle);
+        this.ctx.moveTo(-width / 2 - 1, -height / 2 - 1);
+        this.ctx.lineTo(width / 2 + 1, -height / 2 - 1);
+        this.ctx.lineTo(width / 2 + 1, height / 2 + 1);
+        this.ctx.lineTo(-width / 2 - 1, height / 2 + 1);
         this.ctx.closePath();
         this.ctx.stroke();
-        this.ctx.setLineDash([]);
+        this.ctx.restore();
     }
 
     redraw() {
@@ -893,11 +1109,9 @@ class ImageEditor {
         this.ctx.globalAlpha = 1;
         // UI:
         let [boundaryX, boundaryY] = this.imageCoordToCanvasCoord(this.finalOffsetX, this.finalOffsetY);
-        this.drawSelectionBox(boundaryX, boundaryY, this.realWidth * this.zoomLevel, this.realHeight * this.zoomLevel, this.boundaryColor);
-        if (this.activeLayer.offsetX != 0 || this.activeLayer.offsetY != 0) {
-            let [offsetX, offsetY] = this.imageCoordToCanvasCoord(this.activeLayer.offsetX, this.activeLayer.offsetY);
-            this.drawSelectionBox(offsetX, offsetY, this.activeLayer.canvas.width * this.zoomLevel, this.activeLayer.canvas.height * this.zoomLevel, this.uiBorderColor);
-        }
+        this.drawSelectionBox(boundaryX, boundaryY, this.realWidth * this.zoomLevel, this.realHeight * this.zoomLevel, this.boundaryColor, 16 * this.zoomLevel, 0);
+        let [offsetX, offsetY] = this.imageCoordToCanvasCoord(this.activeLayer.offsetX, this.activeLayer.offsetY);
+        this.drawSelectionBox(offsetX, offsetY, this.activeLayer.width * this.zoomLevel, this.activeLayer.height * this.zoomLevel, this.uiBorderColor, 8 * this.zoomLevel, this.activeLayer.rotation);
         this.activeTool.draw();
         this.drawTextBubble("SWARM IMAGE EDITOR - DEVELOPMENT PREVIEW\nIt doesn't work yet. Those icons are placeholders. This is just a preview.", '12px sans-serif', this.canvas.width / 4, 10, this.canvas.width / 2);
         this.ctx.restore();
