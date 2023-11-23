@@ -127,14 +127,16 @@ class ImageEditorToolGeneral extends ImageEditorTool {
         circles.push({name: 'center-right', radius: radius, x: offsetX + width + radius / 2, y: offsetY + height / 2});
         circles.push({name: 'positioner', radius: radius * 2, x: offsetX + width / 2, y: offsetY - radius * 8, icon: this.moveIcon});
         circles.push({name: 'rotator', radius: radius * 2, x: offsetX + width / 2, y: offsetY - radius * 16, icon: this.rotateIcon});
-        for (let circle of circles) {
-            circle.x = Math.round(circle.x);
-            circle.y = Math.round(circle.y);
-            let angle = this.editor.activeLayer.rotation;
-            let [cx, cy] = [offsetX + width / 2, offsetY + height / 2];
-            let [x, y] = [circle.x - cx, circle.y - cy];
-            [x, y] = [x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle)];
-            [circle.x, circle.y] = [x + cx, y + cy];
+        let angle = this.editor.activeLayer.rotation;
+        if (angle != 0) {
+            for (let circle of circles) {
+                circle.x = Math.round(circle.x);
+                circle.y = Math.round(circle.y);
+                let [cx, cy] = [offsetX + width / 2, offsetY + height / 2];
+                let [x, y] = [circle.x - cx, circle.y - cy];
+                [x, y] = [x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle)];
+                [circle.x, circle.y] = [x + cx, y + cy];
+            }
         }
         return circles;
     }
@@ -203,20 +205,16 @@ class ImageEditorToolGeneral extends ImageEditorTool {
                 }
             }
             else if (this.currentDragCircle) {
-                let circles = this.activeLayerControlCircles();
-                let current = circles.find(c => c.name == this.currentDragCircle);
-                let [circleX, circleY] = this.editor.canvasCoordToImageCoord(current.x, current.y);
                 let angle = target.rotation;
+                let current = this.getControlCircle(this.currentDragCircle);
+                let [circleX, circleY] = this.editor.canvasCoordToImageCoord(current.x, current.y);
+                target.rotation = 0;
                 let roundFactor = 1;
                 if (e.ctrlKey) {
                     roundFactor = 8;
                     while (roundFactor * this.editor.zoomLevel < 16) {
                         roundFactor *= 4;
                     }
-                }
-                if (current.name != 'positioner') {
-                    //[mouseX, mouseY] = [mouseX * Math.cos(angle) - mouseY * Math.sin(angle), mouseX * Math.sin(angle) + mouseY * Math.cos(angle)];
-                    //[circleX, circleY] = [circleX * Math.cos(angle) - circleY * Math.sin(angle), circleX * Math.sin(angle) + circleY * Math.cos(angle)];
                 }
                 let dx = Math.round(mouseX / roundFactor) * roundFactor - circleX;
                 let dy = Math.round(mouseY / roundFactor) * roundFactor - circleY;
@@ -225,69 +223,54 @@ class ImageEditorToolGeneral extends ImageEditorTool {
                     target.offsetY += dy;
                 }
                 else {
-                    [dx, dy] = [Math.min(dx, 1024), Math.min(dy, 1024)]; // Backup to reduce explosive growth if rotation goes weird
-                    let topLeft = circles.find(c => c.name == 'top-left');
-                    let topRight = circles.find(c => c.name == 'top-right');
-                    let bottomLeft = circles.find(c => c.name == 'bottom-left');
-                    let bottomRight = circles.find(c => c.name == 'bottom-right');
-                    for (let circle of circles) {
-                        [circle.x, circle.y] = this.editor.canvasCoordToImageCoord(circle.x, circle.y);
+                    if (current.name == 'top-left') {
+                        let widthChange = Math.min(dx, target.width - 1);
+                        let heightChange = Math.min(dy, target.height - 1);
+                        target.offsetX += widthChange;
+                        target.offsetY += heightChange;
+                        target.width -= widthChange;
+                        target.height -= heightChange;
                     }
-                    switch (current.name) {
-                        case 'top-left':
-                            topLeft.x += dx;
-                            topLeft.y += dy;
-                            topRight.y += dy;
-                            bottomLeft.x += dx;
-                            break;
-                        case 'top-right':
-                            topRight.x += dx;
-                            topRight.y += dy;
-                            topLeft.y += dy;
-                            bottomRight.x += dx;
-                            break;
-                        case 'bottom-left':
-                            bottomLeft.x += dx;
-                            bottomLeft.y += dy;
-                            topLeft.x += dx;
-                            bottomRight.y += dy;
-                            break;
-                        case 'bottom-right':
-                            bottomRight.x += dx;
-                            bottomRight.y += dy;
-                            topRight.x += dx;
-                            bottomLeft.y += dy;
-                            break;
-                        case 'center-top':
-                            topLeft.y += dy;
-                            topRight.y += dy;
-                            break;
-                        case 'center-bottom':
-                            bottomLeft.y += dy;
-                            bottomRight.y += dy;
-                            break;
-                        case 'center-left':
-                            topLeft.x += dx;
-                            bottomLeft.x += dx;
-                            break;
-                        case 'center-right':
-                            topRight.x += dx;
-                            bottomRight.x += dx;
-                            break;
+                    else if (current.name == 'top-right') {
+                        let widthChange = Math.max(dx, 1- target.width);
+                        let heightChange = Math.min(dy, target.height - 1);
+                        target.offsetY += heightChange;
+                        target.width += widthChange;
+                        target.height -= heightChange;
                     }
-                    // TODO: This goes wonky with rotated blocks, need to redo
-                    let [widthDX, widthDY] = [topRight.x - topLeft.x, topRight.y - topLeft.y];
-                    let [heightDX, heightDY] = [bottomLeft.x - topLeft.x, bottomLeft.y - topLeft.y];
-                    let offsetGuide = 2 / this.editor.zoomLevel;
-                    let [width, height] = [Math.sqrt(widthDX * widthDX + widthDY * widthDY) - offsetGuide * 2, Math.sqrt(heightDX * heightDX + heightDY * heightDY) - offsetGuide * 2];
-                    let [widthRotated, heightRotated] = [width * Math.cos(angle) - height * Math.sin(angle), width * Math.sin(angle) + height * Math.cos(angle)];
-                    [widthRotated, heightRotated] = [Math.abs(widthRotated), Math.abs(heightRotated)];
-                    let [centerX, centerY] = [topLeft.x + offsetGuide + widthRotated / 2, topLeft.y + offsetGuide + heightRotated / 2];
-                    target.width = Math.round(width);
-                    target.height = Math.round(height);
-                    target.offsetX = Math.round(centerX - width / 2);
-                    target.offsetY = Math.round(centerY - height / 2);
+                    else if (current.name == 'bottom-left') {
+                        let widthChange = Math.min(dx, target.width - 1);
+                        let heightChange = Math.max(dy, 1 - target.height);
+                        target.offsetX += widthChange;
+                        target.width -= widthChange;
+                        target.height += heightChange;
+                    }
+                    else if (current.name == 'bottom-right') {
+                        let widthChange = Math.max(dx, 1 - target.width);
+                        let heightChange = Math.max(dy, 1 - target.height);
+                        target.width += widthChange;
+                        target.height += heightChange;
+                    }
+                    else if (current.name == 'center-top') {
+                        let heightChange = Math.min(dy, target.height - 1);
+                        target.offsetY += heightChange;
+                        target.height -= heightChange;
+                    }
+                    else if (current.name == 'center-bottom') {
+                        let heightChange = Math.max(dy, 1 - target.height);
+                        target.height += heightChange;
+                    }
+                    else if (current.name == 'center-left') {
+                        let widthChange = Math.min(dx, target.width - 1);
+                        target.offsetX += widthChange;
+                        target.width -= widthChange;
+                    }
+                    else if (current.name == 'center-right') {
+                        let widthChange = Math.max(dx, 1 - target.width);
+                        target.width += widthChange;
+                    }
                 }
+                target.rotation = angle;
             }
             else {
                 this.editor.offsetX += dx;
@@ -543,9 +526,12 @@ class ImageEditorLayer {
         let y = offsetY + thisOffsetY;
         ctx.globalAlpha = this.opacity;
         ctx.globalCompositeOperation = this.globalCompositeOperation;
-        ctx.translate((x + this.width / 2) * zoom, (y + this.height / 2) * zoom);
+        let angle = this.rotation;
+        let [cx, cy] = [this.width / 2, this.height / 2];
+        [cx, cy] = [cx * Math.cos(angle) - cy * Math.sin(angle), cx * Math.sin(angle) + cy * Math.cos(angle)];
+        ctx.translate((x + cx) * zoom, (y + cy) * zoom);
         ctx.rotate(this.rotation);
-        ctx.drawImage(this.canvas, -this.width / 2 * zoom, -this.height / 2 * zoom, this.width * zoom, this.height * zoom);
+        ctx.drawImage(this.canvas, -cx * zoom, -cy * zoom, this.width * zoom, this.height * zoom);
         ctx.restore();
     }
 
