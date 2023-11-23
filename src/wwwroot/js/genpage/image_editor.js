@@ -100,7 +100,7 @@ class ImageEditorTool {
  */
 class ImageEditorToolGeneral extends ImageEditorTool {
     constructor(editor) {
-        super(editor, 'general', 'mouse', 'General', 'General tool. Lets you move around the canvas, or adjust size of current layer.\nCan be activated freely with the Alt key.');
+        super(editor, 'general', 'mouse', 'General', 'General tool. Lets you move around the canvas, or adjust size of current layer.\nWhile resizing an object, hold CTRL to snap-to-grid, or hold SHIFT to disable aspect preservation.\nThe general tool can be activated at any time with the Alt key.');
         this.currentDragCircle = null;
         this.rotateIcon = new Image();
         this.rotateIcon.src = '/imgs/rotate.png';
@@ -223,6 +223,15 @@ class ImageEditorToolGeneral extends ImageEditorTool {
                     [x, y] = [x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle)];
                     [x, y] = [x + cx, y + cy];
                     return [x, y];
+                }
+                if (!e.shiftKey && !current.name.startsWith('center') && current.name != 'positioner') {
+                    let [cX, cY] = [target.offsetX + target.width / 2, target.offsetY + target.height / 2];
+                    let [dirX, dirY] = [circleX - cX, circleY - cY];
+                    let lineLen = Math.sqrt(dirX * dirX + dirY * dirY);
+                    [dirX, dirY] = [dirX / lineLen, dirY / lineLen];
+                    let [vX, vY] = [mouseX - cX, mouseY - cY];
+                    let d = vX * dirX + vY * dirY;
+                    [mouseX, mouseY] = [cX + dirX * d, cY + dirY * d];
                 }
                 let dx = Math.round(mouseX / roundFactor) * roundFactor - circleX;
                 let dy = Math.round(mouseY / roundFactor) * roundFactor - circleY;
