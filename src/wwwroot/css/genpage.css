@@ -641,6 +641,7 @@ body {
     display: block;
     height: 100%;
     overflow: hidden;
+    white-space: nowrap;
 }
 .preset_list_container {
     height: calc(100% - 3rem);
