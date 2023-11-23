@@ -205,16 +205,24 @@ class ImageEditorToolGeneral extends ImageEditorTool {
                 }
             }
             else if (this.currentDragCircle) {
-                let angle = target.rotation;
                 let current = this.getControlCircle(this.currentDragCircle);
                 let [circleX, circleY] = this.editor.canvasCoordToImageCoord(current.x, current.y);
-                target.rotation = 0;
                 let roundFactor = 1;
                 if (e.ctrlKey) {
                     roundFactor = 8;
                     while (roundFactor * this.editor.zoomLevel < 16) {
                         roundFactor *= 4;
                     }
+                }
+                function applyRotate(x, y, angle = null) {
+                    let [cx, cy] = [target.offsetX + target.width / 2, target.offsetY + target.height / 2];
+                    if (angle == null) {
+                        angle = target.rotation;
+                    }
+                    [x, y] = [x - cx, y - cy];
+                    [x, y] = [x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle)];
+                    [x, y] = [x + cx, y + cy];
+                    return [x, y];
                 }
                 let dx = Math.round(mouseX / roundFactor) * roundFactor - circleX;
                 let dy = Math.round(mouseY / roundFactor) * roundFactor - circleY;
@@ -223,54 +231,88 @@ class ImageEditorToolGeneral extends ImageEditorTool {
                     target.offsetY += dy;
                 }
                 else {
+                    [dx, dy] = [dx * Math.cos(-target.rotation) - dy * Math.sin(-target.rotation), dx * Math.sin(-target.rotation) + dy * Math.cos(-target.rotation)];
+                    let [origX, origY] = [target.offsetX, target.offsetY];
+                    let [origWidth, origHeight] = [target.width, target.height];
                     if (current.name == 'top-left') {
+                        let [origBRX, origBRY] = applyRotate(origX + origWidth, origY + origHeight);
                         let widthChange = Math.min(dx, target.width - 1);
                         let heightChange = Math.min(dy, target.height - 1);
                         target.offsetX += widthChange;
                         target.offsetY += heightChange;
                         target.width -= widthChange;
                         target.height -= heightChange;
+                        let [newBRX, newBRY] = applyRotate(target.offsetX + target.width, target.offsetY + target.height);
+                        target.offsetX += origBRX - newBRX;
+                        target.offsetY += origBRY - newBRY;
                     }
                     else if (current.name == 'top-right') {
+                        let [origBLX, origBLY] = applyRotate(origX, origY + origHeight);
                         let widthChange = Math.max(dx, 1- target.width);
                         let heightChange = Math.min(dy, target.height - 1);
                         target.offsetY += heightChange;
                         target.width += widthChange;
                         target.height -= heightChange;
+                        let [newBLX, newBLY] = applyRotate(target.offsetX, target.offsetY + target.height);
+                        target.offsetX += origBLX - newBLX;
+                        target.offsetY += origBLY - newBLY;
                     }
                     else if (current.name == 'bottom-left') {
+                        let [origTRX, origTRY] = applyRotate(origX + origWidth, origY);
                         let widthChange = Math.min(dx, target.width - 1);
                         let heightChange = Math.max(dy, 1 - target.height);
                         target.offsetX += widthChange;
                         target.width -= widthChange;
                         target.height += heightChange;
+                        let [newTRX, newTRY] = applyRotate(target.offsetX + target.width, target.offsetY);
+                        target.offsetX += origTRX - newTRX;
+                        target.offsetY += origTRY - newTRY;
                     }
                     else if (current.name == 'bottom-right') {
+                        let [origTLX, origTLY] = applyRotate(origX, origY);
                         let widthChange = Math.max(dx, 1 - target.width);
                         let heightChange = Math.max(dy, 1 - target.height);
                         target.width += widthChange;
                         target.height += heightChange;
+                        let [newTLX, newTLY] = applyRotate(target.offsetX, target.offsetY);
+                        target.offsetX += origTLX - newTLX;
+                        target.offsetY += origTLY - newTLY;
                     }
                     else if (current.name == 'center-top') {
+                        let [origCBX, origCBY] = applyRotate(origX + origWidth / 2, origY + origHeight);
                         let heightChange = Math.min(dy, target.height - 1);
                         target.offsetY += heightChange;
                         target.height -= heightChange;
+                        let [newCBX, newCBY] = applyRotate(target.offsetX + target.width / 2, target.offsetY + target.height);
+                        target.offsetX += origCBX - newCBX;
+                        target.offsetY += origCBY - newCBY;
                     }
                     else if (current.name == 'center-bottom') {
+                        let [origCTX, origCTY] = applyRotate(origX + origWidth / 2, origY);
                         let heightChange = Math.max(dy, 1 - target.height);
                         target.height += heightChange;
+                        let [newCTX, newCTY] = applyRotate(target.offsetX + target.width / 2, target.offsetY);
+                        target.offsetX += origCTX - newCTX;
+                        target.offsetY += origCTY - newCTY;
                     }
                     else if (current.name == 'center-left') {
+                        let [origCRX, origCRY] = applyRotate(origX + origWidth, origY + origHeight / 2);
                         let widthChange = Math.min(dx, target.width - 1);
                         target.offsetX += widthChange;
                         target.width -= widthChange;
+                        let [newCRX, newCRY] = applyRotate(target.offsetX + target.width, target.offsetY + target.height / 2);
+                        target.offsetX += origCRX - newCRX;
+                        target.offsetY += origCRY - newCRY;
                     }
                     else if (current.name == 'center-right') {
+                        let [origCLX, origCLY] = applyRotate(origX, origY + origHeight / 2);
                         let widthChange = Math.max(dx, 1 - target.width);
                         target.width += widthChange;
+                        let [newCLX, newCLY] = applyRotate(target.offsetX, target.offsetY + target.height / 2);
+                        target.offsetX += origCLX - newCLX;
+                        target.offsetY += origCLY - newCLY;
                     }
                 }
-                target.rotation = angle;
             }
             else {
                 this.editor.offsetX += dx;
@@ -526,9 +568,7 @@ class ImageEditorLayer {
         let y = offsetY + thisOffsetY;
         ctx.globalAlpha = this.opacity;
         ctx.globalCompositeOperation = this.globalCompositeOperation;
-        let angle = this.rotation;
         let [cx, cy] = [this.width / 2, this.height / 2];
-        [cx, cy] = [cx * Math.cos(angle) - cy * Math.sin(angle), cx * Math.sin(angle) + cy * Math.cos(angle)];
         ctx.translate((x + cx) * zoom, (y + cy) * zoom);
         ctx.rotate(this.rotation);
         ctx.drawImage(this.canvas, -cx * zoom, -cy * zoom, this.width * zoom, this.height * zoom);
