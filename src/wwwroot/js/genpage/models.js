@@ -529,7 +529,7 @@ function updateLoraList() {
     for (let lora of currentLoras) {
         let div = createDiv(null, 'preset-in-list');
         div.dataset.lora_name = lora;
-        div.innerText = lora;
+        div.innerText = lora.endsWith('.safetensors') ? lora.substring(0, lora.length - '.safetensors'.length) : lora;
         let weightInput = document.createElement('input');
         weightInput.className = 'lora-weight-input';
         weightInput.type = 'number';

@@ -78,7 +78,12 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
         {
             for (int i = 0; i < loras.Count; i++)
             {
-                promptAdd += $"<lora:{loras[i]}:{loraWeights[i]}>";
+                string lora = loras[i];
+                if (lora.EndsWith(".safetensors"))
+                {
+                    lora = lora.BeforeLast('.');
+                }
+                promptAdd += $"<lora:{lora}:{loraWeights[i]}>";
             }
         }
         JObject toSend = new()
