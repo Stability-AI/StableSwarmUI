@@ -84,6 +84,10 @@ public class T2IModelClassSorter
         {
             return h.ContainsKey("controlnet_down_blocks.0.bias");
         }});
+        Register(new() { ID = "stable-video-diffusion-img2vid-v0_9", CompatClass = "stable-video-diffusion-img2vid-v1", Name = "Stable Video Diffusion Img2Vid 0.9", StandardWidth = 1024, StandardHeight = 576, IsThisModelOfClass = (m, h) =>
+        {
+            return h.ContainsKey("model.diffusion_model.input_blocks.1.0.time_stack.emb_layers.1.bias");
+        }});
         JToken GetEmbeddingKey(JObject h)
         {
             if (h.TryGetValue("emb_params", out JToken emb_data))
