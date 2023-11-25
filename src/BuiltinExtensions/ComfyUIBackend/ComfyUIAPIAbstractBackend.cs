@@ -340,11 +340,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             async Task LoadImage(JObject outImage, Image.ImageType type)
             {
+                string imType = "output";
                 string fname = outImage["filename"].ToString();
                 if ($"{outImage["type"]}" == "temp")
                 {
-                    Logs.Debug($"Comfy - Skip temp image '{fname}'");
-                    return;
+                    imType = "temp";
                 }
                 string ext = fname.AfterLast('.');
                 string format = (outImage.TryGetValue("format", out JToken formatTok) ? formatTok.ToString() : "") ?? "";
@@ -356,7 +356,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 {
                     type = Image.ImageType.VIDEO;
                 }
-                byte[] image = await(await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
+                byte[] image = await(await HttpClient.GetAsync($"{Address}/view?filename={HttpUtility.UrlEncode(fname)}&type={imType}", interrupt)).Content.ReadAsByteArrayAsync(interrupt);
                 if (image == null || image.Length == 0)
                 {
                     Logs.Error($"Invalid/null/empty image data from ComfyUI server for '{fname}', under {outData.ToDenseDebugString()}");

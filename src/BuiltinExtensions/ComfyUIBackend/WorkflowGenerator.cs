@@ -825,14 +825,39 @@ public class WorkflowGenerator
                 g.FinalLatentImage = new() { samplered, 0 };
                 string decoded = g.CreateVAEDecode(vae, g.FinalLatentImage);
                 g.FinalImageOut = new() { decoded, 0 };
-                g.CreateNode("SwarmSaveAnimatedWebpWS", new JObject()
+                string format = g.UserInput.Get(T2IParamTypes.VideoFormat, "webp").ToLowerFast();
+                if (format == "webp")
                 {
-                    ["images"] = g.FinalImageOut,
-                    ["fps"] = fps,
-                    ["lossless"] = false,
-                    ["quality"] = 95,
-                    ["method"] = "default"
-                });
+                    g.CreateNode("SwarmSaveAnimatedWebpWS", new JObject()
+                    {
+                        ["images"] = g.FinalImageOut,
+                        ["fps"] = fps,
+                        ["lossless"] = false,
+                        ["quality"] = 95,
+                        ["method"] = "default"
+                    });
+                }
+                else
+                {
+                    string actualFormat = format switch
+                    {
+                        "webm" => "video/webm",
+                        "h264" => "video/h264-mp4",
+                        "h265" => "video/h265-mp4",
+                        "gif" => "image/gif",
+                        _ => throw new InvalidDataException($"Invalid video format '{format}'")
+                    };
+                    g.CreateNode("VHS_VideoCombine", new JObject()
+                    {
+                        ["images"] = g.FinalImageOut,
+                        ["frame_rate"] = fps,
+                        ["loop_count"] = 0,
+                        ["filename_prefix"] = "swarmsvd_",
+                        ["format"] = actualFormat,
+                        ["pingpong"] = false,
+                        ["save_image"] = false
+                    });
+                }
             }
         }, 11);
         #endregion

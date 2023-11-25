@@ -38,7 +38,8 @@ public class ComfyUIBackendExtension : Extension
         ["AITemplateLoader"] = "aitemplate",
         ["IPAdapter"] = "ipadapter",
         ["IPAdapterApply"] = "ipadapter",
-        ["IPAdapterModelLoader"] = "cubiqipadapter"
+        ["IPAdapterModelLoader"] = "cubiqipadapter",
+        ["VHS_VideoCombine"] = "video_format_select"
     };
 
     public override void OnPreInit()
