@@ -211,7 +211,7 @@ public static class NetworkBackendUtils
             string[] subDirs = Directory.GetDirectories($"{dir}/venv/lib/");
             foreach (string subDir in subDirs)
             {
-                if (subDir.StartsWith("python"))
+                if (subDir.AfterLast('/').StartsWith("python"))
                 {
                     return Path.GetFullPath(subDir);
                 }
