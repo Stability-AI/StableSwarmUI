@@ -74,7 +74,7 @@ class SwarmKSampler:
                 "rho": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 100.0, "step":0.01, "round": False}),
                 "add_noise": (["enable", "disable"], ),
                 "return_with_leftover_noise": (["disable", "enable"], ),
-                "previews": (["default", "none"], )
+                "previews": (["default", "none", "one"], )
             }
         }
 
@@ -96,7 +96,7 @@ class SwarmKSampler:
         if "noise_mask" in latent_image:
             noise_mask = latent_image["noise_mask"]
 
-        previewer = latent_preview.get_previewer(device, model.model.latent_format) if previews == "default" else None
+        previewer = latent_preview.get_previewer(device, model.model.latent_format) if previews in ["default", "one"] else None
 
         pbar = comfy.utils.ProgressBar(steps)
         def callback(step, x0, x, total_steps):
@@ -105,6 +105,8 @@ class SwarmKSampler:
                 for i in range(x0.shape[0]):
                     preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[i:i+1])
                     swarm_send_extra_preview(i, preview_img[1])
+                    if previews == "one":
+                        break
 
         sigmas = None
         if sigma_min >= 0 and sigma_max >= 0 and scheduler in ["karras", "exponential"]:

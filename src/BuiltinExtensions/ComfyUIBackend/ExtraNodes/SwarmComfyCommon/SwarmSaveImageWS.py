@@ -38,6 +38,7 @@ class SwarmSaveImageWS:
 
 class SwarmSaveAnimatedWebpWS:
     methods = {"default": 4, "fastest": 0, "slowest": 6}
+
     @classmethod
     def INPUT_TYPES(s):
         return {

@@ -540,7 +540,7 @@ public class WorkflowGenerator
             }
             double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
             g.CreateKSampler(g.FinalModel, g.FinalPrompt, g.FinalNegativePrompt, g.FinalLatentImage, cfg, steps, startStep, endStep,
-                g.UserInput.Get(T2IParamTypes.Seed), g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy", true, "10");
+                g.UserInput.Get(T2IParamTypes.Seed), g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy", true, id: "10");
         }, -5);
         #endregion
         #region Refiner
@@ -624,7 +624,7 @@ public class WorkflowGenerator
                 int steps = g.UserInput.Get(T2IParamTypes.Steps);
                 double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
                 g.CreateKSampler(g.FinalModel, prompt, negPrompt, g.FinalSamples, cfg, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
-                    g.UserInput.Get(T2IParamTypes.Seed) + 1, false, method != "StepSwapNoisy", "23");
+                    g.UserInput.Get(T2IParamTypes.Seed) + 1, false, method != "StepSwapNoisy", id: "23");
                 g.FinalSamples = new() { "23", 0 };
             }
             // TODO: Refiner
@@ -821,7 +821,7 @@ public class WorkflowGenerator
                 JArray latent = new () { conditioning, 2 };
                 int steps = g.UserInput.Get(T2IParamTypes.VideoSteps, 20);
                 double cfg = g.UserInput.Get(T2IParamTypes.VideoCFG, 2.5);
-                string samplered = g.CreateKSampler(model, posCond, negCond, latent, cfg, steps, 0, 10000, g.UserInput.Get(T2IParamTypes.Seed) + 42, false, true);
+                string samplered = g.CreateKSampler(model, posCond, negCond, latent, cfg, steps, 0, 10000, g.UserInput.Get(T2IParamTypes.Seed) + 42, false, true, previews: "one");
                 g.FinalLatentImage = new() { samplered, 0 };
                 string decoded = g.CreateVAEDecode(vae, g.FinalLatentImage);
                 g.FinalImageOut = new() { decoded, 0 };
@@ -981,7 +981,7 @@ public class WorkflowGenerator
     }
 
     /// <summary>Creates a KSampler and returns its node ID.</summary>
-    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, string id = null)
+    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, string previews = "default", string id = null)
     {
         JObject inputs = new()
         {
@@ -1007,7 +1007,7 @@ public class WorkflowGenerator
             inputs["sigma_min"] = UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
             inputs["sigma_max"] = UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
             inputs["rho"] = UserInput.Get(T2IParamTypes.SamplerRho, 7);
-            inputs["previews"] = "default";
+            inputs["previews"] = previews;
             return CreateNode("SwarmKSampler", inputs, id);
         }
         else
