@@ -90,6 +90,10 @@ function save_new_preset() {
         if (type.type == "boolean") {
             data[type.id] = elem.checked ? "true" : "false";
         }
+        else if (type.type == "list" && elem.tagName == "SELECT") {
+            let selected = [...elem.selectedOptions].map(o => o.value);
+            data[type.id] = selected.join(',');
+        }
         else {
             data[type.id] = elem.value;
         }
