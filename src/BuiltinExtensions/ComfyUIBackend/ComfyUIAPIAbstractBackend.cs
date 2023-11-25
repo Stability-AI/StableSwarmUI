@@ -212,6 +212,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             long start = Environment.TickCount64;
             bool hasInterrupted = false;
             bool isReceivingOutputs = false;
+            bool isExpectingVideo = false;
             while (true)
             {
                 byte[] output = await socket.ReceiveData(100 * 1024 * 1024, Program.GlobalProgramCancel);
@@ -240,7 +241,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                             case "progress":
                                 int max = json["data"].Value<int>("max");
                                 curPercent = json["data"].Value<float>("value") / max;
-                                isReceivingOutputs = max == 12345;
+                                isReceivingOutputs = max == 12345 || max == 12346;
+                                isExpectingVideo = max == 12346;
                                 yieldProgressUpdate();
                                 break;
                             case "executed":
@@ -266,11 +268,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                             index = (format >> 4) & 0xffff;
                             format &= 7;
                         }
-                        string formatLabel = format switch { 1 => "jpeg", 2 => "png", _ => "jpeg" };
+                        string formatLabel = format switch { 1 => "jpeg", 2 => "png", 3 => "webp", _ => "jpeg" };
                         Logs.Verbose($"ComfyUI Websocket sent: {output.Length} bytes of image data as event {eventId} in format {format} ({formatLabel}) to index {index}");
                         if (isReceivingOutputs)
                         {
-                            takeOutput(new Image(output[8..], Image.ImageType.IMAGE, formatLabel == "jpeg" ? "jpg" : formatLabel));
+                            takeOutput(new Image(output[8..], isExpectingVideo ? Image.ImageType.VIDEO : Image.ImageType.IMAGE, formatLabel == "jpeg" ? "jpg" : formatLabel));
                         }
                         else
                         {
