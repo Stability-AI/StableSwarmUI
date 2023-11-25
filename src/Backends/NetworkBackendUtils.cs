@@ -317,8 +317,8 @@ public static class NetworkBackendUtils
         takeOutput(port, runningProcess);
         runningProcess.Start();
         Logs.Init($"Self-Start {nameSimple} on port {port} is loading...");
-        ReportLogsFromProcess(runningProcess, $"{nameSimple} on port {port}", out Action causeShutdown, getStatus, s => { status = s; reviseStatus(s); });
-        addShutdownEvent?.Invoke(causeShutdown);
+        ReportLogsFromProcess(runningProcess, $"{nameSimple} on port {port}", out Action signalShutdownExpected, getStatus, s => { status = s; reviseStatus(s); });
+        addShutdownEvent?.Invoke(signalShutdownExpected);
         int checks = 0;
         while (status == BackendStatus.LOADING)
         {
@@ -338,11 +338,17 @@ public static class NetworkBackendUtils
         Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
     }
 
-    public static void ReportLogsFromProcess(Process process, string nameSimple, out Action causeShutdown, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus)
+    public static void ReportLogsFromProcess(Process process, string nameSimple)
+    {
+        ReportLogsFromProcess(process, nameSimple, out Action signalShutdownExpected, () => BackendStatus.RUNNING, _ => { });
+        signalShutdownExpected();
+    }
+
+    public static void ReportLogsFromProcess(Process process, string nameSimple, out Action signalShutdownExpected, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus)
     {
         BackendStatus status = getStatus();
         bool isShuttingDown = false;
-        causeShutdown = () => Volatile.Write(ref isShuttingDown, true);
+        signalShutdownExpected = () => Volatile.Write(ref isShuttingDown, true);
         void MonitorLoop()
         {
             string line;

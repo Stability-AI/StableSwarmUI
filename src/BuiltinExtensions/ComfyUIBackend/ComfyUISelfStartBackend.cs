@@ -159,7 +159,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     RedirectStandardOutput = true
                 };
                 Process p = Process.Start(psi);
-                NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Git Pull)", out _, () => BackendStatus.LOADING, s => { });
+                NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Git Pull)");
                 await p.WaitForExitAsync(Program.GlobalProgramCancel);
             }
             catch (Exception ex)
@@ -171,7 +171,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         if (lib is not null && !Directory.Exists($"{lib}/site-packages/rembg"))
         {
             Process p = DoPythonCall("-s -m pip install rembg");
-            NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Install RemBG)", out _, () => BackendStatus.LOADING, s => { });
+            NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Install RemBG)");
             await p.WaitForExitAsync(Program.GlobalProgramCancel);
         }
         await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs.Trim() + " --port {PORT}" + addedArgs, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
