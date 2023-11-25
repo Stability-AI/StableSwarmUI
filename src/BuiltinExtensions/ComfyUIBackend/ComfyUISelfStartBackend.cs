@@ -111,6 +111,19 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         }
     }
 
+    /// <summary>Runs a generic python call for the current comfy backend.</summary>
+    public Process DoPythonCall(string call)
+    {
+        ProcessStartInfo start = new()
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        NetworkBackendUtils.ConfigurePythonExeFor((SettingsRaw as ComfyUISelfStartSettings).StartScript, "ComfyUI", start, out _);
+        start.Arguments = call.Trim();
+        return Process.Start(start);
+    }
+
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     public override async Task Init()
     {
@@ -139,14 +152,27 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         {
             try
             {
-                ProcessStartInfo psi = new("git", "pull") { WorkingDirectory = Path.GetFullPath(settings.StartScript).Replace('\\', '/').BeforeLast('/') };
+                ProcessStartInfo psi = new("git", "pull")
+                {
+                    WorkingDirectory = Path.GetFullPath(settings.StartScript).Replace('\\', '/').BeforeLast('/'),
+                    RedirectStandardError = true,
+                    RedirectStandardOutput = true
+                };
                 Process p = Process.Start(psi);
-                await p.WaitForExitAsync();
+                NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Git Pull)", out _, () => BackendStatus.LOADING, s => { });
+                await p.WaitForExitAsync(Program.GlobalProgramCancel);
             }
             catch (Exception ex)
             {
                 Logs.Error($"Failed to auto-update comfy backend: {ex}");
             }
+        }
+        string lib = NetworkBackendUtils.GetProbableLibFolderFor(settings.StartScript);
+        if (lib is not null && !Directory.Exists($"{lib}/site-packages/rembg"))
+        {
+            Process p = DoPythonCall("-s -m pip install rembg");
+            NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Install RemBG)", out _, () => BackendStatus.LOADING, s => { });
+            await p.WaitForExitAsync(Program.GlobalProgramCancel);
         }
         await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs.Trim() + " --port {PORT}" + addedArgs, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }

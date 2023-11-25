@@ -191,6 +191,80 @@ public static class NetworkBackendUtils
         return port;
     }
 
+    /// <summary>Tries to identify the lib folder that will be used for a given start script.</summary>
+    public static string GetProbableLibFolderFor(string script)
+    {
+        string path = script.Replace('\\', '/');
+        string dir = Path.GetDirectoryName(path);
+        if (File.Exists($"{dir}/venv/Scripts/python.exe"))
+        {
+            return Path.GetFullPath($"{dir}/venv/Lib");
+        }
+        if (File.Exists($"{dir}/../python_embeded/python.exe"))
+        {
+            return Path.GetFullPath($"{dir}/../python_embeded/Lib");
+        }
+        if (File.Exists($"{dir}/venv/bin/python3"))
+        {
+            //return Path.GetFullPath($"{dir}/venv/lib/");
+            // sub-folder named like "python3.10"
+            string[] subDirs = Directory.GetDirectories($"{dir}/venv/lib/");
+            foreach (string subDir in subDirs)
+            {
+                if (subDir.StartsWith("python"))
+                {
+                    return Path.GetFullPath(subDir);
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>Configures python execution for a given python start script.</summary>
+    public static void ConfigurePythonExeFor(string script, string nameSimple, ProcessStartInfo start, out string preArgs)
+    {
+        void AddPath(string path)
+        {
+            start.Environment["PATH"] = PythonLaunchHelper.ReworkPythonPaths(path);
+            Logs.Debug($"({nameSimple} launch) Adding path {path}");
+        }
+        string path = script.Replace('\\', '/');
+        string dir = Path.GetDirectoryName(path);
+        start.WorkingDirectory = dir;
+        preArgs = "-s " + path.AfterLast("/");
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            if (File.Exists($"{dir}/venv/Scripts/python.exe"))
+            {
+                start.FileName = Path.GetFullPath($"{dir}/venv/Scripts/python.exe");
+                AddPath(Path.GetFullPath($"{dir}/venv"));
+            }
+            else if (File.Exists($"{dir}/../python_embeded/python.exe"))
+            {
+                start.FileName = Path.GetFullPath($"{dir}/../python_embeded/python.exe");
+                start.WorkingDirectory = Path.GetFullPath($"{dir}/..");
+                preArgs = "-s " + Path.GetFullPath(path)[(start.WorkingDirectory.Length + 1)..];
+                AddPath(Path.GetFullPath($"{dir}/../python_embeded"));
+            }
+            else
+            {
+                start.FileName = "python";
+            }
+        }
+        else
+        {
+            if (File.Exists($"{dir}/venv/bin/python3"))
+            {
+                start.FileName = Path.GetFullPath($"{dir}/venv/bin/python3");
+                AddPath(Path.GetFullPath($"{dir}/venv"));
+            }
+            else
+            {
+                start.FileName = "python3";
+            }
+        }
+    }
+
     /// <summary>Starts a self-start backend based on the user-configuration and backend-specifics provided.</summary>
     public static Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput)
     {
@@ -228,44 +302,7 @@ public static class NetworkBackendUtils
         string postArgs = extraArgs.Replace("{PORT}", $"{port}").Trim();
         if (path.EndsWith(".py"))
         {
-            preArgs = "-s " + path.AfterLast("/");
-            void AddPath(string path)
-            {
-                string above = Path.GetFullPath($"{path}/..");
-                start.Environment["PATH"] = PythonLaunchHelper.ReworkPythonPaths(path);
-                Logs.Debug($"({nameSimple} launch) Adding path {path}");
-            }
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                if (File.Exists($"{dir}/venv/Scripts/python.exe"))
-                {
-                    start.FileName = Path.GetFullPath($"{dir}/venv/Scripts/python.exe");
-                    AddPath(Path.GetFullPath($"{dir}/venv"));
-                }
-                else if (File.Exists($"{dir}/../python_embeded/python.exe"))
-                {
-                    start.FileName = Path.GetFullPath($"{dir}/../python_embeded/python.exe");
-                    start.WorkingDirectory = Path.GetFullPath($"{dir}/..");
-                    preArgs = "-s " + Path.GetFullPath(path)[(start.WorkingDirectory.Length + 1)..];
-                    AddPath(Path.GetFullPath($"{dir}/../python_embeded"));
-                }
-                else
-                {
-                    start.FileName = "python";
-                }
-            }
-            else
-            {
-                if (File.Exists($"{dir}/venv/bin/python3"))
-                {
-                    start.FileName = Path.GetFullPath($"{dir}/venv/bin/python3");
-                    AddPath(Path.GetFullPath($"{dir}/venv"));
-                }
-                else
-                {
-                    start.FileName = "python3";
-                }
-            }
+            ConfigurePythonExeFor(startScript, nameSimple, start, out preArgs);
             Logs.Debug($"({nameSimple} launch) Will use python: {start.FileName}");
         }
         else
@@ -280,13 +317,37 @@ public static class NetworkBackendUtils
         takeOutput(port, runningProcess);
         runningProcess.Start();
         Logs.Init($"Self-Start {nameSimple} on port {port} is loading...");
+        ReportLogsFromProcess(runningProcess, $"{nameSimple} on port {port}", out Action causeShutdown, getStatus, s => { status = s; reviseStatus(s); });
+        addShutdownEvent?.Invoke(causeShutdown);
+        int checks = 0;
+        while (status == BackendStatus.LOADING)
+        {
+            checks++;
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            if (checks % 10 == 0)
+            {
+                Logs.Debug($"{nameSimple} port {port} waiting for server...");
+            }
+            bool alive = await initInternal(true);
+            if (alive)
+            {
+                Logs.Init($"Self-Start {nameSimple} on port {port} started.");
+            }
+            status = getStatus();
+        }
+        Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
+    }
+
+    public static void ReportLogsFromProcess(Process process, string nameSimple, out Action causeShutdown, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus)
+    {
+        BackendStatus status = getStatus();
         bool isShuttingDown = false;
-        addShutdownEvent?.Invoke(() => { Volatile.Write(ref isShuttingDown, true); });
+        causeShutdown = () => Volatile.Write(ref isShuttingDown, true);
         void MonitorLoop()
         {
             string line;
             bool keepShowing = false;
-            while ((line = runningProcess.StandardOutput.ReadLine()) != null)
+            while ((line = process.StandardOutput.ReadLine()) != null)
             {
                 if (line.StartsWith("Traceback ("))
                 {
@@ -312,15 +373,15 @@ public static class NetworkBackendUtils
             if (status == BackendStatus.RUNNING || status == BackendStatus.LOADING)
             {
                 status = BackendStatus.ERRORED;
-                reviseStatus(status);
+                setStatus(status);
             }
         }
-        new Thread(MonitorLoop) { Name = $"SelfStart{nameSimple}_{port}_Monitor" }.Start();
+        new Thread(MonitorLoop) { Name = $"SelfStart{nameSimple.Replace(' ', '_')}_Monitor" }.Start();
         void MonitorErrLoop()
         {
             StringBuilder errorLog = new();
             string line;
-            while ((line = runningProcess.StandardError.ReadLine()) != null)
+            while ((line = process.StandardError.ReadLine()) != null)
             {
                 Logs.Debug($"{nameSimple} stderr: {line}");
                 errorLog.AppendLine($"{nameSimple} error: {line}");
@@ -331,39 +392,22 @@ public static class NetworkBackendUtils
             }
             if (getStatus() == BackendStatus.DISABLED)
             {
-                Logs.Info($"Self-Start {nameSimple} on port {port} exited properly from disabling.");
+                Logs.Info($"Self-Start {nameSimple} exited properly from disabling.");
             }
             else if (Volatile.Read(ref isShuttingDown))
             {
-                Logs.Info($"Self-Start {nameSimple} on port {port} exited properly.");
+                Logs.Info($"Self-Start {nameSimple} exited properly.");
             }
             else
             {
-                Logs.Info($"Self-Start {nameSimple} on port {port} unexpectedly exited (if something failed, change setting `LogLevel` to `Debug` to see why!)");
+                Logs.Info($"Self-Start {nameSimple} unexpectedly exited (if something failed, change setting `LogLevel` to `Debug` to see why!)");
                 if (errorLog.Length > 0)
                 {
-                    Logs.Info($"Self-Start {nameSimple} on port {port} had errors before shutdown:\n{errorLog}");
+                    Logs.Info($"Self-Start {nameSimple} had errors before shutdown:\n{errorLog}");
                 }
             }
         }
-        new Thread(MonitorErrLoop) { Name = $"SelfStart{nameSimple}_{port}_MonitorErr" }.Start();
-        int checks = 0;
-        while (status == BackendStatus.LOADING)
-        {
-            checks++;
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            if (checks % 10 == 0)
-            {
-                Logs.Debug($"{nameSimple} port {port} waiting for server...");
-            }
-            bool alive = await initInternal(true);
-            if (alive)
-            {
-                Logs.Init($"Self-Start {nameSimple} on port {port} started.");
-            }
-            status = getStatus();
-        }
-        Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
+        new Thread(MonitorErrLoop) { Name = $"SelfStart{nameSimple.Replace(' ', '_')}_MonitorErr" }.Start();
     }
     #endregion
 }

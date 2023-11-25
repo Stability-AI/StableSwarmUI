@@ -1,13 +1,3 @@
-# Hack: this isn't in comfy by default, so just autoinstall it.
-try:
-    import rembg
-except:
-    import subprocess
-    # manually install dependencies minus OpenCV, cause OpenCV causes conflicts, and you're likely to have it from elsewhere already anyway
-    # TODO: Probably just let the C# call the installer here? Need a safe way to autodetect whether rembg is installed before doing that.
-    subprocess.run(["python", "-s", "-m", "pip", "install", "jsonschema", "onnxruntime", "pooch", "pymatting", "scikit-image", "scipy"])
-    subprocess.run(["python", "-s", "-m", "pip", "install", "rembg", "--no-dependencies"])
-
 from PIL import Image
 import numpy as np
 import torch
