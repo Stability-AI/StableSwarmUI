@@ -273,13 +273,12 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                         if (isReceivingOutputs)
                         {
                             takeOutput(new Image(output[8..], isExpectingVideo ? Image.ImageType.VIDEO : Image.ImageType.IMAGE, formatLabel == "jpeg" ? "jpg" : formatLabel));
-                            index++;
                         }
                         else
                         {
                             takeOutput(new JObject()
                             {
-                                ["batch_index"] = index == 0 || !int.TryParse(batchId, out int batchInt) ? $"{index}{batchId}" : batchInt + index,
+                                ["batch_index"] = index == 0 || !int.TryParse(batchId, out int batchInt) ? batchId : batchInt + index,
                                 ["preview"] = $"data:image/{formatLabel};base64," + Convert.ToBase64String(output, 8, output.Length - 8),
                                 ["overall_percent"] = nodesDone / (float)expectedNodes,
                                 ["current_percent"] = curPercent

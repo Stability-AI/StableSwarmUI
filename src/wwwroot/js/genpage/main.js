@@ -521,6 +521,7 @@ function doGenerate(input_overrides = {}) {
         resetBatchIfNeeded();
         let images = {};
         let batch_id = batchesEver++;
+        let discardable = {};
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides), data => {
             if (isPreview) {
                 if (data.image) {
@@ -549,6 +550,8 @@ function doGenerate(input_overrides = {}) {
                 }
                 images[data.batch_index].image = data.image;
                 images[data.batch_index].metadata = data.metadata;
+                discardable[data.batch_index] = images[data.batch_index];
+                delete images[data.batch_index];
             }
             if (data.gen_progress) {
                 if (!(data.gen_progress.batch_index in images)) {
@@ -585,18 +588,26 @@ function doGenerate(input_overrides = {}) {
             if (data.discard_indices) {
                 let needsNew = false;
                 for (let index of data.discard_indices) {
-                    let img = images[index];
-                    img.div.remove();
-                    let curImgElem = document.getElementById('current_image_img');
-                    if (curImgElem && curImgElem.src == img.image) {
-                        needsNew = true;
-                        delete images[index];
+                    let img = discardable[index] || images[index];
+                    if (img) {
+                        img.div.remove();
+                        let curImgElem = document.getElementById('current_image_img');
+                        if (curImgElem && curImgElem.src == img.image) {
+                            needsNew = true;
+                            delete discardable[index];
+                        }
                     }
                 }
                 if (needsNew) {
-                    let imgs = Object.values(images);
+                    let imgs = Object.values(discardable);
                     if (imgs.length > 0) {
                         setCurrentImage(imgs[0].image, imgs[0].metadata);
+                    }
+                }
+                if (Object.keys(discardable).length > 0) {
+                    // clear any lingering previews
+                    for (let img of Object.values(images)) {
+                        img.div.remove();
                     }
                 }
             }
