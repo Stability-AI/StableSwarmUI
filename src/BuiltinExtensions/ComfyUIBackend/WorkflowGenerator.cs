@@ -538,7 +538,8 @@ public class WorkflowGenerator
             {
                 endStep = (int)(steps * (1 - endEarly));
             }
-            g.CreateKSampler(g.FinalModel, g.FinalPrompt, g.FinalNegativePrompt, g.FinalLatentImage, steps, startStep, endStep,
+            double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
+            g.CreateKSampler(g.FinalModel, g.FinalPrompt, g.FinalNegativePrompt, g.FinalLatentImage, cfg, steps, startStep, endStep,
                 g.UserInput.Get(T2IParamTypes.Seed), g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy", true, "10");
         }, -5);
         #endregion
@@ -621,7 +622,8 @@ public class WorkflowGenerator
                     g.FinalSamples = new() { "26", 0 };
                 }
                 int steps = g.UserInput.Get(T2IParamTypes.Steps);
-                g.CreateKSampler(g.FinalModel, prompt, negPrompt, g.FinalSamples, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
+                double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
+                g.CreateKSampler(g.FinalModel, prompt, negPrompt, g.FinalSamples, cfg, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
                     g.UserInput.Get(T2IParamTypes.Seed) + 1, false, method != "StepSwapNoisy", "23");
                 g.FinalSamples = new() { "23", 0 };
             }
@@ -707,7 +709,8 @@ public class WorkflowGenerator
                     int steps = g.UserInput.Get(T2IParamTypes.Steps);
                     int startStep = (int)Math.Round(steps * (1 - part.Strength2));
                     long seed = g.UserInput.Get(T2IParamTypes.Seed) + 2 + i;
-                    string sampler = g.CreateKSampler(g.FinalModel, prompt, negPrompt, new() { masked, 0 }, steps, startStep, 10000, seed, false, true);
+                    double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
+                    string sampler = g.CreateKSampler(g.FinalModel, prompt, negPrompt, new() { masked, 0 }, cfg, steps, startStep, 10000, seed, false, true);
                     string decoded = g.CreateNode("VAEDecode", new JObject()
                     {
                         ["samples"] = new JArray() { sampler, 0 },
@@ -776,6 +779,62 @@ public class WorkflowGenerator
             }
             g.CreateImageSaveNode(g.FinalImageOut, "9");
         }, 10);
+        #endregion
+        #region Video
+        AddStep(g =>
+        {
+            if (g.UserInput.TryGet(T2IParamTypes.VideoModel, out T2IModel vidModel))
+            {
+                string loader = g.CreateNode("ImageOnlyCheckpointLoader", new JObject()
+                {
+                    ["ckpt_name"] = vidModel.ToString()
+                });
+                JArray model = new() { loader, 0 };
+                JArray clipVision = new() { loader, 1 };
+                JArray vae = new() { loader, 2 };
+                double minCfg = g.UserInput.Get(T2IParamTypes.VideoMinCFG, 1);
+                if (minCfg >= 0)
+                {
+                    string cfgGuided = g.CreateNode("VideoLinearCFGGuidance", new JObject()
+                    {
+                        ["model"] = model,
+                        ["min_cfg"] = minCfg
+                    });
+                    model = new() { cfgGuided, 0 };
+                }
+                int frames = g.UserInput.Get(T2IParamTypes.VideoFrames, 25);
+                int fps = g.UserInput.Get(T2IParamTypes.VideoFPS, 6);
+                string conditioning = g.CreateNode("SVD_img2vid_Conditioning", new JObject()
+                {
+                    ["clip_vision"] = clipVision,
+                    ["init_image"] = g.FinalImageOut,
+                    ["vae"] = vae,
+                    ["width"] = 1024, // TODO: Configurable
+                    ["height"] = 576,
+                    ["video_frames"] = frames,
+                    ["motion_bucket_id"] = g.UserInput.Get(T2IParamTypes.VideoMotionBucket, 127),
+                    ["fps"] = fps,
+                    ["augmentation_level"] = g.UserInput.Get(T2IParamTypes.VideoAugmentationLevel, 0)
+                });
+                JArray posCond = new() { conditioning, 0 };
+                JArray negCond = new() { conditioning, 1 };
+                JArray latent = new () { conditioning, 2 };
+                int steps = g.UserInput.Get(T2IParamTypes.VideoSteps, 20);
+                double cfg = g.UserInput.Get(T2IParamTypes.VideoCFG, 2.5);
+                string samplered = g.CreateKSampler(model, posCond, negCond, latent, cfg, steps, 0, 10000, g.UserInput.Get(T2IParamTypes.Seed) + 42, false, true);
+                g.FinalLatentImage = new() { samplered, 0 };
+                string decoded = g.CreateVAEDecode(vae, g.FinalLatentImage);
+                g.FinalImageOut = new() { decoded, 0 };
+                g.CreateNode("SwarmSaveAnimatedWebpWS", new JObject()
+                {
+                    ["images"] = g.FinalImageOut,
+                    ["fps"] = fps,
+                    ["lossless"] = false,
+                    ["quality"] = 95,
+                    ["method"] = "default"
+                });
+            }
+        }, 11);
         #endregion
     }
 
@@ -922,14 +981,14 @@ public class WorkflowGenerator
     }
 
     /// <summary>Creates a KSampler and returns its node ID.</summary>
-    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, string id = null)
+    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, string id = null)
     {
         JObject inputs = new()
         {
             ["model"] = model,
             ["noise_seed"] = seed,
             ["steps"] = steps,
-            ["cfg"] = UserInput.Get(T2IParamTypes.CFGScale),
+            ["cfg"] = cfg,
             // TODO: proper sampler input, and intelligent default scheduler per sampler
             ["sampler_name"] = UserInput.Get(ComfyUIBackendExtension.SamplerParam, "euler"),
             ["scheduler"] = UserInput.Get(ComfyUIBackendExtension.SchedulerParam, "normal"),
