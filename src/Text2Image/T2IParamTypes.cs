@@ -207,18 +207,18 @@ public class T2IParamTypes
     }
 
     public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod, FreeUApplyTo, PersonalNote;
-    public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID, VAETileSize, ClipStopAtLayer;
+    public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID, VAETileSize, ClipStopAtLayer, VideoFrames, VideoMotionBucket, VideoFPS, VideoSteps;
     public static T2IRegisteredParam<long> Seed, VariationSeed, WildcardSeed;
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, InitImageResetToNorm, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult,
-        FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly, SamplerSigmaMin, SamplerSigmaMax, SamplerRho, ControlNetStart, ControlNetEnd;
+        FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly, SamplerSigmaMin, SamplerSigmaMax, SamplerRho, ControlNetStart, ControlNetEnd, VideoAugmentationLevel, VideoCFG, VideoMinCFG;
     public static T2IRegisteredParam<Image> InitImage, MaskImage, ControlNetImage;
-    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel, RegionalObjectInpaintingModel;
+    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel, RegionalObjectInpaintingModel, VideoModel;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
     public static T2IRegisteredParam<List<Image>> PromptImages;
     public static T2IRegisteredParam<bool> DoNotSave, ControlNetPreviewOnly, RevisionZeroPrompt, SeamlessTileable, RemoveBackground;
 
     public static T2IParamGroup GroupRevision, GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, GroupControlNet,
-        GroupAdvancedModelAddons, GroupSwarmInternal, GroupFreeU, GroupRegionalPrompting, GroupAdvancedSampling;
+        GroupAdvancedModelAddons, GroupSwarmInternal, GroupFreeU, GroupRegionalPrompting, GroupAdvancedSampling, GroupVideo;
 
     /// <summary>(For extensions) list of functions that provide fake types for given type names.</summary>
     public static List<Func<string, T2IParamInput, T2IParamType>> FakeTypeProviders = new();
@@ -333,6 +333,32 @@ public class T2IParamTypes
             ));
         ControlNetPreviewOnly = Register<bool>(new("ControlNet Preview Only", "(For API usage) If enabled, requests preview output from ControlNet and no image generation at all.",
             "false", IgnoreIf: "false", FeatureFlag: "controlnet", VisibleNormally: false
+            ));
+        GroupVideo = new("Video", Open: false, OrderPriority: 0, Toggles: true);
+        VideoModel = Register<T2IModel>(new("Video Model", "The model to use for video generation.\nThis should be an SVD (Stable Video Diffusion) model.\nNote that SVD favors a low CFG (~2.5).",
+            "", GetValues: s => Program.MainSDModels.ListModelsFor(s).Where(m => m.ModelClass is not null && m.ModelClass.ID.Contains("stable-video-diffusion")).OrderBy(m => m.Name).Select(m => m.Name).ToList(),
+            OrderPriority: 1, Group: GroupVideo, FeatureFlag: "video", Subtype: "Stable-Diffusion", ChangeWeight: 9
+            ));
+        VideoFrames = Register<int>(new("Video Frames", "How many frames to generate within the video.",
+            "25", Min: 1, Max: 100, OrderPriority: 2, Group: GroupVideo, FeatureFlag: "video"
+            ));
+        VideoFPS = Register<int>(new("Video FPS", "The FPS (frames per second) to use for video generation.\nThis configures the target FPS the video will try to generate for.",
+            "6", Min: 1, Max: 1024, ViewMax: 30, ViewType: ParamViewType.SLIDER, OrderPriority: 2.5, Group: GroupVideo, FeatureFlag: "video"
+            ));
+        VideoSteps = Register<int>(new("Video Steps", "How many steps to use for the video model.\nHigher step counts yield better quality, but much longer generation time.\n20 is a good baseline.",
+            "20", Min: 1, Max: 200, ViewMax: 100, ViewType: ParamViewType.SLIDER, OrderPriority: 3, Group: GroupVideo, FeatureFlag: "video"
+            ));
+        VideoCFG = Register<double>(new("Video CFG", "The CFG Scale to use for video generation.\nVideos start with this CFG on the first frame, and then reduce to MinCFG (normally 1) by the end frame.\nSVD-XT 0.9 normally uses 25 frames, and SVD (non-XT) 0.9 uses 14 frames.",
+            "2.5", Min: 0, Max: 100, ViewMax: 30, Step: 0.5, OrderPriority: 4, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video"
+            ));
+        VideoMinCFG = Register<double>(new("Video Min CFG", "The minimum CFG to use for video generation.\nVideos start with max CFG on first frame, and then reduce to this CFG. Set to -1 to disable.",
+            "1.0", Min: -1, Max: 100, ViewMax: 30, Step: 0.5, OrderPriority: 4.5, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true
+            ));
+        VideoMotionBucket = Register<int>(new("Video Motion Bucket", "Which trained 'motion bucket' to use for the video model.\nHigher values induce more motion. Most values should stay in the 100-200 range.\n127 is a good baseline.",
+            "127", Min: 1, Max: 1023, OrderPriority: 10, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true
+            ));
+        VideoAugmentationLevel = Register<double>(new("Video Augmentation Level", "How much noise to add to the init image.\nHigher values yield more motion.",
+            "0.0", Min: 0, Max: 10, Step: 0.01, OrderPriority: 11, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true
             ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion", ChangeWeight: 10
