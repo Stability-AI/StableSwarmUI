@@ -268,18 +268,42 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                             index = (format >> 4) & 0xffff;
                             format &= 7;
                         }
-                        string formatLabel = format switch { 1 => "jpeg", 2 => "png", 3 => "webp", _ => "jpeg" };
+                        string formatLabel = format switch { 1 => "jpg", 2 => "png", 3 => "webp", 4 => "gif", 5 => "mp4", 6 => "webm", _ => "jpg" };
                         Logs.Verbose($"ComfyUI Websocket sent: {output.Length} bytes of image data as event {eventId} in format {format} ({formatLabel}) to index {index}");
                         if (isReceivingOutputs)
                         {
-                            takeOutput(new Image(output[8..], isExpectingVideo ? Image.ImageType.VIDEO : Image.ImageType.IMAGE, formatLabel == "jpeg" ? "jpg" : formatLabel));
+                            Image.ImageType type = format switch
+                            {
+                                1 => Image.ImageType.IMAGE,
+                                2 => Image.ImageType.IMAGE,
+                                3 => Image.ImageType.IMAGE,
+                                4 => Image.ImageType.ANIMATION,
+                                5 => Image.ImageType.VIDEO,
+                                6 => Image.ImageType.VIDEO,
+                                _ => Image.ImageType.IMAGE
+                            };
+                            if (isExpectingVideo && type == Image.ImageType.IMAGE)
+                            {
+                                type = Image.ImageType.VIDEO;
+                            }
+                            takeOutput(new Image(output[8..], type, formatLabel));
                         }
                         else
                         {
+                            string dataType = formatLabel switch
+                            {
+                                "jpg" => "image/jpeg",
+                                "png" => "image/png",
+                                "webp" => "image/webp",
+                                "gif" => "image/gif",
+                                "mp4" => "video/mp4",
+                                "webm" => "video/webm",
+                                _ => "image/jpeg"
+                            };
                             takeOutput(new JObject()
                             {
                                 ["batch_index"] = index == 0 || !int.TryParse(batchId, out int batchInt) ? batchId : batchInt + index,
-                                ["preview"] = $"data:image/{formatLabel};base64," + Convert.ToBase64String(output, 8, output.Length - 8),
+                                ["preview"] = $"data:{dataType};base64," + Convert.ToBase64String(output, 8, output.Length - 8),
                                 ["overall_percent"] = nodesDone / (float)expectedNodes,
                                 ["current_percent"] = curPercent
                             });

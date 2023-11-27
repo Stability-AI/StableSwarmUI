@@ -361,7 +361,7 @@ public class T2IParamTypes
             "0.0", Min: 0, Max: 10, Step: 0.01, OrderPriority: 11, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true
             ));
         VideoFormat = Register<string>(new("Video Format", "What format to save videos in.",
-            "webp", GetValues: _ => new() { "webp", "gif", "webm", "h264", "h265" }, OrderPriority: 20, Group: GroupVideo, FeatureFlag: "video_format_select"
+            "webp", GetValues: _ => new() { "webp", "gif", "webm", "h264-mp4" }, OrderPriority: 20, Group: GroupVideo, FeatureFlag: "video"
             ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion", ChangeWeight: 10
