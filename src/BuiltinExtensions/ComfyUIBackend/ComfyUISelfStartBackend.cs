@@ -168,11 +168,22 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             }
         }
         string lib = NetworkBackendUtils.GetProbableLibFolderFor(settings.StartScript);
-        if (lib is not null && !Directory.Exists($"{lib}/site-packages/rembg"))
+        if (lib is not null)
         {
-            Process p = DoPythonCall("-s -m pip install rembg");
-            NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Install RemBG)");
-            await p.WaitForExitAsync(Program.GlobalProgramCancel);
+            HashSet<string> libs = Directory.GetDirectories($"{lib}/site-packages/").Select(f => f.Replace('\\', '/').AfterLast('/').Before('-')).ToHashSet();
+            async Task install(string libFolder, string pipName)
+            {
+                if (libs.Contains(libFolder))
+                {
+                    return;
+                }
+                Process p = DoPythonCall($"-s -m pip install {pipName}");
+                NetworkBackendUtils.ReportLogsFromProcess(p, $"ComfyUI (Install {pipName})");
+                await p.WaitForExitAsync(Program.GlobalProgramCancel);
+            }
+            await install("rembg", "rembg");
+            await install("opencv_python", "opencv-python");
+            await install("imageio_ffmpeg", "imageio-ffmpeg");
         }
         await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, "ComfyUI", settings.GPU_ID, settings.ExtraArgs.Trim() + " --port {PORT}" + addedArgs, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
