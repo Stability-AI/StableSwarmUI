@@ -1,4 +1,5 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
+using StableSwarmUI.Backends;
 using StableSwarmUI.Utils;
 
 namespace StableSwarmUI.Core;
@@ -131,7 +132,7 @@ public class Settings : AutoConfiguration
         public int MaxT2ISimultaneous = 32;
 
         /// <summary>Returns the maximum simultaneous text-2-image requests appropriate to this user's restrictions and the available backends.</summary>
-        public int CalcMaxT2ISimultaneous => Math.Max(1, Math.Min(MaxT2ISimultaneous, Program.Backends.Count * 2));
+        public int CalcMaxT2ISimultaneous => Math.Max(1, Math.Min(MaxT2ISimultaneous, Program.Backends.RunningBackendsOfType<AbstractT2IBackend>().Sum(b => b.MaxUsages) * 2));
     }
 
     /// <summary>Settings per-user.</summary>

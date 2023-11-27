@@ -99,7 +99,7 @@ public class GridGeneratorExtension : Extension
                 return Task.CompletedTask;
             }
             Task[] waitOn = data.GetActive();
-            if (waitOn.Length > data.Session.User.Restrictions.CalcMaxT2ISimultaneous)
+            if (waitOn.Length > data.MaxSimul)
             {
                 Task.WaitAny(waitOn);
             }
@@ -162,7 +162,7 @@ public class GridGeneratorExtension : Extension
                 data.Rendering.Add(t);
             }
             Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
-            if (Program.Backends.QueuedRequests > Program.Backends.Count)
+            if (Program.Backends.QueuedRequests > Program.Backends.Count * 2)
             {
                 Task.Delay(100).Wait(); // Add even more delay if we're loading up the backends.
             }
@@ -196,6 +196,8 @@ public class GridGeneratorExtension : Extension
         public ConcurrentQueue<JObject> Generated = new();
 
         public Session Session;
+
+        public int MaxSimul;
 
         public Session.GenClaim Claim;
 
@@ -275,7 +277,7 @@ public class GridGeneratorExtension : Extension
             await socket.SendJson(BasicAPIFeatures.GetCurrentStatusRaw(session), API.WebsocketTimeout);
         }
         await sendStatus();
-        StableSwarmUIGridData data = new() { Session = session, Claim = claim };
+        StableSwarmUIGridData data = new() { Session = session, Claim = claim, MaxSimul = session.User.Restrictions.CalcMaxT2ISimultaneous };
         Grid grid = null;
         try
         {
