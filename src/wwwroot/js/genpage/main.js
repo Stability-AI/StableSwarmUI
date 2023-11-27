@@ -1332,6 +1332,7 @@ imageInputHandler();
 
 function genpageLoad() {
     console.log('Load page...');
+    window.imageEditor = new ImageEditor(true, true, () => setPageBarsFunc());
     pageSizer();
     reviseStatusBar();
     getSession(() => {

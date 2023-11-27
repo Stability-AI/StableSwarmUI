@@ -12,7 +12,7 @@ function enableSliderForBox(div) {
     let number = div.querySelector('input[type="number"]');
     number.addEventListener('input', (event) => {
         let newVal = number.value;
-        if (!shiftMonitor) {
+        if (!event.shiftKey) {
             number.dataset.old_value = newVal;
             return;
         }

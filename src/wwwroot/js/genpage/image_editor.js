@@ -203,6 +203,7 @@ class ImageEditorToolGeneral extends ImageEditorTool {
                 if (e.ctrlKey) {
                     target.rotation = Math.round(target.rotation / (Math.PI / 16)) * (Math.PI / 16);
                 }
+                this.editor.markChanged();
             }
             else if (this.currentDragCircle) {
                 let current = this.getControlCircle(this.currentDragCircle);
@@ -322,6 +323,7 @@ class ImageEditorToolGeneral extends ImageEditorTool {
                         target.offsetY += origCLY - newCLY;
                     }
                 }
+                this.editor.markChanged();
             }
             else {
                 this.editor.offsetX += dx;
@@ -345,6 +347,7 @@ class ImageEditorToolMove extends ImageEditorTool {
         if (this.editor.mouseDown) {
             this.editor.activeLayer.offsetX += (this.editor.mouseX - this.editor.lastMouseX) / this.editor.zoomLevel;
             this.editor.activeLayer.offsetY += (this.editor.mouseY - this.editor.lastMouseY) / this.editor.zoomLevel;
+            this.editor.markChanged();
             return true;
         }
         return false;
@@ -358,7 +361,7 @@ class ImageEditorToolBrush extends ImageEditorTool {
     constructor(editor, id, icon, name, description, isEraser) {
         super(editor, id, icon, name, description);
         this.cursor = 'none';
-        this.color = '#ffffff';
+        this.color = '#000000';
         this.radius = 10;
         this.opacity = 1;
         this.brushing = false;
@@ -366,8 +369,8 @@ class ImageEditorToolBrush extends ImageEditorTool {
         let colorHTML = `
         <div class="image-editor-tool-block">
             <label>Color:&nbsp;</label>
-            <input type="text" class="auto-number id-col1" style="width:75px;flex-grow:0;" value="#ffffff">
-            <input type="color" class="id-col2" value="#ffffff">
+            <input type="text" class="auto-number id-col1" style="width:75px;flex-grow:0;" value="#000000">
+            <input type="color" class="id-col2" value="#000000">
         </div>`;
         let radiusHtml = `<div class="image-editor-tool-block id-rad-block">
                 <label>Radius:&nbsp;</label>
@@ -424,6 +427,7 @@ class ImageEditorToolBrush extends ImageEditorTool {
         this.bufferLayer.drawFilledCircle(lastX, lastY, this.radius, this.color);
         this.bufferLayer.drawFilledCircleStrokeBetween(lastX, lastY, x, y, this.radius, this.color);
         this.bufferLayer.drawFilledCircle(x, y, this.radius, this.color);
+        this.editor.markChanged();
     }
 
     onMouseDown(e) {
@@ -617,7 +621,7 @@ class ImageEditorLayer {
  * The central class managing the image editor interface.
  */
 class ImageEditor {
-    constructor() {
+    constructor(allowMasks = true, useExperimental = true, doFit = null, signalChanged = null) {
         // Configurables:
         this.zoomRate = 1.1;
         this.gridScale = 4;
@@ -628,20 +632,27 @@ class ImageEditor {
         this.textColor = '#ffffff';
         this.boundaryColor = '#ffff00';
         // Data:
+        this.doFit = doFit;
+        this.signalChanged = signalChanged;
+        this.changeCount = 0;
         this.active = false;
         this.inputDiv = getRequiredElementById('image_editor_input');
         this.leftBar = createDiv(null, 'image_editor_leftbar');
         this.inputDiv.appendChild(this.leftBar);
         this.rightBar = createDiv(null, 'image_editor_rightbar');
-        this.rightBar.innerHTML = `<div class="image_editor_newlayer_button basic-button new-image-layer-button" title="New Image Layer">+Image</div>`
-            + `<div class="image_editor_newlayer_button basic-button new-mask-layer-button" title="New Mask Layer">+Mask</div>`;
+        this.rightBar.innerHTML = `<div class="image_editor_newlayer_button basic-button new-image-layer-button" title="New Image Layer">+${allowMasks ? 'Image' : 'Layer'}</div>`;
+        if (allowMasks) {
+            this.rightBar.innerHTML += `<div class="image_editor_newlayer_button basic-button new-mask-layer-button" title="New Mask Layer">+Mask</div>`;
+        }
         this.inputDiv.appendChild(this.rightBar);
         this.rightBar.querySelector('.new-image-layer-button').addEventListener('click', () => {
             this.addEmptyLayer();
         });
-        this.rightBar.querySelector('.new-mask-layer-button').addEventListener('click', () => {
-            this.addEmptyMaskLayer();
-        });
+        if (allowMasks) {
+            this.rightBar.querySelector('.new-mask-layer-button').addEventListener('click', () => {
+                this.addEmptyMaskLayer();
+            });
+        }
         this.canvasList = createDiv(null, 'image_editor_canvaslist');
         // canvas entries can be dragged
         this.canvasList.addEventListener('dragover', (e) => {
@@ -700,7 +711,9 @@ class ImageEditor {
         this.addTool(new ImageEditorToolGeneral(this));
         this.activateTool('general');
         this.addTool(new ImageEditorToolMove(this));
-        this.addTool(new ImageEditorTool(this, 'select', 'select', 'Select', 'Select a region of the image.'));
+        if (useExperimental) {
+            this.addTool(new ImageEditorTool(this, 'select', 'select', 'Select', 'Select a region of the image.'));
+        }
         this.addTool(new ImageEditorToolBrush(this, 'brush', 'paintbrush', 'Paintbrush', 'Draw on the image.', false));
         this.addTool(new ImageEditorToolBrush(this, 'eraser', 'eraser', 'Eraser', 'Erase parts of the image.', true));
     }
@@ -851,7 +864,7 @@ class ImageEditor {
         this.active = true;
         this.inputDiv.style.display = 'inline-block';
         this.doParamHides();
-        setPageBarsFunc();
+        this.doFit();
         if (!this.canvas) {
             this.createCanvas();
         }
@@ -864,7 +877,7 @@ class ImageEditor {
         this.active = false;
         this.inputDiv.style.display = 'none';
         this.unhideParams();
-        setPageBarsFunc();
+        this.doFit();
     }
 
     setActiveLayer(layer) {
@@ -1093,11 +1106,19 @@ class ImageEditor {
         }
     }
 
+    markChanged() {
+        this.changeCount++;
+        if (this.signalChanged) {
+            this.signalChanged();
+        }
+    }
+
     resize() {
         if (this.canvas) {
             this.canvas.width = Math.max(100, this.inputDiv.clientWidth - this.leftBar.clientWidth - this.rightBar.clientWidth);
             this.canvas.height = Math.max(100, this.inputDiv.clientHeight - this.bottomBar.clientHeight);
             this.redraw();
+            this.markChanged();
         }
     }
 
@@ -1148,7 +1169,6 @@ class ImageEditor {
         let [offsetX, offsetY] = this.imageCoordToCanvasCoord(this.activeLayer.offsetX, this.activeLayer.offsetY);
         this.drawSelectionBox(offsetX, offsetY, this.activeLayer.width * this.zoomLevel, this.activeLayer.height * this.zoomLevel, this.uiBorderColor, 8 * this.zoomLevel, this.activeLayer.rotation);
         this.activeTool.draw();
-        this.drawTextBubble("SWARM IMAGE EDITOR - DEVELOPMENT PREVIEW\nIt doesn't work yet. Those icons are placeholders. This is just a preview.", '12px sans-serif', this.canvas.width / 4, 10, this.canvas.width / 2);
         this.ctx.restore();
     }
 
@@ -1182,5 +1202,3 @@ class ImageEditor {
         return canvas.toDataURL('image/png');
     }
 }
-
-let imageEditor = new ImageEditor();
