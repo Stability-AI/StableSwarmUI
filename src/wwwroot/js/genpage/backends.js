@@ -172,6 +172,15 @@ function countBackendsByStatus(status) {
     return Object.values(backends_loaded).filter(x => x.enabled && x.status == status).length;
 }
 
+function toggleShowAdvancedBackends() {
+    let showAdvanced = document.getElementById('backends_show_advanced').checked;
+    for (let button of document.querySelectorAll('#backend_add_buttons button')) {
+        if (button.dataset.isStandard == 'false') {
+            button.style.display = showAdvanced ? 'inline-block' : 'none';
+        }
+    }
+}
+
 function loadBackendTypesMenu() {
     let addButtonsSection = document.getElementById('backend_add_buttons');
     genericRequest('ListBackendTypes', {}, data => {
@@ -180,8 +189,12 @@ function loadBackendTypesMenu() {
         for (let type of data.list) {
             backend_types[type.id] = type;
             let button = document.createElement('button');
+            button.dataset.isStandard = type.is_standard;
             button.title = type.description;
             button.innerText = type.name;
+            if (!type.is_standard) {
+                button.style.display = 'none';
+            }
             let id = type.id;
             button.addEventListener('click', () => { addNewBackend(id); });
             addButtonsSection.appendChild(button);

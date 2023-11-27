@@ -51,7 +51,7 @@ public class BackendHandler
 
     public BackendHandler()
     {
-        RegisterBackendType<SwarmSwarmBackend>("swarmswarmbackend", "Swarm-API-Backend", "Connection StableSwarmUI to another instance of StableSwarmUI as a backend.", true);
+        RegisterBackendType<SwarmSwarmBackend>("swarmswarmbackend", "Swarm-API-Backend", "Connection StableSwarmUI to another instance of StableSwarmUI as a backend.", true, true);
         Program.ModelRefreshEvent += () =>
         {
             foreach (SwarmSwarmBackend backend in RunningBackendsOfType<SwarmSwarmBackend>())
@@ -76,7 +76,7 @@ public class BackendHandler
     };
 
     /// <summary>Register a new backend-type by type ref.</summary>
-    public BackendType RegisterBackendType(Type type, string id, string name, string description, bool CanLoadFast = false)
+    public BackendType RegisterBackendType(Type type, string id, string name, string description, bool CanLoadFast = false, bool isStandard = false)
     {
         Type settingsType = type.GetNestedTypes().First(t => t.IsSubclassOf(typeof(AutoConfiguration)));
         AutoConfiguration.Internal.AutoConfigData settingsInternal = (Activator.CreateInstance(settingsType) as AutoConfiguration).InternalData.SharedData;
@@ -95,7 +95,8 @@ public class BackendHandler
             ["id"] = id,
             ["name"] = name,
             ["description"] = description,
-            ["settings"] = JToken.FromObject(fields)
+            ["settings"] = JToken.FromObject(fields),
+            ["is_standard"] = isStandard
         };
         BackendType typeObj = new(id, name, description, settingsType, settingsInternal, type, netDesc, CanLoadFast: CanLoadFast);
         BackendTypes.Add(id, typeObj);
@@ -103,9 +104,9 @@ public class BackendHandler
     }
 
     /// <summary>Register a new backend-type by type ref.</summary>
-    public BackendType RegisterBackendType<T>(string id, string name, string description, bool CanLoadFast = false) where T : AbstractT2IBackend
+    public BackendType RegisterBackendType<T>(string id, string name, string description, bool CanLoadFast = false, bool isStandard = false) where T : AbstractT2IBackend
     {
-        return RegisterBackendType(typeof(T), id, name, description, CanLoadFast);
+        return RegisterBackendType(typeof(T), id, name, description, CanLoadFast, isStandard);
     }
 
     /// <summary>Special live data about a registered backend.</summary>
