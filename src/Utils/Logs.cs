@@ -39,7 +39,7 @@ public static class Logs
     {
         if (MinimumLevel <= LogLevel.Info)
         {
-            LogWithColor(ConsoleColor.Black, ConsoleColor.Blue, "Info", ConsoleColor.Black, ConsoleColor.White, message);
+            LogWithColor(ConsoleColor.Black, ConsoleColor.Cyan, "Info", ConsoleColor.Black, ConsoleColor.White, message);
         }
     }
 
