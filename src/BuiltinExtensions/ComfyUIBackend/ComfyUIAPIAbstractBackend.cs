@@ -75,11 +75,13 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public abstract bool CanIdle { get; }
 
+    public abstract int OverQueue { get; }
+
     public NetworkBackendUtils.IdleMonitor Idler = new();
 
     public async Task InitInternal(bool ignoreWebError)
     {
-        MaxUsages = 2;
+        MaxUsages = 1 + OverQueue;
         if (string.IsNullOrWhiteSpace(Address))
         {
             Status = BackendStatus.DISABLED;

@@ -32,6 +32,9 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
 
         [ConfigComment("Which GPU to use, if multiple are available.")]
         public int GPU_ID = 0; // TODO: Determine GPU count and provide correct max
+
+        [ConfigComment("How many extra requests may queue up on this backend while one is processing.")]
+        public int OverQueue = 1;
     }
 
     public Process RunningProcess;
@@ -41,6 +44,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
     public override string Address => $"http://localhost:{Port}";
 
     public override bool CanIdle => false;
+
+    public override int OverQueue => (SettingsRaw as ComfyUISelfStartSettings).OverQueue;
 
     public static LockObject ComfyModelFileHelperLock = new();
 

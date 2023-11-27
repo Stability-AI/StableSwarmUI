@@ -1172,7 +1172,7 @@ class ImageEditor {
         this.ctx.restore();
     }
 
-    getFinalImageData() {
+    getFinalImageData(format = 'image/png') {
         let canvas = document.createElement('canvas');
         canvas.width = this.realWidth;
         canvas.height = this.realHeight;
@@ -1184,10 +1184,10 @@ class ImageEditor {
         }
         this.ctx.globalAlpha = 1;
         this.ctx.globalCompositeOperation = 'source-over';
-        return canvas.toDataURL('image/png');
+        return canvas.toDataURL(format);
     }
 
-    getFinalMaskData() {
+    getFinalMaskData(format = 'image/png') {
         let canvas = document.createElement('canvas');
         canvas.width = this.realWidth;
         canvas.height = this.realHeight;
@@ -1199,6 +1199,6 @@ class ImageEditor {
                 layer.drawToBack(ctx, this.finalOffsetX, this.finalOffsetY, 1);
             }
         }
-        return canvas.toDataURL('image/png');
+        return canvas.toDataURL(format);
     }
 }
