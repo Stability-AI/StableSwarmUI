@@ -10,6 +10,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace StableSwarmUI.WebAPI;
@@ -298,7 +299,23 @@ public static class T2IAPI
             Logs.Warning($"User {session.User.UserID} tried to open image path '{origPath}' which maps to '{path}', but cannot as the image does not exist.");
             return new JObject() { ["error"] = "That file does not exist, cannot open." };
         }
-        Process.Start("explorer.exe", $"/select,\"{Path.GetFullPath(path)}\"");
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Process.Start("explorer.exe", $"/select,\"{Path.GetFullPath(path)}\"");
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            Process.Start("xdg-open", $"\"{Path.GetFullPath(path)}\"");
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            Process.Start("open", $"-R \"{Path.GetFullPath(path)}\"");
+        }
+        else
+        {
+            Logs.Warning("Cannot open image path on unrecognized OS type.");
+            return new JObject() { ["error"] = "Cannot open image folder on this OS." };
+        }
         return new JObject() { ["success"] = true };
     }
 
