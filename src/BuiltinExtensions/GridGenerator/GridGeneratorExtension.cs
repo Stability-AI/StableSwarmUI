@@ -161,7 +161,7 @@ public class GridGeneratorExtension : Extension
             {
                 data.Rendering.Add(t);
             }
-            if (Program.Backends.QueuedRequests < 50)
+            if (Program.Backends.QueuedRequests < Program.ServerSettings.Backends.MaxRequestsForcedOrder)
             {
                 Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
             }

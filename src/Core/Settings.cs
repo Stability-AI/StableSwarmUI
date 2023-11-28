@@ -49,6 +49,9 @@ public class Settings : AutoConfiguration
             + "Not to be confused with 'MaxTimeoutMinutes' which requires backends be unresponsive for that duration, this duration includes requests that are merely waiting because other requests are queued."
             + "\nDefaults to 60 * 24 * 7 = 1 week (ultra-long max queue duration).")]
         public int PerRequestTimeoutMinutes = 60 * 24 * 7;
+
+        [ConfigComment("The maximum number of pending requests to continue forcing orderly processing of.\nOver this limit, requests may start going out of order.")]
+        public int MaxRequestsForcedOrder = 20;
     }
 
     /// <summary>Settings related to networking and the webserver.</summary>
