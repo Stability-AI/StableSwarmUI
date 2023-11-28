@@ -167,7 +167,8 @@ body {
     width: calc(100vw - (28rem - 5px) - 22rem);
     height: 49vh;
     vertical-align: top;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     object-fit: contain;
 }
 .current-image-data {
