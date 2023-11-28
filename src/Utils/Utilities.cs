@@ -88,6 +88,34 @@ public static class Utilities
         }
     }
 
+    /// <summary>Mini-utility class to debug timings.</summary>
+    public class ChunkedTimer
+    {
+        public long StartTime = Environment.TickCount64;
+        public long LastTime = Environment.TickCount64;
+
+        public Dictionary<string, (long, long)> Times = new();
+
+        public void Reset()
+        {
+            StartTime = Environment.TickCount64;
+            LastTime = Environment.TickCount64;
+        }
+
+        public void Mark(string part)
+        {
+            long timeNow = Environment.TickCount64;
+            Times[part] = (timeNow - LastTime, timeNow - StartTime);
+            LastTime = timeNow;
+        }
+
+        public void Debug(string extra)
+        {
+            string content = Times.Select(kvp => $"{kvp.Key}: {kvp.Value.Item1 / 1000.0:0.##}s ({kvp.Value.Item2 / 1000.0:0.##}s from start)").JoinString(", ");
+            Logs.Debug($"[ChunkedTimer] {content} {extra}");
+        }
+    }
+
     /// <summary>Gets a secure hex string of a given length (will generate half as many bytes).</summary>
     public static string SecureRandomHex(int length)
     {

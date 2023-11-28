@@ -753,13 +753,28 @@ public class BackendHandler
         }
     }
 
+    public static bool MonitorTimes = false;
+
+    public static Utilities.ChunkedTimer BackendQueueTimer = new();
+
     /// <summary>Primary internal loop thread to handles tracking of backend requests.</summary>
     public void RequestHandlingLoop()
     {
         Logs.Init("Backend request handler loop ready...");
         long lastUpdate = Environment.TickCount64;
+        static void mark(string part)
+        {
+            if (MonitorTimes)
+            {
+                BackendQueueTimer.Mark(part);
+            }
+        }
         while (true)
         {
+            if (MonitorTimes)
+            {
+                BackendQueueTimer.Reset();
+            }
             if (HasShutdown)
             {
                 Logs.Info("Backend request handler loop closing...");
@@ -771,11 +786,14 @@ public class BackendHandler
             }
             try
             {
+                bool anyMoved = false;
+                mark("Start");
                 foreach (T2IBackendRequest request in T2IBackendRequests.Values.ToArray())
                 {
                     if (request.Cancel.IsCancellationRequested)
                     {
                         T2IBackendRequests.TryRemove(request.ID, out _);
+                        anyMoved = true;
                         request.CompletedEvent.Set();
                         continue;
                     }
@@ -783,11 +801,14 @@ public class BackendHandler
                     if (request.Result is not null || request.Failure is not null)
                     {
                         T2IBackendRequests.TryRemove(request.ID, out _);
+                        anyMoved = true;
                         request.CompletedEvent.Set();
                         lastUpdate = Environment.TickCount64;
                     }
                 }
-                if (T2IBackendRequests.IsEmpty())
+                mark("PostLoop");
+                bool empty = T2IBackendRequests.IsEmpty();
+                if (empty)
                 {
                     lastUpdate = Environment.TickCount64;
                 }
@@ -798,10 +819,20 @@ public class BackendHandler
                     foreach (T2IBackendRequest request in T2IBackendRequests.Values.ToArray())
                     {
                         request.Failure = new TimeoutException($"No backend has responded in {Program.ServerSettings.Backends.MaxTimeoutMinutes} minutes.");
+                        anyMoved = true;
                         request.CompletedEvent.Set();
                     }
                 }
-                CheckBackendsSignal.WaitAsync(TimeSpan.FromSeconds(1), Program.GlobalProgramCancel).Wait();
+                mark("PostComplete");
+                if (empty || !anyMoved)
+                {
+                    CheckBackendsSignal.WaitAsync(TimeSpan.FromSeconds(1), Program.GlobalProgramCancel).Wait();
+                }
+                if (MonitorTimes)
+                {
+                    mark("PostSignal");
+                    BackendQueueTimer.Debug($"anyMoved={anyMoved}, empty={empty}");
+                }
             }
             catch (Exception ex)
             {
