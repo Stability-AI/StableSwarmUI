@@ -161,8 +161,10 @@ public class GridGeneratorExtension : Extension
             {
                 data.Rendering.Add(t);
             }
-            if (Program.Backends.QueuedRequests < Program.ServerSettings.Backends.MaxRequestsForcedOrder)
+            int requests = Program.Backends.QueuedRequests;
+            if (requests < Program.ServerSettings.Backends.MaxRequestsForcedOrder)
             {
+                Logs.Debug($"Grid Gen micro-pausing to maintain order as {requests} < {Program.ServerSettings.Backends.MaxRequestsForcedOrder}");
                 Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
             }
             return t;

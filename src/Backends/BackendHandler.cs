@@ -693,7 +693,7 @@ public class BackendHandler
     public ConcurrentDictionary<long, T2IBackendRequest> T2IBackendRequests = new();
 
     /// <summary>Number of currently waiting backend requests.</summary>
-    public int QueuedRequests => T2IBackendRequests.Count;
+    public int QueuedRequests => T2IBackendRequests.Count + RunningBackendsOfType<AbstractT2IBackend>().Sum(b => b.BackendData.Usages);
 
     /// <summary>(Blocking) gets the next available Text2Image backend.</summary>
     /// <returns>A 'using'-compatible wrapper for a backend.</returns>
