@@ -267,6 +267,10 @@ public class T2IParamInput
         {
             output.Remove("original_prompt");
         }
+        if (output.TryGetValue("original_negativeprompt", out JToken origNegPrompt) && output.TryGetValue("negativeprompt", out JToken negPrompt) && origNegPrompt == negPrompt)
+        {
+            output.Remove("original_negativeprompt");
+        }
         return output;
     }
 
