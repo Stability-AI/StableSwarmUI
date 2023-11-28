@@ -392,6 +392,10 @@ textarea, input, select {
     height: 0.5rem;
     cursor: pointer;
 }
+.header-label {
+    width: calc(100% - 20px);
+    display: inline-block;
+}
 .basic-button {
     display: inline-block;
     background-color: var(--button-background);
