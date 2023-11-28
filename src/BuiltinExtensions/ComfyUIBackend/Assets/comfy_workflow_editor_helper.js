@@ -12,7 +12,7 @@ let comfyIsOutputNodeMap = {};
 
 let comfyHasTriedToLoad = false;
 
-let comfyAltSaveNodes = ['ADE_AnimateDiffCombine', 'VHS_VideoCombine'];
+let comfyAltSaveNodes = ['ADE_AnimateDiffCombine', 'VHS_VideoCombine', 'SaveAnimatedWEBP', 'SaveAnimatedPNG', 'SwarmSaveAnimatedWebpWS', 'SwarmSaveAnimationWS'];
 
 /**
  * Tries to load the ComfyUI workflow frame.
