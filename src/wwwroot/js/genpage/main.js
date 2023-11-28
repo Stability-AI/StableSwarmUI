@@ -401,7 +401,7 @@ function updateCurrentStatusDirect(data) {
         num_backends_waiting = data.waiting_backends;
     }
     let total = num_current_gens + num_models_loading + num_live_gens + num_backends_waiting;
-    if (isGeneratingPreviews && num_current_gens == 1) {
+    if (isGeneratingPreviews && num_current_gens <= getRequiredElementById('usersettings_maxsimulpreviews').value) {
         total = 0;
     }
     getRequiredElementById('alt_interrupt_button').classList.toggle('interrupt-button-none', total == 0);
@@ -479,6 +479,22 @@ function toggleGenerateForever() {
     }
 }
 
+function genOnePreview() {
+    doGenerate({'donotsave': true, '_preview': true, 'images': 1});
+}
+
+function needsNewPreview() {
+    if (!isGeneratingPreviews) {
+        return;
+    }
+    let max = getRequiredElementById('usersettings_maxsimulpreviews').value;
+    if (num_current_gens < max) {
+        genOnePreview();
+    }
+}
+
+getRequiredElementById('alt_prompt_textbox').addEventListener('input', () => needsNewPreview());
+
 function toggleGeneratePreviews() {
     let button = getRequiredElementById('generate_previews_button');
     isGeneratingPreviews = !isGeneratingPreviews;
@@ -486,7 +502,7 @@ function toggleGeneratePreviews() {
         button.innerText = 'Stop Generating Previews';
         genPreviewsInterval = setInterval(() => {
             if (num_current_gens == 0) {
-                doGenerate({'donotsave': true, '_preview': true});
+                genOnePreview();
             }
         }, 100);
     }
@@ -1332,7 +1348,7 @@ imageInputHandler();
 
 function genpageLoad() {
     console.log('Load page...');
-    window.imageEditor = new ImageEditor(true, true, () => setPageBarsFunc());
+    window.imageEditor = new ImageEditor(true, true, () => setPageBarsFunc(), () => needsNewPreview());
     pageSizer();
     reviseStatusBar();
     getSession(() => {

@@ -210,6 +210,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("Options to override default VAEs with.")]
         public VAEsData VAEs = new();
+
+        [ConfigComment("When generating live previews, this is how many simultaneous generation requests can be waiting at one time.")]
+        public int MaxSimulPreviews = 1;
     }
 }
 
