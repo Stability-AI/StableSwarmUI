@@ -197,7 +197,10 @@ public static class T2IAPI
                     }
                     output(new JObject() { ["image"] = url, ["batch_index"] = $"{actualIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
                 })));
-            Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
+            if (Program.Backends.QueuedRequests < 50)
+            {
+                Task.Delay(20).Wait(); // Tiny few-ms delay to encourage tasks retaining order.
+            }
         }
         while (tasks.Any())
         {
