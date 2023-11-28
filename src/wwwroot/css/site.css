@@ -392,7 +392,7 @@ textarea, input, select {
     height: 0.5rem;
     cursor: pointer;
 }
-.header-label {
+.header-label-wrap {
     width: calc(100% - 20px);
     display: inline-block;
 }

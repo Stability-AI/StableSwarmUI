@@ -114,6 +114,16 @@ function isParamAdvanced(p) {
     return p.group ? p.group.advanced : p.advanced;
 }
 
+document.addEventListener('click', e => {
+    if (e.target.onclick) {
+        return;
+    }
+    let header = findParentOfClass(e.target, 'input-group-header');
+    if (header) {
+        toggleGroupOpen(header);
+    }
+});
+
 function genInputs(delay_final = false) {
     let runnables = [];
     let groupsClose = [];
@@ -159,9 +169,9 @@ function genInputs(delay_final = false) {
                         }
                     }
                     let toggler = getToggleHtml(param.group.toggles, `input_group_content_${groupId}`, escapeHtml(param.group.name), ' group-toggler-switch', 'doToggleGroup');
-                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header" onclick="toggleGroupOpen(this)"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${escapeHtml(param.group.name)}</span>${toggler}${infoButton}</span><div class="input-group-content" id="input_group_content_${groupId}">`;
+                    html += `<div class="input-group" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header"><span class="header-label-wrap"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${escapeHtml(param.group.name)}</span>${toggler}${infoButton}</span></span><div class="input-group-content" id="input_group_content_${groupId}">`;
                     if (presetArea) {
-                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" onclick="toggleGroupOpen(this)" class="input-group-header"><span class="auto-symbol">&#x2B9F;</span>${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
+                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" class="input-group-header"><span class="auto-symbol">&#x2B9F;</span>${escapeHtml(param.group.name)}</span><div class="input-group-content">`;
                     }
                 }
                 lastGroup = groupName;
