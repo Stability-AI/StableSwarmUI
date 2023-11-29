@@ -1,7 +1,7 @@
 from PIL import Image
 import numpy as np
 from server import PromptServer, BinaryEventTypes
-import io, struct, subprocess, os, random, sys
+import io, struct, subprocess, os, random, sys, time
 from imageio_ffmpeg import get_ffmpeg_exe
 import folder_paths
 
