@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
+using StableSwarmUI.Accounts;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
@@ -126,6 +128,7 @@ public class WebServer
         WebApp.MapGet("/", () => Results.Redirect("/Text2Image"));
         WebApp.Map("/API/{*Call}", API.HandleAsyncRequest);
         WebApp.MapGet("/Output/{*Path}", ViewOutput);
+        WebApp.MapGet("/View/{*Path}", ViewOutput);
         WebApp.MapGet("/ExtensionFile/{*f}", ViewExtensionScript);
         timer.Check("[Web] core maps");
         WebApp.Use(async (context, next) =>
@@ -195,10 +198,10 @@ public class WebServer
     }
 
     /// <summary>Test the validity of a user-given file path. Returns (path, consoleError, userError).</summary>
-    public (string, string, string) CheckOutputFilePath(string path, string userId)
+    public (string, string, string) CheckOutputFilePath(string path, string userId, bool isExact)
     {
         string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.OutputPath);
-        if (Program.ServerSettings.Paths.AppendUserNameToOutputPath)
+        if (Program.ServerSettings.Paths.AppendUserNameToOutputPath && !isExact)
         {
             root = $"{root}/{userId}";
         }
@@ -252,10 +255,28 @@ public class WebServer
     /// <summary>Web route for viewing output images.</summary>
     public async Task ViewOutput(HttpContext context)
     {
-        string path = context.Request.Path.ToString().After("/Output/");
+        string path = context.Request.Path.ToString();
+        bool isExact = false;
+        if (path.StartsWith("/View/"))
+        {
+            path = path.After("/View/");
+            isExact = true;
+        }
+        else
+        {
+            path = path.After("/Output/");
+        }
         path = Uri.UnescapeDataString(path).Replace('\\', '/');
-        string userId = Program.Sessions.AdminUser.UserID; // TODO: From login cookie
-        (path, string consoleError, string userError) = CheckOutputFilePath(path, userId);
+        string userId;
+        if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id)) // TODO: Proper auth
+        {
+            userId = user_id[0];
+        }
+        else
+        {
+            userId = SessionHandler.LocalUserID; // TODO: disable this if non-local swarm instance
+        }
+        (path, string consoleError, string userError) = CheckOutputFilePath(path, userId, isExact);
         if (consoleError is not null)
         {
             Logs.Error(consoleError);

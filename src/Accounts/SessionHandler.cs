@@ -19,15 +19,16 @@ public class SessionHandler
     /// <summary>ID to use for the local user when in single-user mode.</summary>
     public static string LocalUserID = "local";
 
-    /// <summary>Basic reusable admin user.</summary>
-    public User AdminUser;
-
+    /// <summary>Internal database.</summary>
     public ILiteDatabase Database;
 
+    /// <summary>Internal database (users).</summary>
     public ILiteCollection<User.DatabaseEntry> UserDatabase;
 
+    /// <summary>Internal database (presets).</summary>
     public ILiteCollection<T2IPreset> T2IPresets;
 
+    /// <summary>Internal database access locker.</summary>
     public LockObject DBLock = new();
 
     public SessionHandler()
@@ -35,25 +36,31 @@ public class SessionHandler
         Database = new LiteDatabase("Data/Users.ldb");
         UserDatabase = Database.GetCollection<User.DatabaseEntry>("users");
         T2IPresets = Database.GetCollection<T2IPreset>("t2i_presets");
-        User.DatabaseEntry adminUserData = UserDatabase.FindById(LocalUserID);
-        adminUserData ??= new() { ID = LocalUserID, RawSettings = "\n" };
-        AdminUser = new(this, adminUserData);
-        AdminUser.Restrictions.Admin = true;
     }
 
-    public Session CreateAdminSession(string source)
+    public Session CreateAdminSession(string source, string userId = null)
     {
         if (HasShutdown)
         {
             throw new InvalidOperationException("Session handler is shutting down.");
         }
+        userId ??= LocalUserID;
+        userId = Utilities.StrictFilenameClean(userId).Replace("/", "");
+        if (userId.Length == 0)
+        {
+            userId = "_";
+        }
+        User.DatabaseEntry adminUserData = UserDatabase.FindById(userId);
+        adminUserData ??= new() { ID = userId, RawSettings = "\n" };
+        User user = new(this, adminUserData);
+        user.Restrictions.Admin = true;
         Logs.Info($"Creating new admin session for {source}");
         for (int i = 0; i < 1000; i++)
         {
             Session sess = new()
             {
                 ID = Utilities.SecureRandomHex(SessionIDLength),
-                User = AdminUser
+                User = user
             };
             if (Sessions.TryAdd(sess.ID, sess))
             {

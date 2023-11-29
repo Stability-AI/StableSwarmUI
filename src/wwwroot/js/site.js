@@ -1,5 +1,6 @@
 
 let session_id = null;
+let user_id = null;
 
 function enableSlidersIn(elem) {
     for (let div of elem.getElementsByClassName('auto-slider-box')) {
@@ -155,6 +156,7 @@ function getSession(callback) {
     genericRequest('GetNewSession', {}, data => {
         console.log("Session started.");
         session_id = data.session_id;
+        user_id = data.user_id;
         if (lastServerVersion == null) {
             lastServerVersion = data.version;
         }

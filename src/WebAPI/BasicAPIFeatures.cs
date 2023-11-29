@@ -14,6 +14,7 @@ using StableSwarmUI.Backends;
 using System.Diagnostics;
 using System.Net.Http;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Primitives;
 
 namespace StableSwarmUI.WebAPI;
 
@@ -42,9 +43,16 @@ public static class BasicAPIFeatures
     /// <summary>API Route to create a new session automatically.</summary>
     public static async Task<JObject> GetNewSession(HttpContext context)
     {
+        string user = null;
+        if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id)) // TODO: Proper auth
+        {
+            user = user_id[0];
+        }
+        Session session = Program.Sessions.CreateAdminSession(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", user);
         return new JObject()
         {
-            ["session_id"] = Program.Sessions.CreateAdminSession(context.Connection.RemoteIpAddress?.ToString() ?? "unknown").ID,
+            ["session_id"] = session.ID,
+            ["user_id"] = session.User.UserID,
             ["version"] = Utilities.VaryID,
             ["server_id"] = Utilities.LoopPreventionID.ToString(),
             ["count_running"] = Program.Backends.T2IBackends.Values.Count(b => b.Backend.Status == BackendStatus.RUNNING || b.Backend.Status == BackendStatus.LOADING)

@@ -291,6 +291,13 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         if (folder.startsWith('Output/')) {
             folder = folder.substring('Output/'.length);
         }
+        if (folder.startsWith('View/')) {
+            folder = folder.substring('View/'.length);
+            let firstSlash = folder.indexOf('/');
+            if (firstSlash != -1) {
+                folder = folder.substring(firstSlash + 1);
+            }
+        }
         let lastSlash = folder.lastIndexOf('/');
         if (lastSlash != -1) {
             folder = folder.substring(0, lastSlash);
@@ -641,7 +648,7 @@ function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
         let folders = data.folders.sort((a, b) => b.toLowerCase().localeCompare(a.toLowerCase()));
         let mapped = data.files.map(f => {
             let fullSrc = `${prefix}${f.src}`;
-            return { 'name': fullSrc, 'data': { 'src': `Output/${fullSrc}`, 'name': f.src, 'metadata': f.metadata } };
+            return { 'name': fullSrc, 'data': { 'src': `View/${user_id}/${fullSrc}`, 'fullsrc': fullSrc, 'name': f.src, 'metadata': f.metadata } };
         });
         callback(folders, mapped);
     });
@@ -652,7 +659,7 @@ function describeImage(image) {
         {
             label: 'Open In Folder',
             onclick: (e) => {
-                genericRequest('OpenImageFolder', {'path': image.data.src.substring("Output/".length)}, data => {});
+                genericRequest('OpenImageFolder', {'path': image.data.fullsrc}, data => {});
             }
         },
         {
@@ -663,7 +670,7 @@ function describeImage(image) {
         {
             label: 'Delete',
             onclick: (e) => {
-                genericRequest('DeleteImage', {'path': image.data.src.substring("Output/".length)}, data => {
+                genericRequest('DeleteImage', {'path': image.data.src.fullsrc}, data => {
                     e.remove();
                 });
             }
