@@ -177,7 +177,7 @@ public class Session : IEquatable<Session>
                 }
             }
         }
-        return ($"Output/{imagePath}.{extension}", fullPath);
+        return ($"View/{User.UserID}/{imagePath}.{extension}", fullPath);
     }
 
     /// <summary>Gets a hash code for this session, for C# equality comparsion.</summary>
