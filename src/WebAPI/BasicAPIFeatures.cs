@@ -53,6 +53,7 @@ public static class BasicAPIFeatures
         {
             ["session_id"] = session.ID,
             ["user_id"] = session.User.UserID,
+            ["output_append_user"] = Program.ServerSettings.Paths.AppendUserNameToOutputPath,
             ["version"] = Utilities.VaryID,
             ["server_id"] = Utilities.LoopPreventionID.ToString(),
             ["count_running"] = Program.Backends.T2IBackends.Values.Count(b => b.Backend.Status == BackendStatus.RUNNING || b.Backend.Status == BackendStatus.LOADING)

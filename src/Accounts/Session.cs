@@ -1,5 +1,6 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using System.IO;
@@ -177,7 +178,8 @@ public class Session : IEquatable<Session>
                 }
             }
         }
-        return ($"View/{User.UserID}/{imagePath}.{extension}", fullPath);
+        string prefix = Program.ServerSettings.Paths.AppendUserNameToOutputPath ? $"View/{User.UserID}/" : "Output/";
+        return ($"{prefix}{imagePath}.{extension}", fullPath);
     }
 
     /// <summary>Gets a hash code for this session, for C# equality comparsion.</summary>

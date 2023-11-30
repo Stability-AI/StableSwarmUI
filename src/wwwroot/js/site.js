@@ -1,6 +1,11 @@
 
 let session_id = null;
 let user_id = null;
+let outputAppendUser = null;
+
+function getImageOutPrefix() {
+    return outputAppendUser ? `View/${user_id}` : 'Output';
+}
 
 function enableSlidersIn(elem) {
     for (let div of elem.getElementsByClassName('auto-slider-box')) {
@@ -157,6 +162,7 @@ function getSession(callback) {
         console.log("Session started.");
         session_id = data.session_id;
         user_id = data.user_id;
+        outputAppendUser = data.output_append_user;
         if (lastServerVersion == null) {
             lastServerVersion = data.version;
         }

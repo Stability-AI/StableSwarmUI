@@ -306,10 +306,10 @@ class GridGenClass {
                         rate = Math.round(rate * 100) / 100;
                         message = `${rate} seconds per image`;
                     }
-                    outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="View/${user_id}/Grids/${outputFolder.value}/index.html" target="_blank">View/${user_id}/Grids/<code>${outputFolder.value}</code></a>`;
+                    outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${outputFolder.value}</code></a>`;
                 }
                 else if (data.success) {
-                    outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="View/${user_id}/Grids/${outputFolder.value}/index.html" target="_blank">View/${user_id}/Grids/<code>${outputFolder.value}</code></a>`;
+                    outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${outputFolder.value}</code></a>`;
                 }
             });
         };
@@ -343,7 +343,7 @@ class GridGenClass {
         let updateOutputInfo = () => {
             genericRequest('GridGenDoesExist', { 'folderName': outputFolder.value }, data => {
                 let prefix = data.exists ? '<span class="gridgen_warn">Output WILL OVERRIDE existing folder</span>' : 'Output will be saved to';
-                outInfoBox.innerHTML = `${prefix} <a href="View/${user_id}/Grids/${outputFolder.value}/index.html" target="_blank">View/${user_id}/Grids/<code>${outputFolder.value}</code></a>`;
+                outInfoBox.innerHTML = `${prefix} <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${outputFolder.value}</code></a>`;
             });
         };
         outputFolder.addEventListener('input', updateOutputInfo);
