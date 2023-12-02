@@ -211,7 +211,7 @@ public static class T2IAPI
         output(new JObject() { ["discard_indices"] = JToken.FromObject(discard) });
     }
 
-    public static HashSet<string> ImageExtensions = new() { "png", "jpg", "html", "gif", "webm", "mp4" };
+    public static HashSet<string> ImageExtensions = new() { "png", "jpg", "html", "gif", "webm", "mp4", "webp" };
 
     // TODO: Configurable limit
     /// <summary>API route to get a list of available history images.</summary>
