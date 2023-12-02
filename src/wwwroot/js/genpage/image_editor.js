@@ -621,7 +621,7 @@ class ImageEditorLayer {
  * The central class managing the image editor interface.
  */
 class ImageEditor {
-    constructor(allowMasks = true, useExperimental = true, doFit = null, signalChanged = null) {
+    constructor(div, allowMasks = true, useExperimental = true, doFit = null, signalChanged = null) {
         // Configurables:
         this.zoomRate = 1.1;
         this.gridScale = 4;
@@ -636,7 +636,7 @@ class ImageEditor {
         this.signalChanged = signalChanged;
         this.changeCount = 0;
         this.active = false;
-        this.inputDiv = getRequiredElementById('image_editor_input');
+        this.inputDiv = div;
         this.leftBar = createDiv(null, 'image_editor_leftbar');
         this.inputDiv.appendChild(this.leftBar);
         this.rightBar = createDiv(null, 'image_editor_rightbar');

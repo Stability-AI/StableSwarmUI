@@ -87,7 +87,7 @@ function createDiv(id, classes, html = null) {
  * Escapes a string for use in HTML.
  */
 function escapeHtml(text) {
-    return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+    return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;').replaceAll('\n', '\n<br>');
 }
 
 /**

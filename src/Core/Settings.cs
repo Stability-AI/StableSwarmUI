@@ -16,7 +16,7 @@ public class Settings : AutoConfiguration
     [ConfigComment("Restrictions to apply to default users.")]
     public UserRestriction DefaultUserRestriction = new();
 
-    [ConfigComment("Default settings for users (unless the user modifies them, if so permitted).")]
+    [ConfigComment("Default settings for users (unless the user modifies them, if so permitted).\n(NOTE: Usually, don't edit this. Go to the 'User' tab to edit your User-Settings).")]
     public User DefaultUser = new();
 
     [ConfigComment("Settings related to backends.")]
