@@ -670,7 +670,7 @@ function describeImage(image) {
         {
             label: 'Delete',
             onclick: (e) => {
-                genericRequest('DeleteImage', {'path': image.data.src.fullsrc}, data => {
+                genericRequest('DeleteImage', {'path': image.data.fullsrc}, data => {
                     e.remove();
                 });
             }
