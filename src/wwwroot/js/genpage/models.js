@@ -128,6 +128,8 @@ function editModel(model, browser) {
         let newImg = curImg.cloneNode(true);
         newImg.id = 'edit_model_image_img';
         newImg.style.maxWidth = '100%';
+        delete newImg.width;
+        delete newImg.height;
         imageInput.appendChild(newImg);
         if (!model.preview_image || model.preview_image == 'imgs/model_placeholder.jpg') {
             enableImage.checked = true;
@@ -141,7 +143,7 @@ function editModel(model, browser) {
         getRequiredElementById(`edit_model_${val}`).value = model[val] || '';
     }
     getRequiredElementById('edit_model_is_negative').checked = model.is_negative_embedding || false;
-    getRequiredElementById('edit_model_is_negative_div').style.display = model.architecture.endsWith('/textual-inversion') ? 'block' : 'none';
+    getRequiredElementById('edit_model_is_negative_div').style.display = model.architecture && model.architecture.endsWith('/textual-inversion') ? 'block' : 'none';
     $('#edit_model_modal').modal('show');
 }
 
