@@ -308,7 +308,7 @@ function describePreset(preset) {
         name = name.substring(index + 1);
     }
     let searchable = description;
-    return { name, description, buttons, 'image': preset.data.preview_image, className, searchable };
+    return { name, description: escapeHtml(description), buttons, 'image': preset.data.preview_image, className, searchable };
 }
 
 function selectPreset(preset) {

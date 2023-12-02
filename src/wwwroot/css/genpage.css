@@ -318,6 +318,7 @@ body {
     height: 10rem;
     overflow: auto;
     display: inline-block;
+    white-space: normal;
     word-break: break-all;
     font-size: 80%;
 }
