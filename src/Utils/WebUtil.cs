@@ -57,27 +57,31 @@ public static class WebUtil
             return new("Unknown GPU.");
         }
         NvidiaUtil.NvidiaInfo bestGpu = nv.OrderByDescending(x => x.TotalMemory.InBytes).First();
-        string basic = $"GPU {bestGpu.ID}: <b>{bestGpu.GPUName}</b>, <b>{bestGpu.TotalMemory}</b> VRAM";
+        string basic = "";
+        foreach (NvidiaUtil.NvidiaInfo info in nv)
+        {
+            basic += $"{(info == bestGpu ? "* " : "")}GPU {info.ID}: <b>{info.GPUName}</b>, <b>{info.TotalMemory}</b> VRAM\n<br>";
+        }
         if (nv.Length > 1)
         {
-            basic += $" ({nv.Length} total GPUs)";
+            basic += $"({nv.Length} total GPUs)";
         }
         if (bestGpu.TotalMemory.GiB > 15)
         {
-            return new($"{basic} - able to run locally for almost anything.");
+            return new($"{basic}able to run locally for almost anything.");
         }
         if (bestGpu.TotalMemory.GiB > 11)
         {
-            return new($"{basic} - sufficient to run most usages locally.");
+            return new($"{basic}sufficient to run most usages locally.");
         }
         if (bestGpu.TotalMemory.GiB > 7)
         {
-            return new($"{basic} - sufficient to run basic usage locally. May be limited on large generations.");
+            return new($"{basic}sufficient to run basic usage locally. May be limited on large generations.");
         }
         if (bestGpu.TotalMemory.GiB > 3)
         {
-            return new($"{basic} - limited, may need to configure settings for LowVRAM usage to work reliably.");
+            return new($"{basic}limited, may need to configure settings for LowVRAM usage to work reliably.");
         }
-        return new($"{basic} - insufficient, may work with LowVRAM or CPU mode, but otherwise will need remote cloud process.");
+        return new($"{basic}insufficient, may work with LowVRAM or CPU mode, but otherwise will need remote cloud process.");
     }
 }
