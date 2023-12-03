@@ -276,7 +276,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
                 'width': width * 2,
                 'height': height * 2
             };
-            doGenerate(input_overrides);
+            doGenerate(input_overrides, { 'initimagecreativity': 0.6 });
         }));
     });
     quickAppendButton(buttons, 'Star', () => {
@@ -524,7 +524,7 @@ function toggleGeneratePreviews() {
 
 let batchesEver = 0;
 
-function doGenerate(input_overrides = {}) {
+function doGenerate(input_overrides = {}, input_preoverrides = {}) {
     if (session_id == null) {
         if (Date.now() - time_started > 1000 * 60) {
             showError("Cannot generate, session not started. Did the server crash?");
@@ -548,7 +548,7 @@ function doGenerate(input_overrides = {}) {
         let images = {};
         let batch_id = batchesEver++;
         let discardable = {};
-        makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides), data => {
+        makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides, input_preoverrides), data => {
             if (isPreview) {
                 if (data.image) {
                     setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`, false, true);

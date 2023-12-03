@@ -417,8 +417,8 @@ function toggle_advanced_checkbox_manual() {
 
 let currentAutomaticVae = 'None';
 
-function getGenInput(input_overrides = {}) {
-    let input = {};
+function getGenInput(input_overrides = {}, input_preoverrides = {}) {
+    let input = JSON.parse(JSON.stringify(input_preoverrides));
     for (let type of gen_param_types) {
         if (type.toggleable && !getRequiredElementById(`input_${type.id}_toggle`).checked) {
             continue;
