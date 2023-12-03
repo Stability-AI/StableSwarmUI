@@ -78,6 +78,9 @@ public static class Logs
     /// <summary>All current log trackers.</summary>
     public static LogTracker[] Trackers = new LogTracker[(int)LogLevel.None];
 
+    /// <summary>Named set of other log trackers (eg backends).</summary>
+    public static ConcurrentDictionary<string, LogTracker> OtherTrackers = new();
+
     static Logs()
     {
         for (int i = 0; i < Trackers.Length; i++)

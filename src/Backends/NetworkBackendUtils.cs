@@ -346,6 +346,8 @@ public static class NetworkBackendUtils
 
     public static void ReportLogsFromProcess(Process process, string nameSimple, out Action signalShutdownExpected, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus)
     {
+        Logs.LogTracker logTracker = new();
+        Logs.OtherTrackers[nameSimple] = logTracker;
         BackendStatus status = getStatus();
         bool isShuttingDown = false;
         signalShutdownExpected = () => Volatile.Write(ref isShuttingDown, true);
@@ -373,6 +375,7 @@ public static class NetworkBackendUtils
                 {
                     Logs.Debug($"{nameSimple} stdout: {line}");
                 }
+                logTracker.Track($"stdout: {line}");
             }
             status = getStatus();
             Logs.Debug($"Status of {nameSimple} after process end is {status}");
@@ -381,6 +384,7 @@ public static class NetworkBackendUtils
                 status = BackendStatus.ERRORED;
                 setStatus(status);
             }
+            Logs.OtherTrackers.TryRemove(new(nameSimple, logTracker));
         }
         new Thread(MonitorLoop) { Name = $"SelfStart{nameSimple.Replace(' ', '_')}_Monitor" }.Start();
         void MonitorErrLoop()
@@ -391,6 +395,7 @@ public static class NetworkBackendUtils
             {
                 Logs.Debug($"{nameSimple} stderr: {line}");
                 errorLog.AppendLine($"{nameSimple} error: {line}");
+                logTracker.Track($"stderr: {line}");
                 if (errorLog.Length > 1024 * 50)
                 {
                     errorLog = new StringBuilder(errorLog.ToString()[(1024 * 10)..]);
