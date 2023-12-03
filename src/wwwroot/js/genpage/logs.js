@@ -17,7 +17,8 @@ class ServerLogsHelper {
     }
 
     regenTypeListElem() {
-        if (arraysEqual(this.lastLogTypes || [], this.logTypes)) {
+        let names = this.logTypes.map((t) => t.name);
+        if (arraysEqual(this.lastLogTypes || [], names)) {
             return;
         }
         let html = '';
@@ -27,7 +28,7 @@ class ServerLogsHelper {
         }
         this.typeSelectors.innerHTML = html;
         this.typeSelectors.value = selected;
-        this.lastLogTypes = this.logTypes;
+        this.lastLogTypes = names;
     }
 
     loadTypeList(callback) {
