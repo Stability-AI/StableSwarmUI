@@ -27,7 +27,7 @@ Key feature targets not yet implemented:
 
 # Installing on Windows
 
-- Download [The Install-Windows.bat file](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.5.6-Alpha/install-windows.bat), store it somewhere you want to install at (not `Program Files`), and run it.
+- Download [The Install-Windows.bat file](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.5.8-Alpha/install-windows.bat), store it somewhere you want to install at (not `Program Files`), and run it.
     - It should open a command prompt and install itself.
     - If it closes without going further, try running it again, it sometimes needs to run twice. (TODO: Fix that)
     - It will place an icon on your desktop that you can use to re-launch the server at any time.

@@ -20,8 +20,8 @@ winget install --id Git.Git -e --source winget --accept-source-agreements --acce
 git clone https://github.com/Stability-AI/StableSwarmUI
 cd StableSwarmUI
 
-.\make-shortcut.bat
+call .\make-shortcut.bat
 
-.\launch-windows.bat --launch_mode webinstall
+call .\launch-windows.bat --launch_mode webinstall
 
 IF %ERRORLEVEL% NEQ 0 ( pause )
