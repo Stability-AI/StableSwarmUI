@@ -64,7 +64,7 @@ public static class WebUtil
         }
         if (nv.Length > 1)
         {
-            basic += $"({nv.Length} total GPUs)";
+            basic += $"({nv.Length} total GPUs) ";
         }
         if (bestGpu.TotalMemory.GiB > 15)
         {

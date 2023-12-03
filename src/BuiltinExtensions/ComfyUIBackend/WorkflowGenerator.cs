@@ -621,9 +621,22 @@ public class WorkflowGenerator
                     }, "26");
                     g.FinalSamples = new() { "26", 0 };
                 }
+                JArray model = g.FinalModel;
+                if (g.UserInput.TryGet(ComfyUIBackendExtension.RefinerHyperTile, out int tileSize))
+                {
+                    string hyperTileNode = g.CreateNode("HyperTile", new JObject()
+                    {
+                        ["model"] = model,
+                        ["tile_size"] = tileSize,
+                        ["swap_size"] = 2, // TODO: Do these other params matter?
+                        ["max_depth"] = 0,
+                        ["scale_depth"] = false
+                    });
+                    model = new() { hyperTileNode, 0 };
+                }
                 int steps = g.UserInput.Get(T2IParamTypes.Steps);
                 double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
-                g.CreateKSampler(g.FinalModel, prompt, negPrompt, g.FinalSamples, cfg, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
+                g.CreateKSampler(model, prompt, negPrompt, g.FinalSamples, cfg, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
                     g.UserInput.Get(T2IParamTypes.Seed) + 1, false, method != "StepSwapNoisy", id: "23");
                 g.FinalSamples = new() { "23", 0 };
             }
