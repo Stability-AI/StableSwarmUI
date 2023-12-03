@@ -212,7 +212,7 @@ public class T2IParamTypes
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, InitImageResetToNorm, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult,
         FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly, SamplerSigmaMin, SamplerSigmaMax, SamplerRho, ControlNetStart, ControlNetEnd, VideoAugmentationLevel, VideoCFG, VideoMinCFG;
     public static T2IRegisteredParam<Image> InitImage, MaskImage, ControlNetImage;
-    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel, RegionalObjectInpaintingModel, VideoModel;
+    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel, RegionalObjectInpaintingModel, VideoModel, RefinerVAE;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
     public static T2IRegisteredParam<List<Image>> PromptImages;
     public static T2IRegisteredParam<bool> DoNotSave, ControlNetPreviewOnly, RevisionZeroPrompt, SeamlessTileable, RemoveBackground;
@@ -306,6 +306,9 @@ public class T2IParamTypes
         RefinerModel = Register<T2IModel>(new("Refiner Model", "The model to use for refinement. This should be a model that's good at small-details, and use a structural model as your base model.\n'Use Base' will use your base model rather than switching.\nSDXL 1.0 released with an official refiner model.",
             "(Use Base)", IgnoreIf: "(Use Base)", GetValues: listRefinerModels, OrderPriority: -5, Group: GroupRefiners, FeatureFlag: "refiners", Subtype: "Stable-Diffusion", ChangeWeight: 9
             ));
+        RefinerVAE = Register<T2IModel>(new("Refiner VAE", "Optional VAE replacement for the refiner stage.",
+            "None", IgnoreIf: "None", GetValues: listVaes, IsAdvanced: true, OrderPriority: -4.5, Group: GroupRefiners, FeatureFlag: "refiners", Subtype: "VAE", ChangeWeight: 7
+            ));
         RefinerControl = Register<double>(new("Refine Control Percentage", "Higher values give the refiner more control, lower values give the base more control.\nThis is similar to 'Init Image Creativity', but for the refiner. This controls how many steps the refiner takes.",
             "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
             ));
@@ -315,6 +318,10 @@ public class T2IParamTypes
         RefinerUpscale = Register<double>(new("Refiner Upscale", "Optional upscale of the image between the base and refiner stage.\nSometimes referred to as 'high-res fix'.\nSetting to '1' disables the upscale.",
             "1", IgnoreIf: "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
             ));
+        static List<string> listVaes(Session s)
+        {
+            return new string[] { "None" }.Concat(Program.T2IModelSets["VAE"].ListModelsFor(s).Select(m => m.Name)).ToList();
+        }
         GroupControlNet = new("ControlNet", Toggles: true, Open: false, OrderPriority: -1);
         ControlNetImage = Register<Image>(new("ControlNet Image Input", "The image to use as the input to ControlNet guidance.\nThis image will be preprocessed by the chosen preprocessor.\nIf ControlNet is enabled, but this input is not, Init Image will be used instead.",
             "", Toggleable: true, FeatureFlag: "controlnet", Group: GroupControlNet, OrderPriority: 1, ChangeWeight: 2
@@ -367,7 +374,7 @@ public class T2IParamTypes
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion", ChangeWeight: 10
             ));
         VAE = Register<T2IModel>(new("VAE", "The VAE (Variational Auto-Encoder) controls the translation between images and latent space.\nIf your images look faded out, or glitched, you may have the wrong VAE.\nAll models have a VAE baked in by default, this option lets you swap to a different one if you want to.",
-            "None", IgnoreIf: "None", Permission: "param_model", IsAdvanced: true, Toggleable: true, Subtype: "VAE", Group: GroupAdvancedModelAddons, ChangeWeight: 7
+            "None", IgnoreIf: "None", Permission: "param_model", IsAdvanced: true, Toggleable: true, GetValues: listVaes, Subtype: "VAE", Group: GroupAdvancedModelAddons, ChangeWeight: 7
             ));
         Loras = Register<List<string>>(new("LoRAs", "LoRAs (Low-Rank-Adaptation Models) are a way to customize the content of a model without totally replacing it.\nYou can enable one or several LoRAs over top of one model.",
             "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelNamesFor(session).Order().ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false, ChangeWeight: 8

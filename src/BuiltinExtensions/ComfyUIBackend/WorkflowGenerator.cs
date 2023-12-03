@@ -63,7 +63,15 @@ public class WorkflowGenerator
         }, -15);
         AddModelGenStep(g =>
         {
-            if (g.UserInput.TryGet(T2IParamTypes.VAE, out T2IModel vae))
+            if (g.IsRefinerStage && g.UserInput.TryGet(T2IParamTypes.RefinerVAE, out T2IModel rvae))
+            {
+                string vaeNode = g.CreateNode("VAELoader", new JObject()
+                {
+                    ["vae_name"] = rvae.ToString(g.ModelFolderFormat)
+                });
+                g.LoadingVAE = new() { $"{vaeNode}", 0 };
+            }
+            else if (!g.NoVAEOverride && g.UserInput.TryGet(T2IParamTypes.VAE, out T2IModel vae))
             {
                 string vaeNode = g.CreateNode("VAELoader", new JObject()
                 {
@@ -550,17 +558,22 @@ public class WorkflowGenerator
                 && g.UserInput.TryGet(T2IParamTypes.RefinerControl, out double refinerControl)
                 && g.UserInput.TryGet(ComfyUIBackendExtension.RefinerUpscaleMethod, out string upscaleMethod))
             {
+                g.IsRefinerStage = true;
                 JArray origVae = g.FinalVae, prompt = g.FinalPrompt, negPrompt = g.FinalNegativePrompt;
+                bool modelMustReencode = false;
                 if (g.UserInput.TryGet(T2IParamTypes.RefinerModel, out T2IModel refineModel) && refineModel is not null)
                 {
+                    T2IModel baseModel = g.UserInput.Get(T2IParamTypes.Model);
+                    modelMustReencode = refineModel.ModelClass?.CompatClass != "stable-diffusion-xl-v1-refiner" || baseModel.ModelClass?.CompatClass != "stable-diffusion-xl-v1";
+                    g.NoVAEOverride = refineModel.ModelClass?.CompatClass != baseModel.ModelClass?.CompatClass;
                     g.FinalLoadedModel = refineModel;
                     (g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(refineModel, "Refiner", "20");
                     prompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, refineModel, true);
                     negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, refineModel, false);
+                    g.NoVAEOverride = false;
                 }
                 bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale > 1;
                 // TODO: Better same-VAE check
-                bool modelMustReencode = refineModel != null && (refineModel?.ModelClass?.ID != "stable-diffusion-xl-v1-refiner" || g.UserInput.Get(T2IParamTypes.Model).ModelClass?.ID != "stable-diffusion-xl-v1-base");
                 bool doPixelUpscale = doUspcale && (upscaleMethod.StartsWith("pixel-") || upscaleMethod.StartsWith("model-"));
                 if (modelMustReencode || doPixelUpscale)
                 {
@@ -639,6 +652,7 @@ public class WorkflowGenerator
                 g.CreateKSampler(model, prompt, negPrompt, g.FinalSamples, cfg, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
                     g.UserInput.Get(T2IParamTypes.Seed) + 1, false, method != "StepSwapNoisy", id: "23");
                 g.FinalSamples = new() { "23", 0 };
+                g.IsRefinerStage = false;
             }
             // TODO: Refiner
         }, -4);
@@ -887,6 +901,12 @@ public class WorkflowGenerator
 
     /// <summary>Type id ('Base', 'Refiner') of the current loading model.</summary>
     public string LoadingModelType;
+
+    /// <summary>If true, user-selected VAE may be wrong, so ignore it.</summary>
+    public bool NoVAEOverride = false;
+
+    /// <summary>If true, the generator is currently working on the refiner stage.</summary>
+    public bool IsRefinerStage = false;
 
     /// <summary>Creates a new node with the given class type and configuration action, and optional manual ID.</summary>
     public string CreateNode(string classType, Action<string, JObject> configure, string id = null)
