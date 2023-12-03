@@ -374,6 +374,8 @@ public class ComfyUIBackendExtension : Extension
         public SemaphoreSlim Lock = new(1, 1);
 
         public volatile JObject LastExecuting, LastProgress;
+
+        public int BackendOffset = 0;
     }
 
     public class ComfyClientData
@@ -461,6 +463,14 @@ public class ComfyUIBackendExtension : Extension
             WebSocket socket = await context.WebSockets.AcceptWebSocketAsync();
             List<Task> tasks = new();
             ComfyUser user = new();
+            for (int i = 0; i < allBackends.Count; i++)
+            {
+                if (!Users.Values.Any(u => u.BackendOffset == i))
+                {
+                    user.BackendOffset = i;
+                    break;
+                }
+            }
             foreach ((_, string addressLocal, AbstractT2IBackend backendLocal) in allBackends)
             {
                 string scheme = addressLocal.BeforeAndAfter("://", out string addr);
@@ -640,11 +650,11 @@ public class ComfyUIBackendExtension : Extension
                                 JObject prompt = parsed["prompt"] as JObject;
                                 int preferredBackendIndex = prompt["swarm_prefer"]?.Value<int>() ?? -1;
                                 prompt.Remove("swarm_prefer");
-                                List<ComfyClientData> available = user.Clients.Values.ToList();
-                                ComfyClientData client = user.Clients.Values.MinBy(c => c.QueueRemaining);
+                                ComfyClientData[] available = user.Clients.Values.ToArray().Shift(user.BackendOffset);
+                                ComfyClientData client = available.MinBy(c => c.QueueRemaining);
                                 if (preferredBackendIndex >= 0)
                                 {
-                                    client = available[preferredBackendIndex % available.Count];
+                                    client = available[preferredBackendIndex % available.Length];
                                 }
                                 if (client?.SID is not null)
                                 {
