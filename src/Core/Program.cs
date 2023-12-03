@@ -210,6 +210,7 @@ public class Program
         HasShutdown = true;
         Logs.Info("Shutting down...");
         GlobalCancelSource.Cancel();
+        WebServer.WebApp.StopAsync().Wait();
         Backends?.Shutdown();
         Sessions?.Shutdown();
         ProxyHandler?.Stop();

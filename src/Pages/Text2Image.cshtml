@@ -433,7 +433,10 @@
     <div class="tab-pane tab-pane-vw" id="server_tab_body" role="tabpanel">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link active" data-bs-toggle="tab" href="#Settings-Backends" aria-selected="true" role="tab">Backends</a>
+                <a class="nav-link active" data-bs-toggle="tab" href="#Server-Info" aria-selected="true" role="tab">Server Info</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#Settings-Backends" id="serverbackendstabbutton" aria-selected="false" role="tab">Backends</a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" data-bs-toggle="tab" href="#Settings-Server" id="serverconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">Server Configuration</a>
@@ -443,7 +446,40 @@
             </li>
         </ul>
         <div class="tab-content">
-            <div class="tab-pane show active" id="Settings-Backends" role="tabpanel">
+            <div class="tab-pane show active" id="Server-Info" role="tabpanel">
+                <div class="card border-secondary mb-3 card-center-container">
+                    <div class="card-header">Server</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            The "Server" tab provides access to StableSwarmUI's server internals, including:
+                            <br>&bullet; The <a href="#Settings-Backends" onclick="getRequiredElementById('serverbackendstabbutton').click()">Backends</a> tab, which allows you to configure and manage backends (the underlying engines that provide the generation core, or remote instances of swarm this instance is connected to)
+                            <br>&bullet; The <a href="#Settings-Server" onclick="getRequiredElementById('serverconfigtabbutton').click()">Server Configuration</a> tab, which allows you to configure and manage Swarm's settings (such as models directory, server host port, etc)
+                            <br>&bullet; The <a href="#Server-Logs" onclick="getRequiredElementById('logtabbutton').click()">Logs</a> tab, which allows you to view the server logs (eg if you get an error, check Logs -&gt; Debug)
+                            <br>
+                            <br>This is not to be confused with the <a href="#User-Settings" onclick="getRequiredElementById('usersettingstabbutton').click();getRequiredElementById('userconfigtabbutton').click()">User Settings</a> tab, which allows you to configure your user settings (eg save path/format, default VAE choice, etc)
+                        </p>
+                    </div>
+                </div>
+                <div class="card border-secondary mb-3 card-center-container">
+                    <div class="card-header">GPU</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            This server's GPU Info:
+                            <br>@WebUtil.CheckGPUIsSufficient()
+                        </p>
+                    </div>
+                </div>
+                <div class="card border-danger mb-3 card-center-container">
+                    <div class="card-header">Shutdown</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            If you want to shut down the server, click the button below.
+                            <br><button class="basic-button danger-button" onclick="shutdown_server()">Shutdown Server</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="Settings-Backends" role="tabpanel">
                 <div class="backend_add_button_container">
                     Add new backend of type:
                     <span class="form-check form-switch display-inline-block">

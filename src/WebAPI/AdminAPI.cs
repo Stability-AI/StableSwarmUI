@@ -17,6 +17,7 @@ public static class AdminAPI
         API.RegisterAPICall(ChangeServerSettings);
         API.RegisterAPICall(ListLogTypes);
         API.RegisterAPICall(ListRecentLogMessages);
+        API.RegisterAPICall(ShutdownServer);
     }
 
     public static JObject AutoConfigToParamData(AutoConfiguration config)
@@ -160,5 +161,12 @@ public static class AdminAPI
         }
         result["data"] = messageData;
         return result;
+    }
+
+    /// <summary>API Route to shut the server down.</summary>
+    public static async Task<JObject> ShutdownServer(Session session)
+    {
+        _ = Task.Run(Program.Shutdown);
+        return new JObject() { ["success"] = true };
     }
 }

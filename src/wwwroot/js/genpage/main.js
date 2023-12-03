@@ -1125,6 +1125,14 @@ function updateAllModels(models) {
     pickle2safetensor_load();
 }
 
+function shutdown_server() {
+    if (confirm("Are you sure you want to shut StableSwarmUI down?")) {
+        genericRequest('ShutdownServer', {}, data => {
+            close();
+        });
+    }
+}
+
 /** Set some element titles via JavaScript (to allow '\n'). */
 function setTitles() {
     getRequiredElementById('alt_prompt_textbox').title = "Tell the AI what you want to see, then press Enter to submit.\nConsider 'a photo of a cat', or 'cartoonish drawing of an astronaut'";
