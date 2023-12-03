@@ -177,6 +177,22 @@ public class Program
                 Logs.Error($"Failed to launch mode '{LaunchMode}' (If this is a headless/server install, change 'LaunchMode' to 'none' in settings): {ex}");
             }
         });
+        Task.Run(async () =>
+        {
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), GlobalProgramCancel);
+                if (GlobalProgramCancel.IsCancellationRequested)
+                {
+                    return;
+                }
+                if (Backends.BackendsEdited)
+                {
+                    Backends.BackendsEdited = false;
+                    Backends.Save();
+                }
+            }
+        });
         Logs.Init("Program is running.");
         WebServer.WebApp.WaitForShutdown();
         Shutdown();

@@ -46,6 +46,9 @@ public class BackendHandler
     /// <summary>Signal for when a new backend is added to <see cref="BackendsToInit"/>.</summary>
     public AsyncAutoResetEvent NewBackendInitSignal = new(false);
 
+    /// <summary>Lock to guarantee no overlapping backends list saves.</summary>
+    public LockObject SaveLock = new();
+
     /// <summary>The number of currently loaded backends.</summary>
     public int Count => T2IBackends.Count;
 
@@ -428,22 +431,25 @@ public class BackendHandler
     /// <summary>Save the backends list to a file.</summary>
     public void Save()
     {
-        Logs.Info("Saving backends...");
-        FDSSection saveFile = new();
-        foreach (T2IBackendData data in T2IBackends.Values)
+        lock (SaveLock)
         {
-            if (!data.Backend.IsReal)
+            Logs.Info("Saving backends...");
+            FDSSection saveFile = new();
+            foreach (T2IBackendData data in T2IBackends.Values)
             {
-                continue;
+                if (!data.Backend.IsReal)
+                {
+                    continue;
+                }
+                FDSSection data_section = new();
+                data_section.Set("type", data.Backend.HandlerTypeData.ID);
+                data_section.Set("title", data.Backend.Title);
+                data_section.Set("enabled", data.Backend.IsEnabled);
+                data_section.Set("settings", data.Backend.SettingsRaw.Save(true));
+                saveFile.Set(data.ID.ToString(), data_section);
             }
-            FDSSection data_section = new();
-            data_section.Set("type", data.Backend.HandlerTypeData.ID);
-            data_section.Set("title", data.Backend.Title);
-            data_section.Set("enabled", data.Backend.IsEnabled);
-            data_section.Set("settings", data.Backend.SettingsRaw.Save(true));
-            saveFile.Set(data.ID.ToString(), data_section);
+            FDSUtility.SaveToFile(saveFile, SaveFilePath);
         }
-        FDSUtility.SaveToFile(saveFile, SaveFilePath);
     }
 
     /// <summary>Tells all backends to load a given model. Returns true if any backends have loaded it, or false if not.</summary>
