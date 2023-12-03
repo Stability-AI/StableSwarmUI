@@ -347,7 +347,10 @@ public static class NetworkBackendUtils
     public static void ReportLogsFromProcess(Process process, string nameSimple, out Action signalShutdownExpected, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus)
     {
         Logs.LogTracker logTracker = new();
-        Logs.OtherTrackers[nameSimple] = logTracker;
+        lock (Logs.OtherTrackers)
+        {
+            Logs.OtherTrackers[nameSimple] = logTracker;
+        }
         BackendStatus status = getStatus();
         bool isShuttingDown = false;
         signalShutdownExpected = () => Volatile.Write(ref isShuttingDown, true);
@@ -384,7 +387,13 @@ public static class NetworkBackendUtils
                 status = BackendStatus.ERRORED;
                 setStatus(status);
             }
-            Logs.OtherTrackers.TryRemove(new(nameSimple, logTracker));
+            lock (Logs.OtherTrackers)
+            {
+                if (Logs.OtherTrackers.TryGetValue(nameSimple, out Logs.LogTracker tracker) && tracker == logTracker)
+                {
+                    Logs.OtherTrackers.Remove(nameSimple);
+                }
+            }
         }
         new Thread(MonitorLoop) { Name = $"SelfStart{nameSimple.Replace(' ', '_')}_Monitor" }.Start();
         void MonitorErrLoop()

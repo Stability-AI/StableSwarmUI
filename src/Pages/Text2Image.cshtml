@@ -26,7 +26,7 @@
         <a class="nav-link" data-bs-toggle="tab" href="#User-Settings" id="usersettingstabbutton" aria-selected="false" tabindex="-1" role="tab">User</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link" data-bs-toggle="tab" href="#Settings" aria-selected="false" tabindex="-1" role="tab">Server</a>
+        <a class="nav-link" data-bs-toggle="tab" href="#server_tab_body" aria-selected="false" tabindex="-1" role="tab">Server</a>
     </li>
 </ul>
 <div class="tab-content tab-hundred">
@@ -430,13 +430,16 @@
         </div>
         <div style="height: 10rem"></div> <!-- Spacer -->
     </div>
-    <div class="tab-pane tab-pane-vw" id="Settings" role="tabpanel">
+    <div class="tab-pane tab-pane-vw" id="server_tab_body" role="tabpanel">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link active" data-bs-toggle="tab" href="#Settings-Backends" aria-selected="true" role="tab">Backends</a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" data-bs-toggle="tab" href="#Settings-Server" id="serverconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">Server Configuration</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#Server-Logs" id="logtabbutton" aria-selected="false" tabindex="-1" role="tab">Logs</a>
             </li>
         </ul>
         <div class="tab-content">
@@ -452,6 +455,7 @@
                     <button class="basic-button" onclick="restart_all_backends()">Restart All Backends</button>
                 </div>
                 <div class="backends_list" id="backends_list"></div>
+                <div style="height: 10rem"></div> <!-- Spacer -->
             </div>
             <div class="tab-pane" id="Settings-Server" role="tabpanel">
                 <div id="server_settings_container" class="settings-container"></div>
@@ -460,9 +464,13 @@
                     <button type="button" class="btn btn-primary basic-button" onclick="save_server_settings()">Save</button>
                     <button type="button" class="btn btn-secondary" onclick="cancel_server_settings_edit()">Cancel</button>
                 </div>
+        <div style="height: 10rem"></div> <!-- Spacer -->
+            </div>
+            <div class="tab-pane" id="Server-Logs" role="tabpanel">
+                <center>View: <select id="server_log_type_selector"></select></center>
+                <div id="server_logs_container" class="server_logs_container"></div>
             </div>
         </div>
-        <div style="height: 10rem"></div> <!-- Spacer -->
     </div>
 </div>
 
@@ -477,5 +485,6 @@
     <script src="/js/genpage/image_editor.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/main.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/settings_editor.js?vary=@Utilities.VaryID"></script>
+    <script src="/js/genpage/logs.js?vary=@Utilities.VaryID"></script>
     @WebServer.PageFooterExtra
 }

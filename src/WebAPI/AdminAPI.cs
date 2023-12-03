@@ -15,6 +15,8 @@ public static class AdminAPI
     {
         API.RegisterAPICall(ListServerSettings);
         API.RegisterAPICall(ChangeServerSettings);
+        API.RegisterAPICall(ListLogTypes);
+        API.RegisterAPICall(ListRecentLogMessages);
     }
 
     public static JObject AutoConfigToParamData(AutoConfiguration config)
@@ -67,6 +69,7 @@ public static class AdminAPI
         return new JObject() { ["settings"] = AutoConfigToParamData(Program.ServerSettings) };
     }
 
+    /// <summary>API Route to change server settings.</summary>
     public static async Task<JObject> ChangeServerSettings(Session session, JObject rawData)
     {
         JObject settings = (JObject)rawData["settings"];
@@ -89,5 +92,73 @@ public static class AdminAPI
         Program.SaveSettingsFile();
         Program.ReapplySettings();
         return new JObject() { ["success"] = true };
+    }
+
+    /// <summary>API Route to list the current available log types.</summary>
+    public static async Task<JObject> ListLogTypes(Session session)
+    {
+        JArray types = new();
+        lock (Logs.OtherTrackers)
+        {
+            foreach ((string name, Logs.LogTracker tracker) in Logs.OtherTrackers)
+            {
+                types.Add(new JObject()
+                {
+                    ["name"] = name,
+                    ["color"] = tracker.Color
+                });
+            }
+        }
+        return new JObject() { ["types_available"] = types };
+    }
+
+    /// <summary>API Route to get recent server logs.</summary>
+    public static async Task<JObject> ListRecentLogMessages(Session session, JObject raw)
+    {
+        JObject result = await ListLogTypes(session);
+        long lastSeq = Interlocked.Read(ref Logs.LogTracker.LastSequenceID);
+        result["last_sequence_id"] = lastSeq;
+        JObject messageData = new();
+        List<string> types = raw["types"].Select(v => $"{v}").ToList();
+        foreach (string type in types)
+        {
+            Logs.LogTracker tracker;
+            lock (Logs.OtherTrackers)
+            {
+                if (!Logs.OtherTrackers.TryGetValue(type, out tracker))
+                {
+                    continue;
+                }
+            }
+            JArray messages = new();
+            messageData[type] = messages;
+            long lastSeqId = -1;
+            if ((raw["last_sequence_ids"] as JObject).TryGetValue(type, out JToken lastSeqIdToken))
+            {
+                lastSeqId = lastSeqIdToken.Value<long>();
+            }
+            if (tracker.LastSeq < lastSeqId)
+            {
+                continue;
+            }
+            lock (tracker.Lock)
+            {
+                foreach (Logs.LogMessage message in tracker.Messages)
+                {
+                    if (message.Sequence <= lastSeqId)
+                    {
+                        continue;
+                    }
+                    messages.Add(new JObject()
+                    {
+                        ["sequence_id"] = message.Sequence,
+                        ["time"] = $"{message.Time:yyyy-MM-dd HH:mm:ss.fff}",
+                        ["message"] = message.Message
+                    });
+                }
+            }
+        }
+        result["data"] = messageData;
+        return result;
     }
 }

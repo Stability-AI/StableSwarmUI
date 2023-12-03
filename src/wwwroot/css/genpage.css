@@ -982,3 +982,21 @@ body {
     margin-bottom: 5px;
     font-size: 9px;
 }
+.server_logs_container {
+    display: block;
+    width: 80vw;
+    height: calc(90vh - 10rem);
+    border: 1px solid var(--light-border);
+    border-radius: 1rem;
+    padding: 0.5rem;
+    overflow: auto;
+    font-family: 'Courier New', Courier, monospace;
+    margin-left: auto;
+    margin-right: auto;
+}
+.log_message_0 {
+    background-color: rgba(255, 255, 255, 0.01);
+}
+.log_message_1 {
+    background-color: rgba(0, 0, 0, 0.01);
+}

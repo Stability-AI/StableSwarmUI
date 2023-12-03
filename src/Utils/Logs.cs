@@ -61,31 +61,54 @@ public static class Logs
         /// <summary>A queue of all recent log messages.</summary>
         public Queue<LogMessage> Messages = new(MaxTracked);
 
+        /// <summary>Color for this log type.</summary>
+        public string Color = "#707070";
+
+        /// <summary>Global static Sequence ID used for clients to avoid duplicating messages easily.</summary>
+        public static long LastSequenceID = 0;
+
+        /// <summary>Locker for this tracker.</summary>
+        public LockObject Lock = new();
+
+        /// <summary>Last sequence ID for this tracker.</summary>
+        public long LastSeq = 0;
+
         /// <summary>Track a new log message.</summary>
         public void Track(string message)
         {
-            Messages.Enqueue(new LogMessage(DateTimeOffset.Now, message));
-            if (Messages.Count > MaxTracked)
+            lock (Lock)
             {
-                Messages.Dequeue();
+                long seq = Interlocked.Increment(ref LastSequenceID);
+                Messages.Enqueue(new LogMessage(DateTimeOffset.Now, message, seq));
+                LastSeq = seq;
+                if (Messages.Count > MaxTracked)
+                {
+                    Messages.Dequeue();
+                }
             }
         }
     }
 
     /// <summary>Tiny struct representing a logged message, with a timestamp and its message content.</summary>
-    public record struct LogMessage(DateTimeOffset Time, string Message);
+    public record struct LogMessage(DateTimeOffset Time, string Message, long Sequence);
 
     /// <summary>All current log trackers.</summary>
     public static LogTracker[] Trackers = new LogTracker[(int)LogLevel.None];
 
     /// <summary>Named set of other log trackers (eg backends).</summary>
-    public static ConcurrentDictionary<string, LogTracker> OtherTrackers = new();
+    public static Dictionary<string, LogTracker> OtherTrackers = new();
 
     static Logs()
     {
-        for (int i = 0; i < Trackers.Length; i++)
+        Trackers[(int)LogLevel.Verbose] = new() { Color = "#606060" };
+        Trackers[(int)LogLevel.Debug] = new() { Color = "#808080" };
+        Trackers[(int)LogLevel.Info] = new() { Color = "#00FFFF" };
+        Trackers[(int)LogLevel.Init] = new() { Color = "#00FF00" };
+        Trackers[(int)LogLevel.Warning] = new() { Color = "#FFFF00" };
+        Trackers[(int)LogLevel.Error] = new() { Color = "#FF0000" };
+        for (int i = 0; i < (int)LogLevel.None; i++)
         {
-            Trackers[i] = new();
+            OtherTrackers[$"{(LogLevel)i}"] = Trackers[i];
         }
     }
 
