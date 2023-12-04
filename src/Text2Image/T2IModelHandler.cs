@@ -172,8 +172,8 @@ public class T2IModelHandler
         lock (ModificationLock)
         {
             Models.Clear();
-            AddAllFromFolder("");
         }
+        AddAllFromFolder("");
     }
 
     /// <summary>Get (or create) the metadata cache for a given model folder.</summary>
@@ -439,7 +439,7 @@ public class T2IModelHandler
             Logs.Verbose($"[Model Scan] Skipping folder {actualFolder}");
             return;
         }
-        foreach (string subfolder in Directory.EnumerateDirectories(actualFolder))
+        Parallel.ForEach(Directory.EnumerateDirectories(actualFolder), subfolder =>
         {
             string path = $"{prefix}{subfolder.Replace('\\', '/').AfterLast('/')}";
             try
@@ -450,8 +450,8 @@ public class T2IModelHandler
             {
                 Logs.Warning($"Error while scanning model subfolder '{path}': {ex}");
             }
-        }
-        foreach (string file in Directory.EnumerateFiles(actualFolder))
+        });
+        Parallel.ForEach(Directory.EnumerateFiles(actualFolder), file =>
         {
             string fn = file.Replace('\\', '/').AfterLast('/');
             string fullFilename = $"{prefix}{fn}";
@@ -491,6 +491,6 @@ public class T2IModelHandler
                 model.PreviewImage = GetAutoFormatImage(model) ?? model.PreviewImage;
                 Models[fullFilename] = model;
             }
-        }
+        });
     }
 }
