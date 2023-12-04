@@ -118,18 +118,22 @@ public class T2IModelHandler
             ModelMetadataCachePerFolder.Clear();
             static void ClearFolder(string folder)
             {
-                if (File.Exists($"{folder}/model_metadata.ldb"))
+                try
                 {
-                    try
+                    if (File.Exists($"{folder}/model_metadata.ldb"))
                     {
                         File.Delete($"{folder}/model_metadata.ldb");
                     }
-                    catch (IOException) { }
                 }
-                foreach (string subFolder in Directory.GetDirectories(folder))
+                catch (Exception) { }
+                try
                 {
-                    ClearFolder(subFolder);
+                    foreach (string subFolder in Directory.GetDirectories(folder))
+                    {
+                        ClearFolder(subFolder);
+                    }
                 }
+                catch (Exception) { }
             }
             ClearFolder(FolderPath);
         }
