@@ -109,7 +109,11 @@ public class T2IModelHandler
         {
             foreach ((LiteDatabase ldb, _) in ModelMetadataCachePerFolder.Values)
             {
-                ldb.Dispose();
+                try
+                {
+                    ldb.Dispose();
+                }
+                catch (Exception) { }
             }
             ModelMetadataCachePerFolder.Clear();
             static void ClearFolder(string folder)
