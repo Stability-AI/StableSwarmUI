@@ -433,7 +433,15 @@ public class T2IModelHandler
         }
         foreach (string subfolder in Directory.EnumerateDirectories(actualFolder))
         {
-            AddAllFromFolder($"{prefix}{subfolder.Replace('\\', '/').AfterLast('/')}");
+            string path = $"{prefix}{subfolder.Replace('\\', '/').AfterLast('/')}";
+            try
+            {
+                AddAllFromFolder(path);
+            }
+            catch (Exception ex)
+            {
+                Logs.Warning($"Error while scanning model subfolder '{path}': {ex}");
+            }
         }
         foreach (string file in Directory.EnumerateFiles(actualFolder))
         {
