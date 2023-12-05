@@ -350,7 +350,7 @@ function load_image_file(e) {
             e.dataset.filedata = reader.result;
             preview.innerHTML = `<button class="interrupt-button auto-input-image-remove-button" title="Remove image">&times;</button><img src="${reader.result}" alt="Image preview" />`;
             preview.firstChild.addEventListener('click', () => {
-                e.dataset.filedata = null;
+                delete e.dataset.filedata;
                 preview.innerHTML = '';
                 e.value = '';
             });
