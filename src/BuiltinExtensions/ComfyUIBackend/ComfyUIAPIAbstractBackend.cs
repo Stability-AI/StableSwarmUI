@@ -450,7 +450,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             else
             {
-                JObject flowObj = ComfyUIBackendExtension.ReadCustomWorkflow(customWorkflowName);
+                JObject flowObj = ComfyUIWebAPI.ReadCustomWorkflow(customWorkflowName);
                 if (flowObj.ContainsKey("error"))
                 {
                     throw new InvalidDataException("Unrecognized ComfyUI Custom Workflow name.");

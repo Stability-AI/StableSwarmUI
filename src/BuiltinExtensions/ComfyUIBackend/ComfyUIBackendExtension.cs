@@ -233,7 +233,7 @@ public class ComfyUIBackendExtension : Extension
         CustomWorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Custom Workflow", "What custom workflow to use in ComfyUI (built in the Comfy Workflow Editor tab)",
             "", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup, IsAdvanced: true, ValidateValues: false, ChangeWeight: 8,
             GetValues: (_) => CustomWorkflows.Keys.Order().ToList(),
-            Clean: (_, val) => CustomWorkflows.ContainsKey(val) ? $"PARSED%{val}%{ReadCustomWorkflow(val)["prompt"]}" : val,
+            Clean: (_, val) => CustomWorkflows.ContainsKey(val) ? $"PARSED%{val}%{ComfyUIWebAPI.ReadCustomWorkflow(val)["prompt"]}" : val,
             MetadataFormat: v => v.StartsWith("PARSED%") ? v.After("%").Before("%") : v
             ));
         SamplerParam = T2IParamTypes.Register<string>(new("Sampler", "Sampler type (for ComfyUI)",
@@ -262,93 +262,7 @@ public class ComfyUIBackendExtension : Extension
             ));
         Program.Backends.RegisterBackendType<ComfyUIAPIBackend>("comfyui_api", "ComfyUI API By URL", "A backend powered by a pre-existing installation of ComfyUI, referenced via API base URL.", true);
         Program.Backends.RegisterBackendType<ComfyUISelfStartBackend>("comfyui_selfstart", "ComfyUI Self-Starting", "A backend powered by a pre-existing installation of the ComfyUI, automatically launched and managed by this UI server.", isStandard: true);
-        API.RegisterAPICall(ComfySaveWorkflow);
-        API.RegisterAPICall(ComfyReadWorkflow);
-        API.RegisterAPICall(ComfyListWorkflows);
-        API.RegisterAPICall(ComfyDeleteWorkflow);
-        API.RegisterAPICall(ComfyGetGeneratedWorkflow);
-    }
-
-    /// <summary>API route to save a comfy workflow object to persistent file.</summary>
-    public async Task<JObject> ComfySaveWorkflow(string name, string workflow, string prompt, string custom_params)
-    {
-        string path = Utilities.StrictFilenameClean(name);
-        CustomWorkflows.TryAdd(path, path);
-        Directory.CreateDirectory($"{Folder}/CustomWorkflows");
-        path = $"{Folder}/CustomWorkflows/{path}.json";
-        JObject data = new()
-        {
-            ["workflow"] = workflow,
-            ["prompt"] = prompt,
-            ["custom_params"] = custom_params
-        };
-        File.WriteAllBytes(path, data.ToString().EncodeUTF8());
-        return new JObject() { ["success"] = true };
-    }
-
-    /// <summary>Method to directly read a custom workflow file.</summary>
-    public static JObject ReadCustomWorkflow(string name)
-    {
-        string path = Utilities.StrictFilenameClean(name);
-        path = $"{Folder}/CustomWorkflows/{path}.json";
-        if (!File.Exists(path))
-        {
-            return new JObject() { ["error"] = "Unknown custom workflow name." };
-        }
-        string data = Encoding.UTF8.GetString(File.ReadAllBytes(path));
-        return data.ParseToJson();
-    }
-
-    /// <summary>API route to read a comfy workflow object from persistent file.</summary>
-    public async Task<JObject> ComfyReadWorkflow(string name)
-    {
-        JObject val = ReadCustomWorkflow(name);
-        if (val.ContainsKey("error"))
-        {
-            return val;
-        }
-        return new JObject() { ["result"] = val };
-    }
-
-    /// <summary>API route to read a list of available Comfy custom workflows.</summary>
-    public async Task<JObject> ComfyListWorkflows()
-    {
-        return new JObject() { ["workflows"] = JToken.FromObject(CustomWorkflows.Keys.Order().ToList()) };
-    }
-
-    /// <summary>API route to read a delete a saved Comfy custom workflows.</summary>
-    public async Task<JObject> ComfyDeleteWorkflow(string name)
-    {
-        string path = Utilities.StrictFilenameClean(name);
-        CustomWorkflows.Remove(path, out _);
-        path = $"{Folder}/CustomWorkflows/{path}.json";
-        if (!File.Exists(path))
-        {
-            return new JObject() { ["error"] = "Unknown custom workflow name." };
-        }
-        File.Delete(path);
-        return new JObject() { ["success"] = true };
-    }
-
-    /// <summary>API route to get a generated workflow for a T2I input.</summary>
-    public async Task<JObject> ComfyGetGeneratedWorkflow(Session session, JObject rawInput)
-    {
-        T2IParamInput input;
-        try
-        {
-            input = T2IAPI.RequestToParams(session, rawInput);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return new JObject() { ["error"] = ex.Message };
-        }
-        catch (InvalidDataException ex)
-        {
-            return new JObject() { ["error"] = ex.Message };
-        }
-        string format = ComfyBackendsDirect().FirstOrDefault().Backend.SupportedFeatures.Contains("folderbackslash") ? "\\" : "/";
-        string flow = ComfyUIAPIAbstractBackend.CreateWorkflow(input, w => w, format);
-        return new JObject() { ["workflow"] = flow };
+        ComfyUIWebAPI.Register();
     }
 
     public override void OnPreLaunch()
