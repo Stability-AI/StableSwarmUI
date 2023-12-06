@@ -10,6 +10,7 @@ class ServerLogsHelper {
         this.serverTabBody = getRequiredElementById('server_tab_body');
         this.typeSelectors = getRequiredElementById('server_log_type_selector');
         this.actualLogContainer = getRequiredElementById('server_logs_container');
+        this.filterInput = getRequiredElementById('server_log_filter');
         this.lastSeq = -1;
         this.logMessagesByType = {};
         this.lastBounce = 0;
@@ -75,10 +76,12 @@ class ServerLogsHelper {
                 lastSeqs[type.name] = data.last_seq_id;
             }
         }
+        let filter = this.filterInput.value.toLowerCase();
         let selected = this.typeSelectors.value;
         let visibleTypes = this.getVisibleTypes();
-        if (selected != this.lastVisibleType) {
+        if (selected != this.lastVisibleType || filter != this.lastFilter) {
             this.lastVisibleType = selected;
+            this.lastFilter = filter;
             this.actualLogContainer.innerHTML = '';
             let toRenderMessages = [];
             for (let typeName of visibleTypes) {
@@ -88,7 +91,9 @@ class ServerLogsHelper {
                 }
                 let type = this.logTypes.find((t) => t.name == typeName);
                 for (let message of Object.values(storedData.raw)) {
-                    toRenderMessages.push([message, type]);
+                    if (!filter || message.message.toLowerCase().includes(filter)) {
+                        toRenderMessages.push([message, type]);
+                    }
                 }
             }
             toRenderMessages.sort((a, b) => a[0].sequence_id - b[0].sequence_id);
@@ -126,7 +131,9 @@ class ServerLogsHelper {
                     }
                     storedData.raw[message.sequence_id] = message;
                     storedData.last_seq_id = message.sequence_id;
-                    toRenderMessages.push([message, type]);
+                    if (!filter || message.message.toLowerCase().includes(filter)) {
+                        toRenderMessages.push([message, type]);
+                    }
                 }
             }
             toRenderMessages.sort((a, b) => a[0].sequence_id - b[0].sequence_id);
