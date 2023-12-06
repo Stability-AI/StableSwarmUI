@@ -35,6 +35,7 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(ChangeUserSettings);
         API.RegisterAPICall(SetParamEdits);
         T2IAPI.Register();
+        ModelsAPI.Register();
         BackendAPI.Register();
         AdminAPI.Register();
         UtilAPI.Register();

@@ -157,7 +157,7 @@ public class T2IModelHandler
     public List<string> ListModelNamesFor(Session session)
     {
         HashSet<string> list = ListModelsFor(session).Select(m => m.Name).ToHashSet();
-        list.UnionWith(T2IAPI.InternalExtraModels(ModelType).Keys);
+        list.UnionWith(ModelsAPI.InternalExtraModels(ModelType).Keys);
         return list.ToList();
     }
 
