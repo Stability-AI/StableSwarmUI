@@ -1156,6 +1156,7 @@ function pageSizer() {
     altPromptSizeHandleFunc = altPromptSizeHandle;
     textPromptAddKeydownHandler(altText);
     addEventListener("resize", setPageBars);
+    textPromptAddKeydownHandler(getRequiredElementById('edit_wildcard_contents'));
 }
 
 /** Clears out and resets the image-batch view, only if the user wants that. */

@@ -1141,7 +1141,7 @@ class PromptTabCompleteClass {
         let lastBrace = prompt.lastIndexOf('<');
         let areaPre = prompt.substring(0, lastBrace);
         let areaPost = box.value.substring(box.selectionStart);
-        this.popover = createDiv('popover_prompt_suggest', 'sui-popover sui_popover_model sui_popover_scrollable');
+        this.popover = createDiv('popover_prompt_suggest', 'sui-popover sui_popover_model sui_popover_scrollable sui-popover-notransition');
         let isFirst = true;
         for (let val of possible) {
             let name = val;
@@ -1183,7 +1183,7 @@ class PromptTabCompleteClass {
             }
             this.popover.appendChild(button);
         }
-        document.body.appendChild(this.popover);
+        box.parentElement.appendChild(this.popover);
         let rect = box.getBoundingClientRect();
         showPopover('prompt_suggest', rect.x, rect.y + box.offsetHeight + 6);
     }
