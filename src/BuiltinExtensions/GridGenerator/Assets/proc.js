@@ -16,11 +16,10 @@ function loadData() {
         // axis.id/title/description
         for (var val of axis.values) {
             // val.key/title/description/show
-            var clicktab = document.getElementById('clicktab_' + axis.id + '__' + val.key);
+            let clicktab = getNavValTab(axis.id, val.key);
             clicktab.addEventListener('click', fillTable);
             if (!val.show) {
-                document.getElementById('showval_' + axis.id + '__' + val.key).checked = false;
-                clicktab.classList.add('tab_hidden');
+                setShowVal(axis.id, val.key, false);
             }
         }
         for (var prefix of ['x_', 'y_', 'x2_', 'y2_']) {
@@ -218,7 +217,7 @@ window.addEventListener('keydown', function(kbevent) {
         var next = getNextAxis(Array.from(rawData.axes).reverse(), axisId);
         if (next != null) {
             var selectedKey = getSelectedValKey(next);
-            var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
+            var swapToTab = getNavValTab(next.id, selectedKey);
             swapToTab.focus({ preventScroll: true });
         }
     }
@@ -226,7 +225,7 @@ window.addEventListener('keydown', function(kbevent) {
         var next = getNextAxis(rawData.axes, axisId);
         if (next != null) {
             var selectedKey = getSelectedValKey(next);
-            var swapToTab = this.document.getElementById(`clicktab_${next.id}__${selectedKey}`);
+            var swapToTab = getNavValTab(next.id, selectedKey);
             swapToTab.focus({ preventScroll: true });
         }
     }
@@ -251,6 +250,14 @@ function unescapeHtml(text) {
 
 function canShowVal(axis, val) {
     return document.getElementById(`showval_${axis}__${val}`).checked;
+}
+
+function setShowVal(axis, val, show) {
+    document.getElementById(`showval_${axis}__${val}`).checked = show;
+    getNavValTab(axis, val).classList.toggle('tab_hidden', !show);
+}
+function getNavValTab(axis, val) {
+    return document.getElementById(`clicktab_${axis}__${val}`);
 }
 
 function percentToRedGreen(percent) {
@@ -529,16 +536,14 @@ function toggleShowAllAxis(axisId) {
         return canShowVal(axisId, val.key);
     });
     for (var val of axis.values) {
-        document.getElementById('showval_' + axisId + '__' + val.key).checked = !hide;
-        var element = document.getElementById('clicktab_' + axisId + '__' + val.key);
-        element.classList.toggle('tab_hidden', hide);
+        setShowVal(axisId, val.key, !hide);
     }
     fillTable();
 }
 
 function toggleShowVal(axis, val) {
     var show = canShowVal(axis, val);
-    var element = document.getElementById('clicktab_' + axis + '__' + val);
+    let element = getNavValTab(axis, val);
     element.classList.toggle('tab_hidden', !show);
     if (!show && element.classList.contains('active')) {
         var next = [...element.parentElement.parentElement.getElementsByClassName('nav-link')].filter(e => !e.classList.contains('tab_hidden'));
@@ -972,6 +977,13 @@ function updateHash() {
     for (let subAxis of rawData.axes) {
         hash += `,${encodeURIComponent(getSelectedValKey(subAxis))}`;
     }
+    for (let axis of rawData.axes) {
+        for (let value of axis.values) {
+            if (!canShowVal(axis.id, value.key)) {
+                hash += `&hide=${encodeURIComponent(axis.id)},${encodeURIComponent(value.key)}`;
+            }
+        }
+    }
     history.pushState(null, null, hash);
 }
 
@@ -979,7 +991,15 @@ function applyHash(hash) {
     if (!hash) {
         return;
     }
-    let hashInputs = hash.substring(1).split(',');
+    let params = hash.substring(1).split('&');
+    for (let hidden of params.slice(1)) {
+        let [action, value] = hidden.split('=');
+        if (action == 'hide') {
+            let [axis, val] = value.split(',');
+            setShowVal(axis, val, false);
+        }
+    }
+    let hashInputs = params[0].split(',');
     let expectedLen = 1 + 4 + 4 + rawData.axes.length;
     if (hashInputs.length != expectedLen) {
         console.log(`Hash length mismatch: ${hashInputs.length} != ${expectedLen}, skipping value reload.`);
@@ -1003,8 +1023,8 @@ function applyHash(hash) {
         target.click();
     }
     for (let subAxis of rawData.axes) {
-        let id = 'clicktab_' + subAxis.id + '__' + decodeURIComponent(hashInputs[index++]);
-        let target = document.getElementById(id);
+        let val = decodeURIComponent(hashInputs[index++]);
+        let target = getNavValTab(subAxis.id, val);
         if (!target) {
             console.log(`Axis-value element not found: ${id}, skipping value reload.`);
             return;
