@@ -381,6 +381,7 @@ public static class T2IAPI
         {
             ["list"] = new JArray(T2IParamTypes.Types.Values.Select(v => v.ToNet(session)).ToList()),
             ["models"] = modelData,
+            ["wildcards"] = new JArray(WildcardsHelper.ListFiles),
             ["param_edits"] = string.IsNullOrWhiteSpace(session.User.Data.RawParamEdits) ? null : JObject.Parse(session.User.Data.RawParamEdits)
         };
     }

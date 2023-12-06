@@ -284,6 +284,9 @@ function textPromptAddKeydownHandler(elem) {
             return false;
         }
     });
+    if (typeof promptTabComplete != 'undefined') {
+        promptTabComplete.enableFor(elem);
+    }
 }
 
 function setSeedToRandom(elemId) {

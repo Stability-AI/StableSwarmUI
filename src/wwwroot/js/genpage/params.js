@@ -500,6 +500,7 @@ function refreshParameterValues(callback = null) {
         }
         genericRequest('ListT2IParams', {}, data => {
             updateAllModels(data.models);
+            allWildcards = data.wildcards;
         });
         let promises = [Promise.resolve(true)];
         for (let extra of refreshParamsExtra) {
@@ -998,3 +999,194 @@ class ParamConfigurationClass {
 
 /** Instance of ParamConfigurationClass, central handler for user-edited parameters. */
 let paramConfig = new ParamConfigurationClass();
+
+class PromptTabCompleteClass {
+    constructor() {
+        this.prefixes = {
+        };
+        this.registerPrefix('random', 'Select from a set of random words to include', (prefix) => {
+            return [];
+        });
+        this.registerPrefix('wildcard', 'Select a random line from a wildcard file (presaved list of options)', (prefix) => {
+            let prefixLow = prefix.toLowerCase();
+            return allWildcards.filter(w => w.toLowerCase().startsWith(prefixLow));
+        });
+        this.registerPrefix('preset', 'Forcibly apply a preset onto the current generation (useful eg inside wildcards or other automatic inclusions - normally use the Presets UI tab)', (prefix) => {
+            let prefixLow = prefix.toLowerCase();
+            return allPresets.filter(p => p.title.toLowerCase().startsWith(prefixLow)).map(p => p.title);
+        });
+        this.registerPrefix('embed', 'Use a pretrained CLIP TI Embedding', (prefix) => {
+            let prefixLow = prefix.toLowerCase();
+            return coreModelMap['Embedding'].filter(e => e.toLowerCase().startsWith(prefixLow));
+        });
+        this.registerPrefix('lora', 'Forcibly apply a pretrained LoRA model (useful eg inside wildcards or other automatic inclusions - normally use the LoRAs UI tab)', (prefix) => {
+            let prefixLow = prefix.toLowerCase();
+            return coreModelMap['LoRA'].filter(m => m.toLowerCase().startsWith(prefixLow));
+        });
+        this.registerPrefix('region', 'Apply a different prompt to a sub-region within the image', (prefix) => {
+            return ['\nx,y,width,height eg "0.25,0.25,0.5,0.5" or x,y,width,height,strength eg "0,0,1,1,0.5" where strength is how strongly to apply the prompt to the region (vs global prompt). Can do "region:background" for background-only region.'];
+        });
+        this.registerPrefix('object', 'Select a sub-region inside the image and inpaint over it with a different prompt', (prefix) => {
+            return ['\nx,y,width,height eg "0.25,0.25,0.5,0.5" or x,y,width,height,strength,strength2 eg "0,0,1,1,0.5,0.4" where strength is how strongly to apply the prompt to the region (vs global prompt) on the general pass, and strength2 is how strongly to inpaint (ie InitImageCreativity).'];
+        });
+        this.registerPrefix('segment', 'Automatically segment an area by CLIP matcher and inpaint it (optionally with a unique prompt)', (prefix) => {
+            return ['\nSpecify before the ">" some text to match against in the image, like "<segment:face>". Can also do "<segment:text,creativity,threshold>" eg "face,0.6,0.5" where creativity is InitImageCreativity, and threshold is mask matching threshold for CLIP-Seg.'];
+        });
+        this.registerPrefix('clear', 'Automatically clear part of the image to transparent (by CLIP segmentation matching) (iffy quality, prefer the Remove Background parameter over this)', (prefix) => {
+            return ['\nSpecify before the ">" some text to match against in the image, like "<segment:background>"'];
+        });
+    }
+
+    enableFor(box) {
+        box.addEventListener('keydown', e => this.onKeyDown(box, e), true);
+        box.addEventListener('input', () => this.onInput(box), true);
+    }
+
+    registerPrefix(name, description, completer) {
+        this.prefixes[name] = { name, description, completer };
+    }
+
+    getPromptBeforeCursor(box) {
+        return box.value.substring(0, box.selectionStart);
+    }
+
+    getPossibleList(box) {
+        let prompt = this.getPromptBeforeCursor(box);
+        let lastBrace = prompt.lastIndexOf('<');
+        if (lastBrace == -1) {
+            return [];
+        }
+        let lastClose = prompt.lastIndexOf('>');
+        if (lastClose > lastBrace) {
+            return [];
+        }
+        let content = prompt.substring(lastBrace + 1);
+        let colon = content.indexOf(':');
+        if (colon == -1) {
+            content = content.toLowerCase();
+            return Object.keys(this.prefixes).filter(p => p.toLowerCase().startsWith(content)).map(p => [p, this.prefixes[p].description]);
+        }
+        let prefix = content.substring(0, colon);
+        let suffix = content.substring(colon + 1);
+        if (!(prefix in this.prefixes)) {
+            return [];
+        }
+        return this.prefixes[prefix].completer(suffix).map(p => p.startsWith('\n') ? p : `<${prefix}:${p}>`);
+    }
+
+    popoverSelected() {
+        return this.popover.getElementsByClassName('sui_popover_model_button_selected')[0];
+    }
+
+    popoverScrollFix() {
+        let selected = this.popoverSelected();
+        if (selected.offsetTop + selected.offsetHeight > this.popover.scrollTop + this.popover.offsetHeight) {
+            this.popover.scrollTop = selected.offsetTop + selected.offsetHeight - this.popover.offsetHeight + 6;
+        }
+        else if (selected.offsetTop < this.popover.scrollTop) {
+            this.popover.scrollTop = selected.offsetTop;
+        }
+    }
+
+    popoverPossible() {
+        return [...this.popover.getElementsByClassName('sui_popover_model_button')].filter(e => !e.classList.contains('sui_popover_model_button_disabled'));
+    }
+
+    onKeyDown(box, e) {
+        if (e.shiftKey || e.ctrlKey || !this.popover) {
+            return;
+        }
+        let possible = this.popoverPossible();
+        if (!possible) {
+            return;
+        }
+        if (e.key == 'Tab' || e.key == 'Enter') {
+            let selected = this.popover.querySelector('.sui_popover_model_button_selected');
+            if (selected) {
+                selected.click();
+            }
+            e.preventDefault();
+            return false;
+        }
+        else if (e.key == 'ArrowUp') {
+            let selectedIndex = possible.findIndex(e => e.classList.contains('sui_popover_model_button_selected'));
+            possible[selectedIndex].classList.remove('sui_popover_model_button_selected');
+            possible[(selectedIndex + possible.length - 1) % possible.length].classList.add('sui_popover_model_button_selected');
+            this.popoverScrollFix();
+        }
+        else if (e.key == 'ArrowDown') {
+            let selectedIndex = possible.findIndex(e => e.classList.contains('sui_popover_model_button_selected'));
+            possible[selectedIndex].classList.remove('sui_popover_model_button_selected');
+            possible[(selectedIndex + 1) % possible.length].classList.add('sui_popover_model_button_selected');
+            this.popoverScrollFix();
+        }
+        else {
+            return;
+        }
+        e.preventDefault();
+        return false;
+    }
+
+    onInput(box) {
+        if (this.popover) {
+            hidePopover('prompt_suggest');
+            this.popover.remove();
+            this.popover = null;
+        }
+        let possible = this.getPossibleList(box);
+        if (possible.length == 0) {
+            return;
+        }
+        let prompt = this.getPromptBeforeCursor(box);
+        let lastBrace = prompt.lastIndexOf('<');
+        let areaPre = prompt.substring(0, lastBrace);
+        let areaPost = box.value.substring(box.selectionStart);
+        this.popover = createDiv('popover_prompt_suggest', 'sui-popover sui_popover_model sui_popover_scrollable');
+        let isFirst = true;
+        for (let val of possible) {
+            let name = val;
+            let desc = '';
+            let apply = name;
+            let isClickable = true;
+            if (typeof val == 'object') {
+                [name, desc] = val;
+                apply = `<${name}:`;
+            }
+            else if (val.startsWith('\n')) {
+                isClickable = false;
+                name = '';
+                desc = val.substring(1);
+            }
+            let clazz = 'sui_popover_model_button';
+            if (isFirst && isClickable) {
+                clazz += ' sui_popover_model_button_selected';
+            }
+            if (!isClickable) {
+                clazz += ' sui_popover_model_button_disabled';
+            }
+            let button = createDiv(null, clazz);
+            if (isClickable) {
+                isFirst = false;
+            }
+            button.innerText = desc.length == 0 ? name : `${name} - ${desc}`;
+            if (isClickable) {
+                button.addEventListener('click', () => {
+                    hidePopover('prompt_suggest');
+                    this.popover.remove();
+                    this.popover = null;
+                    box.value = areaPre + apply + areaPost;
+                    box.selectionStart = areaPre.length + apply.length;
+                    box.selectionEnd = areaPre.length + apply.length;
+                    box.focus();
+                    box.dispatchEvent(new Event('input'));
+                });
+            }
+            this.popover.appendChild(button);
+        }
+        document.body.appendChild(this.popover);
+        let rect = box.getBoundingClientRect();
+        showPopover('prompt_suggest', rect.x, rect.y + box.offsetHeight + 6);
+    }
+}
+
+let promptTabComplete = new PromptTabCompleteClass();

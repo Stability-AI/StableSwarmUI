@@ -8,6 +8,7 @@ let curWildcardMenuWildcard = null;
 let curModelMenuModel = null;
 let curModelMenuBrowser = null;
 let loraWeightPref = {};
+let allWildcards = [];
 
 function test_wildcard_again() {
     let card = curWildcardMenuWildcard;

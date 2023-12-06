@@ -256,6 +256,7 @@ function setShowVal(axis, val, show) {
     document.getElementById(`showval_${axis}__${val}`).checked = show;
     getNavValTab(axis, val).classList.toggle('tab_hidden', !show);
 }
+
 function getNavValTab(axis, val) {
     return document.getElementById(`clicktab_${axis}__${val}`);
 }
