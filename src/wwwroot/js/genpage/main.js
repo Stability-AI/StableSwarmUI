@@ -1215,9 +1215,11 @@ function openEmptyEditor() {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     let image = new Image();
+    image.onload = () => {
+        imageEditor.setBaseImage(image);
+        imageEditor.activate();
+    };
     image.src = canvas.toDataURL();
-    imageEditor.setBaseImage(image);
-    imageEditor.activate();
 }
 
 function upvertAutoWebuiMetadataToSwarm(lines) {
