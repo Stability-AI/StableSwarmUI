@@ -554,11 +554,15 @@ function setDirectParamValue(param, value, paramElem = null) {
 }
 
 function resetParamsToDefault() {
+    getRequiredElementById('alt_prompt_textbox').value = '';
     for (let param of gen_param_types) {
         let id = `input_${param.id}`;
         deleteCookie(`lastparam_${id}`);
         if (param.visible) {
             setDirectParamValue(param, param.default);
+            if (param.id == 'prompt') {
+                triggerChangeFor(getRequiredElementById(id));
+            }
             if (param.toggleable) {
                 let toggler = getRequiredElementById(`${id}_toggle`);
                 toggler.checked = false;

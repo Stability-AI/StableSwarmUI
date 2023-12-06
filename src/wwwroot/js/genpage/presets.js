@@ -190,11 +190,19 @@ function updatePresetList() {
 function applyOnePreset(preset) {
     for (let key of Object.keys(preset.param_map)) {
         let param = gen_param_types.filter(p => p.id == key)[0];
+
         if (param) {
             let elem = getRequiredElementById(`input_${param.id}`);
             let val = preset.param_map[key];
+            let rawVal = getInputVal(elem);
             if (typeof val == "string" && val.includes("{value}")) {
                 val = val.replace("{value}", elem.value);
+            }
+            else if (key == 'loras' && rawVal) {
+                val = rawVal + "," + val;
+            }
+            else if (key == 'loraweights' && rawVal) {
+                val = rawVal + "," + val;
             }
             setDirectParamValue(param, val);
             if (param.group && param.group.toggles) {
@@ -246,7 +254,8 @@ function editPreset(preset) {
 }
 
 function sortPresets() {
-    allPresets = allPresets.sort((a, b) => a.title.toLowerCase() == "default" ? -1 : (b.title.toLowerCase() == "default" ? 1 : 0));
+    let preList = allPresets.filter(p => p.title.toLowerCase() == "default" || p.title.toLowerCase() == "preview");
+    allPresets = preList.concat(allPresets.filter(p => p.title.toLowerCase() != "default" && p.title.toLowerCase() != "preview"));
 }
 
 function listPresetFolderAndFiles(path, isRefresh, callback, depth) {

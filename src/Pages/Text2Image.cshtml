@@ -101,6 +101,18 @@
                     <div class="sui_popover_model_button" onclick="doInterrupt()">Interrupt Current Session</div>
                     <div class="sui_popover_model_button" onclick="doInterrupt(true)">Interrupt All Sessions</div>
                 </div>
+                @WebUtil.ModalHeader("gen_previews_missing_preset_modal", "Missing Preview Preset")
+                    <div class="modal-body">
+                        To generate previews properly, please create a Preset and title it exactly "Preview"
+                        <br>It is recommended that this preset be configured to use a fast-generation method such as LCM or Turbo.
+                        <br>Your preset named exactly "Preview" will automatically be used when generating previews, and ignored when you click Generate to generate a full image.
+                        <br><div id="gen_previews_autobutton"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary basic-button" onclick="toggleGeneratePreviews(true);$('#gen_previews_missing_preset_modal').modal('hide')">Start Anyway</button>
+                        <button type="button" class="btn btn-secondary" onclick="$('#gen_previews_missing_preset_modal').modal('hide')">Cancel</button>
+                    </div>
+                @WebUtil.ModalFooter()
             </div>
         </div>
         <div class="t2i-mid-split-bar splitter-bar" id="t2i-mid-split-bar"><div class="t2i-split-quickbutton t2i-mid-split-quickbutton" id="t2i-mid-split-quickbutton">&#x290B;</div></div>

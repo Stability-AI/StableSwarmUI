@@ -6,6 +6,9 @@ body {
     position: fixed;
     overflow: hidden;
 }
+.modal-body {
+    white-space: normal;
+}
 .prompt-box {
     width: 100%;
     border-radius: 0.5rem;

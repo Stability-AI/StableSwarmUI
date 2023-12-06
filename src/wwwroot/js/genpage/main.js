@@ -489,8 +489,42 @@ function toggleGenerateForever() {
     }
 }
 
+let lastPreviewParams = null;
+
 function genOnePreview() {
-    doGenerate({'donotsave': true, '_preview': true, 'images': 1});
+    let allParams = getGenInput();
+    if (lastPreviewParams && JSON.stringify(lastPreviewParams) == JSON.stringify(allParams)) {
+        return;
+    }
+    lastPreviewParams = allParams;
+    let previewPreset = allPresets.find(p => p.title == 'Preview');
+    let input_overrides = {};
+    if (previewPreset) {
+        for (let key of Object.keys(previewPreset.param_map)) {
+            let param = gen_param_types.filter(p => p.id == key)[0];
+            if (param) {
+                let val = previewPreset.param_map[key];
+                let elem = document.getElementById(`input_${param.id}`);
+                if (elem) {
+                    let rawVal = getInputVal(elem);
+                    if (typeof val == "string" && val.includes("{value}")) {
+                        val = val.replace("{value}", elem.value);
+                    }
+                    else if (key == 'loras' && rawVal) {
+                        val = rawVal + "," + val;
+                    }
+                    else if (key == 'loraweights' && rawVal) {
+                        val = rawVal + "," + val;
+                    }
+                    input_overrides[key] = val;
+                }
+            }
+        }
+    }
+    input_overrides['_preview'] = true;
+    input_overrides['donotsave'] = true;
+    input_overrides['images'] = 1;
+    doGenerate(input_overrides);
 }
 
 function needsNewPreview() {
@@ -505,10 +539,51 @@ function needsNewPreview() {
 
 getRequiredElementById('alt_prompt_textbox').addEventListener('input', () => needsNewPreview());
 
-function toggleGeneratePreviews() {
+function toggleGeneratePreviews(override_preview_req = false) {
+    if (!isGeneratingPreviews) {
+        let previewPreset = allPresets.find(p => p.title == 'Preview');
+        if (!previewPreset && !override_preview_req) {
+            let autoButtonArea = getRequiredElementById('gen_previews_autobutton');
+            let lcm = coreModelMap['LoRA'].find(m => m.toLowerCase().includes('sdxl_lcm'));
+            if (lcm) {
+                autoButtonArea.innerHTML = `<hr>You have a LoRA named "${escapeHtml(lcm)}" available - would you like to autogenerate a Preview preset? <button class="btn btn-primary">Generate Preview Preset</button>`;
+                autoButtonArea.querySelector('button').addEventListener('click', () => {
+                    let toSend = {
+                        'is_edit': false,
+                        'title': 'Preview',
+                        'description': '(Auto-generated) LCM Preview Preset, used when "Generate Previews" is clicked',
+                        'param_map': {
+                            'loras': lcm,
+                            'loraweights': '1',
+                            'steps': 4,
+                            'cfgscale': 1,
+                            'sampler': 'lcm',
+                            'scheduler': 'normal'
+                        }
+                    };
+                    genericRequest('AddNewPreset', toSend, data => {
+                        if (Object.keys(data).includes("preset_fail")) {
+                            gen_previews_autobutton.innerText = data.preset_fail;
+                            return;
+                        }
+                        loadUserData(() => {
+                            $('#gen_previews_missing_preset_modal').modal('hide');
+                            toggleGeneratePreviews();
+                        });
+                    });
+                });
+            }
+            $('#gen_previews_missing_preset_modal').modal('show');
+            return;
+        }
+    }
     let button = getRequiredElementById('generate_previews_button');
     isGeneratingPreviews = !isGeneratingPreviews;
     if (isGeneratingPreviews) {
+        let seed = document.getElementById('input_seed');
+        if (seed && seed.value == -1) {
+            seed.value = 1;
+        }
         button.innerText = 'Stop Generating Previews';
         genPreviewsInterval = setInterval(() => {
             if (num_current_gens == 0) {
@@ -1090,7 +1165,7 @@ function resetBatchIfNeeded() {
     }
 }
 
-function loadUserData() {
+function loadUserData(callback) {
     genericRequest('GetMyUserData', {}, data => {
         allPresets = data.presets;
         sortPresets();
@@ -1101,6 +1176,9 @@ function loadUserData() {
             if (defaultPreset) {
                 applyOnePreset(defaultPreset);
             }
+        }
+        if (callback) {
+            callback();
         }
     });
 }

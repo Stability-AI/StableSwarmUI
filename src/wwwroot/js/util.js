@@ -636,6 +636,13 @@ function getInputVal(input) {
     if (input.type && input.type == 'checkbox') {
         return input.checked;
     }
+    else if (input.tagName == 'SELECT' && input.multiple) {
+        let valSet = [...input.selectedOptions].map(option => option.value);
+        if (valSet.length > 0) {
+            return valSet.join(',');
+        }
+        return '';
+    }
     return input.value;
 }
 
