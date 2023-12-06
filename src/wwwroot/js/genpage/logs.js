@@ -135,6 +135,14 @@ class ServerLogsHelper {
                         toRenderMessages.push([message, type]);
                     }
                 }
+                if (storedData.raw.length > 2048) {
+                    let keys = Object.keys(storedData.raw);
+                    let removeCount = keys.length - 1536;
+                    keys.sort((a, b) => a - b);
+                    for (let i = 0; i < removeCount; i++) {
+                        delete storedData.raw[keys[i]];
+                    }
+                }
             }
             toRenderMessages.sort((a, b) => a[0].sequence_id - b[0].sequence_id);
             for (let [message, type] of toRenderMessages) {

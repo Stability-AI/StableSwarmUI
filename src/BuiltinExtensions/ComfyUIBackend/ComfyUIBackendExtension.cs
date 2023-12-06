@@ -469,6 +469,7 @@ public class ComfyUIBackendExtension : Extension
         }
         if (context.WebSockets.IsWebSocketRequest)
         {
+            Logs.Debug($"Comfy backend direct websocket request to {path}, have {allBackends.Count} backends available");
             WebSocket socket = await context.WebSockets.AcceptWebSocketAsync();
             List<Task> tasks = new();
             ComfyUser user = new();
@@ -482,7 +483,7 @@ public class ComfyUIBackendExtension : Extension
                 {
                     if (!Users.Values.Any(u => u.BackendOffset == option) && RecentlyClaimedBackends.TryAdd(option, option))
                     {
-                        Logs.Debug($"Comfy backend offset for new user is {option}");
+                        Logs.Debug($"Comfy backend direct offset for new user is {option}");
                         user.BackendOffset = option;
                         found = true;
                         break;
@@ -664,6 +665,7 @@ public class ComfyUIBackendExtension : Extension
                     await context.Request.Body.CopyToAsync(memStream);
                     byte[] data = memStream.ToArray();
                     JObject parsed = StringConversionHelper.UTF8Encoding.GetString(data).ParseToJson();
+                    bool redirected = false;
                     if (parsed.TryGetValue("client_id", out JToken clientIdTok))
                     {
                         string sid = clientIdTok.ToString();
@@ -687,6 +689,8 @@ public class ComfyUIBackendExtension : Extension
                                     address = client.Address;
                                     parsed["client_id"] = client.SID;
                                     client.FixUpPrompt(parsed["prompt"] as JObject);
+                                    Logs.Debug($"Sent Comfy backend direct prompt requested to backend #{backend.BackendData.ID}");
+                                    redirected = true;
                                 }
                             }
                             finally
@@ -695,12 +699,20 @@ public class ComfyUIBackendExtension : Extension
                             }
                         }
                     }
+                    if (!redirected)
+                    {
+                        Logs.Debug($"Was not able to redirect Comfy backend direct prompt request");
+                    }
                     content = Utilities.JSONContent(parsed);
                 }
                 catch (Exception ex)
                 {
                     Logs.Debug($"ComfyUI redirection failed - prompt json parse: {ex}");
                 }
+            }
+            else
+            {
+                Logs.Verbose($"Comfy direct POST request to path {path}");
             }
             HttpRequestMessage request = new(new HttpMethod("POST"), $"{address}/{path}") { Content = content ?? new StreamContent(context.Request.Body) };
             if (content is null)
