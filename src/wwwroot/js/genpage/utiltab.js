@@ -87,3 +87,78 @@ function util_massMetadataClear() {
         });
     });
 }
+
+class LoraExtractorUtil {
+    constructor() {
+        this.tabHeader = getRequiredElementById('loraextractortabbutton');
+        this.baseInput = getRequiredElementById('lora_extractor_base_model');
+        this.otherInput = getRequiredElementById('lora_extractor_other_model');
+        this.rankInput = getRequiredElementById('lora_extractor_rank');
+        this.nameInput = getRequiredElementById('lora_extractor_name');
+        this.textArea = getRequiredElementById('lora_extractor_text_area');
+        this.progressBar = getRequiredElementById('lora_extractor_special_progressbar');
+        this.tabHeader.addEventListener('click', () => this.refillInputModels());
+    }
+
+    refillInputModels() {
+        let html = '';
+        for (let model of coreModelMap['Stable-Diffusion']) {
+            html += `<option>${model}</option>`;
+        }
+        let baseSelected = this.baseInput.value;
+        let otherSelected = this.otherInput.value;
+        this.baseInput.innerHTML = html;
+        this.otherInput.innerHTML = html;
+        this.baseInput.value = baseSelected;
+        this.otherInput.value = otherSelected;
+    }
+
+    run() {
+        let baseModel = this.baseInput.value;
+        let otherModel = this.otherInput.value;
+        let rank = this.rankInput.value;
+        let outName = this.nameInput.value.replaceAll('\\', '/');
+        while (outName.includes('//')) {
+            outName = outName.replaceAll('//', '/');
+        }
+        if (outName.startsWith('/')) {
+            outName = outName.substring(1);
+        }
+        if (outName.endsWith('.safetensors')) {
+            outName = outName.substring(0, outName.length - '.safetensors'.length);
+        }
+        if (outName.endsWith('.ckpt')) {
+            outName = outName.substring(0, outName.length - '.ckpt'.length);
+        }
+        if (!baseModel || !otherModel || !outName) {
+            this.textArea.innerText = "Missing required values, cannot extract.";
+            return;
+        }
+        if (coreModelMap['LoRA'].includes(outName)) {
+            if (!confirm("That output name is already taken, are you sure you want to overwrite it?")) {
+                return;
+            }
+        }
+        this.textArea.innerText = "Running, please wait...";
+        let overall = this.progressBar.querySelector('.image-preview-progress-overall');
+        let current = this.progressBar.querySelector('.image-preview-progress-current');
+        makeWSRequest('DoLoraExtractionWS', { baseModel: baseModel, otherModel: otherModel, rank: rank, outName: outName }, data => {
+            if (data.overall_percent) {
+                overall.style.width = `${data.overall_percent * 100}%`;
+                current.style.width = `${data.current_percent * 100}%`;
+            }
+            else if (data.success) {
+                this.textArea.innerText = "Done!";
+                refreshParameterValues();
+                overall.style.width = `0%`;
+                current.style.width = `0%`;
+            }
+        }, 0, e => {
+            this.textArea.innerText = `Error: ${e}`;
+            overall.style.width = `0%`;
+            current.style.width = `0%`;
+        });
+    }
+}
+
+loraExtractor = new LoraExtractorUtil();

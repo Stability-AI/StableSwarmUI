@@ -1003,3 +1003,13 @@ body {
 .log_message_1 {
     background-color: rgba(0, 0, 0, 0.01);
 }
+.lora_extractor_special {
+    width: 100%;
+    position: relative;
+}
+.lora_extractor_special .image-preview-progress-overall {
+    top: 5px;
+}
+.lora_extractor_special .image-preview-progress-current {
+    top: 3px;
+}

@@ -324,6 +324,9 @@
             <li class="nav-item" role="presentation">
                 <a class="nav-link" data-bs-toggle="tab" href="#Utilities-Pickle2Safetensor-Tab" aria-selected="false" tabindex="-1" role="tab">Pickle To Safetensors</a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" data-bs-toggle="tab" href="#Utilities-LoraExtractor-Tab" id="loraextractortabbutton" aria-selected="false" tabindex="-1" role="tab">LoRA Extractor</a>
+            </li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane show active" id="Utilities-Info-Tab" role="tabpanel">
@@ -400,6 +403,37 @@
                     </table>
                 </div>
                 <br>
+            </div>
+            <div class="tab-pane" id="Utilities-LoraExtractor-Tab" role="tabpanel">
+                <div class="card border-secondary mb-3 card-center-container">
+                    <div class="card-header">LoRA Extractor</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            This is a tool to extract a LoRA from the difference between two models.
+                            <br>"Base" should be whatever the common base model is, eg SDXL-1.0-Base.
+                            <br>"Other" should be the unique model with information to extract into the LoRA.
+                            <br>The closer Base is to Other, the less complex the LoRA's data will be, and the more likely it will work well with other models that were built off the same base.
+                            <br>
+                            <br>Note that LoRA Extraction is an imperfect partial process, and will lose some of the data that makes the model unique.
+                            <br>Rank is a number indicating how much detail to try to save. Higher numbers result in bigger files, and only slightly more accurate matching. Small values (eg 16) are usually sufficient.
+                        </p>
+                    </div>
+                </div>
+                <div class="card-center-container">
+                    Base model: <select class="auto-dropdown" id="lora_extractor_base_model"></select>
+                    <br>Other model: <select class="auto-dropdown" id="lora_extractor_other_model"></select>
+                    <br>Rank: <input type="number" id="lora_extractor_rank" value="16" min="1" max="320" />
+                    <br>Save as: <input type="text" id="lora_extractor_name" placeholder="LoRA Name" />
+                    <br>
+                    <br>
+                    <center>
+                        <button id="lora_extractor_button" class="basic-button" onclick="loraExtractor.run()">Extract LoRA</button>
+                    </center>
+                    <br>
+                    <div class="lora_extractor_special" id="lora_extractor_special_progressbar"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>
+                </div>
+                <div class="card-center-container" id="lora_extractor_text_area">
+                </div>
             </div>
         </div>
         <div style="height: 10rem"></div> <!-- Spacer -->

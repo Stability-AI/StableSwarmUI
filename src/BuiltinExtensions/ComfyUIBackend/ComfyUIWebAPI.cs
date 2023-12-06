@@ -2,10 +2,12 @@
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Builtin_ComfyUIBackend;
+using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
 using System.IO;
+using System.Net.WebSockets;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -18,6 +20,7 @@ public static class ComfyUIWebAPI
         API.RegisterAPICall(ComfyListWorkflows);
         API.RegisterAPICall(ComfyDeleteWorkflow);
         API.RegisterAPICall(ComfyGetGeneratedWorkflow);
+        API.RegisterAPICall(DoLoraExtractionWS);
     }
 
     /// <summary>API route to save a comfy workflow object to persistent file.</summary>
@@ -100,5 +103,107 @@ public static class ComfyUIWebAPI
         string format = ComfyUIBackendExtension.ComfyBackendsDirect().FirstOrDefault().Backend.SupportedFeatures.Contains("folderbackslash") ? "\\" : "/";
         string flow = ComfyUIAPIAbstractBackend.CreateWorkflow(input, w => w, format);
         return new JObject() { ["workflow"] = flow };
+    }
+
+    /// <summary>API route to extract a LoRA from two models.</summary>
+    public static async Task<JObject> DoLoraExtractionWS(Session session, WebSocket ws, string baseModel, string otherModel, int rank, string outName)
+    {
+        outName = Utilities.StrictFilenameClean(outName);
+        if (ModelsAPI.TryGetRefusalForModel(session, baseModel, out JObject refusal)
+            || ModelsAPI.TryGetRefusalForModel(session, otherModel, out refusal)
+            || ModelsAPI.TryGetRefusalForModel(session, outName, out refusal))
+        {
+            await ws.SendJson(refusal, API.WebsocketTimeout);
+            return null;
+        }
+        if (rank < 1 || rank > 320)
+        {
+            await ws.SendJson(new JObject() { ["error"] = "Rank must be between 1 and 320." }, API.WebsocketTimeout);
+            return null;
+        }
+        T2IModel baseModelData = Program.MainSDModels.Models[baseModel];
+        T2IModel otherModelData = Program.MainSDModels.Models[otherModel];
+        if (baseModelData is null || otherModelData is null)
+        {
+            await ws.SendJson(new JObject() { ["error"] = "Unknown input model name." }, API.WebsocketTimeout);
+            return null;
+        }
+        string format = ComfyUIBackendExtension.RunningComfyBackends.FirstOrDefault()?.ModelFolderFormat;
+        JObject metadata = new()
+        {
+            ["modelspec.architecture"] = otherModelData.ModelClass?.ID,
+            ["modelspec.title"] = otherModelData.Metadata.Title + " (Extracted LoRA)",
+            ["modelspec.description"] = $"LoRA of {otherModelData.Metadata.Title} extracted from {baseModelData.Metadata.Title} at rank {rank}.\n{otherModelData.Metadata.Description}",
+            ["modelspec.date"] = DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            ["modelspec.resolution"] = $"{otherModelData.Metadata.StandardWidth}x{otherModelData.Metadata.StandardHeight}",
+            ["modelspec.sai_model_spec"] = "1.0.0"
+        };
+        if (otherModelData.Metadata.PreviewImage is not null && otherModelData.Metadata.PreviewImage != "imgs/model_placeholder.jpg")
+        {
+            metadata["modelspec.thumbnail"] = otherModelData.Metadata.PreviewImage;
+        }
+        JObject workflow = new()
+        {
+            ["4"] = new JObject()
+            {
+                ["class_type"] = "CheckpointLoaderSimple",
+                ["inputs"] = new JObject()
+                {
+                    ["ckpt_name"] = baseModelData.ToString(format)
+                }
+            },
+            ["5"] = new JObject()
+            {
+                ["class_type"] = "CheckpointLoaderSimple",
+                ["inputs"] = new JObject()
+                {
+                    ["ckpt_name"] = otherModelData.ToString(format)
+                }
+            },
+            ["6"] = new JObject()
+            {
+                ["class_type"] = "SwarmExtractLora",
+                ["inputs"] = new JObject()
+                {
+                    ["base_model"] = new JArray() { "4", 0 },
+                    ["base_model_clip"] = new JArray() { "4", 1 },
+                    ["other_model"] = new JArray() { "5", 0 },
+                    ["other_model_clip"] = new JArray() { "5", 1 },
+                    ["rank"] = rank,
+                    ["save_rawpath"] = Program.T2IModelSets["LoRA"].FolderPath + "/",
+                    ["save_filename"] = outName.Replace('\\', '/').Replace("/", format ?? $"{Path.DirectorySeparatorChar}"),
+                    ["save_clip"] = "true",
+                    ["metadata"] = metadata.ToString()
+                }
+            }
+        };
+        long ticks = Environment.TickCount64;
+        await API.RunWebsocketHandlerCallWS<object>(async (s, t, a, b) =>
+        {
+            await ComfyUIBackendExtension.RunArbitraryWorkflowOnFirstBackend(workflow.ToString(), data =>
+            {
+                if (data is JObject jData && jData.ContainsKey("overall_percent"))
+                {
+                    long newTicks = Environment.TickCount64;
+                    if (newTicks - ticks > 500)
+                    {
+                        ticks = newTicks;
+                        a(jData);
+                    }
+                }
+            });
+        }, session, null, ws);
+        T2IModelHandler loras = Program.T2IModelSets["LoRA"];
+        loras.Refresh();
+        if (loras.Models.ContainsKey($"{outName}.safetensors"))
+        {
+            await ws.SendJson(new JObject() { ["success"] = true }, API.WebsocketTimeout);
+            return null;
+        }
+        else
+        {
+            await ws.SendJson(new JObject() { ["error"] = "Extraction failed, lora not saved." }, API.WebsocketTimeout);
+            return null;
+        }
     }
 }
