@@ -346,7 +346,7 @@ public class ComfyUIBackendExtension : Extension
         {
             return new JObject() { ["error"] = ex.Message };
         }
-        string format = ComfyBackendsDirect().FirstOrDefault().Item3.SupportedFeatures.Contains("folderbackslash") ? "\\" : "/";
+        string format = ComfyBackendsDirect().FirstOrDefault().Backend.SupportedFeatures.Contains("folderbackslash") ? "\\" : "/";
         string flow = ComfyUIAPIAbstractBackend.CreateWorkflow(input, w => w, format);
         return new JObject() { ["workflow"] = flow };
     }
@@ -356,15 +356,17 @@ public class ComfyUIBackendExtension : Extension
         WebServer.WebApp.Map("/ComfyBackendDirect/{*Path}", ComfyBackendDirectHandler);
     }
 
-    public static IEnumerable<(HttpClient, string, AbstractT2IBackend)> ComfyBackendsDirect()
+    public record struct ComfyBackendData(HttpClient Client, string Address, AbstractT2IBackend Backend);
+
+    public static IEnumerable<ComfyBackendData> ComfyBackendsDirect()
     {
         foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends)
         {
-            yield return (backend.HttpClient, backend.Address, backend);
+            yield return new(backend.HttpClient, backend.Address, backend);
         }
         foreach (SwarmSwarmBackend swarmBackend in Program.Backends.RunningBackendsOfType<SwarmSwarmBackend>().Where(b => b.RemoteBackendTypes.Any(b => b.StartsWith("comfyui_"))))
         {
-            yield return (swarmBackend.HttpClient, $"{swarmBackend.Settings.Address}/ComfyBackendDirect", swarmBackend);
+            yield return new(swarmBackend.HttpClient, $"{swarmBackend.Settings.Address}/ComfyBackendDirect", swarmBackend);
         }
     }
 
@@ -432,6 +434,8 @@ public class ComfyUIBackendExtension : Extension
 
     public ConcurrentDictionary<string, ComfyUser> Users = new();
 
+    public ConcurrentDictionary<int, int> RecentlyClaimedBackends = new();
+
     /// <summary>Web route for viewing output images. This just works as a simple proxy.</summary>
     public async Task ComfyBackendDirectHandler(HttpContext context)
     {
@@ -439,7 +443,7 @@ public class ComfyUIBackendExtension : Extension
         {
             return;
         }
-        List<(HttpClient, string, AbstractT2IBackend)> allBackends = ComfyBackendsDirect().ToList();
+        List<ComfyBackendData> allBackends = ComfyBackendsDirect().ToList();
         (HttpClient webClient, string address, AbstractT2IBackend backend) = allBackends.FirstOrDefault();
         if (webClient is null)
         {
@@ -451,7 +455,7 @@ public class ComfyUIBackendExtension : Extension
         }
         if (!context.Request.Cookies.TryGetValue("comfy_domulti", out string doMultiStr) || doMultiStr != "true")
         {
-            allBackends = new() { (webClient, address, backend) };
+            allBackends = new() { new(webClient, address, backend) };
         }
         string path = context.Request.Path.Value;
         path = path.After("/ComfyBackendDirect");
@@ -468,14 +472,30 @@ public class ComfyUIBackendExtension : Extension
             WebSocket socket = await context.WebSockets.AcceptWebSocketAsync();
             List<Task> tasks = new();
             ComfyUser user = new();
-            for (int i = 0; i < allBackends.Count; i++)
+            // Order all evens then all odds - eg 0, 2, 4, 6, 1, 3, 5, 7 (to reduce chance of overlap when sharing)
+            int[] vals = Enumerable.Range(0, allBackends.Count).ToArray();
+            vals = vals.Where(v => v % 2 == 0).Concat(vals.Where(v => v % 2 == 1)).ToArray();
+            bool found = false;
+            void tryFindBackend()
             {
-                if (!Users.Values.Any(u => u.BackendOffset == i))
+                foreach (int option in vals)
                 {
-                    user.BackendOffset = i;
-                    break;
+                    if (!Users.Values.Any(u => u.BackendOffset == option) && RecentlyClaimedBackends.TryAdd(option, option))
+                    {
+                        Logs.Debug($"Comfy backend offset for new user is {option}");
+                        user.BackendOffset = option;
+                        found = true;
+                        break;
+                    }
                 }
             }
+            tryFindBackend(); // First try: find one never claimed
+            if (!found) // second chance: clear claims and find one at least not taken by existing user
+            {
+                RecentlyClaimedBackends.Clear();
+                tryFindBackend();
+            }
+            // (All else fails, default to 0)
             foreach ((_, string addressLocal, AbstractT2IBackend backendLocal) in allBackends)
             {
                 string scheme = addressLocal.BeforeAndAfter("://", out string addr);
