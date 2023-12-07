@@ -177,6 +177,7 @@ public static class ComfyUIWebAPI
                 }
             }
         };
+        Logs.Info($"Starting LoRA extraction (for user {session.User.UserID}) for base '{baseModel}', other '{otherModel}', rank {rank}, output to '{outName}'...");
         long ticks = Environment.TickCount64;
         await API.RunWebsocketHandlerCallWS<object>(async (s, t, a, b) =>
         {
@@ -197,11 +198,13 @@ public static class ComfyUIWebAPI
         loras.Refresh();
         if (loras.Models.ContainsKey($"{outName}.safetensors"))
         {
+            Logs.Info($"Completed successful LoRA extraction for user '{session.User.UserID}' saved as '{outName}'.");
             await ws.SendJson(new JObject() { ["success"] = true }, API.WebsocketTimeout);
             return null;
         }
         else
         {
+            Logs.Error($"LoRA extraction FAILED for user '{session.User.UserID}' for target '{outName}' - model did not save.");
             await ws.SendJson(new JObject() { ["error"] = "Extraction failed, lora not saved." }, API.WebsocketTimeout);
             return null;
         }
