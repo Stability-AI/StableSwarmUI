@@ -36,6 +36,9 @@ public class Settings : AutoConfiguration
     [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<Logs.LogLevel>))]
     public string LogLevel = "Info";
 
+    [ConfigComment("Settings related to the User Interface.")]
+    public UIData UI = new();
+
     /// <summary>Settings related to backends.</summary>
     public class BackendData : AutoConfiguration
     {
@@ -213,6 +216,13 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("When generating live previews, this is how many simultaneous generation requests can be waiting at one time.")]
         public int MaxSimulPreviews = 1;
+    }
+
+    /// <summary>UI-related settings.</summary>
+    public class UIData : AutoConfiguration
+    {
+        [ConfigComment("Optionally specify a (raw HTML) welcome message here. If specified, will override the automatic welcome messages.")]
+        public string OverrideWelcomeMessage = "";
     }
 }
 

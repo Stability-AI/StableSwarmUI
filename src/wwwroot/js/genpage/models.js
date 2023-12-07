@@ -617,6 +617,7 @@ function directSetModel(model) {
         curModelArch = arch;
         curModelCompatClass = compatClass;
     }
+    getRequiredElementById('input_model').dispatchEvent(new Event('change'));
     currentAutomaticVae = 'None';
     if (curModelArch) {
         let setting = null;

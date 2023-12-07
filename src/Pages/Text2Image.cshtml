@@ -26,7 +26,7 @@
         <a class="nav-link" data-bs-toggle="tab" href="#User-Settings" id="usersettingstabbutton" aria-selected="false" tabindex="-1" role="tab">User</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link" data-bs-toggle="tab" href="#server_tab_body" aria-selected="false" tabindex="-1" role="tab">Server</a>
+        <a class="nav-link" data-bs-toggle="tab" href="#server_tab_body" id="servertabbutton" aria-selected="false" tabindex="-1" role="tab">Server</a>
     </li>
 </ul>
 <div class="tab-content tab-hundred">
@@ -48,7 +48,7 @@
                 </div>
                 <div class="t2i-top-split-bar splitter-bar" id="t2i-top-split-bar"><div class="t2i-split-quickbutton t2i-top-split-quickbutton" id="t2i-top-split-quickbutton">&#x21DA;</div></div>
                 <div class="main-image-area" id="main_image_area">
-                    <div class="image_editor_input" id="image_editor_input" style="display:none;"></div><div class="current_image" id="current_image"></div><div class="t2i-top-split-bar splitter-bar" id="t2i-top-2nd-split-bar"></div>
+                    <div class="image_editor_input" id="image_editor_input" style="display:none;"></div><div class="current_image" id="current_image"><div id="welcome_message" class="welcome_message">@(new HtmlString(Program.ServerSettings.UI.OverrideWelcomeMessage))</div></div><div class="t2i-top-split-bar splitter-bar" id="t2i-top-2nd-split-bar"></div>
                     <div class="current_image_batch" id="current_image_batch_wrapper">
                         <div style="position: relative; width: 0; height: 0;">
                             <div class="batch-gear-button" onclick="doPopover('batchgear')">&#9881;</div>
@@ -132,7 +132,7 @@
                     <a class="nav-link" data-bs-toggle="tab" href="#Presets-Tab" aria-selected="false" tabindex="-1" role="tab">Presets</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" data-bs-toggle="tab" href="#Models-Tab" aria-selected="false" tabindex="-1" role="tab">Models</a>
+                    <a class="nav-link" data-bs-toggle="tab" href="#Models-Tab" id="modelstabheader" aria-selected="false" tabindex="-1" role="tab">Models</a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a class="nav-link" data-bs-toggle="tab" href="#Vaes-Tab" aria-selected="false" tabindex="-1" role="tab">VAEs</a>

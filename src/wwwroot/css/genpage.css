@@ -1013,3 +1013,14 @@ body {
 .lora_extractor_special .image-preview-progress-current {
     top: 3px;
 }
+.welcome_message {
+    margin: auto;
+    width: fit-content;
+    height: fit-content;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 150%;
+    white-space: pre-wrap;
+    text-align: center;
+}
