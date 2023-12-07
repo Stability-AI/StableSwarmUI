@@ -39,7 +39,8 @@ Key feature targets not yet implemented:
 
 # Installing on Linux
 
-- Install `git`, `python3` via your OS package manager if they are not already installed.
+- Install `git`, `python3` via your OS package manager if they are not already installed (make sure to include `pip` and `venv` on distros that do not include them in python directly)
+    - For example, on recent Ubuntu versions, `sudo apt install git python3-pip python3-venv`
 - Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0 (you need `dotnet-sdk-7.0`, as that includes all relevant sub-packages)
     - Some users [have said](https://github.com/Stability-AI/StableSwarmUI/pull/6) that certain Linux distros expect `aspnet-runtime` to be installed separately
 - Open a shell terminal and `cd` to a directory you want to install into
