@@ -1,5 +1,6 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
@@ -274,11 +275,14 @@ public class T2IParamInput
         return output;
     }
 
+    /// <summary>Aggressively safe JSON Serializer Settings for metadata encoding.</summary>
+    public static JsonSerializerSettings SafeSerializer = new() { Formatting = Formatting.Indented, StringEscapeHandling = StringEscapeHandling.EscapeNonAscii };
+
     /// <summary>Generates a metadata JSON object for this input and creates a proper string form of it, fit for inclusion in an image.</summary>
     public string GenRawMetadata()
     {
         JObject obj = GenMetadataObject();
-        return new JObject() { ["sui_image_params"] = obj }.ToString(Newtonsoft.Json.Formatting.Indented).Replace("\r\n", "\n");
+        return JsonConvert.SerializeObject(new JObject() { ["sui_image_params"] = obj }, SafeSerializer).Replace("\r\n", "\n");
     }
 
     /// <summary>Special utility to process prompt inputs before the request is executed (to parse wildcards, embeddings, etc).</summary>
