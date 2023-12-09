@@ -89,6 +89,7 @@
                         <div class="sui_popover_model_button" id="generate_previews_button" onclick="toggleGeneratePreviews()">Generate Previews</div>
                         <div class="sui_popover_model_button" onclick="doInterrupt()">Interrupt Current Session</div>
                         <div class="sui_popover_model_button" onclick="doInterrupt(true)">Interrupt All Sessions</div>
+                        <div class="sui_popover_model_button" onclick="showPromptTokenizen('alt_prompt_textbox')">Show Prompt Tokenization</div>
                     </div>
                     <div class="sui-popover sui_popover_model" id="popover_generate">
                         <div class="sui_popover_model_button" onclick="doGenerate()">Generate</div>
@@ -328,7 +329,7 @@
                 <a class="nav-link active" data-bs-toggle="tab" href="#Utilities-Info-Tab" aria-selected="true" role="tab">Info</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" href="#Utilities-CLIP-Token-Tab" aria-selected="false" tabindex="-1" role="tab">CLIP Tokenization</a>
+                <a class="nav-link" data-bs-toggle="tab" id="cliptokentabbutton" href="#Utilities-CLIP-Token-Tab" aria-selected="false" tabindex="-1" role="tab">CLIP Tokenization</a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" data-bs-toggle="tab" href="#Utilities-Pickle2Safetensor-Tab" aria-selected="false" tabindex="-1" role="tab">Pickle To Safetensors</a>
@@ -365,7 +366,7 @@
             </div>
             <div class="tab-pane" id="Utilities-CLIP-Token-Tab" role="tabpanel">
                 <div class="card border-secondary mb-3 card-center-container">
-                    <div class="card-header">Pickle To Safetensors</div>
+                    <div class="card-header">CLIP Tokenizer</div>
                     <div class="card-body">
                         <p class="card-text">
                             This is a tool to analyze CLIP tokenization for Stable Diffusion models.

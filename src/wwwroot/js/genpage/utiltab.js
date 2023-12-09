@@ -7,7 +7,6 @@ function utilClipTokenize() {
     function process() {
         elem.dataset.is_running_proc = true;
         genericRequest('TokenizeInDetail', { text: elem.value }, data => {
-            console.log(`server says ${JSON.stringify(data)}`)
             let html = '';
             for (let token of data.tokens) {
                 let text = token.text;
@@ -41,6 +40,15 @@ function utilClipTokenize() {
     else {
         process();
     }
+}
+
+function showPromptTokenizen(box) {
+    let src = getRequiredElementById(box);
+    let target = getRequiredElementById('clip_tokenization_test_textarea');
+    target.value = src.value || src.innerText;
+    getRequiredElementById('utilitiestabbutton').click();
+    getRequiredElementById('cliptokentabbutton').click();
+    triggerChangeFor(target);
 }
 
 /** Preloads conversion data. */
