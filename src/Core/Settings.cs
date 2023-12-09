@@ -219,6 +219,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("Set to a number above 1 to allow generations of multiple images to automatically generate square mini-grids when they're done.")]
         public int MaxImagesInMiniGrid = 1;
+
+        [ConfigComment("How many images the history view should stop trying to load after.")]
+        public int MaxImagesInHistory = 1000;
     }
 
     /// <summary>UI-related settings.</summary>

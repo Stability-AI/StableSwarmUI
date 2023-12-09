@@ -230,8 +230,9 @@ public static class T2IAPI
 
     // TODO: Configurable limit
     /// <summary>API route to get a list of available history images.</summary>
-    private static JObject GetListAPIInternal(Session session, string path, string root, HashSet<string> extensions, Func<string, bool> isAllowed, Func<string, string, JObject> valToObj, int depth, int limit = 1000)
+    private static JObject GetListAPIInternal(Session session, string path, string root, HashSet<string> extensions, Func<string, bool> isAllowed, Func<string, string, JObject> valToObj, int depth)
     {
+        int limit = session.User.Settings.MaxImagesInHistory;
         (path, string consoleError, string userError) = WebServer.CheckFilePath(root, path);
         if (consoleError is not null)
         {
