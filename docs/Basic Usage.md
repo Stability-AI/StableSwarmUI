@@ -82,6 +82,7 @@ Prompting is, primarily, just text input. However, there are some special option
     - An entry can contain the syntax of eg `1-5` to automatically select a number from 1 to 5. For example, `<random:1-3, blue>` will give back any of: `1`, `2`, `3`, or `blue`.
     - You can repeat random choices via `<random[1-3]:red, blue, purple>` which might return for example `red blue` or `red blue purple` or `blue`.
         - You can use a comma at the end like `random[1-3,]` to specify the output should have a comma eg `red, blue`.
+        - This will avoid repetition, unless you have a large count than number of options.
 - You can use the syntax `<wildcard:my/wildcard/name>` to randomly select from a wildcard file, which is basically a pre-saved text file of random options, 1 per line.
     - Edit these in the UI at the bottom in the "Wildcards" tab.
     - You can also import wildcard files from other UIs (ie text file collections) by just adding them into `Data/Wildcards` folder.

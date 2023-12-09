@@ -111,21 +111,31 @@ public class T2IParamInput
                 return null;
             }
             string separator = data.Contains("||") ? "||" : (data.Contains('|') ? "|" : ",");
-            string[] vals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (vals.Length == 0)
+            string[] rawVals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (rawVals.Length == 0)
             {
                 Logs.Warning($"Random input '{data}' is empty and will be ignored.");
                 return null;
             }
             string result = "";
+            List<string> vals = rawVals.ToList();
             for (int i = 0; i < count; i++)
             {
-                string choice = vals[context.Random.Next(vals.Length)];
+                int index = context.Random.Next(vals.Count);
+                string choice = vals[index];
                 if (TryInterpretNumberRange(choice, out string number))
                 {
                     return number;
                 }
                 result += context.Parse(choice).Trim() + partSeparator;
+                if (vals.Count == 1)
+                {
+                    vals = rawVals.ToList();
+                }
+                else
+                {
+                    vals.RemoveAt(index);
+                }
             }
             return result.Trim();
         };
@@ -142,13 +152,24 @@ public class T2IParamInput
                 Logs.Warning($"Wildcard input '{data}' does not match any wildcard file and will be ignored.");
                 return null;
             }
+            WildcardsHelper.Wildcard wildcard = WildcardsHelper.GetWildcard(card);
             List<string> usedWildcards = context.Input.ExtraMeta.GetOrCreate("used_wildcards", () => new List<string>()) as List<string>;
             usedWildcards.Add(card);
             string result = "";
+            List<string> vals = wildcard.Options.ToList();
             for (int i = 0; i < count; i++)
             {
-                string choice = WildcardsHelper.PickRandom(card, context.Random);
+                int index = context.Random.Next(vals.Count);
+                string choice = vals[index];
                 result += context.Parse(choice).Trim() + partSeparator;
+                if (vals.Count == 1)
+                {
+                    vals = wildcard.Options.ToList();
+                }
+                else
+                {
+                    vals.RemoveAt(index);
+                }
             }
             return result.Trim();
         };
