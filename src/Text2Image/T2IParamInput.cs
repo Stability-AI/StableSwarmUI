@@ -482,6 +482,7 @@ public class T2IParamInput
                     (prefix, preData) = prefix.BeforeLast(']').BeforeAndAfter('[');
                 }
                 context.PreData = preData;
+                Logs.Verbose($"[Prompt Parsing] Found tag {val}, will fill... prefix = '{prefix}', data = '{data}', predata = '{preData}'");
                 if (!string.IsNullOrWhiteSpace(data) && set.TryGetValue(prefix, out Func<string, PromptTagContext, string> proc))
                 {
                     string result = proc(data, context);
