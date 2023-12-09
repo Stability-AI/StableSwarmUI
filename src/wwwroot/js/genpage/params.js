@@ -1007,12 +1007,19 @@ class PromptTabCompleteClass {
         this.registerPrefix('random', 'Select from a set of random words to include', (prefix) => {
             return ['\nSpecify a comma-separated list of words to choose from, like "<random:cat,dog,elephant>". You can use "||" instead of "," if you need to include commas in your values. You can use eg "1-5" to pick a random number in a range.'];
         });
-        this.registerPrefix('repeat', 'Repeat a value several times', (prefix) => {
-            return ['\nUse for example like "<repeat:3,very> big" to get "very very very big", or "<repeat:1-3,very>" to get randomly between 1 to 3 "very"s, or <repeat:3,<random:cat,dog>>" to get "cat" or "dog" 3 times in a row eg "cat dog cat".'];
+        this.registerPrefix('random[2-4]', 'Selects multiple options from a set of random words to include', (prefix) => {
+            return ['\nSpecify a comma-separated list of words to choose from, like "<random[2]:cat,dog,elephant>". You can use "||" instead of "," if you need to include commas in your values. You can use eg "1-5" to pick a random number in a range. Put a comma in the input (eg "random[2,]:") to make the output have commas too.'];
         });
         this.registerPrefix('wildcard', 'Select a random line from a wildcard file (presaved list of options)', (prefix) => {
             let prefixLow = prefix.toLowerCase();
             return allWildcards.filter(w => w.toLowerCase().startsWith(prefixLow));
+        });
+        this.registerPrefix('wildcard[2-4]', 'Select multiple random lines from a wildcard file (presaved list of options) (works same as "random" but for wildcards)', (prefix) => {
+            let prefixLow = prefix.toLowerCase();
+            return allWildcards.filter(w => w.toLowerCase().startsWith(prefixLow));
+        });
+        this.registerPrefix('repeat', 'Repeat a value several times', (prefix) => {
+            return ['\nUse for example like "<repeat:3,very> big" to get "very very very big", or "<repeat:1-3,very>" to get randomly between 1 to 3 "very"s, or <repeat:3,<random:cat,dog>>" to get "cat" or "dog" 3 times in a row eg "cat dog cat".'];
         });
         this.registerPrefix('preset', 'Forcibly apply a preset onto the current generation (useful eg inside wildcards or other automatic inclusions - normally use the Presets UI tab)', (prefix) => {
             let prefixLow = prefix.toLowerCase();

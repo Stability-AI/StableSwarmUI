@@ -80,6 +80,12 @@ Prompting is, primarily, just text input. However, there are some special option
     - This random is seeded by the main seed - so if you have a static seed, this won't change.
     - You can use `,` to separate the entries, or `|`, or `||`. Whichever is most unique gets used - so if you want random options with `,` in them, just use `|` as a separator, and `,` will be ignored (eg `<random:red|blue|purple>`).
     - An entry can contain the syntax of eg `1-5` to automatically select a number from 1 to 5. For example, `<random:1-3, blue>` will give back any of: `1`, `2`, `3`, or `blue`.
+    - You can repeat random choices via `<random[1-3]:red, blue, purple>` which might return for example `red blue` or `red blue purple` or `blue`.
+        - You can use a comma at the end like `random[1-3,]` to specify the output should have a comma eg `red, blue`.
+- You can use the syntax `<wildcard:my/wildcard/name>` to randomly select from a wildcard file, which is basically a pre-saved text file of random options, 1 per line.
+    - Edit these in the UI at the bottom in the "Wildcards" tab.
+    - You can also import wildcard files from other UIs (ie text file collections) by just adding them into `Data/Wildcards` folder.
+    - This supports the same syntax as `random` to get multiple, for example `<wildcard[1-3]:animals>` might return `cat dog` or `elephant leopard dog`.
 - You can use the syntax `<repeat:3, cat>` to get the word "cat" 3 times in a row (`cat cat cat`).
     - You can use for example like `<repeat:1-3, <random:cat, dog>>` to get between 1 and 3 copies of either `cat` or `dog`, for example it might return `cat dog cat`.
 - You can use `<embed:filename>` to use a Textual Inversion embedding anywhere.

@@ -24,6 +24,9 @@ public class T2IParamInput
 
         public int Depth = 0;
 
+        /// <summary>If the current syntax usage has a pre-data block, it will be here. This will be null otherwise.</summary>
+        public string PreData;
+
         public string Parse(string text)
         {
             if (Depth > 1000)
@@ -76,10 +79,37 @@ public class T2IParamInput
         return null;
     }
 
+    public static (int, string) InterpretPredataForRandom(string prefix, string preData, string data)
+    {
+        int count = 1;
+        string separator = " ";
+        if (preData is not null)
+        {
+            if (preData.EndsWithFast(','))
+            {
+                separator = ", ";
+                preData = preData[0..^1];
+            }
+            double? countVal = InterpretNumber(preData);
+            if (!countVal.HasValue)
+            {
+                Logs.Warning($"Random input '{prefix}[{preData}:{data}' has invalid predata count (not a number) and will be ignored.");
+                return (0, null);
+            }
+            count = (int)countVal.Value;
+        }
+        return (count, separator);
+    }
+
     static T2IParamInput()
     {
         PromptTagProcessors["random"] = (data, context) =>
         {
+            (int count, string partSeparator) = InterpretPredataForRandom("random", context.PreData, data);
+            if (partSeparator is null)
+            {
+                return null;
+            }
             string separator = data.Contains("||") ? "||" : (data.Contains('|') ? "|" : ",");
             string[] vals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (vals.Length == 0)
@@ -87,15 +117,25 @@ public class T2IParamInput
                 Logs.Warning($"Random input '{data}' is empty and will be ignored.");
                 return null;
             }
-            string choice = vals[context.Random.Next(vals.Length)];
-            if (TryInterpretNumberRange(choice, out string number))
+            string result = "";
+            for (int i = 0; i < count; i++)
             {
-                return number;
+                string choice = vals[context.Random.Next(vals.Length)];
+                if (TryInterpretNumberRange(choice, out string number))
+                {
+                    return number;
+                }
+                result += context.Parse(choice).Trim() + partSeparator;
             }
-            return context.Parse(choice);
+            return result.Trim();
         };
         PromptTagProcessors["wildcard"] = (data, context) =>
         {
+            (int count, string partSeparator) = InterpretPredataForRandom("random", context.PreData, data);
+            if (partSeparator is null)
+            {
+                return null;
+            }
             string card = T2IParamTypes.GetBestInList(data, WildcardsHelper.ListFiles);
             if (card is null)
             {
@@ -104,8 +144,13 @@ public class T2IParamInput
             }
             List<string> usedWildcards = context.Input.ExtraMeta.GetOrCreate("used_wildcards", () => new List<string>()) as List<string>;
             usedWildcards.Add(card);
-            string choice = WildcardsHelper.PickRandom(card, context.Random);
-            return context.Parse(choice);
+            string result = "";
+            for (int i = 0; i < count; i++)
+            {
+                string choice = WildcardsHelper.PickRandom(card, context.Random);
+                result += context.Parse(choice).Trim() + partSeparator;
+            }
+            return result.Trim();
         };
         PromptTagProcessors["repeat"] = (data, context) =>
         {
@@ -410,6 +455,12 @@ public class T2IParamInput
             val = StringConversionHelper.QuickSimpleTagFiller(val, "<", ">", tag =>
             {
                 (string prefix, string data) = tag.BeforeAndAfter(':');
+                string preData = null;
+                if (prefix.EndsWith(']') && prefix.Contains('['))
+                {
+                    (prefix, preData) = prefix.BeforeLast(']').BeforeAndAfter('[');
+                }
+                context.PreData = preData;
                 if (!string.IsNullOrWhiteSpace(data) && set.TryGetValue(prefix, out Func<string, PromptTagContext, string> proc))
                 {
                     string result = proc(data, context);
