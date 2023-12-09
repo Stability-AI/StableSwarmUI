@@ -91,6 +91,13 @@ function escapeHtml(text) {
 }
 
 /**
+ * Escapes a string for use in HTML (no line break handling).
+ */
+function escapeHtmlNoBr(text) {
+    return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+}
+
+/**
  * Escapes a string for use in a JavaScript string literal.
  */
 function escapeJsString(text) {

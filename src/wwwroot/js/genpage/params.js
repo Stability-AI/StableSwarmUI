@@ -515,7 +515,7 @@ function refreshParameterValues(callback = null) {
                     let html = '';
                     for (let value of param.values) {
                         let selected = value == val ? ' selected="true"' : '';
-                        html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
+                        html += `<option value="${escapeHtmlNoBr(value)}"${selected}>${escapeHtml(value)}</option>`;
                     }
                     dropdown.innerHTML = html;
                 }

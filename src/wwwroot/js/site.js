@@ -473,7 +473,7 @@ function makeTextInput(featureid, id, name, description, value, format, placehol
     <div class="auto-input auto-text-box${(isBig ? "" : " auto-input-flex")}"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
         ${tokenCounter}
-        <textarea class="auto-text${(isBig ? " auto-text-block" : "")}" id="${id}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtml(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
+        <textarea class="auto-text${(isBig ? " auto-text-block" : "")}" id="${id}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtmlNoBr(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
         <button class="interrupt-button image-clear-button" style="display: none;">Clear Images</button>
         <div class="added-image-area"></div>
     </div>`;
@@ -504,7 +504,7 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
         <select class="auto-dropdown" id="${id}" autocomplete="false" onchange="autoSelectWidth(this)">`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
-        html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
+        html += `<option value="${escapeHtmlNoBr(value)}"${selected}>${escapeHtml(value)}</option>`;
     }
     html += `
         </select>
@@ -520,10 +520,10 @@ function makeMultiselectInput(featureid, id, name, description, values, defaultV
     let html = `
     <div class="auto-input auto-dropdown-box"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
-        <select class="form-select" id="${id}" autocomplete="false" data-placeholder="${escapeHtml(placeholder)}" multiple>`;
+        <select class="form-select" id="${id}" autocomplete="false" data-placeholder="${escapeHtmlNoBr(placeholder)}" multiple>`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
-        html += `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
+        html += `<option value="${escapeHtmlNoBr(value)}"${selected}>${escapeHtml(value)}</option>`;
     }
     html += `
         </select>
