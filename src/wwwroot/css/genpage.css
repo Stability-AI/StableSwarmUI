@@ -717,9 +717,6 @@ body {
     height: calc(100% - 5rem);
     overflow: auto;
 }
-.alt-interrupt {
-    margin-left: 0px;
-}
 .alt_prompt_region {
     position: relative;
     top: -3.5rem;
@@ -753,6 +750,21 @@ body {
     height: 2rem;
     text-align: center;
     border-radius: 0.7rem;
+    margin: 0;
+}
+.alt-prompt-generate-button {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-right: none !important;
+}
+.alt-prompt-center-button {
+    border-radius: 0 !important;
+}
+.alt-interrupt {
+    margin-left: 0px;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-left: none !important;
 }
 .alt_prompt_extra_area {
     width: 100%;
