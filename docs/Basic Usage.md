@@ -80,6 +80,8 @@ Prompting is, primarily, just text input. However, there are some special option
     - This random is seeded by the main seed - so if you have a static seed, this won't change.
     - You can use `,` to separate the entries, or `|`, or `||`. Whichever is most unique gets used - so if you want random options with `,` in them, just use `|` as a separator, and `,` will be ignored (eg `<random:red|blue|purple>`).
     - An entry can contain the syntax of eg `1-5` to automatically select a number from 1 to 5. For example, `<random:1-3, blue>` will give back any of: `1`, `2`, `3`, or `blue`.
+- You can use the syntax `<repeat:3, cat>` to get the word "cat" 3 times in a row (`cat cat cat`).
+    - You can use for example like `<repeat:1-3, <random:cat, dog>>` to get between 1 and 3 copies of either `cat` or `dog`, for example it might return `cat dog cat`.
 - You can use `<embed:filename>` to use a Textual Inversion embedding anywhere.
 - You may use `<lora:filename:weight>` to enable a LoRA
     - Note that it's generally preferred to use the GUI at the bottom of the page to select loras

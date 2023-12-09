@@ -50,7 +50,7 @@ public class T2IParamInput
         (string preDash, string postDash) = inputVal.BeforeAndAfter('-');
         if (long.TryParse(preDash.Trim(), out long int1) && long.TryParse(postDash.Trim(), out long int2))
         {
-            number = $"{Random.Shared.NextInt64(int1, int2)}";
+            number = $"{Random.Shared.NextInt64(int1, int2 + 1)}";
             return true;
         }
         if (double.TryParse(preDash.Trim(), out double num1) && double.TryParse(postDash.Trim(), out double num2))
@@ -60,6 +60,20 @@ public class T2IParamInput
         }
         number = null;
         return false;
+    }
+
+    /// <summary>Interprets a number input by a user, or returns null if unable to.</summary>
+    public static double? InterpretNumber(string inputVal)
+    {
+        if (TryInterpretNumberRange(inputVal, out string number))
+        {
+            inputVal = number;
+        }
+        if (double.TryParse(inputVal.Trim(), out double num))
+        {
+            return num;
+        }
+        return null;
     }
 
     static T2IParamInput()
@@ -92,6 +106,22 @@ public class T2IParamInput
             usedWildcards.Add(card);
             string choice = WildcardsHelper.PickRandom(card, context.Random);
             return context.Parse(choice);
+        };
+        PromptTagProcessors["repeat"] = (data, context) =>
+        {
+            (string count, string value) = data.BeforeAndAfter(',');
+            double? countVal = InterpretNumber(count);
+            if (!countVal.HasValue)
+            {
+                Logs.Warning($"Repeat input '{data}' has invalid count (not a number) and will be ignored.");
+                return null;
+            }
+            string result = "";
+            for (int i = 0; i < countVal.Value; i++)
+            {
+                result += context.Parse(value).Trim() + " ";
+            }
+            return result.Trim();
         };
         PromptTagProcessors["preset"] = (data, context) =>
         {
