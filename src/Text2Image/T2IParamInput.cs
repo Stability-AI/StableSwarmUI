@@ -44,6 +44,24 @@ public class T2IParamInput
     /// <summary>Mapping of prompt tag prefixes, to allow for registration of custom prompt tags - specifically post-processing like lora (which remove from prompt and get read elsewhere).</summary>
     public static Dictionary<string, Func<string, PromptTagContext, string>> PromptTagPostProcessors = new();
 
+    /// <summary>Interprets a random number range input by a user, if the input is a number range.</summary>
+    public static bool TryInterpretNumberRange(string inputVal, out string number)
+    {
+        (string preDash, string postDash) = inputVal.BeforeAndAfter('-');
+        if (long.TryParse(preDash.Trim(), out long int1) && long.TryParse(postDash.Trim(), out long int2))
+        {
+            number = $"{Random.Shared.NextInt64(int1, int2)}";
+            return true;
+        }
+        if (double.TryParse(preDash.Trim(), out double num1) && double.TryParse(postDash.Trim(), out double num2))
+        {
+            number = $"{Random.Shared.NextDouble() * (num2 - num1) + num1}";
+            return true;
+        }
+        number = null;
+        return false;
+    }
+
     static T2IParamInput()
     {
         PromptTagProcessors["random"] = (data, context) =>
@@ -55,7 +73,12 @@ public class T2IParamInput
                 Logs.Warning($"Random input '{data}' is empty and will be ignored.");
                 return null;
             }
-            return context.Parse(vals[context.Random.Next(vals.Length)]);
+            string choice = vals[context.Random.Next(vals.Length)];
+            if (TryInterpretNumberRange(choice, out string number))
+            {
+                return number;
+            }
+            return context.Parse(choice);
         };
         PromptTagProcessors["wildcard"] = (data, context) =>
         {

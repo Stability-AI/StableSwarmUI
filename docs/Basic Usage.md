@@ -79,6 +79,7 @@ Prompting is, primarily, just text input. However, there are some special option
 - You can use the syntax `<random:red, blue, purple>` to randomly select from a list for each gen
     - This random is seeded by the main seed - so if you have a static seed, this won't change.
     - You can use `,` to separate the entries, or `|`, or `||`. Whichever is most unique gets used - so if you want random options with `,` in them, just use `|` as a separator, and `,` will be ignored (eg `<random:red|blue|purple>`).
+    - An entry can contain the syntax of eg `1-5` to automatically select a number from 1 to 5. For example, `<random:1-3, blue>` will give back any of: `1`, `2`, `3`, or `blue`.
 - You can use `<embed:filename>` to use a Textual Inversion embedding anywhere.
 - You may use `<lora:filename:weight>` to enable a LoRA
     - Note that it's generally preferred to use the GUI at the bottom of the page to select loras
