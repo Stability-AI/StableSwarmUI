@@ -7,6 +7,7 @@ using ISImage = SixLabors.ImageSharp.Image;
 using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp.Processing;
 using FreneticUtilities.FreneticExtensions;
+using SixLabors.ImageSharp.Formats.Png;
 
 /// <summary>Helper to represent an image file cleanly and quickly.</summary>
 public class Image
@@ -245,7 +246,8 @@ public class Image
         switch (format)
         {
             case "PNG":
-                img.SaveAsPng(ms);
+                PngEncoder encoder = new() { TextCompressionThreshold = int.MaxValue };
+                img.SaveAsPng(ms, encoder);
                 ext = "png";
                 break;
             case "JPG":

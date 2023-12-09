@@ -1371,7 +1371,6 @@ function imageInputHandler() {
                 reader.onload = (e) => {
                     let data = e.target.result;
                     exifr.parse(data).then(parsed => {
-                        // check any of imageMetadataKeys are present
                         if (parsed && imageMetadataKeys.some(key => key in parsed)) {
                             return parsed;
                         }
