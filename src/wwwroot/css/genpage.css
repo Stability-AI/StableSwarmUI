@@ -1024,3 +1024,7 @@ body {
     white-space: pre-wrap;
     text-align: center;
 }
+.welcome-message-wrapper {
+    min-height: 8em;
+    width: fit-content;
+}

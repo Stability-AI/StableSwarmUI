@@ -1,3 +1,9 @@
+/** Removes any current visible image or other content and forcibly redisplays any welcome message. */
+function forceShowWelcomeMessage() {
+    getRequiredElementById('current_image').innerHTML = '<div id="welcome_message" class="welcome_message"></div>';
+    resetWelcomeMessage();
+}
+
 /** (Only if a welcome message is displayed) clears the existing welcome message and replaces it automatically. */
 function resetWelcomeMessage(override = null) {
     let div = document.getElementById('welcome_message');
@@ -44,7 +50,13 @@ function automaticWelcomeMessage(override = null) {
         `New feature (2023-12-06): Tab Completion in prompts!\nJust type a '&lt;' symbol and watch the suggestions for prompt-syntax tools appear! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7775593">(Feature Announcement Link)</a>`,
         `New feature (2023-12-07): Welcome messages!\nOh, well, hi, that's this right here. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7791189">(Feature Announcement Link)</a>`
     ];
-    let choice = override != null ? messages[override] : messages[Math.floor(Math.random() * messages.length)];
-    div.innerHTML = `${prefix}\n${choice}`;
+    if (override == null) {
+        override = Math.floor(Math.random() * messages.length);
+    }
+    override = override % messages.length;
+    if (override < 0) {
+        override += messages.length;
+    }
+    div.innerHTML = `${prefix}\n<div class="welcome-message-wrapper">${messages[override]}</div>\n\n<button onclick="resetWelcomeMessage(${override - 1})">&lt;</button> <button onclick="resetWelcomeMessage(${override + 1})">&gt;</button>`;
     return;
 }
