@@ -232,10 +232,11 @@ public static class BasicAPIFeatures
     }
 
     /// <summary>API Route to add a new user parameters preset.</summary>
-    public static async Task<JObject> AddNewPreset(Session session, string title, string description, JObject raw, string preview_image = null, bool is_edit = false)
+    public static async Task<JObject> AddNewPreset(Session session, string title, string description, JObject raw, string preview_image = null, bool is_edit = false, string editing = null)
     {
         JObject paramData = (JObject)raw["param_map"];
-        if (session.User.GetPreset(title) is not null && !is_edit)
+        T2IPreset existingPreset = session.User.GetPreset(is_edit ? editing : title);
+        if (existingPreset is not null && !is_edit)
         {
             return new JObject() { ["preset_fail"] = "A preset with that title already exists." };
         }
@@ -251,6 +252,10 @@ public static class BasicAPIFeatures
         {
             Logs.Info($"User {session.User.UserID} tried to set a preset preview image to forbidden path: {preset.PreviewImage}");
             return new JObject() { ["preset_fail"] = "Forbidden preview-image path." };
+        }
+        if (is_edit && existingPreset is not null && editing != title)
+        {
+            session.User.DeletePreset(editing);
         }
         session.User.SavePreset(preset);
         return new JObject() { ["success"] = true };

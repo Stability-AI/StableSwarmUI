@@ -106,6 +106,7 @@ function save_new_preset() {
     if (preset_to_edit) {
         toSend['preview_image'] = preset_to_edit.preview_image;
         toSend['is_edit'] = true;
+        toSend['editing'] = preset_to_edit.title;
     }
     if (getRequiredElementById('new_preset_enable_image').checked) {
         toSend['preview_image'] = imageToSmallPreviewData(getRequiredElementById('new_preset_image').getElementsByTagName('img')[0]);
