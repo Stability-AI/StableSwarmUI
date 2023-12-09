@@ -28,6 +28,7 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(InstallConfirmWS);
         API.RegisterAPICall(GetMyUserData);
         API.RegisterAPICall(AddNewPreset);
+        API.RegisterAPICall(DuplicatePreset);
         API.RegisterAPICall(DeletePreset);
         API.RegisterAPICall(GetCurrentStatus);
         API.RegisterAPICall(InterruptAll);
@@ -258,6 +259,31 @@ public static class BasicAPIFeatures
             session.User.DeletePreset(editing);
         }
         session.User.SavePreset(preset);
+        return new JObject() { ["success"] = true };
+    }
+
+    /// <summary>API Route to duplicate a user preset.</summary>
+    public static async Task<JObject> DuplicatePreset(Session session, string preset)
+    {
+        T2IPreset existingPreset = session.User.GetPreset(preset);
+        if (existingPreset is null)
+        {
+            return new JObject() { ["preset_fail"] = "No such preset." };
+        }
+        int id = 2;
+        while (session.User.GetPreset($"{preset} ({id})") is not null)
+        {
+            id++;
+        }
+        T2IPreset newPreset = new()
+        {
+            Author = session.User.UserID,
+            Title = $"{preset} ({id})",
+            Description = existingPreset.Description,
+            ParamMap = new(existingPreset.ParamMap),
+            PreviewImage = existingPreset.PreviewImage
+        };
+        session.User.SavePreset(newPreset);
         return new JObject() { ["success"] = true };
     }
 

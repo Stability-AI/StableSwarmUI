@@ -224,6 +224,12 @@ function apply_presets() {
     presetBrowser.rerender();
 }
 
+function duplicatePreset(preset) {
+    genericRequest('DuplicatePreset', { preset: preset.title }, data => {
+        loadUserData();
+    });
+}
+
 function editPreset(preset) {
     clearPresetView();
     preset_to_edit = preset;
@@ -302,6 +308,7 @@ function describePreset(preset) {
         { label: 'Toggle', onclick: () => selectPreset(preset) },
         { label: 'Direct Apply', onclick: () => applyOnePreset(preset.data) },
         { label: 'Edit Preset', onclick: () => editPreset(preset.data) },
+        { label: 'Duplicate Preset', onclick: () => duplicatePreset(preset.data) },
         { label: 'Delete Preset', onclick: () => {
             if (confirm("Are you sure want to delete that preset?")) {
                 genericRequest('DeletePreset', { preset: preset.data.title }, data => {
