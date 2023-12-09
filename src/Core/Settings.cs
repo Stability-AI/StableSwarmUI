@@ -216,6 +216,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("When generating live previews, this is how many simultaneous generation requests can be waiting at one time.")]
         public int MaxSimulPreviews = 1;
+
+        [ConfigComment("Set to a number above 1 to allow generations of multiple images to automatically generate square mini-grids when they're done.")]
+        public int MaxImagesInMiniGrid = 1;
     }
 
     /// <summary>UI-related settings.</summary>

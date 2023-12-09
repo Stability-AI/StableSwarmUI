@@ -20,7 +20,6 @@ Key feature targets not yet implemented:
 - Localization / automatic translation
 - Mobile browser formatting
 - Self-contained internal mini-backend for simple usages
-- Simple box grids for batches (eg 2x2 squares of images when you generate a batch of 4)
 - full detail "Current Model" display in UI, separate from the model selector (probably as a tab within the batch sidebar?)
 
 # Installing on Windows

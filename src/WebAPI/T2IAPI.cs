@@ -1,6 +1,8 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Newtonsoft.Json.Linq;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
@@ -11,7 +13,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
+using Image = StableSwarmUI.Utils.Image;
+using ISImage = SixLabors.ImageSharp.Image;
+using ISImageRGBA = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
 
 namespace StableSwarmUI.WebAPI;
 
@@ -137,6 +141,27 @@ public static class T2IAPI
         List<int> discard = new();
         int numExtra = 0;
         int batchSizeExpected = user_input.Get(T2IParamTypes.BatchSize, 1);
+        void saveImage(Image image, int actualIndex, T2IParamInput thisParams, string metadata)
+        {
+            (string url, string filePath) = thisParams.Get(T2IParamTypes.DoNotSave, false) ? (session.GetImageB64(image), null) : session.SaveImage(image, actualIndex, thisParams, metadata);
+            if (url == "ERROR")
+            {
+                setError($"Server failed to save an image.");
+                return;
+            }
+            lock (imageSet)
+            {
+                imageSet.Add(new(image, () =>
+                {
+                    if (filePath is not null && File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
+                    discard.Add(actualIndex);
+                }));
+            }
+            output(new JObject() { ["image"] = url, ["batch_index"] = $"{actualIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
+        }
         for (int i = 0; i < images && !claim.ShouldCancel; i++)
         {
             removeDoneTasks();
@@ -169,24 +194,7 @@ public static class T2IAPI
                     {
                         actualIndex = images * batchSizeExpected + Interlocked.Increment(ref numExtra);
                     }
-                    (string url, string filePath) = thisParams.Get(T2IParamTypes.DoNotSave, false) ? (session.GetImageB64(image), null) : session.SaveImage(image, actualIndex, thisParams, metadata);
-                    if (url == "ERROR")
-                    {
-                        setError($"Server failed to save an image.");
-                        return;
-                    }
-                    lock (imageSet)
-                    {
-                        imageSet.Add(new(image, () =>
-                        {
-                            if (filePath is not null && File.Exists(filePath))
-                            {
-                                File.Delete(filePath);
-                            }
-                            discard.Add(actualIndex);
-                        }));
-                    }
-                    output(new JObject() { ["image"] = url, ["batch_index"] = $"{actualIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
+                    saveImage(image, actualIndex, thisParams, metadata);
                 })));
             if (Program.Backends.QueuedRequests < Program.ServerSettings.Backends.MaxRequestsForcedOrder)
             {
@@ -197,6 +205,22 @@ public static class T2IAPI
         {
             await Task.WhenAny(tasks);
             removeDoneTasks();
+        }
+        if (imageSet.Count < session.User.Settings.MaxImagesInMiniGrid && imageSet.Count > 1 && imageSet.All(i => i.Image.Type == Image.ImageType.IMAGE))
+        {
+            ISImage[] imgs = imageSet.Select(i => i.Image.ToIS).ToArray();
+            int rows = (int)Math.Ceiling(Math.Sqrt(imgs.Length));
+            int widthPerImage = imgs.Max(i => i.Width);
+            int heightPerImage = imgs.Max(i => i.Height);
+            ISImageRGBA grid = new(widthPerImage * rows, heightPerImage * rows);
+            for (int i = 0; i < imgs.Length; i++)
+            {
+                int x = (i % rows) * widthPerImage, y = (i / rows) * heightPerImage;
+                grid.Mutate(m => m.DrawImage(imgs[i], new Point(x, y), 1));
+            }
+            Image gridImg = new(grid);
+            (gridImg, string metadata) = user_input.SourceSession.ApplyMetadata(gridImg, user_input, imgs.Length);
+            saveImage(gridImg, -1, user_input, metadata);
         }
         T2IEngine.PostBatchEvent?.Invoke(new(user_input, imageSet.ToArray()));
         output(new JObject() { ["discard_indices"] = JToken.FromObject(discard) });
