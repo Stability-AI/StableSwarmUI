@@ -222,6 +222,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("How many images the history view should stop trying to load after.")]
         public int MaxImagesInHistory = 1000;
+
+        [ConfigComment("If true, the Image History view will cache small preview thumbnails of images.\nThis should make things run faster. You can turn it off if you don't want that.")]
+        public bool ImageHistoryUsePreviews = true;
     }
 
     /// <summary>UI-related settings.</summary>

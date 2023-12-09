@@ -45,14 +45,7 @@ public class SessionHandler
             throw new InvalidOperationException("Session handler is shutting down.");
         }
         userId ??= LocalUserID;
-        userId = Utilities.StrictFilenameClean(userId).Replace("/", "");
-        if (userId.Length == 0)
-        {
-            userId = "_";
-        }
-        User.DatabaseEntry adminUserData = UserDatabase.FindById(userId);
-        adminUserData ??= new() { ID = userId, RawSettings = "\n" };
-        User user = new(this, adminUserData);
+        User user = GetUser(userId);
         user.Restrictions.Admin = true;
         Logs.Info($"Creating new admin session for {source}");
         for (int i = 0; i < 1000; i++)
@@ -69,6 +62,19 @@ public class SessionHandler
             }
         }
         throw new InvalidOperationException("Something is critically wrong in the session handler, cannot generate unique IDs!");
+    }
+
+    /// <summary>Gets or creates the user for the given ID.</summary>
+    public User GetUser(string userId)
+    {
+        userId = Utilities.StrictFilenameClean(userId).Replace("/", "");
+        if (userId.Length == 0)
+        {
+            userId = "_";
+        }
+        User.DatabaseEntry userData = UserDatabase.FindById(userId);
+        userData ??= new() { ID = userId, RawSettings = "\n" };
+        return new(this, userData);
     }
 
     /// <summary>Tries to get the session for an id.</summary>

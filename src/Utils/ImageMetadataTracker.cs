@@ -22,7 +22,20 @@ public static class ImageMetadataTracker
         public long LastVerified { get; set; } // Reading file time can be slow, so don't do more than once per day per file.
     }
 
-    public record class ImageDatabase(LockObject Lock, LiteDatabase Database, ILiteCollection<ImageMetadataEntry> Metadata);
+    /// <summary>BSON database entry for image preview thumbnails.</summary>
+    public class ImagePreviewEntry
+    {
+        [BsonId]
+        public string FileName { get; set; }
+
+        public long FileTime { get; set; }
+
+        public long LastVerified { get; set; }
+
+        public byte[] PreviewData { get; set; }
+    }
+
+    public record class ImageDatabase(LockObject Lock, LiteDatabase Database, ILiteCollection<ImageMetadataEntry> Metadata, ILiteCollection<ImagePreviewEntry> Previews);
 
     /// <summary>Set of all image metadatabases, as a map from folder name to database.</summary>
     public static ConcurrentDictionary<string, ImageDatabase> Databases = new();
@@ -33,7 +46,7 @@ public static class ImageMetadataTracker
         return Databases.GetOrAdd(folder, f =>
         {
             LiteDatabase ldb = new(f + "/image_metadata.ldb");
-            return new(new(), ldb, ldb.GetCollection<ImageMetadataEntry>("image_metadata"));
+            return new(new(), ldb, ldb.GetCollection<ImageMetadataEntry>("image_metadata"), ldb.GetCollection<ImagePreviewEntry>("image_previews"));
         });
     }
 
@@ -53,6 +66,69 @@ public static class ImageMetadataTracker
         lock (metadata.Lock)
         {
             metadata.Metadata.Delete(filename);
+            metadata.Previews.Delete(filename);
+        }
+    }
+
+    /// <summary>Get the preview bytes for the given image, going through a cache manager.</summary>
+    public static byte[] GetOrCreatePreviewFor(string file)
+    {
+        string ext = file.AfterLast('.');
+        if (!ExtensionsWithMetadata.Contains(ext))
+        {
+            return null;
+        }
+        string folder = file.BeforeAndAfterLast('/', out string filename);
+        ImageDatabase metadata = GetDatabaseForFolder(folder);
+        long timeNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        lock (metadata.Lock)
+        {
+            ImagePreviewEntry entry = metadata.Previews.FindById(filename);
+            if (entry is not null)
+            {
+                if (Math.Abs(timeNow - entry.LastVerified) > 60 * 60 * 24)
+                {
+                    long fTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
+                    if (entry.FileTime != fTime)
+                    {
+                        entry = null;
+                    }
+                    else
+                    {
+                        entry.LastVerified = timeNow;
+                        metadata.Previews.Upsert(entry);
+                    }
+                }
+                if (entry is not null)
+                {
+                    return entry.PreviewData;
+                }
+            }
+        }
+        if (!File.Exists(file))
+        {
+            return null;
+        }
+        long fileTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
+        try
+        {
+            byte[] data = File.ReadAllBytes(file);
+            if (data.Length == 0)
+            {
+                return null;
+            }
+            byte[] fileData = new Image(data, Image.ImageType.IMAGE, ext).ToMetadataJpg().ImageData;
+            lock (metadata.Lock)
+            {
+                ImagePreviewEntry entry = new() { FileName = filename, PreviewData = fileData, LastVerified = timeNow, FileTime = fileTime };
+                metadata.Previews.Upsert(entry);
+            }
+            return fileData;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading image preview for file '{file}': {ex}");
+            return null;
         }
     }
 
@@ -103,7 +179,7 @@ public static class ImageMetadataTracker
             {
                 return null;
             }
-            string fileData = new Image(data, Image.ImageType.IMAGE, file.AfterLast('.')).GetMetadata();
+            string fileData = new Image(data, Image.ImageType.IMAGE, ext).GetMetadata();
             lock (metadata.Lock)
             {
                 ImageMetadataEntry entry = new() { FileName = filename, Metadata = fileData, LastVerified = timeNow, FileTime = fileTime };

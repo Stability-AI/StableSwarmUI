@@ -286,7 +286,14 @@ public class WebServer
         byte[] data;
         try
         {
-            data = await File.ReadAllBytesAsync(path);
+            if (context.Request.Query.TryGetValue("preview", out StringValues previewToken) && $"{previewToken}" == "true" && Program.Sessions.GetUser(userId).Settings.ImageHistoryUsePreviews)
+            {
+                data = ImageMetadataTracker.GetOrCreatePreviewFor(path);
+            }
+            else
+            {
+                data = await File.ReadAllBytesAsync(path);
+            }
         }
         catch (Exception ex)
         {
