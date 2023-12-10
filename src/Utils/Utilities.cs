@@ -17,6 +17,7 @@ using System;
 using System.Net;
 using System.Diagnostics;
 using StableSwarmUI.Text2Image;
+using System.Net.Sockets;
 
 namespace StableSwarmUI.Utils;
 
@@ -600,5 +601,24 @@ public static class Utilities
         {
             Logs.Debug($"Failed to remove bad pycache from {path}: {ex}");
         }
+    }
+
+    /// <summary>Tries to read the local IP address, if possible. Returns null if not found. Value may be wrong or misleading.</summary>
+    public static string GetLocalIPAddress()
+    {
+        IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
+        List<string> result = new();
+        foreach (var ip in host.AddressList)
+        {
+            if (ip.AddressFamily == AddressFamily.InterNetwork && !$"{ip}".EndsWith(".1"))
+            {
+                result.Add($"http://{ip}:{Program.ServerSettings.Network.Port}");
+            }
+        }
+        if (result.Any())
+        {
+            return result.JoinString(", ");
+        }
+        return null;
     }
 }

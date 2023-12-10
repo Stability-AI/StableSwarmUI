@@ -525,6 +525,29 @@
                         </p>
                     </div>
                 </div>
+                <div class="card border-secondary mb-3 card-center-container">
+                    <div class="card-header">Local Network</div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            @if (Program.ServerSettings.Network.Host == "127.0.0.1" || Program.ServerSettings.Network.Host == "localhost")
+                            {
+                                <p>This server is only accessible from this computer.</p>
+                            }
+                            else
+                            {
+                                string address = Utilities.GetLocalIPAddress();
+                                if (address is null)
+                                {
+                                    <p>Unknown local address, but seems to be open to LAN based on Host setting '<b>@(Program.ServerSettings.Network.Host)</b>'</p>
+                                }
+                                else
+                                {
+                                    <p>This server is likely accessible from LAN on one of the following addresses: @(address)</p>
+                                }
+                            }
+                        </p>
+                    </div>
+                </div>
                 <div class="card border-danger mb-3 card-center-container">
                     <div class="card-header">Shutdown</div>
                     <div class="card-body">
