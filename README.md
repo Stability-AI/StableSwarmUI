@@ -10,11 +10,9 @@ Follow the [Feature Announcements Thread](https://github.com/Stability-AI/Stable
 
 # Status
 
-This project is in **ALPHA** status. That means all the basic features work, but there's a wide range of core features not yet implemented, and there are many bugs and not-too-great-quality-of-life issues throughout.
+This project is in **ALPHA** status, preparing to move to **BETA** very soon. That means most things work, but there's a lot more planned before it's truly "ready for primetime". it's currently at a point where it's safe to recommend for general users, though you may need at times to use the integrated Comfy tab as a backup way to execute some things that would ideally be on the main UI. There are some known bugs and quality-of-life limits still be worked out.
 
-Powerusers and developers are encouraged to try it out and help build it, but general/beginner users are advised caution.
-
-Those interested in helping push from Alpha to Beta to Full Release are welcome to submit PRs (read the [Contributing](/CONTRIBUTING.md) document first), and you can contact us here on GitHub or on [Discord](https://discord.gg/stablediffusion) in the `stableswarmui` channel. I highly recommended reaching out to ask about plans for a feature before PRing it. There may already be specific plans or even a work in progress.
+Those interested in helping push to a Full ready-for-anything Release status are welcome to submit PRs (read the [Contributing](/CONTRIBUTING.md) document first), and you can contact us here on GitHub or on [Discord](https://discord.gg/stablediffusion) in the `#stableswarmui` channel. I highly recommended reaching out to ask about plans for a feature before PRing it. There may already be specific plans or even a work in progress.
 
 Key feature targets not yet implemented:
 - Localization / automatic translation
@@ -64,7 +62,7 @@ Key feature targets not yet implemented:
 
 The installation starts now and downloads the Stable Diffusion models from the internet. Depending on your internet connection, this may take several minutes. Wait for your web browser to open the StableSwarmUI window.
 
-> **Important**: During the StableSwarmUI installation, you are prompted for the type of backend you want to use. For Mac computers with M1 or M2, you can safely choose the ComfyUI backend and choose the Stable Diffusion XL Base and Refiner models in the Download Models screen.
+> During the StableSwarmUI installation, you are prompted for the type of backend you want to use. For Mac computers with M1 or M2, you can safely choose the ComfyUI backend and choose the Stable Diffusion XL Base and Refiner models in the Download Models screen.
 
 # Running with Docker
 
@@ -83,7 +81,9 @@ See [the documentation folder](docs).
 
 # Motivations
 
-The "Swarm" name is in reference to the original key function of the UI: enabling a 'swarm' of GPUs to all generate images for the same user at once (especially for large grid generations).
+The "Swarm" name is in reference to the original key function of the UI: enabling a 'swarm' of GPUs to all generate images for the same user at once (especially for large grid generations). This is just the feature that inspired the name and not the end all of what Swarm is.
+
+The overall goal of StableSwarmUI is to a be full-featured one-stop-shop for all things Stable Diffusion.
 
 See [the motivations document](/docs/Motivations.md) for motivations on technical choices.
 
@@ -96,7 +96,8 @@ This project:
 - can automatically install [christophschuhmann/improved-aesthetic-predictor](https://github.com/christophschuhmann/improved-aesthetic-predictor) (Apache2).
 - can automatically install [yuvalkirstain/PickScore](https://github.com/yuvalkirstain/PickScore) (MIT).
 - can automatically install [git-for-windows](https://git-scm.com/download/win) (GPLv2).
-- embeds copies of web assets from [BootStrap](https://getbootstrap.com/) (MIT), [Select2](https://select2.org/) (MIT), [JQuery](https://jquery.com/) (MIT).
+- uses [JSON.NET](https://github.com/JamesNK/Newtonsoft.Json) (MIT), [FreneticUtilities](https://github.com/FreneticLLC/FreneticUtilities) (MIT), [LiteDB](https://github.com/mbdavid/LiteDB) (MIT), [ImageSharp](https://github.com/SixLabors/ImageSharp/) (Apache2 under open-source Split License)
+- embeds copies of web assets from [BootStrap](https://getbootstrap.com/) (MIT), [Select2](https://select2.org/) (MIT), [JQuery](https://jquery.com/) (MIT), [exifr](https://github.com/MikeKovarik/exifr) (MIT).
 - has the option to connect to remote servers to use [the Stability.ai API](https://dreamstudio.com/api/start/) as a backend.
 - supports user-built extensions which may have their own licenses or legal conditions.
 
