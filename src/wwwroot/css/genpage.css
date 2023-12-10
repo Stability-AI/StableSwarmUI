@@ -756,6 +756,7 @@ body {
     border-top-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
     border-right: none !important;
+    margin-left: 2px;
 }
 .alt-prompt-center-button {
     border-radius: 0 !important;
