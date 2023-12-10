@@ -235,7 +235,7 @@ class GenPageBrowserClass {
             }
             let img = document.createElement('img');
             img.addEventListener('click', () => {
-                this.select(file);
+                this.select(file, div);
             });
             div.appendChild(img);
             if (this.format.includes('Cards')) {

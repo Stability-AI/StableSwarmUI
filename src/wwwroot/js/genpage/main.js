@@ -18,6 +18,8 @@ let otherInfoSpanContent = [];
 
 let isGeneratingForever = false, isGeneratingPreviews = false;
 
+let lastHistoryImage = null, lastHistoryImageDiv = null;
+
 function updateOtherInfoSpan() {
     let span = getRequiredElementById('other_info_span');
     span.innerHTML = otherInfoSpanContent.join(' ');
@@ -136,6 +138,23 @@ function closeImageFullview() {
 function shiftToNextImagePreview(next = true, expand = false) {
     let curImgElem = document.getElementById('current_image_img');
     if (!curImgElem) {
+        return;
+    }
+    if (curImgElem.dataset.batch_id == 'history') {
+        let divs = [...lastHistoryImageDiv.parentElement.children].filter(div => div.classList.contains('image-block'));
+        let index = divs.findIndex(div => div == lastHistoryImageDiv);
+        if (index == -1) {
+            console.log(`Image preview shift failed as current image ${lastHistoryImage} is not in history area`);
+            return;
+        }
+        let newIndex = index + (next ? 1 : -1);
+        if (newIndex < 0) {
+            newIndex = divs.length - 1;
+        }
+        else if (newIndex >= divs.length) {
+            newIndex = 0;
+        }
+        divs[newIndex].querySelector('img').click();
         return;
     }
     let batch_area = getRequiredElementById('current_image_batch');
@@ -758,12 +777,14 @@ function describeImage(image) {
     return { name, description, buttons, 'image': imageSrc, className: '', searchable };
 }
 
-function selectImageInHistory(image) {
+function selectImageInHistory(image, div) {
+    lastHistoryImage = image.data.src;
+    lastHistoryImageDiv = div;
     if (image.data.name.endsWith('.html')) {
         window.open(image.data.src, '_blank');
     }
     else {
-        setCurrentImage(image.data.src, image.data.metadata);
+        setCurrentImage(image.data.src, image.data.metadata, 'history');
     }
 }
 
