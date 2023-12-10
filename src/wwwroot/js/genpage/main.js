@@ -20,6 +20,8 @@ let isGeneratingForever = false, isGeneratingPreviews = false;
 
 let lastHistoryImage = null, lastHistoryImageDiv = null;
 
+let currentMetadataVal = null, currentImgSrc = null;
+
 function updateOtherInfoSpan() {
     let span = getRequiredElementById('other_info_span');
     span.innerHTML = otherInfoSpanContent.join(' ');
@@ -54,8 +56,6 @@ function clickImageInBatch(div) {
     let imgElem = div.getElementsByTagName('img')[0];
     setCurrentImage(imgElem.src, div.dataset.metadata, div.dataset.batch_id || '', imgElem.dataset.previewGrow == 'true');
 }
-
-let currentMetadataVal = null;
 
 function copy_current_image_params() {
     if (!currentMetadataVal) {
@@ -155,6 +155,10 @@ function shiftToNextImagePreview(next = true, expand = false) {
             newIndex = 0;
         }
         divs[newIndex].querySelector('img').click();
+        if (expand) {
+            divs[newIndex].querySelector('img').click();
+            expandCurrentImage(currentImgSrc, currentMetadataVal);
+        }
         return;
     }
     let batch_area = getRequiredElementById('current_image_batch');
@@ -233,6 +237,8 @@ function alignImageDataFormat() {
 }
 
 function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, smoothAdd = false) {
+    currentImgSrc = src;
+    currentMetadataVal = metadata;
     if (smoothAdd) {
         let image = new Image();
         image.src = src;
@@ -271,7 +277,6 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
     img.id = 'current_image_img';
     img.dataset.batch_id = batchId;
     img.onclick = () => expandCurrentImage(src, metadata);
-    currentMetadataVal = metadata;
     let extrasWrapper = isReuse ? document.getElementById('current-image-extras-wrapper') : createDiv('current-image-extras-wrapper', 'current-image-extras-wrapper');
     extrasWrapper.innerHTML = '';
     let buttons = createDiv(null, 'current-image-buttons');
@@ -342,10 +347,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         }
         alignImageDataFormat();
     }
-    if (isReuse) {
-
-    }
-    else {
+    if (!isReuse) {
         curImg.appendChild(img);
         curImg.appendChild(extrasWrapper);
     }
