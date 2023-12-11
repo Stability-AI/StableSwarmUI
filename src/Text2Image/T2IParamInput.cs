@@ -208,11 +208,7 @@ public class T2IParamInput
         PromptTagProcessors["embed"] = (data, context) =>
         {
             data = context.Parse(data);
-            if (context.Embeds is null)
-            {
-                Logs.Warning($"Embedding '{data}' ignored because the engine has not loaded the embeddings list.");
-                return "";
-            }
+            context.Embeds ??= Program.T2IModelSets["Embedding"].ListModelNamesFor(context.Input.SourceSession).ToArray();
             string want = data.ToLowerFast().Replace('\\', '/');
             string matched = T2IParamTypes.GetBestInList(want, context.Embeds);
             if (matched is null)
@@ -235,11 +231,7 @@ public class T2IParamInput
             {
                 lora = lora[..colonIndex];
             }
-            if (context.Loras is null)
-            {
-                Logs.Warning($"Lora '{data}' ignored because the engine has not loaded the lora list.");
-                return "";
-            }
+            context.Loras ??= Program.T2IModelSets["LoRA"].ListModelNamesFor(context.Input.SourceSession).Select(m => m.ToLowerFast()).ToArray();
             string matched = T2IParamTypes.GetBestInList(lora, context.Loras);
             if (matched is not null)
             {
@@ -452,9 +444,7 @@ public class T2IParamInput
         }
         Random rand = new((int)wildcardSeed);
         string lowRef = fixedVal.ToLowerFast();
-        string[] embeds = lowRef.Contains("<embed") ? Program.T2IModelSets["Embedding"].ListModelNamesFor(SourceSession).ToArray() : null;
-        string[] loras = lowRef.Contains("<lora:") ? Program.T2IModelSets["LoRA"].ListModelNamesFor(SourceSession).Select(m => m.ToLowerFast()).ToArray() : null;
-        PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID, Embeds = embeds, Loras = loras };
+        PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID };
         fixedVal = ProcessPromptLike(fixedVal, context);
         if (fixedVal != val)
         {
