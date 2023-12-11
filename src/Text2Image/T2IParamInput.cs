@@ -231,7 +231,7 @@ public class T2IParamInput
             {
                 lora = lora[..colonIndex];
             }
-            context.Loras ??= Program.T2IModelSets["LoRA"].ListModelNamesFor(context.Input.SourceSession).Select(m => m.ToLowerFast()).ToArray();
+            context.Loras ??= Program.T2IModelSets["LoRA"].ListModelNamesFor(context.Input.SourceSession).ToArray();
             string matched = T2IParamTypes.GetBestInList(lora, context.Loras);
             if (matched is not null)
             {
