@@ -83,6 +83,7 @@ public enum ParamViewType
 /// <param name="Type">The type of the type - text vs integer vs etc (will be set when registering).</param>
 /// <param name="DoNotSave">Can be set to forbid tracking/saving of a param value.</param>
 /// <param name="ImageShouldResize">(For Image-type params) If true, the image should resize to match the target resolution.</param>
+/// <param name="DoNotPreview">If this is true, the parameter is unfit for previewing (eg long generation addons or unnecessary refinements).</param>
 /// <param name="Subtype">The sub-type of the type - for models, this might be eg "Stable-Diffusion".</param>
 /// <param name="ID">The raw ID of this parameter (will be set when registering).</param>
 /// <param name="SharpType">The C# datatype.</param>
@@ -91,7 +92,7 @@ public record class T2IParamType(string Name, string Description, string Default
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null, string IgnoreIf = null,
     ParamViewType ViewType = ParamViewType.SMALL, bool HideFromMetadata = false, Func<string, string> MetadataFormat = null, bool AlwaysRetain = false, double ChangeWeight = 0,
-    T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, string Subtype = null, string ID = null, Type SharpType = null)
+    T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, bool DoNotPreview = false, string Subtype = null, string ID = null, Type SharpType = null)
 {
     public JObject ToNet(Session session)
     {
@@ -117,6 +118,7 @@ public record class T2IParamType(string Name, string Description, string Default
             ["group"] = Group?.ToNet(session),
             ["always_retain"] = AlwaysRetain,
             ["do_not_save"] = DoNotSave,
+            ["do_not_preview"] = DoNotPreview,
             ["view_type"] = ViewType.ToString().ToLowerFast()
         };
     }
@@ -304,19 +306,19 @@ public class T2IParamTypes
             return new string[] { "(Use Base)" }.Concat(refinerList.Select(m => m.Name)).Append("-----").Concat(bases).ToList();
         }
         RefinerModel = Register<T2IModel>(new("Refiner Model", "The model to use for refinement. This should be a model that's good at small-details, and use a structural model as your base model.\n'Use Base' will use your base model rather than switching.\nSDXL 1.0 released with an official refiner model.",
-            "(Use Base)", IgnoreIf: "(Use Base)", GetValues: listRefinerModels, OrderPriority: -5, Group: GroupRefiners, FeatureFlag: "refiners", Subtype: "Stable-Diffusion", ChangeWeight: 9
+            "(Use Base)", IgnoreIf: "(Use Base)", GetValues: listRefinerModels, OrderPriority: -5, Group: GroupRefiners, FeatureFlag: "refiners", Subtype: "Stable-Diffusion", ChangeWeight: 9, DoNotPreview: true
             ));
         RefinerVAE = Register<T2IModel>(new("Refiner VAE", "Optional VAE replacement for the refiner stage.",
-            "None", IgnoreIf: "None", GetValues: listVaes, IsAdvanced: true, OrderPriority: -4.5, Group: GroupRefiners, FeatureFlag: "refiners", Subtype: "VAE", ChangeWeight: 7
+            "None", IgnoreIf: "None", GetValues: listVaes, IsAdvanced: true, OrderPriority: -4.5, Group: GroupRefiners, FeatureFlag: "refiners", Subtype: "VAE", ChangeWeight: 7, DoNotPreview: true
             ));
         RefinerControl = Register<double>(new("Refine Control Percentage", "Higher values give the refiner more control, lower values give the base more control.\nThis is similar to 'Init Image Creativity', but for the refiner. This controls how many steps the refiner takes.",
-            "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
+            "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true
             ));
         RefinerMethod = Register<string>(new("Refiner Method", "How to apply the refiner. Different methods create different results.\n'PostApply' runs the base in full, then runs the refiner with an Init Image.\n'StepSwap' swaps the model after x steps during generation.\n'StepSwapNoisy' is StepSwap but with first-stage noise only.",
-            "PostApply", GetValues: (_) => new() { "PostApply", "StepSwap", "StepSwapNoisy" }, OrderPriority: -3, Group: GroupRefiners, FeatureFlag: "refiners"
+            "PostApply", GetValues: (_) => new() { "PostApply", "StepSwap", "StepSwapNoisy" }, OrderPriority: -3, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true
             ));
         RefinerUpscale = Register<double>(new("Refiner Upscale", "Optional upscale of the image between the base and refiner stage.\nSometimes referred to as 'high-res fix'.\nSetting to '1' disables the upscale.",
-            "1", IgnoreIf: "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners"
+            "1", IgnoreIf: "1", Min: 1, Max: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true
             ));
         static List<string> listVaes(Session s)
         {
@@ -344,31 +346,31 @@ public class T2IParamTypes
         GroupVideo = new("Video", Open: false, OrderPriority: 0, Toggles: true);
         VideoModel = Register<T2IModel>(new("Video Model", "The model to use for video generation.\nThis should be an SVD (Stable Video Diffusion) model.\nNote that SVD favors a low CFG (~2.5).",
             "", GetValues: s => Program.MainSDModels.ListModelsFor(s).Where(m => m.ModelClass is not null && m.ModelClass.ID.Contains("stable-video-diffusion")).OrderBy(m => m.Name).Select(m => m.Name).ToList(),
-            OrderPriority: 1, Group: GroupVideo, FeatureFlag: "video", Subtype: "Stable-Diffusion", ChangeWeight: 9
+            OrderPriority: 1, Group: GroupVideo, FeatureFlag: "video", Subtype: "Stable-Diffusion", ChangeWeight: 9, DoNotPreview: true
             ));
         VideoFrames = Register<int>(new("Video Frames", "How many frames to generate within the video.",
-            "25", Min: 1, Max: 100, OrderPriority: 2, Group: GroupVideo, FeatureFlag: "video"
+            "25", Min: 1, Max: 100, OrderPriority: 2, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
             ));
         VideoFPS = Register<int>(new("Video FPS", "The FPS (frames per second) to use for video generation.\nThis configures the target FPS the video will try to generate for.",
-            "6", Min: 1, Max: 1024, ViewMax: 30, ViewType: ParamViewType.SLIDER, OrderPriority: 2.5, Group: GroupVideo, FeatureFlag: "video"
+            "6", Min: 1, Max: 1024, ViewMax: 30, ViewType: ParamViewType.SLIDER, OrderPriority: 2.5, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
             ));
         VideoSteps = Register<int>(new("Video Steps", "How many steps to use for the video model.\nHigher step counts yield better quality, but much longer generation time.\n20 is a good baseline.",
-            "20", Min: 1, Max: 200, ViewMax: 100, ViewType: ParamViewType.SLIDER, OrderPriority: 3, Group: GroupVideo, FeatureFlag: "video"
+            "20", Min: 1, Max: 200, ViewMax: 100, ViewType: ParamViewType.SLIDER, OrderPriority: 3, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
             ));
         VideoCFG = Register<double>(new("Video CFG", "The CFG Scale to use for video generation.\nVideos start with this CFG on the first frame, and then reduce to MinCFG (normally 1) by the end frame.\nSVD-XT 0.9 normally uses 25 frames, and SVD (non-XT) 0.9 uses 14 frames.",
-            "2.5", Min: 0, Max: 100, ViewMax: 30, Step: 0.5, OrderPriority: 4, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video"
+            "2.5", Min: 0, Max: 100, ViewMax: 30, Step: 0.5, OrderPriority: 4, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
             ));
         VideoMinCFG = Register<double>(new("Video Min CFG", "The minimum CFG to use for video generation.\nVideos start with max CFG on first frame, and then reduce to this CFG. Set to -1 to disable.",
-            "1.0", Min: -1, Max: 100, ViewMax: 30, Step: 0.5, OrderPriority: 4.5, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true
+            "1.0", Min: -1, Max: 100, ViewMax: 30, Step: 0.5, OrderPriority: 4.5, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true, DoNotPreview: true
             ));
         VideoMotionBucket = Register<int>(new("Video Motion Bucket", "Which trained 'motion bucket' to use for the video model.\nHigher values induce more motion. Most values should stay in the 100-200 range.\n127 is a good baseline.",
             "127", Min: 1, Max: 1023, OrderPriority: 10, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true
             ));
         VideoAugmentationLevel = Register<double>(new("Video Augmentation Level", "How much noise to add to the init image.\nHigher values yield more motion.",
-            "0.0", Min: 0, Max: 10, Step: 0.01, OrderPriority: 11, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true
+            "0.0", Min: 0, Max: 10, Step: 0.01, OrderPriority: 11, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true, DoNotPreview: true
             ));
         VideoFormat = Register<string>(new("Video Format", "What format to save videos in.",
-            "webp", GetValues: _ => new() { "webp", "gif", "webm", "h264-mp4" }, OrderPriority: 20, Group: GroupVideo, FeatureFlag: "video"
+            "webp", GetValues: _ => new() { "webp", "gif", "webm", "h264-mp4" }, OrderPriority: 20, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
             ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion", ChangeWeight: 10

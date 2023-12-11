@@ -485,7 +485,13 @@ function getGenInput(input_overrides = {}, input_preoverrides = {}) {
     }
     input["presets"] = currentPresets.map(p => p.title);
     for (let key in input_overrides) {
-        input[key] = input_overrides[key];
+        let val = input_overrides[key];
+        if (val == null) {
+            delete input[key];
+        }
+        else {
+            input[key] = input_overrides[key];
+        }
     }
     return input;
 }

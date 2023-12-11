@@ -545,6 +545,11 @@ function genOnePreview() {
     input_overrides['_preview'] = true;
     input_overrides['donotsave'] = true;
     input_overrides['images'] = 1;
+    for (let param of gen_param_types) {
+        if (param.do_not_preview) {
+            input_overrides[param.id] = null;
+        }
+    }
     doGenerate(input_overrides);
 }
 
