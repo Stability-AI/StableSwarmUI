@@ -108,3 +108,4 @@ Licensed under the PolyForm Noncommercial License 1.0.0, view [LICENSE.txt](/LIC
 (In short: personal usage is free, commercial usage is not)
 
 This license is an initial selection, particularly for the Alpha stage of the project, that is subject to change in the future.
+It will probably be swapped to MIT during Beta.
