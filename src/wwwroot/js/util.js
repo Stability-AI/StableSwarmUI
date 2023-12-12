@@ -562,7 +562,7 @@ function imageToSmallPreviewData(img) {
  */
 function stripHtmlToText(raw) {
     let div = document.createElement('div');
-    div.innerHTML = raw.replaceAll('<br>', '\n');
+    div.innerHTML = raw.replaceAll('\n<br>', '\n').replaceAll('<br>\n', '\n').replaceAll('<br>', '\n');
     return div.textContent || div.innerText || '';
 }
 

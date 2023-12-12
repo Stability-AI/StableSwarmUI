@@ -331,7 +331,11 @@ class ModelBrowserWrapper {
                     }
                 } }
             ];
-            description = `<span class="wildcard_title">${escapeHtml(name)}</span><br>${escapeHtml(model.data.raw)}`;
+            let raw = model.data.raw;
+            if (raw.length > 512) {
+                raw = raw.substring(0, 512) + '...';
+            }
+            description = `<span class="wildcard_title">${escapeHtml(name)}</span><br>${escapeHtml(raw)}`;
             let isSelected = promptBox.value.includes(`<wildcard:${model.data.name}>`);
             let className = isSelected ? 'model-selected' : '';
             let searchable = `${model.data.name}, ${description}`;
