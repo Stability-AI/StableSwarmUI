@@ -71,7 +71,7 @@ function editWildcard(card) {
         newImg.id = 'edit_wildcard_image_img';
         newImg.style.maxWidth = '100%';
         imageInput.appendChild(newImg);
-        if (!card.preview_image || card.preview_image == 'imgs/model_placeholder.jpg') {
+        if (!card.image || card.image == 'imgs/model_placeholder.jpg') {
             enableImage.checked = true;
         }
         enableImage.disabled = false;
