@@ -473,6 +473,10 @@ public class WorkflowGenerator
                 if (preprocessor.ToLowerFast() != "none")
                 {
                     JToken objectData = ComfyUIBackendExtension.ControlNetPreprocessors[preprocessor];
+                    if (objectData is null)
+                    {
+                        throw new InvalidDataException($"ComfyUI backend does not have a preprocessor named '{preprocessor}'");
+                    }
                     string preProcNode = g.CreateNode(preprocessor, (_, n) =>
                     {
                         n["inputs"] = new JObject()
@@ -486,11 +490,14 @@ public class WorkflowGenerator
                                 n["inputs"][key] = defaultValue;
                             }
                         }
-                        foreach ((string key, JToken data) in (JObject)objectData["input"]["optional"])
+                        if (((JObject)objectData["input"]).TryGetValue("optional", out JToken optional))
                         {
-                            if (data.Count() == 2 && data[1] is JObject settings && settings.TryGetValue("default", out JToken defaultValue))
+                            foreach ((string key, JToken data) in (JObject)optional)
                             {
-                                n["inputs"][key] = defaultValue;
+                                if (data.Count() == 2 && data[1] is JObject settings && settings.TryGetValue("default", out JToken defaultValue))
+                                {
+                                    n["inputs"][key] = defaultValue;
+                                }
                             }
                         }
                     });
