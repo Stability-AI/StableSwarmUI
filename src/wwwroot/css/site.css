@@ -357,8 +357,6 @@ textarea, input, select {
     transition: visibility 0s, opacity 0.3s linear;
 }
 .sui-popover-notransition {
-    visibility: visible;
-    opacity: 1;
     transition: none;
 }
 .auto-slider-toggle {
