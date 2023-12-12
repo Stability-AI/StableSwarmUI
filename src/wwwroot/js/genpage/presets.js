@@ -240,8 +240,8 @@ function editPreset(preset) {
         let newImg = curImg.cloneNode(true);
         newImg.id = 'new_preset_image_img';
         newImg.style.maxWidth = '100%';
-        delete newImg.width;
-        delete newImg.height;
+        newImg.removeAttribute('width');
+        newImg.removeAttribute('height');
         getRequiredElementById('new_preset_image').appendChild(newImg);
         let enableImage = getRequiredElementById('new_preset_enable_image');
         enableImage.checked = false;

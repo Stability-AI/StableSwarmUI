@@ -70,6 +70,8 @@ function editWildcard(card) {
         let newImg = curImg.cloneNode(true);
         newImg.id = 'edit_wildcard_image_img';
         newImg.style.maxWidth = '100%';
+        newImg.removeAttribute('width');
+        newImg.removeAttribute('height');
         imageInput.appendChild(newImg);
         if (!card.image || card.image == 'imgs/model_placeholder.jpg') {
             enableImage.checked = true;
@@ -129,8 +131,8 @@ function editModel(model, browser) {
         let newImg = curImg.cloneNode(true);
         newImg.id = 'edit_model_image_img';
         newImg.style.maxWidth = '100%';
-        delete newImg.width;
-        delete newImg.height;
+        newImg.removeAttribute('width');
+        newImg.removeAttribute('height');
         imageInput.appendChild(newImg);
         if (!model.preview_image || model.preview_image == 'imgs/model_placeholder.jpg') {
             enableImage.checked = true;
