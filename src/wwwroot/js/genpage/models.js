@@ -398,7 +398,9 @@ class ModelBrowserWrapper {
 
     selectModel(model) {
         this.selectOne(model);
-        this.browser.rerender();
+        setTimeout(() => {
+            this.browser.rerender();
+        }, 50);
     }
 }
 
@@ -421,7 +423,6 @@ function selectWildcard(model) {
         promptBox.value += ` ${chunk}`;
     }
     triggerChangeFor(promptBox);
-    wildcardsBrowser.browser.rerender();
 }
 
 function embedClearFromPrompt(model, element) {
@@ -449,7 +450,6 @@ function selectEmbedding(model) {
         promptBox.value += ` ${chunk}`;
     }
     triggerChangeFor(promptBox);
-    sdEmbedBrowser.browser.rerender();
 }
 
 let lastPromptForEmbedMonitor = {};
