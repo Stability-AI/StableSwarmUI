@@ -299,10 +299,6 @@ public class T2IParamTypes
             List<T2IModel> baseList = Program.MainSDModels.ListModelsFor(s).OrderBy(m => m.Name).ToList();
             List<T2IModel> refinerList = baseList.Where(m => m.ModelClass is not null && m.ModelClass.Name.Contains("Refiner")).ToList();
             List<string> bases = baseList.Select(m => m.Name).ToList();
-            if (refinerList.IsEmpty())
-            {
-                return bases;
-            }
             return new string[] { "(Use Base)" }.Concat(refinerList.Select(m => m.Name)).Append("-----").Concat(bases).ToList();
         }
         RefinerModel = Register<T2IModel>(new("Refiner Model", "The model to use for refinement. This should be a model that's good at small-details, and use a structural model as your base model.\n'Use Base' will use your base model rather than switching.\nSDXL 1.0 released with an official refiner model.",
