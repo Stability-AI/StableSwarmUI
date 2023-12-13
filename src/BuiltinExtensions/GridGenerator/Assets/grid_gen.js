@@ -332,7 +332,7 @@ class GridGenClass {
         this.axisDiv = createDiv('grid-gen-axis-area', 'grid-gen-axis-area');
         this.settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
         this.settingsDiv.innerHTML =
-            '<br><label for="grid_generate_type" onchange="extensionGridGen.typeChanged()">Output Type: </label><select id="grid_generate_type"><option>Just Images</option><option>Grid Image</option><option>Web Page</option></select>'
+            '<br><label for="grid_generate_type">Output Type: </label><select id="grid_generate_type" onchange="extensionGridGen.typeChanged()"><option>Just Images</option><option>Grid Image</option><option>Web Page</option></select>'
             + '<div id="grid-gen-page-config"><br><div id="grid-gen-info-box">...</div>'
             + makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.', '', 'normal', 'Output folder name...', false, true)
             + '</div><br><div class="grid-gen-checkboxes">'
