@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using ISImage = SixLabors.ImageSharp.Image;
 
 namespace StableSwarmUI.Builtin_ImageBatchToolExtension;
 
@@ -27,7 +28,7 @@ public class ImageBatchToolExtension : Extension
     }
 
     /// <summary>API route to generate images with WebSocket updates.</summary>
-    public static async Task<JObject> ImageBatchRun(WebSocket socket, Session session, JObject rawInput, string input_folder, string output_folder, bool init_image, bool revision, bool controlnet)
+    public static async Task<JObject> ImageBatchRun(WebSocket socket, Session session, JObject rawInput, string input_folder, string output_folder, bool init_image, bool revision, bool controlnet, string resMode)
     {
         // TODO: Strict path validation / user permission confirmation.
         if (input_folder.Length < 5 || output_folder.Length < 5)
@@ -59,15 +60,15 @@ public class ImageBatchToolExtension : Extension
             return null;
         }
         Directory.CreateDirectory(output_folder);
-        await API.RunWebsocketHandlerCallWS(GenBatchRun_Internal, session, (rawInput, input_folder, output_folder, init_image, revision, controlnet, imageFiles), socket);
+        await API.RunWebsocketHandlerCallWS(GenBatchRun_Internal, session, (rawInput, input_folder, output_folder, init_image, revision, controlnet, imageFiles, resMode), socket);
         Logs.Info("Image Batcher completed successfully");
         await socket.SendJson(new JObject() { ["success"] = "complete" }, API.WebsocketTimeout);
         return null;
     }
 
-    public static async Task GenBatchRun_Internal(Session session, (JObject, string, string, bool, bool, bool, string[]) input, Action<JObject> output, bool isWS)
+    public static async Task GenBatchRun_Internal(Session session, (JObject, string, string, bool, bool, bool, string[], string) input, Action<JObject> output, bool isWS)
     {
-        (JObject rawInput, string input_folder, string output_folder, bool init_image, bool revision, bool controlnet, string[] imageFiles) = input;
+        (JObject rawInput, string input_folder, string output_folder, bool init_image, bool revision, bool controlnet, string[] imageFiles, string resMode) = input;
         using Session.GenClaim claim = session.Claim(gens: imageFiles.Length);
         async Task sendStatus()
         {
@@ -123,7 +124,40 @@ public class ImageBatchToolExtension : Extension
                 break;
             }
             Image image = new(File.ReadAllBytes(file), Image.ImageType.IMAGE, file.AfterLast('.'));
+            ISImage imgData = image.ToIS;
             T2IParamInput param = baseParams.Clone();
+            void setRes(int width, int height)
+            {
+                param.Set(T2IParamTypes.Width, width);
+                param.Set(T2IParamTypes.Height, height);
+                param.Remove(T2IParamTypes.AspectRatio);
+                param.Remove(T2IParamTypes.AltResolutionHeightMult);
+            }
+            switch (resMode)
+            {
+                case "From Parameter":
+                    break;
+                case "From Image":
+                    setRes(imgData.Width, imgData.Height);
+                    break;
+                case "Scale To Model":
+                    (int width, int height) = Utilities.ResToModelFit(imgData.Width, imgData.Height, param.Get(T2IParamTypes.Model));
+                    setRes(width, height);
+                    break;
+                case "Scale To Model Or Above":
+                    (width, height) = Utilities.ResToModelFit(imgData.Width, imgData.Height, param.Get(T2IParamTypes.Model));
+                    if (width < imgData.Width || height < imgData.Height)
+                    {
+                        setRes(imgData.Width, imgData.Height);
+                    }
+                    else
+                    {
+                        setRes(width, height);
+                    }
+                    break;
+                default:
+                    throw new InvalidDataException("Invalid resolution mode");
+            }
             if (init_image)
             {
                 param.Set(T2IParamTypes.InitImage, image);
