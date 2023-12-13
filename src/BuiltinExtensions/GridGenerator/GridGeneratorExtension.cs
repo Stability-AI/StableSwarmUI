@@ -9,7 +9,14 @@ using StableSwarmUI.WebAPI;
 using System.IO;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using SixLabors.Fonts;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Drawing.Processing;
 using static StableSwarmUI.Builtin_GridGeneratorExtension.GridGenCore;
+using Image = StableSwarmUI.Utils.Image;
+using ISImage = SixLabors.ImageSharp.Image;
+using ISImageRGBA = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
 
 namespace StableSwarmUI.Builtin_GridGeneratorExtension;
 
@@ -143,19 +150,33 @@ public class GridGeneratorExtension : Extension
                     }
                     string targetPath = $"{mainpath}.{ext}";
                     string dir = targetPath.Replace('\\', '/').BeforeLast('/');
-                    if (!Directory.Exists(dir))
+                    if (set.Grid.OutputType == Grid.OutputyTypeEnum.WEB_PAGE)
                     {
-                        Directory.CreateDirectory(dir);
-                    }
-                    File.WriteAllBytes(targetPath, image.ImageData);
-                    if (set.Grid.PublishMetadata)
-                    {
-                        if (!string.IsNullOrWhiteSpace(metadata))
+                        if (!Directory.Exists(dir))
+                        {
+                            Directory.CreateDirectory(dir);
+                        }
+                        File.WriteAllBytes(targetPath, image.ImageData);
+                        if (set.Grid.PublishMetadata && !string.IsNullOrWhiteSpace(metadata))
                         {
                             File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata}\n{metaExtra}".EncodeUTF8());
                         }
+                        data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{ext}", ["metadata"] = metadata });
                     }
-                    data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{ext}", ["metadata"] = metadata });
+                    else
+                    {
+                        (string url, string filePath) = thisParams.Get(T2IParamTypes.DoNotSave, false) ? (data.Session.GetImageB64(image), null) : data.Session.SaveImage(image, iteration, thisParams, metadata);
+                        if (url == "ERROR")
+                        {
+                            setError($"Server failed to save an image.");
+                            return;
+                        }
+                        data.AddOutput(new JObject() { ["image"] = url, ["batch_index"] = $"{iteration}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
+                        if (set.Grid.OutputType == Grid.OutputyTypeEnum.GRID_IMAGE)
+                        {
+                            data.GeneratedOutputs.TryAdd(set.BaseFilepath, image);
+                        }
+                    }
                 }));
             lock (data.UpdateLock)
             {
@@ -205,6 +226,8 @@ public class GridGeneratorExtension : Extension
         public JObject ErrorOut;
 
         public AsyncAutoResetEvent Signal = new(false);
+
+        public ConcurrentDictionary<string, Image> GeneratedOutputs = new();
 
         public Task[] GetActive()
         {
@@ -259,7 +282,20 @@ public class GridGeneratorExtension : Extension
         return new JObject() { ["exists"] = exists };
     }
 
-    public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder)
+    public static Font MainFont;
+
+    public static Font GetFont()
+    {
+        if (MainFont is null)
+        {
+            FontCollection collection = new();
+            collection.Add("src/wwwroot/fonts/unifont-12.0.01.woff2");
+            MainFont = collection.Families.First().CreateFont(16, FontStyle.Bold);
+        }
+        return MainFont;
+    }
+
+    public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string outputType)
     {
         using Session.GenClaim claim = session.Claim(gens: 1);
         T2IParamInput baseParams;
@@ -282,7 +318,8 @@ public class GridGeneratorExtension : Extension
         Grid grid = null;
         try
         {
-            Task mainRun = Task.Run(() => grid = Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, "Output", outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun, weightOrder));
+            string ext = Image.ImageFormatToExtension(session.User.Settings.FileFormat.ImageFormat);
+            Task mainRun = Task.Run(() => grid = Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, "Output", outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun, weightOrder, outputType, ext));
             while (!mainRun.IsCompleted || data.GetActive().Any() || data.Generated.Any())
             {
                 await data.Signal.WaitAsync(TimeSpan.FromSeconds(1));
@@ -296,6 +333,97 @@ public class GridGeneratorExtension : Extension
             {
                 throw mainRun.Exception;
             }
+            if (grid.OutputType == Grid.OutputyTypeEnum.GRID_IMAGE && grid.Axes.Count <= 3)
+            {
+                (string, string) proc(AxisValue val) => (val.Title, T2IParamTypes.CleanNameGeneric(val.Key));
+                List<(string, string)> xAxis = grid.Axes[0].Values.Select(proc).ToList();
+                List<(string, string)> yAxis = grid.Axes.Count > 1 ? grid.Axes[1].Values.Select(proc).ToList() : new() { (null, null) };
+                List<(string, string)> y2Axis = grid.Axes.Count > 2 ? grid.Axes[2].Values.Select(proc).ToList() : new() { (null, null) };
+                int maxWidth = data.GeneratedOutputs.Max(x => x.Value.ToIS.Width);
+                int maxHeight = data.GeneratedOutputs.Max(x => x.Value.ToIS.Height);
+                Font font = GetFont();
+                TextOptions options = new(font);
+                FontRectangle rect = TextMeasurer.MeasureAdvance("ABCdefg Word Prefix", options);
+                int textWidth = (int)Math.Ceiling(rect.Width);
+                int textHeight = (int)Math.Ceiling(rect.Height) * 2;
+                int totalWidth = maxWidth * xAxis.Count + textWidth;
+                int totalHeight = maxHeight * (yAxis.Count * y2Axis.Count) + textHeight * y2Axis.Count;
+                Logs.Info($"Will generate grid image of size {totalWidth}x{totalHeight}");
+                ISImageRGBA gridImg = new(totalWidth, totalHeight);
+                gridImg.Mutate(m =>
+                {
+                    m.Fill(Color.White);
+                    Brush brush = new SolidBrush(Color.Black);
+                    int xIndex = 0;
+                    float yIndex = 0;
+                    foreach ((string x, _) in xAxis)
+                    {
+                        RichTextOptions rto = new(font) { WrappingLength = maxWidth, Origin = new(xIndex * maxWidth + textWidth, 0) };
+                        m.DrawText(rto, x, brush);
+                        xIndex++;
+                    }
+                    foreach ((string y2, _) in y2Axis)
+                    {
+                        if (y2 is not null)
+                        {
+                            RichTextOptions rto = new(font) { WrappingLength = textWidth, Origin = new(0, yIndex * maxHeight) };
+                            m.DrawText(rto, y2, brush);
+                            yIndex += textHeight / (float)maxHeight;
+                        }
+                        foreach ((string y, _) in yAxis)
+                        {
+                            if (y is not null)
+                            {
+                                RichTextOptions rto = new(font) { WrappingLength = textWidth, Origin = new(0, yIndex * maxHeight + textHeight * 2) };
+                                m.DrawText(rto, y, brush);
+                            }
+                            yIndex++;
+                        }
+                    }
+                    yIndex = 0;
+                    foreach ((_, string y2) in y2Axis)
+                    {
+                        if (y2 is not null)
+                        {
+                            yIndex += textHeight / (float)maxHeight;
+                        }
+                        foreach ((_, string y) in yAxis)
+                        {
+                            xIndex = 0;
+                            foreach ((_, string x) in xAxis)
+                            {
+                                string imgPath = x;
+                                if (y is not null)
+                                {
+                                    imgPath = $"{imgPath}/{y}";
+                                    if (y2 is not null)
+                                    {
+                                        imgPath = $"{imgPath}/{y2}";
+                                    }
+                                }
+                                ISImage img = data.GeneratedOutputs[imgPath].ToIS;
+                                m.DrawImage(img, new Point(xIndex * maxWidth + textWidth, (int)(yIndex * maxHeight + textHeight)), 1);
+                                xIndex++;
+                            }
+                            yIndex++;
+                        }
+                    }
+                });
+                Logs.Info("Generated, saving...");
+                Image outImg = new(gridImg);
+                int batchId = xAxis.Count * yAxis.Count * y2Axis.Count;
+                Logs.Debug("Apply metadata...");
+                (outImg, string metadata) = session.ApplyMetadata(outImg, grid.InitialParams, batchId);
+                Logs.Debug("Metadata applied, save to file...");
+                (string url, string filePath) = grid.InitialParams.Get(T2IParamTypes.DoNotSave, false) ? (data.Session.GetImageB64(outImg), null) : data.Session.SaveImage(outImg, batchId, grid.InitialParams, metadata);
+                if (url == "ERROR")
+                {
+                    data.ErrorOut = new JObject() { ["error"] = $"Server failed to save an image." };
+                    throw new InvalidOperationException();
+                }
+                Logs.Debug("Saved to file, send over websocket...");
+                await socket.SendJson(new JObject() { ["image"] = url, ["batch_index"] = $"{batchId}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata }, API.WebsocketTimeout);
+            }
         }
         catch (Exception ex)
         {
@@ -304,7 +432,10 @@ public class GridGeneratorExtension : Extension
                 Volatile.Write(ref data.ErrorOut, ExToError(ex));
             }
         }
-        PostClean(session.User.OutputDirectory, outputFolderName);
+        if (grid.OutputType == Grid.OutputyTypeEnum.WEB_PAGE)
+        {
+            PostClean(session.User.OutputDirectory, outputFolderName);
+        }
         Task faulted = data.Rendering.FirstOrDefault(t => t.IsFaulted);
         JObject err = Volatile.Read(ref data.ErrorOut);
         if (faulted is not null && err is null)

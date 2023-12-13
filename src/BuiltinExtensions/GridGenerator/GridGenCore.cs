@@ -229,6 +229,13 @@ public partial class GridGenCore
         public volatile bool MustCancel;
 
         public bool PublishMetadata;
+
+        public enum OutputyTypeEnum
+        {
+            WEB_PAGE, JUST_IMAGES, GRID_IMAGE
+        }
+
+        public OutputyTypeEnum OutputType;
     }
 
     public class SingleGridCall
@@ -609,6 +616,10 @@ public partial class GridGenCore
 
         public string EmitWebData(string path, T2IParamInput input, bool dryRun, string footerExtra)
         {
+            if (Grid.OutputType != Grid.OutputyTypeEnum.WEB_PAGE)
+            {
+                return null;
+            }
             Logs.Info("Building final web data...");
             string json = BuildJson(input, dryRun);
             if (!dryRun)
@@ -634,20 +645,32 @@ public partial class GridGenCore
 
     // TODO: Clever model logic switching so this doesn't spam-switch
 
-    public static Grid Run(T2IParamInput baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string footerExtra = "")
+    public static Grid Run(T2IParamInput baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string outputType, string format, string footerExtra = "")
     {
         Grid grid = new()
         {
             Title = outputFolderName,
             Description = "",
             Author = "Unspecified",
-            Format = "png",
+            Format = format,
             Axes = new(),
             BaseParams = new(),
             InitialParams = baseParams.Clone(),
             LocalData = LocalData,
-            PublishMetadata = publishGenMetadata
+            PublishMetadata = publishGenMetadata,
+            OutputType = outputType switch
+            {
+                "Just Images" => Grid.OutputyTypeEnum.JUST_IMAGES,
+                "Grid Image" => Grid.OutputyTypeEnum.GRID_IMAGE,
+                "Web Page" => Grid.OutputyTypeEnum.WEB_PAGE,
+                _ => throw new Exception($"Invalid output type '{outputType}'")
+            }
         };
+        if (grid.OutputType != Grid.OutputyTypeEnum.WEB_PAGE)
+        {
+            generatePage = false;
+            grid.PublishMetadata = false;
+        }
         int axisIndex = 0;
         foreach (JToken axis in axes)
         {

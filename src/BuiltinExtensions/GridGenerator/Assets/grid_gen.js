@@ -264,21 +264,27 @@ class GridGenClass {
         this.axisDiv.appendChild(wrapper);
     }
 
+    typeChanged() {
+        let type = getRequiredElementById('grid_generate_type').value;
+        getRequiredElementById('grid-gen-page-config').style.display = type == 'Web Page' ? 'block' : 'none';
+    }
+
     register() {
         let doGenerate = () => {
             resetBatchIfNeeded();
             let startTime = Date.now();
             let generatedCount = 0;
-            let getOpt = (o) => document.getElementById('grid-gen-opt-' + o).checked;
+            let getOpt = (o) => getRequiredElementById('grid-gen-opt-' + o).checked;
             let data = {
                 'baseParams': getGenInput(),
-                'outputFolderName': document.getElementById('grid-gen-output-folder-name').value,
+                'outputFolderName': getRequiredElementById('grid-gen-output-folder-name').value,
                 'doOverwrite': getOpt('do-overwrite'),
                 'fastSkip': getOpt('fast-skip'),
                 'generatePage': getOpt('generate-page'),
                 'publishGenMetadata': getOpt('publish-metadata'),
                 'dryRun': getOpt('dry-run'),
-                'weightOrder': getOpt('weight-order')
+                'weightOrder': getOpt('weight-order'),
+                'outputType': getRequiredElementById('grid_generate_type').value,
             };
             let axisData = [];
             for (let axis of this.axisDiv.getElementsByClassName('grid-gen-axis-wrapper')) {
@@ -326,9 +332,10 @@ class GridGenClass {
         this.axisDiv = createDiv('grid-gen-axis-area', 'grid-gen-axis-area');
         this.settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
         this.settingsDiv.innerHTML =
-            '<br><div id="grid-gen-info-box">...</div>'
+            '<br><label for="grid_generate_type" onchange="extensionGridGen.typeChanged()">Output Type: </label><select id="grid_generate_type"><option>Just Images</option><option>Grid Image</option><option>Web Page</option></select>'
+            + '<div id="grid-gen-page-config"><br><div id="grid-gen-info-box">...</div>'
             + makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.', '', 'normal', 'Output folder name...', false, true)
-            + '<br><div class="grid-gen-checkboxes">'
+            + '</div><br><div class="grid-gen-checkboxes">'
             + makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false, false, true)
             + makeCheckboxInput(null, 'grid-gen-opt-fast-skip', 'Fast Skip', 'If checked, uses faster skipping algorithm (prevents validation of skipped axes).', false, false, true)
             + makeCheckboxInput(null, 'grid-gen-opt-generate-page', 'Generate Page', 'If unchecked, will prevent regenerating the page for the grid.', true, false, true)
@@ -341,6 +348,7 @@ class GridGenClass {
         let outInfoBox = document.getElementById('grid-gen-info-box');
         let outputFolder = document.getElementById('grid-gen-output-folder-name');
         let updateOutputInfo = () => {
+            this.typeChanged();
             genericRequest('GridGenDoesExist', { 'folderName': outputFolder.value }, data => {
                 let prefix = data.exists ? '<span class="gridgen_warn">Output WILL OVERRIDE existing folder</span>' : 'Output will be saved to';
                 outInfoBox.innerHTML = `${prefix} <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${outputFolder.value}</code></a>`;
@@ -353,6 +361,7 @@ class GridGenClass {
         }
         outputFolder.value = `grid-${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}-${pad(today.getHours())}-${pad(today.getMinutes())}-${pad(today.getSeconds())}`;
         updateOutputInfo();
+        this.typeChanged();
         this.addAxis();
     }
 }

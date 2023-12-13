@@ -216,11 +216,14 @@ public static class T2IAPI
             int widthPerImage = imgs.Max(i => i.Width);
             int heightPerImage = imgs.Max(i => i.Height);
             ISImageRGBA grid = new(widthPerImage * rows, heightPerImage * rows);
-            for (int i = 0; i < imgs.Length; i++)
+            grid.Mutate(m =>
             {
-                int x = (i % rows) * widthPerImage, y = (i / rows) * heightPerImage;
-                grid.Mutate(m => m.DrawImage(imgs[i], new Point(x, y), 1));
-            }
+                for (int i = 0; i < imgs.Length; i++)
+                {
+                    int x = (i % rows) * widthPerImage, y = (i / rows) * heightPerImage;
+                    m.DrawImage(imgs[i], new Point(x, y), 1);
+                }
+            });
             Image gridImg = new(grid);
             (gridImg, string metadata) = user_input.SourceSession.ApplyMetadata(gridImg, user_input, imgs.Length);
             saveImage(gridImg, -1, user_input, metadata);

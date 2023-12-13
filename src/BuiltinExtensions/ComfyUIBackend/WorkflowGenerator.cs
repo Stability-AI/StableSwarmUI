@@ -472,11 +472,7 @@ public class WorkflowGenerator
                 }
                 if (preprocessor.ToLowerFast() != "none")
                 {
-                    JToken objectData = ComfyUIBackendExtension.ControlNetPreprocessors[preprocessor];
-                    if (objectData is null)
-                    {
-                        throw new InvalidDataException($"ComfyUI backend does not have a preprocessor named '{preprocessor}'");
-                    }
+                    JToken objectData = ComfyUIBackendExtension.ControlNetPreprocessors[preprocessor] ?? throw new InvalidDataException($"ComfyUI backend does not have a preprocessor named '{preprocessor}'");
                     string preProcNode = g.CreateNode(preprocessor, (_, n) =>
                     {
                         n["inputs"] = new JObject()

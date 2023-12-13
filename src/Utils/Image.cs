@@ -211,6 +211,18 @@ public class Image
         return GetMetadata()?.ParseToJson()?["sui_image_params"]?.Value<JObject>();
     }
 
+    public static string ImageFormatToExtension(string format)
+    {
+        return format switch
+        {
+            "PNG" => "png",
+            "JPG" => "jpg",
+            "JPG90" => "jpg",
+            "JPG75" => "jpg",
+            _ => throw new ArgumentException("Unknown format: " + format, nameof(format)),
+        };
+    }
+
     /// <summary>Converts an image to the specified format, and the specific metadata text.</summary>
     public Image ConvertTo(string format, string metadata = null, int dpi = 0)
     {
