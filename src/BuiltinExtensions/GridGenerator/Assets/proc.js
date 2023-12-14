@@ -67,11 +67,14 @@ function getExtension(filePath) {
 /** External callable. */
 function fix_video(path) {
     let ext = getExtension(path);
-    if (ext != 'webm' && ext != 'mp4') {
-        return;
-    }
     let matches = document.querySelectorAll(`img[data-img_path="${path}"]`);
     for (let match of matches) {
+        if (ext != 'webm' && ext != 'mp4') {
+            if (!match.src.endsWith(ext)) {
+                match.src = `${path}.${ext}`;
+            }
+            continue;
+        }
         if (match.tagName == 'VIDEO') {
             continue;
         }
@@ -319,7 +322,8 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
             newScr = document.createElement('script');
             newScr.src = getMetadataScriptFor(slashed);
         }
-        if (scoreDisplay != 'None' && typeof getScoreFor != 'undefined') {
+        let doScores = scoreDisplay != 'None' && typeof getScoreFor != 'undefined';
+        if (doScores) {
             scoreUpdates.push(() => {
                 let score = getScoreFor(slashed);
                 if (score) {
@@ -344,16 +348,22 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                     elem.firstChild.innerHTML = `<div style="position: relative; width: 0; height: 0"><div style="position: absolute; left: 0; z-index: 20;">${Math.round(score * 100)}%</div><div class="heatmapper" style="position: absolute; left: 0; width: 100px; height: 100px; z-index: 10; background-color: ${blockColor}"></div></div>`;
                 }
             });
-            if (newScr && typeof getScoreFor != 'undefined') {
-                newScr.onload = () => {
-                    setTimeout(() => {
-                        lastScoreBump = Date.now();
-                    }, 1);
-                    if (scoreBumpTracker == null) {
-                        scoreBumpTracker = setInterval(() => {
-                            if (Date.now() - lastScoreBump > 300) {
-                                clearInterval(scoreBumpTracker);
-                                scoreBumpTracker = null;
+        }
+        if (newScr != null) {
+            newScr.onload = () => {
+                setTimeout(() => {
+                    lastScoreBump = Date.now();
+                    let ext = file_extensions_alt[slashed];
+                    if (ext && !actualUrl.endsWith(ext)) {
+                        fix_video(slashed);
+                    }
+                }, 1);
+                if (scoreBumpTracker == null) {
+                    scoreBumpTracker = setInterval(() => {
+                        if (Date.now() - lastScoreBump > 300) {
+                            clearInterval(scoreBumpTracker);
+                            scoreBumpTracker = null;
+                            if (doScores) {
                                 scoreMin = 1;
                                 scoreMax = 0;
                                 for (let image of document.getElementsByClassName('table_img')) {
@@ -370,10 +380,10 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
                                 }
                                 updateScaling();
                             }
-                        }, 100);
-                    }
-                };
-            }
+                        }
+                    }, 100);
+                }
+            };
         }
         if (newScr) {
             scriptDump.appendChild(newScr);
