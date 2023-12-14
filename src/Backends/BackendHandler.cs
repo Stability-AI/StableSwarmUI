@@ -672,7 +672,7 @@ public class BackendHandler
             if (Pressure is null && Model is not null)
             {
                 Logs.Verbose($"[BackendHandler] Backend request #{ID} is creating pressure for model {Model.Name}...");
-                Pressure = Handler.ModelRequests.GetOrAdd(Model.Name, _ => new() { Model = Model });
+                Pressure = Handler.ModelRequests.GetOrCreate(Model.Name, () => new() { Model = Model });
                 lock (Pressure.Locker)
                 {
                     Pressure.Count++;
