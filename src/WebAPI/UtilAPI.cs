@@ -36,14 +36,17 @@ public static class UtilAPI
         {
             CliplikeTokenizer tokenizer = Tokenizers.GetOrAdd(tokenset, set =>
             {
-                string fullPath = $"src/srcdata/Tokensets/{set}.txt.gz";
-                if (!File.Exists(fullPath))
+                lock (Tokenizers)
                 {
-                    throw new InvalidOperationException($"Tokenset '{set}' does not exist.");
+                    string fullPath = $"src/srcdata/Tokensets/{set}.txt.gz";
+                    if (!File.Exists(fullPath))
+                    {
+                        throw new InvalidOperationException($"Tokenset '{set}' does not exist.");
+                    }
+                    CliplikeTokenizer tokenizer = new();
+                    tokenizer.Load(fullPath);
+                    return tokenizer;
                 }
-                CliplikeTokenizer tokenizer = new();
-                tokenizer.Load(fullPath);
-                return tokenizer;
             });
             return (null, tokenizer);
         }

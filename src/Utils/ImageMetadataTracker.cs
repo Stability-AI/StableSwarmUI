@@ -45,8 +45,12 @@ public static class ImageMetadataTracker
     {
         return Databases.GetOrAdd(folder, f =>
         {
-            LiteDatabase ldb = new(f + "/image_metadata.ldb");
-            return new(new(), ldb, ldb.GetCollection<ImageMetadataEntry>("image_metadata"), ldb.GetCollection<ImagePreviewEntry>("image_previews"));
+            // Stupidly, in C# ConcurrentDictionary.GetOrAdd can call its function multiple times concurrently, despite the whole point of ConcurrentDict being preventing concurrency issues???
+            lock (Databases)
+            {
+                LiteDatabase ldb = new(f + "/image_metadata.ldb");
+                return new(new(), ldb, ldb.GetCollection<ImageMetadataEntry>("image_metadata"), ldb.GetCollection<ImagePreviewEntry>("image_previews"));
+            }
         });
     }
 
