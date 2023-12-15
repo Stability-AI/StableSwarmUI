@@ -61,7 +61,7 @@ def do_lora_handle(base_data, other_data, rank, prefix, require, do_bias, callba
         base_tensor = base_tensor.cpu()
         max_diff = float(diff.abs().max())
         if max_diff < 1e-5:
-            print(f"discard unaltered key {name} ({max_diff})")
+            print(f"discard unaltered key {key} ({max_diff})")
             continue
         if key.endswith(".weight"):
             fixed_key = key[:-len(".weight")].replace('.', '_')
