@@ -342,6 +342,7 @@ class GridGenClass {
         let startTime = Date.now();
         let generatedCount = 0;
         let getOpt = (o) => getRequiredElementById('grid-gen-opt-' + o).checked;
+        let type = this.outputType.value;
         let data = {
             'baseParams': getGenInput(),
             'outputFolderName': this.outputFolder.value,
@@ -351,7 +352,7 @@ class GridGenClass {
             'publishGenMetadata': getOpt('publish-metadata'),
             'dryRun': getOpt('dry-run'),
             'weightOrder': getOpt('weight-order'),
-            'outputType': this.outputType.value,
+            'outputType': type,
         };
         let axisData = [];
         for (let axis of this.listAxes()) {
@@ -383,10 +384,20 @@ class GridGenClass {
                     rate = Math.round(rate * 100) / 100;
                     message = `${rate} seconds per image`;
                 }
-                this.outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+                if (type == 'Web Page') {
+                    this.outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+                }
+                else {
+                    this.outInfoBox.innerHTML = `<b>Running at ${message}</b>`;
+                }
             }
             else if (data.success) {
-                this.outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+                if (type == 'Web Page') {
+                    this.outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+                }
+                else {
+                    this.outInfoBox.innerHTML = `<b>Completed!</b>`;
+                }
             }
         });
     }

@@ -669,7 +669,7 @@ function doPopupFor(img) {
     }
     let params = escapeHtml(metaText).replaceAll('\n', '\n<br>');
     let text = 'Image: ' + img.alt + (params.length > 1 ? ', parameters: <br>' + params : '<br>(parameters hidden)');
-    modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img class="popup_modal_img" src="${img.src}"><br><div class="popup_modal_undertext">${text}</div>`;
+    modalElem.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="modal_inner_div"><img onclick="$('#image_info_modal').modal('hide')" class="popup_modal_img" src="${img.src}"><br><div class="popup_modal_undertext">${text}</div>`;
     $('#image_info_modal').modal('toggle');
 }
 
