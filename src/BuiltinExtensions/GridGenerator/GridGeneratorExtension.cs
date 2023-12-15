@@ -166,8 +166,9 @@ public class GridGeneratorExtension : Extension
                             Directory.CreateDirectory(dir);
                         }
                         File.WriteAllBytes(targetPath, image.ImageData);
-                        if (set.Grid.PublishMetadata && !string.IsNullOrWhiteSpace(metadata))
+                        if (set.Grid.PublishMetadata && (!string.IsNullOrWhiteSpace(metadata) || !string.IsNullOrWhiteSpace(metaExtra)))
                         {
+                            metadata ??= "{}";
                             File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata}\n{metaExtra}".EncodeUTF8());
                         }
                         data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{ext}", ["metadata"] = metadata });
