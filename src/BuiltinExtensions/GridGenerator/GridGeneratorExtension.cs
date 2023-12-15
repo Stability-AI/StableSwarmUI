@@ -211,6 +211,38 @@ public class GridGeneratorExtension : Extension
     {
         API.RegisterAPICall(GridGenRun);
         API.RegisterAPICall(GridGenDoesExist);
+        API.RegisterAPICall(GridGenSaveData);
+        API.RegisterAPICall(GridGenDeleteData);
+        API.RegisterAPICall(GridGenGetData);
+        API.RegisterAPICall(GridGenListData);
+    }
+
+    public async Task<JObject> GridGenSaveData(Session session, string gridName, JObject rawData)
+    {
+        session.User.SaveGenericData("gridgenerator", gridName, rawData["data"].ToString());
+        return new JObject() { ["success"] = true };
+    }
+
+    public async Task<JObject> GridGenDeleteData(Session session, string gridName)
+    {
+        session.User.DeleteGenericData("gridgenerator", gridName);
+        return new JObject() { ["success"] = true };
+    }
+
+    public async Task<JObject> GridGenGetData(Session session, string gridName)
+    {
+        string data = session.User.GetGenericData("gridgenerator", gridName);
+        if (data is null)
+        {
+            return new() { ["error"] = "Could not find that Grid Generator save." };
+        }
+        return new JObject() { ["data"] = data.ParseToJson() };
+    }
+
+    public async Task<JObject> GridGenListData(Session session)
+    {
+        List<string> data = session.User.ListAllGenericData("gridgenerator");
+        return new JObject() { ["data"] = JArray.FromObject(data.ToArray()) };
     }
 
     public class GridCallData

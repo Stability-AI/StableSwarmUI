@@ -106,7 +106,6 @@ class GridGenClass {
                     title += "(This value is skipped)";
                 }
                 else if (mode) {
-                    console.log(`render ${mode} is ${mode.name} is ${mode.type}`)
                     cleanPart = cleanPart.toLowerCase();
                     if (mode.values || mode.type == 'model' || mode.type == 'boolean') {
                         let matched = getFillable().filter(f => f.toLowerCase().includes(cleanPart));
@@ -329,8 +328,13 @@ class GridGenClass {
     }
 
     typeChanged() {
-        let type = getRequiredElementById('grid_generate_type').value;
+        let type = this.outputType.value;
         getRequiredElementById('grid-gen-page-config').style.display = type == 'Web Page' ? 'block' : 'none';
+        this.updateOutputInfo();
+    }
+
+    listAxes() {
+        return this.axisDiv.getElementsByClassName('grid-gen-axis-wrapper');
     }
 
     register() {
@@ -341,17 +345,17 @@ class GridGenClass {
             let getOpt = (o) => getRequiredElementById('grid-gen-opt-' + o).checked;
             let data = {
                 'baseParams': getGenInput(),
-                'outputFolderName': getRequiredElementById('grid-gen-output-folder-name').value,
+                'outputFolderName': this.outputFolder.value,
                 'doOverwrite': getOpt('do-overwrite'),
                 'fastSkip': getOpt('fast-skip'),
                 'generatePage': getOpt('generate-page'),
                 'publishGenMetadata': getOpt('publish-metadata'),
                 'dryRun': getOpt('dry-run'),
                 'weightOrder': getOpt('weight-order'),
-                'outputType': getRequiredElementById('grid_generate_type').value,
+                'outputType': this.outputType.value,
             };
             let axisData = [];
-            for (let axis of this.axisDiv.getElementsByClassName('grid-gen-axis-wrapper')) {
+            for (let axis of this.listAxes()) {
                 let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
                 let input = axis.getElementsByClassName('grid-gen-axis-input')[0].innerText;
                 if (type != '') {
@@ -376,10 +380,10 @@ class GridGenClass {
                         rate = Math.round(rate * 100) / 100;
                         message = `${rate} seconds per image`;
                     }
-                    outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${outputFolder.value}</code></a>`;
+                    this.outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
                 }
                 else if (data.success) {
-                    outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${outputFolder.value}</code></a>`;
+                    this.outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
                 }
             });
         };
@@ -396,20 +400,31 @@ class GridGenClass {
         this.axisDiv = createDiv('grid-gen-axis-area', 'grid-gen-axis-area');
         this.settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
         this.settingsDiv.innerHTML =
-            `<br><label for="grid_generate_type">Output Type: </label><select id="grid_generate_type" onchange="extensionGridGen.typeChanged()"><option>Just Images</option><option>Grid Image</option><option>Web Page</option></select>
+            `<br><label for="grid_generate_type">Output Type: </label><select id="grid_generate_type" onchange="extensionGridGen.typeChanged()"><option>Just Images</option><option>Grid Image</option><option>Web Page</option></select>&emsp;<button class="basic-button" onclick="extensionGridGen.saveGridConfig()">Save Grid Config</button>&emsp;<button class="basic-button" onclick="extensionGridGen.loadGridConfig()">Load Grid Config</button>
+            ${modalHeader('gridgen_load_modal', 'Grid Generator: Load Modal')}
+                <div class="modal-body">
+                    <p>Load grid config...</p>
+                    <select id="grid_gen_load_config_selector">
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="extensionGridGen.loadModalDelete()">Delete Grid Config</button>
+                    <button type="button" class="btn btn-primary" onclick="extensionGridGen.loadModalLoadNow()">Load Grid Config</button>
+                    <button type="button" class="btn btn-secondary" onclick="extensionGridGen.hideLoadModal()">Cancel</button>
+                </div>
+            ${modalFooter()}
+            <div id="grid-gen-info-box">...</div>
             <div id="grid-gen-page-config">
-                <br>
-                <div id="grid-gen-info-box">...</div>
                 ${makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.', '', 'normal', 'Output folder name...', false, true)}
             </div>
             <br>
             <div class="grid-gen-checkboxes">
-                ${makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false, false, true)}
-                ${makeCheckboxInput(null, 'grid-gen-opt-fast-skip', 'Fast Skip', 'If checked, uses faster skipping algorithm (prevents validation of skipped axes).', false, false, true)}
-                ${makeCheckboxInput(null, 'grid-gen-opt-generate-page', 'Generate Page', 'If unchecked, will prevent regenerating the page for the grid.', true, false, true)}
-                ${makeCheckboxInput(null, 'grid-gen-opt-publish-metadata', 'Publish Generation Metadata', 'If unchecked, will hide the image generation metadata.', true, false, true)}
-                ${makeCheckboxInput(null, 'grid-gen-opt-dry-run', 'Dry Run', 'If checked, will not actually generate any images - useful to validate your grid.', false, false, true)}
-                ${makeCheckboxInput(null, 'grid-gen-opt-weight-order', 'Allow Reordering', 'If checked, the grid generator will reorder processing order of axes to maximize generation speed.', true, false, true)}
+                ${makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-fast-skip', 'Fast Skip', 'If checked, uses faster skipping algorithm (prevents validation of skipped axes).', false, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-generate-page', 'Generate Page', 'If unchecked, will prevent regenerating the page for the grid.', true, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-publish-metadata', 'Publish Generation Metadata', 'If unchecked, will hide the image generation metadata.', true, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-dry-run', 'Dry Run', 'If checked, will not actually generate any images - useful to validate your grid.', false, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-weight-order', 'Allow Reordering', 'If checked, the grid generator will reorder processing order of axes to maximize generation speed.', true, false, true)}&emsp;
             </div>
             <div class="hoverable-minor-hint-text">
                 When using numbered parameters, you can type for example "<code>1, 2, .., 10</code>" to automatically have the "<code>..</code>" part filled in.
@@ -417,24 +432,109 @@ class GridGenClass {
             </div>`;
         this.mainDiv.appendChild(this.settingsDiv);
         this.mainDiv.appendChild(this.axisDiv);
-        let outInfoBox = document.getElementById('grid-gen-info-box');
-        let outputFolder = document.getElementById('grid-gen-output-folder-name');
-        let updateOutputInfo = () => {
-            this.typeChanged();
-            genericRequest('GridGenDoesExist', { 'folderName': outputFolder.value }, data => {
-                let prefix = data.exists ? '<span class="gridgen_warn">Output WILL OVERRIDE existing folder</span>' : 'Output will be saved to';
-                outInfoBox.innerHTML = `${prefix} <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${outputFolder.value}</code></a>`;
-            });
-        };
-        outputFolder.addEventListener('input', updateOutputInfo);
+        this.outInfoBox = document.getElementById('grid-gen-info-box');
+        this.outputFolder = document.getElementById('grid-gen-output-folder-name');
+        this.outputType = document.getElementById('grid_generate_type');
+        this.outputFolder.addEventListener('input', () => { this.typeChanged(); this.updateOutputInfo() });
         let today = new Date();
         function pad(n) {
             return n < 10 ? '0' + n : n;
         }
-        outputFolder.value = `grid-${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}-${pad(today.getHours())}-${pad(today.getMinutes())}-${pad(today.getSeconds())}`;
-        updateOutputInfo();
+        this.outputFolder.value = `grid-${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}-${pad(today.getHours())}-${pad(today.getMinutes())}-${pad(today.getSeconds())}`;
+        this.updateOutputInfo();
         this.typeChanged();
         this.addAxis();
+    }
+    
+    updateOutputInfo () {
+        if (this.outputType.value == 'Web Page') {
+            genericRequest('GridGenDoesExist', { 'folderName': this.outputFolder.value }, data => {
+                let prefix = data.exists ? '<span class="gridgen_warn">Output WILL OVERRIDE existing folder</span>' : 'Output will be saved to';
+                this.outInfoBox.innerHTML = `${prefix} <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+            });
+        }
+        else {
+            this.outInfoBox.innerHTML = '...';
+        }
+    };
+
+    saveGridConfig() {
+        let gridName = prompt("Enter a name for this grid config:");
+        if (!gridName) {
+            return;
+        }
+        let axes = [];
+        for (let axis of this.listAxes()) {
+            let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
+            let input = axis.getElementsByClassName('grid-gen-axis-input')[0].innerText;
+            if (type != '' && input.trim() != '') {
+                axes.push({ 'mode': type, 'values': input });
+            }
+        }
+        let checkboxes = {};
+        for (let opt of this.settingsDiv.getElementsByClassName('grid-gen-checkboxes')[0].getElementsByTagName('input')) {
+            checkboxes[opt.id] = opt.checked;
+        }
+        let data = {
+            'axes': axes,
+            'checkboxes': checkboxes,
+            'output_folder_name': this.outputFolder.value,
+            'output_type': this.outputType.value,
+        };
+        genericRequest('GridGenSaveData', { 'gridName': gridName, 'data': data }, data => {
+            this.outInfoBox.innerHTML = `<b>Config saved!</b>`;
+        });
+    }
+
+    loadGridConfig() {
+        genericRequest('GridGenListData', {}, data => {
+            let selector = document.getElementById('grid_gen_load_config_selector');
+            selector.innerHTML = '';
+            for (let config of data.data) {
+                selector.add(new Option(config, config));
+            }
+            $('#gridgen_load_modal').modal('show');
+        });
+    }
+
+    loadModalDelete() {
+        let gridName = document.getElementById('grid_gen_load_config_selector').value;
+        genericRequest('GridGenDeleteData', { 'gridName': gridName }, data => {
+            this.hideLoadModal();
+            this.outInfoBox.innerHTML = `<b>Config deleted!</b>`;
+        });
+    }
+
+    loadModalLoadNow() {
+        let gridName = document.getElementById('grid_gen_load_config_selector').value;
+        genericRequest('GridGenGetData', { 'gridName': gridName }, data => {
+            this.hideLoadModal();
+            this.outputFolder.value = data.data.output_folder_name;
+            this.outputType.value = data.data.output_type;
+            this.typeChanged();
+            for (let opt of this.settingsDiv.getElementsByClassName('grid-gen-checkboxes')[0].getElementsByTagName('input')) {
+                if (data.data.checkboxes[opt.id] != null) {
+                    opt.checked = data.data.checkboxes[opt.id];
+                }
+            }
+            this.axisDiv.innerHTML = '';
+            this.lastAxisId = 0;
+            this.addAxis();
+            for (let axis of data.data.axes) {
+                let wrapper = this.listAxes()[this.listAxes().length - 1];
+                let selector = wrapper.getElementsByClassName('grid-gen-selector')[0];
+                selector.value = axis.mode;
+                triggerChangeFor(selector);
+                let input = wrapper.getElementsByClassName('grid-gen-axis-input')[0];
+                input.innerText = axis.values;
+                triggerChangeFor(input);
+            }
+            this.outInfoBox.innerHTML = `<b>Config loaded!</b>`;
+        });
+    }
+
+    hideLoadModal() {
+        $('#gridgen_load_modal').modal('hide');
     }
 }
 

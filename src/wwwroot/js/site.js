@@ -578,3 +578,15 @@ function quickAppendButton(div, name, func) {
     button.onclick = func;
     div.appendChild(button);
 }
+
+function modalHeader(id, title) {
+    return `
+    <div class="modal" tabindex="-1" role="dialog" id="${id}">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">${title}</h5></div>`;
+}
+
+function modalFooter() {
+    return `</div></div></div>`;
+}

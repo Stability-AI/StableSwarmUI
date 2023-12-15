@@ -66,6 +66,12 @@ public class User
         }
     }
 
+    /// <summary>Returns a list of all generic-data IDs this user has saved.</summary>
+    public List<string> ListAllGenericData(string dataname)
+    {
+        return GetAllGenericData(dataname).Select(d => d.ID.After("///").After("///")).ToList();
+    }
+
     /// <summary>Returns a list of all generic-data this user has saved.</summary>
     public List<SessionHandler.GenericDataStore> GetAllGenericData(string dataname)
     {
