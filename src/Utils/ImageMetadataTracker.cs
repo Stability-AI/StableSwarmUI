@@ -45,7 +45,18 @@ public static class ImageMetadataTracker
     {
         return Databases.GetOrCreate(folder, () =>
         {
-            LiteDatabase ldb = new(folder + "/image_metadata.ldb");
+            string path = $"{folder}/image_metadata.ldb";
+            LiteDatabase ldb;
+            try
+            {
+                ldb = new(path);
+            }
+            catch (Exception)
+            {
+                Logs.Warning($"Image metadata store at '{path}' is corrupt, deleting it and rebuilding.");
+                File.Delete(path);
+                ldb = new(path);
+            }
             return new(new(), ldb, ldb.GetCollection<ImageMetadataEntry>("image_metadata"), ldb.GetCollection<ImagePreviewEntry>("image_previews"));
         });
     }

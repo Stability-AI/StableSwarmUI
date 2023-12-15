@@ -536,3 +536,6 @@ textarea, input, select {
     color: var(--text);
     opacity: 1;
 }
+.form-check-input {
+    cursor: pointer;
+}

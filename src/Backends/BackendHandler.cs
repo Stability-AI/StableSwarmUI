@@ -245,7 +245,7 @@ public class BackendHandler
     /// <summary>Gets a set of all currently running backends of the given type.</summary>
     public IEnumerable<T> RunningBackendsOfType<T>() where T : AbstractT2IBackend
     {
-        return T2IBackends.Values.Select(b => b.Backend as T).Where(b => b is not null && b.Status == BackendStatus.RUNNING);
+        return T2IBackends.Values.Select(b => b.Backend as T).Where(b => b is not null && !b.Reserved && b.Status == BackendStatus.RUNNING);
     }
 
     /// <summary>Causes all backends to restart.</summary>
