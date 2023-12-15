@@ -145,7 +145,7 @@ public static class ImageMetadataTracker
     }
 
     /// <summary>Get the metadata text for the given file, going through a cache manager.</summary>
-    public static string GetMetadataFor(string file, string root)
+    public static string GetMetadataFor(string file, string root, bool starNoFolders)
     {
         string ext = file.AfterLast('.');
         if (!ExtensionsWithMetadata.Contains(ext))
@@ -194,6 +194,10 @@ public static class ImageMetadataTracker
             string fileData = new Image(data, Image.ImageType.IMAGE, ext).GetMetadata();
             string subPath = file.StartsWith(root) ? file[root.Length..] : Path.GetRelativePath(root, file);
             subPath = subPath.Replace('\\', '/').Trim('/');
+            if (starNoFolders)
+            {
+                subPath = subPath.Replace("/", "");
+            }
             string starPath = $"{root}/Starred/{subPath}";
             bool isStarred = subPath.StartsWith("Starred/") || File.Exists(starPath);
             if (isStarred)

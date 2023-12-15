@@ -373,7 +373,7 @@ public static class T2IAPI
         return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject()
         {
             ["src"] = name,
-            ["metadata"] = ImageMetadataTracker.GetMetadataFor(file, root)
+            ["metadata"] = ImageMetadataTracker.GetMetadataFor(file, root, session.User.Settings.StarNoFolders)
         }, depth);
     }
 
@@ -398,7 +398,7 @@ public static class T2IAPI
             Logs.Warning($"User {session.User.UserID} tried to star image path '{origPath}' which maps to '{path}', but cannot as the image does not exist.");
             return new JObject() { ["error"] = "That file does not exist, cannot star." };
         }
-        string starPath = $"Starred/{origPath}";
+        string starPath = $"Starred/{(session.User.Settings.StarNoFolders ? origPath.Replace("/", "") : origPath)}";
         (starPath, _, _) = WebServer.CheckFilePath(root, starPath);
         if (File.Exists(starPath))
         {
