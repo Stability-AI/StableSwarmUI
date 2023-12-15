@@ -1,6 +1,7 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using LiteDB;
+using Newtonsoft.Json.Linq;
 using StableSwarmUI.Core;
 using System.IO;
 
@@ -144,7 +145,7 @@ public static class ImageMetadataTracker
     }
 
     /// <summary>Get the metadata text for the given file, going through a cache manager.</summary>
-    public static string GetMetadataFor(string file)
+    public static string GetMetadataFor(string file, string root)
     {
         string ext = file.AfterLast('.');
         if (!ExtensionsWithMetadata.Contains(ext))
@@ -191,6 +192,23 @@ public static class ImageMetadataTracker
                 return null;
             }
             string fileData = new Image(data, Image.ImageType.IMAGE, ext).GetMetadata();
+            string subPath = file.StartsWith(root) ? file[root.Length..] : Path.GetRelativePath(root, file);
+            subPath = subPath.Replace('\\', '/').Trim('/');
+            string starPath = $"{root}/Starred/{subPath}";
+            bool isStarred = subPath.StartsWith("Starred/") || File.Exists(starPath);
+            if (isStarred)
+            {
+                if (fileData is null)
+                {
+                    fileData = "{ \"is_starred\": true }";
+                }
+                else
+                {
+                    JObject jData = fileData.ParseToJson();
+                    jData["is_starred"] = true;
+                    fileData = jData.ToString();
+                }
+            }
             lock (metadata.Lock)
             {
                 ImageMetadataEntry entry = new() { FileName = filename, Metadata = fileData, LastVerified = timeNow, FileTime = fileTime };

@@ -27,6 +27,7 @@ public static class T2IAPI
         API.RegisterAPICall(GenerateText2Image);
         API.RegisterAPICall(GenerateText2ImageWS);
         API.RegisterAPICall(ListImages);
+        API.RegisterAPICall(ToggleImageStarred);
         API.RegisterAPICall(OpenImageFolder);
         API.RegisterAPICall(DeleteImage);
         API.RegisterAPICall(ListT2IParams);
@@ -372,8 +373,48 @@ public static class T2IAPI
         return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject()
         {
             ["src"] = name,
-            ["metadata"] = ImageMetadataTracker.GetMetadataFor(file)
+            ["metadata"] = ImageMetadataTracker.GetMetadataFor(file, root)
         }, depth);
+    }
+
+    /// <summary>API route to toggle whether an image is starred or not.</summary>
+    public static async Task<JObject> ToggleImageStarred(Session session, string path)
+    {
+        path = path.Replace('\\', '/').Trim('/');
+        if (path.StartsWith("Starred/"))
+        {
+            path = path["Starred/".Length..];
+        }
+        string origPath = path;
+        string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, session.User.OutputDirectory);
+        (path, string consoleError, string userError) = WebServer.CheckFilePath(root, path);
+        if (consoleError is not null)
+        {
+            Logs.Error(consoleError);
+            return new JObject() { ["error"] = userError };
+        }
+        if (!File.Exists(path))
+        {
+            Logs.Warning($"User {session.User.UserID} tried to star image path '{origPath}' which maps to '{path}', but cannot as the image does not exist.");
+            return new JObject() { ["error"] = "That file does not exist, cannot star." };
+        }
+        string starPath = $"Starred/{origPath}";
+        (starPath, _, _) = WebServer.CheckFilePath(root, starPath);
+        if (File.Exists(starPath))
+        {
+            File.Delete(starPath);
+            ImageMetadataTracker.RemoveMetadataFor(path);
+            ImageMetadataTracker.RemoveMetadataFor(starPath);
+            return new JObject() { ["new_state"] = false };
+        }
+        else
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(starPath));
+            File.Copy(path, starPath);
+            ImageMetadataTracker.RemoveMetadataFor(path);
+            ImageMetadataTracker.RemoveMetadataFor(starPath);
+            return new JObject() { ["new_state"] = true };
+        }
     }
 
     public static SemaphoreSlim RefreshSemaphore = new(1, 1);

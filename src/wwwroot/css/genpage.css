@@ -271,6 +271,9 @@ body {
 .image-block:hover {
     background-color: var(--emphasis);
 }
+.image-block-starred {
+    box-shadow: 0 0 1px 1px yellow;
+}
 .image-batch-0 {
     background-color: var(--batch-0);
 }
@@ -1040,4 +1043,15 @@ body {
 .welcome-message-wrapper {
     min-height: 8em;
     width: fit-content;
+}
+.button-starred-image {
+    background-color: yellow;
+    color: black;
+    box-shadow: 0 0 1px 1px yellow;
+    transition: all 0.5s ease-out;
+    border: none;
+}
+.button-starred-image:hover {
+    background-color: orange;
+    color: black;
 }
