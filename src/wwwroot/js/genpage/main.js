@@ -54,7 +54,7 @@ function toggleAutoLoadPreviews() {
 
 function clickImageInBatch(div) {
     let imgElem = div.getElementsByTagName('img')[0];
-    setCurrentImage(div.dataset.src, div.dataset.metadata, div.dataset.batch_id || '', imgElem.dataset.previewGrow == 'true');
+    setCurrentImage(div.dataset.src, div.dataset.metadata, div.dataset.batch_id ?? '', imgElem.dataset.previewGrow == 'true');
 }
 
 function copy_current_image_params() {
@@ -238,7 +238,7 @@ function alignImageDataFormat() {
 
 function toggleStar(path, rawSrc) {
     genericRequest('ToggleImageStarred', {'path': path}, data => {
-        let curImgImg = getRequiredElementById('current_image_img');
+        let curImgImg = document.getElementById('current_image_img');
         if (curImgImg && curImgImg.dataset.src == rawSrc) {
             let button = getRequiredElementById('current_image').querySelector('.star-button');
             if (data.new_state) {
@@ -252,12 +252,12 @@ function toggleStar(path, rawSrc) {
         }
         let batchDiv = getRequiredElementById('current_image_batch').querySelector(`.image-block[data-src="${rawSrc}"]`);
         if (batchDiv) {
-            batchDiv.dataset.metadata = JSON.stringify({ ...(JSON.parse(batchDiv.dataset.metadata || '{}') || {}), is_starred: data.new_state });
+            batchDiv.dataset.metadata = JSON.stringify({ ...(JSON.parse(batchDiv.dataset.metadata ?? '{}') ?? {}), is_starred: data.new_state });
             batchDiv.classList.toggle('image-block-starred', data.new_state);
         }
         let historyDiv = getRequiredElementById('imagehistorybrowser-content').querySelector(`.image-block[data-src="${rawSrc}"]`);
         if (historyDiv) {
-            historyDiv.dataset.metadata = JSON.stringify({ ...(JSON.parse(historyDiv.dataset.metadata || '{}') || {}), is_starred: data.new_state });
+            historyDiv.dataset.metadata = JSON.stringify({ ...(JSON.parse(historyDiv.dataset.metadata ?? '{}') ?? {}), is_starred: data.new_state });
             historyDiv.classList.toggle('image-block-starred', data.new_state);
         }
     });
@@ -348,7 +348,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
             doGenerate(input_overrides, { 'initimagecreativity': 0.6 });
         }));
     });
-    let metaParsed = metadata ? JSON.parse(metadata) : { is_starred: false };
+    let metaParsed = JSON.parse(metadata) ?? { is_starred: false };
     quickAppendButton(buttons, metaParsed.is_starred ? 'Starred' : 'Star', (e, button) => {
         toggleStar(imagePathClean, src);
     }, (metaParsed.is_starred ? ' star-button button-starred-image' : ' star-button'));
@@ -712,7 +712,7 @@ function doGenerate(input_overrides = {}, input_preoverrides = {}) {
             }
             if (data.gen_progress) {
                 if (!(data.gen_progress.batch_index in images)) {
-                    let batch_div = gotImagePreview(data.gen_progress.preview || 'imgs/model_placeholder.jpg', `{"preview": "${data.gen_progress.current_percent}"}`, `${batch_id}_${data.gen_progress.batch_index}`);
+                    let batch_div = gotImagePreview(data.gen_progress.preview ?? 'imgs/model_placeholder.jpg', `{"preview": "${data.gen_progress.current_percent}"}`, `${batch_id}_${data.gen_progress.batch_index}`);
                     images[data.gen_progress.batch_index] = {div: batch_div, image: null, metadata: null, overall_percent: 0, current_percent: 0};
                     let progress_bars_html = `<div class="image-preview-progress-inner"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>`;
                     let progress_bars = createDiv(null, 'image-preview-progress-wrapper', progress_bars_html);
@@ -745,7 +745,7 @@ function doGenerate(input_overrides = {}, input_preoverrides = {}) {
             if (data.discard_indices) {
                 let needsNew = false;
                 for (let index of data.discard_indices) {
-                    let img = discardable[index] || images[index];
+                    let img = discardable[index] ?? images[index];
                     if (img) {
                         img.div.remove();
                         let curImgElem = document.getElementById('current_image_img');
@@ -816,6 +816,11 @@ function describeImage(image) {
 }
 
 function selectImageInHistory(image, div) {
+    let curImg = document.getElementById('current_image_img');
+    if (curImg && curImg.dataset.src == image.data.src) {
+        curImg.click();
+        return;
+    }
     lastHistoryImage = image.data.src;
     lastHistoryImageDiv = div;
     if (image.data.name.endsWith('.html')) {
