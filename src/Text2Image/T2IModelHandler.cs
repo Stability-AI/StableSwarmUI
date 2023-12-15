@@ -226,6 +226,7 @@ public class T2IModelHandler
             {
                 return;
             }
+            Logs.Debug($"Will reapply metadata for model {model.RawFilePath}");
             using FileStream reader = File.OpenRead(model.RawFilePath);
             byte[] headerLen = new byte[8];
             reader.ReadExactly(headerLen, 0, 8);
@@ -288,6 +289,7 @@ public class T2IModelHandler
             File.Move(model.RawFilePath, model.RawFilePath + ".tmp2");
             File.Move(model.RawFilePath + ".tmp", model.RawFilePath);
             File.Delete(model.RawFilePath + ".tmp2");
+            Logs.Debug($"Completed metadata update for {model.RawFilePath}");
         }
     }
 
