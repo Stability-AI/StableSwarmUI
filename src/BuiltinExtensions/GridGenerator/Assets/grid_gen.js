@@ -366,9 +366,13 @@ class GridGenClass {
             return;
         }
         data['gridAxes'] = axisData;
+        let timeLastGenHit = Date.now();
         makeWSRequestT2I('GridGenRun', data, data => {
             if (data.image) {
-                appendGenTimeFrom(data.metadata);
+                let timeNow = Date.now();
+                let timeDiff = timeNow - timeLastGenHit;
+                timeLastGenHit = timeNow;
+                appendGenTimeFrom(timeDiff / 1000);
                 gotImageResult(data.image, data.metadata);
                 generatedCount++;
                 let timeProgress = Math.round((Date.now() - startTime) / 1000);

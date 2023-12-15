@@ -413,18 +413,9 @@ function gotImagePreview(image, metadata, batchId) {
 let totalGensThisRun = 0;
 let totalGenRunTime = 0;
 
-function appendGenTimeFrom(metadata) {
-    if (!metadata) {
-        return;
-    }
-    metadata = JSON.parse(metadata);
-    if (!metadata || !metadata.sui_image_params || !metadata.sui_image_params.generation_time) {
-        return;
-    }
-    let time = metadata.sui_image_params.generation_time;
-    let genTime = parseFloat(time.substring(time.lastIndexOf('and') + 3, time.lastIndexOf('(gen)')).trim());
+function appendGenTimeFrom(time) {
     totalGensThisRun++;
-    totalGenRunTime += genTime;
+    totalGenRunTime += time;
 }
 
 function updateCurrentStatusDirect(data) {
@@ -652,6 +643,7 @@ function doGenerate(input_overrides = {}, input_preoverrides = {}) {
         let images = {};
         let batch_id = batchesEver++;
         let discardable = {};
+        let timeLastGenHit = Date.now();
         makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides, input_preoverrides), data => {
             if (isPreview) {
                 if (data.image) {
@@ -660,7 +652,10 @@ function doGenerate(input_overrides = {}, input_preoverrides = {}) {
                 return;
             }
             if (data.image) {
-                appendGenTimeFrom(data.metadata);
+                let timeNow = Date.now();
+                let timeDiff = timeNow - timeLastGenHit;
+                timeLastGenHit = timeNow;
+                appendGenTimeFrom(timeDiff / 1000);
                 if (!(data.batch_index in images)) {
                     let batch_div = gotImageResult(data.image, data.metadata, `${batch_id}_${data.batch_index}`);
                     images[data.batch_index] = {div: batch_div, image: data.image, metadata: data.metadata, overall_percent: 0, current_percent: 0};

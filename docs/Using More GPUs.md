@@ -125,7 +125,7 @@ Before we begin, let's plan how we're going to set things up.
         - The `10 current generations` indicates how many images in total are being generated (in this case `10`)
         - The `4 running` indicates how many are currently assigned to a backend GPU (in this case `4` images are assigned). Note that generally by default 2 images get assigned to any GPU at a time, so `4 running` indicates that **2** backends are working.
         - The `6 queued` indicates how many images are not yet assigned and are waiting in a queue behind others (in this case `6`). You can generally expect queued+running to equal the total (4 + 6 = 10).
-        - The `est 3m 50s` is an estimate of how long it will take to generate all the images waiting. Note that this is a loose estimate and is likely to be wrong. (Currently it has a bug that causes it to improperly compensates for the number of GPUs available and will greatly overestimate time. It will also get confused about delays caused by model loading. Overall, don't rely on it for much more than a loose guess for right now. In the future hopefully it will be adjusted to be more accurate.)
+        - The `est 3m 50s` is an estimate of how long it will take to generate all the images waiting. Note that this is a loose estimate and is likely to be wrong.
     - Pay close attention to the `running` count. Make sure it is double the number of GPUs you expect.
         - If it is just `2`, your Other Machines are not likely not running properly.
         - If it is above 2 but less than double your backends, you may have some backends not working.
