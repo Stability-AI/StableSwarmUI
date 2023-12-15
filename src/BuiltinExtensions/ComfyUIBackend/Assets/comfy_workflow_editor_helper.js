@@ -434,7 +434,7 @@ function comfyBuildParams(callback) {
                         type = 'dropdown';
                         values = ['enable', 'disable'];
                     }
-                    else if (node.class_type == 'SwarmLoadImageB64' || node.class_type == 'LoadImage') {
+                    else if (node.class_type == 'SwarmLoadImageB64') {
                         type = 'image';
                     }
                     else {
