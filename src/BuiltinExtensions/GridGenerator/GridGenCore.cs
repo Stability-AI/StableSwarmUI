@@ -55,14 +55,20 @@ public partial class GridGenCore
         for (int i = 0; i < inList.Count; i++)
         {
             string rawVal = inList[i].Trim();
+            bool skip = rawVal.StartsWith("SKIP:");
+            string prefix = skip ? "SKIP:" : "";
+            if (skip)
+            {
+                rawVal = rawVal["SKIP:".Length..].Trim();
+            }
             if (rawVal == ".." || rawVal == "..." || rawVal == "....")
             {
                 if (i < 2 || i + 1 >= inList.Count)
                 {
                     throw new Exception($"Cannot use ellipses notation at index {i}/{inList.Count} - must have at least 2 values before and 1 after.");
                 }
-                double prior = double.Parse(outList[^1]);
-                double doublePrior = double.Parse(outList[^2]);
+                double prior = double.Parse(outList[^1].Replace("SKIP:", ""));
+                double doublePrior = double.Parse(outList[^2].Replace("SKIP:", ""));
                 double after = double.Parse(inList[i + 1]);
                 double step = prior - doublePrior;
                 if ((step < 0) != ((after - prior) < 0))
@@ -77,12 +83,12 @@ public partial class GridGenCore
                     {
                         outVal = (int)Math.Round(outVal);
                     }
-                    outList.Add($"{outVal:0.#######}");
+                    outList.Add($"{prefix}{outVal:0.#######}");
                 }
             }
             else
             {
-                outList.Add(rawVal);
+                outList.Add($"{prefix}{rawVal}");
             }
         }
         return outList;
@@ -178,13 +184,18 @@ public partial class GridGenCore
                 try
                 {
                     string valStr = val.Trim();
+                    bool skip = valStr.StartsWith("SKIP:");
+                    if (skip)
+                    {
+                        valStr = valStr["SKIP:".Length..].Trim();
+                    }
                     index++;
                     if (isSplitByDoublePipe && valStr == "" && index == valuesList.Count)
                     {
                         continue;
                     }
                     valStr = T2IParamTypes.ValidateParam(Mode, valStr, grid.InitialParams.SourceSession);
-                    Values.Add(new AxisValue(grid, this, index.ToString(), $"{id}={valStr}"));
+                    Values.Add(new AxisValue(grid, this, index.ToString(), $"{id}={valStr}") { Skip = skip });
                 }
                 catch (InvalidDataException ex)
                 {

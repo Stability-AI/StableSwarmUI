@@ -40,7 +40,16 @@ public class GridGeneratorExtension : Extension
                     return list;
                 }
                 string first = list[0];
-                return list.Select(v => $"{first}={v}").ToList();
+                return list.Select(v =>
+                {
+                    bool skip = v.StartsWith("SKIP:");
+                    if (skip)
+                    {
+                        v = v["SKIP:".Length..].Trim();
+                        return $"SKIP:{first}={v}";
+                    }
+                    return $"{first}={v}";
+                }).ToList();
             }));
         PresetsParameter = T2IParamTypes.Register<string>(new("[Grid Gen] Presets", "Apply parameter presets to the image. Can use a comma-separated list to apply multiple per-cell, eg 'a, b || a, c || b, c'",
             "", VisibleNormally: false, AlwaysRetain: true, Toggleable: true, ValidateValues: false, ChangeWeight: 2, GetValues: (session) => session.User.GetAllPresets().Select(p => p.Title).ToList()));
