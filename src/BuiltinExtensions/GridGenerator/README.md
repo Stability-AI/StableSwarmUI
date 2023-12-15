@@ -18,3 +18,7 @@ Operates as a "Tool" within the "Tools" UI, lets you generate grids of images to
 - Any parameters may have `SKIP:` in front of them (all caps!) to skip that value.
     - For example, `1, 2, SKIP: 3, 4` will output a grid that has all of 1,2,3,4, but only has images in 1,2,4.
         - This is useful particularly for when you're reusing grid pages and want to leave a placeholder, or overwrite some images but leave the rest as they were.
+
+# History
+
+The first version of this tool was [Infinity Grid Generator for Automatic1111's Stable-Diffusion-WebUI](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script). It has a very special place in my heart as it was used by Stability employees, which was a key factor that led to me (Alex "mcmonkey" Goodwin) getting hired by Stability, and being given the opportunity to build bigger-and-better tools like StableSwarmUI!

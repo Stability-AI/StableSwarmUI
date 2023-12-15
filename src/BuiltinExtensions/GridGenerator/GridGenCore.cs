@@ -144,6 +144,8 @@ public partial class GridGenCore
 
         public T2IParamType Mode;
 
+        public static AsciiMatcher ValidKeysMatcher = new(AsciiMatcher.LowercaseLetters + AsciiMatcher.Digits + "_");
+
         /// <summary>Index of the axis within the axis list, used to maintain user-intended ordering.</summary>
         public int Index;
 
@@ -179,6 +181,7 @@ public partial class GridGenCore
             {
                 valuesList = Mode.ParseList(valuesList);
             }
+            HashSet<string> keys = new();
             foreach (string val in valuesList)
             {
                 try
@@ -195,7 +198,26 @@ public partial class GridGenCore
                         continue;
                     }
                     valStr = T2IParamTypes.ValidateParam(Mode, valStr, grid.InitialParams.SourceSession);
-                    Values.Add(new AxisValue(grid, this, index.ToString(), $"{id}={valStr}") { Skip = skip });
+                    string key = ValidKeysMatcher.TrimToMatches(valStr.ToLowerFast());
+                    if (key.Length > 15)
+                    {
+                        // Long keys might be model names or similar, so trim them to a probably better name
+                        key = ValidKeysMatcher.TrimToMatches(valStr.AfterLast('/').ToLowerFast().Replace(".safetensors", ""));
+                        if (key.Length > 15)
+                        {
+                            key = key[0..15];
+                        }
+                    }
+                    if (key.Length < 4 || keys.Contains(key))
+                    {
+                        key = $"{key}{index}";
+                    }
+                    while (keys.Contains(key)) // Backup for if there's a key that looks like the indexed key of another value for some reason
+                    {
+                        key = $"{key}_2";
+                    }
+                    keys.Add(key);
+                    Values.Add(new AxisValue(grid, this, key, $"{id}={valStr}") { Skip = skip });
                 }
                 catch (InvalidDataException ex)
                 {
@@ -459,7 +481,7 @@ public partial class GridGenCore
                 {
                     GridRunnerPostDryHook(this, p, set).ContinueWith(_ =>
                     {
-                        UpdateLiveFile($"{URLBase}/{set.BaseFilepath}.{Grid.Format}");
+                        UpdateLiveFile($"{set.BaseFilepath}.{Grid.Format}");
                     });
                 }
                 catch (FileNotFoundException e)
