@@ -1,6 +1,10 @@
 # Grid Generator Extension
 
-Operates as a "Tool" within the "Tools" UI, lets you generate grids of images to compare prompts or parameters.
+Infinite-dimensional multi-axis image grid generator tool for StableSwarmUI.
+
+### Concept
+
+Operates as a "Tool" within the "Tools" UI, built into Swarm by default as an official reference Extension, lets you generate grids of images to compare prompts or parameters.
 
 - Grids are infinite dimensional, you can add as many axes as you want.
 - Grids display as a webpage that you can open and select axis display settings dynamically. You can save an image from the grid view.
@@ -12,7 +16,7 @@ Operates as a "Tool" within the "Tools" UI, lets you generate grids of images to
 - **WARNING**: The time it takes to generate a grid grows exponentially.
     - Lets say it takes you 1 second per image. You have one axis with 10 values... that's 10 seconds. Now you add another axis with 10 values... that's now 10\*10 = 100 seconds. Now you add a third axis with 10 values... now it takes 1000 seconds (17 minutes). Add a fourth and you're at 10k seconds (3 hours). Keep going and soon you'll be taking days, weeks, ... past a certain scale, it doesn't make sense unless you have several GPUs backing your generations to counteract the scaling.
 
-## Tricks
+### Tricks
 
 - When using numbered parameters, for example `Seed`, you can input `..` between numbers to automatically fill that space, for example `1, 2, .., 10`
     - Must have two numbers before (to identify the start and step), and one number after (to identify the end)
@@ -32,7 +36,7 @@ Operates as a "Tool" within the "Tools" UI, lets you generate grids of images to
 - `[Grid Gen] Presets` is a list
     - You can do `mypreset || mypreset, mypreset2 || mypreset2` to compare two presets and also the combination thereof.
 
-# History
+### History
 
 The first version of this tool was [Infinity Grid Generator for Automatic1111's Stable-Diffusion-WebUI](https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script). It has a very special place in my heart as it was used by Stability employees, which was a key factor that led to me (Alex "mcmonkey" Goodwin) getting hired by Stability, and being given the opportunity to build bigger-and-better tools like StableSwarmUI!
 
