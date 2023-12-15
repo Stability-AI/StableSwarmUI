@@ -380,10 +380,10 @@ class GridGenClass {
                         rate = Math.round(rate * 100) / 100;
                         message = `${rate} seconds per image`;
                     }
-                    this.outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+                    this.outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
                 }
                 else if (data.success) {
-                    this.outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+                    this.outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
                 }
             });
         };
