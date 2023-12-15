@@ -79,6 +79,18 @@ class GridGenClass {
         inputBox.className = 'grid-gen-axis-input';
         inputBox.id = `grid-gen-axis-input-${id}`;
         let mode = null;
+        function getFillable() {
+            if (mode && (mode.values || mode.type == 'model')) {
+                return mode.type == 'model' ? coreModelMap[mode.subtype || 'Stable-Diffusion'] : mode.values;
+            }
+            else if (mode && mode.type == 'boolean') {
+                return ['true', 'false'];
+            }
+            else if (mode && mode.examples) {
+                return mode.examples;
+            }
+            return null;
+        }
         let updateInput = () => {
             let lastSelection = getCurrentCursorPosition(inputBox.id);
             let text = inputBox.innerText;
@@ -86,7 +98,67 @@ class GridGenClass {
             let parts = text.split(separator);
             let html = '';
             for (let i in parts) {
-                html += `<span class="grid-gen-axis-input-value">${parts[i]}</span>` + (i == parts.length - 1 ? '' : `<span class="grid-gen-axis-input-separator">${separator}</span>`);
+                let title = '';
+                let clazz = 'grid-gen-axis-input-value';
+                let cleanPart = parts[i].trim();
+                if (cleanPart.startsWith('SKIP:')) {
+                    clazz += ' grid-gen-axis-input-value-skipped';
+                    title += "(This value is skipped)";
+                }
+                else if (mode) {
+                    console.log(`render ${mode} is ${mode.name} is ${mode.type}`)
+                    cleanPart = cleanPart.toLowerCase();
+                    if (mode.values || mode.type == 'model' || mode.type == 'boolean') {
+                        let matched = getFillable().filter(f => f.toLowerCase().includes(cleanPart));
+                        if (matched.length == 0) {
+                            title += "This value does not appear in the available value set. Are you sure it's correct?";
+                            clazz += ' grid-gen-axis-input-value-invalid';
+                        }
+                        else if (matched.length == 1) {
+                            title += `Perfect match: ${matched[0]}`;
+                        }
+                        else {
+                            let firstMatch = matched.filter(f => f.toLowerCase().startsWith(cleanPart));
+                            if (firstMatch.length == 1) {
+                                title += `StartsWith match: ${firstMatch[0]}`;
+                            }
+                            else {
+                                let exactMatch = matched.filter(f => f.toLowerCase() == cleanPart);
+                                if (exactMatch.length == 1) {
+                                    title += `Exact match: ${exactMatch[0]}`;
+                                }
+                                else {
+                                    title += `Multiple possible matches: ${matched.join(' || ')}`;
+                                }
+                            }
+                        }
+                    }
+                    else if (['integer', 'decimal'].includes(mode.type) && ['..', '...', '....'].includes(cleanPart)) {
+                    }
+                    else if (mode.type == 'integer') {
+                        let ival = parseInt(cleanPart);
+                        if (isNaN(ival) || cleanPart.includes('.')) {
+                            title += "This value is not a valid integer number.";
+                            clazz += ' grid-gen-axis-input-value-invalid';
+                        }
+                        else if (ival < mode.min || ival > mode.max) {
+                            title += `The value ${ival} is outside the range of ${mode.min} to ${mode.max}`;
+                            clazz += ' grid-gen-axis-input-value-invalid';
+                        }
+                    }
+                    else if (mode.type == 'decimal') {
+                        let fval = parseFloat(cleanPart);
+                        if (isNaN(fval)) {
+                            title += "This value is not a valid decimal number.";
+                            clazz += ' grid-gen-axis-input-value-invalid';
+                        }
+                        else if (fval < mode.min || fval > mode.max) {
+                            title += `The value ${fval} is outside the range of ${mode.min} to ${mode.max}`;
+                            clazz += ' grid-gen-axis-input-value-invalid';
+                        }
+                    }
+                }
+                html += `<span class="${clazz}" title="${escapeHtmlNoBr(title)}">${parts[i]}</span>` + (i == parts.length - 1 ? '' : `<span class="grid-gen-axis-input-separator">${separator}</span>`);
             }
             inputBox.innerHTML = html;
             if (lastSelection != -1) {
@@ -206,19 +278,11 @@ class GridGenClass {
         fillButton.className = 'basic-button grid-gen-axis-fill-button';
         fillButton.title = 'Fill with available values';
         fillButton.addEventListener('click', () => {
-            let toFill;
-            if (mode && (mode.values || mode.type == 'model')) {
-                toFill = mode.type == 'model' ? coreModelMap[mode.subtype || 'Stable-Diffusion'].join(' || ') : mode.values.join(' || ');
-            }
-            else if (mode && mode.type == 'boolean') {
-                toFill = 'true || false';
-            }
-            else if (mode && mode.examples) {
-                toFill = mode.examples.join(' || ');
-            }
-            else {
+            let toFill = getFillable();
+            if (!toFill) {
                 return;
             }
+            toFill = toFill.join(' || ');
             let text = inputBox.innerText.trim();
             if (!toFill.includes(',') && !text.includes('||')) {
                 toFill = toFill.replaceAll(' || ', ', ');
