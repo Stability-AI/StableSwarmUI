@@ -28,14 +28,27 @@ public class SessionHandler
     /// <summary>Internal database (presets).</summary>
     public ILiteCollection<T2IPreset> T2IPresets;
 
+    /// <summary>Generic user data store.</summary>
+    public ILiteCollection<GenericDataStore> GenericData;
+
     /// <summary>Internal database access locker.</summary>
     public LockObject DBLock = new();
+
+    /// <summary>Helper for the database to store generic datablob.s</summary>
+    public class GenericDataStore
+    {
+        [BsonId]
+        public string ID { get; set; }
+
+        public string Data { get; set; }
+    }
 
     public SessionHandler()
     {
         Database = new LiteDatabase("Data/Users.ldb");
         UserDatabase = Database.GetCollection<User.DatabaseEntry>("users");
         T2IPresets = Database.GetCollection<T2IPreset>("t2i_presets");
+        GenericData = Database.GetCollection<GenericDataStore>("generic_data");
     }
 
     public Session CreateAdminSession(string source, string userId = null)

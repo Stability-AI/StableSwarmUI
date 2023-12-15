@@ -57,6 +57,44 @@ public class User
         }
     }
 
+    /// <summary>Returns the user generic-data for the given name, or null if not found.</summary>
+    public string GetGenericData(string dataname, string name)
+    {
+        lock (SessionHandlerSource.DBLock)
+        {
+            return SessionHandlerSource.GenericData.FindById($"{UserID}///${dataname}///{name.ToLowerFast()}")?.Data;
+        }
+    }
+
+    /// <summary>Returns a list of all generic-data this user has saved.</summary>
+    public List<SessionHandler.GenericDataStore> GetAllGenericData(string dataname)
+    {
+        lock (SessionHandlerSource.DBLock)
+        {
+            string id = $"{UserID}///${dataname}///";
+            return SessionHandlerSource.GenericData.Find(b => b.ID.StartsWith(id)).ToList();
+        }
+    }
+
+    /// <summary>Saves a new generic-data on the user's account.</summary>
+    public void SaveGenericData(string dataname, string name, string data)
+    {
+        lock (SessionHandlerSource.DBLock)
+        {
+            SessionHandler.GenericDataStore dataStore = new() { ID = $"{UserID}///${dataname}///{name.ToLowerFast()}", Data = data };
+            SessionHandlerSource.GenericData.Upsert(dataStore.ID, dataStore);
+        }
+    }
+
+    /// <summary>Deletes a user generic-data, returns true if anything was deleted.</summary>
+    public bool DeleteGenericData(string dataname, string name)
+    {
+        lock (SessionHandlerSource.DBLock)
+        {
+            return SessionHandlerSource.GenericData.Delete($"{UserID}///${dataname}///{name.ToLowerFast()}");
+        }
+    }
+
     /// <summary>Returns the user preset for the given name, or null if not found.</summary>
     public T2IPreset GetPreset(string name)
     {
