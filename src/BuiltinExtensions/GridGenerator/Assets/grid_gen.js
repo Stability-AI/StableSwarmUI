@@ -445,7 +445,7 @@ class GridGenClass {
         this.typeChanged();
         this.addAxis();
     }
-    
+
     updateOutputInfo () {
         if (this.outputType.value == 'Web Page') {
             genericRequest('GridGenDoesExist', { 'folderName': this.outputFolder.value }, data => {
