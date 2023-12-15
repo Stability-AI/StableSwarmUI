@@ -197,7 +197,10 @@ public partial class GridGenCore
                     {
                         continue;
                     }
-                    valStr = T2IParamTypes.ValidateParam(Mode, valStr, grid.InitialParams.SourceSession);
+                    if (!skip)
+                    {
+                        valStr = T2IParamTypes.ValidateParam(Mode, valStr, grid.InitialParams.SourceSession);
+                    }
                     string key = ValidKeysMatcher.TrimToMatches(valStr.ToLowerFast());
                     if (key.Length > 15)
                     {
