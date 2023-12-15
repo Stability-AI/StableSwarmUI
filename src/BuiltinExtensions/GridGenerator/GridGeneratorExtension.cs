@@ -473,7 +473,7 @@ public class GridGeneratorExtension : Extension
                 Volatile.Write(ref data.ErrorOut, ExToError(ex));
             }
         }
-        if (grid.OutputType == Grid.OutputyTypeEnum.WEB_PAGE)
+        if (grid is not null && grid.OutputType == Grid.OutputyTypeEnum.WEB_PAGE)
         {
             PostClean(session.User.OutputDirectory, outputFolderName);
         }
