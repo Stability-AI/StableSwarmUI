@@ -124,6 +124,19 @@ public class WorkflowGenerator
         }, -8);
         AddModelGenStep(g =>
         {
+            if (g.UserInput.TryGet(ComfyUIBackendExtension.SelfAttentionGuidanceScale, out double sagScale))
+            {
+                string guided = g.CreateNode("SelfAttentionGuidance", new JObject()
+                {
+                    ["model"] = g.LoadingModel,
+                    ["scale"] = sagScale,
+                    ["blur_sigma"] = g.UserInput.Get(ComfyUIBackendExtension.SelfAttentionGuidanceSigmaBlur, 2.0)
+                });
+                g.LoadingModel = new() { $"{guided}", 0 };
+            }
+        }, -7);
+        AddModelGenStep(g =>
+        {
             if (g.UserInput.TryGet(T2IParamTypes.ClipStopAtLayer, out int layer))
             {
                 string clipSkip = g.CreateNode("CLIPSetLastLayer", new JObject()
