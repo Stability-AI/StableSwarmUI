@@ -526,3 +526,13 @@ textarea, input, select {
     padding: 0.5rem;
     border: 1px solid var(--shadow);
 }
+.hoverable-minor-hint-text {
+    color: var(--text-soft);
+    opacity: 0.5;
+    font-size: 90%;
+    transition: all 0.5s;
+}
+.hoverable-minor-hint-text:hover {
+    color: var(--text);
+    opacity: 1;
+}

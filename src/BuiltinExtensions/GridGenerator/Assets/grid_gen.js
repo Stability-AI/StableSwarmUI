@@ -332,17 +332,25 @@ class GridGenClass {
         this.axisDiv = createDiv('grid-gen-axis-area', 'grid-gen-axis-area');
         this.settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
         this.settingsDiv.innerHTML =
-            '<br><label for="grid_generate_type">Output Type: </label><select id="grid_generate_type" onchange="extensionGridGen.typeChanged()"><option>Just Images</option><option>Grid Image</option><option>Web Page</option></select>'
-            + '<div id="grid-gen-page-config"><br><div id="grid-gen-info-box">...</div>'
-            + makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.', '', 'normal', 'Output folder name...', false, true)
-            + '</div><br><div class="grid-gen-checkboxes">'
-            + makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false, false, true)
-            + makeCheckboxInput(null, 'grid-gen-opt-fast-skip', 'Fast Skip', 'If checked, uses faster skipping algorithm (prevents validation of skipped axes).', false, false, true)
-            + makeCheckboxInput(null, 'grid-gen-opt-generate-page', 'Generate Page', 'If unchecked, will prevent regenerating the page for the grid.', true, false, true)
-            + makeCheckboxInput(null, 'grid-gen-opt-publish-metadata', 'Publish Generation Metadata', 'If unchecked, will hide the image generation metadata.', true, false, true)
-            + makeCheckboxInput(null, 'grid-gen-opt-dry-run', 'Dry Run', 'If checked, will not actually generate any images - useful to validate your grid.', false, false, true)
-            + makeCheckboxInput(null, 'grid-gen-opt-weight-order', 'Allow Reordering', 'If checked, the grid generator will reorder processing order of axes to maximize generation speed.', true, false, true)
-            + '</div>';
+            `<br><label for="grid_generate_type">Output Type: </label><select id="grid_generate_type" onchange="extensionGridGen.typeChanged()"><option>Just Images</option><option>Grid Image</option><option>Web Page</option></select>
+            <div id="grid-gen-page-config">
+                <br>
+                <div id="grid-gen-info-box">...</div>
+                ${makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.', '', 'normal', 'Output folder name...', false, true)}
+            </div>
+            <br>
+            <div class="grid-gen-checkboxes">
+                ${makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false, false, true)}
+                ${makeCheckboxInput(null, 'grid-gen-opt-fast-skip', 'Fast Skip', 'If checked, uses faster skipping algorithm (prevents validation of skipped axes).', false, false, true)}
+                ${makeCheckboxInput(null, 'grid-gen-opt-generate-page', 'Generate Page', 'If unchecked, will prevent regenerating the page for the grid.', true, false, true)}
+                ${makeCheckboxInput(null, 'grid-gen-opt-publish-metadata', 'Publish Generation Metadata', 'If unchecked, will hide the image generation metadata.', true, false, true)}
+                ${makeCheckboxInput(null, 'grid-gen-opt-dry-run', 'Dry Run', 'If checked, will not actually generate any images - useful to validate your grid.', false, false, true)}
+                ${makeCheckboxInput(null, 'grid-gen-opt-weight-order', 'Allow Reordering', 'If checked, the grid generator will reorder processing order of axes to maximize generation speed.', true, false, true)}
+            </div>
+            <div class="hoverable-minor-hint-text">
+                When using numbered parameters, you can type for example "<code>1, 2, .., 10</code>" to automatically have the "<code>..</code>" part filled in.
+                &emsp;You can prefix any value with "<code>SKIP:</code>" (in all caps) to automatically skip that value (but keep it listed in the grid).&emsp;<a href="https://github.com/Stability-AI/StableSwarmUI/blob/master/src/BuiltinExtensions/GridGenerator/README.md" target="_blank">Full README/docs here</a>
+            </div>`;
         this.mainDiv.appendChild(this.settingsDiv);
         this.mainDiv.appendChild(this.axisDiv);
         let outInfoBox = document.getElementById('grid-gen-info-box');

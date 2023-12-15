@@ -10,6 +10,9 @@
 - TODO: Backends (what a 'backend' is, supported options, usage, etc)
     - [ComfyUI Backend Extension](/src/BuiltinExtensions/ComfyUIBackend/README.md)
     - [Auto WebUI Backend Extension](/src/BuiltinExtensions/AutoWebUIBackend/README.md)
+- TODO: Tools (what a tool is, how to use em, etc)
+    - [GridGenerator](/src/BuiltinExtensions/GridGenerator/README.md)
+    - [ImageBatchTool](/src/BuiltinExtensions/ImageBatchTool/README.md)
 - TODO: Extensions (what an extension is, what it can do, where to find them, etc)
 - TODO: HTTP API
 - TODO: WebSocket API
