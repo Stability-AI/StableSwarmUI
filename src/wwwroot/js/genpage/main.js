@@ -309,6 +309,9 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
     quickAppendButton(buttons, 'Reuse Parameters', copy_current_image_params);
     quickAppendButton(buttons, 'View In History', () => {
         let folder = src;
+        if (folder.startsWith("http://") || folder.startsWith("https://")) {
+            folder = folder.substring(folder.indexOf('/', folder.indexOf('/') + 2));
+        }
         if (folder.startsWith('/')) {
             folder = folder.substring(1);
         }

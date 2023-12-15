@@ -337,66 +337,68 @@ class GridGenClass {
         return this.axisDiv.getElementsByClassName('grid-gen-axis-wrapper');
     }
 
-    register() {
-        let doGenerate = () => {
-            resetBatchIfNeeded();
-            let startTime = Date.now();
-            let generatedCount = 0;
-            let getOpt = (o) => getRequiredElementById('grid-gen-opt-' + o).checked;
-            let data = {
-                'baseParams': getGenInput(),
-                'outputFolderName': this.outputFolder.value,
-                'doOverwrite': getOpt('do-overwrite'),
-                'fastSkip': getOpt('fast-skip'),
-                'generatePage': getOpt('generate-page'),
-                'publishGenMetadata': getOpt('publish-metadata'),
-                'dryRun': getOpt('dry-run'),
-                'weightOrder': getOpt('weight-order'),
-                'outputType': this.outputType.value,
-            };
-            let axisData = [];
-            for (let axis of this.listAxes()) {
-                let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
-                let input = axis.getElementsByClassName('grid-gen-axis-input')[0].innerText;
-                if (type != '') {
-                    axisData.push({ 'mode': type, 'vals': input });
-                }
+    doGenerate() {
+        resetBatchIfNeeded();
+        let startTime = Date.now();
+        let generatedCount = 0;
+        let getOpt = (o) => getRequiredElementById('grid-gen-opt-' + o).checked;
+        let data = {
+            'baseParams': getGenInput(),
+            'outputFolderName': this.outputFolder.value,
+            'doOverwrite': getOpt('do-overwrite'),
+            'fastSkip': getOpt('fast-skip'),
+            'generatePage': getOpt('generate-page'),
+            'publishGenMetadata': getOpt('publish-metadata'),
+            'dryRun': getOpt('dry-run'),
+            'weightOrder': getOpt('weight-order'),
+            'outputType': this.outputType.value,
+        };
+        let axisData = [];
+        for (let axis of this.listAxes()) {
+            let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
+            let input = axis.getElementsByClassName('grid-gen-axis-input')[0].innerText;
+            if (type != '') {
+                axisData.push({ 'mode': type, 'vals': input });
             }
-            if (axisData.length == 0) {
-                showError('No axes defined.');
+        }
+        if (axisData.length == 0) {
+            showError('No axes defined.');
+            return;
+        }
+        data['gridAxes'] = axisData;
+        makeWSRequestT2I('GridGenRun', data, data => {
+            if (data.image) {
+                appendGenTimeFrom(data.metadata);
+                gotImageResult(data.image, data.metadata);
+                generatedCount++;
+                let timeProgress = Math.round((Date.now() - startTime) / 1000);
+                let rate = Math.round(generatedCount / timeProgress * 100) / 100;
+                let message = `${rate} images per second`;
+                if (rate < 1) {
+                    rate = 1 / rate;
+                    rate = Math.round(rate * 100) / 100;
+                    message = `${rate} seconds per image`;
+                }
+                this.outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+            }
+            else if (data.success) {
+                this.outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+            }
+        });
+    }
+
+    doGenWrapper() {
+        setCurrentModel(() => {
+            if (document.getElementById('current_model').value == '') {
+                showError("Cannot generate, no model selected.");
                 return;
             }
-            data['gridAxes'] = axisData;
-            makeWSRequestT2I('GridGenRun', data, data => {
-                if (data.image) {
-                    appendGenTimeFrom(data.metadata);
-                    gotImageResult(data.image, data.metadata);
-                    generatedCount++;
-                    let timeProgress = Math.round((Date.now() - startTime) / 1000);
-                    let rate = Math.round(generatedCount / timeProgress * 100) / 100;
-                    let message = `${rate} images per second`;
-                    if (rate < 1) {
-                        rate = 1 / rate;
-                        rate = Math.round(rate * 100) / 100;
-                        message = `${rate} seconds per image`;
-                    }
-                    this.outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
-                }
-                else if (data.success) {
-                    this.outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
-                }
-            });
-        };
-        let doGenWrapper = () => {
-            setCurrentModel(() => {
-                if (document.getElementById('current_model').value == '') {
-                    showError("Cannot generate, no model selected.");
-                    return;
-                }
-                doGenerate();
-            });
-        };
-        this.mainDiv = registerNewTool('grid_generator', 'Grid Generator', 'Generate Grid', doGenWrapper);
+            this.doGenerate();
+        });
+    }
+
+    register() {
+        this.mainDiv = registerNewTool('grid_generator', 'Grid Generator', 'Generate Grid', () => this.doGenWrapper());
         this.axisDiv = createDiv('grid-gen-axis-area', 'grid-gen-axis-area');
         this.settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
         this.settingsDiv.innerHTML =
@@ -483,6 +485,7 @@ class GridGenClass {
         };
         genericRequest('GridGenSaveData', { 'gridName': gridName, 'data': data }, data => {
             this.outInfoBox.innerHTML = `<b>Config saved!</b>`;
+            setTimeout(() => this.updateOutputInfo(), 5000);
         });
     }
 
@@ -502,6 +505,7 @@ class GridGenClass {
         genericRequest('GridGenDeleteData', { 'gridName': gridName }, data => {
             this.hideLoadModal();
             this.outInfoBox.innerHTML = `<b>Config deleted!</b>`;
+            setTimeout(() => this.updateOutputInfo(), 5000);
         });
     }
 
@@ -530,6 +534,7 @@ class GridGenClass {
                 triggerChangeFor(input);
             }
             this.outInfoBox.innerHTML = `<b>Config loaded!</b>`;
+            setTimeout(() => this.updateOutputInfo(), 5000);
         });
     }
 

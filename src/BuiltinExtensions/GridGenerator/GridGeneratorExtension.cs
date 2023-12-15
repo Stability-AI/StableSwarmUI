@@ -360,7 +360,8 @@ public class GridGeneratorExtension : Extension
         try
         {
             string ext = Image.ImageFormatToExtension(session.User.Settings.FileFormat.ImageFormat);
-            Task mainRun = Task.Run(() => grid = Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, "Output", outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun, weightOrder, outputType, ext));
+            string urlBase = Program.ServerSettings.Paths.AppendUserNameToOutputPath ? $"View/{session.User.UserID}" : "Output";
+            Task mainRun = Task.Run(() => grid = Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, urlBase, outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun, weightOrder, outputType, ext));
             while (!mainRun.IsCompleted || data.GetActive().Any() || data.Generated.Any())
             {
                 await data.Signal.WaitAsync(TimeSpan.FromSeconds(1));
