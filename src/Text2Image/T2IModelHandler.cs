@@ -39,6 +39,9 @@ public class T2IModelHandler
     /// <summary>The full folder path for relevant models.</summary>
     public string FolderPath;
 
+    /// <summary>Quick internal tracker for unauthorized access errors, to aggregate the warning.</summary>
+    public ConcurrentQueue<string> UnathorizedAccessSet = new();
+
     /// <summary>Helper, data store for model metadata.</summary>
     public class ModelMetadataStore
     {
@@ -174,6 +177,11 @@ public class T2IModelHandler
             Models.Clear();
         }
         AddAllFromFolder("");
+        if (UnathorizedAccessSet.Any())
+        {
+            Logs.Warning($"Got UnauthorizedAccessException while loading model paths: {UnathorizedAccessSet.Select(m => $"'{m}'").JoinString(", ")}");
+            UnathorizedAccessSet.Clear();
+        }
     }
 
     /// <summary>Get (or create) the metadata cache for a given model folder.</summary>
@@ -447,6 +455,10 @@ public class T2IModelHandler
             try
             {
                 AddAllFromFolder(path);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                UnathorizedAccessSet.Enqueue(path);
             }
             catch (Exception ex)
             {
