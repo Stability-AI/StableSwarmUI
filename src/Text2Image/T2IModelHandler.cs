@@ -484,6 +484,10 @@ public class T2IModelHandler
                 {
                     LoadMetadata(model);
                 }
+                catch (UnauthorizedAccessException)
+                {
+                    UnathorizedAccessSet.Enqueue(fullFilename);
+                }
                 catch (Exception ex)
                 {
                     if (Program.GlobalProgramCancel.IsCancellationRequested)
