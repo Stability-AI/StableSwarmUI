@@ -136,11 +136,16 @@ public class WebServer
             await next();
             if (context.Response.StatusCode == 404)
             {
+                if (context.Response.HasStarted)
+                {
+                    return;
+                }
                 if (!context.Request.Path.Value.ToLowerFast().StartsWith("/error/"))
                 {
                     try
                     {
                         context.Response.Redirect("/Error/404");
+                        return;
                     }
                     catch (Exception)
                     {
@@ -300,7 +305,7 @@ public class WebServer
             if (ex is FileNotFoundException || ex is DirectoryNotFoundException || ex is PathTooLongException)
             {
                 Logs.Verbose($"File-not-found error reading output file '{path}': {ex}");
-                await context.YieldJsonOutput(null, 04, Utilities.ErrorObj("404, file not found.", "file_not_found"));
+                await context.YieldJsonOutput(null, 404, Utilities.ErrorObj("404, file not found.", "file_not_found"));
             }
             else
             {
@@ -311,7 +316,8 @@ public class WebServer
         }
         context.Response.ContentType = Utilities.GuessContentType(path);
         context.Response.StatusCode = 200;
-        await context.Response.Body.WriteAsync(data);
+        context.Response.ContentLength = data.Length;
+        await context.Response.Body.WriteAsync(data, Program.GlobalProgramCancel);
         await context.Response.CompleteAsync();
     }
 }

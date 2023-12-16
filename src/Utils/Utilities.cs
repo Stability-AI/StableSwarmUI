@@ -253,9 +253,11 @@ public static class Utilities
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, TimedCancel(TimeSpan.FromMinutes(1)));
             return;
         }
+        byte[] resp = obj.ToString(Formatting.None).EncodeUTF8();
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = status;
-        await context.Response.WriteAsync(obj.ToString(Formatting.None));
+        context.Response.ContentLength = resp.Length;
+        await context.Response.BodyWriter.WriteAsync(resp, Program.GlobalProgramCancel);
         await context.Response.CompleteAsync();
     }
 
