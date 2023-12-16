@@ -257,6 +257,7 @@ public static class Utilities
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = status;
         context.Response.ContentLength = resp.Length;
+        context.Response.Headers.CacheControl = "no-store";
         await context.Response.BodyWriter.WriteAsync(resp, Program.GlobalProgramCancel);
         await context.Response.CompleteAsync();
     }

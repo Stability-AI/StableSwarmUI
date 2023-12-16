@@ -179,7 +179,7 @@ public class T2IModelHandler
         AddAllFromFolder("");
         if (UnathorizedAccessSet.Any())
         {
-            Logs.Warning($"Got UnauthorizedAccessException while loading model paths: {UnathorizedAccessSet.Select(m => $"'{m}'").JoinString(", ")}");
+            Logs.Warning($"Got UnauthorizedAccessException while loading {ModelType} model paths: {UnathorizedAccessSet.Select(m => $"'{m}'").JoinString(", ")}");
             UnathorizedAccessSet.Clear();
         }
     }
