@@ -330,6 +330,7 @@ class GridGenClass {
     typeChanged() {
         let type = this.outputType.value;
         getRequiredElementById('grid-gen-page-config').style.display = type == 'Web Page' ? 'block' : 'none';
+        localStorage.setItem('gridgen_output_type', type);
         this.updateOutputInfo();
     }
 
@@ -452,6 +453,7 @@ class GridGenClass {
         this.outInfoBox = document.getElementById('grid-gen-info-box');
         this.outputFolder = document.getElementById('grid-gen-output-folder-name');
         this.outputType = document.getElementById('grid_generate_type');
+        this.outputType.value = localStorage.getItem('gridgen_output_type') || 'Web Page';
         this.outputFolder.addEventListener('input', () => { this.typeChanged(); this.updateOutputInfo() });
         let today = new Date();
         function pad(n) {
