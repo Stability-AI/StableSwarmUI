@@ -417,7 +417,7 @@ class GridGenClass {
         this.axisDiv = createDiv('grid-gen-axis-area', 'grid-gen-axis-area');
         this.settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
         this.settingsDiv.innerHTML =
-            `<br><label for="grid_generate_type">Output Type: </label><select id="grid_generate_type" onchange="extensionGridGen.typeChanged()"><option>Just Images</option><option>Grid Image</option><option>Web Page</option></select>&emsp;<button class="basic-button" onclick="extensionGridGen.saveGridConfig()">Save Grid Config</button>&emsp;<button class="basic-button" onclick="extensionGridGen.loadGridConfig()">Load Grid Config</button>
+            `<br><label for="grid_generate_type">Output Type: </label><select id="grid_generate_type" onchange="extensionGridGen.typeChanged()"><option>Just Images</option><option>Grid Image</option><option selected>Web Page</option></select>&emsp;<button class="basic-button" onclick="extensionGridGen.saveGridConfig()">Save Grid Config</button>&emsp;<button class="basic-button" onclick="extensionGridGen.loadGridConfig()">Load Grid Config</button>
             ${modalHeader('gridgen_load_modal', 'Grid Generator: Load Modal')}
                 <div class="modal-body">
                     <p>Load grid config...</p>
