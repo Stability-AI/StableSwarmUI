@@ -5,7 +5,6 @@ using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
-using System.IO;
 
 namespace StableSwarmUI.Text2Image;
 
@@ -300,40 +299,42 @@ public class T2IParamInput
         return toret;
     }
 
+    public static object SimplifyParamVal(object val)
+    {
+        if (val is Image img)
+        {
+            return img.AsBase64;
+        }
+        else if (val is List<Image> imgList)
+        {
+            return imgList.Select(img => img.AsBase64).JoinString("|");
+        }
+        else if (val is List<string> strList)
+        {
+            return strList.JoinString(",");
+        }
+        else if (val is List<T2IModel> modelList)
+        {
+            return modelList.Select(m => m.Name).JoinString(",");
+        }
+        else if (val is T2IModel model)
+        {
+            return model.Name;
+        }
+        else if (val is string str)
+        {
+            return FillEmbedsInString(str, e => $"<embed:{e}>");
+        }
+        return val;
+    }
+
     /// <summary>Generates a JSON object for this input that can be fed straight back into the Swarm API.</summary>
     public JObject ToJSON()
     {
         JObject result = new();
         foreach ((string key, object val) in ValuesInput)
         {
-            if (val is Image img)
-            {
-                result[key] = img.AsBase64;
-            }
-            else if (val is List<Image> imgList)
-            {
-                result[key] = imgList.Select(img => img.AsBase64).JoinString("|");
-            }
-            else if (val is List<string> strList)
-            {
-                result[key] = strList.JoinString(",");
-            }
-            else if (val is List<T2IModel> modelList)
-            {
-                result[key] = modelList.Select(m => m.Name).JoinString(",");
-            }
-            else if (val is T2IModel model)
-            {
-                result[key] = model.Name;
-            }
-            else if (val is string str)
-            {
-                result[key] = FillEmbedsInString(str, e => $"<embed:{e}>");
-            }
-            else
-            {
-                result[key] = JToken.FromObject(val);
-            }
+            result[key] = JToken.FromObject(SimplifyParamVal(val));
         }
         return result;
     }
@@ -443,7 +444,6 @@ public class T2IParamInput
             wildcardSeed = Random.Shared.Next(int.MaxValue);
         }
         Random rand = new((int)wildcardSeed);
-        string lowRef = fixedVal.ToLowerFast();
         PromptTagContext context = new() { Input = this, Random = rand, Param = param.Type.ID };
         fixedVal = ProcessPromptLike(fixedVal, context);
         if (fixedVal != val)
@@ -650,6 +650,6 @@ public class T2IParamInput
 
     public override string ToString()
     {
-        return $"T2IParamInput({string.Join(", ", ValuesInput.Select(x => $"{x.Key}: {x.Value}"))})";
+        return $"T2IParamInput({string.Join(", ", ValuesInput.Select(x => $"{x.Key}: {SimplifyParamVal(x.Value)}"))})";
     }
 }
