@@ -624,4 +624,10 @@ public static class Utilities
         }
         return null;
     }
+
+    /// <summary>Cause an immediate aggressive RAM cleanup.</summary>
+    public static void CleanRAM()
+    {
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
+    }
 }

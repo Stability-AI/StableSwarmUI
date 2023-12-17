@@ -931,6 +931,7 @@ public class BackendHandler
                                 }
                                 Thread.Sleep(100);
                             }
+                            Utilities.CleanRAM();
                             availableBackend.Backend.LoadModel(highestPressure.Model).Wait(cancel);
                             Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} loaded model, returning to pool");
                         }
