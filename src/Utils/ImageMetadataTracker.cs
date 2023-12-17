@@ -194,12 +194,13 @@ public static class ImageMetadataTracker
             string fileData = new Image(data, Image.ImageType.IMAGE, ext).GetMetadata();
             string subPath = file.StartsWith(root) ? file[root.Length..] : Path.GetRelativePath(root, file);
             subPath = subPath.Replace('\\', '/').Trim('/');
+            string rawSubPath = subPath;
             if (starNoFolders)
             {
                 subPath = subPath.Replace("/", "");
             }
             string starPath = $"{root}/Starred/{subPath}";
-            bool isStarred = subPath.StartsWith("Starred/") || File.Exists(starPath);
+            bool isStarred = rawSubPath.StartsWith("Starred/") || File.Exists(starPath);
             if (isStarred)
             {
                 if (fileData is null)
