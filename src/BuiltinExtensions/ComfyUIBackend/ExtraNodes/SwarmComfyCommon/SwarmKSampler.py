@@ -61,7 +61,7 @@ class SwarmKSampler:
                 "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step": 0.5, "round": 0.001}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                "scheduler": (["turbo"] + comfy.samplers.KSampler.SCHEDULERS, ),
                 "positive": ("CONDITIONING", ),
                 "negative": ("CONDITIONING", ),
                 "latent_image": ("LATENT", ),
@@ -109,9 +109,13 @@ class SwarmKSampler:
                         break
 
         sigmas = None
-        if sigma_min >= 0 and sigma_max >= 0 and scheduler in ["karras", "exponential"]:
+        if sigma_min >= 0 and sigma_max >= 0 and scheduler in ["karras", "exponential", "turbo"]:
             real_model, _, _, _, _ = comfy.sample.prepare_sampling(model, noise.shape, positive, negative, noise_mask)
-            if sampler_name in ['dpm_2', 'dpm_2_ancestral']:
+            if scheduler == "turbo":
+                timesteps = torch.flip(torch.arange(1, 11) * 100 - 1, (0,))[:steps]
+                sigmas = model.model.model_sampling.sigma(timesteps)
+                sigmas = torch.cat([sigmas, sigmas.new_zeros([1])])
+            elif sampler_name in ['dpm_2', 'dpm_2_ancestral']:
                 sigmas = calculate_sigmas_scheduler(real_model, scheduler, steps + 1, sigma_min, sigma_max, rho)
                 sigmas = torch.cat([sigmas[:-2], sigmas[-1:]])
             else:
