@@ -18,7 +18,7 @@ class SwarmModelTiling:
     FUNCTION = "adapt"
 
     def adapt(self, model):
-        m = model.clone()
+        m = copy.deepcopy(model)
         m.model.apply(make_circular)
         return (m,)
 
@@ -33,9 +33,9 @@ class SwarmTileableVAE:
 
     CATEGORY = "StableSwarmUI"
     RETURN_TYPES = ("VAE",)
-    FUNCTION = "decode"
+    FUNCTION = "adapt"
 
-    def decode(self, vae):
+    def adapt(self, vae):
         vae = copy.deepcopy(vae)
         vae.first_stage_model.apply(make_circular)
         return (vae,)
