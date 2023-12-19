@@ -123,7 +123,16 @@ public static class BasicAPIFeatures
                     string path;
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
-                        await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_or_cpu_nightly_pytorch.7z", "dlbackend/comfyui_dl.7z", updateProgress);
+                        try
+                        {
+                            await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_cu121_or_cpu.7z", "dlbackend/comfyui_dl.7z", updateProgress);
+                        }
+                        catch (HttpRequestException ex)
+                        {
+                            Logs.Error($"Comfy download failed: {ex}");
+                            Logs.Info("Will try alternate download...");
+                            await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_or_cpu_nightly_pytorch.7z", "dlbackend/comfyui_dl.7z", updateProgress);
+                        }
                         updateProgress(0);
                         await output("Downloaded! Extracting...");
                         Directory.CreateDirectory("dlbackend/tmpcomfy/");
