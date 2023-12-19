@@ -14,6 +14,7 @@
     - [GridGenerator](/src/BuiltinExtensions/GridGenerator/README.md)
     - [ImageBatchTool](/src/BuiltinExtensions/ImageBatchTool/README.md)
 - TODO: Extensions (what an extension is, what it can do, where to find them, etc)
+    - [Dynamic Thresholding](/src/BuiltinExtensions/DynamicThresholding/README.md)
 - TODO: HTTP API
 - TODO: WebSocket API
 - TODO: Custom expansion
