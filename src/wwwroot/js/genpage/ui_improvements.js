@@ -1,4 +1,8 @@
 
+let mouseX, mouseY;
+let popHide = [];
+let lastPopoverTime = 0, lastPopover = null;
+
 class AdvancedPopover {
     /**
      * eg: new AdvancedPopover('my_popover', [ { key: 'Button 1', action: () => console.log("Clicked!") } ], true, mouseX, mouseY, 'Button 1');
@@ -25,7 +29,10 @@ class AdvancedPopover {
             });
             this.popover.appendChild(this.textInput);
         }
-        this.optionArea = createDiv(null, 'sui_popover_scrollable');
+        this.optionArea = createDiv(null, 'sui_popover_scrollable_tall');
+        this.expectedHeight = 0;
+        this.targetY = null;
+        this.blockHeight = parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.3;
         this.buildList();
         this.popover.appendChild(this.optionArea);
         document.body.appendChild(this.popover);
@@ -50,6 +57,7 @@ class AdvancedPopover {
         this.optionArea.innerHTML = '';
         let searchText = this.textInput ? this.textInput.value.toLowerCase() : '';
         let didSelect = false;
+        this.expectedHeight = 0;
         for (let button of this.buttons) {
             if (button.key.toLowerCase().includes(searchText)) {
                 let optionDiv = document.createElement('div');
@@ -69,6 +77,7 @@ class AdvancedPopover {
                     });
                 }
                 this.optionArea.appendChild(optionDiv);
+                this.expectedHeight += this.blockHeight;
             }
         }
         if (!didSelect) {
@@ -79,6 +88,9 @@ class AdvancedPopover {
         }
         this.optionArea.scrollTop = scroll;
         this.scrollFix();
+        if (this.targetY != null) {
+            this.reposition();
+        }
     }
 
     selected() {
@@ -148,7 +160,33 @@ class AdvancedPopover {
         }
     }
 
+    reposition() {
+        if (this.popover.classList.contains('sui_popover_reverse')) {
+            this.popover.classList.remove('sui_popover_reverse');
+        }
+        let y;
+        let maxHeight;
+        let extraHeight = (this.textInput ? this.textInput.offsetHeight : 0) + 32;
+        let expected = this.expectedHeight + extraHeight;
+        if (this.targetY + expected < window.innerHeight) {
+            y = this.targetY;
+            maxHeight = this.expectedHeight;
+        }
+        else if (this.flipYHeight != null && this.targetY > window.innerHeight / 2) {
+            y = Math.max(0, this.targetY - this.flipYHeight - expected);
+            this.popover.classList.add('sui_popover_reverse');
+            maxHeight = this.targetY - this.flipYHeight - 32;
+        }
+        else {
+            y = this.targetY;
+            maxHeight = window.innerHeight - y - extraHeight - 10;
+        }
+        this.popover.style.top = `${y}px`;
+        this.optionArea.style.maxHeight = `${maxHeight}px`;
+    }
+
     show(targetX, targetY) {
+        this.targetY = targetY;
         if (this.popover.dataset.visible == "true") {
             this.hide();
         }
@@ -157,29 +195,33 @@ class AdvancedPopover {
         this.popover.dataset.visible = "true";
         let x = Math.min(targetX, window.innerWidth - this.popover.offsetWidth - 10);
         let y = Math.min(targetY, window.innerHeight - this.popover.offsetHeight);
-        if (this.flipYHeight && targetY + this.popover.offsetHeight > window.innerHeight) {
-            y = Math.max(0, targetY - this.flipYHeight - this.popover.offsetHeight);
-        }
         this.popover.style.left = `${x}px`;
         this.popover.style.top = `${y}px`;
         this.popover.style.width = '';
+        this.reposition();
         popHide.push(this);
+        lastPopoverTime = Date.now();
+        lastPopover = this;
     }
 }
 
 class UIImprovementHandler {
     constructor() {
         this.lastPopover = null;
+        let lastShift = false;
         document.addEventListener('mousedown', (e) => {
             if (e.target.tagName == 'SELECT') {
-                return this.onSelectClicked(e.target, e);
+                lastShift = e.shiftKey;
+                if (!lastShift) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
             }
         }, true);
         document.addEventListener('click', (e) => {
-            if (e.target.tagName == 'SELECT' && !e.shiftKey) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
+            if (e.target.tagName == 'SELECT' && !lastShift) { // e.shiftKey doesn't work in click for some reason
+                return this.onSelectClicked(e.target, e);
             }
         }, true);
         document.addEventListener('mouseup', (e) => {
@@ -192,17 +234,17 @@ class UIImprovementHandler {
     }
 
     onSelectClicked(elem, e) {
-        if (this.lastPopover) {
+        if (this.lastPopover && this.lastPopover.popover) {
             this.lastPopover.remove();
             this.lastPopover = null;
-        }
-        if (e.shiftKey) {
-            return true;
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
         }
         let popId = `uiimprover_${elem.id}`;
         let rect = elem.getBoundingClientRect();
         let buttons = [...elem.options].map(o => { return { key: o.innerText, action: () => { elem.value = o.value; triggerChangeFor(elem); } }; })
-        this.lastPopover = new AdvancedPopover(popId, buttons, true, rect.x, rect.y, elem.value);
+        this.lastPopover = new AdvancedPopover(popId, buttons, true, rect.x, rect.y, elem.value, 0);
         e.preventDefault();
         e.stopPropagation();
         return false;
@@ -210,3 +252,87 @@ class UIImprovementHandler {
 }
 
 uiImprover = new UIImprovementHandler();
+
+///////////// Older-style popover code, to be cleaned
+
+function doPopHideCleanup(target) {
+    for (let x = 0; x < popHide.length; x++) {
+        let id = popHide[x];
+        let pop = id.popover ? id.popover : getRequiredElementById(`popover_${id}`);
+        if (id == lastPopover && Date.now() - lastPopoverTime < 50) {
+            continue;
+        }
+        if (pop.contains(target) && !target.classList.contains('sui_popover_model_button')) {
+            continue;
+        }
+        if (id instanceof AdvancedPopover) {
+            id.remove();
+        }
+        else {
+            pop.classList.remove('sui-popover-visible');
+            pop.dataset.visible = "false";
+            popHide.splice(x, 1);
+        }
+    }
+}
+
+document.addEventListener('mousedown', (e) => {
+    mouseX = e.pageX;
+    mouseY = e.pageY;
+    if (e.button == 2) { // right-click
+        doPopHideCleanup(e.target);
+    }
+}, true);
+
+document.addEventListener('click', (e) => {
+    if (e.target.tagName == 'BODY') {
+        return; // it's impossible on the genpage to actually click body, so this indicates a bugged click, so ignore it
+    }
+    doPopHideCleanup(e.target);
+    if (getRequiredElementById('image_fullview_modal').style.display == 'block' && !findParentOfClass(e.target, 'imageview_popup_modal_undertext')) {
+        closeImageFullview();
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+}, true);
+
+/** Ensures the popover for the given ID is hidden. */
+function hidePopover(id) {
+    let pop = getRequiredElementById(`popover_${id}`);
+    if (pop.dataset.visible == "true") {
+        pop.classList.remove('sui-popover-visible');
+        pop.dataset.visible = "false";
+        popHide.splice(popHide.indexOf(id), 1);
+    }
+}
+
+/** Shows the given popover, optionally at the specified location. */
+function showPopover(id, targetX = mouseX, targetY = mouseY) {
+    let pop = getRequiredElementById(`popover_${id}`);
+    if (pop.dataset.visible == "true") {
+        hidePopover(id); // Hide to reset before showing again.
+    }
+    pop.classList.add('sui-popover-visible');
+    pop.style.width = '200px';
+    pop.dataset.visible = "true";
+    let x = Math.min(targetX, window.innerWidth - pop.offsetWidth - 10);
+    let y = Math.min(targetY, window.innerHeight - pop.offsetHeight);
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y}px`;
+    pop.style.width = '';
+    popHide.push(id);
+    lastPopoverTime = Date.now();
+    lastPopover = id;
+}
+
+/** Toggles the given popover, showing it or hiding it as relevant. */
+function doPopover(id) {
+    let pop = getRequiredElementById(`popover_${id}`);
+    if (pop.dataset.visible == "true") {
+        hidePopover(id);
+    }
+    else {
+        showPopover(id);
+    }
+}

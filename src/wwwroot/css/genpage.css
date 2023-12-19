@@ -398,6 +398,11 @@ body {
     padding-right: 3px;
     color: var(--text);
     text-decoration: none;
+    height: 1.3rem;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 .sui_popover_text_input {
     display: block;
@@ -406,8 +411,9 @@ body {
     padding-right: 3px;
     color: var(--text);
     text-decoration: none;
-    padding-bottom: 0.1rem;
-    margin-bottom: 0.1rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
     border-bottom: 1px solid var(--light-border);
 }
 .sui_popover_model_button_selected {
@@ -434,6 +440,14 @@ body {
 .sui_popover_scrollable {
     max-height: 15rem;
     overflow-y: auto;
+}
+.sui_popover_scrollable_tall {
+    max-height: calc(max(15rem, 45vh));
+    overflow-y: auto;
+}
+.sui_popover_reverse {
+    display: flex;
+    flex-direction: column-reverse;
 }
 .model_filename {
     font-size: 80%;
