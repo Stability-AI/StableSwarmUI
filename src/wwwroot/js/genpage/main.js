@@ -889,7 +889,7 @@ let popHide = [];
 function doPopHideCleanup(target) {
     for (let x = 0; x < popHide.length; x++) {
         let id = popHide[x];
-        let pop = getRequiredElementById(`popover_${id}`);
+        let pop = id.popover ? id.popover : getRequiredElementById(`popover_${id}`);
         if (pop.contains(target) && !target.classList.contains('sui_popover_model_button')) {
             continue;
         }
@@ -908,6 +908,9 @@ document.addEventListener('mousedown', (e) => {
 }, true);
 
 document.addEventListener('click', (e) => {
+    if (e.target.tagName == 'BODY') {
+        return; // it's impossible on the genpage to actually click body, so this indicates a bugged click, so ignore it
+    }
     doPopHideCleanup(e.target);
     if (getRequiredElementById('image_fullview_modal').style.display == 'block' && !findParentOfClass(e.target, 'imageview_popup_modal_undertext')) {
         closeImageFullview();

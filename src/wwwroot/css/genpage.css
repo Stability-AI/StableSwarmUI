@@ -399,6 +399,17 @@ body {
     color: var(--text);
     text-decoration: none;
 }
+.sui_popover_text_input {
+    display: block;
+    width: 100%;
+    padding-left: 3px;
+    padding-right: 3px;
+    color: var(--text);
+    text-decoration: none;
+    padding-bottom: 0.1rem;
+    margin-bottom: 0.1rem;
+    border-bottom: 1px solid var(--light-border);
+}
 .sui_popover_model_button_selected {
     background-color: color-mix(in srgb, var(--emphasis) 50%, var(--background));
 }

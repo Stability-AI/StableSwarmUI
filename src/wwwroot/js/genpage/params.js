@@ -1054,7 +1054,7 @@ class PromptTabCompleteClass {
     }
 
     enableFor(box) {
-        box.addEventListener('keydown', e => this.onKeyDown(box, e), true);
+        box.addEventListener('keydown', e => this.onKeyDown(e), true);
         box.addEventListener('input', () => this.onInput(box), true);
     }
 
@@ -1090,62 +1090,14 @@ class PromptTabCompleteClass {
         return this.prefixes[prefix].completer(suffix).map(p => p.startsWith('\n') ? p : `<${prefix}:${p}>`);
     }
 
-    popoverSelected() {
-        return this.popover.getElementsByClassName('sui_popover_model_button_selected')[0];
-    }
-
-    popoverScrollFix() {
-        let selected = this.popoverSelected();
-        if (selected.offsetTop + selected.offsetHeight > this.popover.scrollTop + this.popover.offsetHeight) {
-            this.popover.scrollTop = selected.offsetTop + selected.offsetHeight - this.popover.offsetHeight + 6;
+    onKeyDown(e) {
+        if (this.popover) {
+            this.popover.onKeyDown(e);
         }
-        else if (selected.offsetTop < this.popover.scrollTop) {
-            this.popover.scrollTop = selected.offsetTop;
-        }
-    }
-
-    popoverPossible() {
-        return [...this.popover.getElementsByClassName('sui_popover_model_button')].filter(e => !e.classList.contains('sui_popover_model_button_disabled'));
-    }
-
-    onKeyDown(box, e) {
-        if (e.shiftKey || e.ctrlKey || !this.popover) {
-            return;
-        }
-        let possible = this.popoverPossible();
-        if (!possible) {
-            return;
-        }
-        if (e.key == 'Tab' || e.key == 'Enter') {
-            let selected = this.popover.querySelector('.sui_popover_model_button_selected');
-            if (selected) {
-                selected.click();
-            }
-            e.preventDefault();
-            return false;
-        }
-        else if (e.key == 'ArrowUp') {
-            let selectedIndex = possible.findIndex(e => e.classList.contains('sui_popover_model_button_selected'));
-            possible[selectedIndex].classList.remove('sui_popover_model_button_selected');
-            possible[(selectedIndex + possible.length - 1) % possible.length].classList.add('sui_popover_model_button_selected');
-            this.popoverScrollFix();
-        }
-        else if (e.key == 'ArrowDown') {
-            let selectedIndex = possible.findIndex(e => e.classList.contains('sui_popover_model_button_selected'));
-            possible[selectedIndex].classList.remove('sui_popover_model_button_selected');
-            possible[(selectedIndex + 1) % possible.length].classList.add('sui_popover_model_button_selected');
-            this.popoverScrollFix();
-        }
-        else {
-            return;
-        }
-        e.preventDefault();
-        return false;
     }
 
     onInput(box) {
         if (this.popover) {
-            hidePopover('prompt_suggest');
             this.popover.remove();
             this.popover = null;
         }
@@ -1153,12 +1105,11 @@ class PromptTabCompleteClass {
         if (possible.length == 0) {
             return;
         }
+        let buttons = [];
         let prompt = this.getPromptBeforeCursor(box);
         let lastBrace = prompt.lastIndexOf('<');
         let areaPre = prompt.substring(0, lastBrace);
         let areaPost = box.value.substring(box.selectionStart);
-        this.popover = createDiv('popover_prompt_suggest', 'sui-popover sui_popover_model sui_popover_scrollable sui-popover-notransition');
-        let isFirst = true;
         for (let val of possible) {
             let name = val;
             let desc = '';
@@ -1173,35 +1124,20 @@ class PromptTabCompleteClass {
                 name = '';
                 desc = val.substring(1);
             }
-            let clazz = 'sui_popover_model_button';
-            if (isFirst && isClickable) {
-                clazz += ' sui_popover_model_button_selected';
-            }
-            if (!isClickable) {
-                clazz += ' sui_popover_model_button_disabled';
-            }
-            let button = createDiv(null, clazz);
+            let button = { key: desc.length == 0 ? name : `${name} - ${desc}` };
             if (isClickable) {
-                isFirst = false;
-            }
-            button.innerText = desc.length == 0 ? name : `${name} - ${desc}`;
-            if (isClickable) {
-                button.addEventListener('click', () => {
-                    hidePopover('prompt_suggest');
-                    this.popover.remove();
-                    this.popover = null;
+                button.action = () => {
                     box.value = areaPre + apply + areaPost;
                     box.selectionStart = areaPre.length + apply.length;
                     box.selectionEnd = areaPre.length + apply.length;
                     box.focus();
                     box.dispatchEvent(new Event('input'));
-                });
+                };
             }
-            this.popover.appendChild(button);
+            buttons.push(button);
         }
-        box.parentElement.appendChild(this.popover);
         let rect = box.getBoundingClientRect();
-        showPopover('prompt_suggest', rect.x, rect.y + box.offsetHeight + 6);
+        this.popover = new AdvancedPopover('prompt_suggest', buttons, false, rect.x, rect.y + box.offsetHeight + 6, null, box.offsetHeight + 6);
     }
 }
 
