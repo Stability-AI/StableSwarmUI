@@ -288,17 +288,14 @@ public class WebServer
             await context.YieldJsonOutput(null, 400, Utilities.ErrorObj(userError, "bad_path"));
             return;
         }
-        byte[] data;
+        byte[] data = null;
         try
         {
             if (context.Request.Query.TryGetValue("preview", out StringValues previewToken) && $"{previewToken}" == "true" && Program.Sessions.GetUser(userId).Settings.ImageHistoryUsePreviews)
             {
                 data = ImageMetadataTracker.GetOrCreatePreviewFor(path);
             }
-            else
-            {
-                data = await File.ReadAllBytesAsync(path);
-            }
+            data ??= await File.ReadAllBytesAsync(path);
         }
         catch (Exception ex)
         {
