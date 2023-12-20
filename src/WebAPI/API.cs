@@ -126,6 +126,11 @@ public class API
         }
         catch (Exception ex)
         {
+            if (ex is WebSocketException wserr && wserr.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+            {
+                Error($"Remote WebSocket disconnected unexpectedly (ConnectionClosedPrematurely). Did your browser crash while generating?");
+                return;
+            }
             Error($"Internal exception: {ex}");
             if (socket is null)
             {
