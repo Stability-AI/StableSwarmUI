@@ -129,9 +129,10 @@ public static class ComfyUIWebAPI
             return null;
         }
         string format = ComfyUIBackendExtension.RunningComfyBackends.FirstOrDefault()?.ModelFolderFormat;
+        string arch = otherModelData.ModelClass is null ? "unknown/lora" : $"{otherModelData.ModelClass.ID}/lora";
         JObject metadata = new()
         {
-            ["modelspec.architecture"] = otherModelData.ModelClass?.ID,
+            ["modelspec.architecture"] = arch,
             ["modelspec.title"] = otherModelData.Metadata.Title + " (Extracted LoRA)",
             ["modelspec.description"] = $"LoRA of {otherModelData.Metadata.Title} extracted from {baseModelData.Metadata.Title} at rank {rank}.\n{otherModelData.Metadata.Description}",
             ["modelspec.date"] = DateTime.UtcNow.ToString("yyyy-MM-dd"),
