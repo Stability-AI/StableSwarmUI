@@ -31,9 +31,11 @@ public class API
     public static async Task HandleAsyncRequest(HttpContext context)
     {
         // TODO: Validate that 'async' is truly async here. If needed, spin up our own threads.
+        Session session = null;
         void Error(string message)
         {
-            Logs.Error($"[WebAPI] Error handling API request '{context.Request.Path}': {message}");
+            string forUser = session is null ? "" : $" for user '{session.User.UserID}'";
+            Logs.Error($"[WebAPI] Error handling API request '{context.Request.Path}'{forUser}: {message}");
         }
         WebSocket socket = null;
         try
@@ -75,7 +77,6 @@ public class API
                 return;
             }
             string path = context.Request.Path.ToString().After("/API/");
-            Session session = null;
             if (path != "GetNewSession")
             {
                 if (!input.TryGetValue("session_id", out JToken session_id))
