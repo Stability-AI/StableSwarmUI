@@ -64,6 +64,25 @@ class ServerLogsHelper {
         return this.levels.slice(this.levels.indexOf(selected));
     }
 
+    matchIdentifier(identifier) {
+        let matched = this.logTypes.filter((t) => t.identifier == identifier);
+        if (matched.length == 0) {
+            return null;
+        }
+        return matched[0];
+    }
+
+    showLogsForIdentifier(identifier) {
+        let matched = this.matchIdentifier(identifier);
+        if (!matched) {
+            return;
+        }
+        this.typeSelectors.value = matched.name;
+        getRequiredElementById('servertabbutton').click();
+        this.tabButton.click();
+        this.updateLoop();
+    }
+
     updateLoop() {
         if (!this.serverTabBody.classList.contains('active') || !this.tabBody.classList.contains('active')) {
             return;

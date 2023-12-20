@@ -75,6 +75,10 @@ function addBackendToHtml(backend, disable, spot = null) {
         }
     });
     let cardBody = createDiv(null, 'card-body');
+    let buttons = document.createElement('div');
+    let isLogAvailable = serverLogs.matchIdentifier(`backend-${backend.id}`) != null;
+    buttons.innerHTML = `<button class="basic-button backend-restart-button" disabled onclick="restart_backend('${backend.id}')">Restart</button> <button class="basic-button backend-log-view-button"${isLogAvailable ? '' : ' disabled'} onclick="serverLogs.showLogsForIdentifier('backend-${backend.id}')">View Logs</button>`;
+    cardBody.appendChild(buttons);
     for (let setting of type.settings) {
         let input = document.createElement('div');
         let pop = `<div class="sui-popover" id="popover_setting_${backend.id}_${setting.name}"><b>${escapeHtml(setting.name)}</b> (${setting.type}):<br>&emsp;${escapeHtml(setting.description)}</div>`;
@@ -143,12 +147,14 @@ function loadBackendsList() {
                 spot.remove();
             }
             else {
+                let card = document.getElementById(`backend-card-${oldBack.id}`);
                 if (oldBack.status != newBack.status) {
-                    let card = document.getElementById(`backend-card-${oldBack.id}`);
                     card.classList.remove(`backend-${oldBack.status}`);
                     card.classList.add(`backend-${newBack.status}`);
                     card.querySelector('.card-title-status').innerText = newBack.status;
                 }
+                card.querySelector('.backend-restart-button').disabled = newBack.status != 'errored' && newBack.status != 'running';
+                card.querySelector('.backend-log-view-button').disabled = serverLogs.matchIdentifier(`backend-${newBack.id}`) == null;
                 if (newBack.modcount > oldBack.modcount) {
                     addBackendToHtml(newBack, true, spot);
                 }
@@ -220,6 +226,7 @@ function isVisible(element) {
 function backendLoopUpdate() {
     let loading = countBackendsByStatus('loading') + countBackendsByStatus('waiting');
     if (loading > 0 || isVisible(backendsListView)) {
+        serverLogs.onTabButtonClick();
         if (backendsCheckRateCounter++ % 3 == 0) {
             loadBackendsList(); // TODO: only if have permission
         }
@@ -230,6 +237,14 @@ function backendLoopUpdate() {
             refreshParameterValues();
         }
         backendsCheckRateCounter = 0;
+    }
+}
+
+function restart_backend(id) {
+    if (confirm(`Are you sure you want to restart backend ${id}?`)) {
+        genericRequest('RestartBackends', {backend: `${id}`}, data => {
+            loadBackendsList();
+        });
     }
 }
 

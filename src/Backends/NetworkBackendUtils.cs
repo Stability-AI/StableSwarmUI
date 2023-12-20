@@ -266,13 +266,13 @@ public static class NetworkBackendUtils
     }
 
     /// <summary>Starts a self-start backend based on the user-configuration and backend-specifics provided.</summary>
-    public static Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput)
+    public static Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, string identifier, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput)
     {
-        return DoSelfStart(startScript, nameSimple, gpuId, extraArgs, status => backend.Status = status, async (b) => { await initInternal(b); return backend.Status == BackendStatus.RUNNING; }, takeOutput, () => backend.Status, a => backend.OnShutdown += a);
+        return DoSelfStart(startScript, nameSimple, identifier, gpuId, extraArgs, status => backend.Status = status, async (b) => { await initInternal(b); return backend.Status == BackendStatus.RUNNING; }, takeOutput, () => backend.Status, a => backend.OnShutdown += a);
     }
 
     /// <summary>Starts a self-start backend based on the user-configuration and backend-specifics provided.</summary>
-    public static async Task DoSelfStart(string startScript, string nameSimple, int gpuId, string extraArgs, Action<BackendStatus> reviseStatus, Func<bool, Task<bool>> initInternal, Action<int, Process> takeOutput, Func<BackendStatus> getStatus, Action<Action> addShutdownEvent)
+    public static async Task DoSelfStart(string startScript, string nameSimple, string identifier, int gpuId, string extraArgs, Action<BackendStatus> reviseStatus, Func<bool, Task<bool>> initInternal, Action<int, Process> takeOutput, Func<BackendStatus> getStatus, Action<Action> addShutdownEvent)
     {
         if (string.IsNullOrWhiteSpace(startScript))
         {
@@ -317,7 +317,7 @@ public static class NetworkBackendUtils
         takeOutput(port, runningProcess);
         runningProcess.Start();
         Logs.Init($"Self-Start {nameSimple} on port {port} is loading...");
-        ReportLogsFromProcess(runningProcess, $"{nameSimple} on port {port}", out Action signalShutdownExpected, getStatus, s => { status = s; reviseStatus(s); });
+        ReportLogsFromProcess(runningProcess, $"{nameSimple} on port {port}", identifier, out Action signalShutdownExpected, getStatus, s => { status = s; reviseStatus(s); });
         addShutdownEvent?.Invoke(signalShutdownExpected);
         int checks = 0;
         while (status == BackendStatus.LOADING)
@@ -338,15 +338,15 @@ public static class NetworkBackendUtils
         Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
     }
 
-    public static void ReportLogsFromProcess(Process process, string nameSimple)
+    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier)
     {
-        ReportLogsFromProcess(process, nameSimple, out Action signalShutdownExpected, () => BackendStatus.RUNNING, _ => { });
+        ReportLogsFromProcess(process, nameSimple, identifier, out Action signalShutdownExpected, () => BackendStatus.RUNNING, _ => { });
         signalShutdownExpected();
     }
 
-    public static void ReportLogsFromProcess(Process process, string nameSimple, out Action signalShutdownExpected, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus)
+    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier, out Action signalShutdownExpected, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus)
     {
-        Logs.LogTracker logTracker = new();
+        Logs.LogTracker logTracker = new() { Identifier = identifier };
         lock (Logs.OtherTrackers)
         {
             Logs.OtherTrackers[nameSimple] = logTracker;

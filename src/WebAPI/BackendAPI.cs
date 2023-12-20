@@ -152,20 +152,26 @@ public class BackendAPI
     }
 
     /// <summary>API route to restart all backends.</summary>
-    public static async Task<JObject> RestartBackends()
+    public static async Task<JObject> RestartBackends(string backend = "all")
     {
         if (Program.LockSettings)
         {
             return new() { ["error"] = "Settings are locked." };
         }
+        int count = 0;
         foreach (BackendHandler.T2IBackendData data in Program.Backends.T2IBackends.Values)
         {
+            if (backend != "all" && backend != $"{data.ID}")
+            {
+                continue;
+            }
             if (data.Backend.Status == BackendStatus.RUNNING || data.Backend.Status == BackendStatus.ERRORED)
             {
                 await Program.Backends.ShutdownBackendCleanly(data);
                 Program.Backends.DoInitBackend(data);
+                count++;
             }
         }
-        return new JObject() { ["result"] = "Success." };
+        return new JObject() { ["result"] = "Success.", ["count"] = count };
     }
 }

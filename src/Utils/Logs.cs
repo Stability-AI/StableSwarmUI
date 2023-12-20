@@ -73,6 +73,9 @@ public static class Logs
         /// <summary>Last sequence ID for this tracker.</summary>
         public long LastSeq = 0;
 
+        /// <summary>Other identifying data for this log set, if needed.</summary>
+        public string Identifier = "";
+
         /// <summary>Track a new log message.</summary>
         public void Track(string message)
         {

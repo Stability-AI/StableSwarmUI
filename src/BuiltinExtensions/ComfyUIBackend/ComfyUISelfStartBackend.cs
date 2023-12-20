@@ -164,7 +164,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     RedirectStandardOutput = true
                 };
                 Process p = Process.Start(psi);
-                NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Git Pull)");
+                NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Git Pull)", "");
                 await p.WaitForExitAsync(Program.GlobalProgramCancel);
             }
             catch (Exception ex)
@@ -183,14 +183,14 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     return;
                 }
                 Process p = DoPythonCall($"-s -m pip install {pipName}");
-                NetworkBackendUtils.ReportLogsFromProcess(p, $"ComfyUI (Install {pipName})");
+                NetworkBackendUtils.ReportLogsFromProcess(p, $"ComfyUI (Install {pipName})", "");
                 await p.WaitForExitAsync(Program.GlobalProgramCancel);
             }
             await install("rembg", "rembg");
             await install("opencv_python_headless", "opencv-python-headless");
             await install("imageio_ffmpeg", "imageio-ffmpeg");
         }
-        await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, $"ComfyUI-{BackendData.ID}", settings.GPU_ID, settings.ExtraArgs.Trim() + " --port {PORT}" + addedArgs, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
+        await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, $"ComfyUI-{BackendData.ID}", $"backend-{BackendData.ID}", settings.GPU_ID, settings.ExtraArgs.Trim() + " --port {PORT}" + addedArgs, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
 
     public override async Task Shutdown()

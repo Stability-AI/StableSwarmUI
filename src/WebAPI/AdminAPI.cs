@@ -106,7 +106,8 @@ public static class AdminAPI
                 types.Add(new JObject()
                 {
                     ["name"] = name,
-                    ["color"] = tracker.Color
+                    ["color"] = tracker.Color,
+                    ["identifier"] = tracker.Identifier
                 });
             }
         }

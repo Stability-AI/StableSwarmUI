@@ -100,7 +100,7 @@ public class ScorersExtension : Extension
                     return false;
                 }
             }
-            NetworkBackendUtils.DoSelfStart(FilePath + "scorer_engine.py", "ScorersExtension", 0, "{PORT}", s => Status = s, Check, (p, r) => { Port = p; RunningProcess = r; }, () => Status, a => ShutdownEvent += a).Wait();
+            NetworkBackendUtils.DoSelfStart(FilePath + "scorer_engine.py", "ScorersExtension", "scorersextension", 0, "{PORT}", s => Status = s, Check, (p, r) => { Port = p; RunningProcess = r; }, () => Status, a => ShutdownEvent += a).Wait();
         }
     }
 
