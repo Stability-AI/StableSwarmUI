@@ -1058,7 +1058,7 @@ public class WorkflowGenerator
             inputs["sigma_min"] = UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
             inputs["sigma_max"] = UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
             inputs["rho"] = UserInput.Get(T2IParamTypes.SamplerRho, 7);
-            inputs["previews"] = previews;
+            inputs["previews"] = UserInput.Get(T2IParamTypes.NoPreviews) ? "none" : previews;
             return CreateNode("SwarmKSampler", inputs, id);
         }
         else

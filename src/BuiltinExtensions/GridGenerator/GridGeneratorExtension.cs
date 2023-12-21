@@ -144,6 +144,7 @@ public class GridGeneratorExtension : Extension
                     match.ApplyTo(thisParams);
                 }
             }
+            thisParams.Set(T2IParamTypes.NoPreviews, true);
             int iteration = runner.Iteration;
             Task t = Task.Run(() => T2IEngine.CreateImageTask(thisParams, $"{iteration}", data.Claim, data.AddOutput, setError, true, Program.ServerSettings.Backends.PerRequestTimeoutMinutes,
                 (image, metadata) =>
