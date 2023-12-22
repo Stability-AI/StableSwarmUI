@@ -38,6 +38,7 @@ Key feature targets not yet implemented:
     - For example, on recent Ubuntu versions, `sudo apt install git python3-pip python3-venv`
 - Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0 (you need `dotnet-sdk-7.0`, as that includes all relevant sub-packages)
     - Some users [have said](https://github.com/Stability-AI/StableSwarmUI/pull/6) that certain Linux distros expect `aspnet-runtime` to be installed separately
+- In the near future, Swarm will update to DotNET 8, so to be ready for that: Install DotNET 8 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/8.0 (you need `dotnet-sdk-8.0`, as that includes all relevant sub-packages)
 - Open a shell terminal and `cd` to a directory you want to install into
 - Run shell commands:
     - `git clone https://github.com/Stability-AI/StableSwarmUI`
