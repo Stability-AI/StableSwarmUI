@@ -494,7 +494,7 @@ public partial class GridGenCore
                     {
                         Logs.Error("\n\n\nOS Error: The filename or extension is too long - see this article to fix that: https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-Windows-10-default-path-length-limitation-MAX-PATH-is-256-characters.html \n\n\n");
                     }
-                    throw e;
+                    throw;
                 }
             }
         }
