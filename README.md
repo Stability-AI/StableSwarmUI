@@ -56,7 +56,12 @@ Key feature targets not yet implemented:
 1. Open Terminal.
 2. Ensure your `brew` packages are updated with `brew update`.
 3. Verify your `brew` installation with `brew doctor`. You should not see any error in the command output.
-4. Install .NET for macOS: `brew install dotnet`.
+4. Install .NET for macOS:
+    ````
+    brew tap isen-ng/dotnet-sdk-versions
+    brew install --cask dotnet-sdk7-0-400
+    brew install --cask dotnet-sdk8-0-100
+    ````
 5. Change the directory (`cd`) to the folder where you want to install StableSwarmUI.
 6. Clone the StableSwarmUI GitHub repository: `git clone https://github.com/Stability-AI/StableSwarmUI`.
 7. `cd StableSwarmUI` and run the installation script: `./launch-macos.sh`.
