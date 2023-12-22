@@ -630,4 +630,35 @@ public static class Utilities
     {
         GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
     }
+
+    public static string DotNetVersMissing = null;
+
+    /// <summary>Check if a dotnet version is installed, and, if not, show a log message and write to a utility flag.</summary>
+    public static void CheckDotNet(string vers)
+    {
+        Task.Run(() =>
+        {
+            try
+            {
+                Process p = Process.Start(new ProcessStartInfo("dotnet", "--list-runtimes") { RedirectStandardOutput = true, UseShellExecute = false });
+                p.WaitForExit();
+                string output = p.StandardOutput.ReadToEnd();
+                if (!output.Contains($"Microsoft.NETCore.App {vers}."))
+                {
+                    void Warn()
+                    {
+                        Logs.Warning($"You do not seem to have DotNET {vers} installed - this will be required in a future version of StableSwarmUI.");
+                        Logs.Warning($"Please install DotNET SDK {vers}.0 from https://dotnet.microsoft.com/en-us/download/dotnet/{vers}.0");
+                    }
+                    DotNetVersMissing = vers;
+                    Warn();
+                    Task.Delay(TimeSpan.FromSeconds(2)).ContinueWith(_ => Warn());
+                }
+            }
+            catch (Exception ex)
+            {
+                Logs.Debug($"Failed to check dotnet version: {ex}");
+            }
+        });
+    }
 }

@@ -557,6 +557,18 @@
                         </p>
                     </div>
                 </div>
+                @if (Utilities.DotNetVersMissing is not null)
+                {
+                    <div class="card border-danger mb-3 card-center-container">
+                        <div class="card-header">DotNET @Utilities.DotNetVersMissing Missing</div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                You do not seem to have DotNET @Utilities.DotNetVersMissing installed - this will be required in a future version of StableSwarmUI.
+                                <br>Please install DotNET SDK @(Utilities.DotNetVersMissing).0 from <a href="https://dotnet.microsoft.com/en-us/download/dotnet/@(Utilities.DotNetVersMissing).0">https://dotnet.microsoft.com/en-us/download/dotnet/@(Utilities.DotNetVersMissing).0</a>
+                            </p>
+                        </div>
+                    </div>
+                }
             </div>
             <div class="tab-pane" id="Settings-Backends" role="tabpanel">
                 <div class="backend_add_button_container">

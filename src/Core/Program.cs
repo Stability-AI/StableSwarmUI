@@ -69,6 +69,7 @@ public class Program
         Utilities.LoadTimer timer = new();
         AssemblyLoadContext.Default.Unloading += (_) => Shutdown();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Shutdown();
+        Utilities.CheckDotNet("8");
         PrepExtensions();
         try
         {
