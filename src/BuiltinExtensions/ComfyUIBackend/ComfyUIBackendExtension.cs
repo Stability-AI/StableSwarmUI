@@ -13,7 +13,6 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.WebSockets;
-using System.Xml.Linq;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -584,7 +583,7 @@ public class ComfyUIBackendExtension : Extension
             return;
         }
         // This code is utterly silly, but it's incredibly fragile, don't touch without significant testing
-        HttpResponseMessage response;
+        HttpResponseMessage response = null;
         if (context.Request.Method == "POST")
         {
             HttpContent content = null;
@@ -641,16 +640,36 @@ public class ComfyUIBackendExtension : Extension
                     Logs.Debug($"ComfyUI redirection failed - prompt json parse: {ex}");
                 }
             }
+            else if (path == "queue" || path == "interrupt") // eg queue delete
+            {
+                List<Task<HttpResponseMessage>> tasks = new();
+                MemoryStream inputCopy = new();
+                await context.Request.Body.CopyToAsync(inputCopy);
+                byte[] inputBytes = inputCopy.ToArray();
+                foreach (ComfyBackendData back in allBackends)
+                {
+                    HttpRequestMessage dupRequest = new(new HttpMethod("POST"), $"{back.Address}/{path}") { Content = new ByteArrayContent(inputBytes) };
+                    dupRequest.Content.Headers.Add("Content-Type", context.Request.ContentType);
+                    tasks.Add(webClient.SendAsync(dupRequest));
+                }
+                await Task.WhenAll(tasks);
+                List<HttpResponseMessage> responses = tasks.Select(t => t.Result).ToList();
+                response = responses.FirstOrDefault(t => t.StatusCode == HttpStatusCode.OK);
+                response ??= responses.FirstOrDefault();
+            }
             else
             {
                 Logs.Verbose($"Comfy direct POST request to path {path}");
             }
-            HttpRequestMessage request = new(new HttpMethod("POST"), $"{address}/{path}") { Content = content ?? new StreamContent(context.Request.Body) };
-            if (content is null)
+            if (response is null)
             {
-                request.Content.Headers.Add("Content-Type", context.Request.ContentType);
+                HttpRequestMessage request = new(new HttpMethod("POST"), $"{address}/{path}") { Content = content ?? new StreamContent(context.Request.Body) };
+                if (content is null)
+                {
+                    request.Content.Headers.Add("Content-Type", context.Request.ContentType);
+                }
+                response = await webClient.SendAsync(request);
             }
-            response = await webClient.SendAsync(request);
         }
         else
         {
