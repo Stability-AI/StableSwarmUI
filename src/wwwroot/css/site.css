@@ -347,7 +347,7 @@ textarea, input, select {
     left: 0;
     top: 0;
     width: fit-content;
-    z-index: 1000;
+    z-index: 10000;
     white-space: pre-wrap;
     transition: visibility 0s, opacity 0.3s linear;
 }
