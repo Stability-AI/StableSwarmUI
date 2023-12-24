@@ -20,6 +20,12 @@ Key feature targets not yet implemented:
 - Self-contained internal mini-backend for simple usages
 - full detail "Current Model" display in UI, separate from the model selector (probably as a tab within the batch sidebar?)
 
+# Try It On Google Colab
+
+**WARNING**: Google Colab does not necessarily allow remote WebUIs, particularly for free accounts, use at your own risk.
+
+Colab link if you want to try Swarm: https://colab.research.google.com/github/Stability-AI/StableSwarmUI/blob/master/colab/colab-notebook.ipynb
+
 # Installing on Windows
 
 - Download [The Install-Windows.bat file](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.5.8-Alpha/install-windows.bat), store it somewhere you want to install at (not `Program Files`), and run it.
@@ -36,6 +42,20 @@ Key feature targets not yet implemented:
 
 - Install `git`, `python3` via your OS package manager if they are not already installed (make sure to include `pip` and `venv` on distros that do not include them in python directly)
     - For example, on recent Ubuntu versions, `sudo apt install git python3-pip python3-venv`
+- Download [the install-linux.sh file](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.5.9-Alpha/install-linux.sh), store it somewhere you want to install at, and run it
+    - If you like terminals, you can open a terminal to the folder and run the following commands:
+        - `wget https://github.com/Stability-AI/StableSwarmUI/releases/download/0.5.9-Alpha/install-linux.sh -O install-linux.sh`
+        - `chmod +x install-linux.sh`
+- Run the `./install-linux.sh` script, it will install everything for you and eventually open the webpage in your browser.
+- Follow the install instructions on-page.
+
+- You can at any time in the future run the `launch-linux.sh` script to re-launch Swarm.
+- If the page doesn't open itself, you can manually open `http://localhost:7801`
+
+# Alternate Manual Linux Install
+
+- Install `git`, `python3` via your OS package manager if they are not already installed (make sure to include `pip` and `venv` on distros that do not include them in python directly)
+    - For example, on recent Ubuntu versions, `sudo apt install git python3-pip python3-venv`
 - Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0 (you need `dotnet-sdk-7.0`, as that includes all relevant sub-packages)
     - Some users [have said](https://github.com/Stability-AI/StableSwarmUI/pull/6) that certain Linux distros expect `aspnet-runtime` to be installed separately
 - In the near future, Swarm will update to DotNET 8, so to be ready for that: Install DotNET 8 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/8.0 (you need `dotnet-sdk-8.0`, as that includes all relevant sub-packages)
@@ -44,7 +64,7 @@ Key feature targets not yet implemented:
     - `git clone https://github.com/Stability-AI/StableSwarmUI`
     - cd `StableSwarmUI`
     - `./launch-linux.sh`
-- open `http://localhost:7801/Install`
+- open `http://localhost:7801/Install` (if it doesn't launch itself)
 - Follow the install instructions on-page.
 
 (TODO): Maybe outlink a dedicated document with per-distro details and whatever. Maybe also make a one-click installer for Linux?
