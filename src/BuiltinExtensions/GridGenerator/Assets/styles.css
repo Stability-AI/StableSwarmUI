@@ -78,7 +78,7 @@ table tr td:first-child {
     margin: auto;
 }
 .advanced_settings_section {
-    max-width: calc(max(1000px, 60em));
+    max-width: calc(max(1500px, 90em));
     text-align: left;
     margin: auto;
 }
