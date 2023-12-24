@@ -97,3 +97,21 @@ label {
     width: 100%;
     font-size: 80%;
 }
+.install_progress_bar {
+    width: 0%;
+    display: block;
+    height: 5px;
+    background-color: #00ff00;
+    position: relative;
+    left: 0;
+    top: 0;
+}
+.install_progress_step_bar {
+    width: 0%;
+    display: block;
+    height: 5px;
+    background-color: var(--emphasis);
+    position: relative;
+    left: 0;
+    top: 5px;
+}

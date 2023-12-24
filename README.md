@@ -75,7 +75,7 @@ Colab link if you want to try Swarm: https://colab.research.google.com/github/St
 1. Open Terminal.
 2. Ensure your `brew` packages are updated with `brew update`.
 3. Verify your `brew` installation with `brew doctor`. You should not see any error in the command output.
-4. Install .NET for macOS:
+4. Install .NET for macOS: (Note this uses a [third party package from isen-ng](https://github.com/isen-ng/homebrew-dotnet-sdk-versions))
     ````
     brew tap isen-ng/dotnet-sdk-versions
     brew install --cask dotnet-sdk7-0-400

@@ -74,7 +74,11 @@ public static class BasicAPIFeatures
             await socket.SendJson(new JObject() { ["error"] = $"You are not an admin of this server, install request refused." }, API.WebsocketTimeout);
             return null;
         }
-        async Task output(string str) => await socket.SendJson(new JObject() { ["info"] = str }, API.WebsocketTimeout);
+        async Task output(string str)
+        {
+            Logs.Init($"[Installer] {str}");
+            await socket.SendJson(new JObject() { ["info"] = str }, API.WebsocketTimeout);
+        }
         await output("Installation request received, processing...");
         if (Program.Web.RegisteredThemes.ContainsKey(theme))
         {
@@ -108,10 +112,20 @@ public static class BasicAPIFeatures
                 await socket.SendJson(new JObject() { ["error"] = $"Invalid install type!" }, API.WebsocketTimeout);
                 return null;
         }
-        void updateProgress(long progress)
+        int stepsThusFar = 1;
+        int totalSteps = 4;
+        if (backend == "comfyui")
+        {
+            totalSteps++;
+        }
+        if (models != "none")
+        {
+            totalSteps += models.Split(',').Length;
+        }
+        void updateProgress(long progress, long total)
         {
             // TODO: better way to send these out without waiting
-            socket.SendJson(new JObject() { ["progress"] = progress }, API.WebsocketTimeout).Wait();
+            socket.SendJson(new JObject() { ["progress"] = progress, ["total"] = total, ["steps"] = stepsThusFar, ["total_steps"] = totalSteps }, API.WebsocketTimeout).Wait();
         }
         HttpClient client = NetworkBackendUtils.MakeHttpClient();
         switch (backend)
@@ -133,8 +147,9 @@ public static class BasicAPIFeatures
                             Logs.Info("Will try alternate download...");
                             await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_or_cpu_nightly_pytorch.7z", "dlbackend/comfyui_dl.7z", updateProgress);
                         }
-                        updateProgress(0);
-                        await output("Downloaded! Extracting...");
+                        stepsThusFar++;
+                        updateProgress(0, 0);
+                        await output("Downloaded! Extracting... (look in terminal window for details)");
                         Directory.CreateDirectory("dlbackend/tmpcomfy/");
                         await Process.Start("launchtools/7z/win/7za.exe", $"x dlbackend/comfyui_dl.7z -o\"dlbackend/tmpcomfy/\" -y").WaitForExitAsync(Program.GlobalProgramCancel);
                         if (Directory.Exists("dlbackend/tmpcomfy/ComfyUI_windows_portable"))
@@ -147,12 +162,14 @@ public static class BasicAPIFeatures
                         }
                         await output("Installing prereqs...");
                         await Utilities.DownloadFile("https://aka.ms/vs/16/release/vc_redist.x64.exe", "dlbackend/vc_redist.x64.exe", updateProgress);
-                        updateProgress(0);
+                        updateProgress(0, 0);
                         Process.Start(new ProcessStartInfo(Path.GetFullPath("dlbackend/vc_redist.x64.exe"), "/quiet /install /passive /norestart") { UseShellExecute = true }).WaitForExit();
                         path = "dlbackend/comfy/ComfyUI/main.py";
                     }
                     else
                     {
+                        stepsThusFar++;
+                        updateProgress(0, 0);
                         await Process.Start("/bin/bash", "launchtools/comfy-install-linux.sh").WaitForExitAsync(Program.GlobalProgramCancel);
                         path = "dlbackend/ComfyUI/main.py";
                     }
@@ -185,6 +202,8 @@ public static class BasicAPIFeatures
                 await socket.SendJson(new JObject() { ["error"] = $"Invalid backend type!" }, API.WebsocketTimeout);
                 return null;
         }
+        stepsThusFar++;
+        updateProgress(0, 0);
         if (models != "none")
         {
             foreach (string model in models.Split(','))
@@ -210,7 +229,6 @@ public static class BasicAPIFeatures
                 try
                 {
                     await Utilities.DownloadFile(file, $"{folder}/{filename}", updateProgress);
-                    updateProgress(0);
                 }
                 catch (IOException ex)
                 {
@@ -222,10 +240,14 @@ public static class BasicAPIFeatures
                     Logs.Error($"Failed to download '{file}' (HTTP): {ex.GetType().Name}: {ex.Message}");
                     Logs.Debug($"Download exception: {ex}");
                 }
+                stepsThusFar++;
+                updateProgress(0, 0);
                 await output("Model download complete.");
             }
             Program.MainSDModels.Refresh();
         }
+        stepsThusFar++;
+        updateProgress(0, 0);
         Program.ServerSettings.IsInstalled = true;
         if (Program.ServerSettings.LaunchMode == "webinstall")
         {
@@ -233,6 +255,8 @@ public static class BasicAPIFeatures
         }
         Program.SaveSettingsFile();
         await Program.Backends.ReloadAllBackends();
+        stepsThusFar++;
+        updateProgress(0, 0);
         await output("Installed!");
         await socket.SendJson(new JObject() { ["success"] = true }, API.WebsocketTimeout);
         return null;

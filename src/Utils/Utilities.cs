@@ -436,25 +436,29 @@ public static class Utilities
     }
 
     /// <summary>Downloads a file from a given URL and saves it to a given filepath.</summary>
-    public static async Task DownloadFile(string url, string filepath, Action<long> progressUpdate)
+    public static async Task DownloadFile(string url, string filepath, Action<long, long> progressUpdate)
     {
         using FileStream writer = File.OpenWrite(filepath);
         HttpClient client = NetworkBackendUtils.MakeHttpClient();
-        using Stream dlStream = await client.GetStreamAsync(url, Program.GlobalProgramCancel);
-        byte[] buffer = new byte[1024 * 1024 * 64]; // 64 megabytes, just grab as big a chunk as we can
+        using HttpResponseMessage response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseHeadersRead, Program.GlobalProgramCancel);
+        long length = response.Content.Headers.ContentLength ?? 0;
+        byte[] buffer = new byte[Math.Min(length + 1024, 1024 * 1024 * 64)]; // up to 64 megabytes, just grab as big a chunk as we can at a time
         long progress = 0;
         long lastUpdate = Environment.TickCount64;
+        using Stream dlStream = await response.Content.ReadAsStreamAsync();
+        progressUpdate?.Invoke(0, length);
         while (true)
         {
             int read = await dlStream.ReadAsync(buffer, Program.GlobalProgramCancel);
             if (read <= 0)
             {
+                progressUpdate?.Invoke(progress, length);
                 return;
             }
             progress += read;
             if (Environment.TickCount64 - lastUpdate > 1000)
             {
-                progressUpdate?.Invoke(progress);
+                progressUpdate?.Invoke(progress, length);
                 lastUpdate = Environment.TickCount64;
             }
             await writer.WriteAsync(buffer.AsMemory(0, read), Program.GlobalProgramCancel);

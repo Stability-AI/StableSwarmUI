@@ -292,9 +292,8 @@ public class WorkflowGenerator
                             {
                                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
                                 Logs.Info($"Downloading {name} to {filePath}...");
-                                long total = 3_689_911_098L;
                                 double nextPerc = 0.05;
-                                Utilities.DownloadFile(url, filePath, (bytes) =>
+                                Utilities.DownloadFile(url, filePath, (bytes, total) =>
                                 {
                                     double perc = bytes / (double)total;
                                     if (perc >= nextPerc)

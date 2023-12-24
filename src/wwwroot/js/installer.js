@@ -1,6 +1,6 @@
 
 class InstallerClass {
-    parts = ['license', 'themes', 'installed_for', 'backends', 'models', 'end'];
+    parts = ['license', 'skip', 'themes', 'installed_for', 'backends', 'models', 'end'];
     backButton = getRequiredElementById('installer_button_back');
     nextButton = getRequiredElementById('installer_button_next');
     bottomInfo = getRequiredElementById('bottom_info');
@@ -48,6 +48,13 @@ class InstallerClass {
     }
 
     next() {
+        if (this.cur_part == 1) {
+            let skip = getRadioSelectionInFieldset('install_path_selection_field');
+            if (skip == 'just_install') {
+                this.moveToPage(this.parts.length - 1);
+                return;
+            }
+        }
         this.moveToPage(this.cur_part + 1);
     }
 
@@ -59,6 +66,8 @@ class InstallerClass {
         switch (this.parts[this.cur_part]) {
             case 'license':
                 return true;
+            case 'skip':
+                return getRadioSelectionInFieldset('install_path_selection_field') != null;
             case 'themes':
                 return getRadioSelectionInFieldset('theme_selection_field') != null;
             case 'installed_for':
@@ -116,21 +125,34 @@ class InstallerClass {
     submit() {
         let output = getRequiredElementById('install_output');
         let progress = getRequiredElementById('install_progress_spot');
+        let bar = getRequiredElementById('install_progress_bar');
+        let stepBar = getRequiredElementById('install_progress_step_bar');
         output.innerText = 'Sending...\n';
         let data = this.getSubmittable();
         getRequiredElementById('installer_button_confirm').disabled = true;
+        let timeLastRestart = 0;
         makeWSRequest('InstallConfirmWS', data, (response) => {
             if (response.info) {
                 output.innerText += response.info + "\n";
             }
-            else if (response.progress) {
+            else if ('progress' in response) {
+                progress.style.display = 'block';
                 if (response.progress == 0) {
-                    progress.style.display = 'none';
+                    progress.innerText = `Step ${response.steps} / ${response.total_steps}`;
+                    bar.style.width = '0%';
+                    timeLastRestart = Date.now();
                 }
                 else {
-                    progress.style.display = 'block';
-                    progress.innerText = `Progress: ${fileSizeStringify(response.progress)}`;
+                    if (timeLastRestart == 0) {
+                        timeLastRestart = Date.now();
+                    }
+                    let perSecond = response.progress / (Date.now() - timeLastRestart) * 1000;
+                    let percent = response.total == 0 ? 0 : (Math.round(response.progress / response.total * 10000) / 100);
+                    progress.innerText = `Progress: ${fileSizeStringify(response.progress)} / ${fileSizeStringify(response.total)} (${percent}%) (Step ${response.steps} / ${response.total_steps}) ... ${fileSizeStringify(perSecond)}/s`;
+                    bar.style.width = `${percent}%`;
                 }
+                let stepPercent = Math.round(response.steps / response.total_steps * 10000) / 100;
+                stepBar.style.width = `${stepPercent}%`;
             }
             else if (response.success) {
                 window.location.href = '/Text2Image';
