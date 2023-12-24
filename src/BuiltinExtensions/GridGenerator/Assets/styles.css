@@ -144,3 +144,12 @@ table tr td:first-child {
     max-width: 100%;
     max-height: 70vh;
 }
+.advanced-checkbox {
+    display: inline-block;
+    border-radius: 0.2rem;
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    margin: 0.1rem;
+}
+label {
+    display: inline;
+}
