@@ -17,7 +17,6 @@ Those interested in helping push to a Full ready-for-anything Release status are
 Key feature targets not yet implemented:
 - Localization / automatic translation
 - Mobile browser formatting
-- Self-contained internal mini-backend for simple usages
 - full detail "Current Model" display in UI, separate from the model selector (probably as a tab within the batch sidebar?)
 
 # Try It On Google Colab
