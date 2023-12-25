@@ -51,6 +51,20 @@ def calculate_sigmas_scheduler(model, scheduler_name, steps, sigma_min, sigma_ma
     else:
         return None
 
+def make_swarm_sampler_callback(steps, device, model, previews):
+    previewer = latent_preview.get_previewer(device, model.model.latent_format) if previews in ["default", "one"] else None
+    pbar = comfy.utils.ProgressBar(steps)
+    def callback(step, x0, x, total_steps):
+        pbar.update_absolute(step + 1, total_steps, None)
+        if previewer:
+            for i in range(x0.shape[0]):
+                preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[i:i+1])
+                swarm_send_extra_preview(i, preview_img[1])
+                if previews == "one":
+                    break
+    return callback
+
+
 class SwarmKSampler:
     @classmethod
     def INPUT_TYPES(s):
@@ -96,18 +110,6 @@ class SwarmKSampler:
         if "noise_mask" in latent_image:
             noise_mask = latent_image["noise_mask"]
 
-        previewer = latent_preview.get_previewer(device, model.model.latent_format) if previews in ["default", "one"] else None
-
-        pbar = comfy.utils.ProgressBar(steps)
-        def callback(step, x0, x, total_steps):
-            pbar.update_absolute(step + 1, total_steps, None)
-            if previewer:
-                for i in range(x0.shape[0]):
-                    preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[i:i+1])
-                    swarm_send_extra_preview(i, preview_img[1])
-                    if previews == "one":
-                        break
-
         sigmas = None
         if sigma_min >= 0 and sigma_max >= 0 and scheduler in ["karras", "exponential", "turbo"]:
             real_model, _, _, _, _ = comfy.sample.prepare_sampling(model, noise.shape, positive, negative, noise_mask)
@@ -121,6 +123,8 @@ class SwarmKSampler:
             else:
                 sigmas = calculate_sigmas_scheduler(real_model, scheduler, steps, sigma_min, sigma_max, rho)
             sigmas = sigmas.to(device)
+        
+        callback = make_swarm_sampler_callback(steps, device, model, previews)
 
         samples = comfy.sample.sample(model, noise, steps, cfg, sampler_name, scheduler, positive, negative, latent_samples,
                                     denoise=1.0, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step,

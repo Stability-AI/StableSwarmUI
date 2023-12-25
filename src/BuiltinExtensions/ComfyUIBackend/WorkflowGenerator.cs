@@ -187,6 +187,31 @@ public class WorkflowGenerator
                     ["pixels"] = new JArray() { "15", 0 },
                     ["vae"] = g.FinalVae
                 }, "5");
+                if (g.UserInput.TryGet(T2IParamTypes.UnsamplerPrompt, out string unprompt))
+                {
+                    int steps = g.UserInput.Get(T2IParamTypes.Steps);
+                    int startStep = 0;
+                    if (g.UserInput.TryGet(T2IParamTypes.InitImageCreativity, out double creativity))
+                    {
+                        startStep = (int)Math.Round(steps * (1 - creativity));
+                    }
+                    JArray posCond = g.CreateConditioning(unprompt, g.FinalClip, g.FinalLoadedModel, true);
+                    JArray negCond = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt, ""), g.FinalClip, g.FinalLoadedModel, false);
+                    string unsampler = g.CreateNode("SwarmUnsampler", new JObject()
+                    {
+                        ["model"] = g.FinalModel,
+                        ["steps"] = steps,
+                        ["sampler_name"] = g.UserInput.Get(ComfyUIBackendExtension.SamplerParam, "euler"),
+                        ["scheduler"] = g.UserInput.Get(ComfyUIBackendExtension.SchedulerParam, "normal"),
+                        ["positive"] = posCond,
+                        ["negative"] = negCond,
+                        ["latent_image"] = g.FinalLatentImage,
+                        ["start_at_step"] = startStep,
+                        ["previews"] = g.UserInput.Get(T2IParamTypes.NoPreviews) ? "none" : "default"
+                    });
+                    g.FinalLatentImage = new() { unsampler, 0 };
+                    g.MainSamplerAddNoise = false;
+                }
                 if (g.UserInput.TryGet(T2IParamTypes.BatchSize, out int batchSize) && batchSize > 1)
                 {
                     string batchNode = g.CreateNode("RepeatLatentBatch", new JObject()
@@ -563,7 +588,7 @@ public class WorkflowGenerator
             }
             double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
             g.CreateKSampler(g.FinalModel, g.FinalPrompt, g.FinalNegativePrompt, g.FinalLatentImage, cfg, steps, startStep, endStep,
-                g.UserInput.Get(T2IParamTypes.Seed), g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy", true, id: "10");
+                g.UserInput.Get(T2IParamTypes.Seed), g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy", g.MainSamplerAddNoise, id: "10");
         }, -5);
         #endregion
         #region Refiner
@@ -922,6 +947,9 @@ public class WorkflowGenerator
 
     /// <summary>If true, the generator is currently working on the refiner stage.</summary>
     public bool IsRefinerStage = false;
+
+    /// <summary>If true, the main sampler should add noise. If false, it shouldn't.</summary>
+    public bool MainSamplerAddNoise = true;
 
     /// <summary>Creates a new node with the given class type and configuration action, and optional manual ID.</summary>
     public string CreateNode(string classType, Action<string, JObject> configure, string id = null)
