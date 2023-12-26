@@ -30,9 +30,9 @@ public class DataHolderHelper
 
     public record struct FieldData(FieldInfo Field, IDataHolder.NetData Data)
     {
-        public Type Type => Field.FieldType;
-        public string Name => Data.Name;
-        public bool Required => Data.Required;
+        public readonly Type Type => Field.FieldType;
+        public readonly string Name => Data.Name;
+        public readonly bool Required => Data.Required;
     }
 
     public FieldData[] Fields;

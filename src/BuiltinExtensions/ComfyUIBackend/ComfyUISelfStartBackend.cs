@@ -51,20 +51,16 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
 
     public static bool IsComfyModelFileEmitted = false;
 
-    public static void EnsureComfyFile()
+    public static async Task EnsureNodeRepos()
     {
-        lock (ComfyModelFileHelperLock)
+        try
         {
-            if (IsComfyModelFileEmitted)
-            {
-                return;
-            }
             string nodePath = Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes");
             if (!Directory.Exists(nodePath))
             {
                 Directory.CreateDirectory(nodePath);
             }
-            void EnsureNodeRepo(string url)
+            async Task EnsureNodeRepo(string url)
             {
                 string folderName = url.AfterLast('/');
                 if (!Directory.Exists($"{nodePath}/{folderName}"))
@@ -76,7 +72,26 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }).WaitForExit();
                 }
             }
-            EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding");
+            List<Task> tasks = new()
+            {
+                Task.Run(() => EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding"))
+            };
+            await Task.WhenAll(tasks);
+        }
+        catch (Exception ex)
+        {
+            Logs.Error($"Failed to auto-update comfy backend node repos: {ex}");
+        }
+    }
+
+    public static void EnsureComfyFile()
+    {
+        lock (ComfyModelFileHelperLock)
+        {
+            if (IsComfyModelFileEmitted)
+            {
+                return;
+            }
             string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.ModelRoot);
             string yaml = $"""
             stableswarmui:
@@ -106,7 +121,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     {Program.ServerSettings.Paths.SDClipVisionFolder}
                     clip_vision
                 custom_nodes: |
-                    {nodePath}
+                    {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes")}
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/ExtraNodes")}
             """;
             Directory.CreateDirectory(Utilities.CombinePathWithAbsolute(root, Program.ServerSettings.Paths.SDClipVisionFolder));
@@ -153,25 +168,33 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         {
             Logs.Warning($"ComfyUI start script is '{settings.StartScript}', which looks wrong - did you forget to append 'main.py' on the end?");
         }
+        List<Task> tasks = new()
+        {
+            Task.Run(() => EnsureNodeRepos())
+        };
         if (settings.AutoUpdate && !string.IsNullOrWhiteSpace(settings.StartScript))
         {
-            try
+            tasks.Add(Task.Run(async () =>
             {
-                ProcessStartInfo psi = new("git", "pull")
+                try
                 {
-                    WorkingDirectory = Path.GetFullPath(settings.StartScript).Replace('\\', '/').BeforeLast('/'),
-                    RedirectStandardError = true,
-                    RedirectStandardOutput = true
-                };
-                Process p = Process.Start(psi);
-                NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Git Pull)", "");
-                await p.WaitForExitAsync(Program.GlobalProgramCancel);
-            }
-            catch (Exception ex)
-            {
-                Logs.Error($"Failed to auto-update comfy backend: {ex}");
-            }
+                    ProcessStartInfo psi = new("git", "pull")
+                    {
+                        WorkingDirectory = Path.GetFullPath(settings.StartScript).Replace('\\', '/').BeforeLast('/'),
+                        RedirectStandardError = true,
+                        RedirectStandardOutput = true
+                    };
+                    Process p = Process.Start(psi);
+                    NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Git Pull)", "");
+                    await p.WaitForExitAsync(Program.GlobalProgramCancel);
+                }
+                catch (Exception ex)
+                {
+                    Logs.Error($"Failed to auto-update comfy backend: {ex}");
+                }
+            }));
         }
+        await Task.WhenAll(tasks);
         string lib = NetworkBackendUtils.GetProbableLibFolderFor(settings.StartScript);
         if (lib is not null)
         {

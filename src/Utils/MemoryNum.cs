@@ -10,13 +10,13 @@ public struct MemoryNum
         InBytes = inBytes;
     }
 
-    public float KiB => InBytes / 1024f;
+    public readonly float KiB => InBytes / 1024f;
 
-    public float MiB => KiB / 1024f;
+    public readonly float MiB => KiB / 1024f;
 
-    public float GiB => MiB / 1024f;
+    public readonly float GiB => MiB / 1024f;
 
-    public override string ToString()
+    public override readonly string ToString()
     {
         if (InBytes > 1024 * 1024 * 1024)
         {
