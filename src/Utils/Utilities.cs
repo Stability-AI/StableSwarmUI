@@ -644,10 +644,10 @@ public static class Utilities
         {
             try
             {
-                Process p = Process.Start(new ProcessStartInfo("dotnet", "--list-runtimes") { RedirectStandardOutput = true, UseShellExecute = false });
+                Process p = Process.Start(new ProcessStartInfo("dotnet", "--list-sdks") { RedirectStandardOutput = true, UseShellExecute = false });
                 p.WaitForExit();
                 string output = p.StandardOutput.ReadToEnd();
-                if (!output.Contains($"Microsoft.NETCore.App {vers}."))
+                if (!output.Contains($"{vers}.0."))
                 {
                     void Warn()
                     {
