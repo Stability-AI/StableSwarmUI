@@ -650,6 +650,15 @@ public class T2IParamInput
 
     public override string ToString()
     {
-        return $"T2IParamInput({string.Join(", ", ValuesInput.Select(x => $"{x.Key}: {SimplifyParamVal(x.Value)}"))})";
+        static string stringifyVal(object obj)
+        {
+            string val = $"{SimplifyParamVal(obj)}";
+            if (val.Length > 256)
+            {
+                val = val[..256] + "...";
+            }
+            return val;
+        }
+        return $"T2IParamInput({string.Join(", ", ValuesInput.Select(x => $"{x.Key}: {stringifyVal(x.Value)}"))})";
     }
 }

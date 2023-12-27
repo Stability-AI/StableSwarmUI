@@ -528,7 +528,7 @@ public static class Utilities
     }
 
     /// <summary>Gets a dense but trimmed string representation of JSON data, for debugging.</summary>
-    public static string ToDenseDebugString(this JToken jData, int partCharLimit = 256, string spaces = "")
+    public static string ToDenseDebugString(this JToken jData, bool noSpacing = false, int partCharLimit = 256, string spaces = "")
     {
         if (jData is null)
         {
@@ -537,8 +537,8 @@ public static class Utilities
         if (jData is JObject jObj)
         {
             string subSpaces = spaces + "    ";
-            string resultStr = jObj.Properties().Select(v => $"\"{v.Name}\": {v.Value.ToDenseDebugString(partCharLimit, subSpaces)}").JoinString(", ");
-            if (resultStr.Length <= 50)
+            string resultStr = jObj.Properties().Select(v => $"\"{v.Name}\": {v.Value.ToDenseDebugString(noSpacing, partCharLimit, subSpaces)}").JoinString(", ");
+            if (resultStr.Length <= 50 || noSpacing)
             {
                 return "{ " + resultStr + " }";
             }
@@ -547,12 +547,12 @@ public static class Utilities
         else if (jData is JArray jArr)
         {
             string subSpaces = spaces + "    ";
-            string resultStr = jArr.Select(v => v.ToDenseDebugString(partCharLimit, subSpaces)).JoinString(", ");
+            string resultStr = jArr.Select(v => v.ToDenseDebugString(noSpacing, partCharLimit, subSpaces)).JoinString(", ");
             if (resultStr.Length == 0)
             {
                 return "[ ]";
             }
-            if (resultStr.Length <= 50)
+            if (resultStr.Length <= 50 || noSpacing)
             {
                 return $"[ {resultStr} ]";
             }

@@ -207,7 +207,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
             if (promptResult.ContainsKey("error"))
             {
-                Logs.Debug($"Error came from prompt: {workflow}");
+                Logs.Debug($"Error came from prompt: {JObject.Parse(workflow).ToDenseDebugString(noSpacing: true)}");
                 throw new InvalidDataException($"ComfyUI errored: {promptResult}");
             }
             string promptId = $"{promptResult["prompt_id"]}";
@@ -627,7 +627,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         catch (Exception ex)
         {
             Logs.Verbose($"Error: {ex}");
-            Logs.Debug($"Failed to process comfy workflow: {workflow} for inputs {user_input}");
+            Logs.Debug($"Failed to process comfy workflow: {JObject.Parse(workflow).ToDenseDebugString(noSpacing: true)} for inputs {user_input}");
             throw;
         }
         finally
