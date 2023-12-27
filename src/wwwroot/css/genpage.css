@@ -1038,6 +1038,9 @@ body {
     margin-left: auto;
     margin-right: auto;
 }
+.log_message {
+    white-space: pre-wrap;
+}
 .log_message_0 {
     background-color: rgba(255, 255, 255, 0.01);
 }

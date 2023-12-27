@@ -45,7 +45,9 @@ public class WebhookManager
                 return;
             }
             Logs.Verbose("[Webhooks] Marking server as starting generations, sending Queue Start webhook.");
-            await Client.PostAsync(HookSettings.QueueStartWebhook, Utilities.JSONContent(new()));
+            HttpResponseMessage msg = await Client.PostAsync(HookSettings.QueueStartWebhook, Utilities.JSONContent(new()));
+            string response = await msg.Content.ReadAsStringAsync();
+            Logs.Verbose($"[Webhooks] Queue Start webhook response: {msg.StatusCode}: {response}");
             IsServerGenerating = true;
             return;
         }
@@ -81,7 +83,9 @@ public class WebhookManager
             }
             IsServerGenerating = false;
             Logs.Verbose("[Webhooks] Marking server as done generating, sending Queue End webhook.");
-            await Client.PostAsync(HookSettings.QueueEndWebhook, Utilities.JSONContent(new()));
+            HttpResponseMessage msg = await Client.PostAsync(HookSettings.QueueEndWebhook, Utilities.JSONContent(new()));
+            string response = await msg.Content.ReadAsStringAsync();
+            Logs.Verbose($"[Webhooks] Queue End webhook response: {msg.StatusCode}: {response}");
             return;
         }
         catch (Exception ex)
