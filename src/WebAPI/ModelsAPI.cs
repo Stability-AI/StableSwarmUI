@@ -201,13 +201,16 @@ public static class ModelsAPI
     public static async Task SelectModelInternal(Session session, (string, string) data, Action<JObject> output, bool isWS)
     {
         (string model, string backendId) = data;
+        Logs.Verbose($"API request to select model '{model}' on backend '{backendId}' from user '{session.User.UserID}'");
         if (TryGetRefusalForModel(session, model, out JObject refusal))
         {
+            Logs.Verbose("SelectModel refused generically");
             output(refusal);
             return;
         }
         if (!Program.MainSDModels.Models.TryGetValue(model, out T2IModel actualModel))
         {
+            Logs.Verbose("SelectModel refused due to unrecognized model");
             output(new JObject() { ["error"] = "Model not found." });
             return;
         }
@@ -218,9 +221,11 @@ public static class ModelsAPI
         }
         if (!(await Program.Backends.LoadModelOnAll(actualModel, backendId is null ? null : (b => $"{b.ID}" == backendId))))
         {
+            Logs.Verbose("SelectModel refused due to LoadModel returning false");
             output(new JObject() { ["error"] = "Model failed to load." });
             return;
         }
+        Logs.Verbose("SelectModel succeeded");
         output(new JObject() { ["success"] = true });
     }
 

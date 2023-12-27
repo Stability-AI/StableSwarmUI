@@ -457,44 +457,42 @@ public class BackendHandler
     /// <summary>Tells all backends to load a given model. Returns true if any backends have loaded it, or false if not.</summary>
     public async Task<bool> LoadModelOnAll(T2IModel model, Func<T2IBackendData, bool> filter = null)
     {
-        bool result = await Task.Run(async () => // TODO: this is weird async jank
+        Logs.Verbose($"Got request to load model on all: {model.Name}");
+        bool any = false;
+        T2IBackendData[] filtered = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && b.Backend.CanLoadModels && (filter is null || filter(b))).ToArray();
+        if (filtered.Any())
         {
-            bool any = false;
-            T2IBackendData[] filtered = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && b.Backend.CanLoadModels && (filter is null || filter(b))).ToArray();
-            if (filtered.Any())
+            Logs.Warning($"Cannot load model as no backends are available.");
+            return false;
+        }
+        foreach (T2IBackendData backend in filtered)
+        {
+            backend.ReserveModelLoad = true;
+            while (backend.CheckIsInUseNoModelReserve)
             {
-                Logs.Warning($"Cannot load model as no backends are available.");
-                return false;
+                if (Program.GlobalProgramCancel.IsCancellationRequested)
+                {
+                    Logs.Warning($"Cannot load model as the program is shutting down.");
+                    return false;
+                }
+                await Task.Delay(TimeSpan.FromSeconds(0.1));
             }
-            foreach (T2IBackendData backend in filtered)
+            try
             {
-                backend.ReserveModelLoad = true;
-                while (backend.CheckIsInUseNoModelReserve)
-                {
-                    if (Program.GlobalProgramCancel.IsCancellationRequested)
-                    {
-                        return false;
-                    }
-                    await Task.Delay(TimeSpan.FromSeconds(0.1));
-                }
-                try
-                {
-                    any = (await backend.Backend.LoadModel(model)) || any;
-                }
-                catch (Exception ex)
-                {
-                    Logs.Error($"Error loading model on backend {backend.ID} ({backend.Backend.HandlerTypeData.Name}): {ex}");
-                }
-                backend.ReserveModelLoad = false;
+                any = (await backend.Backend.LoadModel(model)) || any;
             }
-            if (!any)
+            catch (Exception ex)
             {
-                Logs.Warning($"Tried {filtered.Length} backends but none were able to load model '{model.Name}'");
+                Logs.Error($"Error loading model on backend {backend.ID} ({backend.Backend.HandlerTypeData.Name}): {ex}");
             }
-            return any;
-        });
+            backend.ReserveModelLoad = false;
+        }
+        if (!any)
+        {
+            Logs.Warning($"Tried {filtered.Length} backends but none were able to load model '{model.Name}'");
+        }
         ReassignLoadedModelsList();
-        return result;
+        return any;
     }
 
     private volatile bool HasShutdown;
