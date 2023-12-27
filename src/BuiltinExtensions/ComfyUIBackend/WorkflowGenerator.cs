@@ -240,7 +240,7 @@ public class WorkflowGenerator
                 {
                     string batchNode = g.CreateNode("RepeatLatentBatch", new JObject()
                     {
-                        ["samples"] = new JArray() { g.FinalLatentImage, 0 },
+                        ["samples"] = g.FinalLatentImage,
                         ["amount"] = batchSize
                     });
                     g.FinalLatentImage = new() { batchNode, 0 };
