@@ -121,6 +121,8 @@ public class BackendHandler
 
         public volatile int Usages = 0;
 
+        public bool CheckIsInUseAtAll => (ReserveModelLoad || Usages > 0) && Backend.Status == BackendStatus.RUNNING;
+
         public bool CheckIsInUse => (ReserveModelLoad || Usages >= Backend.MaxUsages) && Backend.Status == BackendStatus.RUNNING;
 
         public bool CheckIsInUseNoModelReserve => Usages >= Backend.MaxUsages && Backend.Status == BackendStatus.RUNNING;
@@ -837,7 +839,7 @@ public class BackendHandler
                     }
                 }
                 mark("PostComplete");
-                if (empty && !T2IBackends.Any(b => b.Value.CheckIsInUse))
+                if (empty && !T2IBackends.Any(b => b.Value.CheckIsInUseAtAll))
                 {
                     wasNone = true;
                     WebhookManager.TickNoGenerations().Wait();
