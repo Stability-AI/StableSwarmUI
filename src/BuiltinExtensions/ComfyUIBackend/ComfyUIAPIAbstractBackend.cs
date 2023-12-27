@@ -211,10 +211,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 throw new InvalidDataException($"ComfyUI errored: {promptResult}");
             }
             string promptId = $"{promptResult["prompt_id"]}";
-            long start = Environment.TickCount64;
+            long firstStep = 0;
             bool hasInterrupted = false;
             bool isReceivingOutputs = false;
             bool isExpectingVideo = false;
+            string currentNode = "";
             while (true)
             {
                 byte[] output = await socket.ReceiveData(100 * 1024 * 1024, Program.GlobalProgramCancel);
@@ -225,15 +226,17 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                         JObject json = Utilities.ParseToJson(Encoding.UTF8.GetString(output));
                         if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
                         {
-                            Logs.Verbose($"ComfyUI Websocket said: {json.ToString(Formatting.None)}");
+                            Logs.Verbose($"ComfyUI Websocket {batchId} said: {json.ToString(Formatting.None)}");
                         }
                         switch ($"{json["type"]}")
                         {
                             case "executing":
-                                if ($"{json["data"]["node"]}" == "") // Not true null for some reason, so, ... this.
+                                string nodeId = $"{json["data"]["node"]}";
+                                if (nodeId == "") // Not true null for some reason, so, ... this.
                                 {
                                     goto endloop;
                                 }
+                                currentNode = nodeId;
                                 goto case "execution_cached";
                             case "execution_cached":
                                 nodesDone++;
@@ -252,7 +255,12 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                                 curPercent = 0;
                                 yieldProgressUpdate();
                                 break;
-                            case "exection_start": // queuing
+                            case "execution_start":
+                                if (firstStep == 0)
+                                {
+                                    firstStep = Environment.TickCount64;
+                                }
+                                break;
                             case "status": // queuing
                                 break;
                             default:
@@ -288,7 +296,13 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                             {
                                 type = Image.ImageType.VIDEO;
                             }
-                            takeOutput(new Image(output[8..], type, formatLabel));
+                            bool isReal = true;
+                            if (currentNode is not null && int.TryParse(currentNode, out int nodeIdNum) && nodeIdNum < 100 && nodeIdNum != 9)
+                            {
+                                // Reserved nodes that aren't the final output are intermediate outputs.
+                                isReal = false;
+                            }
+                            takeOutput(new T2IEngine.ImageOutput() { Img = new Image(output[8..], type, formatLabel), IsReal = isReal, GenTimeMS = firstStep == 0 ? -1 : (Environment.TickCount64 - firstStep) });
                         }
                         else
                         {
@@ -329,7 +343,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             {
                 foreach (Image image in await GetAllImagesForHistory(historyOut[promptId], interrupt))
                 {
-                    takeOutput(image);
+                    takeOutput(new T2IEngine.ImageOutput() { Img = image, IsReal = true, GenTimeMS = firstStep == 0 ? -1 : (Environment.TickCount64 - firstStep) });
                 }
             }
         }

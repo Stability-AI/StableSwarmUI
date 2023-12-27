@@ -216,6 +216,7 @@ public static class T2IAPI
             await Task.WhenAny(tasks);
             removeDoneTasks();
         }
+        long finalTime = Environment.TickCount64;
         T2IEngine.ImageOutput[] griddables = imageSet.Where(i => i.IsReal).ToArray();
         if (griddables.Length < session.User.Settings.MaxImagesInMiniGrid && griddables.Length > 1 && griddables.All(i => i.Img.Type == Image.ImageType.IMAGE))
         {
@@ -238,8 +239,10 @@ public static class T2IAPI
                 }
             });
             Image gridImg = new(grid);
+            long genTime = Environment.TickCount64 - timeStart;
+            user_input.ExtraMeta["generation_time"] = $"{genTime / 1000.0:0.00} total seconds (average {(finalTime - timeStart) / griddables.Length / 1000.0:0.00} seconds per image)";
             (gridImg, string metadata) = user_input.SourceSession.ApplyMetadata(gridImg, user_input, imgs.Length);
-            T2IEngine.ImageOutput gridOutput = new() { Img = gridImg, GenTimeMS = Environment.TickCount64 - timeStart };
+            T2IEngine.ImageOutput gridOutput = new() { Img = gridImg, GenTimeMS = genTime };
             saveImage(gridOutput, -1, user_input, metadata);
         }
         T2IEngine.PostBatchEvent?.Invoke(new(user_input, griddables.ToArray()));
