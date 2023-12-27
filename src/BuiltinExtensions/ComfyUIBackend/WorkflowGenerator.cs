@@ -53,6 +53,29 @@ public class WorkflowGenerator
     /// <summary>Lock for when ensuring the backend has valid models.</summary>
     public static LockObject ModelDownloaderLock = new();
 
+    /* ========= RESERVED NODES ID MAP =========
+     * 4: Initial Model Loader
+     * 5: VAE Encode Init or Empty Latent
+     * 6: Positive Prompt
+     * 7: Negative Prompt
+     * 8: Final VAEDecode
+     * 9: Final Image Save
+     * 10: Main KSampler
+     * 11: Alternate Main VAE Loader
+     * 15: Image Load
+     * 20: Refiner Model Loader
+     * 21: Refiner VAE Loader
+     * 23: Refiner KSampler
+     * 24: Refiner VAEDecoder
+     * 25: Refiner VAEEncode
+     * 26: Refiner ImageScale
+     * 27: Refiner UpscaleModelLoader
+     * 28: Refiner ImageUpscaleWithModel
+     *
+     * 100+: Dynamic
+     * 1500+: LoRA Loaders (Stable-Dynamic)
+     */
+
     static WorkflowGenerator()
     {
         #region Model Loader
@@ -68,7 +91,7 @@ public class WorkflowGenerator
                 string vaeNode = g.CreateNode("VAELoader", new JObject()
                 {
                     ["vae_name"] = rvae.ToString(g.ModelFolderFormat)
-                });
+                }, g.HasNode("21") ? null : "21");
                 g.LoadingVAE = new() { $"{vaeNode}", 0 };
             }
             else if (!g.NoVAEOverride && g.UserInput.TryGet(T2IParamTypes.VAE, out T2IModel vae))
@@ -76,7 +99,7 @@ public class WorkflowGenerator
                 string vaeNode = g.CreateNode("VAELoader", new JObject()
                 {
                     ["vae_name"] = vae.ToString(g.ModelFolderFormat)
-                });
+                }, g.HasNode("11") ? null : "11");
                 g.LoadingVAE = new() { $"{vaeNode}", 0 };
             }
         }, -15);
@@ -97,7 +120,7 @@ public class WorkflowGenerator
                         ["lora_name"] = lora.ToString(g.ModelFolderFormat),
                         ["strength_model"] = weight,
                         ["strength_clip"] = weight
-                    });
+                    }, g.GetStableDynamicID(500, i));
                     g.LoadingModel = new JArray() { $"{newId}", 0 };
                     g.LoadingClip = new JArray() { $"{newId}", 1 };
                 }
@@ -294,7 +317,7 @@ public class WorkflowGenerator
         #region Positive Prompt
         AddStep(g =>
         {
-            g.FinalPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model), true);
+            g.FinalPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model), true, "6");
         }, -8);
         #endregion
         #region ReVision/UnCLIP/IPAdapter
@@ -447,7 +470,7 @@ public class WorkflowGenerator
         #region Negative Prompt
         AddStep(g =>
         {
-            g.FinalNegativePrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model), false);
+            g.FinalNegativePrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model), false, "7");
         }, -7);
         #endregion
         #region ControlNet
@@ -951,6 +974,18 @@ public class WorkflowGenerator
     /// <summary>If true, the main sampler should add noise. If false, it shouldn't.</summary>
     public bool MainSamplerAddNoise = true;
 
+    /// <summary>Gets a dynamic ID within a semi-stable registration set.</summary>
+    public string GetStableDynamicID(int index, int offset)
+    {
+        int id = 1000 + index + offset;
+        string result = $"{id}";
+        if (HasNode(result))
+        {
+            return GetStableDynamicID(index, offset + 1);
+        }
+        return result;
+    }
+
     /// <summary>Creates a new node with the given class type and configuration action, and optional manual ID.</summary>
     public string CreateNode(string classType, Action<string, JObject> configure, string id = null)
     {
@@ -999,6 +1034,12 @@ public class WorkflowGenerator
             }
         }
         return Workflow;
+    }
+
+    /// <summary>Returns true if the given node ID has already been used.</summary>
+    public bool HasNode(string id)
+    {
+        return Workflow.ContainsKey(id);
     }
 
     /// <summary>Creates a node to save an image output.</summary>
@@ -1095,7 +1136,7 @@ public class WorkflowGenerator
     }
 
     /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input.</summary>
-    public JArray CreateConditioningDirect(string prompt, JArray clip, T2IModel model, bool isPositive)
+    public JArray CreateConditioningDirect(string prompt, JArray clip, T2IModel model, bool isPositive, string id = null)
     {
         string node;
         if (model is not null && model.ModelClass is not null && model.ModelClass.ID == "stable-diffusion-xl-v1-base")
@@ -1114,7 +1155,7 @@ public class WorkflowGenerator
                 ["height"] = (int)Utilities.RoundToPrecision(height * mult, 64),
                 ["target_width"] = width,
                 ["target_height"] = height
-            });
+            }, id);
         }
         else
         {
@@ -1122,7 +1163,7 @@ public class WorkflowGenerator
             {
                 ["clip"] = clip,
                 ["text"] = prompt
-            });
+            }, id);
         }
         return new() { node, 0 };
     }
@@ -1130,10 +1171,10 @@ public class WorkflowGenerator
     public record struct RegionHelper(JArray PartCond, JArray Mask);
 
     /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input, applying prompt-given conditioning modifiers as relevant.</summary>
-    public JArray CreateConditioning(string prompt, JArray clip, T2IModel model, bool isPositive)
+    public JArray CreateConditioning(string prompt, JArray clip, T2IModel model, bool isPositive, string firstId = null)
     {
         PromptRegion regionalizer = new(prompt);
-        JArray globalCond = CreateConditioningDirect(regionalizer.GlobalPrompt, clip, model, isPositive);
+        JArray globalCond = CreateConditioningDirect(regionalizer.GlobalPrompt, clip, model, isPositive, firstId);
         PromptRegion.Part[] parts = regionalizer.Parts.Where(p => p.Type == PromptRegion.PartType.Object || p.Type == PromptRegion.PartType.Region).ToArray();
         if (parts.IsEmpty())
         {
