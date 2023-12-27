@@ -74,7 +74,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             }
             List<Task> tasks = new()
             {
-                Task.Run(() => EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding"))
+                Task.Run(async () => await EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding"))
             };
             await Task.WhenAll(tasks);
         }
@@ -170,7 +170,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         }
         List<Task> tasks = new()
         {
-            Task.Run(() => EnsureNodeRepos())
+            Task.Run(EnsureNodeRepos)
         };
         if (settings.AutoUpdate && !string.IsNullOrWhiteSpace(settings.StartScript))
         {
