@@ -165,7 +165,7 @@ public class ScorersExtension : Extension
             Logs.Debug($"Scorers: Limited to {bestN} images but only found {p.Images.Length} to scan, so ignoring");
             return;
         }
-        float[] scores = p.Images.Select(i => i?.Image?.GetSUIMetadata()?["scoring"]?["average"]?.Value<float>() ?? 0).ToArray();
+        float[] scores = p.Images.Select(i => i?.Img?.GetSUIMetadata()?["scoring"]?["average"]?.Value<float>() ?? 0).ToArray();
         float[] sorted = scores.OrderDescending().ToArray();
         float cutoff = sorted[bestN - 1];
         Logs.Debug($"Scorers: will cutoff to {bestN} images with score {cutoff} or above");

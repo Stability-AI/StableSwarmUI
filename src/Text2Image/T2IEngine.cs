@@ -35,10 +35,23 @@ namespace StableSwarmUI.Text2Image
         public static Action<PostBatchEventParams> PostBatchEvent;
 
         /// <summary>Parameters for <see cref="PostBatchEvent"/>.</summary>
-        public record class PostBatchEventParams(T2IParamInput UserInput, ImageInBatch[] Images);
+        public record class PostBatchEventParams(T2IParamInput UserInput, ImageOutput[] Images);
 
-        /// <summary>Represents a single image within a batch of images, for <see cref="PostBatchEvent"/>.</summary>
-        public record class ImageInBatch(Image Image, Action RefuseImage);
+        /// <summary>Micro-class that represents an image-output and key related details.</summary>
+        public class ImageOutput
+        {
+            /// <summary>The generated image.</summary>
+            public Image Img;
+
+            /// <summary>The time in milliseconds it took to generate, or -1 if unknown.</summary>
+            public long GenTimeMS = -1;
+
+            /// <summary>If true, the image is a real final output. If false, there is something non-standard about this image (eg it's a secondary preview) and so should be excluded from grids/etc.</summary>
+            public bool IsReal = true;
+
+            /// <summary>An action that will remove/discard this image as relevant.</summary>
+            public Action RefuseImage;
+        }
 
         /// <summary>Helper to create a function to match a backend to a user input request.</summary>
         public static Func<BackendHandler.T2IBackendData, bool> BackendMatcherFor(T2IParamInput user_input)
@@ -111,15 +124,15 @@ namespace StableSwarmUI.Text2Image
         }
 
         /// <summary>Internal handler route to create an image based on a user request.</summary>
-        public static async Task CreateImageTask(T2IParamInput user_input, string batchId, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image, string> saveImages)
+        public static async Task CreateImageTask(T2IParamInput user_input, string batchId, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<ImageOutput, string> saveImages)
         {
             await CreateImageTask(user_input, batchId, claim, output, setError, isWS, backendTimeoutMin, saveImages, true);
         }
 
         /// <summary>Internal handler route to create an image based on a user request.</summary>
-        public static async Task CreateImageTask(T2IParamInput user_input, string batchId, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<Image, string> saveImages, bool canCallTools)
+        public static async Task CreateImageTask(T2IParamInput user_input, string batchId, Session.GenClaim claim, Action<JObject> output, Action<string> setError, bool isWS, float backendTimeoutMin, Action<ImageOutput, string> saveImages, bool canCallTools)
         {
-            Stopwatch timer = Stopwatch.StartNew();
+            long timeStart = Environment.TickCount64;
             void sendStatus()
             {
                 if (isWS && user_input.SourceSession is not null)
@@ -187,27 +200,29 @@ namespace StableSwarmUI.Text2Image
                 sendStatus();
                 long prepTime;
                 int numImagesGenned = 0;
-                long lastGenTime = 0;
+                long lastGenTime = Environment.TickCount64;
                 string genTimeReport = "? failed!";
-                void handleImage(Image img)
+                void handleImage(ImageOutput img)
                 {
-                    if (img is not null)
+                    lastGenTime = Environment.TickCount64;
+                    if (img.GenTimeMS < 0)
                     {
-                        lastGenTime = timer.ElapsedMilliseconds;
-                        genTimeReport = $"{prepTime / 1000.0:0.00} (prep) and {(lastGenTime - prepTime) / 1000.0:0.00} (gen) seconds";
-                        user_input.ExtraMeta["generation_time"] = genTimeReport;
-                        bool refuse = false;
-                        PostGenerateEvent?.Invoke(new(img, user_input, () => refuse = true));
-                        if (refuse)
-                        {
-                            Logs.Info($"Refused an image.");
-                        }
-                        else
-                        {
-                            (img, string metadata) = user_input.SourceSession.ApplyMetadata(img, user_input, numImagesGenned);
-                            saveImages(img, metadata);
-                            numImagesGenned++;
-                        }
+                        img.GenTimeMS = Environment.TickCount64 - prepTime;
+                    }
+                    long fullTime = Environment.TickCount64 - timeStart;
+                    genTimeReport = $"{(fullTime - img.GenTimeMS) / 1000.0:0.00} (prep) and {img.GenTimeMS / 1000.0:0.00} (gen) seconds";
+                    user_input.ExtraMeta["generation_time"] = genTimeReport;
+                    bool refuse = false;
+                    PostGenerateEvent?.Invoke(new(img.Img, user_input, () => refuse = true));
+                    if (refuse)
+                    {
+                        Logs.Info($"Refused an image.");
+                    }
+                    else
+                    {
+                        (img.Img, string metadata) = user_input.SourceSession.ApplyMetadata(img.Img, user_input, numImagesGenned);
+                        saveImages(img, metadata);
+                        numImagesGenned++;
                     }
                 }
                 using (backend)
@@ -216,12 +231,16 @@ namespace StableSwarmUI.Text2Image
                     {
                         return;
                     }
-                    prepTime = timer.ElapsedMilliseconds;
+                    prepTime = Environment.TickCount64;
                     await backend.Backend.GenerateLive(user_input, batchId, obj =>
                     {
                         if (obj is Image img)
                         {
-                            handleImage(img);
+                            handleImage(new() { Img = img });
+                        }
+                        else if (obj is ImageOutput imgOut)
+                        {
+                            handleImage(imgOut);
                         }
                         else
                         {
@@ -239,7 +258,8 @@ namespace StableSwarmUI.Text2Image
                     }
                     else
                     {
-                        Logs.Info($"Generated {numImagesGenned} images in {genTimeReport} ({((lastGenTime - prepTime) / numImagesGenned) / 1000.0:0.00} seconds per image)");
+                        long averageMs = (lastGenTime - prepTime) / numImagesGenned;
+                        Logs.Info($"Generated {numImagesGenned} images in {(Environment.TickCount64 - timeStart) / 1000.0:0.00} seconds ({averageMs / 1000.0:0.00} seconds per image)");
                     }
                 }
             }

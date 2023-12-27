@@ -8,7 +8,6 @@ using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
 using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 using ISImage = SixLabors.ImageSharp.Image;
 
@@ -91,7 +90,6 @@ public class ImageBatchToolExtension : Extension
             output(new JObject() { ["error"] = ex.Message });
             return;
         }
-        List<T2IEngine.ImageInBatch> imageSet = new();
         List<Task> tasks = new();
         void removeDoneTasks()
         {
@@ -175,7 +173,7 @@ public class ImageBatchToolExtension : Extension
                 (image, metadata) =>
                 {
                     (string preExt, string ext) = fname.BeforeAndAfterLast('.');
-                    string properExt = image.Extension;
+                    string properExt = image.Img.Extension;
                     if (properExt == "png" && ext != "png")
                     {
                         ext = "png";
@@ -184,8 +182,8 @@ public class ImageBatchToolExtension : Extension
                     {
                         ext = "jpg";
                     }
-                    File.WriteAllBytes($"{output_folder}/{preExt}.{ext}", image.ImageData);
-                    output(new JObject() { ["image"] = session.GetImageB64(image), ["batch_index"] = $"{imageIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
+                    File.WriteAllBytes($"{output_folder}/{preExt}.{ext}", image.Img.ImageData);
+                    output(new JObject() { ["image"] = session.GetImageB64(image.Img), ["batch_index"] = $"{imageIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
                 }));
         }
         while (tasks.Any())

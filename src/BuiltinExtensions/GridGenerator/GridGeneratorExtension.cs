@@ -153,9 +153,9 @@ public class GridGeneratorExtension : Extension
                     string mainpath = $"{set.Grid.Runner.BasePath}/{set.BaseFilepath}";
                     string ext = set.Grid.Format;
                     string metaExtra = "";
-                    if (image.Type != Image.ImageType.IMAGE)
+                    if (image.Img.Type != Image.ImageType.IMAGE)
                     {
-                        ext = image.Extension;
+                        ext = image.Img.Extension;
                         metaExtra += $"file_extensions_alt[\"{set.BaseFilepath}\"] = \"{ext}\"\nfix_video(\"{set.BaseFilepath}\")";
                     }
                     string targetPath = $"{mainpath}.{ext}";
@@ -166,7 +166,7 @@ public class GridGeneratorExtension : Extension
                         {
                             Directory.CreateDirectory(dir);
                         }
-                        File.WriteAllBytes(targetPath, image.ImageData);
+                        File.WriteAllBytes(targetPath, image.Img.ImageData);
                         if (set.Grid.PublishMetadata && (!string.IsNullOrWhiteSpace(metadata) || !string.IsNullOrWhiteSpace(metaExtra)))
                         {
                             metadata ??= "{}";
@@ -176,7 +176,7 @@ public class GridGeneratorExtension : Extension
                     }
                     else
                     {
-                        (string url, string filePath) = thisParams.Get(T2IParamTypes.DoNotSave, false) ? (data.Session.GetImageB64(image), null) : data.Session.SaveImage(image, iteration, thisParams, metadata);
+                        (string url, string filePath) = thisParams.Get(T2IParamTypes.DoNotSave, false) ? (data.Session.GetImageB64(image.Img), null) : data.Session.SaveImage(image.Img, iteration, thisParams, metadata);
                         if (url == "ERROR")
                         {
                             setError($"Server failed to save an image.");
@@ -185,7 +185,7 @@ public class GridGeneratorExtension : Extension
                         data.AddOutput(new JObject() { ["image"] = url, ["batch_index"] = $"{iteration}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
                         if (set.Grid.OutputType == Grid.OutputyTypeEnum.GRID_IMAGE)
                         {
-                            data.GeneratedOutputs.TryAdd(set.BaseFilepath, image);
+                            data.GeneratedOutputs.TryAdd(set.BaseFilepath, image.Img);
                         }
                     }
                 }));

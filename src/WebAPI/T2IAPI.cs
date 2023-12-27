@@ -107,6 +107,7 @@ public static class T2IAPI
             output(new JObject() { ["error"] = message });
             claim.LocalClaimInterrupt.Cancel();
         }
+        long timeStart = Environment.TickCount64;
         T2IParamInput user_input;
         try
         {
@@ -122,7 +123,7 @@ public static class T2IAPI
             setError(ex.Message);
             return;
         }
-        List<T2IEngine.ImageInBatch> imageSet = new();
+        List<T2IEngine.ImageOutput> imageSet = new();
         List<Task> tasks = new();
         void removeDoneTasks()
         {
@@ -142,24 +143,29 @@ public static class T2IAPI
         List<int> discard = new();
         int numExtra = 0;
         int batchSizeExpected = user_input.Get(T2IParamTypes.BatchSize, 1);
-        void saveImage(Image image, int actualIndex, T2IParamInput thisParams, string metadata)
+        void saveImage(T2IEngine.ImageOutput image, int actualIndex, T2IParamInput thisParams, string metadata)
         {
-            (string url, string filePath) = thisParams.Get(T2IParamTypes.DoNotSave, false) ? (session.GetImageB64(image), null) : session.SaveImage(image, actualIndex, thisParams, metadata);
+            (string url, string filePath) = thisParams.Get(T2IParamTypes.DoNotSave, false) ? (session.GetImageB64(image.Img), null) : session.SaveImage(image.Img, actualIndex, thisParams, metadata);
             if (url == "ERROR")
             {
                 setError($"Server failed to save an image.");
                 return;
             }
+            image.RefuseImage = () =>
+            {
+                if (filePath is not null && File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+                discard.Add(actualIndex);
+                lock (imageSet)
+                {
+                    imageSet.Remove(image);
+                }
+            };
             lock (imageSet)
             {
-                imageSet.Add(new(image, () =>
-                {
-                    if (filePath is not null && File.Exists(filePath))
-                    {
-                        File.Delete(filePath);
-                    }
-                    discard.Add(actualIndex);
-                }));
+                imageSet.Add(image);
             }
             output(new JObject() { ["image"] = url, ["batch_index"] = $"{actualIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
         }
@@ -210,10 +216,11 @@ public static class T2IAPI
             await Task.WhenAny(tasks);
             removeDoneTasks();
         }
-        if (imageSet.Count < session.User.Settings.MaxImagesInMiniGrid && imageSet.Count > 1 && imageSet.All(i => i.Image.Type == Image.ImageType.IMAGE))
+        T2IEngine.ImageOutput[] griddables = imageSet.Where(i => i.IsReal).ToArray();
+        if (griddables.Length < session.User.Settings.MaxImagesInMiniGrid && griddables.Length > 1 && griddables.All(i => i.Img.Type == Image.ImageType.IMAGE))
         {
-            ISImage[] imgs = imageSet.Select(i => i.Image.ToIS).ToArray();
             int rows = (int)Math.Ceiling(Math.Sqrt(imgs.Length));
+            ISImage[] imgs = griddables.Select(i => i.Img.ToIS).ToArray();
             int widthPerImage = imgs.Max(i => i.Width);
             int heightPerImage = imgs.Max(i => i.Height);
             ISImageRGBA grid = new(widthPerImage * rows, heightPerImage * rows);
@@ -227,9 +234,10 @@ public static class T2IAPI
             });
             Image gridImg = new(grid);
             (gridImg, string metadata) = user_input.SourceSession.ApplyMetadata(gridImg, user_input, imgs.Length);
-            saveImage(gridImg, -1, user_input, metadata);
+            T2IEngine.ImageOutput gridOutput = new() { Img = gridImg, GenTimeMS = Environment.TickCount64 - timeStart };
+            saveImage(gridOutput, -1, user_input, metadata);
         }
-        T2IEngine.PostBatchEvent?.Invoke(new(user_input, imageSet.ToArray()));
+        T2IEngine.PostBatchEvent?.Invoke(new(user_input, griddables.ToArray()));
         output(new JObject() { ["discard_indices"] = JToken.FromObject(discard) });
     }
 
