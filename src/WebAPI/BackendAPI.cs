@@ -39,6 +39,7 @@ public class BackendAPI
             ["features"] = new JArray(backend.Backend.SupportedFeatures.ToArray()),
             ["enabled"] = backend.Backend.IsEnabled,
             ["title"] = backend.Backend.Title,
+            ["can_load_models"] = backend.Backend.CanLoadModels,
             ["max_usages"] = backend.Backend.MaxUsages
         };
         if (full)

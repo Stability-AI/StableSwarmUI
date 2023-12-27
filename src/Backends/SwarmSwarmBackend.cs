@@ -182,6 +182,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                         SwarmSwarmBackend newSwarm = newData.Backend as SwarmSwarmBackend;
                         newSwarm.LinkedRemoteBackendID = id;
                         newSwarm.Models = Models;
+                        newSwarm.CanLoadModels = backend["can_load_models"].Value<bool>();
                         ControlledNonrealBackends.TryAdd(id, newData);
                     }
                     if (ControlledNonrealBackends.TryGetValue(id, out BackendHandler.T2IBackendData data))

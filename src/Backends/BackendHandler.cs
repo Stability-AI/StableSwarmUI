@@ -459,11 +459,20 @@ public class BackendHandler
     {
         Logs.Verbose($"Got request to load model on all: {model.Name}");
         bool any = false;
-        T2IBackendData[] filtered = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && b.Backend.CanLoadModels && (filter is null || filter(b))).ToArray();
+        T2IBackendData[] filtered = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && b.Backend.CanLoadModels).ToArray();
         if (!filtered.Any())
         {
             Logs.Warning($"Cannot load model as no backends are available.");
             return false;
+        }
+        if (filter is not null)
+        {
+            filtered = filtered.Where(filter).ToArray();
+            if (!filtered.Any())
+            {
+                Logs.Warning($"Cannot load model as no backends match the requested filter.");
+                return false;
+            }
         }
         foreach (T2IBackendData backend in filtered)
         {
