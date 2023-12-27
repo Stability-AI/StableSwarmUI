@@ -33,6 +33,7 @@ public class WebhookManager
         }
         if (string.IsNullOrWhiteSpace(HookSettings.QueueStartWebhook))
         {
+            Logs.Verbose("[Webhooks] Marking server as starting generations silently.");
             IsServerGenerating = true;
             return;
         }
@@ -43,6 +44,7 @@ public class WebhookManager
             {
                 return;
             }
+            Logs.Verbose("[Webhooks] Marking server as starting generations, sending Queue Start webhook.");
             await Client.PostAsync(HookSettings.QueueStartWebhook, Utilities.JSONContent(new()));
             IsServerGenerating = true;
             return;
@@ -66,6 +68,7 @@ public class WebhookManager
         }
         if (string.IsNullOrWhiteSpace(HookSettings.QueueEndWebhook))
         {
+            Logs.Verbose("[Webhooks] Marking server as done generating silently.");
             IsServerGenerating = false;
             return;
         }
@@ -77,6 +80,7 @@ public class WebhookManager
                 return;
             }
             IsServerGenerating = false;
+            Logs.Verbose("[Webhooks] Marking server as done generating, sending Queue End webhook.");
             await Client.PostAsync(HookSettings.QueueEndWebhook, Utilities.JSONContent(new()));
             return;
         }
