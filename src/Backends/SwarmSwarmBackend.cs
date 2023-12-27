@@ -436,7 +436,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                         }
                         else
                         {
-                            Logs.Verbose($"[{HandlerTypeData.Name}] Got progress from websocket: {response}");
+                            Logs.Verbose($"[{HandlerTypeData.Name}] Got progress from websocket: {response.ToDenseDebugString(true)}");
                         }
                         objVal["batch_index"] = batchId;
                         takeOutput(val);
@@ -448,7 +448,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     }
                     else
                     {
-                        Logs.Verbose($"[{HandlerTypeData.Name}] Got other from websocket: {response}");
+                        Logs.Verbose($"[{HandlerTypeData.Name}] Got other from websocket: {response.ToDenseDebugString(true)}");
                     }
                 }
                 if (websocket.CloseStatus.HasValue)

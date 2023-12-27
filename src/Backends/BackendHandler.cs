@@ -460,7 +460,13 @@ public class BackendHandler
         bool result = await Task.Run(async () => // TODO: this is weird async jank
         {
             bool any = false;
-            foreach (T2IBackendData backend in T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && b.Backend.CanLoadModels && (filter is null || filter(b))))
+            T2IBackendData[] filtered = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && b.Backend.CanLoadModels && (filter is null || filter(b))).ToArray();
+            if (filtered.Any())
+            {
+                Logs.Warning($"Cannot load model as no backends are available.");
+                return false;
+            }
+            foreach (T2IBackendData backend in filtered)
             {
                 backend.ReserveModelLoad = true;
                 while (backend.CheckIsInUseNoModelReserve)
@@ -480,6 +486,10 @@ public class BackendHandler
                     Logs.Error($"Error loading model on backend {backend.ID} ({backend.Backend.HandlerTypeData.Name}): {ex}");
                 }
                 backend.ReserveModelLoad = false;
+            }
+            if (!any)
+            {
+                Logs.Warning($"Tried {filtered.Length} backends but none were able to load model '{model.Name}'");
             }
             return any;
         });
