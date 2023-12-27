@@ -219,16 +219,21 @@ public static class T2IAPI
         T2IEngine.ImageOutput[] griddables = imageSet.Where(i => i.IsReal).ToArray();
         if (griddables.Length < session.User.Settings.MaxImagesInMiniGrid && griddables.Length > 1 && griddables.All(i => i.Img.Type == Image.ImageType.IMAGE))
         {
-            int rows = (int)Math.Ceiling(Math.Sqrt(imgs.Length));
             ISImage[] imgs = griddables.Select(i => i.Img.ToIS).ToArray();
+            int columns = (int)Math.Ceiling(Math.Sqrt(imgs.Length));
+            int rows = columns;
+            if (griddables.Length <= columns * (columns - 1))
+            {
+                rows--;
+            }
             int widthPerImage = imgs.Max(i => i.Width);
             int heightPerImage = imgs.Max(i => i.Height);
-            ISImageRGBA grid = new(widthPerImage * rows, heightPerImage * rows);
+            ISImageRGBA grid = new(widthPerImage * columns, heightPerImage * rows);
             grid.Mutate(m =>
             {
                 for (int i = 0; i < imgs.Length; i++)
                 {
-                    int x = (i % rows) * widthPerImage, y = (i / rows) * heightPerImage;
+                    int x = (i % columns) * widthPerImage, y = (i / columns) * heightPerImage;
                     m.DrawImage(imgs[i], new Point(x, y), 1);
                 }
             });
