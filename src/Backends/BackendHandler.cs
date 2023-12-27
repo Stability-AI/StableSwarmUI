@@ -526,6 +526,7 @@ public class BackendHandler
             Task.Delay(TimeSpan.FromMilliseconds(100)).Wait();
             tasks = tasks.Where(t => !t.Item2.IsCompleted).ToList();
         }
+        WebhookManager.TryMarkDoneGenerating().Wait();
         if (BackendsEdited)
         {
             Logs.Info("All backends shut down, saving file...");
@@ -775,6 +776,7 @@ public class BackendHandler
                 BackendQueueTimer.Mark(part);
             }
         }
+        bool wasNone = true;
         while (true)
         {
             if (MonitorTimes)
@@ -803,6 +805,11 @@ public class BackendHandler
                         request.CompletedEvent.Set();
                         continue;
                     }
+                    if (wasNone)
+                    {
+                        wasNone = false;
+                        WebhookManager.WaitUntilCanStartGenerating().Wait();
+                    }
                     request.TryFind();
                     if (request.Result is not null || request.Failure is not null)
                     {
@@ -830,6 +837,11 @@ public class BackendHandler
                     }
                 }
                 mark("PostComplete");
+                if (empty && !T2IBackends.Any(b => b.Value.CheckIsInUse))
+                {
+                    wasNone = true;
+                    WebhookManager.TickNoGenerations().Wait();
+                }
                 if (empty || !anyMoved)
                 {
                     CheckBackendsSignal.WaitAsync(TimeSpan.FromSeconds(1), Program.GlobalProgramCancel).Wait();

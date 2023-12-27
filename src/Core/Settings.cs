@@ -39,6 +39,9 @@ public class Settings : AutoConfiguration
     [ConfigComment("Settings related to the User Interface.")]
     public UIData UI = new();
 
+    [ConfigComment("Settings related to webhooks.")]
+    public WebHooksData WebHooks = new();
+
     /// <summary>Settings related to backends.</summary>
     public class BackendData : AutoConfiguration
     {
@@ -235,6 +238,19 @@ public class Settings : AutoConfiguration
     {
         [ConfigComment("Optionally specify a (raw HTML) welcome message here. If specified, will override the automatic welcome messages.")]
         public string OverrideWelcomeMessage = "";
+    }
+
+    /// <summary>Webhook settings.</summary>
+    public class WebHooksData : AutoConfiguration
+    {
+        [ConfigComment("Webhook to call (empty JSON POST) when queues are starting up from idle.\nLeave empty to disable any webhook.\nCall must return before the first generation starts.")]
+        public string QueueStartWebhook = "";
+
+        [ConfigComment("Webhook to call (empty JSON POST) when all queues are done and the server is going idle.\nLeave empty to disable any webhook.\nCall must return before queuing may restart.")]
+        public string QueueEndWebhook = "";
+
+        [ConfigComment("How long to wait (in seconds) after all queues are done before sending the queue end webhook.\nThis is useful to prevent rapid start+end calls.")]
+        public double QueueEndDelay = 1;
     }
 }
 

@@ -1,0 +1,110 @@
+﻿using FreneticUtilities.FreneticToolkit;
+using Newtonsoft.Json.Linq;
+using StableSwarmUI.Backends;
+using StableSwarmUI.Core;
+using System.Net.Http;
+
+namespace StableSwarmUI.Utils;
+
+/// <summary>Central class for processing webhooks.</summary>
+public class WebhookManager
+{
+    /// <summary>All server settings related to webhooks.</summary>
+    public static Settings.WebHooksData HookSettings => Program.ServerSettings.WebHooks;
+
+    /// <summary>If true, the server is believed to currently be generating images. If false, it is idle.</summary>
+    public static volatile bool IsServerGenerating = false;
+
+    /// <summary>Web client for the hook manager to use.</summary>
+    public static HttpClient Client = NetworkBackendUtils.MakeHttpClient();
+
+    /// <summary>Lock to prevent overlapping updates to <see cref="IsServerGenerating"/> state.</summary>
+    public static SemaphoreSlim Lock = new(1, 1);
+
+    /// <summary>The timestamp of when the server initially stopped generating anything.</summary>
+    public static long TimeStoppedGenerating = 0;
+
+    /// <summary>Marks the server as currently trying to generate and completes when the state is updated and the webhook is done processing, if relevant.</summary>
+    public static async Task WaitUntilCanStartGenerating()
+    {
+        if (IsServerGenerating)
+        {
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(HookSettings.QueueStartWebhook))
+        {
+            IsServerGenerating = true;
+            return;
+        }
+        await Lock.WaitAsync();
+        try
+        {
+            if (IsServerGenerating)
+            {
+                return;
+            }
+            await Client.PostAsync(HookSettings.QueueStartWebhook, Utilities.JSONContent(new()));
+            IsServerGenerating = true;
+            return;
+        }
+        catch (Exception ex)
+        {
+            Logs.Error($"Failed to send queue start webhook: {ex}");
+        }
+        finally
+        {
+            Lock.Release();
+        }
+    }
+
+    /// <summary>Marks the server as currently done generating (ie, idle) and completes when the state is updated and the webhook is done processing, if relevant.</summary>
+    public static async Task TryMarkDoneGenerating()
+    {
+        if (!IsServerGenerating)
+        {
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(HookSettings.QueueEndWebhook))
+        {
+            IsServerGenerating = false;
+            return;
+        }
+        await Lock.WaitAsync();
+        try
+        {
+            if (!IsServerGenerating)
+            {
+                return;
+            }
+            IsServerGenerating = false;
+            await Client.PostAsync(HookSettings.QueueEndWebhook, Utilities.JSONContent(new()));
+            return;
+        }
+        catch (Exception ex)
+        {
+            Logs.Error($"Failed to send queue end webhook: {ex}");
+        }
+        finally
+        {
+            Lock.Release();
+        }
+    }
+
+    /// <summary>Does an idle tick for the server having no current generations running.</summary>
+    public static async Task TickNoGenerations()
+    {
+        if (!IsServerGenerating)
+        {
+            return;
+        }
+        if (TimeStoppedGenerating == 0)
+        {
+            TimeStoppedGenerating = Environment.TickCount64;
+        }
+        if (Environment.TickCount64 - TimeStoppedGenerating >= HookSettings.QueueEndDelay * 1000)
+        {
+            TimeStoppedGenerating = 0;
+            await TryMarkDoneGenerating();
+        }
+    }
+}
