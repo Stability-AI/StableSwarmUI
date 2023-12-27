@@ -71,6 +71,7 @@ public class WorkflowGenerator
      * 26: Refiner ImageScale
      * 27: Refiner UpscaleModelLoader
      * 28: Refiner ImageUpscaleWithModel
+     * 29: Refiner ImageSave
      *
      * 100+: Dynamic
      * 1500+: LoRA Loaders (Stable-Dynamic)
@@ -635,13 +636,18 @@ public class WorkflowGenerator
                     negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, refineModel, false);
                     g.NoVAEOverride = false;
                 }
+                bool doSave = g.UserInput.Get(T2IParamTypes.RefinerSaveBeforeRefine, false);
                 bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale > 1;
                 // TODO: Better same-VAE check
                 bool doPixelUpscale = doUspcale && (upscaleMethod.StartsWith("pixel-") || upscaleMethod.StartsWith("model-"));
-                if (modelMustReencode || doPixelUpscale)
+                if (modelMustReencode || doPixelUpscale || doSave)
                 {
                     g.CreateVAEDecode(origVae, g.FinalSamples, "24");
                     string pixelsNode = "24";
+                    if (doSave)
+                    {
+                        g.CreateImageSaveNode(new() { pixelsNode, 0 }, "29");
+                    }
                     if (doPixelUpscale)
                     {
                         if (upscaleMethod.StartsWith("pixel-"))
@@ -680,12 +686,15 @@ public class WorkflowGenerator
                             return;
                         }
                     }
-                    g.CreateNode("VAEEncode", new JObject()
+                    if (modelMustReencode || doPixelUpscale)
                     {
-                        ["pixels"] = new JArray() { pixelsNode, 0 },
-                        ["vae"] = g.FinalVae
-                    }, "25");
-                    g.FinalSamples = new() { "25", 0 };
+                        g.CreateNode("VAEEncode", new JObject()
+                        {
+                            ["pixels"] = new JArray() { pixelsNode, 0 },
+                            ["vae"] = g.FinalVae
+                        }, "25");
+                        g.FinalSamples = new() { "25", 0 };
+                    }
                 }
                 if (doUspcale && upscaleMethod.StartsWith("latent-"))
                 {

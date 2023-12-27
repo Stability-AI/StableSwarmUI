@@ -141,7 +141,7 @@ public static class T2IAPI
         }
         int max_degrees = session.User.Restrictions.CalcMaxT2ISimultaneous;
         List<int> discard = new();
-        int numExtra = 0;
+        int numExtra = 0, numNonReal = 0;
         int batchSizeExpected = user_input.Get(T2IParamTypes.BatchSize, 1);
         void saveImage(T2IEngine.ImageOutput image, int actualIndex, T2IParamInput thisParams, string metadata)
         {
@@ -199,10 +199,17 @@ public static class T2IAPI
                 (image, metadata) =>
                 {
                     int actualIndex = imageIndex + numCalls;
-                    numCalls++;
-                    if (numCalls > batchSizeExpected)
+                    if (image.IsReal)
                     {
-                        actualIndex = images * batchSizeExpected + Interlocked.Increment(ref numExtra);
+                        numCalls++;
+                        if (numCalls > batchSizeExpected)
+                        {
+                            actualIndex = images * batchSizeExpected + Interlocked.Increment(ref numExtra);
+                        }
+                    }
+                    else
+                    {
+                        actualIndex = -10 - Interlocked.Increment(ref numNonReal);
                     }
                     saveImage(image, actualIndex, thisParams, metadata);
                 })));

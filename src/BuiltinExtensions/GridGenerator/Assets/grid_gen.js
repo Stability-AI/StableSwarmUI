@@ -6,6 +6,7 @@ class GridGenClass {
     settingsDiv = null;
     lastAxisId = 0;
     popover = null;
+    excludedParams = ['images', 'batchsize', 'refinersavebeforerefine'];
 
     fillSelectorOptions(selector) {
         selector.add(new Option('', '', true, true));
@@ -50,7 +51,7 @@ class GridGenClass {
 
         });
         for (let option of opts) {
-            if (!option.extra_hidden && option.id != 'images') {
+            if (!option.extra_hidden && !this.excludedParams.includes(option.id)) {
                 selector.add(new Option(option.name, option.id));
             }
         }

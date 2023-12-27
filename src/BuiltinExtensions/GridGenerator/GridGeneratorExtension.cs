@@ -356,6 +356,9 @@ public class GridGeneratorExtension : Extension
         {
             await socket.SendJson(BasicAPIFeatures.GetCurrentStatusRaw(session), API.WebsocketTimeout);
         }
+        baseParams.Remove(T2IParamTypes.BatchSize);
+        baseParams.Remove(T2IParamTypes.Images);
+        baseParams.Remove(T2IParamTypes.RefinerSaveBeforeRefine);
         await sendStatus();
         StableSwarmUIGridData data = new() { Session = session, Claim = claim, MaxSimul = session.User.Restrictions.CalcMaxT2ISimultaneous };
         Grid grid = null;
