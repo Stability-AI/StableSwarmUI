@@ -325,17 +325,17 @@ public class GridGeneratorExtension : Extension
         return new JObject() { ["exists"] = exists };
     }
 
-    public static Font MainFont;
+    public static FontCollection MainFontCollection;
+    public static ConcurrentDictionary<float, Font> Fonts = new();
 
-    public static Font GetFont()
+    public static Font GetFont(float sizeMult)
     {
-        if (MainFont is null)
+        if (MainFontCollection is null)
         {
-            FontCollection collection = new();
-            collection.Add("src/wwwroot/fonts/unifont-12.0.01.woff2");
-            MainFont = collection.Families.First().CreateFont(16, FontStyle.Bold);
+            MainFontCollection = new();
+            MainFontCollection.Add("src/wwwroot/fonts/unifont-12.0.01.woff2");
         }
-        return MainFont;
+        return Fonts.GetOrCreate(sizeMult, () => MainFontCollection.Families.First().CreateFont(16 * sizeMult, FontStyle.Bold));
     }
 
     public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string outputType)
@@ -388,41 +388,59 @@ public class GridGeneratorExtension : Extension
                 List<(string, string)> y2Axis = grid.Axes.Count > 2 ? grid.Axes[2].Values.Select(proc).ToList() : new() { (null, null) };
                 int maxWidth = data.GeneratedOutputs.Max(x => x.Value.ToIS.Width);
                 int maxHeight = data.GeneratedOutputs.Max(x => x.Value.ToIS.Height);
-                Font font = GetFont();
+                Font font = GetFont(1);
                 TextOptions options = new(font);
-                FontRectangle rect = TextMeasurer.MeasureAdvance("ABCdefg Word Prefix", options);
+                FontRectangle rect = TextMeasurer.MeasureSize("ABCdefg Word Prefix", options);
                 int textWidth = (int)Math.Ceiling(rect.Width);
-                int textHeight = (int)Math.Ceiling(rect.Height) * 2;
+                int rawTextHeight = (int)Math.Ceiling(rect.Height);
+                int textHeight = rawTextHeight * 2;
                 int totalWidth = maxWidth * xAxis.Count + textWidth;
                 int totalHeight = maxHeight * (yAxis.Count * y2Axis.Count) + textHeight * y2Axis.Count;
                 Logs.Info($"Will generate grid image of size {totalWidth}x{totalHeight}");
                 ISImageRGBA gridImg = new(totalWidth, totalHeight);
                 gridImg.Mutate(m =>
                 {
-                    m.Fill(Color.White);
                     Brush brush = new SolidBrush(Color.Black);
+                    void DrawTextAutoScale(string text, float x, float y, float width, float height)
+                    {
+                        RichTextOptions rto = new(font) { WrappingLength = width, Origin = new(x, y) };
+                        float lines = height / rawTextHeight;
+                        FontRectangle measured = TextMeasurer.MeasureSize(text, options);
+                        Logs.Debug($"Measured {text} as {measured.Width}x{measured.Height} in {width}x{height} with {lines} lines");
+                        if (measured.Width < width * lines * 0.5)
+                        {
+                            rto.Font = GetFont(2);
+                        }
+                        else if (measured.Width > width * lines * 2)
+                        {
+                            rto.Font = GetFont(0.5f);
+                        }
+                        else if (measured.Width > width * lines)
+                        {
+                            rto.Font = GetFont(0.75f);
+                        }
+                        m.DrawText(rto, text, brush);
+                    }
+                    m.Fill(Color.White);
                     int xIndex = 0;
                     float yIndex = 0;
                     foreach ((string x, _) in xAxis)
                     {
-                        RichTextOptions rto = new(font) { WrappingLength = maxWidth, Origin = new(xIndex * maxWidth + textWidth, 0) };
-                        m.DrawText(rto, x, brush);
+                        DrawTextAutoScale(x, xIndex * maxWidth + textWidth, 0, maxWidth, textHeight);
                         xIndex++;
                     }
                     foreach ((string y2, _) in y2Axis)
                     {
                         if (y2 is not null)
                         {
-                            RichTextOptions rto = new(font) { WrappingLength = textWidth, Origin = new(0, yIndex * maxHeight) };
-                            m.DrawText(rto, y2, brush);
+                            DrawTextAutoScale(y2, 0, yIndex * maxHeight + textHeight, textWidth, maxHeight);
                             yIndex += textHeight / (float)maxHeight;
                         }
                         foreach ((string y, _) in yAxis)
                         {
                             if (y is not null)
                             {
-                                RichTextOptions rto = new(font) { WrappingLength = textWidth, Origin = new(0, yIndex * maxHeight + textHeight * 2) };
-                                m.DrawText(rto, y, brush);
+                                DrawTextAutoScale(y, 0, yIndex * maxHeight + textHeight * 2, textWidth, maxHeight);
                             }
                             yIndex++;
                         }
