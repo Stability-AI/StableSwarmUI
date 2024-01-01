@@ -167,7 +167,7 @@ function save_edit_model() {
     for (let val of ['author', 'type', 'description', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags']) {
         data[val] = getRequiredElementById(`edit_model_${val}`).value;
     }
-    data['is_negative_embedding'] = model.architecture.endsWith('/textual-inversion') ? getRequiredElementById('edit_model_is_negative').checked : false;
+    data['is_negative_embedding'] = (model.architecture || '').endsWith('/textual-inversion') ? getRequiredElementById('edit_model_is_negative').checked : false;
     data.subtype = curModelMenuBrowser.subType;
     function complete() {
         genericRequest('EditModelMetadata', data, data => {
