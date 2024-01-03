@@ -597,6 +597,7 @@ function hideUnsupportableParams() {
     if (!gen_param_types) {
         return;
     }
+    let filter = getRequiredElementById('main_inputs_filter').value.toLowerCase();
     let groups = {};
     let advancedCount = 0;
     let toggler = getRequiredElementById('advanced_options_checkbox');
@@ -605,12 +606,20 @@ function hideUnsupportableParams() {
         if (elem) {
             let box = findParentOfClass(elem, 'auto-input');
             let supported = param.feature_flag == null || Object.values(backends_loaded).filter(b => b.features.includes(param.feature_flag)).length > 0;
+            let filterShow = true;
+            if (filter && param.id != 'prompt') {
+                let searchText = `${param.id} ${param.name} ${param.description} ${param.group ? param.group.name : ''}`.toLowerCase();
+                filterShow = searchText.includes(filter);
+            }
             param.feature_missing = !supported;
             let show = supported;
             if (param.advanced && !toggler.checked) {
                 show = false;
             }
-            if (param.advanced && supported) {
+            if (!filterShow) {
+                show = false;
+            }
+            if (param.advanced && supported && filterShow) {
                 advancedCount++;
             }
             if (!box.dataset.visible_controlled) {

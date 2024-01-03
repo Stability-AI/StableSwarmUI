@@ -1088,3 +1088,8 @@ body {
     background-color: orange;
     color: black;
 }
+.main_inputs_filter {
+    width: 100%;
+    margin: auto;
+    margin-bottom: 0.2rem;
+}
