@@ -588,6 +588,7 @@ body {
 .group-toggler-switch {
     margin-left: 1rem;
     display: inline-block;
+    margin-bottom: 0;
 }
 .settings-container {
     padding-left: 1rem;
@@ -609,6 +610,10 @@ body {
     top: -1.3rem;
     height: 0.5rem;
     left: -1rem;
+}
+.input-group-closed .input-group-header-activated {
+    background-color: color-mix(in srgb, var(--background) 90%, var(--emphasis));
+    border-radius: 0.5rem;
 }
 .imageview_popup_modal_background {
     font-family: monospace, monospace;

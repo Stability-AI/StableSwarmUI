@@ -75,6 +75,7 @@ function toggleGroupOpen(elem, shouldOpen = null) {
     if (shouldOpen) {
         group.style.display = 'block';
         parent.classList.remove('input-group-closed');
+        parent.classList.add('input-group-open');
         parent.querySelector('.auto-symbol').innerHTML = '&#x2B9F;';
         if (!group.dataset.do_not_save) {
             setCookie(`group_open_${parent.id}`, 'open', 365);
@@ -83,6 +84,7 @@ function toggleGroupOpen(elem, shouldOpen = null) {
     else {
         group.style.display = 'none';
         parent.classList.add('input-group-closed');
+        parent.classList.remove('input-group-open');
         parent.querySelector('.auto-symbol').innerHTML = '&#x2B9E;';
         if (!group.dataset.do_not_save) {
             setCookie(`group_open_${parent.id}`, 'closed', 365);
@@ -93,7 +95,13 @@ function toggleGroupOpen(elem, shouldOpen = null) {
 function doToggleGroup(id) {
     let elem = getRequiredElementById(`${id}_toggle`);
     let parent = findParentOfClass(elem, 'input-group');
-    let header = parent.querySelector('.input-group-header');
+    let header = parent.querySelector('.input-group-header .header-label-wrap');
+    if (elem.checked) {
+        header.classList.add('input-group-header-activated');
+    }
+    else {
+        header.classList.remove('input-group-header-activated');
+    }
     let group = parent.querySelector('.input-group-content');
     if (!group.dataset.do_not_save) {
         setCookie(`group_toggle_${parent.id}`, elem.checked ? 'yes' : 'no', 365);
