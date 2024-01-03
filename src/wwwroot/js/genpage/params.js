@@ -79,11 +79,6 @@ function toggleGroupOpen(elem, shouldOpen = null) {
         if (!group.dataset.do_not_save) {
             setCookie(`group_open_${parent.id}`, 'open', 365);
         }
-        let toggler = document.getElementById(`${group.id}_toggle`);
-        if (toggler) {
-            toggler.checked = true;
-            doToggleGroup(group.id);
-        }
     }
     else {
         group.style.display = 'none';
@@ -100,11 +95,6 @@ function doToggleGroup(id) {
     let parent = findParentOfClass(elem, 'input-group');
     let header = parent.querySelector('.input-group-header');
     let group = parent.querySelector('.input-group-content');
-    if (!elem.checked) {
-        if (group.style.display != 'none') {
-            toggleGroupOpen(header);
-        }
-    }
     if (!group.dataset.do_not_save) {
         setCookie(`group_toggle_${parent.id}`, elem.checked ? 'yes' : 'no', 365);
     }
