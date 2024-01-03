@@ -758,6 +758,14 @@ class ImageEditor {
         }
     }
 
+    handleAltUp() {
+        if (this.preAltTool) {
+            this.activateTool(this.preAltTool.id);
+            this.preAltTool = null;
+            this.redraw();
+        }
+    }
+
     onKeyDown(e) {
         if (e.key === 'Alt') {
             e.preventDefault();
@@ -777,12 +785,7 @@ class ImageEditor {
     onGlobalKeyUp(e) {
         if (e.key === 'Alt') {
             this.altDown = false;
-            if (this.preAltTool) {
-                e.preventDefault();
-                this.activateTool(this.preAltTool.id);
-                this.preAltTool = null;
-                this.redraw();
-            }
+            this.handleAltUp();
         }
     }
 
@@ -802,7 +805,7 @@ class ImageEditor {
     }
 
     onMouseDown(e) {
-        if (this.altDown) {
+        if (this.altDown || e.button == 1) {
             this.handleAltDown();
         }
         this.mouseDown = true;
@@ -811,6 +814,9 @@ class ImageEditor {
     }
 
     onMouseUp(e) {
+        if (e.button == 1) {
+            this.handleAltUp();
+        }
         this.mouseDown = false;
         this.activeTool.onMouseUp(e);
         this.redraw();
