@@ -598,6 +598,7 @@ function hideUnsupportableParams() {
         return;
     }
     let groups = {};
+    let advancedCount = 0;
     let toggler = getRequiredElementById('advanced_options_checkbox');
     for (let param of gen_param_types) {
         let elem = document.getElementById(`input_${param.id}`);
@@ -608,6 +609,9 @@ function hideUnsupportableParams() {
             let show = supported;
             if (param.advanced && !toggler.checked) {
                 show = false;
+            }
+            if (param.advanced && supported) {
+                advancedCount++;
             }
             if (!box.dataset.visible_controlled) {
                 box.style.display = show ? '' : 'none';
@@ -623,6 +627,7 @@ function hideUnsupportableParams() {
             }
         }
     }
+    getRequiredElementById('advanced_hidden_count').innerText = `(${advancedCount})`;
     for (let group in groups) {
         let groupData = groups[group];
         let groupElem = getRequiredElementById(group);
