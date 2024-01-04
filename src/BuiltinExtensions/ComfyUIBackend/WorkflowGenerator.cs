@@ -920,7 +920,8 @@ public class WorkflowGenerator
                 JArray latent = new () { conditioning, 2 };
                 int steps = g.UserInput.Get(T2IParamTypes.VideoSteps, 20);
                 double cfg = g.UserInput.Get(T2IParamTypes.VideoCFG, 2.5);
-                string samplered = g.CreateKSampler(model, posCond, negCond, latent, cfg, steps, 0, 10000, g.UserInput.Get(T2IParamTypes.Seed) + 42, false, true, previews: "one");
+                string previewType = g.UserInput.Get(ComfyUIBackendExtension.VideoPreviewType, "animate");
+                string samplered = g.CreateKSampler(model, posCond, negCond, latent, cfg, steps, 0, 10000, g.UserInput.Get(T2IParamTypes.Seed) + 42, false, true, previews: previewType);
                 g.FinalLatentImage = new() { samplered, 0 };
                 string decoded = g.CreateVAEDecode(vae, g.FinalLatentImage);
                 g.FinalImageOut = new() { decoded, 0 };
