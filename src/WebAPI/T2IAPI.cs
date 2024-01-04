@@ -100,6 +100,7 @@ public static class T2IAPI
     public static async Task GenT2I_Internal(Session session, (int, JObject) input, Action<JObject> output, bool isWS)
     {
         (int images, JObject rawInput) = input;
+        Logs.Info($"User {session.User.UserID} requested {images} image(s)...");
         using Session.GenClaim claim = session.Claim(gens: images);
         void setError(string message)
         {
