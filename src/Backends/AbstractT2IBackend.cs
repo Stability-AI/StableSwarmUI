@@ -80,14 +80,17 @@ public abstract class AbstractT2IBackend
     /// <summary>If non-empty, is a user-facing title-override for the given backend.</summary>
     public string Title = "";
 
-    /// <summary>If true, a special process wants to claim this backend next (ie, normal gen usage should not run).</summary>
-    public volatile bool Reserved = false;
+    /// <summary>If true, this backend is intending to shutdown, and should be excluded from generation.</summary>
+    public volatile bool ShutDownReserve = false;
 
     /// <summary>The maximum number of simultaneous requests this backend should take.</summary>
     public int MaxUsages = 1;
 
     /// <summary>Whether this backend has the capability to load a model.</summary>
     public bool CanLoadModels = true;
+
+    /// <summary>If above 0, something wants preferential ownership of this backend, and so general generations should not be sent to it.</summary>
+    public volatile int Reservations = 0;
 
     /// <summary>The list of all model names this server has (key=model subtype, value=list of filenames), or null if untracked.</summary>
     public Dictionary<string, List<string>> Models = null;

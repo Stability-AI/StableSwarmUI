@@ -313,6 +313,17 @@ public class ComfyUIBackendExtension : Extension
         public volatile JObject LastExecuting, LastProgress;
 
         public int BackendOffset = 0;
+
+        public ComfyClientData Reserved;
+
+        public void Unreserve()
+        {
+            if (Reserved is not null)
+            {
+                Interlocked.Decrement(ref Reserved.Backend.Reservations);
+                Reserved = null;
+            }
+        }
     }
 
     public class ComfyClientData
@@ -383,7 +394,9 @@ public class ComfyUIBackendExtension : Extension
             await context.Response.CompleteAsync();
             return;
         }
-        if (!context.Request.Cookies.TryGetValue("comfy_domulti", out string doMultiStr) || doMultiStr != "true")
+        bool hasMulti = context.Request.Cookies.TryGetValue("comfy_domulti", out string doMultiStr);
+        bool shouldReserve = hasMulti && doMultiStr == "reserve";
+        if (!shouldReserve && (!hasMulti || doMultiStr != "true"))
         {
             allBackends = new() { new(webClient, address, backend) };
         }
@@ -544,6 +557,10 @@ public class ComfyUIBackendExtension : Extension
                     {
                         Users.TryRemove(client.SID, out _);
                         user.Clients.TryRemove(client, out _);
+                        if (client.SID == user.MasterSID)
+                        {
+                            user.Unreserve();
+                        }
                     }
                 }));
             }
@@ -577,12 +594,12 @@ public class ComfyUIBackendExtension : Extension
                 finally
                 {
                     Users.TryRemove(user.MasterSID, out _);
+                    user.Unreserve();
                 }
             }));
             await Task.WhenAll(tasks);
             return;
         }
-        // This code is utterly silly, but it's incredibly fragile, don't touch without significant testing
         HttpResponseMessage response = null;
         if (context.Request.Method == "POST")
         {
@@ -612,6 +629,22 @@ public class ComfyUIBackendExtension : Extension
                                 if (preferredBackendIndex >= 0)
                                 {
                                     client = available[preferredBackendIndex % available.Length];
+                                }
+                                if (shouldReserve)
+                                {
+                                    if (user.Reserved is not null)
+                                    {
+                                        client = user.Reserved;
+                                    }
+                                    else
+                                    {
+                                        user.Reserved = available.FirstOrDefault(c => c.Backend.Reservations == 0) ?? available.FirstOrDefault();
+                                        if (user.Reserved is not null)
+                                        {
+                                            client = user.Reserved;
+                                            Interlocked.Increment(ref client.Backend.Reservations);
+                                        }
+                                    }
                                 }
                                 if (client?.SID is not null)
                                 {

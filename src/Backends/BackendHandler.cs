@@ -193,7 +193,7 @@ public class BackendHandler
     /// <summary>Shuts down the given backend properly and cleanly, in a way that avoids interrupting usage of the backend.</summary>
     public async Task ShutdownBackendCleanly(T2IBackendData data)
     {
-        data.Backend.Reserved = true;
+        data.Backend.ShutDownReserve = true;
         try
         {
             while (data.CheckIsInUse)
@@ -208,7 +208,7 @@ public class BackendHandler
         }
         finally
         {
-            data.Backend.Reserved = false;
+            data.Backend.ShutDownReserve = false;
         }
     }
 
@@ -247,7 +247,7 @@ public class BackendHandler
     /// <summary>Gets a set of all currently running backends of the given type.</summary>
     public IEnumerable<T> RunningBackendsOfType<T>() where T : AbstractT2IBackend
     {
-        return T2IBackends.Values.Select(b => b.Backend as T).Where(b => b is not null && !b.Reserved && b.Status == BackendStatus.RUNNING);
+        return T2IBackends.Values.Select(b => b.Backend as T).Where(b => b is not null && !b.ShutDownReserve && b.Status == BackendStatus.RUNNING);
     }
 
     /// <summary>Causes all backends to restart.</summary>
@@ -648,7 +648,7 @@ public class BackendHandler
         public void TryFind()
         {
             List<T2IBackendData> currentBackends = Handler.T2IBackends.Values.ToList();
-            List<T2IBackendData> possible = currentBackends.Where(b => b.Backend.IsEnabled && !b.Backend.Reserved && b.Backend.Status == BackendStatus.RUNNING).ToList();
+            List<T2IBackendData> possible = currentBackends.Where(b => b.Backend.IsEnabled && !b.Backend.ShutDownReserve && b.Backend.Reservations == 0 && b.Backend.Status == BackendStatus.RUNNING).ToList();
             Logs.Verbose($"[BackendHandler] Backend request #{ID} searching for backend... have {possible.Count}/{currentBackends.Count} possible");
             if (!possible.Any())
             {

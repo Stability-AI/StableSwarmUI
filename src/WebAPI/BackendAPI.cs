@@ -79,7 +79,7 @@ public class BackendAPI
             return new JObject() { ["result"] = "No change." };
         }
         backend.Backend.IsEnabled = enabled;
-        backend.Backend.Reserved = true;
+        backend.Backend.ShutDownReserve = true;
         Program.Backends.BackendsEdited = true;
         while (backend.CheckIsInUse)
         {
@@ -98,7 +98,7 @@ public class BackendAPI
             backend.Backend.Status = BackendStatus.WAITING;
             Program.Backends.BackendsToInit.Enqueue(backend);
         }
-        backend.Backend.Reserved = false;
+        backend.Backend.ShutDownReserve = false;
         return new JObject() { ["result"] = "Success." };
     }
 
