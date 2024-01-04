@@ -14,7 +14,6 @@ using System.Net.WebSockets;
 using System.Web;
 using Newtonsoft.Json;
 using System.Buffers.Binary;
-using System.Net.Sockets;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -270,28 +269,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     }
                     else
                     {
-                        int eventId = BinaryPrimitives.ReverseEndianness(BitConverter.ToInt32(output, 0));
-                        int format = BinaryPrimitives.ReverseEndianness(BitConverter.ToInt32(output, 4));
-                        int index = 0;
-                        if (format > 2)
-                        {
-                            index = (format >> 4) & 0xffff;
-                            format &= 7;
-                        }
-                        string formatLabel = format switch { 1 => "jpg", 2 => "png", 3 => "webp", 4 => "gif", 5 => "mp4", 6 => "webm", _ => "jpg" };
-                        Logs.Verbose($"ComfyUI Websocket sent: {output.Length} bytes of image data as event {eventId} in format {format} ({formatLabel}) to index {index}");
+                        (string formatLabel, int index, int eventId) = ComfyRawWebsocketOutputToFormatLabel(output);
+                        Logs.Verbose($"ComfyUI Websocket sent: {output.Length} bytes of image data as event {eventId} in format {formatLabel} to index {index}");
                         if (isReceivingOutputs)
                         {
-                            Image.ImageType type = format switch
-                            {
-                                1 => Image.ImageType.IMAGE,
-                                2 => Image.ImageType.IMAGE,
-                                3 => Image.ImageType.IMAGE,
-                                4 => Image.ImageType.ANIMATION,
-                                5 => Image.ImageType.VIDEO,
-                                6 => Image.ImageType.VIDEO,
-                                _ => Image.ImageType.IMAGE
-                            };
+                            Image.ImageType type = ComfyFormatLabelToImageType(formatLabel);
                             if (isExpectingVideo && type == Image.ImageType.IMAGE)
                             {
                                 type = Image.ImageType.VIDEO;
@@ -360,6 +342,31 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             ReusableSockets.Enqueue(new(id, socket));
         }
     }
+
+    public static (string, int, int) ComfyRawWebsocketOutputToFormatLabel(byte[] output)
+    {
+        int eventId = BinaryPrimitives.ReverseEndianness(BitConverter.ToInt32(output, 0));
+        int format = BinaryPrimitives.ReverseEndianness(BitConverter.ToInt32(output, 4));
+        int index = 0;
+        if (format > 2)
+        {
+            index = (format >> 4) & 0xffff;
+            format &= 7;
+        }
+        string formatLabel = format switch { 1 => "jpg", 2 => "png", 3 => "webp", 4 => "gif", 5 => "mp4", 6 => "webm", _ => "jpg" };
+        return (formatLabel, index, eventId);
+    }
+
+    public static Image.ImageType ComfyFormatLabelToImageType(string formatLabel) => formatLabel switch
+    {
+        "jpg" => Image.ImageType.IMAGE,
+        "png" => Image.ImageType.IMAGE,
+        "webp" => Image.ImageType.IMAGE,
+        "gif" => Image.ImageType.ANIMATION,
+        "mp4" => Image.ImageType.VIDEO,
+        "webm" => Image.ImageType.VIDEO,
+        _ => Image.ImageType.IMAGE
+    };
 
     private async Task<Image[]> GetAllImagesForHistory(JToken output, CancellationToken interrupt)
     {
