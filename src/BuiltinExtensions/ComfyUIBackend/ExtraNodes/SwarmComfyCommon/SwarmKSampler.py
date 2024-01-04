@@ -42,6 +42,17 @@ def swarm_send_extra_preview(id, image):
     preview_bytes = bytesIO.getvalue()
     server.send_sync(1, preview_bytes, sid=server.client_id)
 
+def swarm_send_animated_preview(id, images):
+    server = PromptServer.instance
+    bytesIO = BytesIO()
+    num_data = 3 + (id * 16)
+    header = struct.pack(">I", num_data)
+    bytesIO.write(header)
+    images[0].save(bytesIO, save_all=True, duration=int(1000.0/6), append_images=images[1 : len(images)], lossless=False, quality=50, method=0, format='WEBP')
+    bytesIO.seek(0)
+    preview_bytes = bytesIO.getvalue()
+    server.send_sync(1, preview_bytes, sid=server.client_id)
+
 def calculate_sigmas_scheduler(model, scheduler_name, steps, sigma_min, sigma_max, rho):
     model_wrap = comfy.samplers.wrap_model(model)
     if scheduler_name == "karras":
@@ -52,16 +63,28 @@ def calculate_sigmas_scheduler(model, scheduler_name, steps, sigma_min, sigma_ma
         return None
 
 def make_swarm_sampler_callback(steps, device, model, previews):
-    previewer = latent_preview.get_previewer(device, model.model.latent_format) if previews in ["default", "one"] else None
+    previewer = latent_preview.get_previewer(device, model.model.latent_format) if previews != "none" else None
     pbar = comfy.utils.ProgressBar(steps)
     def callback(step, x0, x, total_steps):
         pbar.update_absolute(step + 1, total_steps, None)
         if previewer:
-            for i in range(x0.shape[0]):
-                preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[i:i+1])
-                swarm_send_extra_preview(i, preview_img[1])
-                if previews == "one":
-                    break
+            def do_preview(id, index):
+                preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[index:index+1])
+                swarm_send_extra_preview(id, preview_img[1])
+            if previews == "iterate":
+                do_preview(0, step % x0.shape[0])
+            elif previews == "animate":
+                images = []
+                for i in range(x0.shape[0]):
+                    preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[i:i+1])
+                    images.append(preview_img[1])
+                swarm_send_animated_preview(0, images)
+            elif previews == "default":
+                for i in range(x0.shape[0]):
+                    preview_img = previewer.decode_latent_to_preview_image("JPEG", x0[i:i+1])
+                    swarm_send_extra_preview(i, preview_img[1])
+            elif previews == "one":
+                do_preview(0, 0)
     return callback
 
 
@@ -88,7 +111,7 @@ class SwarmKSampler:
                 "rho": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 100.0, "step":0.01, "round": False}),
                 "add_noise": (["enable", "disable"], ),
                 "return_with_leftover_noise": (["disable", "enable"], ),
-                "previews": (["default", "none", "one"], )
+                "previews": (["default", "none", "one", "iterate", "animate"], )
             }
         }
 
