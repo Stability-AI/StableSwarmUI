@@ -24,6 +24,15 @@ namespace StableSwarmUI.Utils;
 /// <summary>General utilities holder.</summary>
 public static class Utilities
 {
+    /// <summary>Preps various utilities during server start.</summary>
+    public static void PrepUtils()
+    {
+        Program.TickIsGeneratingEvent += () => WebhookManager.WaitUntilCanStartGenerating().Wait();
+        Program.TickNoGenerationsEvent += () => WebhookManager.TickNoGenerations().Wait();
+        Program.TickIsGeneratingEvent += MemCleaner.TickIsGenerating;
+        Program.TickNoGenerationsEvent += MemCleaner.TickNoGenerations;
+    }
+
     /// <summary>StableSwarmUI's current version.</summary>
     public static readonly string Version = Assembly.GetEntryAssembly()?.GetName().Version.ToString();
 

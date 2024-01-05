@@ -7,7 +7,7 @@ using System.Net.Http;
 namespace StableSwarmUI.Utils;
 
 /// <summary>Central class for processing webhooks.</summary>
-public class WebhookManager
+public static class WebhookManager
 {
     /// <summary>All server settings related to webhooks.</summary>
     public static Settings.WebHooksData HookSettings => Program.ServerSettings.WebHooks;

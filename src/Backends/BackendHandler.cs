@@ -827,7 +827,7 @@ public class BackendHandler
                     if (wasNone)
                     {
                         wasNone = false;
-                        WebhookManager.WaitUntilCanStartGenerating().Wait();
+                        Program.TickIsGeneratingEvent?.Invoke();
                     }
                     request.TryFind();
                     if (request.Result is not null || request.Failure is not null)
@@ -859,7 +859,7 @@ public class BackendHandler
                 if (empty && !T2IBackends.Any(b => b.Value.CheckIsInUseAtAll))
                 {
                     wasNone = true;
-                    WebhookManager.TickNoGenerations().Wait();
+                    Program.TickNoGenerationsEvent?.Invoke();
                 }
                 if (empty || !anyMoved)
                 {

@@ -60,6 +60,12 @@ public class Program
     /// <summary>User-requested launch mode (web, electron, none).</summary>
     public static string LaunchMode;
 
+    /// <summary>Event-action fired once per second (approximately) while the server is generating anything.</summary>
+    public static Action TickIsGeneratingEvent;
+
+    /// <summary>Event-action fired once per second (approximately) while the server is *not* generating anything.</summary>
+    public static Action TickNoGenerationsEvent;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -126,6 +132,8 @@ public class Program
         timer.Check("Web PreInit");
         RunOnAllExtensions(e => e.OnInit());
         timer.Check("Extensions Init");
+        Utilities.PrepUtils();
+        timer.Check("Prep Utils");
         Logs.Init("Loading models list...");
         foreach (T2IModelHandler handler in T2IModelSets.Values)
         {
