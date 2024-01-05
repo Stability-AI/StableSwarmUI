@@ -68,6 +68,7 @@ function updatePauseVideos() {
             video.play();
         }
     }
+    updateHash();
 }
 
 function getExtension(filePath) {
