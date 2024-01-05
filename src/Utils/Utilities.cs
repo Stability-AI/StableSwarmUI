@@ -40,7 +40,14 @@ public static class Utilities
     {
         while (!Program.GlobalProgramCancel.IsCancellationRequested)
         {
-            Task.Delay(TimeSpan.FromSeconds(1)).Wait(Program.GlobalProgramCancel);
+            try
+            {
+                Task.Delay(TimeSpan.FromSeconds(1), Program.GlobalProgramCancel).Wait(Program.GlobalProgramCancel);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
             try
             {
                 Program.TickEvent?.Invoke();
