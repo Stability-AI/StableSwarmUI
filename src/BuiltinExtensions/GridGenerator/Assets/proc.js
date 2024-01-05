@@ -997,7 +997,7 @@ function makeGif() {
 
 function updateHash() {
     var hash = `#auto-loc`;
-    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation', 'stickyLabels']) {
+    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation', 'stickyLabels', 'pauseVideos']) {
         hash += `,${document.getElementById(elem).checked}`;
     }
     for (let val of ['x', 'y', 'x2', 'y2']) {
@@ -1029,7 +1029,7 @@ function applyHash(hash) {
         }
     }
     let hashInputs = params[0].split(',');
-    let expectedLen = 1 + 4 + 4 + rawData.axes.length;
+    let expectedLen = 1 + 5 + 4 + rawData.axes.length;
     if (hashInputs.length != expectedLen) {
         console.log(`Hash length mismatch: ${hashInputs.length} != ${expectedLen}, skipping value reload.`);
         return;
@@ -1039,7 +1039,7 @@ function applyHash(hash) {
         return;
     }
     let index = 1;
-    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation', 'stickyLabels']) {
+    for (let elem of ['showDescriptions', 'autoScaleImages', 'stickyNavigation', 'stickyLabels', 'pauseVideos']) {
         document.getElementById(elem).checked = hashInputs[index++] == 'true';
     }
     for (let axis of ['x', 'y', 'x2', 'y2']) {
