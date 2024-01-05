@@ -42,6 +42,7 @@ function loadData() {
     document.getElementById('stickyLabels').checked = rawData.defaults.sticky_labels;
     document.getElementById('score_display').addEventListener('click', fillTable);
     document.getElementById('score_setting').style.display = typeof getScoreFor == 'undefined' ? 'none' : 'inline-block';
+    document.getElementById('pauseVideos').addEventListener('click', updatePauseVideos);
     updateStylesToMatchInputs();
     for (var axis of ['x', 'y', 'x2', 'y2']) {
         if (rawData.defaults[axis] != '') {
@@ -54,6 +55,18 @@ function loadData() {
     startAutoScroll();
     if (rawData.will_run) {
         setTimeout(checkForUpdates, 5000);
+    }
+}
+
+function updatePauseVideos() {
+    let doPause = document.getElementById('pauseVideos').checked;
+    for (let video of document.getElementsByTagName('video')) {
+        if (doPause) {
+            video.pause();
+        }
+        else {
+            video.play();
+        }
     }
 }
 
@@ -82,6 +95,8 @@ function fix_video(path) {
         video.loop = true;
         video.muted = true;
         video.autoplay = true;
+        let doPause = document.getElementById('pauseVideos').checked;
+        video.paused = doPause;
         video.classList = match.classList;
         video.dataset.img_path = match.dataset.img_path;
         video.onclick = "doPopupFor(this)";
@@ -91,6 +106,9 @@ function fix_video(path) {
         source.type = `video/${ext}`;
         video.appendChild(source);
         match.parentElement.replaceChild(video, match);
+        if (doPause) {
+            video.pause();
+        }
     }
 }
 
