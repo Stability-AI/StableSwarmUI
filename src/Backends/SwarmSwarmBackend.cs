@@ -477,7 +477,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         bool result = false;
         await RunWithSession(async () =>
         {
-            JObject response = await HttpClient.PostJson($"{Address}/API/SelectModel", new() { ["system_ram"] = systemRam, ["backend"] = $"{LinkedRemoteBackendID}" });
+            JObject response = await HttpClient.PostJson($"{Address}/API/FreeBackendMemory", new() { ["system_ram"] = systemRam, ["backend"] = $"{LinkedRemoteBackendID}" });
             result = response["result"].Value<bool>();
         });
         return Volatile.Read(ref result);
