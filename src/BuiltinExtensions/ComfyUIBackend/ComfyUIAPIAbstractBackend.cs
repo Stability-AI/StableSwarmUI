@@ -108,6 +108,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
     }
 
+    /// <inheritdoc/>
     public override async Task Shutdown()
     {
         Logs.Info($"ComfyUI backend {BackendData.ID} shutting down...");
@@ -445,6 +446,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return outputs.ToArray();
     }
 
+    /// <inheritdoc/>
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
         List<Image> images = new();
@@ -567,6 +569,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return false;
     }
 
+    /// <inheritdoc/>
     public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
     {
         List<Action> completeSteps = new();
@@ -656,6 +659,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return await NetworkBackendUtils.Parse<JType>(await HttpClient.PostAsync($"{Address}/{url}", Utilities.JSONContent(payload)));
     }
 
+    /// <inheritdoc/>
     public override async Task<bool> LoadModel(T2IModel model)
     {
         string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model:error_missing_model}", Utilities.EscapeJsonString(model.ToString(ModelFolderFormat)));
@@ -664,5 +668,13 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         return true;
     }
 
+    /// <inheritdoc/>
+    public override async Task<bool> FreeMemory(bool systemRam)
+    {
+        await SendPost<string>("free", new JObject() { ["unload_models"] = true, ["free_memory"] = systemRam });
+        return true;
+    }
+
+    /// <inheritdoc/>
     public override IEnumerable<string> SupportedFeatures => ComfyUIBackendExtension.FeaturesSupported.Append(ModelFolderFormat == "\\" ? "folderbackslash" : "folderslash");
 }

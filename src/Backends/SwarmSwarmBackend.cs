@@ -37,6 +37,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
     /// <summary>A set of all backend-types the remote Swarm instance has.</summary>
     public volatile HashSet<string> RemoteBackendTypes = new();
 
+    /// <inheritdoc/>
     public override IEnumerable<string> SupportedFeatures => RemoteFeatureCombo.Keys;
 
     /// <summary>Current API session ID.</summary>
@@ -238,6 +239,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         }
     }
 
+    /// <inheritdoc/>
     public override async Task Init()
     {
         if (IsReal)
@@ -337,6 +339,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         }
     }
 
+    /// <inheritdoc/>
     public override async Task Shutdown()
     {
         if (IsReal)
@@ -352,6 +355,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         Status = BackendStatus.DISABLED;
     }
 
+    /// <inheritdoc/>
     public override async Task<bool> LoadModel(T2IModel model)
     {
         if (IsReal)
@@ -394,6 +398,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         return req;
     }
 
+    /// <inheritdoc/>
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
         user_input.ProcessPromptEmbeds(x => $"<embedding:{x}>");
@@ -407,6 +412,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         return images;
     }
 
+    /// <inheritdoc/>
     public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
     {
         user_input.ProcessPromptEmbeds(x => $"<embedding:{x}>");
@@ -459,5 +465,21 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             }
             await websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, Program.GlobalProgramCancel);
         });
+    }
+
+    /// <inheritdoc/>
+    public override async Task<bool> FreeMemory(bool systemRam)
+    {
+        if (IsReal)
+        {
+            return false;
+        }
+        bool result = false;
+        await RunWithSession(async () =>
+        {
+            JObject response = await HttpClient.PostJson($"{Address}/API/SelectModel", new() { ["system_ram"] = systemRam, ["backend"] = $"{LinkedRemoteBackendID}" });
+            result = response["result"].Value<bool>();
+        });
+        return Volatile.Read(ref result);
     }
 }

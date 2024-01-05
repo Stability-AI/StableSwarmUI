@@ -63,6 +63,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
         }
     }
 
+    /// <inheritdoc/>
     public override Task Shutdown()
     {
         Status = BackendStatus.DISABLED;
@@ -70,6 +71,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
         user_input.ProcessPromptEmbeds(x => x.BeforeLast('.'));
@@ -131,6 +133,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
         return (string)(await SendGet<JObject>("options"))["sd_model_checkpoint"];
     }
 
+    /// <inheritdoc/>
     public override async Task<bool> LoadModel(T2IModel model)
     {
         string targetClean = model.Name.ToLowerInvariant().Trim('/');
@@ -164,5 +167,6 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
         return true;
     }
 
+    /// <inheritdoc/>
     public override IEnumerable<string> SupportedFeatures => AutoWebUIBackendExtension.FeaturesSupported;
 }

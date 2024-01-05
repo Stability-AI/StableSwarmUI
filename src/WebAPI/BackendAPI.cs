@@ -18,6 +18,7 @@ public class BackendAPI
         API.RegisterAPICall(EditBackend);
         API.RegisterAPICall(AddNewBackend);
         API.RegisterAPICall(RestartBackends);
+        API.RegisterAPICall(FreeBackendMemory);
     }
 
     /// <summary>API route to list currently available backend-types.</summary>
@@ -174,5 +175,26 @@ public class BackendAPI
             }
         }
         return new JObject() { ["result"] = "Success.", ["count"] = count };
+    }
+
+    /// <summary>API route to free memory from all backends.</summary>
+    public static async Task<JObject> FreeBackendMemory(bool system_ram = false, string backend = "all")
+    {
+        List<Task> tasks = new();
+        foreach (AbstractT2IBackend target in Program.Backends.RunningBackendsOfType<AbstractT2IBackend>())
+        {
+            if (backend != "all" && backend != $"{target.BackendData.ID}")
+            {
+                continue;
+            }
+            tasks.Add(target.FreeMemory(system_ram));
+        }
+        if (tasks.IsEmpty())
+        {
+            return new JObject() { ["result"] = false, ["count"] = 0 };
+        }
+        await Task.WhenAll(tasks);
+        Utilities.CleanRAM();
+        return new JObject() { ["result"] = true, ["count"] = tasks.Count };
     }
 }

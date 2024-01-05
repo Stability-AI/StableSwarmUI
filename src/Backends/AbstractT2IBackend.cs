@@ -95,6 +95,15 @@ public abstract class AbstractT2IBackend
     /// <summary>The list of all model names this server has (key=model subtype, value=list of filenames), or null if untracked.</summary>
     public Dictionary<string, List<string>> Models = null;
 
+    /// <summary>Tells the backend to free its memory usage. Returns true if it happened, false if memory is still in use.
+    /// Note that some backends may take extra time between when this call returns and when memory is actually freed, such as if they have jobs to wrap up or slow polling rates.
+    /// Generally give at least one full second before assuming memory is properly cleared.</summary>
+    /// <param name="systemRam">If true, system RAM should be cleaned. If false, only VRAM needs to be freed.</param>
+    public virtual async Task<bool> FreeMemory(bool systemRam)
+    {
+        return false;
+    }
+
     /// <summary>Exception can be thrown to indicate the backend cannot fulfill the request, but for temporary reasons, and another backend should be used instead.</summary>
     public class PleaseRedirectException : Exception
     {
