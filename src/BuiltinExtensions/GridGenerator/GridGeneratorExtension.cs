@@ -119,7 +119,7 @@ public class GridGeneratorExtension : Extension
             {
                 Task.WaitAny(waitOn);
             }
-            if (Volatile.Read(ref data.ErrorOut) is not null)
+            if (Volatile.Read(ref data.ErrorOut) is not null && !data.ContinueOnError)
             {
                 throw new InvalidOperationException("Errored");
             }
@@ -272,6 +272,8 @@ public class GridGeneratorExtension : Extension
 
         public ConcurrentDictionary<string, Image> GeneratedOutputs = new();
 
+        public bool ContinueOnError = false;
+
         public Task[] GetActive()
         {
             lock (UpdateLock)
@@ -338,7 +340,7 @@ public class GridGeneratorExtension : Extension
         return Fonts.GetOrCreate(sizeMult, () => MainFontCollection.Families.First().CreateFont(16 * sizeMult, FontStyle.Bold));
     }
 
-    public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string outputType)
+    public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string outputType, bool continueOnError)
     {
         using Session.GenClaim claim = session.Claim(gens: 1);
         T2IParamInput baseParams;
@@ -360,7 +362,7 @@ public class GridGeneratorExtension : Extension
         baseParams.Remove(T2IParamTypes.Images);
         baseParams.Remove(T2IParamTypes.RefinerSaveBeforeRefine);
         await sendStatus();
-        StableSwarmUIGridData data = new() { Session = session, Claim = claim, MaxSimul = session.User.Restrictions.CalcMaxT2ISimultaneous };
+        StableSwarmUIGridData data = new() { Session = session, Claim = claim, MaxSimul = session.User.Restrictions.CalcMaxT2ISimultaneous, ContinueOnError = continueOnError };
         Grid grid = null;
         try
         {

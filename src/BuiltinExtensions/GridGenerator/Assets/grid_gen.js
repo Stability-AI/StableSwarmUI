@@ -355,6 +355,7 @@ class GridGenClass {
             'dryRun': getOpt('dry-run'),
             'weightOrder': getOpt('weight-order'),
             'outputType': type,
+            'continueOnError': getOpt('continue-on-error'),
         };
         let axisData = [];
         for (let axis of this.listAxes()) {
@@ -444,6 +445,7 @@ class GridGenClass {
                 ${makeCheckboxInput(null, 'grid-gen-opt-publish-metadata', 'Publish Generation Metadata', 'If unchecked, will hide the image generation metadata.', true, false, true)}&emsp;
                 ${makeCheckboxInput(null, 'grid-gen-opt-dry-run', 'Dry Run', 'If checked, will not actually generate any images - useful to validate your grid.', false, false, true)}&emsp;
                 ${makeCheckboxInput(null, 'grid-gen-opt-weight-order', 'Allow Reordering', 'If checked, the grid generator will reorder processing order of axes to maximize generation speed.', true, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-continue-on-error', 'Continue On Error', 'If checked, if any generations failure, those will be skipped and the grid will continue.', false, false, true)}&emsp;
             </div>
             <div class="hoverable-minor-hint-text">
                 When using numbered parameters, you can type for example "<code>1, 2, .., 10</code>" to automatically have the "<code>..</code>" part filled in.
