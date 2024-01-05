@@ -21,17 +21,32 @@ public static class SystemStatusMonitor
     /// <summary>General hardware info provider.</summary>
     public static HardwareInfo HardwareInfo = new();
 
+    /// <summary>Semaphore to prevent the monitor tick firing off overlapping.</summary>
+    public static SemaphoreSlim DeDuplicator = new(1, 1);
+
     /// <summary>Updates system status.</summary>
     public static void Tick()
     {
         Task.Run(() =>
         {
-            long newProcessorTime = SelfProc.TotalProcessorTime.Milliseconds;
-            long newTick = Environment.TickCount64;
-            ProcessCPUUsage = (newProcessorTime - LastProcessorTime) / (double)(newTick - LastTick);
-            LastProcessorTime = newProcessorTime;
-            LastTick = newTick;
-            HardwareInfo.RefreshMemoryStatus();
+            if (DeDuplicator.CurrentCount == 0)
+            {
+                return;
+            }
+            DeDuplicator.Wait();
+            try
+            {
+                long newProcessorTime = SelfProc.TotalProcessorTime.Milliseconds;
+                long newTick = Environment.TickCount64;
+                ProcessCPUUsage = (newProcessorTime - LastProcessorTime) / (double)(newTick - LastTick);
+                LastProcessorTime = newProcessorTime;
+                LastTick = newTick;
+                HardwareInfo.RefreshMemoryStatus();
+            }
+            finally
+            {
+                DeDuplicator.Release();
+            }
         });
     }
 }
