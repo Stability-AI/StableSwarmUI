@@ -60,11 +60,14 @@ public class Program
     /// <summary>User-requested launch mode (web, electron, none).</summary>
     public static string LaunchMode;
 
-    /// <summary>Event-action fired once per second (approximately) while the server is generating anything.</summary>
+    /// <summary>Event-action fired when the server wasn't generating for a while and is now starting to generate again.</summary>
     public static Action TickIsGeneratingEvent;
 
     /// <summary>Event-action fired once per second (approximately) while the server is *not* generating anything.</summary>
     public static Action TickNoGenerationsEvent;
+
+    /// <summary>Event-action fired once per second (approximately) all the time.</summary>
+    public static Action TickEvent;
 
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)

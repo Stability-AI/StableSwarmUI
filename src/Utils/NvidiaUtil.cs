@@ -81,7 +81,6 @@ public static class NvidiaUtil
                     long freeMemory = ParseMemory(parts[6]);
                     long usedMemory = ParseMemory(parts[7]);
                     NvidiaInfo info = new(output.Count, GPUName, driverVersion, temp, utilGPU, utilMemory, new(totalMemory), new(freeMemory), new(usedMemory));
-                    Logs.Verbose($"nvidia-smi: {data}: {info}");
                     output.Add(info);
                 }
                 Internal.LastResultCache = output.ToArray();

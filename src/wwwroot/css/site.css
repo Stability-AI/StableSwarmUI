@@ -539,3 +539,7 @@ textarea, input, select {
 .form-check-input {
     cursor: pointer;
 }
+.simple-table tr td, .simple-table tr th {
+    padding: 0.4rem;
+    border: 1px solid var(--shadow);
+}

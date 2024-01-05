@@ -490,7 +490,7 @@
     <div class="tab-pane tab-pane-vw" id="server_tab_body" role="tabpanel">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link active" data-bs-toggle="tab" href="#Server-Info" aria-selected="true" role="tab">Server Info</a>
+                <a class="nav-link active" data-bs-toggle="tab" href="#Server-Info" id="serverinfotabbutton" aria-selected="true" role="tab">Server Info</a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" data-bs-toggle="tab" href="#Settings-Backends" id="serverbackendstabbutton" aria-selected="false" role="tab">Backends</a>
@@ -547,6 +547,14 @@
                                         <p>This server is likely accessible from LAN on one of the following addresses: @(address)</p>
                                     }
                                 }
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card border-secondary mb-3 card-center-container">
+                        <div class="card-header">Resource Usage</div>
+                        <div class="card-body">
+                            <p class="card-text" id="resource_usage_area">
+                                (Loading...)
                             </p>
                         </div>
                     </div>

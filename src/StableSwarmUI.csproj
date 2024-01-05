@@ -8,9 +8,10 @@
 
   <ItemGroup>
     <PackageReference Include="FreneticLLC.FreneticUtilities" Version="1.0.24" />
+    <PackageReference Include="Hardware.Info" Version="100.0.1.1" />
     <PackageReference Include="LiteDB" Version="5.0.17" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.2" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.0" />
   </ItemGroup>
 

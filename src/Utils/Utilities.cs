@@ -31,6 +31,25 @@ public static class Utilities
         Program.TickNoGenerationsEvent += () => WebhookManager.TickNoGenerations().Wait();
         Program.TickIsGeneratingEvent += MemCleaner.TickIsGenerating;
         Program.TickNoGenerationsEvent += MemCleaner.TickNoGenerations;
+        Program.TickEvent += SystemStatusMonitor.Tick;
+        new Thread(TickLoop).Start();
+    }
+
+    /// <summary>Internal tick loop thread main method.</summary>
+    public static void TickLoop()
+    {
+        while (!Program.GlobalProgramCancel.IsCancellationRequested)
+        {
+            Task.Delay(TimeSpan.FromSeconds(1)).Wait(Program.GlobalProgramCancel);
+            try
+            {
+                Program.TickEvent?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Tick loop encountered exception: {ex}");
+            }
+        }
     }
 
     /// <summary>StableSwarmUI's current version.</summary>

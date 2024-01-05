@@ -1,5 +1,6 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
+using Hardware.Info;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
@@ -18,6 +19,7 @@ public static class AdminAPI
         API.RegisterAPICall(ListLogTypes);
         API.RegisterAPICall(ListRecentLogMessages);
         API.RegisterAPICall(ShutdownServer);
+        API.RegisterAPICall(GetServerResourceInfo);
     }
 
     public static JObject AutoConfigToParamData(AutoConfiguration config)
@@ -169,5 +171,46 @@ public static class AdminAPI
     {
         _ = Task.Run(Program.Shutdown);
         return new JObject() { ["success"] = true };
+    }
+
+    /// <summary>API Route to get information about server resource usage.</summary>
+    public static async Task<JObject> GetServerResourceInfo(Session session)
+    {
+        NvidiaUtil.NvidiaInfo[] gpuInfo = NvidiaUtil.QueryNvidia();
+        MemoryStatus memStatus = SystemStatusMonitor.HardwareInfo.MemoryStatus;
+        JObject result = new()
+        {
+            ["cpu"] = new JObject()
+            {
+                ["usage"] = SystemStatusMonitor.ProcessCPUUsage,
+                ["cores"] = Environment.ProcessorCount,
+            },
+            ["system_ram"] = new JObject()
+            {
+                ["total"] = memStatus.TotalPhysical,
+                ["used"] = memStatus.TotalPhysical - memStatus.AvailablePhysical,
+                ["free"] = memStatus.AvailablePhysical
+            }
+        };
+        if (gpuInfo is not null)
+        {
+            JObject gpus = new();
+            foreach (NvidiaUtil.NvidiaInfo gpu in gpuInfo)
+            {
+                gpus[$"{gpu.ID}"] = new JObject()
+                {
+                    ["id"] = gpu.ID,
+                    ["name"] = gpu.GPUName,
+                    ["temperature"] = gpu.Temperature,
+                    ["utilization_gpu"] = gpu.UtilizationGPU,
+                    ["utilization_memory"] = gpu.UtilizationMemory,
+                    ["total_memory"] = gpu.TotalMemory.InBytes,
+                    ["free_memory"] = gpu.FreeMemory.InBytes,
+                    ["used_memory"] = gpu.UsedMemory.InBytes
+                };
+            }
+            result["gpus"] = gpus;
+        }
+        return result;
     }
 }
