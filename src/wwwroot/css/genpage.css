@@ -1093,3 +1093,13 @@ body {
     margin: auto;
     margin-bottom: 0.2rem;
 }
+.card-collection-inline {
+    display: block;
+    width: fit-content;
+    margin: auto;
+}
+.card-collection-inline .card {
+    display: inline-block;
+    margin: 0.2rem;
+    vertical-align: top;
+}

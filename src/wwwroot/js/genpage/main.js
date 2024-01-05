@@ -1208,6 +1208,14 @@ function shutdown_server() {
     }
 }
 
+function server_clear_vram() {
+    genericRequest('FreeBackendMemory', { 'system_ram': false }, data => {});
+}
+
+function server_clear_sysram() {
+    genericRequest('FreeBackendMemory', { 'system_ram': true }, data => {});
+}
+
 /** Set some element titles via JavaScript (to allow '\n'). */
 function setTitles() {
     getRequiredElementById('alt_prompt_textbox').title = "Tell the AI what you want to see, then press Enter to submit.\nConsider 'a photo of a cat', or 'cartoonish drawing of an astronaut'";
