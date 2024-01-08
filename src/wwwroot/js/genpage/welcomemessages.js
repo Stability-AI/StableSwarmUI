@@ -58,6 +58,6 @@ function automaticWelcomeMessage(override = null) {
     if (override < 0) {
         override += messages.length;
     }
-    div.innerHTML = `${prefix}\n<div class="welcome-message-wrapper">${messages[override]}</div>\n\n<button onclick="resetWelcomeMessage(${override - 1})">&lt;</button> <button onclick="resetWelcomeMessage(${override + 1})">&gt;</button>`;
+    div.innerHTML = `${prefix}\n<div class="welcome-message-wrapper">${messages[override]}</div>\n\n<button class="btn btn-secondary" onclick="resetWelcomeMessage(${override - 1})">&lt;</button> <button class="btn btn-secondary" onclick="resetWelcomeMessage(${override + 1})">&gt;</button>`;
     return;
 }
