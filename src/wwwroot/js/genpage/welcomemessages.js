@@ -49,7 +49,9 @@ function automaticWelcomeMessage(override = null) {
         `New feature (2023-12-03): Log viewer!\nNeed to check those debug logs?\nThey're available under the <b>Server</b> tab, with log-level selection and filters. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7772593">(Feature Announcement Link)</a>`,
         `New feature (2023-12-06): LoRA Extractor!\nWant to reduce your model file space waste and extract some of your finetuned models into LoRAs?\nHead to the <b>Utilities</b> tab to try the LoRA extractor. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7772593">(Feature Announcement Link)</a>`,
         `New feature (2023-12-06): Tab Completion in prompts!\nJust type a '&lt;' symbol and watch the suggestions for prompt-syntax tools appear! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7775593">(Feature Announcement Link)</a>`,
-        `New feature (2023-12-07): Welcome messages!\nOh, well, hi, that's this right here. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7791189">(Feature Announcement Link)</a>`
+        `New feature (2023-12-07): Welcome messages!\nOh, well, hi, that's this right here. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7791189">(Feature Announcement Link)</a>`,
+        /* Version release notes */
+        `Release notes (2024-01-08): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.0-Alpha">Release Notes for version 0.6.0 (Alpha)</a>\nIncludes new features like Unsampling, Image Starring, and more!\nSwarm will be moving to Beta soon!`
     ];
     let dotnetNotice = document.getElementById('dotnet_missing_message');
     if (dotnetNotice) {
