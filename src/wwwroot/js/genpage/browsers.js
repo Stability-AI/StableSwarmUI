@@ -33,7 +33,7 @@ class BrowserTreePart {
  */
 class GenPageBrowserClass {
 
-    constructor(container, listFoldersAndFiles, id, defaultFormat, describe, select) {
+    constructor(container, listFoldersAndFiles, id, defaultFormat, describe, select, extraHeader = '') {
         this.container = getRequiredElementById(container);
         this.listFoldersAndFiles = listFoldersAndFiles;
         this.id = id;
@@ -41,6 +41,7 @@ class GenPageBrowserClass {
         this.describe = describe;
         this.select = select;
         this.folder = '';
+        this.extraHeader = extraHeader;
         this.navCaller = this.navigate.bind(this);
         this.tree = new BrowserTreePart('', {}, false, true);
         this.depth = localStorage.getItem(`browser_${id}_depth`) || 3;
@@ -358,6 +359,7 @@ class GenPageBrowserClass {
                 <button id="${this.id}_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
                 Depth: <input id="${this.id}_depth_input" class="depth-number-input" type="number" min="1" max="10" value="${this.depth}" title="Depth of subfolders to show" autocomplete="false">
                 Filter: <input id="${this.id}_filter_input" type="text" value="${this.filter}" title="Text filter, only show items that contain this text." rows="1" autocomplete="false" placeholder="Filter...">
+                ${this.extraHeader}
                 `);
             let inputArr = buttons.getElementsByTagName('input');
             let depthInput = inputArr[0];
@@ -387,7 +389,7 @@ class GenPageBrowserClass {
             let barSpot;
             let setBar = () => {
                 this.folderTreeDiv.style.width = `${barSpot}px`;
-                this.fullContentDiv.style.width = `calc(100vw - ${barSpot}px - 1rem)`;
+                this.fullContentDiv.style.width = `calc(100vw - ${barSpot}px - 0.6rem)`;
             }
             this.lastReset = () => {
                 barSpot = parseInt(localStorage.getItem(`barspot_browser_${this.id}`) || getCookie(`barspot_browser_${this.id}`) || convertRemToPixels(15)); // TODO: Remove the old cookie

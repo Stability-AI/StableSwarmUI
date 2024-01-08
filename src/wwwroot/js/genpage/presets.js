@@ -339,7 +339,11 @@ function selectPreset(preset) {
     presetBrowser.rerender();
 }
 
-let presetBrowser = new GenPageBrowserClass('preset_list', listPresetFolderAndFiles, 'presetbrowser', 'Cards', describePreset, selectPreset);
+let presetBrowser = new GenPageBrowserClass('preset_list', listPresetFolderAndFiles, 'presetbrowser', 'Cards', describePreset, selectPreset,
+    `<button id="preset_list_create_new_button" class="refresh-button" onclick="create_new_preset_button()">Create New Preset</button>
+    <button id="preset_list_import_button" class="refresh-button" onclick="importPresetsButton()">Import Presets</button>
+    <button id="preset_list_export_button" class="refresh-button" onclick="exportPresetsButton()">Export All Presets</button>
+    <button id="preset_list_apply_button" class="refresh-button" onclick="apply_presets()" title="Apply all current presets directly to your parameter list.">Apply Presets</button>`);
 
 function importPresetsButton() {
     getRequiredElementById('import_presets_textarea').value = '';

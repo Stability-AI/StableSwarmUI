@@ -233,11 +233,11 @@ function sortModelName(a, b) {
 }
 
 class ModelBrowserWrapper {
-    constructor(subType, container, id, selectOne) {
+    constructor(subType, container, id, selectOne, extraHeader = '') {
         this.subType = subType;
         this.selectOne = selectOne;
         let format = subType == 'Wildcards' ? 'Small Cards' : 'Cards';
-        this.browser = new GenPageBrowserClass(container, this.listModelFolderAndFiles.bind(this), id, format, this.describeModel.bind(this), this.selectModel.bind(this));
+        this.browser = new GenPageBrowserClass(container, this.listModelFolderAndFiles.bind(this), id, format, this.describeModel.bind(this), this.selectModel.bind(this), extraHeader);
     }
 
     listModelFolderAndFiles(path, isRefresh, callback, depth) {
@@ -413,7 +413,7 @@ let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (v
 let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data.name); });
 let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => { selectEmbedding(embed.data); });
 let sdControlnetBrowser = new ModelBrowserWrapper('ControlNet', 'controlnet_list', 'sdcontrolnetbrowser', (controlnet) => { setControlNet(controlnet.data); });
-let wildcardsBrowser = new ModelBrowserWrapper('Wildcards', 'wildcard_list', 'wildcardsbrowser', (wildcard) => { selectWildcard(wildcard.data); });
+let wildcardsBrowser = new ModelBrowserWrapper('Wildcards', 'wildcard_list', 'wildcardsbrowser', (wildcard) => { selectWildcard(wildcard.data); }, `<button id="wildcards_list_create_new_button" class="refresh-button" onclick="create_new_wildcard_button()">Create New Wildcard</button>`);
 
 let allModelBrowsers = [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser, wildcardsBrowser];
 

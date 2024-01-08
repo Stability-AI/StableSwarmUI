@@ -668,7 +668,7 @@ body {
 .browser-content-container {
     display: inline-block;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 4rem);
     overflow: auto;
     vertical-align: top;
     padding-bottom: 3rem;
@@ -679,9 +679,6 @@ body {
     height: 100%;
     overflow: hidden;
     white-space: nowrap;
-}
-.preset_list_container {
-    height: calc(100% - 3rem);
 }
 .browser-folder-tree-part {
     display: block;
