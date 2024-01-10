@@ -62,7 +62,7 @@ public static class BasicAPIFeatures
         };
     }
 
-    public static async Task<JObject> InstallConfirmWS(Session session, WebSocket socket, string theme, string installed_for, string backend, string stability_api_key, string models)
+    public static async Task<JObject> InstallConfirmWS(Session session, WebSocket socket, string theme, string installed_for, string backend, string stability_api_key, string models, bool install_amd)
     {
         if (Program.ServerSettings.IsInstalled)
         {
@@ -135,6 +135,7 @@ public static class BasicAPIFeatures
                     await output("Downloading ComfyUI backend... please wait...");
                     Directory.CreateDirectory("dlbackend/");
                     string path;
+                    string extraArgs = "";
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         try
@@ -165,12 +166,20 @@ public static class BasicAPIFeatures
                         updateProgress(0, 0);
                         Process.Start(new ProcessStartInfo(Path.GetFullPath("dlbackend/vc_redist.x64.exe"), "/quiet /install /passive /norestart") { UseShellExecute = true }).WaitForExit();
                         path = "dlbackend/comfy/ComfyUI/main.py";
+                        if (install_amd)
+                        {
+                            await output("Installing AMD compatible Torch-DirectML...");
+                            string comfyFolderPath = Path.GetFullPath("dlbackend/comfy");
+                            Process.Start(new ProcessStartInfo($"{comfyFolderPath}/python_embeded/python.exe", "-s -m pip install torch-directml") { UseShellExecute = true, WorkingDirectory = comfyFolderPath }).WaitForExit();
+                            extraArgs += "--directml ";
+                        }
                     }
                     else
                     {
                         stepsThusFar++;
                         updateProgress(0, 0);
-                        await Process.Start("/bin/bash", "launchtools/comfy-install-linux.sh").WaitForExitAsync(Program.GlobalProgramCancel);
+                        string gpuType = install_amd ? "amd" : "nv";
+                        await Process.Start("/bin/bash", $"launchtools/comfy-install-linux.sh {gpuType}").WaitForExitAsync(Program.GlobalProgramCancel);
                         path = "dlbackend/ComfyUI/main.py";
                     }
                     NvidiaUtil.NvidiaInfo[] nv = NvidiaUtil.QueryNvidia();
@@ -181,7 +190,7 @@ public static class BasicAPIFeatures
                         gpu = mostVRAM.ID;
                     }
                     await output("Enabling ComfyUI...");
-                    Program.Backends.AddNewOfType(Program.Backends.BackendTypes["comfyui_selfstart"], new ComfyUISelfStartBackend.ComfyUISelfStartSettings() { StartScript = path, GPU_ID = gpu });
+                    Program.Backends.AddNewOfType(Program.Backends.BackendTypes["comfyui_selfstart"], new ComfyUISelfStartBackend.ComfyUISelfStartSettings() { StartScript = path, GPU_ID = gpu, ExtraArgs = extraArgs.Trim() });
                     break;
                 }
             case "stabilityapi":

@@ -6,6 +6,10 @@ class InstallerClass {
     bottomInfo = getRequiredElementById('bottom_info');
 
     constructor() {
+        let amdPart = document.getElementById('installer_section_amd');
+        if (amdPart) {
+            this.parts.splice(1, 0, 'amd');
+        }
         this.cur_part = 0;
         this.backButton.addEventListener('click', this.back.bind(this));
         this.nextButton.addEventListener('click', this.next.bind(this));
@@ -48,7 +52,7 @@ class InstallerClass {
     }
 
     next() {
-        if (this.cur_part == 1) {
+        if (this.parts[this.cur_part] == 'skip') {
             let skip = getRadioSelectionInFieldset('install_path_selection_field');
             if (skip == 'just_install') {
                 this.moveToPage(this.parts.length - 1);
@@ -66,6 +70,8 @@ class InstallerClass {
         switch (this.parts[this.cur_part]) {
             case 'license':
                 return true;
+            case 'amd':
+                return getRadioSelectionInFieldset('amd_selection_field') != null;
             case 'skip':
                 return getRadioSelectionInFieldset('install_path_selection_field') != null;
             case 'themes':
@@ -112,13 +118,19 @@ class InstallerClass {
     }
 
     getSubmittable() {
+        let amd_section = document.getElementById('amd_selection_field');
+        let install_amd = false;
+        if (amd_section) {
+            install_amd = getRadioSelectionInFieldset('amd_selection_field') == 'yes';
+        }
         let models = this.modelsToDownload();
         return {
             theme: getRadioSelectionInFieldset('theme_selection_field'),
             installed_for: getRadioSelectionInFieldset('installed_for_selection_field'),
             backend: getRadioSelectionInFieldset('backend_selection_field'),
             stability_api_key: getRequiredElementById('stability_api_key').value,
-            models: models.length == 0 ? 'none' : this.modelsToDownload().join(', ')
+            models: models.length == 0 ? 'none' : this.modelsToDownload().join(', '),
+            install_amd: install_amd
         };
     }
 

@@ -84,4 +84,22 @@ public static class WebUtil
         }
         return new($"{basic}insufficient, may work with LowVRAM or CPU mode, but otherwise will need remote cloud process.");
     }
+
+    /// <summary>Returns true if the user most likely has an AMD GPU.</summary>
+    public static bool ProbablyHasAMDGpu()
+    {
+        NvidiaUtil.NvidiaInfo[] nv = NvidiaUtil.QueryNvidia();
+        if (nv is not null && nv.Length > 0)
+        {
+            Logs.Verbose($"Probably not AMD due to Nvidia GPU");
+            return false;
+        }
+        string mpsVar = Environment.GetEnvironmentVariable("PYTORCH_ENABLE_MPS_FALLBACK");
+        if (!string.IsNullOrWhiteSpace(mpsVar)) // Mac
+        {
+            Logs.Verbose($"Probably not AMD due to PYTORCH_ENABLE_MPS_FALLBACK={mpsVar}, indicating a Mac");
+            return false;
+        }
+        return true;
+    }
 }

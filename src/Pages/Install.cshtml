@@ -31,6 +31,30 @@
         <br>By using this software you agree to follow its license and the applicable licenses of any models included or separately downloaded.
     </div>
 
+    @if (WebUtil.ProbablyHasAMDGpu())
+    {
+        <div id="installer_section_amd" style="display: none;">
+            <div class="install_q_head">You don't seem to have an nvidia GPU. Do you want to install an AMD compatible version?</div>
+            <div class="install_hint">Installation works differently if you an AMD GPU instead. This will use DirectML on Windows, or ROCm on Linux.
+                <br>If you do not have an AMD Radeon GPU, select 'No'.
+                <br><b>WARNING: This is untested and probably doesn't work due to painfully strict versioning requirements.</b>
+            </div>
+            <br>
+            <fieldset class="form-group" id="amd_selection_field">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="amd_radio" id="amd_no" value="no">
+                    <label class="form-check-label" for="amd_no">No</label>
+                    <div class="install_hint">Do the standard install (nvidia-compatible).</div>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="amd_radio" id="amd_yes" value="yes" checked="">
+                    <label class="form-check-label" for="amd_yes">Yes</label>
+                    <div class="install_hint">Install the AMD version.</div>
+                </div>
+            </fieldset>
+        </div>
+    }
+
     <div id="installer_section_skip" style="display: none;">
         <div class="install_q_head">Choose install path:</div>
         <div class="install_hint">You can always change settings later.</div>
