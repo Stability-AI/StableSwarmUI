@@ -73,6 +73,9 @@ function genericServerError() {
     showError('Failed to send request to server. Did the server crash?');
 }
 
+let failedWSAddr = translatable(`Failed to get WebSocket address. You may be connecting to the server in an unexpected way. Please use "http" or "https" URLs.`);
+let failedDepth = translatable(`Failed to get session ID after 3 tries. Your account may have been invalidated. Try refreshing the page, or contact the site owner.`);
+
 function makeWSRequest(url, in_data, callback, depth = 0, errorHandle = null) {
     function fail(e) {
         if (errorHandle) {
@@ -85,7 +88,7 @@ function makeWSRequest(url, in_data, callback, depth = 0, errorHandle = null) {
     let ws_address = getWSAddress();
     if (ws_address == null) {
         console.log(`Tried making WS request ${url} but failed.`);
-        fail('Failed to get WebSocket address. You may be connecting to the server in an unexpected way. Please use "http" or "https" URLs.');
+        fail(failedWSAddr);
         return;
     }
     let socket = new WebSocket(`${ws_address}/API/${url}`);
@@ -97,7 +100,7 @@ function makeWSRequest(url, in_data, callback, depth = 0, errorHandle = null) {
         let data = JSON.parse(event.data);
         if (data.error_id && data.error_id == 'invalid_session_id') {
             if (depth > 3) {
-                fail('Failed to get session ID after 3 tries. Your account may have been invalidated. Try refreshing the page, or contact the site owner.');
+                fail(failedDepth.get());
                 return;
             }
             console.log('Session refused, will get new one and try again.');
@@ -117,6 +120,8 @@ function makeWSRequest(url, in_data, callback, depth = 0, errorHandle = null) {
     socket.onerror = errorHandle || genericServerError;
 }
 
+let failedCrash = translatable(`Failed to send request to server. Did the server crash?`);
+
 function genericRequest(url, in_data, callback, depth = 0, errorHandle = null) {
     in_data['session_id'] = session_id;
     function fail(e) {
@@ -130,12 +135,12 @@ function genericRequest(url, in_data, callback, depth = 0, errorHandle = null) {
     sendJsonToServer(`/API/${url}`, in_data, (status, data) => {
         if (!data) {
             console.log(`Tried making generic request ${url} but failed.`);
-            fail('Failed to send request to server. Did the server crash?');
+            fail(failedCrash);
             return;
         }
         if (data.error_id && data.error_id == 'invalid_session_id') {
             if (depth > 3) {
-                fail('Failed to get session ID after 3 tries. Your account may have been invalidated. Try refreshing the page, or contact the site owner.');
+                fail(failedDepth.get());
                 return;
             }
             console.log('Session refused, will get new one and try again.');
@@ -147,7 +152,7 @@ function genericRequest(url, in_data, callback, depth = 0, errorHandle = null) {
         if (data.error) {
             console.log(`Tried making generic request ${url} but failed with error: ${data.error}`);
             console.log(`Input was ${JSON.stringify(in_data)}`);
-            fail(data.error);
+            fail(data.error.get());
             return;
         }
         callback(data);
@@ -156,6 +161,8 @@ function genericRequest(url, in_data, callback, depth = 0, errorHandle = null) {
 
 let lastServerVersion = null;
 let versionIsWrong = false;
+
+let serverHasUpdated = translatable(`The server has updated since you opened the page, please refresh.`);
 
 function getSession(callback) {
     genericRequest('GetNewSession', {}, data => {
@@ -169,7 +176,7 @@ function getSession(callback) {
         else if (lastServerVersion != data.version) {
             if (!versionIsWrong) {
                 versionIsWrong = true;
-                showError(`The server has updated since you opened the page, please refresh.`);
+                showError(serverHasUpdated.get());
             }
             if (typeof reviseStatusBar != 'undefined') {
                 reviseStatusBar();
@@ -432,7 +439,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, view
     return `
     <div class="slider-auto-container">
     <div class="auto-input auto-slider-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
         <br>
         <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
@@ -447,7 +454,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
     if (format == 'seed') {
         return `
             <div class="auto-input auto-number-box auto-input-flex"${featureid}>
-                <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
+                <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
                 <input class="auto-number auto-number-seedbox" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
                 <button class="basic-button" title="Random (Set to -1)" onclick="setSeedToRandom('${id}')">&#x1F3B2;</button>
                 <button class="basic-button" title="Reuse (from currently selected image)" onclick="reuseLastParamVal('${id}');">&#128257;</button>
@@ -471,10 +478,10 @@ function makeTextInput(featureid, id, name, description, value, format, placehol
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-text-box${(isBig ? "" : " auto-input-flex")}"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         ${tokenCounter}
         <textarea class="auto-text${(isBig ? " auto-text-block" : "")}" id="${id}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtmlNoBr(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
-        <button class="interrupt-button image-clear-button" style="display: none;">Clear Images</button>
+        <button class="interrupt-button image-clear-button translate" style="display: none;">Clear Images</button>
         <div class="added-image-area"></div>
     </div>`;
 }
@@ -488,7 +495,7 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-checkbox-box auto-input-flex"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         <input class="auto-checkbox" type="checkbox" data-name="${name}" id="${id}"${checked}>
     </div>`;
 }
@@ -500,7 +507,7 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
     featureid += featureid2;
     let html = `
     <div class="auto-input auto-dropdown-box auto-input-flex"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         <select class="auto-dropdown" id="${id}" autocomplete="false" onchange="autoSelectWidth(this)">`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
@@ -519,7 +526,7 @@ function makeMultiselectInput(featureid, id, name, description, values, defaultV
     featureid += featureid2;
     let html = `
     <div class="auto-input auto-dropdown-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         <select class="form-select" id="${id}" autocomplete="false" data-placeholder="${escapeHtmlNoBr(placeholder)}" multiple>`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
@@ -538,7 +545,7 @@ function makeImageInput(featureid, id, name, description, toggles = false, popov
     featureid += featureid2;
     let html = `
     <div class="auto-input auto-file-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
+        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" autocomplete="false">
         <div class="auto-input-image-preview"></div>
     </div>`;
@@ -584,7 +591,7 @@ function modalHeader(id, title) {
     <div class="modal" tabindex="-1" role="dialog" id="${id}">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">${title}</h5></div>`;
+                <div class="modal-header"><h5 class="modal-title translate">${title}</h5></div>`;
 }
 
 function modalFooter() {

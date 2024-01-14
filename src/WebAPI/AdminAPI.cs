@@ -20,6 +20,7 @@ public static class AdminAPI
         API.RegisterAPICall(ListRecentLogMessages);
         API.RegisterAPICall(ShutdownServer);
         API.RegisterAPICall(GetServerResourceInfo);
+        API.RegisterAPICall(DebugLanguageAdd);
     }
 
     public static JObject AutoConfigToParamData(AutoConfiguration config)
@@ -212,5 +213,12 @@ public static class AdminAPI
             result["gpus"] = gpus;
         }
         return result;
+    }
+
+    /// <summary>API Route to shut the server down.</summary>
+    public static async Task<JObject> DebugLanguageAdd(Session session, JObject raw)
+    {
+        LanguagesHelper.TrackSet(raw["set"].ToArray().Select(v => $"{v}").ToArray());
+        return new JObject() { ["success"] = true };
     }
 }

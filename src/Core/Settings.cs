@@ -237,6 +237,15 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("If true, the Image History view will cache small preview thumbnails of images.\nThis should make things run faster. You can turn it off if you don't want that.")]
         public bool ImageHistoryUsePreviews = true;
+
+        public class LanguagesImpl : SettingsOptionsAttribute.AbstractImpl
+        {
+            public override string[] GetOptions => LanguagesHelper.SortedList;
+        }
+
+        [ConfigComment("What language to display the UI in.\nDefault is 'en' (English).")]
+        [SettingsOptions(Impl = typeof(LanguagesImpl))]
+        public string Language = "en";
     }
 
     /// <summary>UI-related settings.</summary>

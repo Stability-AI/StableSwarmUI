@@ -16,17 +16,33 @@
 
 <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item" role="presentation">
-        <a class="nav-link active" data-bs-toggle="tab" href="#Text2Image" id="text2imagetabbutton" aria-selected="true" role="tab">Generate</a>
+        <a class="nav-link active translate" data-bs-toggle="tab" href="#Text2Image" id="text2imagetabbutton" aria-selected="true" role="tab">Generate</a>
     </li>
     @WebServer.T2ITabHeader
     <li class="nav-item" role="presentation">
-        <a class="nav-link" data-bs-toggle="tab" href="#Utilities-Tab" id="utilitiestabbutton" aria-selected="false" tabindex="-1" role="tab">Utilities</a>
+        <a class="nav-link translate" data-bs-toggle="tab" href="#Utilities-Tab" id="utilitiestabbutton" aria-selected="false" tabindex="-1" role="tab">Utilities</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link" data-bs-toggle="tab" href="#User-Settings" id="usersettingstabbutton" aria-selected="false" tabindex="-1" role="tab">User</a>
+        <a class="nav-link translate" data-bs-toggle="tab" href="#User-Settings" id="usersettingstabbutton" aria-selected="false" tabindex="-1" role="tab">User</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link" data-bs-toggle="tab" href="#server_tab_body" id="servertabbutton" aria-selected="false" tabindex="-1" role="tab">Server</a>
+        <a class="nav-link translate" data-bs-toggle="tab" href="#server_tab_body" id="servertabbutton" aria-selected="false" tabindex="-1" role="tab">Server</a>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" id="language_dropdown_link" style="float:right" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Language</a>
+        <div class="dropdown-menu translate-menu notranslate">
+            @foreach (string code in LanguagesHelper.PreferredLanguages)
+            {
+                LanguagesHelper.Language lang = LanguagesHelper.Languages[code];
+                <a class="dropdown-item" onclick="changeLanguage('@code')" href="#"><span class="translate-block-sm"><img class="translate-img" src="imgs/flags/@(code).jpg" /></span><span class="translate-block-sm2">@code</span> - @lang.Name - @lang.LocalName</a>
+            }
+            <div class="dropdown-divider"></div>
+            @foreach (string code in LanguagesHelper.SortedList.Except(LanguagesHelper.PreferredLanguages))
+            {
+                LanguagesHelper.Language lang = LanguagesHelper.Languages[code];
+                <a class="dropdown-item" onclick="changeLanguage('@code')" href="#">@code - @lang.Name - @lang.LocalName</a>
+            }
+        </div>
     </li>
 </ul>
 <div class="tab-content tab-hundred">
@@ -36,7 +52,7 @@
                 <div class="input-sidebar" id="input_sidebar">
                     <span class="interrupt_line"></span>
                     <div class="main_inputs_area_wrapper" id="main_inputs_area_wrapper">
-                        <input type="text" class="main_inputs_filter auto-text" id="main_inputs_filter" oninput="hideUnsupportableParams()" placeholder="Filter parameters..."></text>
+                        <input type="text translate" class="main_inputs_filter auto-text" id="main_inputs_filter" oninput="hideUnsupportableParams()" placeholder="Filter parameters..."></text>
                         <div id="main_inputs_area"></div>
                         <div id="main_inputs_area_advanced" class="main_inputs_area_advanced" style="display:none;"></div>
                         <div id="main_inputs_area_hidden" class="main_inputs_area_hidden"></div>
@@ -56,16 +72,16 @@
                         </div>
                         <div class="sui-popover sui_popover_model" id="popover_batchgear">
                             <div class="batchgear-toggler" title="Clears the batch view.">
-                                <button class="interrupt-button" id="clear_batch_button" onclick="clearBatch()">Clear Batch</button>
+                                <button class="interrupt-button translate" id="clear_batch_button" onclick="clearBatch()">Clear Batch</button>
                             </div>
-                            <div class="batchgear-toggler" title="If enabled, automatically clears out the image batch when generating a new one. If disabled, leaves history to grow until you refresh the page.">
+                            <div class="batchgear-toggler translate" title="If enabled, automatically clears out the image batch when generating a new one. If disabled, leaves history to grow until you refresh the page.">
                                 <span class="form-check form-switch display-inline-block">
-                                    <input type="checkbox" class="form-check-input" id="auto_clear_batch_checkbox" onchange="toggleAutoClearBatch()"> <label class="form-check-label" for="auto_clear_batch_checkbox">Auto Clear Batch</label>
+                                    <input type="checkbox" class="form-check-input" id="auto_clear_batch_checkbox" onchange="toggleAutoClearBatch()"> <label class="form-check-label" for="auto_clear_batch_checkbox translate">Auto Clear Batch</label>
                                 </span>
                             </div>
-                            <div class="batchgear-toggler" title="If enabled, automatically swaps to previews of new images the moment they're available, before the image itself is done generating.">
+                            <div class="batchgear-toggler translate" title="If enabled, automatically swaps to previews of new images the moment they're available, before the image itself is done generating.">
                                 <span class="form-check form-switch display-inline-block">
-                                    <input type="checkbox" class="form-check-input" id="auto_load_previews_checkbox" onchange="toggleAutoLoadPreviews()" checked=""> <label class="form-check-label" for="auto_load_previews_checkbox">Auto Swap To Previews</label>
+                                    <input type="checkbox" class="form-check-input" id="auto_load_previews_checkbox" onchange="toggleAutoLoadPreviews()" checked=""> <label class="form-check-label translate" for="auto_load_previews_checkbox translate">Auto Swap To Previews</label>
                                 </span>
                             </div>
                         </div>
@@ -73,44 +89,44 @@
                     </div>
                     <div class="alt_prompt_region" id="alt_prompt_region">
                         <div id="alt_prompt_extra_area" class="alt_prompt_extra_area">
-                            <button class="interrupt-button image-clear-button" style="display: none;" id="alt_prompt_image_clear_button">Clear Images</button>
+                            <button class="interrupt-button image-clear-button translate" style="display: none;" id="alt_prompt_image_clear_button">Clear Images</button>
                             <div class="added-image-area alt-prompt-added-image-area" id="alt_prompt_image_area"></div>
                         </div>
                         <div class="alt_prompt_main_line">
                             <span class="alt-text-tokencount-wrapper"><span class="auto-input-prompt-tokencount alt-text-tokencount" title="Text-Encoder token count / chunk-size">0/75</span></span>
-                            <textarea id="alt_prompt_textbox" class="alt_prompt_textbox" rows="1" placeholder="Type your prompt here... (or, drag an image in to use ReVision)"></textarea>
-                            <button class="alt-prompt-buttons alt-prompt-generate-button basic-button" id="alt_generate_button" oncontextmenu="doPopover('generate'); return false;" onclick="doGenerate()">Generate</button>
+                            <textarea id="alt_prompt_textbox" class="alt_prompt_textbox translate" rows="1" placeholder="Type your prompt here... (or, drag an image in to use ReVision)"></textarea>
+                            <button class="alt-prompt-buttons alt-prompt-generate-button basic-button translate" id="alt_generate_button" oncontextmenu="doPopover('generate'); return false;" onclick="doGenerate()">Generate</button>
                             <button class="alt-prompt-buttons alt-prompt-center-button basic-button" id="alt_center_button" oncontextmenu="doPopover('generate_center'); return false;" onclick="doPopover('generate_center')">&#x2B9F;</button>
                             <button class="alt-prompt-buttons interrupt-button interrupt-button-none alt-interrupt" id="alt_interrupt_button" oncontextmenu="doPopover('interrupt'); return false;" onclick="doInterrupt()">&times;</button>
                         </div>
                     </div>
                     <div class="sui-popover sui_popover_model" id="popover_generate_center">
-                        <div class="sui_popover_model_button" onclick="doGenerate()">Generate</div>
-                        <div class="sui_popover_model_button" id="generate_forever_button" onclick="toggleGenerateForever()">Generate Forever</div>
-                        <div class="sui_popover_model_button" id="generate_previews_button" onclick="toggleGeneratePreviews()">Generate Previews</div>
-                        <div class="sui_popover_model_button" onclick="doInterrupt()">Interrupt Current Session</div>
-                        <div class="sui_popover_model_button" onclick="doInterrupt(true)">Interrupt All Sessions</div>
-                        <div class="sui_popover_model_button" onclick="showPromptTokenizen('alt_prompt_textbox')">Show Prompt Tokenization</div>
+                        <div class="sui_popover_model_button translate" onclick="doGenerate()">Generate</div>
+                        <div class="sui_popover_model_button translate" id="generate_forever_button" onclick="toggleGenerateForever()">Generate Forever</div>
+                        <div class="sui_popover_model_button translate" id="generate_previews_button" onclick="toggleGeneratePreviews()">Generate Previews</div>
+                        <div class="sui_popover_model_button translate" onclick="doInterrupt()">Interrupt Current Session</div>
+                        <div class="sui_popover_model_button translate" onclick="doInterrupt(true)">Interrupt All Sessions</div>
+                        <div class="sui_popover_model_button translate" onclick="showPromptTokenizen('alt_prompt_textbox')">Show Prompt Tokenization</div>
                     </div>
                     <div class="sui-popover sui_popover_model" id="popover_generate">
-                        <div class="sui_popover_model_button" onclick="doGenerate()">Generate</div>
-                        <div class="sui_popover_model_button" id="generate_forever_button" onclick="toggleGenerateForever()">Generate Forever</div>
-                        <div class="sui_popover_model_button" id="generate_previews_button" onclick="toggleGeneratePreviews()">Generate Previews</div>
+                        <div class="sui_popover_model_button translate" onclick="doGenerate()">Generate</div>
+                        <div class="sui_popover_model_button translate" id="generate_forever_button" onclick="toggleGenerateForever()">Generate Forever</div>
+                        <div class="sui_popover_model_button translate" id="generate_previews_button" onclick="toggleGeneratePreviews()">Generate Previews</div>
                     </div>
                     <div class="sui-popover sui_popover_model" id="popover_interrupt">
-                        <div class="sui_popover_model_button" onclick="doInterrupt()">Interrupt Current Session</div>
-                        <div class="sui_popover_model_button" onclick="doInterrupt(true)">Interrupt All Sessions</div>
+                        <div class="sui_popover_model_button translate" onclick="doInterrupt()">Interrupt Current Session</div>
+                        <div class="sui_popover_model_button translate" onclick="doInterrupt(true)">Interrupt All Sessions</div>
                     </div>
                 </div>
-                <div class="model-block-menu-button t2i-area-quicktools" onclick="doPopover('quicktools')">Quick Tools</div>
+                <div class="model-block-menu-button t2i-area-quicktools translate" onclick="doPopover('quicktools')">Quick Tools</div>
                 <div class="sui-popover sui_popover_model" id="popover_quicktools">
-                    <div class="sui_popover_model_button" onclick="resetPageSizer()">Reset Page Layout</div>
-                    <div class="sui_popover_model_button" onclick="refreshParameterValues()">Reload Parameter Values</div>
-                    <div class="sui_popover_model_button" onclick="resetParamsToDefault()">Reset Params to Default</div>
-                    <div class="sui_popover_model_button" onclick="openEmptyEditor()">Open Empty Image Editor</div>
-                    <div class="sui_popover_model_button" onclick="doInterrupt()">Interrupt Current Session</div>
-                    <div class="sui_popover_model_button" onclick="doInterrupt(true)">Interrupt All Sessions</div>
-                    <div class="sui_popover_model_button" onclick="forceShowWelcomeMessage()">Reshow Welcome Message</div>
+                    <div class="sui_popover_model_button translate" onclick="resetPageSizer()">Reset Page Layout</div>
+                    <div class="sui_popover_model_button translate" onclick="refreshParameterValues()">Reload Parameter Values</div>
+                    <div class="sui_popover_model_button translate" onclick="resetParamsToDefault()">Reset Params to Default</div>
+                    <div class="sui_popover_model_button translate" onclick="openEmptyEditor()">Open Empty Image Editor</div>
+                    <div class="sui_popover_model_button translate" onclick="doInterrupt()">Interrupt Current Session</div>
+                    <div class="sui_popover_model_button translate" onclick="doInterrupt(true)">Interrupt All Sessions</div>
+                    <div class="sui_popover_model_button translate" onclick="forceShowWelcomeMessage()">Reshow Welcome Message</div>
                 </div>
                 @WebUtil.ModalHeader("gen_previews_missing_preset_modal", "Missing Preview Preset")
                     <div class="modal-body">
@@ -120,8 +136,8 @@
                         <br><div id="gen_previews_autobutton"></div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary basic-button" onclick="toggleGeneratePreviews(true);$('#gen_previews_missing_preset_modal').modal('hide')">Start Anyway</button>
-                        <button type="button" class="btn btn-secondary" onclick="$('#gen_previews_missing_preset_modal').modal('hide')">Cancel</button>
+                        <button type="button" class="btn btn-primary basic-button translate" onclick="toggleGeneratePreviews(true);$('#gen_previews_missing_preset_modal').modal('hide')">Start Anyway</button>
+                        <button type="button" class="btn btn-secondary translate" onclick="$('#gen_previews_missing_preset_modal').modal('hide')">Cancel</button>
                     </div>
                 @WebUtil.ModalFooter()
             </div>
@@ -130,38 +146,38 @@
         <div class="t2i-bottom-bar" id="t2i_bottom_bar">
             <div class="bottom-info-bar-container">
                 <span class="bottom-info-bar-component"><span><span class="other_info_span" id="other_info_span" style="min-height: 1rem"></span></span>
-                <span class="bottom-info-bar-component"><b>Model</b>: <select class="auto-dropdown current_model_view" onchange="autoSelectWidth(this)" id="current_model"></select></span>
-                <span class="bottom-info-bar-component" style="display:none;" id="current_presets_wrapper"><span><b>Current presets</b><span id="preset_info_slot"></span>: </span> <span id="current_preset_list_view"></span></span>
-                <span class="bottom-info-bar-component" style="display:none;" id="current_loras_wrapper"><span><b>Current LoRAs</b><span id="lora_info_slot"></span>: </span> <span id="current_lora_list_view"></span></span>
+                <span class="bottom-info-bar-component"><b class="translate">Model</b>: <select class="auto-dropdown current_model_view" onchange="autoSelectWidth(this)" id="current_model"></select></span>
+                <span class="bottom-info-bar-component" style="display:none;" id="current_presets_wrapper"><span><b class="translate">Current presets</b><span id="preset_info_slot"></span>: </span> <span id="current_preset_list_view"></span></span>
+                <span class="bottom-info-bar-component" style="display:none;" id="current_loras_wrapper"><span class="translate"><b>Current LoRAs</b><span id="lora_info_slot"></span>: </span> <span id="current_lora_list_view"></span></span>
                 <span class="bottom-info-bar-component"><span><span class="num_jobs_span" id="num_jobs_span" style="min-height: 1rem"></span></span>
             </div>
             <ul class="nav nav-tabs" role="tablist" id="bottombartabcollection">
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link active" id="imagehistorytabclickable" data-bs-toggle="tab" href="#Image-History-Tab" aria-selected="true" role="tab">Image History</a>
+                    <a class="nav-link active translate" id="imagehistorytabclickable" data-bs-toggle="tab" href="#Image-History-Tab" aria-selected="true" role="tab">Image History</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" data-bs-toggle="tab" href="#Presets-Tab" aria-selected="false" tabindex="-1" role="tab">Presets</a>
+                    <a class="nav-link translate" data-bs-toggle="tab" href="#Presets-Tab" aria-selected="false" tabindex="-1" role="tab">Presets</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" data-bs-toggle="tab" href="#Models-Tab" id="modelstabheader" aria-selected="false" tabindex="-1" role="tab">Models</a>
+                    <a class="nav-link translate" data-bs-toggle="tab" href="#Models-Tab" id="modelstabheader" aria-selected="false" tabindex="-1" role="tab">Models</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" data-bs-toggle="tab" href="#Vaes-Tab" aria-selected="false" tabindex="-1" role="tab">VAEs</a>
+                    <a class="nav-link translate" data-bs-toggle="tab" href="#Vaes-Tab" aria-selected="false" tabindex="-1" role="tab">VAEs</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" data-bs-toggle="tab" href="#Loras-Tab" aria-selected="false" tabindex="-1" role="tab">LoRAs</a>
+                    <a class="nav-link translate" data-bs-toggle="tab" href="#Loras-Tab" aria-selected="false" tabindex="-1" role="tab">LoRAs</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" data-bs-toggle="tab" href="#Embeddings-Tab" aria-selected="false" tabindex="-1" role="tab">Embeddings</a>
+                    <a class="nav-link translate" data-bs-toggle="tab" href="#Embeddings-Tab" aria-selected="false" tabindex="-1" role="tab">Embeddings</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" data-bs-toggle="tab" href="#ControlNets-Tab" aria-selected="false" tabindex="-1" role="tab">ControlNets</a>
+                    <a class="nav-link translate" data-bs-toggle="tab" href="#ControlNets-Tab" aria-selected="false" tabindex="-1" role="tab">ControlNets</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" data-bs-toggle="tab" href="#Wildcards-Tab" aria-selected="false" tabindex="-1" role="tab">Wildcards</a>
+                    <a class="nav-link translate" data-bs-toggle="tab" href="#Wildcards-Tab" aria-selected="false" tabindex="-1" role="tab">Wildcards</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" data-bs-toggle="tab" href="#Tools-Tab" aria-selected="false" tabindex="-1" role="tab">Tools</a>
+                    <a class="nav-link translate" data-bs-toggle="tab" href="#Tools-Tab" aria-selected="false" tabindex="-1" role="tab">Tools</a>
                 </li>
             </ul>
             <div class="tab-content" id="t2i_bottom_bar_content">
@@ -171,7 +187,7 @@
                 <div class="modal modal-fullscreen imageview_popup_modal_background" id="image_fullview_modal">
                     <div id="image_fullview_modal_content" style="width:fit-content;margin:auto;"></div>
                     <div style="position: fixed; top: 1rem; right: 10%; width: 0; height: 0">
-                        <span class="text_button" onclick="closeImageFullview()">[Close]</button>
+                        <span class="text_button translate" onclick="closeImageFullview()">[Close]</button>
                     </div>
                 </div>
                 <div class="tab-pane genpage-bottom-tab" id="Presets-Tab" role="tabpanel">
@@ -180,66 +196,66 @@
                             <h5>Format:</h5>
                             <div class="btn-group" role="group">
                                 <input type="radio" class="btn-check" name="btnradio" id="export_preset_format_json" autocomplete="off" checked="" onchange="exportPresetsButton()">
-                                <label class="btn btn-outline-primary" for="export_preset_format_json">StableSwarmUI JSON</label>
+                                <label class="btn btn-outline-primary translate" for="export_preset_format_json">StableSwarmUI JSON</label>
                                 <input type="radio" class="btn-check" name="btnradio" id="export_preset_format_csv" autocomplete="off" onchange="exportPresetsButton()">
-                                <label class="btn btn-outline-primary" for="export_preset_format_csv">Prompt only CSV</label>
+                                <label class="btn btn-outline-primary translate" for="export_preset_format_csv">Prompt only CSV</label>
                             </div>
                             <br><br>
                             <textarea id="export_presets_textarea" style="width: 100%;" rows="10" disabled autocomplete="off"></textarea>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-primary basic-button" onclick="exportPresetsDownload()">Download</button>
-                            <button type="button" class="btn btn-secondary" onclick="closeExportPresetViewer()">Close</button>
+                            <button type="button" class="btn btn-primary basic-button translate" onclick="exportPresetsDownload()">Download</button>
+                            <button type="button" class="btn btn-secondary translate" onclick="closeExportPresetViewer()">Close</button>
                         </div>
                     @WebUtil.ModalFooter()
                     @WebUtil.ModalHeader("import_presets_modal", "Import Presets")
                         <div class="modal-body">
                             <div id="import_preset_upload_container">
-                                <input type="file" id="import_preset_uploader" oninput="importPresetUpload()" /> <label for="import_preset_uploader"></i>&nbsp; Upload Preset File (JSON or CSV)</label>
+                                <input type="file" id="import_preset_uploader" oninput="importPresetUpload()" /> &nbsp;<label for="import_preset_uploader" class="translate">Upload Preset File (JSON or CSV)</label>
                                 <textarea id="import_presets_textarea" style="width: 100%;" rows="10" oninput="importPresetsCheck()"></textarea>
                             </div>
                             <span class="form-check form-switch display-inline-block">
-                                <input type="checkbox" class="form-check-input" id="import_presets_overwrite" onchange="importPresetsCheck()"> <label class="form-check-label" for="import_presets_overwrite">Overwrite existing presets</label>
+                                <input type="checkbox" class="form-check-input" id="import_presets_overwrite" onchange="importPresetsCheck()"> <label class="form-check-label translate" for="import_presets_overwrite">Overwrite existing presets</label>
                             </span>
                         </div>
                         <div class="modal-footer">
                             <span id="import_preset_modal_error" class="modal_error_bottom"></span>
-                            <button type="button" class="btn btn-primary basic-button" id="import_presets_activate_button" onclick="importPresetsActivate()" disabled autocomplete="off">Import</button>
-                            <button type="button" class="btn btn-secondary" onclick="closeImportPresetViewer()">Cancel</button>
+                            <button type="button" class="btn btn-primary basic-button translate" id="import_presets_activate_button" onclick="importPresetsActivate()" disabled autocomplete="off">Import</button>
+                            <button type="button" class="btn btn-secondary translate" onclick="closeImportPresetViewer()">Cancel</button>
                         </div>
                     @WebUtil.ModalFooter()
                     @WebUtil.ModalHeader("add_preset_modal", """Create New Preset: <input type="text" id="new_preset_name" placeholder="Preset Name" />""")
                         <div class="modal-body">
-                            <textarea class="auto-text auto-text-block" id="preset_description" rows="3" placeholder="Preset description text..."></textarea>
+                            <textarea class="auto-text auto-text-block translate" id="preset_description" rows="3" placeholder="Preset description text..."></textarea>
                             <span class="form-check form-switch display-inline-block">
-                                <input class="auto-slider-toggle form-check-input" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick="doToggleEnable('new_preset_image')"> Use Image
+                                <input class="auto-slider-toggle form-check-input translate" type="checkbox" id="new_preset_enable_image" title="Enable/disable image" onclick="doToggleEnable('new_preset_image')"> Use Image
                             </span>
                             <div id="new_preset_image" class="new_preset_image"></div>
                             <hr>
-                            <h5>Parameters in the Preset</h5>
-                            <p>Select the checkbox next to inputs you want included in the preset.<br>By default this will override values entirely. For text inputs, use <code>{value}</code> to include the current UI value instead of overriding.</p>
+                            <h5 class="translate">Parameters in the Preset</h5>
+                            <p class="translate">Select the checkbox next to inputs you want included in the preset.<br>By default this will override values entirely. For text inputs, use <code>{value}</code> to include the current UI value instead of overriding.</p>
                             <div id="new_preset_modal_inputs"></div>
                             <div class="advanced_input_checkbox advanced_input_checkbox_presets">
                                 <input type="checkbox" id="preset_advanced_options_checkbox" onclick="preset_toggle_advanced()"/>
-                                <span onclick="preset_toggle_advanced_checkbox_manual()">Display Advanced Options?</span>
+                                <span class="translate" onclick="preset_toggle_advanced_checkbox_manual()">Display Advanced Options?</span>
                             </div>
                             <div id="new_preset_modal_advanced_inputs" style="display:none;"></div>
                             <div class="advanced_input_checkbox advanced_input_checkbox_presets">
                                 <input type="checkbox" id="preset_hidden_options_checkbox" onclick="preset_toggle_hidden()"/>
-                                <span onclick="preset_toggle_hidden_checkbox_manual()">Display Normally-Hidden Options?</span>
+                                <span class="translate" onclick="preset_toggle_hidden_checkbox_manual()">Display Normally-Hidden Options?</span>
                             </div>
                             <div id="new_preset_modal_hidden_inputs" style="display:none;"></div>
                         </div>
                         <div class="modal-footer">
                             <span id="new_preset_modal_error" class="modal_error_bottom"></span>
-                            <button type="button" class="btn btn-primary basic-button" onclick="save_new_preset()">Save</button>
-                            <button type="button" class="btn btn-secondary" onclick="close_create_new_preset()">Cancel</button>
+                            <button type="button" class="btn btn-primary basic-button translate" onclick="save_new_preset()">Save</button>
+                            <button type="button" class="btn btn-secondary translate" onclick="close_create_new_preset()">Cancel</button>
                         </div>
                     @WebUtil.ModalFooter()
                     <div class="browser_container preset_list_container" id="preset_list"></div>
                     <div class="sui-popover sui_popover_model" id="popover_presetmenu">
-                        <div class="sui_popover_model_button" onclick="presetMenuEdit()">Edit Preset</div>
-                        <div class="sui_popover_model_button" onclick="presetMenuDelete()">Delete Preset</div>
+                        <div class="sui_popover_model_button translate" onclick="presetMenuEdit()">Edit Preset</div>
+                        <div class="sui_popover_model_button translate" onclick="presetMenuDelete()">Delete Preset</div>
                     </div>
                 </div>
                 <div class="tab-pane genpage-bottom-tab" id="Models-Tab" role="tabpanel">
@@ -271,40 +287,40 @@
             </div>
             @WebUtil.ModalHeader("edit_model_modal", """Edit Model Metadata: <input type="text" class="modal_text_extra" id="edit_model_name" placeholder="Model Name" />""")
                 <div class="modal-body">
-                    <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra" placeholder="Model Author" /></div>
-                    <div>Architecture: <input type="text" id="edit_model_type" class="modal_text_extra" placeholder="Model Type" /></div>
-                    <div>Standard Resolution: <input type="text" id="edit_model_resolution" class="modal_text_extra" placeholder="Resolution, eg 1024x1024" /></div>
-                    <div>License: <input type="text" id="edit_model_license" class="modal_text_extra" placeholder="Model License" /></div>
-                    <div>Date: <input type="text" id="edit_model_date" class="modal_text_extra" placeholder="Model Date" /></div>
-                    <div>Merged From: <input type="text" id="edit_model_merged_from" class="modal_text_extra" placeholder="Model Merged From" /></div>
-                    <div>Tags: <input type="text" id="edit_model_tags" class="modal_text_extra" placeholder="Model Tags" /></div>
-                    <div>Usage Hint: <input type="text" id="edit_model_usage_hint" class="modal_text_extra" placeholder="Model Usage Hint" /></div>
-                    <div>Trigger Phrase: <input type="text" id="edit_model_trigger_phrase" class="modal_text_extra" placeholder="Model Trigger Phrase" /></div>
+                    <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra translate" placeholder="Model Author" /></div>
+                    <div>Architecture: <input type="text" id="edit_model_type" class="modal_text_extra translate" placeholder="Model Type" /></div>
+                    <div>Standard Resolution: <input type="text" id="edit_model_resolution" class="modal_text_extra translate" placeholder="Resolution, eg 1024x1024" /></div>
+                    <div>License: <input type="text" id="edit_model_license" class="modal_text_extra translate" placeholder="Model License" /></div>
+                    <div>Date: <input type="text" id="edit_model_date" class="modal_text_extra translate" placeholder="Model Date" /></div>
+                    <div>Merged From: <input type="text" id="edit_model_merged_from" class="modal_text_extra translate" placeholder="Model Merged From" /></div>
+                    <div>Tags: <input type="text" id="edit_model_tags" class="modal_text_extra translate" placeholder="Model Tags" /></div>
+                    <div>Usage Hint: <input type="text" id="edit_model_usage_hint" class="modal_text_extra translate" placeholder="Model Usage Hint" /></div>
+                    <div>Trigger Phrase: <input type="text" id="edit_model_trigger_phrase" class="modal_text_extra translate" placeholder="Model Trigger Phrase" /></div>
                     <div id="edit_model_is_negative_div">Is Negative Embedding: <span class="form-check form-switch display-inline-block"><input type="checkbox" id="edit_model_is_negative" class="slider-toggle form-check-input" title="If checked, embedding is for Negative Prompts. Otherwise, for the main prompt." /></span></div>
-                    Description: <textarea class="auto-text auto-text-block" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
+                    Description: <textarea class="auto-text auto-text-block translate" id="edit_model_description" rows="3" placeholder="Model description text..."></textarea>
                     <span class="form-check form-switch display-inline-block">
-                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_model_enable_image" title="Enable/disable image" onclick="doToggleEnable('edit_model_image')"> Use Image
+                        <input class="auto-slider-toggle form-check-input translate" type="checkbox" id="edit_model_enable_image" title="Enable/disable image" onclick="doToggleEnable('edit_model_image')"> Use Image
                     </span>
                     <div id="edit_model_image" class="new_preset_image"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary basic-button" onclick="save_edit_model()">Save</button>
-                    <button type="button" class="btn btn-secondary" onclick="close_edit_model()">Cancel</button>
+                    <button type="button" class="btn btn-primary basic-button translate" onclick="save_edit_model()">Save</button>
+                    <button type="button" class="btn btn-secondary translate" onclick="close_edit_model()">Cancel</button>
                 </div>
             @WebUtil.ModalFooter()
             @WebUtil.ModalHeader("edit_wildcard_modal", """Edit Wildcard: <input type="text" class="modal_text_extra" id="edit_wildcard_name" placeholder="Wildcard Name" />""")
                 <div class="modal-body">
-                    <p>Wildcards are lists of random prompt segments. One entry per line. Prompt sub-syntax is allowed (eg you can link another wildcard, or use <code>&lt;random:...&gt;</code>, or <code>&lt;preset:...&gt;</code> or anything else you want).</p>
-                    <p>Prefix a line with <code>#</code> to make it a comment (ie won't be counted as an option).</p>
+                    <p class="translate">Wildcards are lists of random prompt segments. One entry per line. Prompt sub-syntax is allowed (eg you can link another wildcard, or use <code>&lt;random:...&gt;</code>, or <code>&lt;preset:...&gt;</code> or anything else you want).</p>
+                    <p class="translate">Prefix a line with <code>#</code> to make it a comment (ie won't be counted as an option).</p>
                     Options: <textarea class="auto-text auto-text-block" id="edit_wildcard_contents" rows="15" placeholder="Wildcard options (1 per line)"></textarea>
                     <span class="form-check form-switch display-inline-block">
-                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="edit_wildcard_enable_image" title="Enable/disable image" onclick="doToggleEnable('edit_wildcard_image')"> Use Image
+                        <input class="auto-slider-toggle form-check-input translate" type="checkbox" id="edit_wildcard_enable_image" title="Enable/disable image" onclick="doToggleEnable('edit_wildcard_image')"> Use Image
                     </span>
                     <div id="edit_wildcard_image" class="new_preset_image"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary basic-button" onclick="save_edit_wildcard()">Save</button>
-                    <button type="button" class="btn btn-secondary" onclick="close_edit_wildcard()">Cancel</button>
+                    <button type="button" class="btn btn-primary basic-button translate" onclick="save_edit_wildcard()">Save</button>
+                    <button type="button" class="btn btn-secondary translate" onclick="close_edit_wildcard()">Cancel</button>
                 </div>
             @WebUtil.ModalFooter()
             @WebUtil.ModalHeader("test_wildcard_modal", """Test Wildcard: <span id="test_wildcard_name"></span>""")
@@ -312,8 +328,8 @@
                     Result: <textarea class="auto-text auto-text-block" id="test_wildcard_result" rows="3" placeholder="Result here..."></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" id="test_wildcard_again_button" class="btn btn-primary basic-button" onclick="test_wildcard_again()">Test Again</button>
-                    <button type="button" class="btn btn-secondary" onclick="close_test_wildcard()">Cancel</button>
+                    <button type="button" id="test_wildcard_again_button" class="btn btn-primary basic-button translate" onclick="test_wildcard_again()">Test Again</button>
+                    <button type="button" class="btn btn-secondary translate" onclick="close_test_wildcard()">Cancel</button>
                 </div>
             @WebUtil.ModalFooter()
         </div>
@@ -322,16 +338,16 @@
     <div class="tab-pane tab-pane-vw" id="Utilities-Tab" role="tabpanel">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link active" data-bs-toggle="tab" href="#Utilities-Info-Tab" aria-selected="true" role="tab">Info</a>
+                <a class="nav-link active translate" data-bs-toggle="tab" href="#Utilities-Info-Tab" aria-selected="true" role="tab">Info</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" id="cliptokentabbutton" href="#Utilities-CLIP-Token-Tab" aria-selected="false" tabindex="-1" role="tab">CLIP Tokenization</a>
+                <a class="nav-link translate" data-bs-toggle="tab" id="cliptokentabbutton" href="#Utilities-CLIP-Token-Tab" aria-selected="false" tabindex="-1" role="tab">CLIP Tokenization</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" href="#Utilities-Pickle2Safetensor-Tab" aria-selected="false" tabindex="-1" role="tab">Pickle To Safetensors</a>
+                <a class="nav-link translate" data-bs-toggle="tab" href="#Utilities-Pickle2Safetensor-Tab" aria-selected="false" tabindex="-1" role="tab">Pickle To Safetensors</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" href="#Utilities-LoraExtractor-Tab" id="loraextractortabbutton" aria-selected="false" tabindex="-1" role="tab">LoRA Extractor</a>
+                <a class="nav-link translate" data-bs-toggle="tab" href="#Utilities-LoraExtractor-Tab" id="loraextractortabbutton" aria-selected="false" tabindex="-1" role="tab">LoRA Extractor</a>
             </li>
         </ul>
         <div class="tab-content">
@@ -339,18 +355,18 @@
                 <div class="card border-secondary mb-3 card-center-container">
                     <div class="card-header">Utilities</div>
                     <div class="card-body">
-                        <p class="card-text">
+                        <p class="card-text translate">
                             The "Utilities" tab provides a variety of general utilities and tools in the subtabs above, and the quicktools below.
                         </p>
                     </div>
                 </div>
                 <br>
                 <div class="card border-secondary mb-3 card-center-container">
-                    <div class="card-header">Metadata Reset</div>
+                    <div class="card-header translate">Metadata Reset</div>
                     <div class="card-body">
-                        <p class="card-text">
+                        <p class="card-text translate">
                             <div class="card-center-container">
-                                <button id="util_massmetadataclear_button" class="basic-button" onclick="util_massMetadataClear()">Reset All Metadata</button>
+                                <button id="util_massmetadataclear_button" class="basic-button translate" onclick="util_massMetadataClear()">Reset All Metadata</button>
                             </div>
                             <br>If you click this button, all Model and Image metadata datastores will be reset, and they will be reloaded from source files.
                             <br>This is useful for example if you've externally modified your model or image files and want to clean out or update Swarm's metadata tracking.
@@ -362,9 +378,9 @@
             </div>
             <div class="tab-pane" id="Utilities-CLIP-Token-Tab" role="tabpanel">
                 <div class="card border-secondary mb-3 card-center-container">
-                    <div class="card-header">CLIP Tokenizer</div>
+                    <div class="card-header translate">CLIP Tokenizer</div>
                     <div class="card-body">
-                        <p class="card-text">
+                        <p class="card-text translate">
                             This is a tool to analyze CLIP tokenization for Stable Diffusion models.
                             <br>All current Stable Diffusion models use the same CLIP token set, so this applies to them all.
                             <br>Simply type some text in the box below to see how it gets tokenized.
@@ -378,9 +394,9 @@
             </div>
             <div class="tab-pane" id="Utilities-Pickle2Safetensor-Tab" role="tabpanel">
                 <div class="card border-secondary mb-3 card-center-container">
-                    <div class="card-header">Pickle To Safetensors</div>
+                    <div class="card-header translate">Pickle To Safetensors</div>
                     <div class="card-body">
-                        <p class="card-text">
+                        <p class="card-text translate">
                             This is a tool to quickle convert legacy Pickle (.pt, .ckpt, .bin) files to modern Safetensors files.
                             <br><b>WARNING:</b> Pickle files may contain malicious code. Do not use this tool or otherwise load pickle files unless you trust their source.
                             <br>The pickle files will be moved to a "backups" folder, and the safetensors files left in place where the pickles originally were.
@@ -392,29 +408,29 @@
                     </div>
                 </div>
                 <div class="card-center-container">
-                    <input type="checkbox" id="pickle2safetensor_fp16" checked> <label for="pickle2safetensor_fp16">Convert to FP16?</label> (This will save filespace with minimal side effects, highly recommended)
+                    <input type="checkbox" id="pickle2safetensor_fp16" checked> <label for="pickle2safetensor_fp16" class="translate">Convert to FP16?</label> (This will save filespace with minimal side effects, highly recommended)
                 </div>
                 <div class="card-center-container" id="pickle2safetensor_text_area">
                 </div>
                 <div class="card-center-container">
                     <table class="spaced_util_table">
-                        <tr>
+                        <tr class="translate">
                             <th>Type</th><th>Count</th><th>Convert</th>
                         </tr>
-                        <tr><td>Models</td><td><span id="pickle2safetensor_stable-diffusion_count">?</span></td><td><button id="pickle2safetensor_stable-diffusion_button" class="basic-button" onclick="pickle2safetensor_run('Stable-Diffusion')">Convert Models</button></td></tr>
-                        <tr><td>LoRAs</td><td><span id="pickle2safetensor_lora_count">?</span></td><td><button id="pickle2safetensor_lora_button" class="basic-button" onclick="pickle2safetensor_run('LoRA')">Convert LoRAs</button></td></tr>
-                        <tr><td>VAEs</td><td><span id="pickle2safetensor_vae_count">?</span></td><td><button id="pickle2safetensor_vae_button" class="basic-button" onclick="pickle2safetensor_run('VAE')">Convert VAEs</button></td></tr>
-                        <tr><td>Embeddings</td><td><span id="pickle2safetensor_embedding_count">?</span></td><td><button id="pickle2safetensor_embedding_button" class="basic-button" onclick="pickle2safetensor_run('Embedding')">Convert Embeddings</button></td></tr>
-                        <tr><td>ControlNets</td><td><span id="pickle2safetensor_controlnet_count">?</span></td><td><button id="pickle2safetensor_controlnet_button" class="basic-button" onclick="pickle2safetensor_run('ControlNet')">Convert ControlNets</button></td></tr>
+                        <tr><td class="translate">Models</td><td><span id="pickle2safetensor_stable-diffusion_count">?</span></td><td><button id="pickle2safetensor_stable-diffusion_button" class="basic-button translate" onclick="pickle2safetensor_run('Stable-Diffusion')">Convert Models</button></td></tr>
+                        <tr><td class="translate">LoRAs</td><td><span id="pickle2safetensor_lora_count">?</span></td><td><button id="pickle2safetensor_lora_button" class="basic-button translate" onclick="pickle2safetensor_run('LoRA')">Convert LoRAs</button></td></tr>
+                        <tr><td class="translate">VAEs</td><td><span id="pickle2safetensor_vae_count">?</span></td><td><button id="pickle2safetensor_vae_button" class="basic-button translate" onclick="pickle2safetensor_run('VAE')">Convert VAEs</button></td></tr>
+                        <tr><td class="translate">Embeddings</td><td><span id="pickle2safetensor_embedding_count">?</span></td><td><button id="pickle2safetensor_embedding_button" class="basic-button translate" onclick="pickle2safetensor_run('Embedding')">Convert Embeddings</button></td></tr>
+                        <tr><td class="translate">ControlNets</td><td><span id="pickle2safetensor_controlnet_count">?</span></td><td><button id="pickle2safetensor_controlnet_button" class="basic-button translate" onclick="pickle2safetensor_run('ControlNet')">Convert ControlNets</button></td></tr>
                     </table>
                 </div>
                 <br>
             </div>
             <div class="tab-pane" id="Utilities-LoraExtractor-Tab" role="tabpanel">
                 <div class="card border-secondary mb-3 card-center-container">
-                    <div class="card-header">LoRA Extractor</div>
+                    <div class="card-header translate">LoRA Extractor</div>
                     <div class="card-body">
-                        <p class="card-text">
+                        <p class="card-text translate">
                             This is a tool to extract a LoRA from the difference between two models.
                             <br>"Base" should be whatever the common base model is, eg SDXL-1.0-Base.
                             <br>"Other" should be the unique model with information to extract into the LoRA.
@@ -433,7 +449,7 @@
                     <br>
                     <br>
                     <center>
-                        <button id="lora_extractor_button" class="basic-button" onclick="loraExtractor.run()">Extract LoRA</button>
+                        <button id="lora_extractor_button" class="basic-button translate" onclick="loraExtractor.run()">Extract LoRA</button>
                     </center>
                     <br>
                     <div class="lora_extractor_special" id="lora_extractor_special_progressbar"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>
@@ -447,17 +463,17 @@
     <div class="tab-pane tab-pane-vw" id="User-Settings" role="tabpanel">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link active" data-bs-toggle="tab" href="#user-info" aria-selected="true" role="tab">User Info</a>
+                <a class="nav-link active translate" data-bs-toggle="tab" href="#user-info" aria-selected="true" role="tab">User Info</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" href="#Settings-User" id="userconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">User Settings</a>
+                <a class="nav-link translate" data-bs-toggle="tab" href="#Settings-User" id="userconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">User Settings</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" href="#Param-Config-User" id="userparamconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">Parameter Configuration</a>
+                <a class="nav-link translate" data-bs-toggle="tab" href="#Param-Config-User" id="userparamconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">Parameter Configuration</a>
             </li>
         </ul>
         <div class="tab-content">
-            <div class="tab-pane show active" id="user-info" role="tabpanel">
+            <div class="tab-pane show active translate" id="user-info" role="tabpanel">
                 (TODO: info n stuff here)
                 <br>
             </div>
@@ -465,18 +481,18 @@
                 <div id="user_settings_container" class="settings-container"></div>
                 <div class="settings_submit_confirmer" id="usersettings_confirmer">
                     <span class="settings_submit_confirmer_text">Save <span id="usersettings_edit_count">0</span> edited setting(s)?</span>
-                    <button type="button" class="btn btn-primary basic-button" onclick="save_user_settings()">Save</button>
-                    <button type="button" class="btn btn-secondary" onclick="cancel_user_settings_edit()">Cancel</button>
+                    <button type="button" class="btn btn-primary basic-button translate" onclick="save_user_settings()">Save</button>
+                    <button type="button" class="btn btn-secondary translate" onclick="cancel_user_settings_edit()">Cancel</button>
                 </div>
             </div>
             <div class="tab-pane" id="Param-Config-User" role="tabpanel">
                 <br>
-                <h4>Notice: this is raw internal configuration of parameters. Don't mess with this unless you know what you're doing.</h4>
+                <h4 class="translate">Notice: this is raw internal configuration of parameters. Don't mess with this unless you know what you're doing.</h4>
                 <div id="user_param_config_container" class="settings-container"></div>
                 <div class="settings_submit_confirmer" id="user_param_config_confirmer">
                     <span class="settings_submit_confirmer_text">Save <span id="user_param_config_edit_count">0</span> edited parameter setting(s)?</span>
-                    <button type="button" class="btn btn-primary basic-button" onclick="paramConfig.saveEdits()">Save</button>
-                    <button type="button" class="btn btn-secondary" onclick="paramConfig.cancelEdits()">Cancel</button>
+                    <button type="button" class="btn btn-primary basic-button translate" onclick="paramConfig.saveEdits()">Save</button>
+                    <button type="button" class="btn btn-secondary translate" onclick="paramConfig.cancelEdits()">Cancel</button>
                 </div>
             </div>
         </div>
@@ -485,22 +501,22 @@
     <div class="tab-pane tab-pane-vw" id="server_tab_body" role="tabpanel">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link active" data-bs-toggle="tab" href="#Server-Info" id="serverinfotabbutton" aria-selected="true" role="tab">Server Info</a>
+                <a class="nav-link active translate" data-bs-toggle="tab" href="#Server-Info" id="serverinfotabbutton" aria-selected="true" role="tab">Server Info</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" href="#Settings-Backends" id="serverbackendstabbutton" aria-selected="false" role="tab">Backends</a>
+                <a class="nav-link translate" data-bs-toggle="tab" href="#Settings-Backends" id="serverbackendstabbutton" aria-selected="false" role="tab">Backends</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" href="#Settings-Server" id="serverconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">Server Configuration</a>
+                <a class="nav-link translate" data-bs-toggle="tab" href="#Settings-Server" id="serverconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">Server Configuration</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" data-bs-toggle="tab" href="#Server-Logs" id="logtabbutton" aria-selected="false" tabindex="-1" role="tab">Logs</a>
+                <a class="nav-link translate" data-bs-toggle="tab" href="#Server-Logs" id="logtabbutton" aria-selected="false" tabindex="-1" role="tab">Logs</a>
             </li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane show active" id="Server-Info" role="tabpanel">
                 <div class="card border-secondary mb-3 card-center-container">
-                    <div class="card-header">Server</div>
+                    <div class="card-header translate">Server</div>
                     <div class="card-body">
                         <p class="card-text">
                             The "Server" tab provides access to StableSwarmUI's server internals, including:
@@ -523,12 +539,12 @@
                         </div>
                     </div>
                     <div class="card border-secondary mb-3 card-center-container">
-                        <div class="card-header">Local Network</div>
+                        <div class="card-header translate">Local Network</div>
                         <div class="card-body">
                             <p class="card-text">
                                 @if (Program.ServerSettings.Network.Host == "127.0.0.1" || Program.ServerSettings.Network.Host == "localhost")
                                 {
-                                    <p>This server is only accessible from this computer.</p>
+                                    <p class="translate">This server is only accessible from this computer.</p>
                                 }
                                 else
                                 {
@@ -546,7 +562,7 @@
                         </div>
                     </div>
                     <div class="card border-secondary mb-3 card-center-container">
-                        <div class="card-header">Resource Usage</div>
+                        <div class="card-header translate">Resource Usage</div>
                         <div class="card-body">
                             <p class="card-text" id="resource_usage_area">
                                 (Loading...)
@@ -568,7 +584,7 @@
                 </div>
                 <div class="card-collection-inline">
                     <div class="card border-danger mb-3 card-center-container">
-                        <div class="card-header">Shutdown</div>
+                        <div class="card-header translate">Shutdown</div>
                         <div class="card-body">
                             <p class="card-text">
                                 If you want to shut down the server, click the button below.
@@ -577,7 +593,7 @@
                         </div>
                     </div>
                     <div class="card border-secondary mb-3 card-center-container">
-                        <div class="card-header">Free Memory</div>
+                        <div class="card-header translate">Free Memory</div>
                         <div class="card-body">
                             <p class="card-text">
                                 You can free up the VRAM usage, or system memory usage (cache) from backends with the two buttons below.
@@ -593,12 +609,12 @@
                 <div class="backend_add_button_container">
                     Add new backend of type:
                     <span class="form-check form-switch display-inline-block">
-                        <input class="auto-slider-toggle form-check-input" type="checkbox" id="backends_show_advanced" title="Show Advanced Backend Types" onclick="toggleShowAdvancedBackends()" autocomplete="off"> Show Advanced
+                        <input class="auto-slider-toggle form-check-input translate" type="checkbox" id="backends_show_advanced" title="Show Advanced Backend Types" onclick="toggleShowAdvancedBackends()" autocomplete="off"> Show Advanced
                     </span>
                     <div id="backend_add_buttons"></div>
                 </div>
                 <div>
-                    <button class="basic-button" onclick="restart_all_backends()">Restart All Backends</button>
+                    <button class="basic-button translate" onclick="restart_all_backends()">Restart All Backends</button>
                 </div>
                 <div class="backends_list" id="backends_list"></div>
                 <div style="height: 10rem"></div> <!-- Spacer -->
@@ -607,8 +623,8 @@
                 <div id="server_settings_container" class="settings-container"></div>
                 <div class="settings_submit_confirmer" id="serversettings_confirmer">
                     <span class="settings_submit_confirmer_text">Save <span id="serversettings_edit_count">0</span> edited setting(s)?</span>
-                    <button type="button" class="btn btn-primary basic-button" onclick="save_server_settings()">Save</button>
-                    <button type="button" class="btn btn-secondary" onclick="cancel_server_settings_edit()">Cancel</button>
+                    <button type="button" class="btn btn-primary basic-button translate" onclick="save_server_settings()">Save</button>
+                    <button type="button" class="btn btn-secondary translate" onclick="cancel_server_settings_edit()">Cancel</button>
                 </div>
         <div style="height: 10rem"></div> <!-- Spacer -->
             </div>

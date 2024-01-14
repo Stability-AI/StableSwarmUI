@@ -543,3 +543,19 @@ textarea, input, select {
     padding: 0.4rem;
     border: 1px solid var(--shadow);
 }
+.translate-block-sm {
+    display: inline-block;
+    width: 2.3rem;
+    text-align: center;
+}
+.translate-block-sm2 {
+    display: inline-block;
+    width: 1.5rem;
+    text-align: center;
+}
+.translate-img {
+    height: 1rem;
+    object-fit: contain;
+    object-position: center;
+    margin: auto;
+}

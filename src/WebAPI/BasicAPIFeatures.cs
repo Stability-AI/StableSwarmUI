@@ -35,6 +35,7 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(GetUserSettings);
         API.RegisterAPICall(ChangeUserSettings);
         API.RegisterAPICall(SetParamEdits);
+        API.RegisterAPICall(GetLanguage);
         T2IAPI.Register();
         ModelsAPI.Register();
         BackendAPI.Register();
@@ -277,7 +278,8 @@ public static class BasicAPIFeatures
         return new JObject()
         {
             ["user_name"] = session.User.UserID,
-            ["presets"] = new JArray(session.User.GetAllPresets().Select(p => p.NetData()).ToArray())
+            ["presets"] = new JArray(session.User.GetAllPresets().Select(p => p.NetData()).ToArray()),
+            ["language"] = session.User.Settings.Language
         };
     }
 
@@ -424,5 +426,14 @@ public static class BasicAPIFeatures
         session.User.Data.RawParamEdits = edits.ToString(Formatting.None);
         session.User.Save();
         return new JObject() { ["success"] = true };
+    }
+
+    public static async Task<JObject> GetLanguage(Session session, string language)
+    {
+        if (!LanguagesHelper.Languages.TryGetValue(language, out LanguagesHelper.Language lang))
+        {
+            return new JObject() { ["error"] = "No such language." };
+        }
+        return new JObject() { ["language"] = lang.ToJSON() };
     }
 }

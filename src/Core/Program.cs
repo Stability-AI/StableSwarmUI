@@ -137,6 +137,8 @@ public class Program
         timer.Check("Extensions Init");
         Utilities.PrepUtils();
         timer.Check("Prep Utils");
+        LanguagesHelper.LoadAll();
+        timer.Check("Languages load");
         Logs.Init("Loading models list...");
         foreach (T2IModelHandler handler in T2IModelSets.Values)
         {

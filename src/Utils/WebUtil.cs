@@ -11,8 +11,8 @@ public static class WebUtil
         return new HtmlString($"""
 <div class="toast {(show ? "show" : "hide")}" role="alert" aria-live="assertive" aria-atomic="true" id="{box_id}">
     <div class="toast-header">
-    <strong class="me-auto">{header}</strong>
-    <small>{small_side}</small>
+    <strong class="me-auto translate">{header}</strong>
+    <small class="translate">{small_side}</small>
     <button type="button" class="btn-close ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close">
         <span aria-hidden="true"></span>
     </button>
@@ -30,7 +30,7 @@ public static class WebUtil
             <div class="modal" tabindex="-1" role="dialog" id="{id}">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
-                        <div class="modal-header"><h5 class="modal-title">{title}</h5></div>
+                        <div class="modal-header"><h5 class="modal-title translate">{title}</h5></div>
             """);
     }
 

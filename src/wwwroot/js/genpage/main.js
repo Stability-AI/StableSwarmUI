@@ -1183,6 +1183,9 @@ function resetBatchIfNeeded() {
 function loadUserData(callback) {
     genericRequest('GetMyUserData', {}, data => {
         allPresets = data.presets;
+        if (!language) {
+            language = data.language;
+        }
         sortPresets();
         presetBrowser.update();
         if (shouldApplyDefault) {
@@ -1195,6 +1198,7 @@ function loadUserData(callback) {
         if (callback) {
             callback();
         }
+        loadAndApplyTranslations();
     });
 }
 

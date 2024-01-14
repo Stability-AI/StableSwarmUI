@@ -25,6 +25,8 @@
     <script src="/js/jquery.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
     <script src="/js/select2.min.js"></script>
+    <script src="/js/util.js?vary=@Utilities.VaryID"></script>
+    <script src="/js/translator.js?vary=@Utilities.VaryID"></script>
 </head>
 <body>
     <div class="top-status-bar" id="top_status_bar"></div>
@@ -32,7 +34,6 @@
         @WebUtil.Toast("error_toast_box", "Error", "", "error_toast_content", "", false)
     </div>
     @RenderBody()
-    <script src="/js/util.js?vary=@Utilities.VaryID"></script>
     <script src="/js/site.js?vary=@Utilities.VaryID"></script>
     @RenderSection("Scripts", required: false)
     <div id="version_display" class="version-display">StableSwarmUI v<span>@Utilities.Version</span></div>
