@@ -191,7 +191,6 @@ function updatePresetList() {
 function applyOnePreset(preset) {
     for (let key of Object.keys(preset.param_map)) {
         let param = gen_param_types.filter(p => p.id == key)[0];
-
         if (param) {
             let elem = getRequiredElementById(`input_${param.id}`);
             let val = preset.param_map[key];
@@ -209,7 +208,7 @@ function applyOnePreset(preset) {
             if (param.group && param.group.toggles) {
                 let toggler = document.getElementById(`input_group_content_${param.group.id}_toggle`);
                 toggler.checked = true;
-                doToggleEnable(toggler.id);
+                doToggleGroup(`input_group_content_${param.group.id}`);
             }
         }
     }
