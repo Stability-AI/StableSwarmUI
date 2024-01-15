@@ -43,7 +43,7 @@ function applyTranslations() {
     getRequiredElementById('language_dropdown_link').innerHTML = `<img class="translate-img" src="imgs/flags/${language_data.code}.jpg" /> ${escapeHtml(language_data.local_name)}`;
     for (let elem of document.querySelectorAll(".translate")) {
         if (elem.title) {
-            let translated = translate(elem.title);
+            let translated = translate(elem.dataset.pretranslated_title || elem.title);
             if (translated == elem.title) {
                 continue;
             }
@@ -53,7 +53,7 @@ function applyTranslations() {
             elem.title = translated;
         }
         if (elem.placeholder) {
-            let translated = translate(elem.placeholder);
+            let translated = translate(elem.dataset.pretranslated_placeholder || elem.placeholder);
             if (translated == elem.placeholder) {
                 continue;
             }
@@ -64,7 +64,7 @@ function applyTranslations() {
             continue; // placeholdered elements are text inputs, ie don't replace content
         }
         if (elem.textContent) {
-            let translated = translate(elem.textContent);
+            let translated = translate(elem.dataset.pretranslated || elem.textContent);
             if (translated == elem.textContent) {
                 continue;
             }
