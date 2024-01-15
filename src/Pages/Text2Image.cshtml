@@ -40,7 +40,7 @@
             @foreach (string code in LanguagesHelper.SortedList.Except(LanguagesHelper.PreferredLanguages))
             {
                 LanguagesHelper.Language lang = LanguagesHelper.Languages[code];
-                <a class="dropdown-item" onclick="changeLanguage('@code')" href="#">@code - @lang.Name - @lang.LocalName</a>
+                <a class="dropdown-item" onclick="changeLanguage('@code')" href="#"><span class="translate-block-sm"><img class="translate-img" src="imgs/flags/@(code).jpg" /></span><span class="translate-block-sm2">@code</span> - @lang.Name - @lang.LocalName</a>
             }
         </div>
     </li>
