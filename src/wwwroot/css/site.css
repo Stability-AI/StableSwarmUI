@@ -558,4 +558,5 @@ textarea, input, select {
     object-fit: contain;
     object-position: center;
     margin: auto;
+    vertical-align: text-top;
 }
