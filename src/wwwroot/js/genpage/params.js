@@ -6,7 +6,7 @@ let refreshParamsExtra = [];
 function getHtmlForParam(param, prefix) {
     try {
         // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
-        let example = param.examples ? `<br><br><span class="translate">Examples</span>: <code><span class="translate">${param.examples.map(escapeHtmlNoBr).join(`</span></code>,&emsp;<code><span class="translate">`)}</span></code>` : '';
+        let example = param.examples ? `<br><br><span class="translate">Examples</span>: <code>${param.examples.map(escapeHtmlNoBr).join(`</code>,&emsp;<code>`)}</code>` : '';
         let pop = param.no_popover ? '' : `<div class="sui-popover" id="popover_${prefix}${param.id}"><b>${escapeHtmlNoBr(param.name)}</b> (${param.type}):<br>&emsp;<span class="translate">${escapeHtmlNoBr(param.description)}</span>${example}</div>`;
         switch (param.type) {
             case 'text':
