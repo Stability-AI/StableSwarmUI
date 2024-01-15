@@ -462,7 +462,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
     }
     return `
         <div class="auto-input auto-number-box auto-input-flex"${featureid}>
-            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${name}${popover}</span>
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
             <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
         </div>`;
 }

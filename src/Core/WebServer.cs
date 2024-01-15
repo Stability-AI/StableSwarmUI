@@ -184,7 +184,7 @@ public class WebServer
                     string simpleName = file.AfterLast('/').BeforeLast('.');
                     string id = T2IParamTypes.CleanTypeName(simpleName);
                     string content = File.ReadAllText(file);
-                    tabHeader.Append($"<li class=\"nav-item\" role=\"presentation\"><a class=\"nav-link\" id=\"maintab_{id}\" data-bs-toggle=\"tab\" href=\"#{id}\" aria-selected=\"false\" tabindex=\"-1\" role=\"tab\">{simpleName}</a></li>\n");
+                    tabHeader.Append($"<li class=\"nav-item\" role=\"presentation\"><a class=\"nav-link translate\" id=\"maintab_{id}\" data-bs-toggle=\"tab\" href=\"#{id}\" aria-selected=\"false\" tabindex=\"-1\" role=\"tab\">{simpleName}</a></li>\n");
                     tabFooter.Append($"<div class=\"tab-pane tab-pane-vw\" id=\"{id}\" role=\"tabpanel\">\n{content}\n</div>\n");
                 }
             }
