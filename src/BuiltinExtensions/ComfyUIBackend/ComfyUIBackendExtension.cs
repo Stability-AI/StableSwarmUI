@@ -702,7 +702,7 @@ public class ComfyUIBackendExtension : Extension
                 HttpRequestMessage request = new(new HttpMethod("POST"), $"{address}/{path}") { Content = content ?? new StreamContent(context.Request.Body) };
                 if (content is null)
                 {
-                    request.Content.Headers.Add("Content-Type", context.Request.ContentType);
+                    request.Content.Headers.Add("Content-Type", context.Request.ContentType ?? "application/json");
                 }
                 response = await webClient.SendAsync(request);
             }

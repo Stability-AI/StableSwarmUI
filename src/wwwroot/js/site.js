@@ -480,8 +480,8 @@ function makeTextInput(featureid, id, name, description, value, format, placehol
     <div class="auto-input auto-text-box${(isBig ? "" : " auto-input-flex")}"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         ${tokenCounter}
-        <textarea class="auto-text${(isBig ? " auto-text-block" : "")}" id="${id}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtmlNoBr(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
-        <button class="interrupt-button image-clear-button translate" style="display: none;">Clear Images</button>
+        <textarea class="auto-text${(isBig ? " auto-text-block" : "")} translate" id="${id}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtmlNoBr(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
+        <button class="interrupt-button image-clear-button" style="display: none;">${translateableHtml("Clear Images")}</button>
         <div class="added-image-area"></div>
     </div>`;
 }

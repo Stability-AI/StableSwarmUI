@@ -412,6 +412,9 @@
         "Failed to get WebSocket address. You may be connecting to the server in an unexpected way. Please use \"http\" or \"https\" URLs.": "",
         "Failed to get session ID after 3 tries. Your account may have been invalidated. Try refreshing the page, or contact the site owner.": "",
         "Failed to send request to server. Did the server crash?": "",
-        "The server has updated since you opened the page, please refresh.": ""
+        "The server has updated since you opened the page, please refresh.": "",
+        "Video": "",
+        "Refiner": "",
+        "Core Parameters": ""
     }
 }

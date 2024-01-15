@@ -15,6 +15,8 @@ Want to help translate Swarm into another language?
     - See example here: (TODO: Link)
     - In short: copy/paste `languages/en.json` to `languages/(your-code).json`, fill out the info at the top, and start translating keys.
     - You can use https://github.com/mcmonkeyprojects/translate-tool to fill out any keys you can't be bothered filling in yourself with automatic AI-powered translation
+- Are you adding new translatable keys?
+    - I use the hidden webconsole call `debugSubmitTranslatables()` to generate `languages/en.debug` which contains a raw key list, and then use `--add-json` to add it in with the translate tool.
 
 # Legal
 

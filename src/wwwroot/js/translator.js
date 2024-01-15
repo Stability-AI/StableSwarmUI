@@ -37,6 +37,9 @@ function debugSubmitTranslatables() {
 }
 
 function applyTranslations() {
+    if (!language_data || !language_data.local_name) {
+        return;
+    }
     getRequiredElementById('language_dropdown_link').innerHTML = `<img class="translate-img" src="imgs/flags/${language_data.code}.jpg" /> ${escapeHtml(language_data.local_name)}`;
     for (let elem of document.querySelectorAll(".translate")) {
         if (elem.title) {
