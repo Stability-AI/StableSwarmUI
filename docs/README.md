@@ -7,14 +7,15 @@
 - TODO: Settings
 - TODO: Account system
 - [Command line arguments](/docs/Command%20Line%20Arguments.md) describes the available command line arguments in detail.
-- TODO: Backends (what a 'backend' is, supported options, usage, etc)
-    - [ComfyUI Backend Extension](/src/BuiltinExtensions/ComfyUIBackend/README.md)
-    - [Auto WebUI Backend Extension](/src/BuiltinExtensions/AutoWebUIBackend/README.md)
-- TODO: Tools (what a tool is, how to use em, etc)
-    - [GridGenerator](/src/BuiltinExtensions/GridGenerator/README.md)
-    - [ImageBatchTool](/src/BuiltinExtensions/ImageBatchTool/README.md)
 - TODO: Extensions (what an extension is, what it can do, where to find them, etc)
-    - [Dynamic Thresholding](/src/BuiltinExtensions/DynamicThresholding/README.md)
+    - TODO: Backends (what a 'backend' is, supported options, usage, etc)
+        - [ComfyUI Backend Extension](/src/BuiltinExtensions/ComfyUIBackend/README.md)
+        - [Auto WebUI Backend Extension](/src/BuiltinExtensions/AutoWebUIBackend/README.md)
+    - TODO: Tools (what a tool is, how to use em, etc)
+        - [GridGenerator](/src/BuiltinExtensions/GridGenerator/README.md)
+        - [ImageBatchTool](/src/BuiltinExtensions/ImageBatchTool/README.md)
+    - Other:
+        - [Dynamic Thresholding](/src/BuiltinExtensions/DynamicThresholding/README.md)
 - TODO: HTTP API
 - TODO: WebSocket API
 - TODO: Custom expansion
