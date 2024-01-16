@@ -182,6 +182,10 @@ public class ImageBatchToolExtension : Extension
                     {
                         ext = "jpg";
                     }
+                    else if (!string.IsNullOrWhiteSpace(properExt))
+                    {
+                        ext = properExt;
+                    }
                     File.WriteAllBytes($"{output_folder}/{preExt}.{ext}", image.Img.ImageData);
                     output(new JObject() { ["image"] = session.GetImageB64(image.Img), ["batch_index"] = $"{imageIndex}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
                 }));
