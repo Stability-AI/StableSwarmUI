@@ -158,7 +158,7 @@ class GridGenClass {
                         }
                     }
                 }
-                html += `<span class="${clazz}" title="${escapeHtmlNoBr(title)}">${parts[i]}</span>` + (i == parts.length - 1 ? '' : `<span class="grid-gen-axis-input-separator">${separator}</span>`);
+                html += `<span class="${clazz}" title="${escapeHtmlNoBr(title)}">${escapeHtmlNoBr(parts[i])}</span>` + (i == parts.length - 1 ? '' : `<span class="grid-gen-axis-input-separator">${separator}</span>`);
             }
             inputBox.innerHTML = html;
             if (lastSelection != -1) {
