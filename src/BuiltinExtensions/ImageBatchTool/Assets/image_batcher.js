@@ -36,7 +36,7 @@ class ImageBatcherClass {
             + makeCheckboxInput(null, 'ext_image_batcher_use_as_init', 'Use As Init', 'Whether to use the image as the Init Image parameter.', true, false, true, true)
             + makeCheckboxInput(null, 'ext_image_batcher_use_as_controlnet', 'Use As ControlNet Input', 'Whether to use the image as input to ControlNet (only applies if a ControlNet model is enabled).', true, false, true, true)
             + makeCheckboxInput(null, 'ext_image_batcher_use_as_revision', 'Use As ReVision', 'Whether to use the image as a ReVision image input.', false, false, true, true)
-            + `<select id="ext_image_batcher_res_mode"><option>From Parameter</option><option>From Image</option><option>Scale To Model</option><option>Scale To Model Or Above</option></select>`;
+            + `Resolution: <select id="ext_image_batcher_res_mode"><option>From Parameter</option><option>From Image</option><option>Scale To Model</option><option>Scale To Model Or Above</option></select>`;
     }
 }
 
