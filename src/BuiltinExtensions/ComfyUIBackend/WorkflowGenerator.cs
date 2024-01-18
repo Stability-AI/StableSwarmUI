@@ -921,7 +921,7 @@ public class WorkflowGenerator
                 int steps = g.UserInput.Get(T2IParamTypes.VideoSteps, 20);
                 double cfg = g.UserInput.Get(T2IParamTypes.VideoCFG, 2.5);
                 string previewType = g.UserInput.Get(ComfyUIBackendExtension.VideoPreviewType, "animate");
-                string samplered = g.CreateKSampler(model, posCond, negCond, latent, cfg, steps, 0, 10000, g.UserInput.Get(T2IParamTypes.Seed) + 42, false, true, previews: previewType);
+                string samplered = g.CreateKSampler(model, posCond, negCond, latent, cfg, steps, 0, 10000, g.UserInput.Get(T2IParamTypes.Seed) + 42, false, true, sigmin: 0.002, sigmax: 1000, previews: previewType, defsampler: "dpmpp_2m_sde_gpu", defscheduler: "karras");
                 g.FinalLatentImage = new() { samplered, 0 };
                 string decoded = g.CreateVAEDecode(vae, g.FinalLatentImage);
                 g.FinalImageOut = new() { decoded, 0 };
@@ -1110,7 +1110,7 @@ public class WorkflowGenerator
     }
 
     /// <summary>Creates a KSampler and returns its node ID.</summary>
-    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, string previews = "default", string id = null)
+    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, double sigmin = -1, double sigmax = -1, string previews = "default", string defsampler = "euler", string defscheduler = "normal", string id = null)
     {
         JObject inputs = new()
         {
@@ -1119,8 +1119,8 @@ public class WorkflowGenerator
             ["steps"] = steps,
             ["cfg"] = cfg,
             // TODO: proper sampler input, and intelligent default scheduler per sampler
-            ["sampler_name"] = UserInput.Get(ComfyUIBackendExtension.SamplerParam, "euler"),
-            ["scheduler"] = UserInput.Get(ComfyUIBackendExtension.SchedulerParam, "normal"),
+            ["sampler_name"] = UserInput.Get(ComfyUIBackendExtension.SamplerParam, defsampler),
+            ["scheduler"] = UserInput.Get(ComfyUIBackendExtension.SchedulerParam, defscheduler),
             ["positive"] = pos,
             ["negative"] = neg,
             ["latent_image"] = latent,
@@ -1133,8 +1133,8 @@ public class WorkflowGenerator
         {
             inputs["var_seed"] = UserInput.Get(T2IParamTypes.VariationSeed, 0);
             inputs["var_seed_strength"] = UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
-            inputs["sigma_min"] = UserInput.Get(T2IParamTypes.SamplerSigmaMin, -1);
-            inputs["sigma_max"] = UserInput.Get(T2IParamTypes.SamplerSigmaMax, -1);
+            inputs["sigma_min"] = UserInput.Get(T2IParamTypes.SamplerSigmaMin, sigmin);
+            inputs["sigma_max"] = UserInput.Get(T2IParamTypes.SamplerSigmaMax, sigmax);
             inputs["rho"] = UserInput.Get(T2IParamTypes.SamplerRho, 7);
             inputs["previews"] = UserInput.Get(T2IParamTypes.NoPreviews) ? "none" : previews;
             return CreateNode("SwarmKSampler", inputs, id);
