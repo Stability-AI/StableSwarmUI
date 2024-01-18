@@ -40,7 +40,13 @@ function applyTranslations() {
     if (!language_data || !language_data.local_name) {
         return;
     }
-    getRequiredElementById('language_dropdown_link').innerHTML = `<img class="translate-img" src="imgs/flags/${language_data.code}.jpg" /> ${escapeHtml(language_data.local_name)}`;
+    let dropdown = document.getElementById('language_dropdown_link');
+    if (dropdown) {
+        let newHtml = `<img class="translate-img" src="imgs/flags/${language_data.code}.jpg" /> ${escapeHtml(language_data.local_name)}`;
+        if (dropdown.innerHTML != newHtml) { // try to avoid reload flicker
+            dropdown.innerHTML = newHtml;
+        }
+    }
     for (let elem of document.querySelectorAll(".translate")) {
         if (elem.title) {
             let translated = translate(elem.dataset.pretranslated_title || elem.title);
@@ -88,9 +94,11 @@ function changeLanguage(code) {
     language = code;
     setCookie("display_language", code, 365);
     let langSetting = document.getElementById('usersettings_language');
-    langSetting.value = code;
-    triggerChangeFor(langSetting);
-    save_user_settings();
+    if (langSetting) {
+        langSetting.value = code;
+        triggerChangeFor(langSetting);
+        save_user_settings();
+    }
     loadAndApplyTranslations();
 }
 
