@@ -96,13 +96,15 @@ function doToggleGroup(id) {
     let elem = getRequiredElementById(`${id}_toggle`);
     let parent = findParentOfClass(elem, 'input-group');
     let header = parent.querySelector('.input-group-header .header-label-wrap');
+    let group = parent.querySelector('.input-group-content');
     if (elem.checked) {
         header.classList.add('input-group-header-activated');
+        group.classList.add('input-group-content-activated');
     }
     else {
         header.classList.remove('input-group-header-activated');
+        group.classList.remove('input-group-content-activated');
     }
-    let group = parent.querySelector('.input-group-content');
     if (!group.dataset.do_not_save) {
         setCookie(`group_toggle_${parent.id}`, elem.checked ? 'yes' : 'no', 365);
     }
