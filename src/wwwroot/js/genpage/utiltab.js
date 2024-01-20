@@ -7,7 +7,7 @@ function utilClipTokenize() {
     function process() {
         elem.dataset.is_running_proc = true;
         genericRequest('TokenizeInDetail', { text: elem.value }, data => {
-            let html = '';
+            let html = `<span style="width: 3rem; display: inline-block;">${data.tokens.length} tokens: </span>`;
             for (let token of data.tokens) {
                 let text = token.text;
                 let tweak = '';
