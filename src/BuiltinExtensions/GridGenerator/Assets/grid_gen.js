@@ -345,9 +345,10 @@ class GridGenClass {
         let generatedCount = 0;
         let getOpt = (o) => getRequiredElementById('grid-gen-opt-' + o).checked;
         let type = this.outputType.value;
+        this.updateOutputInfo();
         let data = {
             'baseParams': getGenInput(),
-            'outputFolderName': this.outputFolder.value,
+            'outputFolderName': this.lastPath,
             'doOverwrite': getOpt('do-overwrite'),
             'fastSkip': getOpt('fast-skip'),
             'generatePage': getOpt('generate-page'),
@@ -371,6 +372,7 @@ class GridGenClass {
         }
         data['gridAxes'] = axisData;
         let timeLastGenHit = Date.now();
+        let path = this.lastPath;
         makeWSRequestT2I('GridGenRun', data, data => {
             if (data.image) {
                 let timeNow = Date.now();
@@ -388,7 +390,7 @@ class GridGenClass {
                     message = `${rate} seconds per image`;
                 }
                 if (type == 'Web Page') {
-                    this.outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+                    this.outInfoBox.innerHTML = `<b>Running at ${message}</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${path}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${path}</code></a>`;
                 }
                 else {
                     this.outInfoBox.innerHTML = `<b>Running at ${message}</b>`;
@@ -396,7 +398,7 @@ class GridGenClass {
             }
             else if (data.success) {
                 if (type == 'Web Page') {
-                    this.outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+                    this.outInfoBox.innerHTML = `<b>Completed!</b> Output saved to <a href="${getImageOutPrefix()}/Grids/${path}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${path}</code></a>`;
                 }
                 else {
                     this.outInfoBox.innerHTML = `<b>Completed!</b>`;
@@ -435,7 +437,7 @@ class GridGenClass {
             ${modalFooter()}
             <div id="grid-gen-info-box">...</div>
             <div id="grid-gen-page-config">
-                ${makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.', '', 'normal', 'Output folder name...', false, true)}
+                ${makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.\nYou can use auto-fills [date], [time], [year], [month], [day], [hour], [minute], [second]', '', 'normal', 'Output folder name...', false, true)}
             </div>
             <br>
             <div class="grid-gen-checkboxes">
@@ -458,21 +460,36 @@ class GridGenClass {
         this.outputType = document.getElementById('grid_generate_type');
         this.outputType.value = localStorage.getItem('gridgen_output_type') || 'Web Page';
         this.outputFolder.addEventListener('input', () => { this.typeChanged(); this.updateOutputInfo() });
-        let today = new Date();
-        function pad(n) {
-            return n < 10 ? '0' + n : n;
-        }
-        this.outputFolder.value = `grid-${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}-${pad(today.getHours())}-${pad(today.getMinutes())}-${pad(today.getSeconds())}`;
+        this.outputFolder.value = `grid-[date]-[time]`;
         this.updateOutputInfo();
         this.typeChanged();
         this.addAxis();
     }
 
-    updateOutputInfo () {
+    parseOutputPath() {
+        let today = new Date();
+        let path = this.outputFolder.value;
+        function pad(n) {
+            return n < 10 ? '0' + n : n;
+        }
+        path = path.replaceAll('[date]', `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`)
+            .replaceAll('[time]', `${pad(today.getHours())}-${pad(today.getMinutes())}-${pad(today.getSeconds())}`)
+            .replaceAll('[year]', `${today.getFullYear()}`)
+            .replaceAll('[month]', `${pad(today.getMonth() + 1)}`)
+            .replaceAll('[day]', `${pad(today.getDate())}`)
+            .replaceAll('[hour]', `${pad(today.getHours())}`)
+            .replaceAll('[minute]', `${pad(today.getMinutes())}`)
+            .replaceAll('[second]', `${pad(today.getSeconds())}`);
+        this.lastPath = path;
+        return path;
+    }
+
+    updateOutputInfo() {
+        this.lastPath = this.parseOutputPath();
         if (this.outputType.value == 'Web Page') {
-            genericRequest('GridGenDoesExist', { 'folderName': this.outputFolder.value }, data => {
+            genericRequest('GridGenDoesExist', { 'folderName': this.lastPath }, data => {
                 let prefix = data.exists ? '<span class="gridgen_warn">Output WILL OVERRIDE existing folder</span>' : 'Output will be saved to';
-                this.outInfoBox.innerHTML = `${prefix} <a href="${getImageOutPrefix()}/Grids/${this.outputFolder.value}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.outputFolder.value}</code></a>`;
+                this.outInfoBox.innerHTML = `${prefix} <a href="${getImageOutPrefix()}/Grids/${this.lastPath}/index.html" target="_blank">${getImageOutPrefix()}/Grids/<code>${this.lastPath}</code></a>`;
             });
         }
         else {
