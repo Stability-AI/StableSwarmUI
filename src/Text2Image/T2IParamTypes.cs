@@ -209,7 +209,7 @@ public class T2IParamTypes
     }
 
     public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod, FreeUApplyTo, PersonalNote, VideoFormat, UnsamplerPrompt;
-    public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID, VAETileSize, ClipStopAtLayer, VideoFrames, VideoMotionBucket, VideoFPS, VideoSteps;
+    public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID, VAETileSize, ClipStopAtLayer, VideoFrames, VideoMotionBucket, VideoFPS, VideoSteps, RefinerSteps;
     public static T2IRegisteredParam<long> Seed, VariationSeed, WildcardSeed;
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, InitImageResetToNorm, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult,
         FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly, SamplerSigmaMin, SamplerSigmaMax, SamplerRho, ControlNetStart, ControlNetEnd, VideoAugmentationLevel, VideoCFG, VideoMinCFG;
@@ -312,6 +312,9 @@ public class T2IParamTypes
             ));
         RefinerControl = Register<double>(new("Refiner Control Percentage", "Higher values give the refiner more control, lower values give the base more control.\nThis is similar to 'Init Image Creativity', but for the refiner. This controls how many steps the refiner takes.",
             "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true
+            ));
+        RefinerSteps = Register<int>(new("Refiner Steps", "Alternate Steps value for the refiner stage.",
+            "20", Min: 1, Max: 200, ViewMax: 100, Step: 1, Examples: new[] { "10", "15", "20", "30", "40" }, OrderPriority: -3.75, Toggleable: true, IsAdvanced: true, Group: GroupRefiners, ViewType: ParamViewType.SLIDER
             ));
         RefinerMethod = Register<string>(new("Refiner Method", "How to apply the refiner. Different methods create different results.\n'PostApply' runs the base in full, then runs the refiner with an Init Image.\n'StepSwap' swaps the model after x steps during generation.\n'StepSwapNoisy' is StepSwap but with first-stage noise only.",
             "PostApply", GetValues: (_) => new() { "PostApply", "StepSwap", "StepSwapNoisy" }, OrderPriority: -3, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true

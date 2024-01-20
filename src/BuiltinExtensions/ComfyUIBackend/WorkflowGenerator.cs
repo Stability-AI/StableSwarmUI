@@ -719,7 +719,7 @@ public class WorkflowGenerator
                     });
                     model = new() { hyperTileNode, 0 };
                 }
-                int steps = g.UserInput.Get(T2IParamTypes.Steps);
+                int steps = g.UserInput.Get(T2IParamTypes.RefinerSteps, g.UserInput.Get(T2IParamTypes.Steps));
                 double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
                 g.CreateKSampler(model, prompt, negPrompt, g.FinalSamples, cfg, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
                     g.UserInput.Get(T2IParamTypes.Seed) + 1, false, method != "StepSwapNoisy", id: "23");
