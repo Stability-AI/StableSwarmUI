@@ -72,7 +72,7 @@ public static class Utilities
     public static Guid LoopPreventionID = Guid.NewGuid();
 
     /// <summary>Matcher for characters banned or specialcased by Windows or other OS's.</summary>
-    public static AsciiMatcher FilePathForbidden = new(c => c < 32 || "<>:\"\\|?*~&@;".Contains(c));
+    public static AsciiMatcher FilePathForbidden = new(c => c < 32 || "<>:\"\\|?*~&@;#$^".Contains(c));
 
     public static HashSet<string> ReservedFilenames = new() { "con", "prn", "aux", "nul" };
 
