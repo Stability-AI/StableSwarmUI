@@ -438,10 +438,6 @@ public class T2IModelHandler
             return;
         }
         Logs.Verbose($"[Model Scan] Add all from folder {folder}");
-        if (folder.StartsWith('.'))
-        {
-            return;
-        }
         string prefix = folder == "" ? "" : $"{folder}/";
         string actualFolder = $"{FolderPath}/{folder}";
         if (!Directory.Exists(actualFolder))
