@@ -121,14 +121,16 @@ body {
     vertical-align: top;
 }
 .advanced_input_checkbox {
-    width: 100%;
+    width: calc(100%-2rem);
+    margin-left: 1rem;
+    margin-right: 1rem;
     text-align: center;
     background-color: var(--background-soft);
     margin-top: 1rem;
     margin-bottom: 1.5rem;
     cursor: pointer;
     position: relative;
-    bottom: 3.5rem;
+    bottom: 2.25rem;
 }
 .advanced_input_checkbox_presets {
     bottom: 0rem;
