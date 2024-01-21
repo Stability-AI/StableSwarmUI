@@ -999,6 +999,7 @@ function pageSizer() {
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
+    let isSmallWindow = window.innerWidth < 768 || window.innerHeight < 768;
     function setPageBars() {
         if (altRegion.style.display != 'none') {
             altText.style.height = 'auto';
@@ -1008,8 +1009,8 @@ function pageSizer() {
         setCookie('barspot_pageBarTop', pageBarTop, 365);
         setCookie('barspot_pageBarTop2', pageBarTop2, 365);
         setCookie('barspot_pageBarMidPx', pageBarMid, 365);
-        let barTopLeft = leftShut ? `0px` : pageBarTop == -1 ? `28rem` : `${pageBarTop}px`;
-        let barTopRight = pageBarTop2 == -1 ? `21rem` : `${pageBarTop2}px`;
+        let barTopLeft = leftShut ? `0px` : pageBarTop == -1 ? (isSmallWindow ? `14rem` : `28rem`) : `${pageBarTop}px`;
+        let barTopRight = pageBarTop2 == -1 ? (isSmallWindow ? `4rem` : `21rem`) : `${pageBarTop2}px`;
         inputSidebar.style.width = `${barTopLeft}`;
         mainInputsAreaWrapper.style.width = `${barTopLeft}`;
         inputSidebar.style.display = leftShut ? 'none' : '';

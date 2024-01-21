@@ -1104,3 +1104,8 @@ body {
     margin: 0.2rem;
     vertical-align: top;
 }
+@media screen and (max-width:768px) {
+    .input-sidebar {
+        width: calc(16rem - 5px);
+    }
+}
