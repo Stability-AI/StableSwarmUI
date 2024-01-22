@@ -45,7 +45,7 @@ public class SessionHandler
 
     public SessionHandler()
     {
-        Database = new LiteDatabase("Data/Users.ldb");
+        Database = new LiteDatabase($"{Program.DataDir}/Users.ldb");
         UserDatabase = Database.GetCollection<User.DatabaseEntry>("users");
         T2IPresets = Database.GetCollection<T2IPreset>("t2i_presets");
         GenericData = Database.GetCollection<GenericDataStore>("generic_data");
