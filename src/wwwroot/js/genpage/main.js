@@ -527,7 +527,7 @@ function toggleGenerateForever() {
             if (num_current_gens == 0) {
                 doGenerate();
             }
-        }, 100);
+        }, parseInt(parseFloat(getUserSetting('generateforeverdelay', '0.1')) * 1000));
     }
     else {
         button.innerText = 'Generate Forever';
