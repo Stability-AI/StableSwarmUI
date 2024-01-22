@@ -18,9 +18,6 @@ public class T2IModelHandler
     /// <summary>All models known to this handler.</summary>
     public ConcurrentDictionary<string, T2IModel> Models = new();
 
-    /// <summary>Helper to sort model classes.</summary>
-    public T2IModelClassSorter ClassSorter = new();
-
     /// <summary>Lock used when modifying the model list.</summary>
     public LockObject ModificationLock = new();
 
@@ -366,7 +363,7 @@ public class T2IModelHandler
                 return;
             }
             JObject metaHeader = headerData["__metadata__"] as JObject;
-            T2IModelClass clazz = ClassSorter.IdentifyClassFor(model, headerData);
+            T2IModelClass clazz = T2IModelClassSorter.IdentifyClassFor(model, headerData);
             string img = metaHeader?.Value<string>("modelspec.thumbnail") ?? metaHeader?.Value<string>("preview_image");
             if (img is not null && !img.StartsWith("data:image/"))
             {
@@ -422,7 +419,7 @@ public class T2IModelHandler
         {
             model.Title = metadata.Title;
             model.Description = metadata.Description;
-            model.ModelClass = ClassSorter.ModelClasses.GetValueOrDefault(metadata.ModelClassType ?? "");
+            model.ModelClass = T2IModelClassSorter.ModelClasses.GetValueOrDefault(metadata.ModelClassType ?? "");
             model.PreviewImage = string.IsNullOrWhiteSpace(metadata.PreviewImage) ? "imgs/model_placeholder.jpg" : metadata.PreviewImage;
             model.StandardWidth = metadata.StandardWidth;
             model.StandardHeight = metadata.StandardHeight;

@@ -9,15 +9,15 @@ namespace StableSwarmUI.Text2Image;
 public class T2IModelClassSorter
 {
     /// <summary>All known model classes.</summary>
-    public Dictionary<string, T2IModelClass> ModelClasses = new();
+    public static Dictionary<string, T2IModelClass> ModelClasses = new();
 
     /// <summary>Register a new model class to the sorter.</summary>
-    public void Register(T2IModelClass clazz)
+    public static void Register(T2IModelClass clazz)
     {
         ModelClasses.Add(clazz.ID, clazz);
     }
 
-    public T2IModelClassSorter()
+    static T2IModelClassSorter()
     {
         bool IsAlt(JObject h) => h.ContainsKey("cond_stage_model.roberta.embeddings.word_embeddings.weight");
         bool isV1(JObject h) => h.ContainsKey("cond_stage_model.transformer.text_model.embeddings.position_ids");
@@ -148,7 +148,7 @@ public class T2IModelClassSorter
     }
 
     /// <summary>Returns the model class that matches this model, or null if none.</summary>
-    public T2IModelClass IdentifyClassFor(T2IModel model, JObject header)
+    public static T2IModelClass IdentifyClassFor(T2IModel model, JObject header)
     {
         if (model.ModelClass is not null)
         {
