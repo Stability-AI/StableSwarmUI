@@ -78,7 +78,15 @@ public class User
         lock (SessionHandlerSource.DBLock)
         {
             string id = $"{UserID}///${dataname}///";
-            return SessionHandlerSource.GenericData.Find(b => b.ID.StartsWith(id)).ToList();
+            try
+            {
+                return SessionHandlerSource.GenericData.Find(b => b.ID.StartsWith(id)).ToList();
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Error loading generic-data for user {UserID}: {ex}");
+                return new();
+            }
         }
     }
 
@@ -115,14 +123,22 @@ public class User
     {
         lock (SessionHandlerSource.DBLock)
         {
-            List<T2IPreset> presets = Data.Presets.Select(p => SessionHandlerSource.T2IPresets.FindById(p)).ToList();
-            if (presets.Any(p => p is null))
+            try
             {
-                List<string> bad = Data.Presets.Where(p => SessionHandlerSource.T2IPresets.FindById(p) is null).ToList();
-                Logs.Error($"User {UserID} has presets that don't exist (database error?): {string.Join(", ", bad)}");
-                presets.RemoveAll(p => p is null);
+                List<T2IPreset> presets = Data.Presets.Select(p => SessionHandlerSource.T2IPresets.FindById(p)).ToList();
+                if (presets.Any(p => p is null))
+                {
+                    List<string> bad = Data.Presets.Where(p => SessionHandlerSource.T2IPresets.FindById(p) is null).ToList();
+                    Logs.Error($"User {UserID} has presets that don't exist (database error?): {string.Join(", ", bad)}");
+                    presets.RemoveAll(p => p is null);
+                }
+                return presets;
             }
-            return presets;
+            catch (Exception ex)
+            {
+                Logs.Error($"Error loading presets for user {UserID}: {ex}");
+                return new();
+            }
         }
     }
 
