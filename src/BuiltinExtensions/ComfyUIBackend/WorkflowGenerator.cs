@@ -1109,8 +1109,14 @@ public class WorkflowGenerator
         }, id);
     }
 
+    /// <summary>Default sampler type.</summary>
+    public string DefaultSampler = "euler";
+
+    /// <summary>Default sampler scheduler type.</summary>
+    public string DefaultScheduler = "normal";
+
     /// <summary>Creates a KSampler and returns its node ID.</summary>
-    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, double sigmin = -1, double sigmax = -1, string previews = "default", string defsampler = "euler", string defscheduler = "normal", string id = null)
+    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, double sigmin = -1, double sigmax = -1, string previews = "default", string defsampler = null, string defscheduler = null, string id = null)
     {
         JObject inputs = new()
         {
@@ -1119,8 +1125,8 @@ public class WorkflowGenerator
             ["steps"] = steps,
             ["cfg"] = cfg,
             // TODO: proper sampler input, and intelligent default scheduler per sampler
-            ["sampler_name"] = UserInput.Get(ComfyUIBackendExtension.SamplerParam, defsampler),
-            ["scheduler"] = UserInput.Get(ComfyUIBackendExtension.SchedulerParam, defscheduler),
+            ["sampler_name"] = UserInput.Get(ComfyUIBackendExtension.SamplerParam, defsampler ?? DefaultSampler),
+            ["scheduler"] = UserInput.Get(ComfyUIBackendExtension.SchedulerParam, defscheduler ?? DefaultScheduler),
             ["positive"] = pos,
             ["negative"] = neg,
             ["latent_image"] = latent,
