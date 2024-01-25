@@ -518,16 +518,32 @@ function doInterrupt(allSessions = false) {
 }
 let genForeverInterval, genPreviewsInterval;
 
+let lastGenForeverParams = null;
+
+function doGenForeverOnce() {
+    if (num_current_gens > 0) {
+        return;
+    }
+    let allParams = getGenInput();
+    if (!('seed' in allParams) || allParams['seed'] != -1) {
+        if (lastGenForeverParams && JSON.stringify(lastGenForeverParams) == JSON.stringify(allParams)) {
+            return;
+        }
+        lastGenForeverParams = allParams;
+    }
+    doGenerate();
+}
+
 function toggleGenerateForever() {
     let button = getRequiredElementById('generate_forever_button');
     isGeneratingForever = !isGeneratingForever;
     if (isGeneratingForever) {
         button.innerText = 'Stop Generating';
+        let delaySeconds = parseFloat(getUserSetting('generateforeverdelay', '0.1'));
+        let delayMs = Math.max(parseInt(delaySeconds * 1000), 1);
         genForeverInterval = setInterval(() => {
-            if (num_current_gens == 0) {
-                doGenerate();
-            }
-        }, parseInt(parseFloat(getUserSetting('generateforeverdelay', '0.1')) * 1000));
+            doGenForeverOnce();
+        }, delayMs);
     }
     else {
         button.innerText = 'Generate Forever';
