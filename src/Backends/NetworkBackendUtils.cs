@@ -356,36 +356,44 @@ public static class NetworkBackendUtils
         signalShutdownExpected = () => Volatile.Write(ref isShuttingDown, true);
         void MonitorLoop()
         {
-            string line;
-            bool keepShowing = false;
-            while ((line = process.StandardOutput.ReadLine()) != null)
+            try
             {
-                if (line.StartsWith("Traceback ("))
+                string line;
+                bool keepShowing = false;
+                while ((line = process.StandardOutput.ReadLine()) != null)
                 {
-                    keepShowing = true;
-                    Logs.Warning($"{nameSimple} stdout: {line}");
+                    if (line.StartsWith("Traceback ("))
+                    {
+                        keepShowing = true;
+                        Logs.Warning($"{nameSimple} stdout: {line}");
+                    }
+                    else if (keepShowing && line.StartsWith("  "))
+                    {
+                        Logs.Warning($"{nameSimple} stdout: {line}");
+                    }
+                    else if (keepShowing)
+                    {
+                        Logs.Warning($"{nameSimple} stdout: {line}");
+                        keepShowing = false;
+                    }
+                    else
+                    {
+                        Logs.Debug($"{nameSimple} stdout: {line}");
+                    }
+                    logTracker.Track($"stdout: {line}");
                 }
-                else if (keepShowing && line.StartsWith("  "))
+                status = getStatus();
+                Logs.Debug($"Status of {nameSimple} after process end is {status}");
+                if (status == BackendStatus.RUNNING || status == BackendStatus.LOADING)
                 {
-                    Logs.Warning($"{nameSimple} stdout: {line}");
+                    status = BackendStatus.ERRORED;
+                    setStatus(status);
                 }
-                else if (keepShowing)
-                {
-                    Logs.Warning($"{nameSimple} stdout: {line}");
-                    keepShowing = false;
-                }
-                else
-                {
-                    Logs.Debug($"{nameSimple} stdout: {line}");
-                }
-                logTracker.Track($"stdout: {line}");
             }
-            status = getStatus();
-            Logs.Debug($"Status of {nameSimple} after process end is {status}");
-            if (status == BackendStatus.RUNNING || status == BackendStatus.LOADING)
+            catch (Exception ex)
             {
-                status = BackendStatus.ERRORED;
-                setStatus(status);
+                Logs.Error($"Error in {nameSimple} monitor loop: {ex}");
+                setStatus(BackendStatus.ERRORED);
             }
             lock (Logs.OtherTrackers)
             {
