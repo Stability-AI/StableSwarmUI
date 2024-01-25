@@ -1100,11 +1100,13 @@ body {
     display: block;
     width: fit-content;
     margin: auto;
+    text-align: center;
 }
 .card-collection-inline .card {
     display: inline-block;
     margin: 0.2rem;
     vertical-align: top;
+    text-align: left;
 }
 @media screen and (max-width:768px) {
     .input-sidebar {

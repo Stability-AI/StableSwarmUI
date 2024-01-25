@@ -551,11 +551,13 @@
                                     string address = Utilities.GetLocalIPAddress();
                                     if (address is null)
                                     {
-                                        <p>Unknown local address, but seems to be open to LAN based on Host setting '<b>@(Program.ServerSettings.Network.Host)</b>'</p>
+                                        <p>Unknown local address, but seems to be open to LAN based on Host setting
+                                        <br>'<b>@(Program.ServerSettings.Network.Host)</b>'</p>
                                     }
                                     else
                                     {
-                                        <p>This server is likely accessible from LAN on one of the following addresses: @(address)</p>
+                                        <p>This server is likely accessible from LAN on one of the following addresses:
+                                        <br>@(address)</p>
                                     }
                                 }
                             </p>
