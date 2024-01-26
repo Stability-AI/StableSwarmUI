@@ -135,7 +135,7 @@ function genericRequest(url, in_data, callback, depth = 0, errorHandle = null) {
     sendJsonToServer(`/API/${url}`, in_data, (status, data) => {
         if (!data) {
             console.log(`Tried making generic request ${url} but failed.`);
-            fail(failedCrash);
+            fail(failedCrash.get());
             return;
         }
         if (data.error_id && data.error_id == 'invalid_session_id') {
