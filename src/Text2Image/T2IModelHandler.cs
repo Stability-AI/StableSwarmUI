@@ -298,7 +298,9 @@ public class T2IModelHandler
         }
     }
 
-    private static readonly string[] AutoImageFormatSuffixes = new[] { ".jpg", ".png", ".preview.png", ".preview.jpg", ".jpeg", ".preview.jpeg", ".thumb.jpg", ".thumb.png" };
+    public static readonly string[] AutoImageFormatSuffixes = new[] { ".jpg", ".png", ".preview.png", ".preview.jpg", ".jpeg", ".preview.jpeg", ".thumb.jpg", ".thumb.png" };
+
+    public static readonly string[] AltModelMetadataJsonFileSuffixes = new[] { ".json", ".cm-info.json" };
 
     public string GetAutoFormatImage(T2IModel model)
     {
@@ -362,6 +364,23 @@ public class T2IModelHandler
                 Logs.Debug($"Not loading metadata for {model.Name} as the header is not JSON?");
                 return;
             }
+            string altModelPrefix = $"{FolderPath}/{model.Name.BeforeLast('.')}";
+            string altDescription = null, altName = null, altTriggerPhrase = null;
+            foreach (string altSuffix in AltModelMetadataJsonFileSuffixes)
+            {
+                if (File.Exists(altModelPrefix + altSuffix))
+                {
+                    JObject altMetadata = File.ReadAllText(altModelPrefix + altSuffix).ParseToJson();
+                    altName = altMetadata?.Value<string>("UserTitle") ?? altMetadata?.Value<string>("ModelName");
+                    altDescription = altMetadata?.Value<string>("VersionName") + altMetadata?.Value<string>("VersionDescription") + altMetadata?.Value<string>("ModelDescription");
+                    string[] trainedWords = altMetadata.TryGetValue("TrainedWords", out JToken trainedWordsToken) ? trainedWordsToken.ToObject<string[]>() : null;
+                    if (trainedWords is not null && trainedWords.Length > 0)
+                    {
+                        altTriggerPhrase = trainedWords.JoinString(", ");
+                    }
+                    break;
+                }
+            }
             JObject metaHeader = headerData["__metadata__"] as JObject;
             T2IModelClass clazz = T2IModelClassSorter.IdentifyClassFor(model, headerData);
             string img = metaHeader?.Value<string>("modelspec.thumbnail") ?? metaHeader?.Value<string>("preview_image");
@@ -388,15 +407,15 @@ public class T2IModelHandler
                 ModelFileVersion = modified,
                 ModelName = fileName,
                 ModelClassType = clazz?.ID,
-                Title = metaHeader?.Value<string>("modelspec.title") ?? metaHeader?.Value<string>("title") ?? fileName.BeforeLast('.'),
+                Title = metaHeader?.Value<string>("modelspec.title") ?? metaHeader?.Value<string>("title") ?? altName ?? fileName.BeforeLast('.'),
                 Author = metaHeader?.Value<string>("modelspec.author") ?? metaHeader?.Value<string>("author"),
-                Description = metaHeader?.Value<string>("modelspec.description") ?? metaHeader?.Value<string>("description"),
+                Description = metaHeader?.Value<string>("modelspec.description") ?? metaHeader?.Value<string>("description") ?? altDescription,
                 PreviewImage = img,
                 StandardWidth = width,
                 StandardHeight = height,
                 UsageHint = metaHeader?.Value<string>("modelspec.usage_hint"),
                 MergedFrom = metaHeader?.Value<string>("modelspec.merged_from"),
-                TriggerPhrase = metaHeader?.Value<string>("modelspec.trigger_phrase"),
+                TriggerPhrase = metaHeader?.Value<string>("modelspec.trigger_phrase") ?? altTriggerPhrase,
                 License = metaHeader?.Value<string>("modelspec.license"),
                 Date = metaHeader?.Value<string>("modelspec.date"),
                 Preprocesor = metaHeader?.Value<string>("modelspec.preprocessor"),
