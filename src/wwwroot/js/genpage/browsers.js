@@ -343,7 +343,8 @@ class GenPageBrowserClass {
             for (let format of ['Cards', 'Small Cards', 'Big Cards', 'Thumbnails', 'Small Thumbnails', 'Big Thumbnails', 'Giant Thumbnails', 'List']) {
                 let option = document.createElement('option');
                 option.value = format;
-                option.innerText = format;
+                option.className = 'translate';
+                option.innerText = translate(format);
                 if (format == this.format) {
                     option.selected = true;
                 }
@@ -355,10 +356,10 @@ class GenPageBrowserClass {
                 this.update();
             });
             let buttons = createSpan(`${this.id}-button-container`, 'browser-header-buttons', `
-                <button id="${this.id}_refresh_button" title="Refresh" class="refresh-button">&#x21BB;</button>
-                <button id="${this.id}_up_button" class="refresh-button" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
-                Depth: <input id="${this.id}_depth_input" class="depth-number-input" type="number" min="1" max="10" value="${this.depth}" title="Depth of subfolders to show" autocomplete="false">
-                Filter: <input id="${this.id}_filter_input" type="text" value="${this.filter}" title="Text filter, only show items that contain this text." rows="1" autocomplete="false" placeholder="Filter...">
+                <button id="${this.id}_refresh_button" title="Refresh" class="refresh-button translate translate-no-text">&#x21BB;</button>
+                <button id="${this.id}_up_button" class="refresh-button translate translate-no-text" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
+                Depth: <input id="${this.id}_depth_input" class="depth-number-input translate translate-no-text" type="number" min="1" max="10" value="${this.depth}" title="Depth of subfolders to show" autocomplete="false">
+                Filter: <input id="${this.id}_filter_input" type="text" value="${this.filter}" title="Text filter, only show items that contain this text." rows="1" autocomplete="false" class="translate translate-no-text" placeholder="${translate('Filter...')}">
                 ${this.extraHeader}
                 `);
             let inputArr = buttons.getElementsByTagName('input');
@@ -434,5 +435,7 @@ class GenPageBrowserClass {
         if (scrollOffset) {
             this.contentDiv.scrollTop = scrollOffset;
         }
+        applyTranslations(this.headerBar);
+        applyTranslations(this.contentDiv);
     }
 }

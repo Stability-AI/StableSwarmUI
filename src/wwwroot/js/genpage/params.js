@@ -244,7 +244,7 @@ function genInputs(delay_final = false) {
                     inputHeightParent.style.display = 'none';
                     aspect = inputAspectRatio.value;
                 }
-                resGroupLabel.innerText = `Resolution: ${aspect} (${inputWidth.value}x${inputHeight.value})`;
+                resGroupLabel.innerText = `${translate('Resolution')}: ${aspect} (${inputWidth.value}x${inputHeight.value})`;
             };
             for (let target of [inputWidth, inputWidthSlider, inputHeight, inputHeightSlider]) {
                 target.addEventListener('input', resTrick);
