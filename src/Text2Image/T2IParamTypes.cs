@@ -183,6 +183,7 @@ public class T2IParamTypes
     {
         type = type with { ID = CleanTypeName(type.Name), Type = SharpTypeToDataType(typeof(T), type.GetValues != null), SharpType = typeof(T) };
         Types.Add(type.ID, type);
+        LanguagesHelper.AppendSetInternal(type.Name, type.Description);
         return new T2IRegisteredParam<T>() { Type = type };
     }
 

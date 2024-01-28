@@ -60,8 +60,12 @@ public class LanguagesHelper
     }
 
     /// <summary>Track a set of translatables in the debug set.</summary>
-    public static void TrackSet(string[] set)
+    public static void AppendSetInternal(params string[] set)
     {
+        if (set is null || set.Length == 0)
+        {
+            return;
+        }
         foreach (string s in set)
         {
             if (string.IsNullOrWhiteSpace(s))
@@ -74,6 +78,12 @@ public class LanguagesHelper
             }
             DebugSet[s] = "";
         }
+    }
+
+    /// <summary>Track a set of translatables in the debug set.</summary>
+    public static void TrackSet(string[] set)
+    {
+        AppendSetInternal(set);
         DebugSet = JObject.FromObject(DebugSet.Properties().OrderBy(p => p.Name).ToDictionary(p => p.Name, p => p.Value));
         File.WriteAllText($"./languages/en.debug", new JObject() { ["keys"] = DebugSet }.ToString(Newtonsoft.Json.Formatting.Indented));
     }
