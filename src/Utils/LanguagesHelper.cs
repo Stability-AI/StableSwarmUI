@@ -74,6 +74,7 @@ public class LanguagesHelper
             }
             DebugSet[s] = "";
         }
+        DebugSet = JObject.FromObject(DebugSet.Properties().OrderBy(p => p.Name).ToDictionary(p => p.Name, p => p.Value));
         File.WriteAllText($"./languages/en.debug", new JObject() { ["keys"] = DebugSet }.ToString(Newtonsoft.Json.Formatting.Indented));
     }
 }
