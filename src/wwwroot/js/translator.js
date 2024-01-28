@@ -36,7 +36,7 @@ function debugSubmitTranslatables() {
     genericRequest('DebugLanguageAdd', { set: keys }, data => { });
 }
 
-function applyTranslations() {
+function applyTranslations(root = null) {
     if (!language_data || !language_data.local_name) {
         return;
     }
@@ -47,7 +47,10 @@ function applyTranslations() {
             dropdown.innerHTML = newHtml;
         }
     }
-    for (let elem of document.querySelectorAll(".translate")) {
+    if (root == null) {
+        root = document;
+    }
+    for (let elem of root.querySelectorAll(".translate")) {
         if (elem.title) {
             let translated = translate(elem.dataset.pretranslated_title || elem.title);
             if (translated == elem.title) {
@@ -69,7 +72,7 @@ function applyTranslations() {
             elem.placeholder = translated;
             continue; // placeholdered elements are text inputs, ie don't replace content
         }
-        if (elem.textContent) {
+        if (elem.textContent && !elem.classList.contains("translate-no-text")) {
             let translated = translate(elem.dataset.pretranslated || elem.textContent);
             if (translated == elem.textContent) {
                 continue;
