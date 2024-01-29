@@ -1,8 +1,7 @@
 {
     "name_en": "English",
     "name_local": "English",
-    "keys":
-    {
+    "keys": {
         "\n                            The \"Utilities\" tab provides a variety of general utilities and tools in the subtabs above, and the quicktools below.\n                        ": "",
         "\n                            This is a tool to analyze CLIP tokenization for Stable Diffusion models.\n                            All current Stable Diffusion models use the same CLIP token set, so this applies to them all.\n                            Simply type some text in the box below to see how it gets tokenized.\n                            It will show each text-piece, and its numerical ID.\n                        ": "",
         "\n                            This is a tool to extract a LoRA from the difference between two models.\n                            \"Base\" should be whatever the common base model is, eg SDXL-1.0-Base.\n                            \"Other\" should be the unique model with information to extract into the LoRA.\n                            The closer Base is to Other, the less complex the LoRA's data will be, and the more likely it will work well with other models that were built off the same base.\n                            \n                            Note that LoRA Extraction is an imperfect partial process, and will lose some of the data that makes the model unique.\n                            Rank is a number indicating how much detail to try to save. Higher numbers result in bigger files, and only slightly more accurate matching. Small values (eg 16) are usually sufficient.\n                        ": "",
