@@ -80,11 +80,25 @@ public class LanguagesHelper
         }
     }
 
+    /// <summary>Fix formatting on all language files to prevent trouble.</summary>
+    public static void FixUpLangs()
+    {
+        string[] order = new[] { "name_en", "name_local", "authorship", "keys" };
+        foreach (string filename in Directory.EnumerateFiles("./languages/", "*.json"))
+        {
+            JObject data = JObject.Parse(File.ReadAllText(filename));
+            data = data.SortByKey(k => Array.IndexOf(order, k));
+            data["keys"] = ((JObject)data["keys"]).SortByKey(k => k);
+            File.WriteAllText(filename, data.SerializeClean());
+        }
+    }
+
     /// <summary>Track a set of translatables in the debug set.</summary>
     public static void TrackSet(string[] set)
     {
         AppendSetInternal(set);
-        DebugSet = JObject.FromObject(DebugSet.Properties().OrderBy(p => p.Name).ToDictionary(p => p.Name, p => p.Value));
-        File.WriteAllText($"./languages/en.debug", new JObject() { ["keys"] = DebugSet }.ToString(Newtonsoft.Json.Formatting.Indented));
+        DebugSet = DebugSet.SortByKey(k => k);
+        File.WriteAllText($"./languages/en.debug", new JObject() { ["keys"] = DebugSet }.SerializeClean());
+        FixUpLangs();
     }
 }

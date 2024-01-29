@@ -280,6 +280,28 @@ public static class Utilities
         return result;
     }
 
+    /// <summary>Sorts the data in a <see cref="JObject"/> by the given key processing function.</summary>
+    public static JObject SortByKey<TSortable>(this JObject obj, Func<string, TSortable> sort)
+    {
+        return JObject.FromObject(obj.Properties().OrderBy(p => sort(p.Name)).ToDictionary(p => p.Name, p => p.Value));
+    }
+
+    /// <summary>Gives a clean standard 4-space serialize of this <see cref="JObject"/>.</summary>
+    public static string SerializeClean(this JObject jobj)
+    {
+        // Why is JSON.NET's API so weirdly splintered? So many different fundamental routes needed to get access to basic settings.
+        using StringWriter sw = new();
+        using JsonTextWriter jw = new(sw);
+        jw.Formatting = Formatting.Indented;
+        jw.IndentChar = ' ';
+        jw.Indentation = 4;
+        JsonSerializer serializer = new();
+        serializer.Serialize(jw, jobj);
+        jw.Flush();
+        return sw.ToString() + Environment.NewLine;
+
+    }
+
     public static async Task YieldJsonOutput(this HttpContext context, WebSocket socket, int status, JObject obj)
     {
         if (socket != null)
