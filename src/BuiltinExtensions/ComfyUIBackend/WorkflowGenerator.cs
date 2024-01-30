@@ -636,7 +636,7 @@ public class WorkflowGenerator
                     negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, refineModel, false);
                     g.NoVAEOverride = false;
                 }
-                bool doSave = g.UserInput.Get(T2IParamTypes.RefinerSaveBeforeRefine, false);
+                bool doSave = g.UserInput.Get(T2IParamTypes.SaveIntermediateImages, false);
                 bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale > 1;
                 // TODO: Better same-VAE check
                 bool doPixelUpscale = doUspcale && (upscaleMethod.StartsWith("pixel-") || upscaleMethod.StartsWith("model-"));
@@ -741,6 +741,10 @@ public class WorkflowGenerator
             PromptRegion.Part[] parts = new PromptRegion(g.UserInput.Get(T2IParamTypes.Prompt, "")).Parts.Where(p => p.Type == PromptRegion.PartType.Segment).ToArray();
             if (parts.Any())
             {
+                if (g.UserInput.Get(T2IParamTypes.SaveIntermediateImages, false))
+                {
+                    g.CreateImageSaveNode(g.FinalImageOut);
+                }
                 PromptRegion negativeRegion = new(g.UserInput.Get(T2IParamTypes.NegativePrompt, ""));
                 PromptRegion.Part[] negativeParts = negativeRegion.Parts.Where(p => p.Type == PromptRegion.PartType.Segment).ToArray();
                 for (int i = 0; i < parts.Length; i++)

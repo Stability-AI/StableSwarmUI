@@ -360,7 +360,7 @@ public class GridGeneratorExtension : Extension
         }
         baseParams.Remove(T2IParamTypes.BatchSize);
         baseParams.Remove(T2IParamTypes.Images);
-        baseParams.Remove(T2IParamTypes.RefinerSaveBeforeRefine);
+        baseParams.Remove(T2IParamTypes.SaveIntermediateImages);
         await sendStatus();
         StableSwarmUIGridData data = new() { Session = session, Claim = claim, MaxSimul = session.User.Restrictions.CalcMaxT2ISimultaneous, ContinueOnError = continueOnError };
         Grid grid = null;
