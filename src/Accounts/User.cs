@@ -240,7 +240,7 @@ public class User
             {
                 data = data[..maxLen];
             }
-            data = data.Replace("/", "");
+            data = data.Replace('\\', '/').Replace("/", "");
             return data;
         }
         string path = Settings.OutPathBuilder.Format;
