@@ -139,8 +139,9 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     /// <param name="workflow">The workflow JSON to use.</param>
     /// <param name="batchId">Local batch-ID for this generation.</param>
     /// <param name="takeOutput">Takes an output object: Image for final images, JObject for anything else.</param>
+    /// <param name="user_input">Original user input data.</param>
     /// <param name="interrupt">Interrupt token to use.</param>
-    public async Task AwaitJobLive(string workflow, string batchId, Action<object> takeOutput, CancellationToken interrupt)
+    public async Task AwaitJobLive(string workflow, string batchId, Action<object> takeOutput, T2IParamInput user_input, CancellationToken interrupt)
     {
         Logs.Verbose("Will await a job, do parse...");
         JObject workflowJson = Utilities.ParseToJson(workflow);
@@ -216,8 +217,15 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             bool isReceivingOutputs = false;
             bool isExpectingVideo = false;
             string currentNode = "";
+            bool isMe = false;
             while (true)
             {
+                if (interrupt.IsCancellationRequested && !hasInterrupted)
+                {
+                    hasInterrupted = true;
+                    Logs.Debug("ComfyUI Interrupt requested");
+                    await HttpClient.PostAsync($"{Address}/interrupt", new StringContent(""), Program.GlobalProgramCancel);
+                }
                 byte[] output = await socket.ReceiveData(100 * 1024 * 1024, Program.GlobalProgramCancel);
                 if (output is not null)
                 {
@@ -226,9 +234,24 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                         JObject json = Utilities.ParseToJson(Encoding.UTF8.GetString(output));
                         if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
                         {
-                            Logs.Verbose($"ComfyUI Websocket {batchId} said: {json.ToString(Formatting.None)}");
+                            Logs.Verbose($"ComfyUI Websocket {batchId} said (isMe={isMe}): {json.ToString(Formatting.None)}");
                         }
-                        switch ($"{json["type"]}")
+                        string type = $"{json["type"]}";
+                        if (!isMe)
+                        {
+                            if (type == "execution_start")
+                            {
+                                if ($"{json["data"]["prompt_id"]}" == promptId)
+                                {
+                                    isMe = true;
+                                }
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+                        switch (type)
                         {
                             case "executing":
                                 string nodeId = $"{json["data"]["node"]}";
@@ -285,6 +308,21 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                                 // Reserved nodes that aren't the final output are intermediate outputs.
                                 isReal = false;
                             }
+                            if (Program.ServerSettings.AddDebugData)
+                            {
+                                user_input.ExtraMeta["debug_backend"] = new JObject()
+                                {
+                                    ["backend_type"] = BackendData.BackType.Name,
+                                    ["backend_id"] = BackendData.ID,
+                                    ["debug_internal_prompt"] = user_input.Get(T2IParamTypes.Prompt),
+                                    ["backend_usages"] = BackendData.Usages,
+                                    ["comfy_output_node"] = currentNode,
+                                    ["comfy_is_real"] = isReal,
+                                    ["comfy_img_type"] = $"{type}",
+                                    ["comfy_event_id"] = eventId,
+                                    ["comfy_index"] = index
+                                };
+                            }
                             takeOutput(new T2IEngine.ImageOutput() { Img = new Image(output[8..], type, formatLabel), IsReal = isReal, GenTimeMS = firstStep == 0 ? -1 : (Environment.TickCount64 - firstStep) });
                         }
                         else
@@ -313,12 +351,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 {
                     return;
                 }
-                if (interrupt.IsCancellationRequested && !hasInterrupted)
-                {
-                    hasInterrupted = true;
-                    Logs.Debug("ComfyUI Interrupt requested");
-                    await HttpClient.PostAsync($"{Address}/interrupt", new StringContent(""), Program.GlobalProgramCancel);
-                }
             }
             endloop:
             JObject historyOut = await SendGet<JObject>($"history/{promptId}");
@@ -326,6 +358,17 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             {
                 foreach (Image image in await GetAllImagesForHistory(historyOut[promptId], interrupt))
                 {
+                    if (Program.ServerSettings.AddDebugData)
+                    {
+                        user_input.ExtraMeta["debug_backend"] = new JObject()
+                        {
+                            ["backend_type"] = BackendData.BackType.Name,
+                            ["backend_id"] = BackendData.ID,
+                            ["debug_internal_prompt"] = user_input.Get(T2IParamTypes.Prompt),
+                            ["backend_usages"] = BackendData.Usages,
+                            ["comfy_output_history_prompt_id"] = promptId
+                        };
+                    }
                     takeOutput(new T2IEngine.ImageOutput() { Img = image, IsReal = true, GenTimeMS = firstStep == 0 ? -1 : (Environment.TickCount64 - firstStep) });
                 }
             }
@@ -632,7 +675,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         string workflow = CreateWorkflow(user_input, initImageFixer, ModelFolderFormat, SupportedFeatures.ToHashSet());
         try
         {
-            await AwaitJobLive(workflow, batchId, takeOutput, user_input.InterruptToken);
+            await AwaitJobLive(workflow, batchId, takeOutput, user_input, user_input.InterruptToken);
         }
         catch (Exception ex)
         {
@@ -663,7 +706,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     public override async Task<bool> LoadModel(T2IModel model)
     {
         string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model:error_missing_model}", Utilities.EscapeJsonString(model.ToString(ModelFolderFormat)));
-        await AwaitJobLive(workflow, "0", _ => { }, Program.GlobalProgramCancel);
+        await AwaitJobLive(workflow, "0", _ => { }, new(null), Program.GlobalProgramCancel);
         CurrentModelName = model.Name;
         return true;
     }

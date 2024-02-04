@@ -36,6 +36,9 @@ public class Settings : AutoConfiguration
     [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<Logs.LogLevel>))]
     public string LogLevel = "Info";
 
+    [ConfigComment("If set true, some additional debugging data will be attached where relevant, such as in image metadata.")]
+    public bool AddDebugData = false;
+
     [ConfigComment("Settings related to the User Interface.")]
     public UIData UI = new();
 

@@ -273,7 +273,7 @@ public class T2IParamInput
     public T2IParamInput(Session session)
     {
         SourceSession = session;
-        InterruptToken = session.SessInterrupt.Token;
+        InterruptToken = session is null ? new CancellationTokenSource().Token : session.SessInterrupt.Token;
         ExtraMeta["swarm_version"] = Utilities.Version;
         ExtraMeta["date"] = DateTime.Now.ToString("yyyy-MM-dd");
     }

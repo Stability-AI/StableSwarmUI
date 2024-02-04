@@ -155,7 +155,7 @@ public class ComfyUIBackendExtension : Extension
     public static async Task RunArbitraryWorkflowOnFirstBackend(string workflow, Action<object> takeRawOutput)
     {
         ComfyUIAPIAbstractBackend backend = RunningComfyBackends.FirstOrDefault() ?? throw new InvalidOperationException("No available ComfyUI Backend to run this operation");
-        await backend.AwaitJobLive(workflow, "0", takeRawOutput, Program.GlobalProgramCancel);
+        await backend.AwaitJobLive(workflow, "0", takeRawOutput, new(null), Program.GlobalProgramCancel);
     }
 
 
