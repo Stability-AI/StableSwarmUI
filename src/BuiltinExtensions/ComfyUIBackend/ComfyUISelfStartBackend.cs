@@ -126,7 +126,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             """;
             Directory.CreateDirectory(Utilities.CombinePathWithAbsolute(root, Program.ServerSettings.Paths.SDClipVisionFolder));
             Directory.CreateDirectory($"{root}/upscale_models");
-            File.WriteAllText("Data/comfy-auto-model.yaml", yaml);
+            File.WriteAllText($"{Program.DataDir}/comfy-auto-model.yaml", yaml);
             IsComfyModelFileEmitted = true;
         }
     }
@@ -152,7 +152,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         ComfyUISelfStartSettings settings = SettingsRaw as ComfyUISelfStartSettings;
         if (!settings.DisableInternalArgs)
         {
-            string pathRaw = $"{Environment.CurrentDirectory}/Data/comfy-auto-model.yaml";
+            string pathRaw = $"{Environment.CurrentDirectory}/{Program.DataDir}/comfy-auto-model.yaml";
             if (pathRaw.Contains(' '))
             {
                 pathRaw = $"\"{pathRaw}\"";
