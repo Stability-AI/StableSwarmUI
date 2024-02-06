@@ -18,18 +18,20 @@ class SwarmRemBg:
 
     def rem(self, images):
         # TODO: Batch support?
-        i = 255.0 * images[0].cpu().numpy()
-        img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
-        img = img.convert("RGBA")
-        img = remove(img, post_process_mask=True)
-        output = np.array(img).astype(np.float32) / 255.0
-        output = torch.from_numpy(output)[None,]
-        if 'A' in img.getbands():
-            mask = np.array(img.getchannel('A')).astype(np.float32) / 255.0
-            mask = 1. - torch.from_numpy(mask)
-        else:
-            mask = torch.zeros((64,64), dtype=torch.float32, device="cpu")
-        return (output, mask.unsqueeze(0))
+        output = []
+        masks = []
+        for image in images:
+            i = 255.0 * image.cpu().numpy()
+            img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
+            img = img.convert("RGBA")
+            img = remove(img, post_process_mask=True)
+            output.append(np.array(img).astype(np.float32) / 255.0)
+            if 'A' in img.getbands():
+                mask = np.array(img.getchannel('A')).astype(np.float32) / 255.0
+                masks.append(1. - mask)
+            else:
+                masks.append(np.zeros((64,64), dtype=np.float32))
+        return (torch.from_numpy(np.array(output)), torch.from_numpy(np.array(masks)))
 
 NODE_CLASS_MAPPINGS = {
     "SwarmRemBg": SwarmRemBg,
