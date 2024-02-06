@@ -515,7 +515,7 @@ function refreshParameterValues(callback = null) {
         }
         Promise.all(promises).then(() => {
             for (let param of gen_param_types) {
-                if (param.type == "dropdown") {
+                if ((param.type == "dropdown" || param.type == "model") && param.values) {
                     let dropdown = getRequiredElementById(`input_${param.id}`);
                     let val = dropdown.value;
                     let html = '';
