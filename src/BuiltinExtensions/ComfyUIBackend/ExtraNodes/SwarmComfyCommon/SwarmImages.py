@@ -58,7 +58,26 @@ class SwarmImageCrop:
         img = image[:, y:to_y, x:to_x, :]
         return (img,)
 
+class SwarmVideoBoomerang:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+            }
+        }
+
+    CATEGORY = "StableSwarmUI"
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "boomerang"
+
+    def boomerang(self, images):
+        # return images followed by  reverse images
+        images = torch.cat((images, images.flip(0)), 0)
+        return (images,)
+
 NODE_CLASS_MAPPINGS = {
     "SwarmImageScaleForMP": SwarmImageScaleForMP,
     "SwarmImageCrop": SwarmImageCrop,
+    "SwarmVideoBoomerang": SwarmVideoBoomerang,
 }

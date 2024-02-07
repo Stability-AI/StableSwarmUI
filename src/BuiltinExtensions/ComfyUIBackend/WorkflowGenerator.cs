@@ -929,6 +929,14 @@ public class WorkflowGenerator
                 g.FinalLatentImage = new() { samplered, 0 };
                 string decoded = g.CreateVAEDecode(vae, g.FinalLatentImage);
                 g.FinalImageOut = new() { decoded, 0 };
+                if (g.UserInput.Get(T2IParamTypes.VideoBoomerang, false))
+                {
+                    string bounced = g.CreateNode("SwarmVideoBoomerang", new JObject()
+                    {
+                        ["images"] = g.FinalImageOut
+                    });
+                    g.FinalImageOut = new() { bounced, 0 };
+                }
                 string format = g.UserInput.Get(T2IParamTypes.VideoFormat, "webp").ToLowerFast();
                 g.CreateNode("SwarmSaveAnimationWS", new JObject()
                 {

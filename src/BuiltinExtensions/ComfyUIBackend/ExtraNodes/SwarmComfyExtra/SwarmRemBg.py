@@ -17,7 +17,6 @@ class SwarmRemBg:
     FUNCTION = "rem"
 
     def rem(self, images):
-        # TODO: Batch support?
         output = []
         masks = []
         for image in images:
