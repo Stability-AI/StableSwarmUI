@@ -88,7 +88,7 @@ public class Program
             Logs.Init("Parsing command line...");
             ParseCommandLineArgs(args);
             Logs.Init("Loading settings file...");
-            DataDir = CommandLineFlags.GetValueOrDefault("data_dir", "Data");
+            DataDir = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, CommandLineFlags.GetValueOrDefault("data_dir", "Data"));
             SettingsFilePath = CommandLineFlags.GetValueOrDefault("settings_file", "Data/Settings.fds");
             LoadSettingsFile();
             // TODO: Legacy format patch from Alpha 0.5! Remove this before 1.0.

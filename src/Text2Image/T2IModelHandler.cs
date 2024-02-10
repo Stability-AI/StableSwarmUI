@@ -136,6 +136,7 @@ public class T2IModelHandler
                 catch (Exception) { }
             }
             ClearFolder(FolderPath);
+            ClearFolder(Program.DataDir);
         }
     }
 
@@ -202,16 +203,17 @@ public class T2IModelHandler
     /// <summary>Updates the metadata cache database to the metadata assigned to this model object.</summary>
     public void ResetMetadataFrom(T2IModel model)
     {
+        bool perFolder = Program.ServerSettings.Paths.ModelMetadataPerFolder;
         long modified = ((DateTimeOffset)File.GetLastWriteTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds();
         string folder = model.RawFilePath.Replace('\\', '/').BeforeAndAfterLast('/', out string fileName);
-        ILiteCollection<ModelMetadataStore> cache = GetCacheForFolder(folder);
+        ILiteCollection<ModelMetadataStore> cache = GetCacheForFolder(perFolder ? folder : Program.DataDir);
         if (cache is null)
         {
             return;
         }
         ModelMetadataStore metadata = model.Metadata ?? new();
         metadata.ModelFileVersion = modified;
-        metadata.ModelName = fileName;
+        metadata.ModelName = perFolder ? fileName : model.RawFilePath;
         metadata.Title = model.Title;
         metadata.Description = model.Description;
         metadata.ModelClassType = model.ModelClass?.ID;
@@ -340,15 +342,17 @@ public class T2IModelHandler
         }
         string folder = model.RawFilePath.Replace('\\', '/').BeforeAndAfterLast('/', out string fileName);
         long modified = ((DateTimeOffset)File.GetLastWriteTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds();
-        ILiteCollection<ModelMetadataStore> cache = GetCacheForFolder(folder);
+        bool perFolder = Program.ServerSettings.Paths.ModelMetadataPerFolder;
+        ILiteCollection<ModelMetadataStore> cache = GetCacheForFolder(perFolder ? folder : Program.DataDir);
         if (cache is null)
         {
             return;
         }
         ModelMetadataStore metadata;
+        string modelCacheId = perFolder ? fileName : model.RawFilePath;
         lock (MetadataLock)
         {
-            metadata = cache.FindById(fileName);
+            metadata = cache.FindById(modelCacheId);
         }
         if (metadata is null || metadata.ModelFileVersion != modified)
         {
@@ -405,7 +409,7 @@ public class T2IModelHandler
             metadata = new()
             {
                 ModelFileVersion = modified,
-                ModelName = fileName,
+                ModelName = modelCacheId,
                 ModelClassType = clazz?.ID,
                 Title = metaHeader?.Value<string>("modelspec.title") ?? metaHeader?.Value<string>("title") ?? altName ?? fileName.BeforeLast('.'),
                 Author = metaHeader?.Value<string>("modelspec.author") ?? metaHeader?.Value<string>("author"),

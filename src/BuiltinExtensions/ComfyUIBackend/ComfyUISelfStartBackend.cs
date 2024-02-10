@@ -152,7 +152,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         ComfyUISelfStartSettings settings = SettingsRaw as ComfyUISelfStartSettings;
         if (!settings.DisableInternalArgs)
         {
-            string pathRaw = $"{Environment.CurrentDirectory}/{Program.DataDir}/comfy-auto-model.yaml";
+            string pathRaw = $"{Program.DataDir}/comfy-auto-model.yaml";
             if (pathRaw.Contains(' '))
             {
                 pathRaw = $"\"{pathRaw}\"";

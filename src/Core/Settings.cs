@@ -123,6 +123,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("When true, output paths always have the username as a folder.\nWhen false, this will be skipped.\nKeep this on in multi-user environments.")]
         public bool AppendUserNameToOutputPath = true;
+
+        [ConfigComment("If true, model metadata is tracked on a per-folder basis. This is better for example if you copy model folders to different machines, or have symlinks to different instances, or etc.\nIf false, model metadata is tracked in the central data folder. This is better if you don't want stray files in your model folders, or if you have several Swarm instances running simultaneously.")]
+        public bool ModelMetadataPerFolder = true;
     }
 
     /// <summary>Settings to control restrictions on users.</summary>
