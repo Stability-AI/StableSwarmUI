@@ -269,6 +269,9 @@ public class T2IParamInput
     /// <summary>Interrupt token from the session.</summary>
     public CancellationToken InterruptToken;
 
+    /// <summary>List of reasons this input did not match backend requests, if any.</summary>
+    public HashSet<string> RefusalReasons = new();
+
     /// <summary>Construct a new parameter input handler for a session.</summary>
     public T2IParamInput(Session session)
     {

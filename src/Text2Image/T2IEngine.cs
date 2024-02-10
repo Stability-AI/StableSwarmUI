@@ -64,11 +64,13 @@ namespace StableSwarmUI.Text2Image
                 if (typeLow != "any" && typeLow != backend.Backend.HandlerTypeData.ID.ToLowerFast())
                 {
                     Logs.Verbose($"Filter out backend {backend.ID} as the Type is specified as {typeLow}, but the backend type is {backend.Backend.HandlerTypeData.ID.ToLowerFast()}");
+                    user_input.RefusalReasons.Add($"Specific backend type requested in advanced parameters did not match");
                     return false;
                 }
                 if (requireId && backend.ID != reqId)
                 {
                     Logs.Verbose($"Filter out backend {backend.ID} as the request requires backend ID {reqId}, but the backend ID is {backend.ID}");
+                    user_input.RefusalReasons.Add($"Specific backend ID# requested in advanced parameters did not match");
                     return false;
                 }
                 HashSet<string> features = backend.Backend.SupportedFeatures.ToHashSet();
@@ -77,6 +79,7 @@ namespace StableSwarmUI.Text2Image
                     if (!features.Contains(flag))
                     {
                         Logs.Verbose($"Filter out backend {backend.ID} as the request requires flag {flag}, but the backend does not support it");
+                        user_input.RefusalReasons.Add($"Request requires flag '{flag}' which is not present on the backend");
                         return false;
                     }
                 }
@@ -87,6 +90,7 @@ namespace StableSwarmUI.Text2Image
                         if (user_input.TryGet(param, out T2IModel model) && backend.Backend.Models.TryGetValue(type, out List<string> models) && !models.Contains(model.Name))
                         {
                             Logs.Verbose($"Filter out backend {backend.ID} as the request requires {type} model {model.Name}, but the backend does not have that model");
+                            user_input.RefusalReasons.Add($"Request requires model '{model.Name}' but the backend does not have that model");
                             return false;
                         }
                         return true;
@@ -103,6 +107,7 @@ namespace StableSwarmUI.Text2Image
                             if (!loraModels.Contains(lora))
                             {
                                 Logs.Verbose($"Filter out backend {backend.ID} as the request requires lora {lora}, but the backend does not have that lora");
+                                user_input.RefusalReasons.Add($"Request requires LoRA '{lora}' but the backend does not have that LoRA");
                                 return false;
                             }
                         }
@@ -114,6 +119,7 @@ namespace StableSwarmUI.Text2Image
                             if (!embedModels.Contains(embed))
                             {
                                 Logs.Verbose($"Filter out backend {backend.ID} as the request requires embedding {embed}, but the backend does not have that embedding");
+                                user_input.RefusalReasons.Add($"Request requires embedding '{embed}' but the backend does not have that embedding");
                                 return false;
                             }
                         }
@@ -166,7 +172,7 @@ namespace StableSwarmUI.Text2Image
                 PreGenerateEvent?.Invoke(new(user_input));
                 claim.Extend(backendWaits: 1);
                 sendStatus();
-                backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Get(T2IParamTypes.Model),
+                backend = await Program.Backends.GetNextT2IBackend(TimeSpan.FromMinutes(backendTimeoutMin), user_input.Get(T2IParamTypes.Model), user_input,
                     filter: BackendMatcherFor(user_input), session: user_input.SourceSession, notifyWillLoad: sendStatus, cancel: claim.InterruptToken);
             }
             catch (InvalidDataException ex)

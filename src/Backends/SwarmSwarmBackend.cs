@@ -377,6 +377,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         });
         if (!success)
         {
+            Logs.Debug($"{HandlerTypeData.Name} {BackendData.ID} remote backend failed to load model '{model.Name}'.");
             return false;
         }
         CurrentModelName = model.Name;

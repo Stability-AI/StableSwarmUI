@@ -622,9 +622,11 @@ public class BackendHandler
 
         public T2IBackendAccess Result;
 
+        public T2IParamInput UserInput;
+
         public Exception Failure;
 
-        public void ReleasePressure()
+        public void ReleasePressure(bool failed)
         {
             if (Pressure is null)
             {
@@ -636,13 +638,17 @@ public class BackendHandler
                 Handler.ModelRequests.TryRemove(Pressure.Model.Name, out _);
             }
             Pressure = null;
+            if (failed && UserInput is not null)
+            {
+                UserInput.RefusalReasons.Add("All backends failed to load model.");
+            }
         }
 
         public void Complete()
         {
             Logs.Debug($"[BackendHandler] Backend request #{ID} finished.");
             Handler.T2IBackendRequests.TryRemove(ID, out _);
-            ReleasePressure();
+            ReleasePressure(false);
         }
 
         public void TryFind()
@@ -662,8 +668,13 @@ public class BackendHandler
             possible = Filter is null ? possible : possible.Where(Filter).ToList();
             if (!possible.Any())
             {
-                Logs.Warning("[BackendHandler] No backends match the request! Cannot generate anything.");
-                Failure = new InvalidOperationException("No backends match the settings of the request given!");
+                string reason = "";
+                if (UserInput is not null && UserInput.RefusalReasons.Any())
+                {
+                    reason = $" Backends refused for the following reason(s):\n{UserInput.RefusalReasons.Select(r => $"- {r}").JoinString("\n")}";
+                }
+                Logs.Warning($"[BackendHandler] No backends match the request! Cannot generate anything.{reason}");
+                Failure = new InvalidOperationException($"No backends match the settings of the request given!{reason}");
                 return;
             }
             List<T2IBackendData> available = possible.Where(b => !b.CheckIsInUse).OrderBy(b => b.Usages).ToList();
@@ -705,7 +716,7 @@ public class BackendHandler
             }
             if (available.Any())
             {
-                Handler.LoadHighestPressureNow(possible, available, ReleasePressure, Cancel);
+                Handler.LoadHighestPressureNow(possible, available, () => ReleasePressure(true), Cancel);
             }
             if (Pressure is not null && Pressure.IsLoading && NotifyWillLoad is not null)
             {
@@ -725,13 +736,14 @@ public class BackendHandler
     /// <returns>A 'using'-compatible wrapper for a backend.</returns>
     /// <param name="maxWait">Maximum duration to wait for. If time runs out, throws <see cref="TimeoutException"/>.</param>
     /// <param name="model">The model to use, or null for any. Specifying a model directly will prefer a backend with that model loaded, or cause a backend to load it if not available.</param>
+    /// <param name="input">User input, if any.</param>
     /// <param name="filter">Optional genericfilter for backend acceptance.</param>
     /// <param name="session">The session responsible for this request, if any.</param>
     /// <param name="notifyWillLoad">Optional callback for when this request will trigger a model load.</param>
     /// <param name="cancel">Optional request cancellation.</param>
     /// <exception cref="TimeoutException">Thrown if <paramref name="maxWait"/> is reached.</exception>
     /// <exception cref="InvalidOperationException">Thrown if no backends are available.</exception>
-    public async Task<T2IBackendAccess> GetNextT2IBackend(TimeSpan maxWait, T2IModel model = null, Func<T2IBackendData, bool> filter = null, Session session = null, Action notifyWillLoad = null, CancellationToken cancel = default)
+    public async Task<T2IBackendAccess> GetNextT2IBackend(TimeSpan maxWait, T2IModel model = null, T2IParamInput input = null, Func<T2IBackendData, bool> filter = null, Session session = null, Action notifyWillLoad = null, CancellationToken cancel = default)
     {
         if (HasShutdown)
         {
@@ -741,6 +753,7 @@ public class BackendHandler
         {
             Handler = this,
             Model = model,
+            UserInput = input,
             Filter = filter,
             Session = session,
             NotifyWillLoad = notifyWillLoad,
@@ -880,7 +893,7 @@ public class BackendHandler
     }
 
     /// <summary>Internal helper route for <see cref="GetNextT2IBackend"/> to trigger a backend model load.</summary>
-    public void LoadHighestPressureNow(List<T2IBackendData> possible, List<T2IBackendData> available, Action ReleasePressure, CancellationToken cancel)
+    public void LoadHighestPressureNow(List<T2IBackendData> possible, List<T2IBackendData> available, Action releasePressure, CancellationToken cancel)
     {
         List<T2IBackendData> availableLoaders = available.Where(b => b.Backend.CanLoadModels).ToList();
         if (availableLoaders.IsEmpty())
@@ -925,7 +938,7 @@ public class BackendHandler
                     if (valid.IsEmpty())
                     {
                         Logs.Warning("[BackendHandler] All backends failed to load the model! Cannot generate anything.");
-                        ReleasePressure();
+                        releasePressure();
                         throw new InvalidOperationException("All available backends failed to load the model.");
                     }
                     valid = valid.Where(b => b.Backend.CurrentModelName != highestPressure.Model.Name).ToList();
