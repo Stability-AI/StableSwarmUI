@@ -907,13 +907,35 @@ public class WorkflowGenerator
                 }
                 int frames = g.UserInput.Get(T2IParamTypes.VideoFrames, 25);
                 int fps = g.UserInput.Get(T2IParamTypes.VideoFPS, 6);
+                string resFormat = g.UserInput.Get(T2IParamTypes.VideoResolution, "Model Preferred");
+                int width = vidModel.StandardWidth <= 0 ? 1024 : vidModel.StandardWidth;
+                int height = vidModel.StandardHeight <= 0 ? 576 : vidModel.StandardHeight;
+                int imageWidth = g.UserInput.Get(T2IParamTypes.Width, width);
+                int imageHeight = g.UserInput.GetImageHeight();
+                if (resFormat == "Image Aspect, Model Res")
+                {
+                    if (width == 1024 && height == 576 && imageWidth == 1344 && imageHeight == 768)
+                    {
+                        width = 1024;
+                        height = 576;
+                    }
+                    else
+                    {
+                        (width, height) = Utilities.ResToModelFit(imageWidth, imageHeight, width * height);
+                    }
+                }
+                else if (resFormat == "Image")
+                {
+                    width = imageWidth;
+                    height = imageHeight;
+                }
                 string conditioning = g.CreateNode("SVD_img2vid_Conditioning", new JObject()
                 {
                     ["clip_vision"] = clipVision,
                     ["init_image"] = g.FinalImageOut,
                     ["vae"] = vae,
-                    ["width"] = 1024, // TODO: Configurable
-                    ["height"] = 576,
+                    ["width"] = width,
+                    ["height"] = height,
                     ["video_frames"] = frames,
                     ["motion_bucket_id"] = g.UserInput.Get(T2IParamTypes.VideoMotionBucket, 127),
                     ["fps"] = fps,
