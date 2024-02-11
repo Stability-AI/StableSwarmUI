@@ -951,6 +951,48 @@ public class WorkflowGenerator
                 g.FinalLatentImage = new() { samplered, 0 };
                 string decoded = g.CreateVAEDecode(vae, g.FinalLatentImage);
                 g.FinalImageOut = new() { decoded, 0 };
+                string format = g.UserInput.Get(T2IParamTypes.VideoFormat, "webp").ToLowerFast();
+                if (g.UserInput.TryGet(ComfyUIBackendExtension.VideoFrameInterpolationMethod, out string method) && g.UserInput.TryGet(ComfyUIBackendExtension.VideoFrameInterpolationMultiplier, out int mult) && mult > 1)
+                {
+                    if (g.UserInput.Get(T2IParamTypes.SaveIntermediateImages, false))
+                    {
+                        g.CreateNode("SwarmSaveAnimationWS", new JObject()
+                        {
+                            ["images"] = g.FinalImageOut,
+                            ["fps"] = fps,
+                            ["lossless"] = false,
+                            ["quality"] = 95,
+                            ["method"] = "default",
+                            ["format"] = format
+                        });
+                    }
+                    if (method == "RIFE")
+                    {
+                        string rife = g.CreateNode("RIFE VFI", new JObject()
+                        {
+                            ["frames"] = g.FinalImageOut,
+                            ["multiplier"] = mult,
+                            ["ckpt_name"] = "rife47.pth",
+                            ["clear_cache_after_n_frames"] = 10,
+                            ["fast_mode"] = true,
+                            ["ensemble"] = true,
+                            ["scale_factor"] = 1
+                        });
+                        g.FinalImageOut = new() { rife, 0 };
+                    }
+                    else if (method == "FILM")
+                    {
+                        string film = g.CreateNode("FILM VFI", new JObject()
+                        {
+                            ["frames"] = g.FinalImageOut,
+                            ["multiplier"] = mult,
+                            ["ckpt_name"] = "film_net_fp32.pt",
+                            ["clear_cache_after_n_frames"] = 10
+                        });
+                        g.FinalImageOut = new() { film, 0 };
+                    }
+                    fps *= mult;
+                }
                 if (g.UserInput.Get(T2IParamTypes.VideoBoomerang, false))
                 {
                     string bounced = g.CreateNode("SwarmVideoBoomerang", new JObject()
@@ -959,7 +1001,6 @@ public class WorkflowGenerator
                     });
                     g.FinalImageOut = new() { bounced, 0 };
                 }
-                string format = g.UserInput.Get(T2IParamTypes.VideoFormat, "webp").ToLowerFast();
                 g.CreateNode("SwarmSaveAnimationWS", new JObject()
                 {
                     ["images"] = g.FinalImageOut,
