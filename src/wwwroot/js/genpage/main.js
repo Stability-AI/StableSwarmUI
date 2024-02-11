@@ -358,11 +358,11 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
             };
             tmpImg.src = img.src;
         }
-    });
+    }, '', 'Sets this image as the Init Image parameter input');
     quickAppendButton(buttons, 'Edit Image', () => {
         imageEditor.setBaseImage(img);
         imageEditor.activate();
-    });
+    }, '', 'Opens an Image Editor for this image');
     quickAppendButton(buttons, 'Upscale 2x', () => {
         toDataURL(img.src, (url => {
             let [width, height] = naturalDim();
@@ -373,12 +373,12 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
             };
             doGenerate(input_overrides, { 'initimagecreativity': 0.6 });
         }));
-    });
+    }, '', 'Runs an instant generation with this image as the input and scale doubled');
     let metaParsed = JSON.parse(metadata) ?? { is_starred: false };
     quickAppendButton(buttons, metaParsed.is_starred ? 'Starred' : 'Star', (e, button) => {
         toggleStar(imagePathClean, src);
-    }, (metaParsed.is_starred ? ' star-button button-starred-image' : ' star-button'));
-    quickAppendButton(buttons, 'Reuse Parameters', copy_current_image_params);
+    }, (metaParsed.is_starred ? ' star-button button-starred-image' : ' star-button'), 'Toggles this image as starred - starred images get moved to a separate folder and highlighted');
+    quickAppendButton(buttons, 'Reuse Parameters', copy_current_image_params, '', 'Copies the parameters used to generate this image to the current generation settings');
     quickAppendButton(buttons, 'View In History', () => {
         let folder = imagePathClean;
         let lastSlash = folder.lastIndexOf('/');
@@ -387,7 +387,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         }
         getRequiredElementById('imagehistorytabclickable').click();
         imageHistoryBrowser.navigate(folder);
-    });
+    }, '', 'Opens the Image History tab and navigates to the folder containing this image');
     extrasWrapper.appendChild(buttons);
     let data = createDiv(null, 'current-image-data');
     data.innerHTML = formatMetadata(metadata);

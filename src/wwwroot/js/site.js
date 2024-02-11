@@ -578,10 +578,11 @@ function describeAspectRatio(width, height) {
     return `1:${roundToStr(hw, 2)}`;
 }
 
-function quickAppendButton(div, name, func, classes = '') {
+function quickAppendButton(div, name, func, classes = '', title = '') {
     let button = document.createElement('button');
     button.className = `basic-button${classes}`;
     button.innerText = name;
+    button.title = title;
     button.onclick = (e) => func(e, button);
     div.appendChild(button);
 }
