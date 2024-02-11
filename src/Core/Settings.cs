@@ -255,6 +255,9 @@ public class Settings : AutoConfiguration
         [ConfigComment("What language to display the UI in.\nDefault is 'en' (English).")]
         [SettingsOptions(Impl = typeof(LanguagesImpl))]
         public string Language = "en";
+
+        [ConfigComment("Comma-separated list of parameters to exclude from 'Reuse Parameters'.\nFor example, set 'model' to not copy the model, or 'model,refinermodel,videomodel' to really never copy any models.")]
+        public string ReuseParamExcludeList = "";
     }
 
     /// <summary>UI-related settings.</summary>

@@ -69,9 +69,10 @@ function copy_current_image_params() {
     if ('original_negativeprompt' in metadata) {
         metadata.negativeprompt = metadata.original_negativeprompt;
     }
+    let exclude = getUserSetting('reuseparamexcludelist').split(',').map(s => cleanParamName(s));
     for (let param of gen_param_types) {
         let elem = document.getElementById(`input_${param.id}`);
-        if (elem && metadata[param.id]) {
+        if (elem && metadata[param.id] && !exclude.includes(param.id)) {
             setDirectParamValue(param, metadata[param.id]);
             if (param.toggleable && param.visible) {
                 let toggle = getRequiredElementById(`input_${param.id}_toggle`);
