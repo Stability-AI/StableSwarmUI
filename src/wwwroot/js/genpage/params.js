@@ -72,7 +72,11 @@ function toggleGroupOpen(elem, shouldOpen = null) {
     if (shouldOpen == null) {
         shouldOpen = isClosed;
     }
-    if (shouldOpen) {
+    doGroupOpenUpdate(group, parent, shouldOpen);
+}
+
+function doGroupOpenUpdate(group, parent, isOpen) {
+    if (isOpen) {
         group.style.display = 'block';
         parent.classList.remove('input-group-closed');
         parent.classList.add('input-group-open');
@@ -108,6 +112,7 @@ function doToggleGroup(id) {
     if (!group.dataset.do_not_save) {
         setCookie(`group_toggle_${parent.id}`, elem.checked ? 'yes' : 'no', 365);
     }
+    doGroupOpenUpdate(group, parent, group.style.display != 'none');
 }
 
 function isParamAdvanced(p) {
