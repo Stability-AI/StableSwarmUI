@@ -1097,6 +1097,7 @@ function pageSizer() {
         }
         imageEditor.resize();
         alignImageDataFormat();
+        imageHistoryBrowser.makeVisible(getRequiredElementById('t2i_bottom_bar'));
     }
     setPageBarsFunc = setPageBars;
     let cookieA = getCookie('barspot_pageBarTop');

@@ -290,7 +290,11 @@ class GenPageBrowserClass {
      */
     makeVisible(elem) {
         for (let img of elem.getElementsByTagName('img')) {
-            if (img.dataset.src && img.getBoundingClientRect().top < window.innerHeight + 256) {
+            if (!img.dataset.src) {
+                continue;
+            }
+            let top = img.getBoundingClientRect().top;
+            if (top < window.innerHeight + 256 && top != 0) {
                 img.src = img.dataset.src;
                 delete img.dataset.src;
             }
