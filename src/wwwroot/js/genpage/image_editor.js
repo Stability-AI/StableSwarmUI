@@ -640,11 +640,15 @@ class ImageEditor {
         this.leftBar = createDiv(null, 'image_editor_leftbar');
         this.inputDiv.appendChild(this.leftBar);
         this.rightBar = createDiv(null, 'image_editor_rightbar');
-        this.rightBar.innerHTML = `<div class="image_editor_newlayer_button basic-button new-image-layer-button" title="New Image Layer">+${allowMasks ? 'Image' : 'Layer'}</div>`;
+        this.rightBar.innerHTML = `<div class="image_editor_newlayer_button basic-button image-editor-close-button interrupt-button" title="Close the Image Editor">&times;</div>`;
+        this.rightBar.innerHTML += `<div class="image_editor_newlayer_button basic-button new-image-layer-button" title="New Image Layer">+${allowMasks ? 'Image' : 'Layer'}</div>`;
         if (allowMasks) {
             this.rightBar.innerHTML += `<div class="image_editor_newlayer_button basic-button new-mask-layer-button" title="New Mask Layer">+Mask</div>`;
         }
         this.inputDiv.appendChild(this.rightBar);
+        this.rightBar.querySelector('.image-editor-close-button').addEventListener('click', () => {
+            this.deactivate();
+        });
         this.rightBar.querySelector('.new-image-layer-button').addEventListener('click', () => {
             this.addEmptyLayer();
         });
