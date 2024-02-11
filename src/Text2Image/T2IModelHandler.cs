@@ -25,7 +25,7 @@ public class T2IModelHandler
     public bool IsShutdown = false;
 
     /// <summary>Internal model metadata cache data (per folder).</summary>
-    public Dictionary<string, (LiteDatabase, ILiteCollection<ModelMetadataStore>)> ModelMetadataCachePerFolder = new();
+    public static Dictionary<string, (LiteDatabase, ILiteCollection<ModelMetadataStore>)> ModelMetadataCachePerFolder = new();
 
     /// <summary>Lock for metadata processing.</summary>
     public LockObject MetadataLock = new();
