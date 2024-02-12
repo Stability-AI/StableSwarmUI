@@ -36,7 +36,20 @@ public static class ImageMetadataTracker
         public byte[] PreviewData { get; set; }
     }
 
-    public record class ImageDatabase(LockObject Lock, LiteDatabase Database, ILiteCollection<ImageMetadataEntry> Metadata, ILiteCollection<ImagePreviewEntry> Previews);
+    public record class ImageDatabase(string Folder, LockObject Lock, LiteDatabase Database, ILiteCollection<ImageMetadataEntry> Metadata, ILiteCollection<ImagePreviewEntry> Previews)
+    {
+        public void Dispose()
+        {
+            try
+            {
+                Database.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Error disposing image metadata database for folder '{Folder}': {ex}");
+            }
+        }
+    }
 
     /// <summary>Set of all image metadatabases, as a map from folder name to database.</summary>
     public static ConcurrentDictionary<string, ImageDatabase> Databases = new();
@@ -58,7 +71,7 @@ public static class ImageMetadataTracker
                 File.Delete(path);
                 ldb = new(path);
             }
-            return new(new(), ldb, ldb.GetCollection<ImageMetadataEntry>("image_metadata"), ldb.GetCollection<ImagePreviewEntry>("image_previews"));
+            return new(folder, new(), ldb, ldb.GetCollection<ImageMetadataEntry>("image_metadata"), ldb.GetCollection<ImagePreviewEntry>("image_previews"));
         });
     }
 
@@ -155,35 +168,43 @@ public static class ImageMetadataTracker
         string folder = file.BeforeAndAfterLast('/', out string filename);
         ImageDatabase metadata = GetDatabaseForFolder(folder);
         long timeNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        lock (metadata.Lock)
+        try
         {
-            ImageMetadataEntry entry = metadata.Metadata.FindById(filename);
-            if (entry is not null)
+            lock (metadata.Lock)
             {
-                if (Math.Abs(timeNow - entry.LastVerified) > 60 * 60 * 24)
-                {
-                    long fTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
-                    if (entry.FileTime != fTime)
-                    {
-                        entry = null;
-                    }
-                    else
-                    {
-                        entry.LastVerified = timeNow;
-                        metadata.Metadata.Upsert(entry);
-                    }
-                }
+                ImageMetadataEntry entry = metadata.Metadata.FindById(filename);
                 if (entry is not null)
                 {
-                    return entry.Metadata;
+                    if (Math.Abs(timeNow - entry.LastVerified) > 60 * 60 * 24)
+                    {
+                        long fTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
+                        if (entry.FileTime != fTime)
+                        {
+                            entry = null;
+                        }
+                        else
+                        {
+                            entry.LastVerified = timeNow;
+                            metadata.Metadata.Upsert(entry);
+                        }
+                    }
+                    if (entry is not null)
+                    {
+                        return entry.Metadata;
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading image metadata for file '{file}' from database: {ex}");
         }
         if (!File.Exists(file))
         {
             return null;
         }
         long fileTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
+        string fileData;
         try
         {
             byte[] data = File.ReadAllBytes(file);
@@ -191,7 +212,7 @@ public static class ImageMetadataTracker
             {
                 return null;
             }
-            string fileData = new Image(data, Image.ImageType.IMAGE, ext).GetMetadata();
+            fileData = new Image(data, Image.ImageType.IMAGE, ext).GetMetadata();
             string subPath = file.StartsWith(root) ? file[root.Length..] : Path.GetRelativePath(root, file);
             subPath = subPath.Replace('\\', '/').Trim('/');
             string rawSubPath = subPath;
@@ -214,18 +235,25 @@ public static class ImageMetadataTracker
                     fileData = jData.ToString();
                 }
             }
-            lock (metadata.Lock)
-            {
-                ImageMetadataEntry entry = new() { FileName = filename, Metadata = fileData, LastVerified = timeNow, FileTime = fileTime };
-                metadata.Metadata.Upsert(entry);
-            }
-            return fileData;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error reading image metadata for file '{file}': {ex}");
             return null;
         }
+        try
+        {
+            lock (metadata.Lock)
+            {
+                ImageMetadataEntry entry = new() { FileName = filename, Metadata = fileData, LastVerified = timeNow, FileTime = fileTime };
+                metadata.Metadata.Upsert(entry);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error writing image metadata for file '{file}' to database: {ex}");
+        }
+        return fileData;
     }
 
     /// <summary>Shuts down and stores metadata helper files.</summary>
@@ -237,7 +265,7 @@ public static class ImageMetadataTracker
         {
             lock (db.Lock)
             {
-                db.Database.Dispose();
+                db.Dispose();
             }
         }
     }
@@ -249,7 +277,7 @@ public static class ImageMetadataTracker
         {
             lock (db.Lock)
             {
-                db.Database.Dispose();
+                db.Dispose();
                 try
                 {
                     File.Delete($"{name}/image_metadata.ldb");
