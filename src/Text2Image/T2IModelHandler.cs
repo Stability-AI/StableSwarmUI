@@ -309,9 +309,17 @@ public class T2IModelHandler
         string prefix = $"{FolderPath}/{model.Name.BeforeLast('.')}";
         foreach (string suffix in AutoImageFormatSuffixes)
         {
-            if (File.Exists(prefix + suffix))
+            try
             {
-                return new Image(File.ReadAllBytes(prefix + suffix), Image.ImageType.IMAGE, suffix.AfterLast('.')).ToMetadataFormat();
+                if (File.Exists(prefix + suffix))
+                {
+                    return new Image(File.ReadAllBytes(prefix + suffix), Image.ImageType.IMAGE, suffix.AfterLast('.')).ToMetadataFormat();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Caught an exception trying to load legacy model thumbnail at '{prefix}{suffix}'");
+                Logs.Debug($"Details for above error {ex}");
             }
         }
         return null;
