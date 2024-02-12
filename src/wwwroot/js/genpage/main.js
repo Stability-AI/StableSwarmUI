@@ -1072,7 +1072,7 @@ function pageSizer() {
         midSplitButton.innerHTML = midForceToBottom ? '&#x290A;' : '&#x290B;';
         let altHeight = altRegion.style.display == 'none' ? '0px' : `(${altText.offsetHeight + altImageRegion.offsetHeight}px + 2rem)`;
         if (pageBarMid != -1 || midForceToBottom) {
-            let fixed = midForceToBottom ? `8rem` : `${pageBarMid}px`;
+            let fixed = midForceToBottom ? `6.5rem` : `${pageBarMid}px`;
             topSplit.style.height = `calc(100vh - ${fixed})`;
             topSplit2.style.height = `calc(100vh - ${fixed})`;
             inputSidebar.style.height = `calc(100vh - ${fixed})`;
