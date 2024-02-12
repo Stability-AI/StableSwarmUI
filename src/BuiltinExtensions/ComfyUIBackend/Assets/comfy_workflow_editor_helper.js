@@ -148,6 +148,38 @@ function comfyGetPrompt(callback) {
 }
 
 /**
+ * Workaround hack, Chrome does not pass mouseup events to iframes when the mouse is outside the iframe.
+ * Comfy has multiple different ways of listening to mouseups so aggressively trigger all of them. And manually force the LiteGraph handler to be safe.
+ */
+function comfyAggressiveMouseUp() {
+    if (!hasComfyLoaded) {
+        return;
+    }
+    function sendUp(elem) {
+        if (elem) {
+            elem.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+            elem.dispatchEvent(new PointerEvent('pointerup', { isPrimary: true, bubbles: true, cancelable: true }));
+            if (elem.onmouseup) {
+                elem.onmouseup();
+            }
+            if (elem.onpointerup) {
+                elem.onpointerup();
+            }
+        }
+    }
+    sendUp(comfyFrame().contentWindow);
+    sendUp(comfyFrame().contentWindow.document);
+    sendUp(comfyFrame().contentWindow.document.body);
+    comfyFrame().contentWindow.app.canvas.processMouseUp(new PointerEvent('pointerup', { isPrimary: true, bubbles: true, cancelable: true }));
+}
+
+document.addEventListener('mouseup', function (e) {
+    if (hasComfyLoaded && e.button == 0) {
+        comfyAggressiveMouseUp();
+    }
+});
+
+/**
  * Builds a set of pseudo-parameters for the current Comfy workflow (async) then calls a callback with the parameter set object, the API workflow, and a list of retained default parameters, as callback(params, workflow, retained).
  */
 function comfyBuildParams(callback) {
