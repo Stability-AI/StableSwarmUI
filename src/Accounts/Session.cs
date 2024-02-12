@@ -116,7 +116,8 @@ public class Session : IEquatable<Session>
             }
         }
         string metadata = user_input.GenRawMetadata();
-        image = image.ConvertTo(User.Settings.FileFormat.ImageFormat, User.Settings.FileFormat.SaveMetadata ? metadata : null, User.Settings.FileFormat.DPI);
+        string format = user_input.Get(T2IParamTypes.ImageFormat, User.Settings.FileFormat.ImageFormat);
+        image = image.ConvertTo(format, User.Settings.FileFormat.SaveMetadata ? metadata : null, User.Settings.FileFormat.DPI);
         return (image, metadata ?? "");
     }
 
@@ -136,7 +137,8 @@ public class Session : IEquatable<Session>
         }
         string rawImagePath = User.BuildImageOutputPath(user_input, batchIndex);
         string imagePath = rawImagePath.Replace("[number]", "1");
-        string extension = (User.Settings.FileFormat.ImageFormat == "PNG" ? "png" : "jpg");
+        string format = user_input.Get(T2IParamTypes.ImageFormat, User.Settings.FileFormat.ImageFormat);
+        string extension = format == "PNG" ? "png" : "jpg";
         if (image.Type != Image.ImageType.IMAGE)
         {
             Logs.Verbose($"Image is type {image.Type} and will save with extension '{image.Extension}'.");
