@@ -104,7 +104,7 @@ body {
 .t2i-mid-split-quickbutton {
     float: right;
     vertical-align: top;
-    top: -1.5rem;
+    top: 0rem;
     right: 2rem;
 }
 .t2i-top-bar {
