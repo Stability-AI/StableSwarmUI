@@ -149,5 +149,12 @@ public class PromptRegion
             Parts.Add(p);
             addMore = s => p.Prompt += s;
         }
+        foreach (Part part in Parts)
+        {
+            if (part.Type == PartType.Segment && string.IsNullOrWhiteSpace(part.Prompt))
+            {
+                part.Prompt = GlobalPrompt;
+            }
+        }
     }
 }
