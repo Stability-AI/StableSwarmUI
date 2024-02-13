@@ -13,9 +13,10 @@
     flex-wrap: wrap;
 }
 .input-group-content > div {
-   padding: 5px;
-   flex: 0 0 50%;
-}
+    padding: 5px;
+    flex: 1 0 0;
+    min-width: 12.5rem;
+ }
 
 .input-group {
     border-radius: 9px !important;
