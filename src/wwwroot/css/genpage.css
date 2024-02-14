@@ -597,21 +597,14 @@ body {
     padding-top: 1rem;
 }
 .settings-group {
-    display: block;
-    width: 100%;
-    margin-top: 1rem;
-    margin-bottom: 2rem;
+    margin-top: 2rem;
     padding-bottom: 0.2rem;
     padding-left: 2rem;
-    border: 1px solid var(--shadow);
-    border-radius: 1rem;
-    padding-top: 0.5rem;
 }
 .group-label {
     position: relative;
-    top: -1.3rem;
-    height: 0.5rem;
     left: -1rem;
+    margin-bottom: 0.7rem;
 }
 .input-group-closed .input-group-header-activated {
     background-color: color-mix(in srgb, var(--background) 90%, var(--emphasis));

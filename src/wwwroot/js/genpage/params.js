@@ -22,10 +22,12 @@ function getHtmlForParam(param, prefix) {
                 }
                 switch (param.view_type) {
                     case 'small':
-                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, 'small', param.toggleable, !param.no_popover) + pop};
+                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, 'small', param.toggleable, !param.no_popover) + pop,
+                        runnable: () => autoNumberWidth(getRequiredElementById(`${prefix}${param.id}`))};
                     case 'normal':
                     case 'big':
-                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, 'big', param.toggleable, !param.no_popover) + pop};
+                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, 'big', param.toggleable, !param.no_popover) + pop,
+                        runnable: () => autoNumberWidth(getRequiredElementById(`${prefix}${param.id}`))};
                     case 'seed':
                         return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, 'seed', param.toggleable, !param.no_popover) + pop};
                     case 'slider':

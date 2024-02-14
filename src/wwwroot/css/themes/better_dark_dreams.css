@@ -22,6 +22,9 @@
     background-color: #222226;
     margin-bottom: 1.8rem !important;
 }
+.settings-group {
+    margin-top: 2rem !important;
+}
 .input-group-closed {
     background-color: transparent !important;
     margin-bottom: 1rem !important;
@@ -34,7 +37,7 @@
 }
 .auto-symbol {
     color:var(--emphasis);
-    margin-right: 0.25rem
+    margin-right: 0.25rem;
 }
 .form-check-input:checked {
     background-color: var(--emphasis);
