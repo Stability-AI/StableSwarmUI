@@ -212,7 +212,7 @@ class UIImprovementHandler {
         document.addEventListener('mousedown', (e) => {
             if (e.target.tagName == 'SELECT') {
                 lastShift = e.shiftKey;
-                if (!lastShift) {
+                if (!lastShift && e.target.options.length > 5) {
                     e.preventDefault();
                     e.stopPropagation();
                     return false;
@@ -220,12 +220,12 @@ class UIImprovementHandler {
             }
         }, true);
         document.addEventListener('click', (e) => {
-            if (e.target.tagName == 'SELECT' && !lastShift) { // e.shiftKey doesn't work in click for some reason
+            if (e.target.tagName == 'SELECT' && !lastShift && e.target.options.length > 5) { // e.shiftKey doesn't work in click for some reason
                 return this.onSelectClicked(e.target, e);
             }
         }, true);
         document.addEventListener('mouseup', (e) => {
-            if (e.target.tagName == 'SELECT' && !e.shiftKey) {
+            if (e.target.tagName == 'SELECT' && !e.shiftKey && e.target.options.length > 5) {
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
@@ -244,7 +244,7 @@ class UIImprovementHandler {
         let popId = `uiimprover_${elem.id}`;
         let rect = elem.getBoundingClientRect();
         let buttons = [...elem.options].map(o => { return { key: o.innerText, action: () => { elem.value = o.value; triggerChangeFor(elem); } }; })
-        this.lastPopover = new AdvancedPopover(popId, buttons, true, rect.x, rect.y, elem.value, 0);
+        this.lastPopover = new AdvancedPopover(popId, buttons, true, rect.x, rect.y, elem.selectedIndex < 0 ? null : elem.selectedOptions[0].innerText, 0);
         e.preventDefault();
         e.stopPropagation();
         return false;
