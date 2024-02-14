@@ -7,7 +7,7 @@
     padding-left: 0.3em;
     padding-right: 0.3em;
 }
-.input-group-content[style*="display: block;"] {
+.input-group-content:not([style*="display: none;"]) {
     display: flex !important;
     flex-wrap: wrap;
 }
