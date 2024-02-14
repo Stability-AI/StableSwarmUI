@@ -7,7 +7,6 @@
     padding-left: 0.3em;
     padding-right: 0.3em;
 }
-
 .input-group-content[style*="display: block;"] {
     display: flex !important;
     flex-wrap: wrap;
@@ -17,7 +16,6 @@
     flex: 1 0 0;
     min-width: 12.5rem;
  }
-
 .input-group {
     border-radius: 9px !important;
     margin-top: 0rem !important;
@@ -30,7 +28,6 @@
     background-color: #222226;
     margin-bottom: 1.8rem !important;
 }
-
 .header-label-wrap {
     position: absolute;
     top: -1.2em;
@@ -49,7 +46,6 @@
     background-color: transparent !important;
     background-image: none !important;
 }
-
 .t2i-area-quicktools {
   right: 0.2rem;
   top: 0.1rem;
@@ -57,7 +53,6 @@
 .t2i-split-quickbutton {
     display: none;
 }
-
 :root {
     --background: #18181b;
     --background-soft: #27272a;
