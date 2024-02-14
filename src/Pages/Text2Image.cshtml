@@ -28,22 +28,6 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link translate" data-bs-toggle="tab" href="#server_tab_body" id="servertabbutton" aria-selected="false" tabindex="-1" role="tab">Server</a>
     </li>
-    <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" id="language_dropdown_link" style="float:right" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Language</a>
-        <div class="dropdown-menu translate-menu notranslate">
-            @foreach (string code in LanguagesHelper.PreferredLanguages)
-            {
-                LanguagesHelper.Language lang = LanguagesHelper.Languages[code];
-                <a class="dropdown-item" onclick="changeLanguage('@code')" href="#"><span class="translate-block-sm"><img class="translate-img" src="imgs/flags/@(code).jpg" /></span><span class="translate-block-sm2">@code</span> - @lang.Name - @lang.LocalName</a>
-            }
-            <div class="dropdown-divider"></div>
-            @foreach (string code in LanguagesHelper.SortedList.Except(LanguagesHelper.PreferredLanguages))
-            {
-                LanguagesHelper.Language lang = LanguagesHelper.Languages[code];
-                <a class="dropdown-item" onclick="changeLanguage('@code')" href="#"><span class="translate-block-sm"><img class="translate-img" src="imgs/flags/@(code).jpg" /></span><span class="translate-block-sm2">@code</span> - @lang.Name - @lang.LocalName</a>
-            }
-        </div>
-    </li>
 </ul>
 <div class="tab-content tab-hundred">
     <div class="tab-pane show active" style="line-height:0" id="Text2Image" role="tabpanel">
@@ -478,7 +462,30 @@
                 <br>
             </div>
             <div class="tab-pane" id="Settings-User" role="tabpanel">
-                <div id="user_settings_container" class="settings-container"></div>
+                <div class="settings-container">
+                    <div class="auto-input" style="overflow: visible">
+                        <span class="auto-input-name translate">Language</span>
+                        <ul class="nav" style="display:inline-block" role="tablist">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" id="language_dropdown_link" style="color:var(--text)" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Language</a>
+                                <div class="dropdown-menu translate-menu notranslate">
+                                    @foreach (string code in LanguagesHelper.PreferredLanguages)
+                                    {
+                                        LanguagesHelper.Language lang = LanguagesHelper.Languages[code];
+                                        <a class="dropdown-item" onclick="changeLanguage('@code')" href="#"><span class="translate-block-sm"><img class="translate-img" src="imgs/flags/@(code).jpg" /></span><span class="translate-block-sm2">@code</span> - @lang.Name - @lang.LocalName</a>
+                                    }
+                                    <div class="dropdown-divider"></div>
+                                    @foreach (string code in LanguagesHelper.SortedList.Except(LanguagesHelper.PreferredLanguages))
+                                    {
+                                        LanguagesHelper.Language lang = LanguagesHelper.Languages[code];
+                                        <a class="dropdown-item" onclick="changeLanguage('@code')" href="#"><span class="translate-block-sm"><img class="translate-img" src="imgs/flags/@(code).jpg" /></span><span class="translate-block-sm2">@code</span> - @lang.Name - @lang.LocalName</a>
+                                    }
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="user_settings_container"></div>
+                </div>
                 <div class="settings_submit_confirmer" id="usersettings_confirmer">
                     <span class="settings_submit_confirmer_text">Save <span id="usersettings_edit_count">0</span> edited setting(s)?</span>
                     <button type="button" class="btn btn-primary basic-button translate" onclick="save_user_settings()">Save</button>
