@@ -19,14 +19,12 @@
 .input-group {
     border-radius: 9px !important;
     margin-top: 0rem !important;
+    background-color: #222226;
+    margin-bottom: 1.8rem !important;
 }
 .input-group-closed {
     background-color: transparent !important;
     margin-bottom: 1rem !important;
-}
-.input-group-open {
-    background-color: #222226;
-    margin-bottom: 1.8rem !important;
 }
 .header-label-wrap {
     position: absolute;
@@ -107,4 +105,3 @@
     --box-selected-border-stronger: rgba(120, 85, 225, 1.0);
     --box-selected-background-stronger: rgba(120, 85, 225, 0.3);
   }
-  
