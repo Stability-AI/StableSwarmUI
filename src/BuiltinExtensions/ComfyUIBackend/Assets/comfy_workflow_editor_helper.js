@@ -170,7 +170,9 @@ function comfyAggressiveMouseUp() {
     sendUp(comfyFrame().contentWindow);
     sendUp(comfyFrame().contentWindow.document);
     sendUp(comfyFrame().contentWindow.document.body);
-    comfyFrame().contentWindow.app.canvas.processMouseUp(new PointerEvent('pointerup', { isPrimary: true, bubbles: true, cancelable: true }));
+    if (comfyFrame().contentWindow.app.canvas) {
+        comfyFrame().contentWindow.app.canvas.processMouseUp(new PointerEvent('pointerup', { isPrimary: true, bubbles: true, cancelable: true }));
+    }
 }
 
 document.addEventListener('mouseup', function (e) {

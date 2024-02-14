@@ -63,9 +63,6 @@
 .comfy_workflow_buttons * {
     border-radius: 0px !important;
 }
-.comfy_buttons_closer {
-    display: none !important;
-}
 .comfy_workflow_buttons_actual {
     left: 0.5rem !important;
     top: 0.5rem !important;
@@ -104,4 +101,4 @@
     --box-selected-background: rgba(120, 85, 225, 0.2);
     --box-selected-border-stronger: rgba(120, 85, 225, 1.0);
     --box-selected-background-stronger: rgba(120, 85, 225, 0.3);
-  }
+}

@@ -511,7 +511,6 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
 }
 
 function makeDropdownInput(featureid, id, name, description, values, defaultVal, toggles = false, popover_button = true, alt_names = null) {
-    console.log(`${alt_names}`)
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
