@@ -55,6 +55,7 @@ function enableSliderForBox(div) {
         });
     }
     number.dispatchEvent(new Event('input'));
+    autoNumberWidth(number);
 }
 
 function showError(message) {
@@ -382,6 +383,15 @@ function autoSelectWidth(elem) {
     span.remove();
 }
 
+function autoNumberWidth(elem) {
+    let span = document.createElement('span');
+    span.innerText = elem.value;
+    document.body.appendChild(span);
+    let width = Math.max(40, span.offsetWidth + 15);
+    elem.style.width = `${width}px`;
+    span.remove();
+}
+
 function makeGenericPopover(id, name, type, description, example) {
     return `<div class="sui-popover" id="popover_${id}"><b>${escapeHtmlNoBr(name)}</b> (${type}):<br>&emsp;${escapeHtmlNoBr(description)}${example}</div>`;
 }
@@ -440,7 +450,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, view
     <div class="slider-auto-container">
     <div class="auto-input auto-slider-box"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
-        <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
+        <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false" onchange="autoNumberWidth(this)">
         <br>
         <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
     </div></div>`;
