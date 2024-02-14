@@ -48,9 +48,6 @@
   right: 0.2rem;
   top: 0.1rem;
 }
-.t2i-split-quickbutton {
-    display: none;
-}
 :root {
     --background: #18181b;
     --background-soft: #27272a;
