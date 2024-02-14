@@ -70,6 +70,7 @@ function copy_current_image_params() {
         metadata.negativeprompt = metadata.original_negativeprompt;
     }
     let exclude = getUserSetting('reuseparamexcludelist').split(',').map(s => cleanParamName(s));
+    resetParamsToDefault(exclude);
     for (let param of gen_param_types) {
         let elem = document.getElementById(`input_${param.id}`);
         if (elem && metadata[param.id] && !exclude.includes(param.id)) {
@@ -78,6 +79,12 @@ function copy_current_image_params() {
                 let toggle = getRequiredElementById(`input_${param.id}_toggle`);
                 toggle.checked = true;
                 doToggleEnable(elem.id);
+            }
+            if (param.group && param.group.toggles) {
+                let toggle = getRequiredElementById(`input_group_content_${param.group.id}_toggle`);
+                if (!toggle.checked) {
+                    toggle.click();
+                }
             }
         }
         else if (elem && param.toggleable && param.visible) {

@@ -567,12 +567,12 @@ function setDirectParamValue(param, value, paramElem = null) {
     triggerChangeFor(paramElem);
 }
 
-function resetParamsToDefault() {
+function resetParamsToDefault(exclude = []) {
     getRequiredElementById('alt_prompt_textbox').value = '';
     for (let param of gen_param_types) {
         let id = `input_${param.id}`;
         deleteCookie(`lastparam_${id}`);
-        if (param.visible) {
+        if (param.visible && !exclude.includes(param.id)) {
             setDirectParamValue(param, param.default);
             if (param.id == 'prompt') {
                 triggerChangeFor(getRequiredElementById(id));
