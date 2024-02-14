@@ -39,9 +39,11 @@ public static class AdminAPI
                 val = AutoConfigToParamData(subConf);
             }
             string[] vals = data.Field.GetCustomAttribute<SettingsOptionsAttribute>()?.Options ?? null;
+            string[] val_names = null;
             if (vals is not null)
             {
                 typeName = "dropdown";
+                val_names = data.Field.GetCustomAttribute<SettingsOptionsAttribute>()?.Names ?? null;
             }
             output[key] = new JObject()
             {
@@ -49,7 +51,8 @@ public static class AdminAPI
                 ["name"] = data.Name,
                 ["value"] = JToken.FromObject(val is List<string> list ? list.JoinString(" || ") : val),
                 ["description"] = data.Field.GetCustomAttribute<AutoConfiguration.ConfigComment>()?.Comments ?? "",
-                ["values"] = vals == null ? null : new JArray(vals)
+                ["values"] = vals == null ? null : new JArray(vals),
+                ["value_names"] = val_names == null ? null : new JArray(val_names)
             };
         }
         return output;

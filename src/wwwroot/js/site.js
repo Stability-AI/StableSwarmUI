@@ -510,7 +510,8 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
     </div>`;
 }
 
-function makeDropdownInput(featureid, id, name, description, values, defaultVal, toggles = false, popover_button = true) {
+function makeDropdownInput(featureid, id, name, description, values, defaultVal, toggles = false, popover_button = true, alt_names = null) {
+    console.log(`${alt_names}`)
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let [popover, featureid2] = getPopoverElemsFor(id, popover_button);
@@ -519,9 +520,11 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
     <div class="auto-input auto-dropdown-box auto-input-flex"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         <select class="auto-dropdown" id="${id}" autocomplete="false" onchange="autoSelectWidth(this)">`;
-    for (let value of values) {
+    for (let i = 0; i < values.length; i++) {
+        let value = values[i];
+        let alt_name = alt_names && alt_names[i] ? alt_names[i] : value;
         let selected = value == defaultVal ? ' selected="true"' : '';
-        html += `<option value="${escapeHtmlNoBr(value)}"${selected}>${escapeHtml(value)}</option>`;
+        html += `<option value="${escapeHtmlNoBr(value)}"${selected}>${escapeHtml(alt_name)}</option>`;
     }
     html += `
         </select>

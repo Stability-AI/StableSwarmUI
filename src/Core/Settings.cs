@@ -200,6 +200,8 @@ public class Settings : AutoConfiguration
         public class ThemesImpl : SettingsOptionsAttribute.AbstractImpl
         {
             public override string[] GetOptions => Program.Web.RegisteredThemes.Keys.ToArray();
+
+            public override string[] Names => Program.Web.RegisteredThemes.Values.Select(v => v.Name).ToArray();
         }
 
         [ConfigComment("What theme to use. Default is 'dark_dreams'.")]
@@ -287,6 +289,8 @@ public class SettingsOptionsAttribute : Attribute
     public abstract class AbstractImpl
     {
         public abstract string[] GetOptions { get; }
+
+        public virtual string[] Names => GetOptions;
     }
 
     public class ForEnum<T> : AbstractImpl where T : Enum
@@ -297,6 +301,8 @@ public class SettingsOptionsAttribute : Attribute
     public Type Impl;
 
     public virtual string[] Options => (Activator.CreateInstance(Impl) as AbstractImpl).GetOptions;
+
+    public virtual string[] Names => (Activator.CreateInstance(Impl) as AbstractImpl).Names;
 }
 
 [AttributeUsage(AttributeTargets.Field)]
@@ -305,4 +311,6 @@ public class ManualSettingsOptionsAttribute : SettingsOptionsAttribute
     public string[] Vals;
 
     public override string[] Options => Vals;
+
+    public override string[] Names => Vals;
 }

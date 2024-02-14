@@ -41,7 +41,7 @@ function getHtmlForParam(param, prefix) {
             case 'boolean':
                 return {html: makeCheckboxInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.toggleable, false, !param.no_popover) + pop};
             case 'dropdown':
-                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, param.toggleable, !param.no_popover) + pop,
+                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, param.toggleable, !param.no_popover, param['value_names']) + pop,
                         runnable: () => autoSelectWidth(getRequiredElementById(`${prefix}${param.id}`))};
             case 'list':
                 if (param.values) {
