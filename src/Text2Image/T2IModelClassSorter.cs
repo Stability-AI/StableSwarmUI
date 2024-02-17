@@ -146,6 +146,9 @@ public class T2IModelClassSorter
         }});
         Register(new() { ID = "segmind-stable-diffusion-1b", CompatClass = "segmind-stable-diffusion-1b", Name = "Segmind Stable Diffusion 1B (SSD-1B)", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; } });
         Register(new() { ID = "stable-video-diffusion-img2vid-v1", CompatClass = "stable-video-diffusion-img2vid-v1", Name = "Stable Video Diffusion Img2Vid v1", StandardWidth = 1024, StandardHeight = 576, IsThisModelOfClass = (m, h) => { return false; }});
+        Register(new() { ID = "stable-cascade-v1-stage-a", CompatClass = "stable-cascade-v1", Name = "Stable Cascade v1 (Stage A)", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; } });
+        Register(new() { ID = "stable-cascade-v1-stage-b", CompatClass = "stable-cascade-v1", Name = "Stable Cascade v1 (Stage B)", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; } });
+        Register(new() { ID = "stable-cascade-v1-stage-c", CompatClass = "stable-cascade-v1", Name = "Stable Cascade v1 (Stage C)", StandardWidth = 1024, StandardHeight = 1024, IsThisModelOfClass = (m, h) => { return false; } });
     }
 
     /// <summary>Returns the model class that matches this model, or null if none.</summary>

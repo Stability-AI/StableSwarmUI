@@ -120,6 +120,10 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 clip_vision: |
                     {Program.ServerSettings.Paths.SDClipVisionFolder}
                     clip_vision
+                clip: |
+                    clip
+                unet: |
+                    unet
                 custom_nodes: |
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes")}
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/ExtraNodes")}
