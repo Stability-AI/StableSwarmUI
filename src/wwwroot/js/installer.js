@@ -26,7 +26,10 @@ class InstallerClass {
         }
         getRequiredElementById('stability_api_key').addEventListener('input', this.check.bind(this));
         getRequiredElementById('installer_button_confirm').addEventListener('click', this.submit.bind(this));
-        getSession();
+        getSession(() => {
+            language = language || 'en';
+            loadAndApplyTranslations();
+        });
     }
 
     themeChanged() {
@@ -130,6 +133,7 @@ class InstallerClass {
             backend: getRadioSelectionInFieldset('backend_selection_field'),
             stability_api_key: getRequiredElementById('stability_api_key').value,
             models: models.length == 0 ? 'none' : this.modelsToDownload().join(', '),
+            language: document.getElementById('installer_language').value,
             install_amd: install_amd
         };
     }

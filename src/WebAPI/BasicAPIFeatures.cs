@@ -63,7 +63,7 @@ public static class BasicAPIFeatures
         };
     }
 
-    public static async Task<JObject> InstallConfirmWS(Session session, WebSocket socket, string theme, string installed_for, string backend, string stability_api_key, string models, bool install_amd)
+    public static async Task<JObject> InstallConfirmWS(Session session, WebSocket socket, string theme, string installed_for, string backend, string stability_api_key, string models, bool install_amd, string language)
     {
         if (Program.ServerSettings.IsInstalled)
         {
@@ -92,6 +92,7 @@ public static class BasicAPIFeatures
             await socket.SendJson(new JObject() { ["error"] = $"Invalid theme input!" }, API.WebsocketTimeout);
             return null;
         }
+        Program.ServerSettings.DefaultUser.Language = language;
         switch (installed_for)
         {
             case "just_self":

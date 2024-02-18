@@ -135,6 +135,11 @@ function changeLanguage(code) {
         triggerChangeFor(langSetting);
         save_user_settings();
     }
+    let installerSetting = document.getElementById('installer_language');
+    if (installerSetting) {
+        installerSetting.value = code;
+        triggerChangeFor(installerSetting);
+    }
     loadAndApplyTranslations();
 }
 

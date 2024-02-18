@@ -18,6 +18,26 @@
 
 <div class="headline">
     <h1>StableSwarmUI Installer</h1>
+    <span class="auto-input-name translate">Language</span>
+    <ul class="nav" style="display:inline-block" role="tablist">
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" id="language_dropdown_link" style="color:var(--text)" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Language</a>
+            <div class="dropdown-menu translate-menu notranslate">
+                @foreach (string code in LanguagesHelper.PreferredLanguages)
+                {
+                    LanguagesHelper.Language lang = LanguagesHelper.Languages[code];
+                    <a class="dropdown-item" onclick="changeLanguage('@code')" href="#"><span class="translate-block-sm"><img class="translate-img" src="imgs/flags/@(code).jpg" /></span><span class="translate-block-sm2">@code</span> - @lang.Name - @lang.LocalName</a>
+                }
+                <div class="dropdown-divider"></div>
+                @foreach (string code in LanguagesHelper.SortedList.Except(LanguagesHelper.PreferredLanguages))
+                {
+                    LanguagesHelper.Language lang = LanguagesHelper.Languages[code];
+                    <a class="dropdown-item" onclick="changeLanguage('@code')" href="#"><span class="translate-block-sm"><img class="translate-img" src="imgs/flags/@(code).jpg" /></span><span class="translate-block-sm2">@code</span> - @lang.Name - @lang.LocalName</a>
+                }
+            </div>
+        </li>
+    </ul>
+    <input type="hidden" id="installer_language" value="en" />
 </div>
 <hr>
 
