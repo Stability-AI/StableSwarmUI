@@ -95,7 +95,8 @@ function applyThemeSetting(theme_info) {
             let theme_id = themeSelectorElement.value;
             let theme = theme_info[theme_id];
             setCookie('sui_theme_id', theme_id, 365);
-            getRequiredElementById('theme_sheet_header').href = theme.path;
+            let header = getRequiredElementById('theme_sheet_header');
+            header.href = theme.path + '?' + header.href.split('?')[1];
             getRequiredElementById('bs_theme_header').href = theme.is_dark ? '/css/bootstrap.min.css' : '/css/bootstrap_light.min.css';
         }
         themeSelectorElement.addEventListener('change', setTheme);
