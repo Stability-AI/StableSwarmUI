@@ -55,6 +55,19 @@
     background-color: #7855e1;
     color: #ffffff;
 }
+.theme_preview_cyber_swarm {
+    background-color: #18181b;
+    color: #eeeeee;
+}
+.theme_preview_cyber_swarm .button_example {
+    border-color: #3f3f46;
+    background-color: #00bc8c;
+    color: #ffffff;
+    border-radius: 1rem;
+    padding-top: 0.1em;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+}
 .theme_preview_gravity_blue {
     background-color: #0b0f20;
     color: #eeeeee;
