@@ -36,6 +36,7 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(ChangeUserSettings);
         API.RegisterAPICall(SetParamEdits);
         API.RegisterAPICall(GetLanguage);
+        API.RegisterAPICall(ServerDebugMessage);
         T2IAPI.Register();
         ModelsAPI.Register();
         BackendAPI.Register();
@@ -436,5 +437,11 @@ public static class BasicAPIFeatures
             return new JObject() { ["error"] = "No such language." };
         }
         return new JObject() { ["language"] = lang.ToJSON() };
+    }
+
+    public static async Task<JObject> ServerDebugMessage(Session session, string message)
+    {
+        Logs.Info($"User '{session.User.UserID}' sent a debug message: {message}");
+        return new JObject() { ["success"] = true };
     }
 }

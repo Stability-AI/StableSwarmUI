@@ -189,6 +189,18 @@ function getSession(callback) {
     });
 }
 
+function sendServerDebugMessage(message) {
+    genericRequest('ServerDebugMessage', { message: message }, data => { });
+}
+
+function doGlobalErrorDebug() {
+    window.onerror = (msg, url, line, col, error) => {
+        var extra = !col ? '' : '\ncolumn: ' + col;
+        extra += !error ? '' : '\nerror: ' + error;
+        sendServerDebugMessage("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+     };
+}
+
 function triggerChangeFor(elem) {
     elem.dispatchEvent(new Event('input'));
     if (elem.oninput) {

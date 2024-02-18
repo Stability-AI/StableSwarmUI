@@ -1129,6 +1129,14 @@ function pageSizer() {
         topDrag2 = true;
         e.preventDefault();
     }, true);
+    topSplit.addEventListener('touchstart', (e) => {
+        topDrag = true;
+        e.preventDefault();
+    }, true);
+    topSplit2.addEventListener('touchstart', (e) => {
+        topDrag2 = true;
+        e.preventDefault();
+    }, true);
     function setMidForce(val) {
         midForceToBottom = val;
         localStorage.setItem('barspot_midForceToBottom', midForceToBottom);
@@ -1138,6 +1146,14 @@ function pageSizer() {
         localStorage.setItem('barspot_leftShut', leftShut);
     }
     midSplit.addEventListener('mousedown', (e) => {
+        if (e.target == midSplitButton) {
+            return;
+        }
+        midDrag = true;
+        setMidForce(false);
+        e.preventDefault();
+    }, true);
+    midSplit.addEventListener('touchstart', (e) => {
         if (e.target == midSplitButton) {
             return;
         }
@@ -1160,8 +1176,8 @@ function pageSizer() {
         e.preventDefault();
         triggerChangeFor(altText);
     }, true);
-    document.addEventListener('mousemove', (e) => {
-        let offX = e.pageX;
+    let moveEvt = (e, x, y) => {
+        let offX = x;
         offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
         if (topDrag) {
             pageBarTop = Math.min(offX - 5, 51 * 16);
@@ -1179,8 +1195,15 @@ function pageSizer() {
             pageBarMid = window.innerHeight - refY + topBar.getBoundingClientRect().top + 15;
             setPageBars();
         }
-    });
+    };
+    document.addEventListener('mousemove', (e) => moveEvt(e, e.pageX, e.pageY));
+    document.addEventListener('touchmove', (e) =>moveEvt(e, e.touches.item(0).pageX, e.touches.item(0).pageY));
     document.addEventListener('mouseup', (e) => {
+        topDrag = false;
+        topDrag2 = false;
+        midDrag = false;
+    });
+    document.addEventListener('touchend', (e) => {
         topDrag = false;
         topDrag2 = false;
         midDrag = false;
