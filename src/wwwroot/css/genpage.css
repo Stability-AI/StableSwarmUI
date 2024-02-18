@@ -1106,3 +1106,7 @@ body {
         width: calc(16rem - 5px);
     }
 }
+.auto-symbol {
+    color:var(--emphasis);
+    margin-right: 0.25rem;
+}

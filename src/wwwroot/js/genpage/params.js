@@ -79,7 +79,7 @@ function toggleGroupOpen(elem, shouldOpen = null) {
 
 function doGroupOpenUpdate(group, parent, isOpen) {
     if (isOpen) {
-        group.style.display = 'block';
+        group.style.display = 'flex';
         parent.classList.remove('input-group-closed');
         parent.classList.add('input-group-open');
         parent.querySelector('.auto-symbol').innerHTML = '&#x2B9F;';

@@ -372,20 +372,30 @@ textarea, input, select {
 .input-group {
     width: 100%;
     border: 1px solid var(--shadow);
-    border-radius: 1rem;
-    margin-top: 0.8rem;
-    margin-bottom: 0.2rem;
+    border-radius: 9px;
+    margin-top: 0rem;
+    margin-bottom: 1.8rem;
     padding-bottom: 0.1rem;
     max-width: 51rem;
+    background-color: var(--background-gray);
 }
 .input-group-closed {
     border: none;
+    background-color: transparent;
+    margin-bottom: 1rem;
 }
 .input-group-content {
+    display: flex;
     max-width: calc(100% - 6px);
     padding-left: 0.5rem;
     width: 100%;
+    flex-wrap: wrap;
 }
+.input-group-content > div {
+    padding: 5px;
+    flex: 1 0 0;
+    min-width: 15rem;
+ }
 .input-group-header {
     position: relative;
     display: block;
@@ -398,6 +408,14 @@ textarea, input, select {
 .header-label-wrap {
     width: calc(100% - 20px);
     display: inline-block;
+    position: absolute;
+    top: -1.2em;
+    left: -1em;
+    margin: 4px;
+}
+.form-check-input:checked {
+    background-color: var(--emphasis);
+    border-color: none;
 }
 .basic-button {
     display: inline-block;

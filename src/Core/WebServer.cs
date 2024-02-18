@@ -86,7 +86,6 @@ public class WebServer
     {
         RegisteredThemes.Clear();
         RegisterTheme(new("dark_dreams", "Dark Dreams", "/css/themes/dark_dreams.css", true));
-        RegisterTheme(new("better_dark_dreams", "Better Dark Dreams", "/css/themes/better_dark_dreams.css", true));
         RegisterTheme(new("gravity_blue", "Gravity Blue", "/css/themes/gravity_blue.css", true));
         RegisterTheme(new("cyber_swarm", "Cyber Swarm", "/css/themes/cyber_swarm.css", true));
         RegisterTheme(new("eyesear_white", "Eyesear White", "/css/themes/eyesear_white.css", false));

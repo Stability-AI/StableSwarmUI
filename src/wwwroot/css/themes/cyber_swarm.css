@@ -1,6 +1,3 @@
-.auto-input-name {
-    margin-bottom: 0px;
-}
 .input-group .basic-button {
     border-radius: 1rem;
     padding-top: 0.1em;
@@ -10,46 +7,6 @@
 .input-group-content:not([style*="display: none;"]) {
     display: flex !important;
     flex-wrap: wrap;
-}
-.input-group-content > div {
-    padding: 5px;
-    flex: 1 0 0;
-    min-width: 12.5rem;
- }
-.input-group {
-    border-radius: 9px !important;
-    margin-top: 0rem !important;
-    background-color: #222226;
-    margin-bottom: 1.8rem !important;
-}
-.settings-group {
-    margin-top: 2rem !important;
-}
-.input-group-closed {
-    background-color: transparent !important;
-    margin-bottom: 1rem !important;
-}
-.header-label-wrap {
-    position: absolute;
-    top: -1.2em;
-    left: -1em;
-    margin: 4px;
-}
-.auto-symbol {
-    color:var(--emphasis);
-    margin-right: 0.25rem;
-}
-.form-check-input:checked {
-    background-color: var(--emphasis);
-    border-color: none;
-}
-.input-group .input-group-header-activated {
-    background-color: transparent !important;
-    background-image: none !important;
-}
-.t2i-area-quicktools {
-  right: 0.2rem;
-  top: 0.1rem;
 }
 .nav-tabs .nav-link {
     border-radius: 0px;
