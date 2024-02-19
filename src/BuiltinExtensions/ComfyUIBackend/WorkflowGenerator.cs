@@ -206,11 +206,7 @@ public class WorkflowGenerator
             if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image img))
             {
                 g.CreateLoadImageNode(img, "${initimage}", true, "15");
-                g.CreateNode("VAEEncode", new JObject()
-                {
-                    ["pixels"] = new JArray() { "15", 0 },
-                    ["vae"] = g.FinalVae
-                }, "5");
+                g.CreateVAEEncode(g.FinalVae, new JArray() { "15", 0 }, "5");
                 if (g.UserInput.TryGet(T2IParamTypes.UnsamplerPrompt, out string unprompt))
                 {
                     int steps = g.UserInput.Get(T2IParamTypes.Steps);
@@ -678,11 +674,7 @@ public class WorkflowGenerator
                     }
                     if (modelMustReencode || doPixelUpscale)
                     {
-                        g.CreateNode("VAEEncode", new JObject()
-                        {
-                            ["pixels"] = new JArray() { pixelsNode, 0 },
-                            ["vae"] = g.FinalVae
-                        }, "25");
+                        g.CreateVAEEncode(g.FinalVae, new JArray() { pixelsNode, 0 }, "25");
                         g.FinalSamples = new() { "25", 0 };
                     }
                 }
@@ -786,11 +778,7 @@ public class WorkflowGenerator
                         ["height"] = g.UserInput.GetImageHeight(),
                         ["can_shrink"] = false
                     });
-                    string vaeEncoded = g.CreateNode("VAEEncode", new JObject()
-                    {
-                        ["pixels"] = new JArray() { scaledImage, 0 },
-                        ["vae"] = g.FinalVae
-                    });
+                    string vaeEncoded = g.CreateVAEEncode(g.FinalVae, new JArray() { scaledImage, 0 }, null, true);
                     string masked = g.CreateNode("SetLatentNoiseMask", new JObject()
                     {
                         ["samples"] = new JArray() { vaeEncoded, 0 },
@@ -1260,6 +1248,28 @@ public class WorkflowGenerator
             created = CreateKSampler(cascadeModel, new JArray() { stageBCond, 0 }, new JArray() { negCond, 0 }, new JArray() { latent[0], 1 }, 1.1, steps, startStep, endStep, seed + 27, returnWithLeftoverNoise, addNoise, sigmin, sigmax, previews, defsampler, defscheduler, id, true);
         }
         return created;
+    }
+
+    /// <summary>Creates a VAE Encode node.</summary>
+    public string CreateVAEEncode(JArray vae, JArray image, string id = null, bool noCascade = false)
+    {
+        if (!noCascade && IsCascade())
+        {
+            return CreateNode("StableCascade_StageC_VAEEncode", new JObject()
+            {
+                ["vae"] = vae,
+                ["image"] = image,
+                ["compression"] = 32
+            }, id);
+        }
+        else
+        {
+            return CreateNode("VAEEncode", new JObject()
+            {
+                ["vae"] = vae,
+                ["pixels"] = image
+            }, id);
+        }
     }
 
     /// <summary>Creates an Empty Latent Image node.</summary>
