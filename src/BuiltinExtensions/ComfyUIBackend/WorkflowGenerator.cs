@@ -83,7 +83,7 @@ public class WorkflowGenerator
         AddStep(g =>
         {
             g.FinalLoadedModel = g.UserInput.Get(T2IParamTypes.Model);
-            (g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(g.FinalLoadedModel, "Base", "4");
+            (g.FinalLoadedModel, g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(g.FinalLoadedModel, "Base", "4");
         }, -15);
         AddModelGenStep(g =>
         {
@@ -257,12 +257,7 @@ public class WorkflowGenerator
                 }
                 if (g.UserInput.TryGet(T2IParamTypes.InitImageResetToNorm, out double resetFactor))
                 {
-                    string emptyImg = g.CreateNode("EmptyLatentImage", new JObject()
-                    {
-                        ["batch_size"] = g.UserInput.Get(T2IParamTypes.BatchSize, 1),
-                        ["height"] = g.UserInput.GetImageHeight(),
-                        ["width"] = g.UserInput.Get(T2IParamTypes.Width)
-                    });
+                    string emptyImg = g.CreateEmptyImage(g.UserInput.Get(T2IParamTypes.Width), g.UserInput.GetImageHeight(), g.UserInput.Get(T2IParamTypes.BatchSize, 1));
                     if (g.Features.Contains("comfy_latent_blend_masked") && maskImageNode is not null)
                     {
                         string blended = g.CreateNode("SwarmLatentBlendMasked", new JObject()
@@ -306,12 +301,7 @@ public class WorkflowGenerator
             }
             else
             {
-                g.CreateNode("EmptyLatentImage", new JObject()
-                {
-                    ["batch_size"] = g.UserInput.Get(T2IParamTypes.BatchSize, 1),
-                    ["height"] = g.UserInput.GetImageHeight(),
-                    ["width"] = g.UserInput.Get(T2IParamTypes.Width)
-                }, "5");
+                g.CreateEmptyImage(g.UserInput.Get(T2IParamTypes.Width), g.UserInput.GetImageHeight(), g.UserInput.Get(T2IParamTypes.BatchSize, 1), "5");
             }
         }, -9);
         #endregion
@@ -631,7 +621,7 @@ public class WorkflowGenerator
                     modelMustReencode = refineModel.ModelClass?.CompatClass != "stable-diffusion-xl-v1-refiner" || baseModel.ModelClass?.CompatClass != "stable-diffusion-xl-v1";
                     g.NoVAEOverride = refineModel.ModelClass?.CompatClass != baseModel.ModelClass?.CompatClass;
                     g.FinalLoadedModel = refineModel;
-                    (g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(refineModel, "Refiner", "20");
+                    (g.FinalLoadedModel, g.FinalModel, g.FinalClip, g.FinalVae) = g.CreateStandardModelLoader(refineModel, "Refiner", "20");
                     prompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.Prompt), g.FinalClip, refineModel, true);
                     negPrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, refineModel, false);
                     g.NoVAEOverride = false;
@@ -1059,6 +1049,23 @@ public class WorkflowGenerator
     /// <summary>If true, the main sampler should add noise. If false, it shouldn't.</summary>
     public bool MainSamplerAddNoise = true;
 
+    /// <summary>Gets the current loaded model compat class.</summary>
+    public string CurrentCompatClass()
+    {
+        if (FinalLoadedModel is null)
+        {
+            FinalLoadedModel = UserInput.Get(T2IParamTypes.Model, null);
+        }
+        return FinalLoadedModel?.ModelClass?.CompatClass;
+    }
+
+    /// <summary>Returns true if the current model is Stable Cascade.</summary>
+    public bool IsCascade()
+    {
+        string clazz = CurrentCompatClass();
+        return clazz is not null && clazz == "stable-cascade-v1";
+    }
+
     /// <summary>Gets a dynamic ID within a semi-stable registration set.</summary>
     public string GetStableDynamicID(int index, int offset)
     {
@@ -1148,9 +1155,13 @@ public class WorkflowGenerator
     }
 
     /// <summary>Creates a model loader and adapts it with any registered model adapters, and returns (Model, Clip, VAE).</summary>
-    public (JArray, JArray, JArray) CreateStandardModelLoader(T2IModel model, string type, string id = null)
+    public (T2IModel, JArray, JArray, JArray) CreateStandardModelLoader(T2IModel model, string type, string id = null, bool noCascadeFix = false)
     {
         LoadingModelType = type;
+        if (!noCascadeFix && model.ModelClass?.ID == "stable-cascade-v1-stage-b" && model.Name.Contains("stage_b") && Program.MainSDModels.Models.TryGetValue(model.Name.Replace("stage_b", "stage_c"), out T2IModel altCascadeModel))
+        {
+            model = altCascadeModel;
+        }
         string modelNode = CreateNode("CheckpointLoaderSimple", new JObject()
         {
             ["ckpt_name"] = model.ToString(ModelFolderFormat)
@@ -1162,7 +1173,7 @@ public class WorkflowGenerator
         {
             step.Action(this);
         }
-        return (LoadingModel, LoadingClip, LoadingVAE);
+        return (model, LoadingModel, LoadingClip, LoadingVAE);
     }
 
     /// <summary>Creates a VAEDecode node and returns its node ID.</summary>
@@ -1191,8 +1202,18 @@ public class WorkflowGenerator
     public string DefaultScheduler = "normal";
 
     /// <summary>Creates a KSampler and returns its node ID.</summary>
-    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, double sigmin = -1, double sigmax = -1, string previews = "default", string defsampler = null, string defscheduler = null, string id = null)
+    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, double sigmin = -1, double sigmax = -1, string previews = "default", string defsampler = null, string defscheduler = null, string id = null, bool rawSampler = false)
     {
+        bool willCascadeFix = false;
+        JArray cascadeModel = null;
+        if (!rawSampler && IsCascade() && FinalLoadedModel.Name.Contains("stage_c") && Program.MainSDModels.Models.TryGetValue(FinalLoadedModel.Name.Replace("stage_c", "stage_b"), out T2IModel bModel))
+        {
+            (_, cascadeModel, _, FinalVae) = CreateStandardModelLoader(bModel, LoadingModelType, null, true);
+            willCascadeFix = true;
+            defsampler ??= "euler_ancestral";
+            defscheduler ??= "simple";
+        }
+        string firstId = willCascadeFix ? null : id;
         JObject inputs = new()
         {
             ["model"] = model,
@@ -1210,6 +1231,7 @@ public class WorkflowGenerator
             ["return_with_leftover_noise"] = returnWithLeftoverNoise ? "enable" : "disable",
             ["add_noise"] = addNoise ? "enable" : "disable"
         };
+        string created;
         if (ComfyUIBackendExtension.FeaturesSupported.Contains("variation_seed") && !RestrictCustomNodes)
         {
             inputs["var_seed"] = UserInput.Get(T2IParamTypes.VariationSeed, 0);
@@ -1218,11 +1240,49 @@ public class WorkflowGenerator
             inputs["sigma_max"] = UserInput.Get(T2IParamTypes.SamplerSigmaMax, sigmax);
             inputs["rho"] = UserInput.Get(T2IParamTypes.SamplerRho, 7);
             inputs["previews"] = UserInput.Get(T2IParamTypes.NoPreviews) ? "none" : previews;
-            return CreateNode("SwarmKSampler", inputs, id);
+            created = CreateNode("SwarmKSampler", inputs, firstId);
         }
         else
         {
-            return CreateNode("KSamplerAdvanced", inputs, id);
+            created = CreateNode("KSamplerAdvanced", inputs, firstId);
+        }
+        if (willCascadeFix)
+        {
+            string negCond = CreateNode("ConditioningZeroOut", new JObject()
+            {
+                ["conditioning"] = pos
+            });
+            string stageBCond = CreateNode("StableCascade_StageB_Conditioning", new JObject()
+            {
+                ["stage_c"] = new JArray() { created, 0 },
+                ["conditioning"] = new JArray() { negCond, 0 }
+            });
+            created = CreateKSampler(cascadeModel, new JArray() { stageBCond, 0 }, new JArray() { negCond, 0 }, new JArray() { latent[0], 1 }, 1.1, steps, startStep, endStep, seed + 27, returnWithLeftoverNoise, addNoise, sigmin, sigmax, previews, defsampler, defscheduler, id, true);
+        }
+        return created;
+    }
+
+    /// <summary>Creates an Empty Latent Image node.</summary>
+    public string CreateEmptyImage(int width, int height, int batchSize, string id = null)
+    {
+        if (IsCascade())
+        {
+            return CreateNode("StableCascade_EmptyLatentImage", new JObject()
+            {
+                ["batch_size"] = batchSize,
+                ["compression"] = 42,
+                ["height"] = height,
+                ["width"] = width
+            }, id);
+        }
+        else
+        {
+            return CreateNode("EmptyLatentImage", new JObject()
+            {
+                ["batch_size"] = batchSize,
+                ["height"] = height,
+                ["width"] = width
+            }, id);
         }
     }
 

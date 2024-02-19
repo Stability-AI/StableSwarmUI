@@ -30,7 +30,7 @@ def swarm_fixed_noise(seed, latent_image, var_seed, var_seed_strength):
         else:
             noise = swarm_partial_noise(seed + i, latent_image[i])
         noises.append(noise)
-    return torch.stack(noises, axis=0)
+    return torch.stack(noises, dim=0)
 
 def swarm_send_extra_preview(id, image):
     server = PromptServer.instance
