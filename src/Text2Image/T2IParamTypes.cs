@@ -262,7 +262,7 @@ public class T2IParamTypes
             ));
         CFGScale = Register<double>(new("CFG Scale", "How strongly to scale prompt input.\nHigher CFG scales tend to produce more contrast, and lower CFG scales produce less contrast.\n"
             + "Too-high values can cause corrupted/burnt images, too-low can cause nonsensical images.\n7 is a good baseline. Normal usages vary between 5 and 9.",
-            "7", Min: 0, Max: 100, ViewMax: 30, Step: 0.25, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, ViewType: ParamViewType.SLIDER, Group: GroupCore, ChangeWeight: -3
+            "7", Min: 1, Max: 100, ViewMax: 20, Step: 0.5, Examples: new[] { "5", "6", "7", "8", "9" }, OrderPriority: -18, ViewType: ParamViewType.SLIDER, Group: GroupCore, ChangeWeight: -3
             ));
         GroupVariation = new("Variation Seed", Toggles: true, Open: false, OrderPriority: -17);
         VariationSeed = Register<long>(new("Variation Seed", "Image-variation seed.\nCombined partially with the original seed to create a similar-but-different image for the same seed.\n-1 = random.",
@@ -361,7 +361,7 @@ public class T2IParamTypes
             "40", Min: 1, Max: 200, ViewMax: 100, ViewType: ParamViewType.SLIDER, OrderPriority: 3, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
             ));
         VideoCFG = Register<double>(new("Video CFG", "The CFG Scale to use for video generation.\nVideos start with this CFG on the first frame, and then reduce to MinCFG (normally 1) by the end frame.\nSVD-XT normally uses 25 frames, and SVD (non-XT) 0.9 used 14 frames.",
-            "2.5", Min: 0, Max: 100, ViewMax: 30, Step: 0.5, OrderPriority: 4, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
+            "2.5", Min: 1, Max: 100, ViewMax: 20, Step: 0.5, OrderPriority: 4, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
             ));
         VideoMinCFG = Register<double>(new("Video Min CFG", "The minimum CFG to use for video generation.\nVideos start with max CFG on first frame, and then reduce to this CFG. Set to -1 to disable.",
             "1.0", Min: -1, Max: 100, ViewMax: 30, Step: 0.5, OrderPriority: 4.5, ViewType: ParamViewType.SLIDER, Group: GroupVideo, FeatureFlag: "video", IsAdvanced: true, DoNotPreview: true
