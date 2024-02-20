@@ -90,7 +90,7 @@ body {
     font-size: 200%;
     cursor: pointer;
     border-radius: 0.2rem;
-    color: var(--button-text);
+    color: var(--text);
 }
 .t2i-split-quickbutton:hover {
     background-color: var(--button-background-hover);
