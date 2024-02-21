@@ -373,6 +373,10 @@ public partial class GridGenCore
 
         public void UpdateLiveFile(string newFile)
         {
+            if (Grid.OutputType != Grid.OutputyTypeEnum.WEB_PAGE)
+            {
+                return;
+            }
             lock (Grid.LastUpdatLock)
             {
                 DateTimeOffset tNow = DateTimeOffset.Now;
@@ -425,12 +429,19 @@ public partial class GridGenCore
 
         public void Preprocess()
         {
-            if (!Directory.Exists(BasePath))
-            {
-                Directory.CreateDirectory(BasePath);
-            }
             Sets = BuildValueSetList(Grid.Axes.ToList());
-            Logs.Info($"Have {Sets.Count} unique value sets, will go into {BasePath}");
+            if (Grid.OutputType == Grid.OutputyTypeEnum.WEB_PAGE)
+            {
+                if (!Directory.Exists(BasePath))
+                {
+                    Directory.CreateDirectory(BasePath);
+                }
+                Logs.Info($"[GridGenerator] Have {Sets.Count} unique value sets, will go into {BasePath}");
+            }
+            else
+            {
+                Logs.Info($"[GridGenerator] Have {Sets.Count} unique value sets");
+            }
             foreach (SingleGridCall set in Sets)
             {
                 set.BuildBasePaths();
@@ -450,7 +461,7 @@ public partial class GridGenCore
                     TotalSteps += steps;
                 }
             }
-            Logs.Info($"Skipped {TotalSkip} files, will run {TotalRun} files, for {TotalSteps} total steps");
+            Logs.Info($"[GridGenerator] Skipped {TotalSkip} files, will run {TotalRun} files, for {TotalSteps} total steps");
             PostPreprocessCallback?.Invoke(this);
         }
 
@@ -471,7 +482,7 @@ public partial class GridGenCore
                 Iteration++;
                 if (!dry)
                 {
-                    Logs.Debug($"Pre-prepping {Iteration}/{TotalRun} ... Set: {set.Data}, file {set.BaseFilepath}");
+                    Logs.Debug($"[GridGenerator] Pre-prepping {Iteration}/{TotalRun} ... Set: {set.Data}, file {set.BaseFilepath}");
                 }
                 T2IParamInput p = Params.Clone();
                 GridRunnerPreDryHook?.Invoke(this);
@@ -706,6 +717,7 @@ public partial class GridGenCore
         {
             generatePage = false;
             grid.PublishMetadata = false;
+            outputFolderName = $"grid-{DateTimeOffset.UtcNow:yyyy-MM-dd-HH-mm-ss}";
         }
         int axisIndex = 0;
         foreach (JToken axis in axes)
@@ -791,7 +803,10 @@ public partial class GridGenCore
             {
                 try
                 {
-                    File.Delete(folder + "/last.js");
+                    if (File.Exists(folder + "/last.js"))
+                    {
+                        File.Delete(folder + "/last.js");
+                    }
                 }
                 catch (Exception ex)
                 {
