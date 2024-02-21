@@ -360,6 +360,22 @@ class ImageEditorToolMove extends ImageEditorTool {
 class ImageEditorToolSelect extends ImageEditorTool {
     constructor(editor) {
         super(editor, 'select', 'select', 'Select', 'Select a region of the image.');
+        let makeRegionButton = `<div class="image-editor-tool-block">
+            <button class="basic-button id-make-region">Make Region</button>
+        </div>`;
+        this.configDiv.innerHTML = makeRegionButton;
+        this.configDiv.querySelector('.id-make-region').addEventListener('click', () => {
+            if (this.editor.hasSelection) {
+                // TODO: This should create a new pseudo-layer that highlights a simple box and render the region text inside of it
+                let promptBox = getRequiredElementById('alt_prompt_textbox');
+                function roundClean(v) {
+                    return Math.round(v * 1000) / 1000;
+                }
+                let regionText = `\n<region:${roundClean(this.editor.selectX / this.editor.realWidth)},${roundClean(this.editor.selectY / this.editor.realHeight)},${roundClean(this.editor.selectWidth / this.editor.realWidth)},${roundClean(this.editor.selectHeight / this.editor.realHeight)}>`;
+                promptBox.value += regionText;
+                triggerChangeFor(promptBox);
+            }
+        });
     }
 
     onMouseDown(e) {
