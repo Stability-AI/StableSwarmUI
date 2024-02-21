@@ -367,6 +367,10 @@ public static class NetworkBackendUtils
                         keepShowing = true;
                         Logs.Warning($"{nameSimple} stdout: {line}");
                     }
+                    else if (line.StartsWith("RuntimeError: "))
+                    {
+                        Logs.Warning($"{nameSimple} stdout: {line}");
+                    }
                     else if (keepShowing && line.StartsWith("  "))
                     {
                         Logs.Warning($"{nameSimple} stdout: {line}");
@@ -410,7 +414,14 @@ public static class NetworkBackendUtils
             string line;
             while ((line = process.StandardError.ReadLine()) != null)
             {
-                Logs.Debug($"{nameSimple} stderr: {line}");
+                if (line.StartsWith("Traceback (") || line.StartsWith("RuntimeError: "))
+                {
+                    Logs.Warning($"{nameSimple} stderr: {line}");
+                }
+                else
+                {
+                    Logs.Debug($"{nameSimple} stderr: {line}");
+                }
                 errorLog.AppendLine($"{nameSimple} error: {line}");
                 logTracker.Track($"stderr: {line}");
                 if (errorLog.Length > 1024 * 50)
