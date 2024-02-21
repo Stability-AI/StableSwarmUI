@@ -186,6 +186,10 @@ public class ComfyUIBackendExtension : Extension
             {
                 IPAdapterModels = IPAdapterModels.Concat(ipadapterCubiq["input"]["required"]["ipadapter_file"][0].Select(m => $"{m}")).Distinct().ToList();
             }
+            if (rawObjectInfo.TryGetValue("GLIGENLoader", out JToken gligenLoader))
+            {
+                GligenModels = GligenModels.Concat(gligenLoader["input"]["required"]["gligen_name"][0].Select(m => $"{m}")).Distinct().ToList();
+            }
             foreach ((string key, JToken data) in rawObjectInfo)
             {
                 if (data["category"].ToString() == "image/preprocessors")
@@ -206,7 +210,7 @@ public class ComfyUIBackendExtension : Extension
 
     public static LockObject ValueAssignmentLocker = new();
 
-    public static T2IRegisteredParam<string> WorkflowParam, CustomWorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod, ControlNetPreprocessorParam, UseIPAdapterForRevision, VideoPreviewType, VideoFrameInterpolationMethod;
+    public static T2IRegisteredParam<string> WorkflowParam, CustomWorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod, ControlNetPreprocessorParam, UseIPAdapterForRevision, VideoPreviewType, VideoFrameInterpolationMethod, GligenModel;
 
     public static T2IRegisteredParam<bool> AITemplateParam, DebugRegionalPrompting;
 
@@ -219,6 +223,8 @@ public class ComfyUIBackendExtension : Extension
         Schedulers = new() { "normal", "karras", "exponential", "simple", "ddim_uniform" };
 
     public static List<string> IPAdapterModels = new() { "None" };
+
+    public static List<string> GligenModels = new() { "None" };
 
     public static ConcurrentDictionary<string, JToken> ControlNetPreprocessors = new() { ["None"] = null };
 
@@ -285,6 +291,9 @@ public class ComfyUIBackendExtension : Extension
             ));
         VideoFrameInterpolationMultiplier = T2IParamTypes.Register<int>(new("Video Frame Interpolation Multiplier", "How many frames to interpolate between each frame in the video.\nHigher values are smoother, but make take significant time to save the output, and may have quality artifacts.",
             "1", IgnoreIf: "1", Min: 1, Max: 10, Step: 1, FeatureFlag: "frameinterps", Group: T2IParamTypes.GroupVideo, OrderPriority: 33
+            ));
+        GligenModel = T2IParamTypes.Register<string>(new("GLIGEN Model", "Optionally use a GLIGEN model.\nGLIGEN is only compatible with SDv1 at time of writing.",
+            "None", IgnoreIf: "None", FeatureFlag: "comfyui", Group: T2IParamTypes.GroupRegionalPrompting, GetValues: (_) => GligenModels
             ));
         Program.Backends.RegisterBackendType<ComfyUIAPIBackend>("comfyui_api", "ComfyUI API By URL", "A backend powered by a pre-existing installation of ComfyUI, referenced via API base URL.", true);
         Program.Backends.RegisterBackendType<ComfyUISelfStartBackend>("comfyui_selfstart", "ComfyUI Self-Starting", "A backend powered by a pre-existing installation of the ComfyUI, automatically launched and managed by this UI server.", isStandard: true);

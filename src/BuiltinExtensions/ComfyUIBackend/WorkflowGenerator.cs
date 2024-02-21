@@ -1040,10 +1040,7 @@ public class WorkflowGenerator
     /// <summary>Gets the current loaded model compat class.</summary>
     public string CurrentCompatClass()
     {
-        if (FinalLoadedModel is null)
-        {
-            FinalLoadedModel = UserInput.Get(T2IParamTypes.Model, null);
-        }
+        FinalLoadedModel ??= UserInput.Get(T2IParamTypes.Model, null);
         return FinalLoadedModel?.ModelClass?.CompatClass;
     }
 
@@ -1340,6 +1337,36 @@ public class WorkflowGenerator
         if (parts.IsEmpty())
         {
             return globalCond;
+        }
+        string gligenModel = UserInput.Get(ComfyUIBackendExtension.GligenModel, "None");
+        if (gligenModel != "None")
+        {
+            string gligenLoader = NodeHelpers.GetOrCreate("gligen_loader", () =>
+            {
+                return CreateNode("GLIGENLoader", new JObject()
+                {
+                    ["gligen_name"] = gligenModel
+                });
+            });
+            int width = UserInput.Get(T2IParamTypes.Width, 1024);
+            int height = UserInput.GetImageHeight();
+            JArray lastCond = globalCond;
+            foreach (PromptRegion.Part part in parts)
+            {
+                string applied = CreateNode("GLIGENTextBoxApply", new JObject()
+                {
+                    ["gligen_textbox_model"] = new JArray() { gligenLoader, 0 },
+                    ["clip"] = clip,
+                    ["conditioning_to"] = lastCond,
+                    ["text"] = part.Prompt,
+                    ["x"] = part.X * width,
+                    ["y"] = part.Y * height,
+                    ["width"] = part.Width * width,
+                    ["height"] = part.Height * height
+                });
+                lastCond = new() { applied, 0 };
+            }
+            return lastCond;
         }
         double globalStrength = UserInput.Get(T2IParamTypes.GlobalRegionFactor, 0.5);
         List<RegionHelper> regions = new();

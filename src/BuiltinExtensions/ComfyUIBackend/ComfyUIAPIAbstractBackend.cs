@@ -69,7 +69,14 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             ModelFolderFormat = "/";
             Logs.Debug($"Comfy backend {BackendData.ID} using model folder format: forward slash / as no backslash was found");
         }
-        ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
+        try
+        {
+            ComfyUIBackendExtension.AssignValuesFromRaw(RawObjectInfo);
+        }
+        catch (Exception ex)
+        {
+            Logs.Error($"Comfy backend {BackendData.ID} failed to load raw node backend info: {ex}");
+        }
     }
 
     public abstract bool CanIdle { get; }
