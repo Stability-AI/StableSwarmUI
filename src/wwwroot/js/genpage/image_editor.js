@@ -355,6 +355,47 @@ class ImageEditorToolMove extends ImageEditorTool {
 }
 
 /**
+ * The selection tool.
+ */
+class ImageEditorToolSelect extends ImageEditorTool {
+    constructor(editor) {
+        super(editor, 'select', 'select', 'Select', 'Select a region of the image.');
+    }
+
+    onMouseDown(e) {
+        let [mouseX, mouseY] = this.editor.canvasCoordToImageCoord(this.editor.mouseX, this.editor.mouseY);
+        this.editor.selectX = mouseX;
+        this.editor.selectY = mouseY;
+        this.editor.hasSelection = false;
+    }
+
+    onMouseUp(e) {
+        if (this.editor.hasSelection) {
+            if (this.editor.selectWidth < 0) {
+                this.editor.selectX += this.editor.selectWidth;
+                this.editor.selectWidth = -this.editor.selectWidth;
+            }
+            if (this.editor.selectHeight < 0) {
+                this.editor.selectY += this.editor.selectHeight;
+                this.editor.selectHeight = -this.editor.selectHeight;
+            }
+        }
+    }
+
+    onGlobalMouseMove(e) {
+        if (this.editor.mouseDown) {
+            let [mouseX, mouseY] = this.editor.canvasCoordToImageCoord(this.editor.mouseX, this.editor.mouseY);
+            this.editor.selectWidth = mouseX - this.editor.selectX;
+            this.editor.selectHeight = mouseY - this.editor.selectY;
+            this.editor.hasSelection = true;
+            this.editor.markChanged();
+            return true;
+        }
+        return false;
+    }
+}
+
+/**
  * The Paintbrush tool (also the base used for other brush-likes, such as the Eraser).
  */
 class ImageEditorToolBrush extends ImageEditorTool {
@@ -696,30 +737,37 @@ class ImageEditor {
         this.rightBar.appendChild(this.canvasList);
         this.bottomBar = createDiv(null, 'image_editor_bottombar');
         this.inputDiv.appendChild(this.bottomBar);
+        this.layers = [];
+        this.activeLayer = null;
+        this.clearVars();
+        // Tools:
+        this.tools = {};
+        this.addTool(new ImageEditorToolGeneral(this));
+        this.activateTool('general');
+        this.addTool(new ImageEditorToolMove(this));
+        this.addTool(new ImageEditorToolSelect(this));
+        this.addTool(new ImageEditorToolBrush(this, 'brush', 'paintbrush', 'Paintbrush', 'Draw on the image.', false));
+        this.addTool(new ImageEditorToolBrush(this, 'eraser', 'eraser', 'Eraser', 'Erase parts of the image.', true));
+    }
+
+    clearVars() {
+        this.mouseDown = false;
         this.zoomLevel = 1;
         this.offsetX = 0;
         this.offsetY = 0;
-        this.tools = {};
         this.mouseX = 0;
         this.mouseY = 0;
         this.lastMouseX = 0;
         this.lastMouseY = 0;
-        this.mouseDown = false;
-        this.layers = [];
-        this.activeLayer = null;
         this.realWidth = 512;
         this.realHeight = 512;
         this.finalOffsetX = 0;
         this.finalOffsetY = 0;
-        // Tools:
-        this.addTool(new ImageEditorToolGeneral(this));
-        this.activateTool('general');
-        this.addTool(new ImageEditorToolMove(this));
-        if (useExperimental) {
-            this.addTool(new ImageEditorTool(this, 'select', 'select', 'Select', 'Select a region of the image.'));
-        }
-        this.addTool(new ImageEditorToolBrush(this, 'brush', 'paintbrush', 'Paintbrush', 'Draw on the image.', false));
-        this.addTool(new ImageEditorToolBrush(this, 'eraser', 'eraser', 'Eraser', 'Erase parts of the image.', true));
+        this.selectX = 0;
+        this.selectY = 0;
+        this.selectWidth = 0;
+        this.selectHeight = 0;
+        this.hasSelection = false;
     }
 
     addTool(tool) {
@@ -1178,6 +1226,10 @@ class ImageEditor {
         this.drawSelectionBox(boundaryX, boundaryY, this.realWidth * this.zoomLevel, this.realHeight * this.zoomLevel, this.boundaryColor, 16 * this.zoomLevel, 0);
         let [offsetX, offsetY] = this.imageCoordToCanvasCoord(this.activeLayer.offsetX, this.activeLayer.offsetY);
         this.drawSelectionBox(offsetX, offsetY, this.activeLayer.width * this.zoomLevel, this.activeLayer.height * this.zoomLevel, this.uiBorderColor, 8 * this.zoomLevel, this.activeLayer.rotation);
+        if (this.hasSelection) {
+            let [selectX, selectY] = this.imageCoordToCanvasCoord(this.selectX, this.selectY);
+            this.drawSelectionBox(selectX, selectY, this.selectWidth * this.zoomLevel, this.selectHeight * this.zoomLevel, this.uiColor, 8 * this.zoomLevel, 0);
+        }
         this.activeTool.draw();
         this.ctx.restore();
     }

@@ -1396,6 +1396,7 @@ function openEmptyEditor() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     let image = new Image();
     image.onload = () => {
+        imageEditor.clearVars();
         imageEditor.setBaseImage(image);
         imageEditor.activate();
     };
