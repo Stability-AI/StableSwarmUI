@@ -649,6 +649,7 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
             }
             if (applyValues && val !== null && val !== undefined) {
                 if (param.id == 'model') {
+                    setCookie('selected_model', val, 90);
                     forceSetDropdownValue('current_model', val);
                 }
                 else {
