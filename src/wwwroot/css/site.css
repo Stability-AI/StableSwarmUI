@@ -373,16 +373,17 @@ textarea, input, select {
     width: 100%;
     border: 1px solid var(--shadow);
     border-radius: 9px;
-    margin-top: 0rem;
-    margin-bottom: 1.8rem;
-    padding-bottom: 0.1rem;
+    margin-bottom: 0rem;
+    margin-top: 1.2rem;
     max-width: 51rem;
     background-color: var(--background-gray);
 }
 .input-group-closed {
     border: none;
     background-color: transparent;
-    margin-bottom: 1rem;
+}
+.input-group-open {
+    margin-bottom: 2rem;
 }
 .input-group-content {
     display: flex;
