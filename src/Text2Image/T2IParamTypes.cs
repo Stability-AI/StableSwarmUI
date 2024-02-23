@@ -210,7 +210,7 @@ public class T2IParamTypes
     }
 
     public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod, FreeUApplyTo, PersonalNote, VideoFormat, VideoResolution, UnsamplerPrompt, ImageFormat;
-    public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID, VAETileSize, ClipStopAtLayer, VideoFrames, VideoMotionBucket, VideoFPS, VideoSteps, RefinerSteps;
+    public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID, VAETileSize, ClipStopAtLayer, VideoFrames, VideoMotionBucket, VideoFPS, VideoSteps, RefinerSteps, CascadeLatentCompression;
     public static T2IRegisteredParam<long> Seed, VariationSeed, WildcardSeed;
     public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, InitImageResetToNorm, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult,
         FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly, SamplerSigmaMin, SamplerSigmaMax, SamplerRho, ControlNetStart, ControlNetEnd, VideoAugmentationLevel, VideoCFG, VideoMinCFG;
@@ -466,6 +466,9 @@ public class T2IParamTypes
             ));
         ClipStopAtLayer = Register<int>(new("CLIP Stop At Layer", "What layer of CLIP to stop at, from the end.\nAlso known as 'CLIP Skip'. Default CLIP Skip is -1 for SDv1, some models prefer -2.\nSDv2, SDXL, and beyond do not need this set ever.",
             "-1", Min: -24, Max: -1, Step: 1, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
+            ));
+        CascadeLatentCompression = Register<int>(new("Cascade Latent Compression", "How deeply to compress latents when using Stable Cascade.\nDefault is 32, you can get slightly faster but lower quality results by using 42.",
+            "32", IgnoreIf: "32", Min: 1, Max: 100, Step: 1, IsAdvanced: true, Group: GroupAdvancedSampling
             ));
         SeamlessTileable = Register<bool>(new("Seamless Tileable", "Makes the generated image seamlessly tileable (like a 3D texture would be).",
             "false", IgnoreIf: "false", IsAdvanced: true, Group: GroupAdvancedSampling, FeatureFlag: "seamless"

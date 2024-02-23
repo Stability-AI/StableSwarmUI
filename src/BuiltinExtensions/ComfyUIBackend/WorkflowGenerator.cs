@@ -1256,7 +1256,7 @@ public class WorkflowGenerator
             {
                 ["vae"] = vae,
                 ["image"] = image,
-                ["compression"] = 32
+                ["compression"] = UserInput.Get(T2IParamTypes.CascadeLatentCompression, 32)
             }, id);
         }
         else
@@ -1277,7 +1277,7 @@ public class WorkflowGenerator
             return CreateNode("StableCascade_EmptyLatentImage", new JObject()
             {
                 ["batch_size"] = batchSize,
-                ["compression"] = 42,
+                ["compression"] = UserInput.Get(T2IParamTypes.CascadeLatentCompression, 32),
                 ["height"] = height,
                 ["width"] = width
             }, id);
