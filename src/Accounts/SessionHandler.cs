@@ -34,6 +34,8 @@ public class SessionHandler
     /// <summary>Internal database access locker.</summary>
     public LockObject DBLock = new();
 
+    public User GenericSharedUser;
+
     /// <summary>Helper for the database to store generic datablob.s</summary>
     public class GenericDataStore
     {
@@ -49,6 +51,7 @@ public class SessionHandler
         UserDatabase = Database.GetCollection<User.DatabaseEntry>("users");
         T2IPresets = Database.GetCollection<T2IPreset>("t2i_presets");
         GenericData = Database.GetCollection<GenericDataStore>("generic_data");
+        GenericSharedUser = GetUser("__shared");
     }
 
     public Session CreateAdminSession(string source, string userId = null)

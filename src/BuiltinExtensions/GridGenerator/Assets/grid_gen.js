@@ -423,7 +423,7 @@ class GridGenClass {
         this.settingsDiv = createDiv('grid-gen-settings-area', 'grid-gen-settings-area');
         this.settingsDiv.innerHTML =
             `<br><label for="grid_generate_type">Output Type: </label><select id="grid_generate_type" onchange="extensionGridGen.typeChanged()"><option>Just Images</option><option>Grid Image</option><option selected>Web Page</option></select>&emsp;<button class="basic-button" onclick="extensionGridGen.saveGridConfig()">Save Grid Config</button>&emsp;<button class="basic-button" onclick="extensionGridGen.loadGridConfig()">Load Grid Config</button>
-            ${modalHeader('gridgen_load_modal', 'Grid Generator: Load Modal')}
+            ${modalHeader('gridgen_load_modal', 'Grid Generator: Load Config')}
                 <div class="modal-body">
                     <p>Load grid config...</p>
                     <select id="grid_gen_load_config_selector">
@@ -433,6 +433,17 @@ class GridGenClass {
                     <button type="button" class="btn btn-danger" onclick="extensionGridGen.loadModalDelete()">Delete Grid Config</button>
                     <button type="button" class="btn btn-primary" onclick="extensionGridGen.loadModalLoadNow()">Load Grid Config</button>
                     <button type="button" class="btn btn-secondary" onclick="extensionGridGen.hideLoadModal()">Cancel</button>
+                </div>
+            ${modalFooter()}
+            ${modalHeader('gridgen_save_modal', 'Grid Generator: Save Config')}
+                <div class="modal-body">
+                    <p>Save grid config...</p>
+                    <input type="text" id="grid_gen_save_config_name" placeholder="Config Name..." class="auto-input-text">
+                    <br><label for="grid_gen_save_is_public">Share Grid With All Users</label> <input type="checkbox" id="grid_gen_save_is_public">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="extensionGridGen.saveModalSaveNow()">Save Grid Config</button>
+                    <button type="button" class="btn btn-secondary" onclick="extensionGridGen.hideSaveModal()">Cancel</button>
                 </div>
             ${modalFooter()}
             <div id="grid-gen-info-box">...</div>
@@ -498,32 +509,7 @@ class GridGenClass {
     };
 
     saveGridConfig() {
-        let gridName = prompt("Enter a name for this grid config:");
-        if (!gridName) {
-            return;
-        }
-        let axes = [];
-        for (let axis of this.listAxes()) {
-            let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
-            let input = axis.getElementsByClassName('grid-gen-axis-input')[0].innerText;
-            if (type != '' && input.trim() != '') {
-                axes.push({ 'mode': type, 'values': input });
-            }
-        }
-        let checkboxes = {};
-        for (let opt of this.settingsDiv.getElementsByClassName('grid-gen-checkboxes')[0].getElementsByTagName('input')) {
-            checkboxes[opt.id] = opt.checked;
-        }
-        let data = {
-            'axes': axes,
-            'checkboxes': checkboxes,
-            'output_folder_name': this.outputFolder.value,
-            'output_type': this.outputType.value,
-        };
-        genericRequest('GridGenSaveData', { 'gridName': gridName, 'data': data }, data => {
-            this.outInfoBox.innerHTML = `<b>Config saved!</b>`;
-            setTimeout(() => this.updateOutputInfo(), 5000);
-        });
+        $('#gridgen_save_modal').modal('show');
     }
 
     loadGridConfig() {
@@ -575,8 +561,43 @@ class GridGenClass {
         });
     }
 
+    saveModalSaveNow() {
+        let gridName = getRequiredElementById('grid_gen_save_config_name').value;
+        if (!gridName) {
+            return;
+        }
+        let isPublic = getRequiredElementById('grid_gen_save_is_public').checked;
+        let axes = [];
+        for (let axis of this.listAxes()) {
+            let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
+            let input = axis.getElementsByClassName('grid-gen-axis-input')[0].innerText;
+            if (type != '' && input.trim() != '') {
+                axes.push({ 'mode': type, 'values': input });
+            }
+        }
+        let checkboxes = {};
+        for (let opt of this.settingsDiv.getElementsByClassName('grid-gen-checkboxes')[0].getElementsByTagName('input')) {
+            checkboxes[opt.id] = opt.checked;
+        }
+        let data = {
+            'axes': axes,
+            'checkboxes': checkboxes,
+            'output_folder_name': this.outputFolder.value,
+            'output_type': this.outputType.value,
+        };
+        genericRequest('GridGenSaveData', { 'gridName': gridName, 'data': data, 'isPublic': isPublic }, data => {
+            this.outInfoBox.innerHTML = `<b>Config saved!</b>`;
+            setTimeout(() => this.updateOutputInfo(), 5000);
+        });
+        this.hideSaveModal();
+    }
+
     hideLoadModal() {
         $('#gridgen_load_modal').modal('hide');
+    }
+
+    hideSaveModal() {
+        $('#gridgen_save_modal').modal('hide');
     }
 }
 

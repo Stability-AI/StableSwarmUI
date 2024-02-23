@@ -219,21 +219,22 @@ public class GridGeneratorExtension : Extension
         API.RegisterAPICall(GridGenListData);
     }
 
-    public async Task<JObject> GridGenSaveData(Session session, string gridName, JObject rawData)
+    public async Task<JObject> GridGenSaveData(Session session, string gridName, bool isPublic, JObject rawData)
     {
-        session.User.SaveGenericData("gridgenerator", gridName, rawData["data"].ToString());
+        (isPublic ? Program.Sessions.GenericSharedUser : session.User).SaveGenericData("gridgenerator", gridName, rawData["data"].ToString());
         return new JObject() { ["success"] = true };
     }
 
     public async Task<JObject> GridGenDeleteData(Session session, string gridName)
     {
         session.User.DeleteGenericData("gridgenerator", gridName);
+        Program.Sessions.GenericSharedUser.DeleteGenericData("gridgenerator", gridName);
         return new JObject() { ["success"] = true };
     }
 
     public async Task<JObject> GridGenGetData(Session session, string gridName)
     {
-        string data = session.User.GetGenericData("gridgenerator", gridName);
+        string data = session.User.GetGenericData("gridgenerator", gridName) ?? Program.Sessions.GenericSharedUser.GetGenericData("gridgenerator", gridName);
         if (data is null)
         {
             return new() { ["error"] = "Could not find that Grid Generator save." };
@@ -244,6 +245,7 @@ public class GridGeneratorExtension : Extension
     public async Task<JObject> GridGenListData(Session session)
     {
         List<string> data = session.User.ListAllGenericData("gridgenerator");
+        data.AddRange(Program.Sessions.GenericSharedUser.ListAllGenericData("gridgenerator"));
         return new JObject() { ["data"] = JArray.FromObject(data.ToArray()) };
     }
 
