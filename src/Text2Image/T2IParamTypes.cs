@@ -464,8 +464,8 @@ public class T2IParamTypes
         SamplerRho = Register<double>(new("Sampler Rho", "Rho value for the sampler.\nOnly applies to Karras/Exponential schedulers.",
             "7", Min: 0, Max: 1000, Step: 0.01, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
             ));
-        ClipStopAtLayer = Register<int>(new("CLIP Stop At Layer", "What layer of CLIP to stop at, from the end.\nAlso known as 'CLIP Skip'. Default CLIP Skip is -1, some models prefer -2.\nSDv2, SDXL, and beyond do not need this set ever.",
-            "-1", IgnoreIf: "-1", Min: -24, Max: -1, Step: 1, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
+        ClipStopAtLayer = Register<int>(new("CLIP Stop At Layer", "What layer of CLIP to stop at, from the end.\nAlso known as 'CLIP Skip'. Default CLIP Skip is -1 for SDv1, some models prefer -2.\nSDv2, SDXL, and beyond do not need this set ever.",
+            "-1", Min: -24, Max: -1, Step: 1, Toggleable: true, IsAdvanced: true, Group: GroupAdvancedSampling
             ));
         SeamlessTileable = Register<bool>(new("Seamless Tileable", "Makes the generated image seamlessly tileable (like a 3D texture would be).",
             "false", IgnoreIf: "false", IsAdvanced: true, Group: GroupAdvancedSampling, FeatureFlag: "seamless"
