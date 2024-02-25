@@ -41,6 +41,10 @@ for file in files:
             # TI Embedding data
             if "string_to_param" in tens:
                 vals = next(iter(tens["string_to_param"].values()))
+                if isinstance(vals, torch.nn.ParameterDict):
+                    vals = {k: v.data for k, v in vals.items()}
+                if isinstance(vals, torch.nn.Parameter):
+                    vals = vals.data
                 tens["emb_params"] = vals
                 del tens["string_to_param"]
             if "name" in tens:
