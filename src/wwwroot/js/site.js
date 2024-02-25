@@ -216,7 +216,7 @@ function textPromptDoCount(elem) {
     let tokenCount = elem.parentElement.querySelector('.auto-input-prompt-tokencount');
     function countTokens() {
         elem.dataset.has_token_count_running = true;
-        genericRequest('CountTokens', { text: elem.value }, data => {
+        genericRequest('CountTokens', { text: elem.value, skipPromptSyntax: true }, data => {
             let chunks = Math.max(75, Math.ceil(data.count / 75) * 75);
             tokenCount.innerText = `${data.count}/${chunks}`;
             delete elem.dataset.has_token_count_running;

@@ -46,6 +46,9 @@ public class T2IParamInput
     /// <summary>Mapping of prompt tag prefixes, to allow for registration of custom prompt tags - specifically post-processing like lora (which remove from prompt and get read elsewhere).</summary>
     public static Dictionary<string, Func<string, PromptTagContext, string>> PromptTagPostProcessors = new();
 
+    /// <summary>Mapping of prompt tag prefixes, to strings intended to allow for estimating token count.</summary>
+    public static Dictionary<string, Func<string, string>> PromptTagLengthEstimators = new();
+
     /// <summary>Interprets a random number range input by a user, if the input is a number range.</summary>
     public static bool TryInterpretNumberRange(string inputVal, out string number)
     {
@@ -138,6 +141,23 @@ public class T2IParamInput
             }
             return result.Trim();
         };
+        PromptTagLengthEstimators["random"] = (data) =>
+        {
+            string separator = data.Contains("||") ? "||" : (data.Contains('|') ? "|" : ",");
+            string[] rawVals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            int longest = 0;
+            string longestStr = "";
+            foreach (string val in rawVals)
+            {
+                string interp = ProcessPromptLikeForLength(val);
+                if (interp.Length > longest)
+                {
+                    longest = interp.Length;
+                    longestStr = interp;
+                }
+            }
+            return longestStr;
+        };
         PromptTagProcessors["wildcard"] = (data, context) =>
         {
             (int count, string partSeparator) = InterpretPredataForRandom("random", context.PreData, data);
@@ -172,6 +192,27 @@ public class T2IParamInput
             }
             return result.Trim();
         };
+        PromptTagLengthEstimators["wildcard"] = (data) =>
+        {
+            string card = T2IParamTypes.GetBestInList(data, WildcardsHelper.ListFiles);
+            if (card is null)
+            {
+                return "";
+            }
+            WildcardsHelper.Wildcard wildcard = WildcardsHelper.GetWildcard(card);
+            int longest = 0;
+            string longestStr = "";
+            foreach (string val in wildcard.Options)
+            {
+                string interp = ProcessPromptLikeForLength(val);
+                if (interp.Length > longest)
+                {
+                    longest = interp.Length;
+                    longestStr = interp;
+                }
+            }
+            return longestStr;
+        };
         PromptTagProcessors["repeat"] = (data, context) =>
         {
             (string count, string value) = data.BeforeAndAfter(',');
@@ -185,6 +226,22 @@ public class T2IParamInput
             for (int i = 0; i < countVal.Value; i++)
             {
                 result += context.Parse(value).Trim() + " ";
+            }
+            return result.Trim();
+        };
+        PromptTagLengthEstimators["repeat"] = (data) =>
+        {
+            (string count, string value) = data.BeforeAndAfter(',');
+            double? countVal = InterpretNumber(count);
+            if (!countVal.HasValue)
+            {
+                return "";
+            }
+            string interp = ProcessPromptLikeForLength(value);
+            string result = "";
+            for (int i = 0; i < countVal.Value; i++)
+            {
+                result += interp + " ";
             }
             return result.Trim();
         };
@@ -202,6 +259,10 @@ public class T2IParamInput
             {
                 return "\0preset:" + prompt;
             }
+            return "";
+        };
+        PromptTagLengthEstimators["preset"] = (data) =>
+        {
             return "";
         };
         PromptTagProcessors["embed"] = (data, context) =>
@@ -250,6 +311,9 @@ public class T2IParamInput
             Logs.Warning($"Lora '{lora}' does not exist and will be ignored.");
             return null;
         };
+        PromptTagLengthEstimators["embed"] = PromptTagLengthEstimators["preset"];
+        PromptTagLengthEstimators["embedding"] = PromptTagLengthEstimators["preset"];
+        PromptTagLengthEstimators["lora"] = PromptTagLengthEstimators["preset"];
     }
 
     /// <summary>The raw values in this input. Do not use this directly, instead prefer:
@@ -504,6 +568,37 @@ public class T2IParamInput
         processSet(PromptTagProcessors);
         processSet(PromptTagPostProcessors);
         return addBefore + val + addAfter;
+    }
+
+    public static string ProcessPromptLikeForLength(string val)
+    {
+        if (val is null)
+        {
+            return null;
+        }
+        void processSet(Dictionary<string, Func<string, string>> set)
+        {
+            val = StringConversionHelper.QuickSimpleTagFiller(val, "<", ">", tag =>
+            {
+                (string prefix, string data) = tag.BeforeAndAfter(':');
+                string preData = null;
+                if (prefix.EndsWith(']') && prefix.Contains('['))
+                {
+                    (prefix, preData) = prefix.BeforeLast(']').BeforeAndAfter('[');
+                }
+                if (!string.IsNullOrWhiteSpace(data) && set.TryGetValue(prefix, out Func<string, string> proc))
+                {
+                    string result = proc(data);
+                    if (result is not null)
+                    {
+                        return result;
+                    }
+                }
+                return $"<{tag}>";
+            }, false, 0);
+        }
+        processSet(PromptTagLengthEstimators);
+        return val;
     }
 
     /// <summary>Gets the raw value of the parameter, if it is present, or null if not.</summary>

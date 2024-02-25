@@ -54,8 +54,22 @@ public static class UtilAPI
     }
 
     /// <summary>API route to count the CLIP-like tokens in a given text prompt.</summary>
-    public static async Task<JObject> CountTokens(string text, string tokenset = "clip", bool weighting = true)
+    public static async Task<JObject> CountTokens(string text, bool skipPromptSyntax = false, string tokenset = "clip", bool weighting = true)
     {
+        if (skipPromptSyntax)
+        {
+            int skippable = text.IndexOf("<segment:");
+            if (skippable != -1)
+            {
+                text = text[..skippable];
+            }
+            skippable = text.IndexOf("<object:");
+            if (skippable != -1)
+            {
+                text = text[..skippable];
+            }
+            text = T2IParamInput.ProcessPromptLikeForLength(text);
+        }
         (JObject error, CliplikeTokenizer tokenizer) = GetTokenizerForAPI(text, tokenset);
         if (error != null)
         {
