@@ -299,7 +299,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
     }
     else {
         img = document.getElementById('current_image_img');
-        if (!img) {
+        if (!img || img.tagName != 'IMG') {
             curImg.innerHTML = '';
             img = document.createElement('img');
         }
