@@ -857,7 +857,15 @@ function describeImage(image) {
             }
         }
     ];
-    let parsedMeta = image.data.metadata ? JSON.parse(image.data.metadata) : { is_starred: false };
+    let parsedMeta = { is_starred: false };
+    if (image.data.metadata) {
+        try {
+            parsedMeta = JSON.parse(image.data.metadata);
+        }
+        catch (e) {
+            console.log(`Failed to parse image metadata: ${e}`);
+        }
+    }
     let description = image.data.name + "\n" + formatMetadata(image.data.metadata);
     let name = image.data.name;
     let imageSrc = image.data.src.endsWith('.html') ? 'imgs/html.jpg' : `${image.data.src}?preview=true`;
