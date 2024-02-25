@@ -1575,6 +1575,7 @@ function genpageLoad() {
             genInputs();
             genToolsList();
             reviseStatusBar();
+            getRequiredElementById('advanced_options_checkbox').checked = localStorage.getItem('display_advanced') == 'true';
             toggle_advanced();
             setCurrentModel();
             loadUserData();

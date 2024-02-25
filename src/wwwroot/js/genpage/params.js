@@ -408,6 +408,7 @@ function toggle_advanced() {
     let advancedArea = getRequiredElementById('main_inputs_area_advanced');
     let toggler = getRequiredElementById('advanced_options_checkbox');
     advancedArea.style.display = toggler.checked ? 'block' : 'none';
+    localStorage.setItem('display_advanced', toggler.checked);
     for (let param of gen_param_types) {
         if (param.toggleable) {
             doToggleEnable(`input_${param.id}`);
