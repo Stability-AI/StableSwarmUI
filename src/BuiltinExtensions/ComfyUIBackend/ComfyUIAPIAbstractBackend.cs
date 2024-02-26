@@ -36,11 +36,13 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public async Task LoadValueSet()
     {
-        JObject result = await SendGet<JObject>("object_info");
+        Logs.Verbose($"Comfy backend {BackendData.ID} loading value set...");
+        JObject result = await SendGet<JObject>("object_info", Utilities.TimedCancel(TimeSpan.FromMinutes(1)));
         if (result.TryGetValue("error", out JToken errorToken))
         {
             throw new Exception($"Remote error: {errorToken}");
         }
+        Logs.Verbose($"Comfy backend {BackendData.ID} loaded value set, parsing...");
         RawObjectInfo = result;
         Models ??= new();
         string firstBackSlash = null;
@@ -77,6 +79,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         {
             Logs.Error($"Comfy backend {BackendData.ID} failed to load raw node backend info: {ex}");
         }
+        Logs.Verbose($"Comfy backend {BackendData.ID} loaded value set and parsed.");
     }
 
     public abstract bool CanIdle { get; }
@@ -110,7 +113,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         if (CanIdle)
         {
             Idler.Backend = this;
-            Idler.ValidateCall = () => SendGet<JObject>("object_info").Wait();
+            Idler.ValidateCall = () => SendGet<JObject>("object_info", Utilities.TimedCancel(TimeSpan.FromMinutes(1))).Wait();
             Idler.Start();
         }
     }
@@ -699,9 +702,14 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
     }
 
-    public async Task<JType> SendGet<JType>(string url) where JType : class
+    public Task<JType> SendGet<JType>(string url) where JType : class
     {
-        return await NetworkBackendUtils.Parse<JType>(await HttpClient.GetAsync($"{Address}/{url}"));
+        return SendGet<JType>(url, Program.GlobalProgramCancel);
+    }
+
+    public async Task<JType> SendGet<JType>(string url, CancellationToken token) where JType : class
+    {
+        return await NetworkBackendUtils.Parse<JType>(await HttpClient.GetAsync($"{Address}/{url}", token));
     }
 
     public async Task<JType> SendPost<JType>(string url, JObject payload) where JType : class
