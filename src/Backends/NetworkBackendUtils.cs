@@ -328,12 +328,22 @@ public static class NetworkBackendUtils
             {
                 Logs.Debug($"{nameSimple} port {port} waiting for server...");
             }
-            bool alive = await initInternal(true);
-            if (alive)
+            try
             {
-                Logs.Init($"Self-Start {nameSimple} on port {port} started.");
+                bool alive = await initInternal(true);
+                if (alive)
+                {
+                    Logs.Init($"Self-Start {nameSimple} on port {port} started.");
+                }
+                status = getStatus();
             }
-            status = getStatus();
+            catch (Exception ex)
+            {
+                Logs.Error($"Self-Start {nameSimple} on port {port} failed to start: {ex.Message}");
+                status = BackendStatus.ERRORED;
+                reviseStatus(status);
+                return;
+            }
         }
         Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
     }
