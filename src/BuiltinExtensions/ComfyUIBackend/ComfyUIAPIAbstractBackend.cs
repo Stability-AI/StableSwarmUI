@@ -40,6 +40,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         JObject result = await SendGet<JObject>("object_info", Utilities.TimedCancel(TimeSpan.FromMinutes(1)));
         if (result.TryGetValue("error", out JToken errorToken))
         {
+            Logs.Verbose($"Comfy backend {BackendData.ID} failed to load value set: {errorToken}");
             throw new Exception($"Remote error: {errorToken}");
         }
         Logs.Verbose($"Comfy backend {BackendData.ID} loaded value set, parsing...");
@@ -102,12 +103,13 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             await LoadValueSet();
             Status = BackendStatus.RUNNING;
         }
-        catch (Exception)
+        catch (Exception e)
         {
             if (!ignoreWebError)
             {
                 throw;
             }
+            Logs.Verbose($"Comfy backend {BackendData.ID} failed to load value set, but ignoring error: {e.GetType().Name}: {e.Message}");
         }
         Idler.Stop();
         if (CanIdle)
