@@ -81,6 +81,10 @@ public class Program
         Utilities.LoadTimer timer = new();
         AssemblyLoadContext.Default.Unloading += (_) => Shutdown();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Shutdown();
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            Logs.Debug($"Unhandled exception: {e.ExceptionObject}");
+        };
         Utilities.CheckDotNet("8");
         PrepExtensions();
         try
