@@ -45,6 +45,16 @@ public class Settings : AutoConfiguration
     [ConfigComment("Settings related to webhooks.")]
     public WebHooksData WebHooks = new();
 
+    [ConfigComment("Settings related to server performance.")]
+    public PerformanceData Performance = new();
+
+    /// <summary>Settings related to server performance.</summary>
+    public class PerformanceData : AutoConfiguration
+    {
+        [ConfigComment("How like an outdated image metadata entry is to be revalidated (ie have it's mtime checked against storage) each time an image's metadata is pulled.\nDefault 0.05 means 5% chance.\nSSD users can safely set it higher. HDD users may be happier setting it to 0.\nMetadata is always loaded the first time an image is seen.")]
+        public float ImageDataValidationChance = 0.05f;
+    }
+
     /// <summary>Settings related to backends.</summary>
     public class BackendData : AutoConfiguration
     {

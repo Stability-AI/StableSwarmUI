@@ -113,6 +113,11 @@ public static class ImageMetadataTracker
             {
                 if (Math.Abs(timeNow - entry.LastVerified) > 60 * 60 * 24)
                 {
+                    float chance = Program.ServerSettings.Performance.ImageDataValidationChance;
+                    if (chance == 0 || Random.Shared.NextDouble() > chance)
+                    {
+                        return entry.PreviewData;
+                    }
                     long fTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
                     if (entry.FileTime != fTime)
                     {
@@ -175,6 +180,11 @@ public static class ImageMetadataTracker
                 ImageMetadataEntry entry = metadata.Metadata.FindById(filename);
                 if (entry is not null)
                 {
+                    float chance = Program.ServerSettings.Performance.ImageDataValidationChance;
+                    if (chance == 0 || Random.Shared.NextDouble() > chance)
+                    {
+                        return entry.Metadata;
+                    }
                     if (Math.Abs(timeNow - entry.LastVerified) > 60 * 60 * 24)
                     {
                         long fTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
