@@ -827,9 +827,15 @@ function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
     let reverse = localStorage.getItem('image_history_sort_reverse') == 'true';
     let sortElem = document.getElementById('image_history_sort_by');
     let sortReverseElem = document.getElementById('image_history_sort_reverse');
+    let fix = null;
     if (sortElem) {
-        if (!sortElem.dataset.has_loaded) {
-            sortElem.dataset.has_loaded = 'true';
+        sortBy = sortElem.value;
+        reverse = sortReverseElem.checked;
+    }
+    else { // first call happens before headers are added built atm
+        fix = () => {
+            let sortElem = document.getElementById('image_history_sort_by');
+            let sortReverseElem = document.getElementById('image_history_sort_reverse');
             sortElem.value = sortBy;
             sortReverseElem.checked = reverse;
             sortElem.addEventListener('change', () => {
@@ -841,8 +847,6 @@ function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
                 imageHistoryBrowser.update();
             });
         }
-        sortBy = sortElem.value;
-        reverse = sortReverseElem.checked;
     }
     let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
     genericRequest('ListImages', {'path': path, 'depth': depth, 'sortBy': sortBy, 'sortReverse': reverse}, data => {
@@ -852,6 +856,9 @@ function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
             return { 'name': fullSrc, 'data': { 'src': `${getImageOutPrefix()}/${fullSrc}`, 'fullsrc': fullSrc, 'name': f.src, 'metadata': f.metadata } };
         });
         callback(folders, mapped);
+        if (fix) {
+            fix();
+        }
     });
 }
 

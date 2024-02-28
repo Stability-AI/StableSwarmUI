@@ -268,6 +268,7 @@ public static class T2IAPI
     {
         int maxInHistory = session.User.Settings.MaxImagesInHistory;
         int maxScanned = session.User.Settings.MaxImagesScannedInHistory;
+        Logs.Verbose($"User {session.User.UserID} wants to list images in '{path}', maxDepth={depth}, sortBy={sortBy}, reverse={sortReverse}, maxInHistory={maxInHistory}, maxScanned={maxScanned}");
         int limit = sortBy == ImageHistorySortMode.Name ? maxInHistory : Math.Max(maxInHistory, maxScanned);
         (path, string consoleError, string userError) = WebServer.CheckFilePath(root, path);
         if (consoleError is not null)
@@ -295,7 +296,12 @@ public static class T2IAPI
                 }
                 if (subDepth > 0)
                 {
-                    foreach (string subDir in Directory.EnumerateDirectories(path + "/" + dir).Select(Path.GetFileName).OrderDescending())
+                    IEnumerable<string> subDirs = Directory.EnumerateDirectories(path + "/" + dir).Select(Path.GetFileName).OrderDescending();
+                    if (sortReverse)
+                    {
+                        subDirs = subDirs.Reverse();
+                    }
+                    foreach (string subDir in subDirs)
                     {
                         string subPath = dir == "" ? subDir : dir + "/" + subDir;
                         if (isAllowed(subPath))
@@ -322,11 +328,11 @@ public static class T2IAPI
             }
             if (sortBy == ImageHistorySortMode.Name)
             {
-                files.Sort((a, b) => a.Name.CompareTo(b.Name));
+                files.Sort((a, b) => b.Name.CompareTo(a.Name));
             }
             else if (sortBy == ImageHistorySortMode.Date)
             {
-                files.Sort((a, b) => a.Metadata.FileTime.CompareTo(b.Metadata.FileTime));
+                files.Sort((a, b) => b.Metadata.FileTime.CompareTo(a.Metadata.FileTime));
             }
             if (sortReverse)
             {
