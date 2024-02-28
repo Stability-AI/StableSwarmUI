@@ -823,9 +823,29 @@ function doGenerate(input_overrides = {}, input_preoverrides = {}) {
 }
 
 function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
+    let sortBy = localStorage.getItem('image_history_sort_by') ?? 'Name';
+    let reverse = localStorage.getItem('image_history_sort_reverse') == 'true';
+    let sortElem = document.getElementById('image_history_sort_by');
+    let sortReverseElem = document.getElementById('image_history_sort_reverse');
+    if (sortElem) {
+        if (!sortElem.dataset.has_loaded) {
+            sortElem.dataset.has_loaded = 'true';
+            sortElem.value = sortBy;
+            sortReverseElem.checked = reverse;
+            sortElem.addEventListener('change', () => {
+                localStorage.setItem('image_history_sort_by', sortElem.value);
+                imageHistoryBrowser.update();
+            });
+            sortReverseElem.addEventListener('change', () => {
+                localStorage.setItem('image_history_sort_reverse', sortReverseElem.checked);
+                imageHistoryBrowser.update();
+            });
+        }
+        sortBy = sortElem.value;
+        reverse = sortReverseElem.checked;
+    }
     let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
-    genericRequest('ListImages', {'path': path, 'depth': depth}, data => {
-        data.files = data.files.sort((a, b) => b.src.toLowerCase().localeCompare(a.src.toLowerCase()));
+    genericRequest('ListImages', {'path': path, 'depth': depth, 'sortBy': sortBy, 'sortReverse': reverse}, data => {
         let folders = data.folders.sort((a, b) => b.toLowerCase().localeCompare(a.toLowerCase()));
         let mapped = data.files.map(f => {
             let fullSrc = `${prefix}${f.src}`;
@@ -893,7 +913,8 @@ function selectImageInHistory(image, div) {
     }
 }
 
-let imageHistoryBrowser = new GenPageBrowserClass('image_history', listImageHistoryFolderAndFiles, 'imagehistorybrowser', 'Thumbnails', describeImage, selectImageInHistory);
+let imageHistoryBrowser = new GenPageBrowserClass('image_history', listImageHistoryFolderAndFiles, 'imagehistorybrowser', 'Thumbnails', describeImage, selectImageInHistory,
+    `<label for="image_history_sort_by">Sort:</label> <select id="image_history_sort_by"><option>Name</option><option>Date</option></select> <input type="checkbox" id="image_history_sort_reverse"> <label for="image_history_sort_reverse">Reverse</label>`);
 
 function getCurrentStatus() {
     if (versionIsWrong) {

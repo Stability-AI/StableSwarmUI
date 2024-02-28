@@ -11,6 +11,7 @@ using StableSwarmUI.Utils;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using Image = StableSwarmUI.Utils.Image;
@@ -259,11 +260,15 @@ public static class T2IAPI
 
     public static HashSet<string> ImageExtensions = new() { "png", "jpg", "html", "gif", "webm", "mp4", "webp" };
 
+    public enum ImageHistorySortMode { Name, Date }
+
     // TODO: Configurable limit
     /// <summary>API route to get a list of available history images.</summary>
-    private static JObject GetListAPIInternal(Session session, string path, string root, HashSet<string> extensions, Func<string, bool> isAllowed, Func<string, string, JObject> valToObj, int depth)
+    private static JObject GetListAPIInternal(Session session, string path, string root, HashSet<string> extensions, Func<string, bool> isAllowed, int depth, ImageHistorySortMode sortBy, bool sortReverse)
     {
-        int limit = session.User.Settings.MaxImagesInHistory;
+        int maxInHistory = session.User.Settings.MaxImagesInHistory;
+        int maxScanned = session.User.Settings.MaxImagesScannedInHistory;
+        int limit = sortBy == ImageHistorySortMode.Name ? maxInHistory : Math.Max(maxInHistory, maxScanned);
         (path, string consoleError, string userError) = WebServer.CheckFilePath(root, path);
         if (consoleError is not null)
         {
@@ -301,22 +306,36 @@ public static class T2IAPI
                 }
             }
             addDirs("", depth);
-            List<JObject> files = new();
+            List<ImageHistoryHelper> files = new();
+            bool starNoFolders = session.User.Settings.StarNoFolders;
             foreach (string folder in dirs.Append(""))
             {
                 string prefix = folder == "" ? "" : folder + "/";
                 List<string> subFiles = Directory.EnumerateFiles($"{path}/{prefix}").Take(limit).ToList();
-                files.AddRange(subFiles.Where(isAllowed).Where(f => extensions.Contains(f.AfterLast('.'))).Select(f => f.Replace('\\', '/')).Select(f => valToObj(f, prefix + f.AfterLast('/'))).ToList());
+                IEnumerable<string> newFileNames = subFiles.Where(isAllowed).Where(f => extensions.Contains(f.AfterLast('.'))).Select(f => f.Replace('\\', '/'));
+                files.AddRange(newFileNames.Select(f => new ImageHistoryHelper(prefix + f.AfterLast('/'), ImageMetadataTracker.GetMetadataFor(f, root, starNoFolders))).Where(f => f.Metadata is not null));
                 limit -= subFiles.Count;
                 if (limit <= 0)
                 {
                     break;
                 }
             }
+            if (sortBy == ImageHistorySortMode.Name)
+            {
+                files.Sort((a, b) => a.Name.CompareTo(b.Name));
+            }
+            else if (sortBy == ImageHistorySortMode.Date)
+            {
+                files.Sort((a, b) => a.Metadata.FileTime.CompareTo(b.Metadata.FileTime));
+            }
+            if (sortReverse)
+            {
+                files.Reverse();
+            }
             return new JObject()
             {
                 ["folders"] = JToken.FromObject(dirs.Union(finalDirs).ToList()),
-                ["files"] = JToken.FromObject(files)
+                ["files"] = JToken.FromObject(files.Take(maxInHistory).Select(f => new JObject() { ["src"] = f.Name, ["metadata"] = f.Metadata.Metadata }).ToList())
             };
         }
         catch (Exception ex)
@@ -332,6 +351,8 @@ public static class T2IAPI
             }
         }
     }
+
+    public record struct ImageHistoryHelper(string Name, ImageMetadataTracker.ImageMetadataEntry Metadata);
 
     /// <summary>API route to cause an image folder to open.</summary>
     public static async Task<JObject> OpenImageFolder(Session session, string path)
@@ -391,14 +412,14 @@ public static class T2IAPI
     }
 
     /// <summary>API route to get a list of available history images.</summary>
-    public static async Task<JObject> ListImages(Session session, string path, int depth)
+    public static async Task<JObject> ListImages(Session session, string path, int depth, string sortBy = "Name", bool sortReverse = false)
     {
-        string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, session.User.OutputDirectory);
-        return GetListAPIInternal(session, path, root, ImageExtensions, f => true, (file, name) => new JObject()
+        if (!Enum.TryParse(sortBy, true, out ImageHistorySortMode sortMode))
         {
-            ["src"] = name,
-            ["metadata"] = ImageMetadataTracker.GetMetadataFor(file, root, session.User.Settings.StarNoFolders)
-        }, depth);
+            return new JObject() { ["error"] = "Invalid sort mode." };
+        }
+        string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, session.User.OutputDirectory);
+        return GetListAPIInternal(session, path, root, ImageExtensions, f => true, depth, sortMode, sortReverse);
     }
 
     /// <summary>API route to toggle whether an image is starred or not.</summary>

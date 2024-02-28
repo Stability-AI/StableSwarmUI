@@ -163,13 +163,9 @@ public static class ImageMetadataTracker
     }
 
     /// <summary>Get the metadata text for the given file, going through a cache manager.</summary>
-    public static string GetMetadataFor(string file, string root, bool starNoFolders)
+    public static ImageMetadataEntry GetMetadataFor(string file, string root, bool starNoFolders)
     {
         string ext = file.AfterLast('.');
-        if (!ExtensionsWithMetadata.Contains(ext))
-        {
-            return null;
-        }
         string folder = file.BeforeAndAfterLast('/', out string filename);
         ImageDatabase metadata = GetDatabaseForFolder(folder);
         long timeNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -177,30 +173,30 @@ public static class ImageMetadataTracker
         {
             lock (metadata.Lock)
             {
-                ImageMetadataEntry entry = metadata.Metadata.FindById(filename);
-                if (entry is not null)
+                ImageMetadataEntry existingEntry = metadata.Metadata.FindById(filename);
+                if (existingEntry is not null)
                 {
                     float chance = Program.ServerSettings.Performance.ImageDataValidationChance;
                     if (chance == 0 || Random.Shared.NextDouble() > chance)
                     {
-                        return entry.Metadata;
+                        return existingEntry;
                     }
-                    if (Math.Abs(timeNow - entry.LastVerified) > 60 * 60 * 24)
+                    if (Math.Abs(timeNow - existingEntry.LastVerified) > 60 * 60 * 24)
                     {
                         long fTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
-                        if (entry.FileTime != fTime)
+                        if (existingEntry.FileTime != fTime)
                         {
-                            entry = null;
+                            existingEntry = null;
                         }
                         else
                         {
-                            entry.LastVerified = timeNow;
-                            metadata.Metadata.Upsert(entry);
+                            existingEntry.LastVerified = timeNow;
+                            metadata.Metadata.Upsert(existingEntry);
                         }
                     }
-                    if (entry is not null)
+                    if (existingEntry is not null)
                     {
-                        return entry.Metadata;
+                        return existingEntry;
                     }
                 }
             }
@@ -214,15 +210,18 @@ public static class ImageMetadataTracker
             return null;
         }
         long fileTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
-        string fileData;
+        string fileData = null;
         try
         {
-            byte[] data = File.ReadAllBytes(file);
-            if (data.Length == 0)
+            if (ExtensionsWithMetadata.Contains(ext))
             {
-                return null;
+                byte[] data = File.ReadAllBytes(file);
+                if (data.Length == 0)
+                {
+                    return null;
+                }
+                fileData = new Image(data, Image.ImageType.IMAGE, ext).GetMetadata();
             }
-            fileData = new Image(data, Image.ImageType.IMAGE, ext).GetMetadata();
             string subPath = file.StartsWith(root) ? file[root.Length..] : Path.GetRelativePath(root, file);
             subPath = subPath.Replace('\\', '/').Trim('/');
             string rawSubPath = subPath;
@@ -251,11 +250,11 @@ public static class ImageMetadataTracker
             Console.WriteLine($"Error reading image metadata for file '{file}': {ex}");
             return null;
         }
+        ImageMetadataEntry entry = new() { FileName = filename, Metadata = fileData, LastVerified = timeNow, FileTime = fileTime };
         try
         {
             lock (metadata.Lock)
             {
-                ImageMetadataEntry entry = new() { FileName = filename, Metadata = fileData, LastVerified = timeNow, FileTime = fileTime };
                 metadata.Metadata.Upsert(entry);
             }
         }
@@ -263,7 +262,7 @@ public static class ImageMetadataTracker
         {
             Console.WriteLine($"Error writing image metadata for file '{file}' to database: {ex}");
         }
-        return fileData;
+        return entry;
     }
 
     /// <summary>Shuts down and stores metadata helper files.</summary>
