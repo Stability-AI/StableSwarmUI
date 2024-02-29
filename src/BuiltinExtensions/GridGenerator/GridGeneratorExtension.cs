@@ -171,7 +171,10 @@ public class GridGeneratorExtension : Extension
                             metadata ??= "{}";
                             File.WriteAllBytes($"{mainpath}.metadata.js", $"all_metadata[\"{set.BaseFilepath}\"] = {metadata}\n{metaExtra}".EncodeUTF8());
                         }
-                        data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{ext}", ["metadata"] = metadata });
+                        if (data.ShowOutputs)
+                        {
+                            data.AddOutput(new JObject() { ["image"] = $"/{set.Grid.Runner.URLBase}/{set.BaseFilepath}.{ext}", ["metadata"] = metadata });
+                        }
                     }
                     else
                     {
@@ -181,7 +184,10 @@ public class GridGeneratorExtension : Extension
                             setError($"Server failed to save an image.");
                             return;
                         }
-                        data.AddOutput(new JObject() { ["image"] = url, ["batch_index"] = $"{iteration}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
+                        if (data.ShowOutputs)
+                        {
+                            data.AddOutput(new JObject() { ["image"] = url, ["batch_index"] = $"{iteration}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata });
+                        }
                         if (set.Grid.OutputType == Grid.OutputyTypeEnum.GRID_IMAGE)
                         {
                             data.GeneratedOutputs.TryAdd(set.BaseFilepath, image.Img);
@@ -275,6 +281,8 @@ public class GridGeneratorExtension : Extension
 
         public bool ContinueOnError = false;
 
+        public bool ShowOutputs = true;
+
         public Task[] GetActive()
         {
             lock (UpdateLock)
@@ -341,7 +349,7 @@ public class GridGeneratorExtension : Extension
         return Fonts.GetOrCreate(sizeMult, () => MainFontCollection.Families.First().CreateFont(16 * sizeMult, FontStyle.Bold));
     }
 
-    public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string outputType, bool continueOnError)
+    public async Task<JObject> GridGenRun(WebSocket socket, Session session, JObject raw, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string outputType, bool continueOnError, bool showOutputs)
     {
         using Session.GenClaim claim = session.Claim(gens: 1);
         T2IParamInput baseParams;
@@ -363,7 +371,7 @@ public class GridGeneratorExtension : Extension
         baseParams.Remove(T2IParamTypes.Images);
         baseParams.Remove(T2IParamTypes.SaveIntermediateImages);
         await sendStatus();
-        StableSwarmUIGridData data = new() { Session = session, Claim = claim, MaxSimul = session.User.Restrictions.CalcMaxT2ISimultaneous, ContinueOnError = continueOnError };
+        StableSwarmUIGridData data = new() { Session = session, Claim = claim, MaxSimul = session.User.Restrictions.CalcMaxT2ISimultaneous, ContinueOnError = continueOnError, ShowOutputs = showOutputs };
         Grid grid = null;
         try
         {
