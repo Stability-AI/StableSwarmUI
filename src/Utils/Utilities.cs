@@ -71,6 +71,9 @@ public static class Utilities
     /// <summary>A unique ID for this server, used to make sure we don't ever form a circular swarm connection path.</summary>
     public static Guid LoopPreventionID = Guid.NewGuid();
 
+    /// <summary>Matcher for ASCII control codes (including newlines, etc).</summary>
+    public static AsciiMatcher ControlCodesMatcher = new(c => c < 32);
+
     /// <summary>Matcher for characters banned or specialcased by Windows or other OS's.</summary>
     public static AsciiMatcher FilePathForbidden = new(c => c < 32 || "<>:\"\\|?*~&@;#$^".Contains(c));
 

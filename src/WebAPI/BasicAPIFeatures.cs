@@ -52,7 +52,19 @@ public static class BasicAPIFeatures
         {
             user = user_id[0];
         }
-        Session session = Program.Sessions.CreateAdminSession(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", user);
+        string source = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        if (context.Request.Headers.TryGetValue("X-Forwarded-For", out StringValues forwardedFor) && forwardedFor.Count > 0)
+        {
+            foreach (string forward in forwardedFor)
+            {
+                source += $" (forwarded-for: {Utilities.ControlCodesMatcher.TrimToNonMatches(forward)})";
+            }
+        }
+        if (source.Length > 100)
+        {
+            source = source[..100] + "...";
+        }
+        Session session = Program.Sessions.CreateAdminSession(source, user);
         return new JObject()
         {
             ["session_id"] = session.ID,
