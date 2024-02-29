@@ -38,7 +38,7 @@ public static class SystemStatusMonitor
             {
                 long newProcessorTime = SelfProc.TotalProcessorTime.Milliseconds;
                 long newTick = Environment.TickCount64;
-                ProcessCPUUsage = (newProcessorTime - LastProcessorTime) / (double)(newTick - LastTick);
+                ProcessCPUUsage = Math.Max(0, (newProcessorTime - LastProcessorTime) / (double)(newTick - LastTick));
                 LastProcessorTime = newProcessorTime;
                 LastTick = newTick;
                 HardwareInfo.RefreshMemoryStatus();
