@@ -639,6 +639,7 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
     params['comfyworkflowraw'].extra_hidden = true;
     actualParams.push(params['comfyworkflowraw']); // must be first
     delete params['comfyworkflowraw'];
+    let setModelVal = null;
     for (let param of rawGenParamTypesFromServer.filter(p => retained.includes(p.id) || p.always_retain)) {
         actualParams.push(param);
         let val = paramVal[param.id];
@@ -650,7 +651,9 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
             if (applyValues && val !== null && val !== undefined) {
                 if (param.id == 'model') {
                     setCookie('selected_model', val, 90);
+                    forceSetDropdownValue('input_model', val);
                     forceSetDropdownValue('current_model', val);
+                    setModelVal = val;
                 }
                 else {
                     setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
@@ -671,6 +674,11 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
     if (!otherInfoSpanContent.includes(comfyInfoSpanNotice)) {
         otherInfoSpanContent.push(comfyInfoSpanNotice);
         updateOtherInfoSpan();
+    }
+    if (setModelVal) {
+        setCookie('selected_model', setModelVal, 90);
+        forceSetDropdownValue('input_model', setModelVal);
+        forceSetDropdownValue('current_model', setModelVal);
     }
 }
 
