@@ -671,7 +671,7 @@ public class ComfyUIBackendExtension : Extension
                                     address = client.Address;
                                     parsed["client_id"] = client.SID;
                                     client.FixUpPrompt(parsed["prompt"] as JObject);
-                                    Logs.Debug($"Sent Comfy backend direct prompt requested to backend #{backend.BackendData.ID}");
+                                    Logs.Info($"Sent Comfy backend direct prompt requested to backend #{backend.BackendData.ID}");
                                     redirected = true;
                                 }
                             }
