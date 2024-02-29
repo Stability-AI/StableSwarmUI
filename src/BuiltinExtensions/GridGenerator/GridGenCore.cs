@@ -262,7 +262,7 @@ public partial class GridGenCore
 
         public GridRunner Runner;
 
-        public volatile bool MustCancel;
+        public Func<bool> MustCancel = () => false;
 
         public bool PublishMetadata;
 
@@ -388,6 +388,10 @@ public partial class GridGenCore
 
         public List<SingleGridCall> BuildValueSetList(List<Axis> axisList, bool topmost = true)
         {
+            if (Grid.MustCancel())
+            {
+                return new();
+            }
             if (axisList.Count == 0)
             {
                 return new();
@@ -430,6 +434,10 @@ public partial class GridGenCore
         public void Preprocess()
         {
             Sets = BuildValueSetList(Grid.Axes.ToList());
+            if (Grid.MustCancel())
+            {
+                return;
+            }
             if (Grid.OutputType == Grid.OutputyTypeEnum.WEB_PAGE)
             {
                 if (!Directory.Exists(BasePath))
@@ -444,6 +452,10 @@ public partial class GridGenCore
             }
             foreach (SingleGridCall set in Sets)
             {
+                if (Grid.MustCancel())
+                {
+                    return;
+                }
                 set.BuildBasePaths();
                 set.FlattenParams(Grid);
                 if (set.Skip)
@@ -475,7 +487,7 @@ public partial class GridGenCore
                 {
                     continue;
                 }
-                if (Grid.MustCancel)
+                if (Grid.MustCancel())
                 {
                     return;
                 }
@@ -692,7 +704,7 @@ public partial class GridGenCore
 
     // TODO: Clever model logic switching so this doesn't spam-switch
 
-    public static Grid Run(T2IParamInput baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string outputType, string format, string footerExtra = "")
+    public static Grid Run(T2IParamInput baseParams, JToken axes, object LocalData, string inputFile, string outputFolderBase, string urlBase, string outputFolderName, bool doOverwrite, bool fastSkip, bool generatePage, bool publishGenMetadata, bool dryRun, bool weightOrder, string outputType, string format, Func<bool> mustCancel, string footerExtra = "")
     {
         Grid grid = new()
         {
@@ -705,6 +717,7 @@ public partial class GridGenCore
             InitialParams = baseParams.Clone(),
             LocalData = LocalData,
             PublishMetadata = publishGenMetadata,
+            MustCancel = mustCancel ?? (() => false),
             OutputType = outputType switch
             {
                 "Just Images" => Grid.OutputyTypeEnum.JUST_IMAGES,
@@ -768,6 +781,10 @@ public partial class GridGenCore
         };
         grid.Runner = runner;
         runner.Preprocess();
+        if (grid.MustCancel())
+        {
+            return grid;
+        }
         string json = "";
         if (generatePage)
         {

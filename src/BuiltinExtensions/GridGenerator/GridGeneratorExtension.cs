@@ -111,7 +111,6 @@ public class GridGeneratorExtension : Extension
             if (data.Claim.ShouldCancel)
             {
                 Logs.Debug("Grid gen hook cancelling per user interrupt request.");
-                runner.Grid.MustCancel = true;
                 return Task.CompletedTask;
             }
             Task[] waitOn = data.GetActive();
@@ -370,7 +369,7 @@ public class GridGeneratorExtension : Extension
         {
             string ext = Image.ImageFormatToExtension(session.User.Settings.FileFormat.ImageFormat);
             string urlBase = Program.ServerSettings.Paths.AppendUserNameToOutputPath ? $"View/{session.User.UserID}" : "Output";
-            Task mainRun = Task.Run(() => grid = Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, urlBase, outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun, weightOrder, outputType, ext));
+            Task mainRun = Task.Run(() => grid = Run(baseParams, raw["gridAxes"], data, null, session.User.OutputDirectory, urlBase, outputFolderName, doOverwrite, fastSkip, generatePage, publishGenMetadata, dryRun, weightOrder, outputType, ext, () => claim.ShouldCancel));
             while (!mainRun.IsCompleted || data.GetActive().Any() || data.Generated.Any())
             {
                 await data.Signal.WaitAsync(TimeSpan.FromSeconds(1));
