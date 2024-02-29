@@ -650,6 +650,7 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
             }
             if (applyValues && val !== null && val !== undefined) {
                 if (param.id == 'model') {
+                    val = val.replaceAll('\\', '/');
                     setCookie('selected_model', val, 90);
                     forceSetDropdownValue('input_model', val);
                     forceSetDropdownValue('current_model', val);
@@ -675,11 +676,13 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
         otherInfoSpanContent.push(comfyInfoSpanNotice);
         updateOtherInfoSpan();
     }
-    if (setModelVal) {
-        setCookie('selected_model', setModelVal, 90);
-        forceSetDropdownValue('input_model', setModelVal);
-        forceSetDropdownValue('current_model', setModelVal);
-    }
+    setTimeout(() => {
+        if (setModelVal) {
+            setCookie('selected_model', setModelVal, 90);
+            forceSetDropdownValue('input_model', setModelVal);
+            forceSetDropdownValue('current_model', setModelVal);
+        }
+    }, 100);
 }
 
 /**
