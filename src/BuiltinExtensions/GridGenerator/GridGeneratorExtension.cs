@@ -417,7 +417,7 @@ public class GridGeneratorExtension : Extension
                         RichTextOptions rto = new(font) { WrappingLength = width, Origin = new(x, y) };
                         float lines = height / rawTextHeight;
                         FontRectangle measured = TextMeasurer.MeasureSize(text, options);
-                        Logs.Debug($"Measured {text} as {measured.Width}x{measured.Height} in {width}x{height} with {lines} lines");
+                        Logs.Verbose($"Measured text '{text}' as {measured.Width}x{measured.Height} in {width}x{height} with {lines} lines");
                         if (measured.Width < width * lines * 0.5)
                         {
                             rto.Font = GetFont(2);
@@ -488,16 +488,16 @@ public class GridGeneratorExtension : Extension
                 Logs.Info("Generated, saving...");
                 Image outImg = new(gridImg);
                 int batchId = xAxis.Count * yAxis.Count * y2Axis.Count;
-                Logs.Debug("Apply metadata...");
+                Logs.Verbose("Apply metadata...");
                 (outImg, string metadata) = session.ApplyMetadata(outImg, grid.InitialParams, batchId);
-                Logs.Debug("Metadata applied, save to file...");
+                Logs.Verbose("Metadata applied, save to file...");
                 (string url, string filePath) = grid.InitialParams.Get(T2IParamTypes.DoNotSave, false) ? (data.Session.GetImageB64(outImg), null) : data.Session.SaveImage(outImg, batchId, grid.InitialParams, metadata);
                 if (url == "ERROR")
                 {
                     data.ErrorOut = new JObject() { ["error"] = $"Server failed to save an image." };
                     throw new InvalidOperationException();
                 }
-                Logs.Debug("Saved to file, send over websocket...");
+                Logs.Verbose("Saved to file, send over websocket...");
                 await socket.SendJson(new JObject() { ["image"] = url, ["batch_index"] = $"{batchId}", ["metadata"] = string.IsNullOrWhiteSpace(metadata) ? null : metadata }, API.WebsocketTimeout);
             }
         }

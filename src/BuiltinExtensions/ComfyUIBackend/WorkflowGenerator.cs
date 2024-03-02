@@ -1282,6 +1282,36 @@ public class WorkflowGenerator
                 ["width"] = width
             }, id);
         }
+        else if (UserInput.Get(ComfyUIBackendExtension.ShiftedLatentAverageInit, false))
+        {
+            double offA = 0, offB = 0, offC = 0, offD = 0;
+            switch (FinalLoadedModel.ModelClass?.CompatClass)
+            {
+                case "stable-diffusion-v1": // https://github.com/Birch-san/sdxl-diffusion-decoder/blob/4ba89847c02db070b766969c0eca3686a1e7512e/script/inference_decoder.py#L112
+                case "stable-diffusion-v2":
+                    offA = 2.1335;
+                    offB = 0.1237;
+                    offC = 0.4052;
+                    offD = -0.0940;
+                    break;
+                case "stable-diffusion-xl-v1": // https://huggingface.co/datasets/Birchlabs/sdxl-latents-ffhq
+                    offA = -2.8982;
+                    offB = -0.9609;
+                    offC = 0.2416;
+                    offD = -0.3074;
+                    break;
+            }
+            return CreateNode("SwarmOffsetEmptyLatentImage", new JObject()
+            {
+                ["batch_size"] = batchSize,
+                ["height"] = height,
+                ["width"] = width,
+                ["off_a"] = offA,
+                ["off_b"] = offB,
+                ["off_c"] = offC,
+                ["off_d"] = offD
+            }, id);
+        }
         else
         {
             return CreateNode("EmptyLatentImage", new JObject()

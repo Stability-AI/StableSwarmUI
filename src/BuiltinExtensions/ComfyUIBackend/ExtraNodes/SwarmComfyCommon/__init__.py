@@ -1,4 +1,4 @@
-from . import SwarmBlending, SwarmClipSeg, SwarmImages, SwarmInternalUtil, SwarmKSampler, SwarmLoadImageB64, SwarmLoraLoader, SwarmMasks, SwarmSaveImageWS, SwarmTiling, SwarmExtractLora, SwarmUnsampler
+from . import SwarmBlending, SwarmClipSeg, SwarmImages, SwarmInternalUtil, SwarmKSampler, SwarmLoadImageB64, SwarmLoraLoader, SwarmMasks, SwarmSaveImageWS, SwarmTiling, SwarmExtractLora, SwarmUnsampler, SwarmLatents
 
 WEB_DIRECTORY = "./web"
 
@@ -15,4 +15,5 @@ NODE_CLASS_MAPPINGS = (
     | SwarmTiling.NODE_CLASS_MAPPINGS
     | SwarmExtractLora.NODE_CLASS_MAPPINGS
     | SwarmUnsampler.NODE_CLASS_MAPPINGS
+    | SwarmLatents.NODE_CLASS_MAPPINGS
 )
