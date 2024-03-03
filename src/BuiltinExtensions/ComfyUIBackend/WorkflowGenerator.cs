@@ -1356,13 +1356,35 @@ public class WorkflowGenerator
         return new() { node, 0 };
     }
 
+    /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input, with support for '&lt;break&gt;' syntax.</summary>
+    public JArray CreateConditioningLine(string prompt, JArray clip, T2IModel model, bool isPositive, string id = null)
+    {
+        string[] breaks = prompt.Split("<break>", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (breaks.Length <= 1)
+        {
+            return CreateConditioningDirect(prompt, clip, model, isPositive, id);
+        }
+        JArray first = CreateConditioningDirect(breaks[0], clip, model, isPositive);
+        for (int i = 1; i < breaks.Length; i++)
+        {
+            JArray second = CreateConditioningDirect(breaks[i], clip, model, isPositive);
+            string concatted = CreateNode("ConditioningConcat", new JObject()
+            {
+                ["conditioning_to"] = first,
+                ["conditioning_from"] = second
+            });
+            first = new JArray() { concatted, 0 };
+        }
+        return first;
+    }
+
     public record struct RegionHelper(JArray PartCond, JArray Mask);
 
     /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input, applying prompt-given conditioning modifiers as relevant.</summary>
     public JArray CreateConditioning(string prompt, JArray clip, T2IModel model, bool isPositive, string firstId = null)
     {
         PromptRegion regionalizer = new(prompt);
-        JArray globalCond = CreateConditioningDirect(regionalizer.GlobalPrompt, clip, model, isPositive, firstId);
+        JArray globalCond = CreateConditioningLine(regionalizer.GlobalPrompt, clip, model, isPositive, firstId);
         PromptRegion.Part[] parts = regionalizer.Parts.Where(p => p.Type == PromptRegion.PartType.Object || p.Type == PromptRegion.PartType.Region).ToArray();
         if (parts.IsEmpty())
         {
@@ -1403,7 +1425,7 @@ public class WorkflowGenerator
         JArray lastMergedMask = null;
         foreach (PromptRegion.Part part in parts)
         {
-            JArray partCond = CreateConditioningDirect(part.Prompt, clip, model, isPositive);
+            JArray partCond = CreateConditioningLine(part.Prompt, clip, model, isPositive);
             string regionNode = CreateNode("SwarmSquareMaskFromPercent", new JObject()
             {
                 ["x"] = part.X,
@@ -1442,7 +1464,7 @@ public class WorkflowGenerator
             ["exclude_mask"] = lastMergedMask
         });
         string backgroundPrompt = string.IsNullOrWhiteSpace(regionalizer.BackgroundPrompt) ? regionalizer.GlobalPrompt : regionalizer.BackgroundPrompt;
-        JArray backgroundCond = CreateConditioningDirect(backgroundPrompt, clip, model, isPositive);
+        JArray backgroundCond = CreateConditioningLine(backgroundPrompt, clip, model, isPositive);
         string mainConditioning = CreateNode("ConditioningSetMask", new JObject()
         {
             ["conditioning"] = backgroundCond,

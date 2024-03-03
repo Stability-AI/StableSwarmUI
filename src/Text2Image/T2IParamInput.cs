@@ -311,9 +311,14 @@ public class T2IParamInput
             Logs.Warning($"Lora '{lora}' does not exist and will be ignored.");
             return null;
         };
+        PromptTagProcessors["break"] = (data, context) =>
+        {
+            return "<break>";
+        };
         PromptTagLengthEstimators["embed"] = PromptTagLengthEstimators["preset"];
         PromptTagLengthEstimators["embedding"] = PromptTagLengthEstimators["preset"];
         PromptTagLengthEstimators["lora"] = PromptTagLengthEstimators["preset"];
+        PromptTagLengthEstimators["break"] = PromptTagLengthEstimators["preset"];
     }
 
     /// <summary>The raw values in this input. Do not use this directly, instead prefer:

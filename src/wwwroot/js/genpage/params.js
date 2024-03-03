@@ -1074,6 +1074,9 @@ class PromptTabCompleteClass {
         this.registerPrefix('clear', 'Automatically clear part of the image to transparent (by CLIP segmentation matching) (iffy quality, prefer the Remove Background parameter over this)', (prefix) => {
             return ['\nSpecify before the ">" some text to match against in the image, like "<segment:background>"'];
         });
+        this.registerPrefix('break', 'Split this prompt across multiple lines of conditioning to the model (helps separate concepts for long prompts).', (prefix) => {
+            return [];
+        }, true);
     }
 
     enableFor(box) {
@@ -1081,8 +1084,8 @@ class PromptTabCompleteClass {
         box.addEventListener('input', () => this.onInput(box), true);
     }
 
-    registerPrefix(name, description, completer) {
-        this.prefixes[name] = { name, description, completer };
+    registerPrefix(name, description, completer, selfStanding = false) {
+        this.prefixes[name] = { name, description, completer, selfStanding };
     }
 
     getPromptBeforeCursor(box) {
@@ -1140,7 +1143,12 @@ class PromptTabCompleteClass {
             let isClickable = true;
             if (typeof val == 'object') {
                 [name, desc] = val;
-                apply = `<${name}:`;
+                if (this.prefixes[name].selfStanding) {
+                    apply = `<${name}>`;
+                }
+                else {
+                    apply = `<${name}:`;
+                }
             }
             else if (val.startsWith('\n')) {
                 isClickable = false;
