@@ -5,10 +5,10 @@ let lastPopoverTime = 0, lastPopover = null;
 
 class AdvancedPopover {
     /**
-     * eg: new AdvancedPopover('my_popover', [ { key: 'Button 1', action: () => console.log("Clicked!") } ], true, mouseX, mouseY, 'Button 1');
+     * eg: new AdvancedPopover('my_popover', [ { key: 'Button 1', action: () => console.log("Clicked!") } ], true, mouseX, mouseY, 'Button 1', document.body);
      * Buttons can optionally exclude action to make unclickable.
      */
-    constructor(id, buttons, canSearch, x, y, preSelect = null, flipYHeight = null) {
+    constructor(id, buttons, canSearch, x, y, root, preSelect = null, flipYHeight = null) {
         this.id = id;
         this.buttons = buttons;
         this.popover = createDiv(`popover_${id}`, 'sui-popover sui_popover_model sui-popover-notransition');
@@ -35,11 +35,12 @@ class AdvancedPopover {
         this.blockHeight = parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.3;
         this.buildList();
         this.popover.appendChild(this.optionArea);
-        document.body.appendChild(this.popover);
+        root.appendChild(this.popover);
         this.show(x, y);
         if (canSearch) {
             this.textInput.focus();
         }
+        this.created = Date.now();
     }
 
     remove() {
@@ -244,7 +245,7 @@ class UIImprovementHandler {
         let popId = `uiimprover_${elem.id}`;
         let rect = elem.getBoundingClientRect();
         let buttons = [...elem.options].map(o => { return { key: o.innerText, action: () => { elem.value = o.value; triggerChangeFor(elem); } }; })
-        this.lastPopover = new AdvancedPopover(popId, buttons, true, rect.x, rect.y, elem.selectedIndex < 0 ? null : elem.selectedOptions[0].innerText, 0);
+        this.lastPopover = new AdvancedPopover(popId, buttons, true, rect.x, rect.y, elem.parentElement, elem.selectedIndex < 0 ? null : elem.selectedOptions[0].innerText, 0);
         e.preventDefault();
         e.stopPropagation();
         return false;
@@ -266,7 +267,9 @@ function doPopHideCleanup(target) {
             continue;
         }
         if (id instanceof AdvancedPopover) {
-            id.remove();
+            if (Date.now() - id.created > 50) {
+                id.remove();
+            }
         }
         else {
             pop.classList.remove('sui-popover-visible');

@@ -1168,7 +1168,7 @@ class PromptTabCompleteClass {
             buttons.push(button);
         }
         let rect = box.getBoundingClientRect();
-        this.popover = new AdvancedPopover('prompt_suggest', buttons, false, rect.x, rect.y + box.offsetHeight + 6, null, box.offsetHeight + 6);
+        this.popover = new AdvancedPopover('prompt_suggest', buttons, false, rect.x, rect.y + box.offsetHeight + 6, box.parentElement, null, box.offsetHeight + 6);
     }
 }
 
