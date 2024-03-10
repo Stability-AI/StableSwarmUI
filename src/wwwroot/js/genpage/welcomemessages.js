@@ -52,6 +52,7 @@ function automaticWelcomeMessage(override = null) {
         `New feature (2023-12-07): Welcome messages!\nOh, well, hi, that's this right here. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7791189">(Feature Announcement Link)</a>`,
         `New feature (2024-01-15): Translations!\nAI-translated text across the UI.\nSpeak one of these other languages? Submit a PR to fix up the AI translators mistakes! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8131492">(Feature Announcement Link)</a>`,
         `New feature (2024-02-19): Stable Cascade\nNatively supported in Swarm with the modern Comfy-style All-In-One format. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8521943">(Feature Announcement Link)</a>`,
+        `New feature (2024-03-10): Comfy Workflow Browser\nAn easy browser for Comfy workflows in the Comfy tab. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8736304">(Feature Announcement Link)</a>`,
         /* Version release notes */
         `Release notes (2024-01-08): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.0-Alpha">Release Notes for version 0.6.0 (Alpha)</a>\nIncludes new features like Unsampling, Image Starring, and more!\nSwarm will be moving to Beta soon!`
     ];
