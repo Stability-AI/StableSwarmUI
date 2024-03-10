@@ -874,6 +874,7 @@ public class BackendHandler
                     wasNone = true;
                     Program.TickNoGenerationsEvent?.Invoke();
                 }
+                Program.GlobalProgramCancel.ThrowIfCancellationRequested();
                 if (empty || !anyMoved)
                 {
                     CheckBackendsSignal.WaitAsync(TimeSpan.FromSeconds(1), Program.GlobalProgramCancel).Wait();
