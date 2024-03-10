@@ -18,7 +18,7 @@ public class Session : IEquatable<Session>
 
     public CancellationTokenSource SessInterrupt = new();
 
-    public List<GenClaim> Claims = new();
+    public List<GenClaim> Claims = [];
 
     /// <summary>Statistics about the generations currently waiting in this session.</summary>
     public int WaitingGenerations = 0, LoadingModels = 0, WaitingBackends = 0, LiveGens = 0;

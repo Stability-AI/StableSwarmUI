@@ -45,7 +45,7 @@ public class WebServer
     public static LogLevel LogLevel;
 
     /// <summary>Extra file content added by extensions.</summary>
-    public Dictionary<string, string> ExtensionSharedFiles = new();
+    public Dictionary<string, string> ExtensionSharedFiles = [];
 
     /// <summary>Extra content for the page header. Automatically set based on extensions.</summary>
     public static HtmlString PageHeaderExtra = new("");
@@ -60,7 +60,7 @@ public class WebServer
     public static HtmlString T2ITabBody = new("");
 
     /// <summary>Set of registered Theme IDs.</summary>
-    public Dictionary<string, ThemeData> RegisteredThemes = new();
+    public Dictionary<string, ThemeData> RegisteredThemes = [];
 
     /// <summary>Data about a theme.</summary>
     /// <param name="ID">The registered theme ID.</param>

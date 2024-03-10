@@ -99,7 +99,7 @@ public static class Logs
     public static LogTracker[] Trackers = new LogTracker[(int)LogLevel.None];
 
     /// <summary>Named set of other log trackers (eg backends).</summary>
-    public static Dictionary<string, LogTracker> OtherTrackers = new();
+    public static Dictionary<string, LogTracker> OtherTrackers = [];
 
     static Logs()
     {

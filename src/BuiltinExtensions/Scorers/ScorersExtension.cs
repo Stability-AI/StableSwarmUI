@@ -15,7 +15,7 @@ namespace StableSwarmUI.Builtin_ScorersExtension;
 
 public class ScorersExtension : Extension
 {
-    public static string[] ScoringEngines = new string[] { "pickscore", "schuhmann_clip_plus_mlp" };
+    public static string[] ScoringEngines = ["pickscore", "schuhmann_clip_plus_mlp"];
 
     public static T2IRegisteredParam<List<string>> AutomaticScorer;
 
@@ -34,11 +34,11 @@ public class ScorersExtension : Extension
                        "schuhmann_clip_plus_mlp", Group: scoreGroup, GetValues: (_) => ScoringEngines.ToList()
                        ));
         ScoreMustExceed = T2IParamTypes.Register<double>(new("Score Must Exceed", "Only keep images with a generated score above this minimum.",
-                       "0.5", Min: 0, Max: 1, Step: 0.1, Toggleable: true, Group: scoreGroup, Examples: new[] { "0.25", "0.5", "0.75", "0.9" }
+                       "0.5", Min: 0, Max: 1, Step: 0.1, Toggleable: true, Group: scoreGroup, Examples: ["0.25", "0.5", "0.75", "0.9"]
                        ));
         TakeBestNScore = T2IParamTypes.Register<int>(new("Take Best N Score", "Only keep the best *this many* images in a batch based on scoring."
                         + "\n(For example, if batch size = 8, and this value = 2, then 8 images will generate and will be scored, and the 2 best will be kept and the other 6 discarded.)",
-                       "1", Min: 1, Max: 100, Step: 1, Toggleable: true, Group: scoreGroup, Examples: new[] { "1", "2", "3" }
+                       "1", Min: 1, Max: 100, Step: 1, Toggleable: true, Group: scoreGroup, Examples: ["1", "2", "3"]
                        ));
     }
 
@@ -89,7 +89,7 @@ public class ScorersExtension : Extension
             {
                 try
                 {
-                    if (await DoPost("API/Ping", new()) != null)
+                    if (await DoPost("API/Ping", []) != null)
                     {
                         Status = BackendStatus.RUNNING;
                     }
@@ -131,7 +131,7 @@ public class ScorersExtension : Extension
             return;
         }
         float scoreAccum = 0;
-        Dictionary<string, object> scores = new();
+        Dictionary<string, object> scores = [];
         foreach (string scorer in scorers)
         {
             if (!ScoringEngines.Contains(scorer))
@@ -166,7 +166,7 @@ public class ScorersExtension : Extension
             return;
         }
         float[] scores = p.Images.Select(i => i?.Img?.GetSUIMetadata()?["scoring"]?["average"]?.Value<float>() ?? 0).ToArray();
-        float[] sorted = scores.OrderDescending().ToArray();
+        float[] sorted = [.. scores.OrderDescending()];
         float cutoff = sorted[bestN - 1];
         Logs.Debug($"Scorers: will cutoff to {bestN} images with score {cutoff} or above");
         for (int i = 0; i < p.Images.Length; i++)

@@ -9,3 +9,6 @@
 [assembly: SuppressMessage("Interoperability", "SYSLIB1054:Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time")]
 [assembly: SuppressMessage("Interoperability", "CA1401:P/Invokes should not be visible")]
 [assembly: SuppressMessage("Performance", "CA1806:Do not ignore method results")]
+[assembly: SuppressMessage("Performance", "CA1860:Avoid using 'Enumerable.Any()' extension method")]
+[assembly: SuppressMessage("Usage", "ASP0018:Unused route parameter")]
+[assembly: SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments")]

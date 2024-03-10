@@ -29,7 +29,7 @@ public class Settings : AutoConfiguration
     public long NvidiaQueryRateLimitMS = 1000;
 
     [ConfigComment("How to launch the UI. If 'none', just quietly launch.\nIf 'web', launch your web-browser to the page.\nIf 'webinstall', launch web-browser to the install page.\nIf 'electron', launch the UI in an electron window (NOT YET IMPLEMENTED).")]
-    [ManualSettingsOptions(Impl = null, Vals = new string[] { "none", "web", "webinstall", "electron" })]
+    [ManualSettingsOptions(Impl = null, Vals = ["none", "web", "webinstall", "electron"])]
     public string LaunchMode = "webinstall";
 
     [ConfigComment("The minimum tier of logs that should be visible in the console.\nDefault is 'info'.")]
@@ -145,7 +145,7 @@ public class Settings : AutoConfiguration
         public int MaxOutPathDepth = 5;
 
         [ConfigComment("Which user-settings the user is allowed to modify.\nDefault is all of them.")]
-        public List<string> AllowedSettings = new() { "*" };
+        public List<string> AllowedSettings = ["*"];
 
         [ConfigComment("If true, the user is treated as a full admin.\nThis includes the ability to modify these settings.")]
         public bool Admin = false;
@@ -157,7 +157,7 @@ public class Settings : AutoConfiguration
         public string AllowedModels = ".*";
 
         [ConfigComment("Generic permission flags. '*' means all.\nDefault is all.")]
-        public List<string> PermissionFlags = new() { "*" };
+        public List<string> PermissionFlags = ["*"];
 
         [ConfigComment("How many images can try to be generating at the same time on this user.")]
         public int MaxT2ISimultaneous = 32;
@@ -233,11 +233,11 @@ public class Settings : AutoConfiguration
         public class VAEsData : AutoConfiguration
         {
             [ConfigComment("What VAE to use with SDXL models by default. Use 'None' to use the one in the model.")]
-            [ManualSettingsOptions(Impl = null, Vals = new string[] { "None" })]
+            [ManualSettingsOptions(Impl = null, Vals = ["None"])]
             public string DefaultSDXLVAE = "None";
 
             [ConfigComment("What VAE to use with SDv1 models by default. Use 'None' to use the one in the model.")]
-            [ManualSettingsOptions(Impl = null, Vals = new string[] { "None" })]
+            [ManualSettingsOptions(Impl = null, Vals = ["None"])]
             public string DefaultSDv1VAE = "None";
         }
 

@@ -13,7 +13,7 @@ namespace StableSwarmUI.WebAPI;
 public class API
 {
     /// <summary>Internal mapping of API handlers, key is API path name, value is an .</summary>
-    public static Dictionary<string, APICall> APIHandlers = new();
+    public static Dictionary<string, APICall> APIHandlers = [];
 
     /// <summary>Register a new API call handler.</summary>
     public static void RegisterAPICall(APICall call)
@@ -194,6 +194,6 @@ public class API
             }
         }
         await handler(session, val, takeOutput, false);
-        return outputs.ToList();
+        return [.. outputs];
     }
 }

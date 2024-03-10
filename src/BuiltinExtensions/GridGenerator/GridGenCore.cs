@@ -15,7 +15,7 @@ public partial class GridGenCore
 
     public static string EXTRA_FOOTER;
 
-    public static List<string> EXTRA_ASSETS = new();
+    public static List<string> EXTRA_ASSETS = [];
 
     public static Action<SingleGridCall, T2IParamInput, bool> GridCallApplyHook;
 
@@ -51,7 +51,7 @@ public partial class GridGenCore
 
     public static List<string> ExpandNumericListRanges(List<string> inList, Type numType)
     {
-        List<string> outList = new();
+        List<string> outList = [];
         for (int i = 0; i < inList.Count; i++)
         {
             string rawVal = inList[i].Trim();
@@ -100,7 +100,7 @@ public partial class GridGenCore
 
         public Axis Axis;
 
-        public Dictionary<string, string> Params = new();
+        public Dictionary<string, string> Params = [];
 
         public bool Skip = false;
 
@@ -116,7 +116,7 @@ public partial class GridGenCore
             {
                 Key += $"__{axis.Values.Count}";
             }
-            Params = new();
+            Params = [];
             string[] halves = val.Split('=', 2);
             if (halves.Length != 2)
             {
@@ -134,7 +134,7 @@ public partial class GridGenCore
     {
         public string RawID, ID;
 
-        public List<AxisValue> Values = new();
+        public List<AxisValue> Values = [];
 
         public string Title, Description = "";
 
@@ -162,7 +162,7 @@ public partial class GridGenCore
                 Title = RawID;
             }
             bool isSplitByDoublePipe = listStr.Contains("||");
-            List<string> valuesList = listStr.Split(isSplitByDoublePipe ? "||" : ",").ToList();
+            List<string> valuesList = [.. listStr.Split(isSplitByDoublePipe ? "||" : ",")];
             ModeName = T2IParamTypes.CleanNameGeneric(id);
             if (!T2IParamTypes.TryGetType(T2IParamTypes.CleanTypeName(ModeName), out Mode, grid.InitialParams))
             {
@@ -181,7 +181,7 @@ public partial class GridGenCore
             {
                 valuesList = Mode.ParseList(valuesList);
             }
-            HashSet<string> keys = new();
+            HashSet<string> keys = [];
             foreach (string val in valuesList)
             {
                 try
@@ -238,13 +238,13 @@ public partial class GridGenCore
     {
         // TODO: Variables
 
-        public List<Axis> Axes = new();
+        public List<Axis> Axes = [];
 
         public string Title, Description, Author;
 
         public string Format;
 
-        public Dictionary<string, string> BaseParams = new();
+        public Dictionary<string, string> BaseParams = [];
 
         public int MinWidth, MinHeight;
 
@@ -252,7 +252,7 @@ public partial class GridGenCore
 
         public string DefaultX, DefaultY, DefaultX2 = "none", DefaultY2 = "none";
 
-        public List<(string, DateTimeOffset)> LastUpdates = new(); // TODO: rework to just use the server instead of this legacy trick (holdover from python version)
+        public List<(string, DateTimeOffset)> LastUpdates = []; // TODO: rework to just use the server instead of this legacy trick (holdover from python version)
 
         public LockObject LastUpdatLock = new();
 
@@ -276,7 +276,7 @@ public partial class GridGenCore
 
     public class SingleGridCall
     {
-        public List<AxisValue> Values = new();
+        public List<AxisValue> Values = [];
 
         public bool Skip;
 
@@ -390,24 +390,24 @@ public partial class GridGenCore
         {
             if (Grid.MustCancel())
             {
-                return new();
+                return [];
             }
             if (axisList.Count == 0)
             {
-                return new();
+                return [];
             }
             if (WeightOrder && topmost)
             {
                 Logs.Verbose($"Axis list ordered by index: {string.Join(", ", axisList.Select(a => a.Title))}");
-                axisList = axisList.OrderBy(a => a.Mode.ChangeWeight).ToList();
+                axisList = [.. axisList.OrderBy(a => a.Mode.ChangeWeight)];
                 Logs.Verbose($"Axis list ordered by weight: {string.Join(", ", axisList.Select(a => a.Title))}");
             }
             Axis curAxis = axisList[0];
             if (axisList.Count == 1)
             {
-                return curAxis.Values.Where(v => !v.Skip || !FastSkip).Select(v => new SingleGridCall(Grid, new() { v })).ToList();
+                return curAxis.Values.Where(v => !v.Skip || !FastSkip).Select(v => new SingleGridCall(Grid, [v])).ToList();
             }
-            List<SingleGridCall> result = new();
+            List<SingleGridCall> result = [];
             List<Axis> nextAxisList = axisList.GetRange(1, axisList.Count - 1);
             foreach (SingleGridCall obj in BuildValueSetList(nextAxisList, false))
             {
@@ -415,7 +415,7 @@ public partial class GridGenCore
                 {
                     if (!val.Skip || !FastSkip)
                     {
-                        List<AxisValue> newList = obj.Values.ToList();
+                        List<AxisValue> newList = [.. obj.Values];
                         newList.Add(val);
                         result.Add(new SingleGridCall(Grid, newList));
                     }
@@ -433,7 +433,7 @@ public partial class GridGenCore
 
         public void Preprocess()
         {
-            Sets = BuildValueSetList(Grid.Axes.ToList());
+            Sets = BuildValueSetList([.. Grid.Axes]);
             if (Grid.MustCancel())
             {
                 return;
@@ -551,7 +551,7 @@ public partial class GridGenCore
             {
                 results["metadata"] = null; // TODO: webdata_get_base_param_data(p)
             }
-            JArray axes = new();
+            JArray axes = [];
             foreach (Axis axis in Grid.Axes)
             {
                 JObject jAxis = new()
@@ -560,7 +560,7 @@ public partial class GridGenCore
                     ["title"] = axis.Title,
                     ["description"] = axis.Description ?? ""
                 };
-                JArray values = new();
+                JArray values = [];
                 foreach (AxisValue val in axis.Values)
                 {
                     JObject jVal = new()
@@ -712,8 +712,8 @@ public partial class GridGenCore
             Description = "",
             Author = "Unspecified",
             Format = format,
-            Axes = new(),
-            BaseParams = new(),
+            Axes = [],
+            BaseParams = [],
             InitialParams = baseParams.Clone(),
             LocalData = LocalData,
             PublishMetadata = publishGenMetadata,

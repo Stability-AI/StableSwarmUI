@@ -77,7 +77,7 @@ public static class Utilities
     /// <summary>Matcher for characters banned or specialcased by Windows or other OS's.</summary>
     public static AsciiMatcher FilePathForbidden = new(c => c < 32 || "<>:\"\\|?*~&@;#$^".Contains(c));
 
-    public static HashSet<string> ReservedFilenames = new() { "con", "prn", "aux", "nul" };
+    public static HashSet<string> ReservedFilenames = ["con", "prn", "aux", "nul"];
 
     static Utilities()
     {
@@ -133,7 +133,7 @@ public static class Utilities
         public long StartTime = Environment.TickCount64;
         public long LastTime = Environment.TickCount64;
 
-        public Dictionary<string, (long, long)> Times = new();
+        public Dictionary<string, (long, long)> Times = [];
 
         public void Reset()
         {
@@ -275,7 +275,7 @@ public static class Utilities
     /// <summary>Converts the JSON data to predictable basic data.</summary>
     public static Dictionary<string, object> ToBasicObject(this JObject obj)
     {
-        Dictionary<string, object> result = new();
+        Dictionary<string, object> result = [];
         foreach ((string key, JToken val) in obj)
         {
             result[key] = val.ToBasicObject();
@@ -550,7 +550,7 @@ public static class Utilities
     /// <summary>Smart clean combination of two paths in a way that allows B to be an absolute path.</summary>
     public static string CombinePathWithAbsolute(string a, string b)
     {
-        if (b.StartsWith("/") || (b.Length > 2 && b[1] == ':') || b.StartsWith("\\\\"))
+        if (b.StartsWith('/') || (b.Length > 2 && b[1] == ':') || b.StartsWith("\\\\"))
         {
             return b;
         }
@@ -674,7 +674,7 @@ public static class Utilities
     public static string GetLocalIPAddress()
     {
         IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
-        List<string> result = new();
+        List<string> result = [];
         foreach (var ip in host.AddressList)
         {
             if (ip.AddressFamily == AddressFamily.InterNetwork && !$"{ip}".EndsWith(".1"))

@@ -76,7 +76,7 @@ public static class ImageMetadataTracker
     }
 
     /// <summary>File format extensions that even can have metadata on them.</summary>
-    public static HashSet<string> ExtensionsWithMetadata = new() { "png", "jpg", "webp" };
+    public static HashSet<string> ExtensionsWithMetadata = ["png", "jpg", "webp"];
 
     /// <summary>Deletes any tracked metadata for the given filepath.</summary>
     public static void RemoveMetadataFor(string file)
@@ -268,7 +268,7 @@ public static class ImageMetadataTracker
     /// <summary>Shuts down and stores metadata helper files.</summary>
     public static void Shutdown()
     {
-        ImageDatabase[] dbs = Databases.Values.ToArray();
+        ImageDatabase[] dbs = [.. Databases.Values];
         Databases.Clear();
         foreach (ImageDatabase db in dbs)
         {
@@ -281,7 +281,7 @@ public static class ImageMetadataTracker
 
     public static void MassRemoveMetadata()
     {
-        KeyValuePair<string, ImageDatabase>[] dbs = Databases.ToArray();
+        KeyValuePair<string, ImageDatabase>[] dbs = [.. Databases];
         foreach ((string name, ImageDatabase db) in dbs)
         {
             lock (db.Lock)

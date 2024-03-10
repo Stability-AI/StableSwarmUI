@@ -9,7 +9,7 @@ namespace StableSwarmUI.Text2Image;
 public class T2IModelClassSorter
 {
     /// <summary>All known model classes.</summary>
-    public static Dictionary<string, T2IModelClass> ModelClasses = new();
+    public static Dictionary<string, T2IModelClass> ModelClasses = [];
 
     /// <summary>Register a new model class to the sorter.</summary>
     public static void Register(T2IModelClass clazz)
@@ -99,7 +99,7 @@ public class T2IModelClassSorter
             {
                 return emb_data;
             }
-            JProperty[] props = h.Properties().Where(p => p.Name.StartsWith("<") && p.Name.EndsWith(">")).ToArray();
+            JProperty[] props = h.Properties().Where(p => p.Name.StartsWith('<') && p.Name.EndsWith('>')).ToArray();
             if (props.Length == 1)
             {
                 return props[0].Value;

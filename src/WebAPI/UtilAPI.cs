@@ -53,7 +53,7 @@ public static class UtilAPI
         }
     }
 
-    private static readonly string[] SkippablePromptSyntax = new[] { "segment", "object", "region", "clear" };
+    private static readonly string[] SkippablePromptSyntax = ["segment", "object", "region", "clear"];
 
     /// <summary>API route to count the CLIP-like tokens in a given text prompt.</summary>
     public static async Task<JObject> CountTokens(string text, bool skipPromptSyntax = false, string tokenset = "clip", bool weighting = true)
@@ -101,7 +101,7 @@ public static class UtilAPI
         {
             return new JObject() { ["error"] = $"Invalid type '{type}'." };
         }
-        Process p = PythonLaunchHelper.LaunchGeneric("launchtools/pickle-to-safetensors.py", true, new[] { models.FolderPath, fp16 ? "true" : "false" });
+        Process p = PythonLaunchHelper.LaunchGeneric("launchtools/pickle-to-safetensors.py", true, [models.FolderPath, fp16 ? "true" : "false"]);
         await p.WaitForExitAsync(Program.GlobalProgramCancel);
         return new JObject() { ["success"] = true };
     }

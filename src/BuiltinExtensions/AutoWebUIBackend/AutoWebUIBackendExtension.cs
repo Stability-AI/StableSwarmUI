@@ -11,14 +11,14 @@ public class AutoWebUIBackendExtension : Extension
 {
 
     /// <summary>List of actions to run when generating an image, primarily to alter the input data.</summary>
-    public static List<Action<JObject, T2IParamInput>> OtherGenHandlers = new();
+    public static List<Action<JObject, T2IParamInput>> OtherGenHandlers = [];
 
     /// <summary>Set of all feature-ids supported by Auto WebUI backends.</summary>
-    public static HashSet<string> FeaturesSupported = new() { "variation_seed", "autowebui" };
+    public static HashSet<string> FeaturesSupported = ["variation_seed", "autowebui"];
 
     public static T2IRegisteredParam<string> SamplerParam;
 
-    public static List<string> Samplers = new() { "Euler a", "Euler" };
+    public static List<string> Samplers = ["Euler a", "Euler"];
 
     public static LockObject ExtBackLock = new();
 

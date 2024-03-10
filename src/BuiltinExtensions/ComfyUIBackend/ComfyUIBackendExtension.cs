@@ -24,7 +24,7 @@ public class ComfyUIBackendExtension : Extension
     public static Dictionary<string, string> Workflows;
 
     /// <summary>Set of all feature-ids supported by ComfyUI backends.</summary>
-    public static HashSet<string> FeaturesSupported = new() { "comfyui", "refiners", "controlnet", "endstepsearly", "seamless", "video" };
+    public static HashSet<string> FeaturesSupported = ["comfyui", "refiners", "controlnet", "endstepsearly", "seamless", "video"];
 
     /// <summary>Extensible map of ComfyUI Node IDs to supported feature IDs.</summary>
     public static Dictionary<string, string> NodeToFeatureMap = new()
@@ -117,7 +117,7 @@ public class ComfyUIBackendExtension : Extension
 
     public void LoadWorkflowFiles()
     {
-        Workflows = new();
+        Workflows = [];
         foreach (string workflow in Directory.EnumerateFiles($"{Folder}/Workflows", "*.json", new EnumerationOptions() { RecurseSubdirectories = true }).Order())
         {
             string fileName = workflow.Replace('\\', '/').After("/Workflows/");
@@ -170,14 +170,14 @@ public class ComfyUIBackendExtension : Extension
     public void Refresh()
     {
         LoadWorkflowFiles();
-        List<Task> tasks = new();
+        List<Task> tasks = [];
         foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends.ToArray())
         {
             tasks.Add(backend.LoadValueSet());
         }
         if (tasks.Any())
         {
-            Task.WaitAll(tasks.ToArray(), Program.GlobalProgramCancel);
+            Task.WaitAll([.. tasks], Program.GlobalProgramCancel);
         }
     }
 
@@ -246,13 +246,13 @@ public class ComfyUIBackendExtension : Extension
 
     public static T2IRegisteredParam<int> RefinerHyperTile, VideoFrameInterpolationMultiplier;
 
-    public static List<string> UpscalerModels = new() { "latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic", "pixel-lanczos" },
-        Samplers = new() { "euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2" },
-        Schedulers = new() { "normal", "karras", "exponential", "simple", "ddim_uniform" };
+    public static List<string> UpscalerModels = ["latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic", "pixel-lanczos"],
+        Samplers = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2"],
+        Schedulers = ["normal", "karras", "exponential", "simple", "ddim_uniform"];
 
-    public static List<string> IPAdapterModels = new() { "None" };
+    public static List<string> IPAdapterModels = ["None"];
 
-    public static List<string> GligenModels = new() { "None" };
+    public static List<string> GligenModels = ["None"];
 
     public static ConcurrentDictionary<string, JToken> ControlNetPreprocessors = new() { ["None"] = null };
 
@@ -392,7 +392,7 @@ public class ComfyUIBackendExtension : Extension
 
         public AbstractT2IBackend Backend;
 
-        public static HashSet<string> ModelNameInputNames = new() { "ckpt_name", "vae_name", "lora_name", "clip_name", "control_net_name", "style_model_name", "model_path", "lora_names" };
+        public static HashSet<string> ModelNameInputNames = ["ckpt_name", "vae_name", "lora_name", "clip_name", "control_net_name", "style_model_name", "model_path", "lora_names"];
 
         public void FixUpPrompt(JObject prompt)
         {
@@ -448,11 +448,11 @@ public class ComfyUIBackendExtension : Extension
         bool shouldReserve = hasMulti && doMultiStr == "reserve";
         if (!shouldReserve && (!hasMulti || doMultiStr != "true"))
         {
-            allBackends = new() { new(webClient, address, backend) };
+            allBackends = [new(webClient, address, backend)];
         }
         string path = context.Request.Path.Value;
         path = path.After("/ComfyBackendDirect");
-        if (path.StartsWith("/"))
+        if (path.StartsWith('/'))
         {
             path = path[1..];
         }
@@ -464,7 +464,7 @@ public class ComfyUIBackendExtension : Extension
         {
             Logs.Debug($"Comfy backend direct websocket request to {path}, have {allBackends.Count} backends available");
             WebSocket socket = await context.WebSockets.AcceptWebSocketAsync();
-            List<Task> tasks = new();
+            List<Task> tasks = [];
             ComfyUser user = new();
             // Order all evens then all odds - eg 0, 2, 4, 6, 1, 3, 5, 7 (to reduce chance of overlap when sharing)
             int[] vals = Enumerable.Range(0, allBackends.Count).ToArray();
@@ -725,7 +725,7 @@ public class ComfyUIBackendExtension : Extension
             }
             else if (path == "queue" || path == "interrupt") // eg queue delete
             {
-                List<Task<HttpResponseMessage>> tasks = new();
+                List<Task<HttpResponseMessage>> tasks = [];
                 MemoryStream inputCopy = new();
                 await context.Request.Body.CopyToAsync(inputCopy);
                 byte[] inputBytes = inputCopy.ToArray();
@@ -758,7 +758,7 @@ public class ComfyUIBackendExtension : Extension
         {
             if (path.StartsWith("view?filename="))
             {
-                List<Task<HttpResponseMessage>> requests = new();
+                List<Task<HttpResponseMessage>> requests = [];
                 foreach ((HttpClient clientLocal, string addressLocal, AbstractT2IBackend backendLocal) in allBackends)
                 {
                     requests.Add(clientLocal.SendAsync(new(new(context.Request.Method), $"{addressLocal}/{path}")));

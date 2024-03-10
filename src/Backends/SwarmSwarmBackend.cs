@@ -35,7 +35,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
     public ConcurrentDictionary<string, string> RemoteFeatureCombo = new();
 
     /// <summary>A set of all backend-types the remote Swarm instance has.</summary>
-    public volatile HashSet<string> RemoteBackendTypes = new();
+    public volatile HashSet<string> RemoteBackendTypes = [];
 
     /// <inheritdoc/>
     public override IEnumerable<string> SupportedFeatures => RemoteFeatureCombo.Keys;
@@ -62,7 +62,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
     public async Task ValidateAndBuild()
     {
-        JObject sessData = await HttpClient.PostJson($"{Address}/API/GetNewSession", new());
+        JObject sessData = await HttpClient.PostJson($"{Address}/API/GetNewSession", []);
         Session = sessData["session_id"].ToString();
         string id = sessData["server_id"]?.ToString();
         BackendCount = sessData["count_running"].Value<int>();
@@ -109,10 +109,10 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             Logs.Verbose($"Trigger refresh on remote swarm {Address}");
             await HttpClient.PostJson($"{Address}/TriggerRefresh", new() { ["session_id"] = Session });
             await ReviseRemoteDataList();
-            List<Task> tasks = new()
-            {
+            List<Task> tasks =
+            [
                 ReviseRemoteDataList()
-            };
+            ];
             foreach (BackendHandler.T2IBackendData backend in ControlledNonrealBackends.Values)
             {
                 tasks.Add((backend.Backend as SwarmSwarmBackend).ReviseRemoteDataList());
@@ -129,15 +129,15 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             AutoThrowException(backendData);
             if (IsReal)
             {
-                List<Task> tasks = new();
-                RemoteModels ??= new();
+                List<Task> tasks = [];
+                RemoteModels ??= [];
                 foreach (string type in Program.T2IModelSets.Keys)
                 {
                     string runType = type;
                     tasks.Add(Task.Run(async () =>
                     {
                         JObject modelsData = await HttpClient.PostJson($"{Address}/API/ListModels", new() { ["session_id"] = Session, ["path"] = "", ["depth"] = 10, ["subtype"] = runType });
-                        Dictionary<string, JObject> remoteModelsParsed = new();
+                        Dictionary<string, JObject> remoteModelsParsed = [];
                         foreach (JToken x in modelsData["files"].ToList())
                         {
                             JObject data = x.DeepClone() as JObject;
@@ -145,12 +145,12 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                             remoteModelsParsed[data["name"].ToString()] = data;
                         }
                         RemoteModels[runType] = remoteModelsParsed;
-                        Models[runType] = remoteModelsParsed.Keys.ToList();
+                        Models[runType] = [.. remoteModelsParsed.Keys];
                     }));
                 }
                 await Task.WhenAll(tasks);
             }
-            HashSet<string> features = new(), types = new();
+            HashSet<string> features = [], types = [];
             bool isLoading = false;
             HashSet<int> ids = IsReal ? new(ControlledNonrealBackends.Keys) : null;
             if (!IsReal)
@@ -245,7 +245,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         if (IsReal)
         {
             CanLoadModels = false;
-            Models = new();
+            Models = [];
         }
         if (string.IsNullOrWhiteSpace(Settings.Address))
         {

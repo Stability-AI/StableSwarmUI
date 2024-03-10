@@ -41,13 +41,13 @@ public class T2IParamInput
     }
 
     /// <summary>Mapping of prompt tag prefixes, to allow for registration of custom prompt tags.</summary>
-    public static Dictionary<string, Func<string, PromptTagContext, string>> PromptTagProcessors = new();
+    public static Dictionary<string, Func<string, PromptTagContext, string>> PromptTagProcessors = [];
 
     /// <summary>Mapping of prompt tag prefixes, to allow for registration of custom prompt tags - specifically post-processing like lora (which remove from prompt and get read elsewhere).</summary>
-    public static Dictionary<string, Func<string, PromptTagContext, string>> PromptTagPostProcessors = new();
+    public static Dictionary<string, Func<string, PromptTagContext, string>> PromptTagPostProcessors = [];
 
     /// <summary>Mapping of prompt tag prefixes, to strings intended to allow for estimating token count.</summary>
-    public static Dictionary<string, Func<string, string>> PromptTagLengthEstimators = new();
+    public static Dictionary<string, Func<string, string>> PromptTagLengthEstimators = [];
 
     /// <summary>Interprets a random number range input by a user, if the input is a number range.</summary>
     public static bool TryInterpretNumberRange(string inputVal, out string number)
@@ -120,7 +120,7 @@ public class T2IParamInput
                 return null;
             }
             string result = "";
-            List<string> vals = rawVals.ToList();
+            List<string> vals = [.. rawVals];
             for (int i = 0; i < count; i++)
             {
                 int index = context.Random.Next(vals.Count);
@@ -132,7 +132,7 @@ public class T2IParamInput
                 result += context.Parse(choice).Trim() + partSeparator;
                 if (vals.Count == 1)
                 {
-                    vals = rawVals.ToList();
+                    vals = [.. rawVals];
                 }
                 else
                 {
@@ -175,7 +175,7 @@ public class T2IParamInput
             List<string> usedWildcards = context.Input.ExtraMeta.GetOrCreate("used_wildcards", () => new List<string>()) as List<string>;
             usedWildcards.Add(card);
             string result = "";
-            List<string> vals = wildcard.Options.ToList();
+            List<string> vals = [.. wildcard.Options];
             for (int i = 0; i < count; i++)
             {
                 int index = context.Random.Next(vals.Count);
@@ -183,7 +183,7 @@ public class T2IParamInput
                 result += context.Parse(choice).Trim() + partSeparator;
                 if (vals.Count == 1)
                 {
-                    vals = wildcard.Options.ToList();
+                    vals = [.. wildcard.Options];
                 }
                 else
                 {
@@ -268,7 +268,7 @@ public class T2IParamInput
         PromptTagProcessors["embed"] = (data, context) =>
         {
             data = context.Parse(data);
-            context.Embeds ??= Program.T2IModelSets["Embedding"].ListModelNamesFor(context.Input.SourceSession).ToArray();
+            context.Embeds ??= [.. Program.T2IModelSets["Embedding"].ListModelNamesFor(context.Input.SourceSession)];
             string want = data.ToLowerFast().Replace('\\', '/');
             string matched = T2IParamTypes.GetBestInList(want, context.Embeds);
             if (matched is null)
@@ -291,7 +291,7 @@ public class T2IParamInput
             {
                 lora = lora[..colonIndex];
             }
-            context.Loras ??= Program.T2IModelSets["LoRA"].ListModelNamesFor(context.Input.SourceSession).ToArray();
+            context.Loras ??= [.. Program.T2IModelSets["LoRA"].ListModelNamesFor(context.Input.SourceSession)];
             string matched = T2IParamTypes.GetBestInList(lora, context.Loras);
             if (matched is not null)
             {
@@ -299,8 +299,8 @@ public class T2IParamInput
                 List<string> weights = context.Input.Get(T2IParamTypes.LoraWeights);
                 if (loraList is null)
                 {
-                    loraList = new();
-                    weights = new();
+                    loraList = [];
+                    weights = [];
                 }
                 loraList.Add(matched);
                 weights.Add(strength.ToString());
@@ -324,13 +324,13 @@ public class T2IParamInput
     /// <summary>The raw values in this input. Do not use this directly, instead prefer:
     /// <see cref="Get{T}(T2IRegisteredParam{T})"/>, <see cref="TryGet{T}(T2IRegisteredParam{T}, out T)"/>,
     /// <see cref="Set{T}(T2IRegisteredParam{T}, string)"/>.</summary>
-    public Dictionary<string, object> ValuesInput = new();
+    public Dictionary<string, object> ValuesInput = [];
 
     /// <summary>Extra data to store in metadata.</summary>
-    public Dictionary<string, object> ExtraMeta = new();
+    public Dictionary<string, object> ExtraMeta = [];
 
     /// <summary>A set of feature flags required for this input.</summary>
-    public HashSet<string> RequiredFlags = new();
+    public HashSet<string> RequiredFlags = [];
 
     /// <summary>The session this input came from.</summary>
     public Session SourceSession;
@@ -339,7 +339,7 @@ public class T2IParamInput
     public CancellationToken InterruptToken;
 
     /// <summary>List of reasons this input did not match backend requests, if any.</summary>
-    public HashSet<string> RefusalReasons = new();
+    public HashSet<string> RefusalReasons = [];
 
     /// <summary>Construct a new parameter input handler for a session.</summary>
     public T2IParamInput(Session session)
@@ -403,7 +403,7 @@ public class T2IParamInput
     /// <summary>Generates a JSON object for this input that can be fed straight back into the Swarm API.</summary>
     public JObject ToJSON()
     {
-        JObject result = new();
+        JObject result = [];
         foreach ((string key, object val) in ValuesInput)
         {
             result[key] = JToken.FromObject(SimplifyParamVal(val));
@@ -414,7 +414,7 @@ public class T2IParamInput
     /// <summary>Generates a metadata JSON object for this input and the given set of extra parameters.</summary>
     public JObject GenMetadataObject()
     {
-        JObject output = new();
+        JObject output = [];
         foreach ((string key, object origVal) in ValuesInput.Union(ExtraMeta))
         {
             object val = origVal;

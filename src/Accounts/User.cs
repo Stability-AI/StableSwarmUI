@@ -21,7 +21,7 @@ public class User
         public string ID { get; set; }
 
         /// <summary>What presets this user has saved, matched to the preset database.</summary>
-        public List<string> Presets { get; set; } = new();
+        public List<string> Presets { get; set; } = [];
 
         /// <summary>This users stored settings data.</summary>
         public string RawSettings { get; set; } = "";
@@ -85,7 +85,7 @@ public class User
             catch (Exception ex)
             {
                 Logs.Error($"Error loading generic-data for user {UserID}: {ex}");
-                return new();
+                return [];
             }
         }
     }
@@ -137,7 +137,7 @@ public class User
             catch (Exception ex)
             {
                 Logs.Error($"Error loading presets for user {UserID}: {ex}");
-                return new();
+                return [];
             }
         }
     }

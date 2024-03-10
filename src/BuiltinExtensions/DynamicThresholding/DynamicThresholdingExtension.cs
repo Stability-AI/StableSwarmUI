@@ -19,11 +19,11 @@ public class DynamicThresholdingExtension : Extension
         T2IParamGroup dynThreshGroup = new("Dynamic Thresholding", Toggles: true, Open: false, IsAdvanced: true);
         MimicScale = T2IParamTypes.Register<double>(new("[DT] Mimic Scale", "[Dynamic Thresholding]\nMimic Scale value (target for the CFG Scale recentering).",
             "7", Min: 0, Max: 100, Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 1,
-            Examples: new[] { "5", "7", "9" }
+            Examples: ["5", "7", "9"]
             ));
         ThresholdPercentile = T2IParamTypes.Register<double>(new("[DT] Threshold Percentile", "[Dynamic Thresholding]\nthresholding percentile. '1' disables, '0.95' is decent value for enabled.",
             "1", Min: 0, Max: 1, Step: 0.05, Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 2,
-            Examples: new[] { "1", "0.99", "0.95", "0.9" }
+            Examples: ["1", "0.99", "0.95", "0.9"]
             ));
         CFGScaleMode = T2IParamTypes.Register<string>(new("[DT] CFG Scale Mode", "[Dynamic Thresholding]\nMode for the CFG Scale scheduler.",
             "Constant", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 3,
@@ -31,7 +31,7 @@ public class DynamicThresholdingExtension : Extension
             ));
         CFGScaleMin = T2IParamTypes.Register<double>(new("[DT] CFG Scale Minimum", "[Dynamic Thresholding]\nCFG Scale minimum value (for non-constant CFG mode).",
             "0", Min: 0, Max: 100, Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 4,
-            Examples: new[] { "0", "1", "2", "5" }
+            Examples: ["0", "1", "2", "5"]
             ));
         MimicScaleMode = T2IParamTypes.Register<string>(new("[DT] Mimic Scale Mode", "[Dynamic Thresholding]\nMode for the Mimic Scale scheduler.",
             "Constant", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 5,
@@ -39,11 +39,11 @@ public class DynamicThresholdingExtension : Extension
             ));
         MimicScaleMin = T2IParamTypes.Register<double>(new("[DT] Mimic Scale Minimum", "[Dynamic Thresholding]\nMimic Scale minimum value (for non-constant mimic mode).",
             "0", Min: 0, Max: 100, Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 6,
-            Examples: new[] { "0", "1", "2", "5" }
+            Examples: ["0", "1", "2", "5"]
             ));
         SchedulerValue = T2IParamTypes.Register<double>(new("[DT] Scheduler Value", "[Dynamic Thresholding]\nIf either scale scheduler is 'Power', this is the power factor.\nIf using 'repeating', this is the number of repeats per image. Otherwise, it does nothing.",
             "4", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 7,
-            Examples: new[] { "2", "4", "8" }
+            Examples: ["2", "4", "8"]
             ));
         SeparateFeatureChannels = T2IParamTypes.Register<bool>(new("[DT] Separate Feature Channels", "[Dynamic Thresholding]\nWhether to separate the feature channels.\nNormally leave this on. I think it should be off for RCFG?",
             "true", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 8
@@ -56,7 +56,7 @@ public class DynamicThresholdingExtension : Extension
             ));
         InterpolatePhi = T2IParamTypes.Register<double>(new("[DT] Interpolate Phi", "[Dynamic Thresholding]\n'phi' interpolation factor.\nInterpolates between original value and DT value, such that 0.0 = use original, and 1.0 = use DT.\n(This exists because RCFG is bad and so half-removing it un-breaks it - better to just not do RCFG).",
             "1", Min: 0, Max: 1, Step: 0.05, Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 11,
-            Examples: new[] { "0", "0.25", "0.5", "0.75", "1" }
+            Examples: ["0", "0.25", "0.5", "0.75", "1"]
             ));
 
         // TODO: Auto WebUI Converter (use DynThres ext on auto webui)
@@ -80,7 +80,7 @@ public class DynamicThresholdingExtension : Extension
                     ["variability_measure"] = g.UserInput.Get(VariabilityMeasure),
                     ["interpolate_phi"] = g.UserInput.Get(InterpolatePhi)
                 });
-                g.FinalModel = new() { $"{newNode}", 0 };
+                g.FinalModel = [$"{newNode}", 0];
             }
         }, -5.5);
     }

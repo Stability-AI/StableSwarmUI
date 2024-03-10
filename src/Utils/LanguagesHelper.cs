@@ -27,16 +27,16 @@ public class LanguagesHelper
     }
 
     /// <summary>Map of all known languages by code.</summary>
-    public static Dictionary<string, Language> Languages = new();
+    public static Dictionary<string, Language> Languages = [];
 
     /// <summary>Languages expected to be most common, ie should be at top.</summary>
-    public static string[] PreferredLanguages = new[] { "en", "zh", "ja" };
+    public static string[] PreferredLanguages = ["en", "zh", "ja"];
 
     /// <summary>Sorted list of codes. Relevant languages bumped to top, rest alphabetical by English name.</summary>
     public static string[] SortedList;
 
     /// <summary>Debug/adding set, for developer usage.</summary>
-    public static JObject DebugSet = new();
+    public static JObject DebugSet = [];
 
     /// <summary>Load all languages.</summary>
     public static void LoadAll()
@@ -52,7 +52,7 @@ public class LanguagesHelper
             }
             Languages.Add(code, new(code, nameEn.ToString(), localName.ToString(), (JObject)keys));
         }
-        SortedList = Languages.Keys.OrderBy(k => k).ToArray();
+        SortedList = [.. Languages.Keys.OrderBy(k => k)];
         if (File.Exists($"./languages/en.debug"))
         {
             DebugSet = (JObject)JObject.Parse(File.ReadAllText($"./languages/en.debug"))["keys"];
@@ -83,7 +83,7 @@ public class LanguagesHelper
     /// <summary>Fix formatting on all language files to prevent trouble.</summary>
     public static void FixUpLangs()
     {
-        string[] order = new[] { "name_en", "name_local", "authorship", "keys" };
+        string[] order = ["name_en", "name_local", "authorship", "keys"];
         foreach (string filename in Directory.EnumerateFiles("./languages/", "*.json"))
         {
             JObject data = JObject.Parse(File.ReadAllText(filename));

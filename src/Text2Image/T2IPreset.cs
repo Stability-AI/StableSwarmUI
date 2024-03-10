@@ -23,7 +23,7 @@ public class T2IPreset
     public string PreviewImage { get; set; }
 
     /// <summary>Mapping of parameters to values.</summary>
-    public Dictionary<string, string> ParamMap { get; set; } = new();
+    public Dictionary<string, string> ParamMap { get; set; } = [];
 
     /// <summary>Gets networkable data about this preset.</summary>
     public JObject NetData()

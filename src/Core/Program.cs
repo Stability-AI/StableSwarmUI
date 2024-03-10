@@ -26,13 +26,13 @@ public class Program
     public static SessionHandler Sessions;
 
     /// <summary>Central store of Text2Image models.</summary>
-    public static Dictionary<string, T2IModelHandler> T2IModelSets = new();
+    public static Dictionary<string, T2IModelHandler> T2IModelSets = [];
 
     /// <summary>Main Stable-Diffusion model tracker.</summary>
     public static T2IModelHandler MainSDModels => T2IModelSets["Stable-Diffusion"];
 
     /// <summary>All extensions currently loaded.</summary>
-    public static List<Extension> Extensions = new();
+    public static List<Extension> Extensions = [];
 
     /// <summary>Holder of server admin settings.</summary>
     public static Settings ServerSettings = new();
@@ -251,7 +251,7 @@ public class Program
     public static void PrepExtensions()
     {
         string[] builtins = Directory.EnumerateDirectories("./src/BuiltinExtensions").Select(s => s.Replace('\\', '/').AfterLast("/src/")).ToArray();
-        string[] extras = Directory.Exists("./src/Extensions") ? Directory.EnumerateDirectories("./src/Extensions/").Select(s => s.Replace('\\', '/').AfterLast("/src/")).ToArray() : Array.Empty<string>();
+        string[] extras = Directory.Exists("./src/Extensions") ? Directory.EnumerateDirectories("./src/Extensions/").Select(s => s.Replace('\\', '/').AfterLast("/src/")).ToArray() : [];
         foreach (Type extType in AppDomain.CurrentDomain.GetAssemblies().ToList().SelectMany(x => x.GetTypes()).Where(t => typeof(Extension).IsAssignableFrom(t) && !t.IsAbstract))
         {
             try
@@ -350,6 +350,7 @@ public class Program
     #endregion
 
     #region command-line pre-apply
+    private static readonly int[] CommonlyUsedPorts = [21, 22, 80, 8080, 7860, 8188];
     /// <summary>Pre-applies settings choices from command line.</summary>
     public static void ApplyCommandLineSettings()
     {
@@ -363,7 +364,7 @@ public class Program
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", environment);
         string host = GetCommandLineFlag("host", ServerSettings.Network.Host);
         int port = int.Parse(GetCommandLineFlag("port", $"{ServerSettings.Network.Port}"));
-        if (new int[] { 21, 22, 80, 8080, 7860, 8188 }.Contains(port))
+        if (CommonlyUsedPorts.Contains(port))
         {
             Logs.Warning($"Port {port} looks like a port commonly used by other programs. You may want to change it.");
         }
@@ -443,10 +444,10 @@ public class Program
     }
 
     /// <summary>Command line value-flags are contained here. Flags without value contain string 'true'. Don't read this directly, use <see cref="GetCommandLineFlag(string, string)"/>.</summary>
-    public static Dictionary<string, string> CommandLineFlags = new();
+    public static Dictionary<string, string> CommandLineFlags = [];
 
     /// <summary>Helper to identify when command line flags go unused.</summary>
-    public static HashSet<string> CommandLineFlagsRead = new();
+    public static HashSet<string> CommandLineFlagsRead = [];
 
     /// <summary>Get the command line flag for a given name, and default value.</summary>
     public static string GetCommandLineFlag(string key, string def)

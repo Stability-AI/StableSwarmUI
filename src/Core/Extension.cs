@@ -10,10 +10,10 @@ public abstract class Extension
     public string ExtensionName;
 
     /// <summary>Optional, filenames (relative to extension directory) of additional script files to use, eg "Assets/my_ext.js". You should populate this during <see cref="OnInit"/> or earlier.</summary>
-    public List<string> ScriptFiles = new();
+    public List<string> ScriptFiles = [];
 
     /// <summary>Optional, filenames (relative to extension directory) of additional CSS files to use, eg "Assets/my_ext.css". You should populate this during <see cref="OnInit"/> or earlier.</summary>
-    public List<string> StyleSheetFiles = new();
+    public List<string> StyleSheetFiles = [];
 
     /// <summary>Called when the extension is initialized for the first time, before settings or anything else is loaded, very early in the extension cycle.</summary>
     public virtual void OnFirstInit()

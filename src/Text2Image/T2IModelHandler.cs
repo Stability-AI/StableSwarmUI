@@ -25,7 +25,7 @@ public class T2IModelHandler
     public bool IsShutdown = false;
 
     /// <summary>Internal model metadata cache data (per folder).</summary>
-    public static Dictionary<string, (LiteDatabase, ILiteCollection<ModelMetadataStore>)> ModelMetadataCachePerFolder = new();
+    public static Dictionary<string, (LiteDatabase, ILiteCollection<ModelMetadataStore>)> ModelMetadataCachePerFolder = [];
 
     /// <summary>Lock for metadata processing.</summary>
     public LockObject MetadataLock = new();
@@ -144,12 +144,12 @@ public class T2IModelHandler
     {
         if (IsShutdown)
         {
-            return new();
+            return [];
         }
         string allowedStr = session.User.Restrictions.AllowedModels;
         if (allowedStr == ".*")
         {
-            return Models.Values.ToList();
+            return [.. Models.Values];
         }
         Regex allowed = new(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         return Models.Values.Where(m => allowed.IsMatch(m.Name)).ToList();
@@ -159,7 +159,7 @@ public class T2IModelHandler
     {
         HashSet<string> list = ListModelsFor(session).Select(m => m.Name).ToHashSet();
         list.UnionWith(ModelsAPI.InternalExtraModels(ModelType).Keys);
-        return list.ToList();
+        return [.. list];
     }
 
     /// <summary>Refresh the model list.</summary>
@@ -248,7 +248,7 @@ public class T2IModelHandler
             string headerStr = Encoding.UTF8.GetString(header);
             JObject json = JObject.Parse(headerStr);
             long pos = reader.Position;
-            JObject metaHeader = (json["__metadata__"] as JObject) ?? new();
+            JObject metaHeader = (json["__metadata__"] as JObject) ?? [];
             if (!(metaHeader?.ContainsKey("modelspec.hash_sha256") ?? false))
             {
                 metaHeader["modelspec.hash_sha256"] = "0x" + Utilities.BytesToHex(SHA256.HashData(reader));
@@ -273,7 +273,7 @@ public class T2IModelHandler
             specSet("license", model.Metadata.License);
             specSet("usage_hint", model.Metadata.UsageHint);
             specSet("trigger_phrase", model.Metadata.TriggerPhrase);
-            specSet("tags", string.Join(",", model.Metadata.Tags ?? Array.Empty<string>()));
+            specSet("tags", string.Join(",", model.Metadata.Tags ?? []));
             specSet("merged_from", model.Metadata.MergedFrom);
             specSet("date", model.Metadata.Date);
             specSet("preprocessor", model.Metadata.Preprocesor);
@@ -300,9 +300,9 @@ public class T2IModelHandler
         }
     }
 
-    public static readonly string[] AutoImageFormatSuffixes = new[] { ".jpg", ".png", ".preview.png", ".preview.jpg", ".jpeg", ".preview.jpeg", ".thumb.jpg", ".thumb.png" };
+    public static readonly string[] AutoImageFormatSuffixes = [".jpg", ".png", ".preview.png", ".preview.jpg", ".jpeg", ".preview.jpeg", ".thumb.jpg", ".thumb.png"];
 
-    public static readonly string[] AltModelMetadataJsonFileSuffixes = new[] { ".json", ".cm-info.json" };
+    public static readonly string[] AltModelMetadataJsonFileSuffixes = [".json", ".cm-info.json"];
 
     public string GetAutoFormatImage(T2IModel model)
     {

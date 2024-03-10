@@ -25,7 +25,7 @@ public static class AdminAPI
 
     public static JObject AutoConfigToParamData(AutoConfiguration config)
     {
-        JObject output = new();
+        JObject output = [];
         foreach ((string key, AutoConfiguration.Internal.SingleFieldData data) in config.InternalData.SharedData.Fields)
         {
             string typeName = data.IsSection ? "group" : T2IParamTypes.SharpTypeToDataType(data.Field.FieldType, false).ToString();
@@ -104,7 +104,7 @@ public static class AdminAPI
     /// <summary>API Route to list the current available log types.</summary>
     public static async Task<JObject> ListLogTypes(Session session)
     {
-        JArray types = new();
+        JArray types = [];
         lock (Logs.OtherTrackers)
         {
             foreach ((string name, Logs.LogTracker tracker) in Logs.OtherTrackers)
@@ -126,7 +126,7 @@ public static class AdminAPI
         JObject result = await ListLogTypes(session);
         long lastSeq = Interlocked.Read(ref Logs.LogTracker.LastSequenceID);
         result["last_sequence_id"] = lastSeq;
-        JObject messageData = new();
+        JObject messageData = [];
         List<string> types = raw["types"].Select(v => $"{v}").ToList();
         foreach (string type in types)
         {
@@ -138,7 +138,7 @@ public static class AdminAPI
                     continue;
                 }
             }
-            JArray messages = new();
+            JArray messages = [];
             messageData[type] = messages;
             long lastSeqId = -1;
             if ((raw["last_sequence_ids"] as JObject).TryGetValue(type, out JToken lastSeqIdToken))
@@ -198,7 +198,7 @@ public static class AdminAPI
         };
         if (gpuInfo is not null)
         {
-            JObject gpus = new();
+            JObject gpus = [];
             foreach (NvidiaUtil.NvidiaInfo gpu in gpuInfo)
             {
                 gpus[$"{gpu.ID}"] = new JObject()

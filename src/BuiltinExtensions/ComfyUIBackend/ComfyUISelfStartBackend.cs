@@ -72,10 +72,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }).WaitForExit();
                 }
             }
-            List<Task> tasks = new()
-            {
-                Task.Run(async () => await EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding"))
-            };
+            List<Task> tasks = [Task.Run(async () => await EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding"))];
             await Task.WhenAll(tasks);
         }
         catch (Exception ex)
@@ -174,10 +171,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         {
             Logs.Warning($"ComfyUI start script is '{settings.StartScript}', which looks wrong - did you forget to append 'main.py' on the end?");
         }
-        List<Task> tasks = new()
-        {
-            Task.Run(EnsureNodeRepos)
-        };
+        List<Task> tasks = [Task.Run(EnsureNodeRepos)];
         if (settings.AutoUpdate && !string.IsNullOrWhiteSpace(settings.StartScript))
         {
             tasks.Add(Task.Run(async () =>

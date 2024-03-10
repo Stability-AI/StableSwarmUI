@@ -398,7 +398,7 @@ public static class BasicAPIFeatures
 
     public static async Task<JObject> GetUserSettings(Session session)
     {
-        JObject themes = new();
+        JObject themes = [];
         foreach (WebServer.ThemeData theme in Program.Web.RegisteredThemes.Values)
         {
             themes[theme.ID] = new JObject()

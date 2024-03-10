@@ -45,7 +45,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         Logs.Verbose($"Comfy backend {BackendData.ID} loaded value set, parsing...");
         RawObjectInfo = result;
-        Models ??= new();
+        Models ??= [];
         string firstBackSlash = null;
         void trackModels(string subtype, string node, string param)
         {
@@ -430,8 +430,8 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         {
             Logs.Verbose($"ComfyUI history said: {output.ToDenseDebugString()}");
         }
-        List<Image> outputs = new();
-        List<string> outputFailures = new();
+        List<Image> outputs = [];
+        List<string> outputFailures = [];
         foreach (JToken outData in output["outputs"].Values())
         {
             if (outData is null)
@@ -498,13 +498,13 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 Logs.Warning($"Comfy backend gave no valid output");
             }
         }
-        return outputs.ToArray();
+        return [.. outputs];
     }
 
     /// <inheritdoc/>
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
-        List<Image> images = new();
+        List<Image> images = [];
         await GenerateLive(user_input, "0", output =>
         {
             if (output is Image img)
@@ -512,7 +512,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 images.Add(img);
             }
         });
-        return images.ToArray();
+        return [.. images];
     }
 
     public static string CreateWorkflow(T2IParamInput user_input, Func<string, string> initImageFixer, string ModelFolderFormat = null, HashSet<string> features = null)
@@ -610,7 +610,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         else
         {
-            workflow = new WorkflowGenerator() { UserInput = user_input, ModelFolderFormat = ModelFolderFormat, Features = features ?? new() }.Generate().ToString();
+            workflow = new WorkflowGenerator() { UserInput = user_input, ModelFolderFormat = ModelFolderFormat, Features = features ?? [] }.Generate().ToString();
             workflow = initImageFixer(workflow);
         }
         return workflow;
@@ -627,7 +627,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     /// <inheritdoc/>
     public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
     {
-        List<Action> completeSteps = new();
+        List<Action> completeSteps = [];
         string initImageFixer(string workflow) // This is a hack, backup for if Swarm nodes are missing
         {
             void TryApply(string key, Image img, bool resize)

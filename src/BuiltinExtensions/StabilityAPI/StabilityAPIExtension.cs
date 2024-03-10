@@ -7,14 +7,14 @@ namespace StableSwarmUI.Builtin_StabilityAPIExtension;
 
 public class StabilityAPIExtension : Extension
 {
-    public static List<string> Engines = new() { "stable-diffusion-v1-5" }; // Auto populated when it loads.
+    public static List<string> Engines = ["stable-diffusion-v1-5"]; // Auto populated when it loads.
 
     public static LockObject TrackerLock = new();
 
-    public static string[] Samplers = new[] { "DDIM", "DDPM", "K_DPMPP_2M", "K_DPMPP_2S_ANCESTRAL", "K_DPM_2", "K_DPM_2_ANCESTRAL", "K_EULER", "K_EULER_ANCESTRAL", "K_HEUN", "K_LMS" };
+    public static string[] Samplers = ["DDIM", "DDPM", "K_DPMPP_2M", "K_DPMPP_2S_ANCESTRAL", "K_DPM_2", "K_DPM_2_ANCESTRAL", "K_EULER", "K_EULER_ANCESTRAL", "K_HEUN", "K_LMS"];
 
     /// <summary>Set of all feature-ids supported by StabilityAPI backends.</summary>
-    public static HashSet<string> FeaturesSupported = new() { "sapi" };
+    public static HashSet<string> FeaturesSupported = ["sapi"];
 
     public static T2IRegisteredParam<string> EngineParam, SamplerParam;
 

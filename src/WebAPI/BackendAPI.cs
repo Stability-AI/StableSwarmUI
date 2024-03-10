@@ -126,7 +126,7 @@ public class BackendAPI
     /// <summary>API route to list currently registered backends.</summary>
     public static async Task<JObject> ListBackends(bool nonreal = false, bool full_data = false)
     {
-        JObject toRet = new();
+        JObject toRet = [];
         foreach (BackendHandler.T2IBackendData data in Program.Backends.T2IBackends.Values.OrderBy(d => d.ID))
         {
             if (!data.Backend.IsReal && !nonreal)
@@ -180,7 +180,7 @@ public class BackendAPI
     /// <summary>API route to free memory from all backends.</summary>
     public static async Task<JObject> FreeBackendMemory(bool system_ram = false, string backend = "all")
     {
-        List<Task> tasks = new();
+        List<Task> tasks = [];
         foreach (AbstractT2IBackend target in Program.Backends.RunningBackendsOfType<AbstractT2IBackend>())
         {
             if (backend != "all" && backend != $"{target.BackendData.ID}")

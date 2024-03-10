@@ -26,7 +26,7 @@ public class BackendHandler
     public LockObject CentralLock = new();
 
     /// <summary>Map of backend type IDs to metadata about them.</summary>
-    public Dictionary<string, BackendType> BackendTypes = new();
+    public Dictionary<string, BackendType> BackendTypes = [];
 
     /// <summary>Value to ensure unique IDs are given to new backends.</summary>
     public int LastBackendID = 0;
@@ -516,7 +516,7 @@ public class BackendHandler
         HasShutdown = true;
         NewBackendInitSignal.Set();
         CheckBackendsSignal.Set();
-        List<(T2IBackendData, Task)> tasks = new();
+        List<(T2IBackendData, Task)> tasks = [];
         foreach (T2IBackendData backend in T2IBackends.Values)
         {
             tasks.Add((backend, Task.Run(async () =>
@@ -574,13 +574,13 @@ public class BackendHandler
         public volatile bool IsLoading;
 
         /// <summary>Sessions that want the model.</summary>
-        public HashSet<Session> Sessions = new();
+        public HashSet<Session> Sessions = [];
 
         /// <summary>Requests that want the model.</summary>
-        public List<T2IBackendRequest> Requests = new();
+        public List<T2IBackendRequest> Requests = [];
 
         /// <summary>Set of backends that tried to satisfy this request but failed.</summary>
-        public HashSet<int> BadBackends = new();
+        public HashSet<int> BadBackends = [];
 
         /// <summary>Async issue prevention lock.</summary>
         public LockObject Locker = new();
@@ -653,7 +653,7 @@ public class BackendHandler
 
         public void TryFind()
         {
-            List<T2IBackendData> currentBackends = Handler.T2IBackends.Values.ToList();
+            List<T2IBackendData> currentBackends = [.. Handler.T2IBackends.Values];
             List<T2IBackendData> possible = currentBackends.Where(b => b.Backend.IsEnabled && !b.Backend.ShutDownReserve && b.Backend.Reservations == 0 && b.Backend.Status == BackendStatus.RUNNING).ToList();
             Logs.Verbose($"[BackendHandler] Backend request #{ID} searching for backend... have {possible.Count}/{currentBackends.Count} possible");
             if (!possible.Any())
@@ -677,7 +677,7 @@ public class BackendHandler
                 Failure = new InvalidOperationException($"No backends match the settings of the request given!{reason}");
                 return;
             }
-            List<T2IBackendData> available = possible.Where(b => !b.CheckIsInUse).OrderBy(b => b.Usages).ToList();
+            List<T2IBackendData> available = [.. possible.Where(b => !b.CheckIsInUse).OrderBy(b => b.Usages)];
             if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
             {
                 Logs.Verbose($"Possible: {possible.Select(b => $"{b.ID}/{b.BackType.Name}").JoinString(", ")}, available {available.Select(b => $"{b.ID}/{b.BackType.Name}").JoinString(", ")}");
@@ -903,7 +903,7 @@ public class BackendHandler
         }
         Logs.Verbose($"[BackendHandler] Will load highest pressure model...");
         long timeRel = Environment.TickCount64;
-        List<ModelRequestPressure> pressures = ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel)).ToList();
+        List<ModelRequestPressure> pressures = [.. ModelRequests.Values.Where(p => !p.IsLoading).OrderByDescending(p => p.Heuristic(timeRel))];
         if (pressures.IsEmpty())
         {
             Logs.Verbose($"[BackendHandler] No model requests, skipping load.");
@@ -952,7 +952,7 @@ public class BackendHandler
                     T2IBackendData availableBackend = valid.MinBy(a => a.TimeLastRelease);
                     Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} will load a model: {highestPressure.Model.Name}, with {highestPressure.Count} requests waiting for {timeWait / 1000f:0.#} seconds");
                     highestPressure.IsLoading = true;
-                    List<Session.GenClaim> claims = new();
+                    List<Session.GenClaim> claims = [];
                     foreach (Session sess in highestPressure.Sessions)
                     {
                         claims.Add(sess.Claim(0, 1, 0, 0));

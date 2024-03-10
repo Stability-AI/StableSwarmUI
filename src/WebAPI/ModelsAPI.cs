@@ -33,7 +33,7 @@ public static class ModelsAPI
         IEnumerable<Dictionary<string, JObject>> sets = backends.Select(b => b.RemoteModels.GetValueOrDefault(subtype)).Where(b => b is not null);
         if (sets.IsEmpty())
         {
-            return new();
+            return [];
         }
         return sets.Aggregate((a, b) => a.Union(b).PairsToDictionary(false));
     }
@@ -94,9 +94,9 @@ public static class ModelsAPI
         }
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        HashSet<string> folders = new();
-        List<JObject> files = new();
-        HashSet<string> dedup = new();
+        HashSet<string> folders = [];
+        List<JObject> files = [];
+        HashSet<string> dedup = [];
         bool tryMatch(string name)
         {
             if (!name.StartsWith(path) || name.Length <= path.Length || (allowed is not null && !allowed.IsMatch(name)))

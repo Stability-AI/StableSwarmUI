@@ -90,7 +90,7 @@ public class ImageBatchToolExtension : Extension
             output(new JObject() { ["error"] = ex.Message });
             return;
         }
-        List<Task> tasks = new();
+        List<Task> tasks = [];
         void removeDoneTasks()
         {
             for (int i = 0; i < tasks.Count; i++)
@@ -162,7 +162,7 @@ public class ImageBatchToolExtension : Extension
             }
             if (revision)
             {
-                List<Image> imgs = param.Get(T2IParamTypes.PromptImages, new()).Append(image).ToList();
+                List<Image> imgs = [.. param.Get(T2IParamTypes.PromptImages, []), image];
                 param.Set(T2IParamTypes.PromptImages, imgs);
             }
             if (controlnet)

@@ -1,14 +1,9 @@
 ﻿namespace StableSwarmUI.Utils;
 
 /// <summary>Mini-struct to hold data about a memory size number.</summary>
-public struct MemoryNum
+public struct MemoryNum(long inBytes)
 {
-    public long InBytes;
-
-    public MemoryNum(long inBytes)
-    {
-        InBytes = inBytes;
-    }
+    public long InBytes = inBytes;
 
     public readonly float KiB => InBytes / 1024f;
 

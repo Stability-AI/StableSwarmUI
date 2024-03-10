@@ -47,7 +47,7 @@ public static class T2IAPI
     public static async Task<JObject> GenerateText2Image(Session session, int images, JObject rawInput)
     {
         List<JObject> outputs = await API.RunWebsocketHandlerCallDirect(GenT2I_Internal, session, (images, rawInput));
-        Dictionary<int, string> imageOutputs = new();
+        Dictionary<int, string> imageOutputs = [];
         int[] discards = null;
         foreach (JObject obj in outputs)
         {
@@ -125,8 +125,8 @@ public static class T2IAPI
             return;
         }
         Logs.Info($"User {session.User.UserID} requested {images} image{(images == 1 ? "": "s")} with model '{user_input.Get(T2IParamTypes.Model)?.Name}'...");
-        List<T2IEngine.ImageOutput> imageSet = new();
-        List<Task> tasks = new();
+        List<T2IEngine.ImageOutput> imageSet = [];
+        List<Task> tasks = [];
         void removeDoneTasks()
         {
             for (int i = 0; i < tasks.Count; i++)
@@ -142,7 +142,7 @@ public static class T2IAPI
             }
         }
         int max_degrees = session.User.Restrictions.CalcMaxT2ISimultaneous;
-        List<int> discard = new();
+        List<int> discard = [];
         int numExtra = 0, numNonReal = 0;
         int batchSizeExpected = user_input.Get(T2IParamTypes.BatchSize, 1);
         void saveImage(T2IEngine.ImageOutput image, int actualIndex, T2IParamInput thisParams, string metadata)
@@ -254,11 +254,11 @@ public static class T2IAPI
             T2IEngine.ImageOutput gridOutput = new() { Img = gridImg, GenTimeMS = genTime };
             saveImage(gridOutput, -1, user_input, metadata);
         }
-        T2IEngine.PostBatchEvent?.Invoke(new(user_input, griddables.ToArray()));
+        T2IEngine.PostBatchEvent?.Invoke(new(user_input, [.. griddables]));
         output(new JObject() { ["discard_indices"] = JToken.FromObject(discard) });
     }
 
-    public static HashSet<string> ImageExtensions = new() { "png", "jpg", "html", "gif", "webm", "mp4", "webp" };
+    public static HashSet<string> ImageExtensions = ["png", "jpg", "html", "gif", "webm", "mp4", "webp"];
 
     public enum ImageHistorySortMode { Name, Date }
 
@@ -286,8 +286,8 @@ public static class T2IAPI
                     ["files"] = new JArray()
                 };
             }
-            List<string> dirs = new();
-            List<string> finalDirs = new();
+            List<string> dirs = [];
+            List<string> finalDirs = [];
             void addDirs(string dir, int subDepth)
             {
                 if (dir != "")
@@ -312,7 +312,7 @@ public static class T2IAPI
                 }
             }
             addDirs("", depth);
-            List<ImageHistoryHelper> files = new();
+            List<ImageHistoryHelper> files = [];
             bool starNoFolders = session.User.Settings.StarNoFolders;
             foreach (string folder in dirs.Append(""))
             {
@@ -495,7 +495,7 @@ public static class T2IAPI
     /// <summary>API route to get a list of parameter types.</summary>
     public static async Task<JObject> ListT2IParams(Session session)
     {
-        JObject modelData = new();
+        JObject modelData = [];
         foreach (T2IModelHandler handler in Program.T2IModelSets.Values)
         {
             modelData[handler.ModelType] = new JArray(handler.ListModelNamesFor(session).Order().ToArray());

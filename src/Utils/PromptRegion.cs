@@ -29,7 +29,7 @@ public class PromptRegion
         public PartType Type;
     }
 
-    public List<Part> Parts = new();
+    public List<Part> Parts = [];
 
     public PromptRegion()
     {
