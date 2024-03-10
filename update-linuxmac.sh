@@ -5,7 +5,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR
 
 # Add dotnet non-admin-install to path
-export PATH=~/.dotnet:$PATH
+export PATH="$SCRIPT_DIR/.dotnet:~/.dotnet:$PATH"
 
 # The actual update
 git pull

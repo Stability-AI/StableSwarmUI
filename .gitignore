@@ -6,6 +6,7 @@ obj/
 *.user
 *.suo
 Properties/
+.dotnet/
 
 # This project
 Output/
