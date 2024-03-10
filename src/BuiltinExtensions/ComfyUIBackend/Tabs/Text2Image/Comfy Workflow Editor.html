@@ -35,6 +35,23 @@
         </div>
     </div>
 </div>
+<div class="modal" tabindex="-1" role="dialog" id="comfy_workflow_save_modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Save Custom Comfy Workflow</h5>
+        </div>
+        <div class="modal-body">
+            <p>Save workflow...</p>
+            <input type="text" id="comfy_save_modal_name" autocomplete="off">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="comfySaveModalSaveNow()">Save Workflow</button>
+            <button type="button" class="btn btn-secondary" onclick="comfyHideSaveModal()">Cancel</button>
+        </div>
+        </div>
+    </div>
+</div>
 <div class="modal" tabindex="-1" role="dialog" id="comfy_workflow_load_modal">
     <div class="modal-dialog" role="document">
         <div class="modal-content">

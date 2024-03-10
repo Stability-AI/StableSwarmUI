@@ -95,6 +95,9 @@ class AdvancedPopover {
     }
 
     selected() {
+        if (!this.popover) {
+            return [];
+        }
         return this.popover.getElementsByClassName('sui_popover_model_button_selected')[0];
     }
 
@@ -112,6 +115,9 @@ class AdvancedPopover {
     }
 
     possible() {
+        if (!this.popover) {
+            return [];
+        }
         return [...this.popover.getElementsByClassName('sui_popover_model_button')].filter(e => !e.classList.contains('sui_popover_model_button_disabled'));
     }
 

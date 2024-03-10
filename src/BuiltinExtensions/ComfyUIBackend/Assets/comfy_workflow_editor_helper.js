@@ -725,18 +725,8 @@ function comfyNoticeMessage(message) {
  * Called when the user wants to save the workflow (via button press).
  */
 function comfySaveWorkflowNow() {
-    comfyBuildParams((params, prompt_text, retained, paramVal, workflow) => {
-        let name = prompt("Enter name to save workflow as:");
-        if (!name || !name.trim()) {
-            return;
-        }
-        comfyNoticeMessage("Saving...");
-        prompt_text = JSON.stringify(prompt_text).replaceAll("\"%%_COMFYFIXME_${", "${").replaceAll("}_ENDFIXME_%%\"", "}");
-        genericRequest('ComfySaveWorkflow', { 'name': name, 'workflow': JSON.stringify(workflow), 'prompt': prompt_text, 'custom_params': params }, (data) => {
-            comfyNoticeMessage("Saved!");
-            comfyReconfigureQuickload();
-        });
-    });
+    comfyReconfigureQuickload();
+    $('#comfy_workflow_save_modal').modal('show');
 }
 
 /**
@@ -798,6 +788,62 @@ function comfyLoadModalDelete() {
 /** Cancel button in the Load modal. */
 function comfyHideLoadModal() {
     $('#comfy_workflow_load_modal').modal('hide');
+}
+
+let comfySaveSearchPopover = null;
+let comfySaveModalName = getRequiredElementById('comfy_save_modal_name');
+
+comfySaveModalName.addEventListener('input', e => {
+    let popId = `uiimprover_comfy_save_modal_name`;
+    let rect = e.target.getBoundingClientRect();
+    let selector = getRequiredElementById('comfy_quickload_select');
+    let search = e.target.value.toLowerCase();
+    let buttons = [...selector.options].filter(o => !o.value.startsWith("-- ") && o.value.toLowerCase().includes(search));
+    buttons = buttons.map(o => { return { key: o.innerText, action: () => { e.target.value = o.value; } }; });
+    if (comfySaveSearchPopover) {
+        comfySaveSearchPopover.remove();
+        comfySaveSearchPopover = null;
+    }
+    if (buttons.length > 1) {
+        comfySaveSearchPopover = new AdvancedPopover(popId, buttons, false, rect.x, rect.y + e.target.offsetHeight + 6, e.target.parentElement, null, e.target.offsetHeight + 6);
+    }
+});
+comfySaveModalName.addEventListener('keydown', e => {
+    if (comfySaveSearchPopover) {
+        comfySaveSearchPopover.onKeyDown(e);
+    }
+}, true);
+
+/** Save button in the Save modal. */
+function comfySaveModalSaveNow() {
+    let saveName = comfySaveModalName.value;
+    if (!saveName || !saveName.trim()) {
+        alert("No name given, can't save");
+        return;
+    }
+    let selector = getRequiredElementById('comfy_quickload_select');
+    let search = saveName.toLowerCase();
+    let match = [...selector.options].find(o => o.value.toLowerCase() == search);
+    if (match) {
+        if (!confirm(`Are you sure you want to overwrite the workflow "${match.value}"?`)) {
+            return;
+        }
+        saveName = match.value;
+    }
+    $('#comfy_workflow_save_modal').modal('hide');
+    comfyNoticeMessage("Saving...");
+    comfyBuildParams((params, prompt_text, retained, paramVal, workflow) => {
+        prompt_text = JSON.stringify(prompt_text).replaceAll("\"%%_COMFYFIXME_${", "${").replaceAll("}_ENDFIXME_%%\"", "}");
+        genericRequest('ComfySaveWorkflow', { 'name': saveName, 'workflow': JSON.stringify(workflow), 'prompt': prompt_text, 'custom_params': params }, (data) => {
+            comfyNoticeMessage("Saved!");
+            comfyReconfigureQuickload();
+        });
+    });
+}
+
+/** Cancel button in the Save modal. */
+function comfyHideSaveModal() {
+    $('#comfy_workflow_save_modal').modal('hide');
 }
 
 /** Fills the quick-load selector with the provided values. */
