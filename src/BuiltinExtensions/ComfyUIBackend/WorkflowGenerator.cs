@@ -1233,16 +1233,12 @@ public class WorkflowGenerator
         }
         if (willCascadeFix)
         {
-            string negCond = CreateNode("ConditioningZeroOut", new JObject()
-            {
-                ["conditioning"] = pos
-            });
             string stageBCond = CreateNode("StableCascade_StageB_Conditioning", new JObject()
             {
                 ["stage_c"] = new JArray() { created, 0 },
-                ["conditioning"] = new JArray() { negCond, 0 }
+                ["conditioning"] = pos
             });
-            created = CreateKSampler(cascadeModel, [stageBCond, 0], [negCond, 0], [latent[0], 1], 1.1, steps, startStep, endStep, seed + 27, returnWithLeftoverNoise, addNoise, sigmin, sigmax, previews, defsampler, defscheduler, id, true);
+            created = CreateKSampler(cascadeModel, [stageBCond, 0], neg, [latent[0], 1], 1.1, steps, startStep, endStep, seed + 27, returnWithLeftoverNoise, addNoise, sigmin, sigmax, previews, defsampler, defscheduler, id, true);
         }
         return created;
     }
