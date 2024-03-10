@@ -113,6 +113,8 @@ public class ComfyUIBackendExtension : Extension
 
     public static IEnumerable<ComfyUIAPIAbstractBackend> RunningComfyBackends => Program.Backends.RunningBackendsOfType<ComfyUIAPIAbstractBackend>();
 
+    public record class ComfyCustomWorkflow(string Name, string Workflow, string Prompt, string CustomParams, string Image);
+
     public void LoadWorkflowFiles()
     {
         Workflows = new();
@@ -133,10 +135,36 @@ public class ComfyUIBackendExtension : Extension
                 if (fileName.EndsWith(".json"))
                 {
                     string name = fileName.BeforeLast('.');
-                    CustomWorkflows.TryAdd(name, name);
+                    CustomWorkflows.TryAdd(name, null);
                 }
             }
         }
+    }
+
+    public static ComfyCustomWorkflow GetWorkflowByName(string name)
+    {
+        if (!CustomWorkflows.TryGetValue(name, out ComfyCustomWorkflow workflow))
+        {
+            return null;
+        }
+        if (workflow is not null)
+        {
+            return workflow;
+        }
+        string path = $"{Folder}/CustomWorkflows/{name}.json";
+        if (!File.Exists(path))
+        {
+            CustomWorkflows.TryRemove(name, out _);
+            return null;
+        }
+        JObject json = File.ReadAllText(path).ParseToJson();
+        string workflowData = json["workflow"]?.ToString();
+        string prompt = json["prompt"]?.ToString();
+        string customParams = json["custom_params"]?.ToString();
+        string image = json["image"]?.ToString() ?? "/imgs/model_placeholder.jpg";
+        workflow = new(name, workflowData, prompt, customParams, image);
+        CustomWorkflows[name] = workflow;
+        return workflow;
     }
 
     public void Refresh()
@@ -229,7 +257,7 @@ public class ComfyUIBackendExtension : Extension
     public static ConcurrentDictionary<string, JToken> ControlNetPreprocessors = new() { ["None"] = null };
 
     /// <summary>All current custom workflow IDs. Values are just a copy of the name (because C# lacks a ConcurrentList).</summary>
-    public static ConcurrentDictionary<string, string> CustomWorkflows = new();
+    public static ConcurrentDictionary<string, ComfyCustomWorkflow> CustomWorkflows = new();
 
     public static T2IParamGroup ComfyGroup, ComfyAdvancedGroup;
 

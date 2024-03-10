@@ -95,3 +95,9 @@
 .comfy-left-button {
     float: left;
 }
+.comfy_workflow_topbar_holder {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    height: 20rem;
+}

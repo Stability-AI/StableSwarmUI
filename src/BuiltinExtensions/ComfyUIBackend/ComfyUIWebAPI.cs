@@ -24,17 +24,27 @@ public static class ComfyUIWebAPI
     }
 
     /// <summary>API route to save a comfy workflow object to persistent file.</summary>
-    public static async Task<JObject> ComfySaveWorkflow(string name, string workflow, string prompt, string custom_params)
+    public static async Task<JObject> ComfySaveWorkflow(string name, string workflow, string prompt, string custom_params, string image)
     {
-        string path = Utilities.StrictFilenameClean(name);
-        ComfyUIBackendExtension.CustomWorkflows.TryAdd(path, path);
-        Directory.CreateDirectory($"{ComfyUIBackendExtension.Folder}/CustomWorkflows");
-        path = $"{ComfyUIBackendExtension.Folder}/CustomWorkflows/{path}.json";
+        string cleaned = Utilities.StrictFilenameClean(name);
+        string path = $"{ComfyUIBackendExtension.Folder}/CustomWorkflows/{cleaned}.json";
+        Directory.CreateDirectory(Directory.GetParent(path).FullName);
+        if (!string.IsNullOrWhiteSpace(image))
+        {
+            image = Image.FromDataString(image).ToMetadataFormat();
+        }
+        else if (ComfyUIBackendExtension.CustomWorkflows.ContainsKey(path))
+        {
+            ComfyUIBackendExtension.ComfyCustomWorkflow oldFlow = ComfyUIBackendExtension.GetWorkflowByName(path);
+            image = oldFlow.Image;
+        }
+        ComfyUIBackendExtension.CustomWorkflows[path] = new ComfyUIBackendExtension.ComfyCustomWorkflow(cleaned, workflow, prompt, custom_params, image);
         JObject data = new()
         {
             ["workflow"] = workflow,
             ["prompt"] = prompt,
-            ["custom_params"] = custom_params
+            ["custom_params"] = custom_params,
+            ["image"] = image
         };
         File.WriteAllBytes(path, data.ToString().EncodeUTF8());
         return new JObject() { ["success"] = true };
@@ -44,13 +54,18 @@ public static class ComfyUIWebAPI
     public static JObject ReadCustomWorkflow(string name)
     {
         string path = Utilities.StrictFilenameClean(name);
-        path = $"{ComfyUIBackendExtension.Folder}/CustomWorkflows/{path}.json";
-        if (!File.Exists(path))
+        ComfyUIBackendExtension.ComfyCustomWorkflow workflow = ComfyUIBackendExtension.GetWorkflowByName(path);
+        if (workflow is null)
         {
             return new JObject() { ["error"] = "Unknown custom workflow name." };
         }
-        string data = Encoding.UTF8.GetString(File.ReadAllBytes(path));
-        return data.ParseToJson();
+        return new JObject()
+        {
+            ["workflow"] = workflow.Workflow,
+            ["prompt"] = workflow.Prompt,
+            ["custom_params"] = workflow.CustomParams,
+            ["image"] = workflow.Image
+        };
     }
 
     /// <summary>API route to read a comfy workflow object from persistent file.</summary>
@@ -67,7 +82,8 @@ public static class ComfyUIWebAPI
     /// <summary>API route to read a list of available Comfy custom workflows.</summary>
     public static async Task<JObject> ComfyListWorkflows()
     {
-        return new JObject() { ["workflows"] = JToken.FromObject(ComfyUIBackendExtension.CustomWorkflows.Keys.Order().ToList()) };
+        return new JObject() { ["workflows"] = JToken.FromObject(ComfyUIBackendExtension.CustomWorkflows.Keys.ToList()
+            .Select(ComfyUIBackendExtension.GetWorkflowByName).OrderBy(w => w.Name).Select(w => new JObject() { ["name"] = w.Name, ["image"] = w.Image }).ToList()) };
     }
 
     /// <summary>API route to read a delete a saved Comfy custom workflows.</summary>

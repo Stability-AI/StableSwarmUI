@@ -726,25 +726,25 @@ function comfyNoticeMessage(message) {
  */
 function comfySaveWorkflowNow() {
     comfyReconfigureQuickload();
+    let curImg = document.getElementById('current_image_img');
+    let enableImage = getRequiredElementById('comfy_save_use_image');
+    let saveImageSection = getRequiredElementById('comfy_save_image');
+    saveImageSection.innerHTML = '';
+    if (curImg) {
+        let newImg = curImg.cloneNode(true);
+        newImg.id = 'comfy_save_image_img';
+        newImg.style.maxWidth = '100%';
+        newImg.removeAttribute('width');
+        newImg.removeAttribute('height');
+        saveImageSection.appendChild(newImg);
+        enableImage.checked = true;
+        enableImage.disabled = false;
+    }
+    else {
+        enableImage.checked = false;
+        enableImage.disabled = true;
+    }
     $('#comfy_workflow_save_modal').modal('show');
-}
-
-/**
- * Called when the user wants to load a workflow (via button press).
- */
-function comfyLoadWorkflowNow() {
-    comfyNoticeMessage("Prepping, please wait...");
-    let selector = getRequiredElementById('comfy_load_modal_selector');
-    selector.innerHTML = '<option></option>';
-    genericRequest('ComfyListWorkflows', {}, (data) => {
-        comfyFillQuickLoad(data.workflows);
-        for (let workflow of data.workflows) {
-            let option = document.createElement('option');
-            option.innerText = workflow;
-            selector.appendChild(option);
-        }
-        $('#comfy_workflow_load_modal').modal('show');
-    });
 }
 
 function comfyLoadByName(name) {
@@ -755,39 +755,6 @@ function comfyLoadByName(name) {
         comfyFrame().contentWindow.app.loadGraphData(comfyFrame().contentWindow.LiteGraph.cloneObject(JSON.parse(workflow)));
         comfyNoticeMessage("Loaded.");
     });
-    comfyHideLoadModal();
-}
-
-/** Load button in the Load modal. */
-function comfyLoadModalLoadNow() {
-    let selector = getRequiredElementById('comfy_load_modal_selector');
-    let selected = selector.options[selector.selectedIndex].value;
-    if (!selected) {
-        return;
-    }
-    comfyLoadByName(selected);
-}
-
-/** Delete button in the Load modal. */
-function comfyLoadModalDelete() {
-    let selector = getRequiredElementById('comfy_load_modal_selector');
-    let selected = selector.options[selector.selectedIndex].value;
-    if (!selected) {
-        return;
-    }
-    if (!confirm(`Are you sure you want to delete the workflow "${selected}"?`)) {
-        return;
-    }
-    comfyNoticeMessage("Deleting...");
-    genericRequest('ComfyDeleteWorkflow', { 'name': selected }, (data) => {
-        comfyNoticeMessage("Deleted.");
-    });
-    comfyHideLoadModal();
-}
-
-/** Cancel button in the Load modal. */
-function comfyHideLoadModal() {
-    $('#comfy_workflow_load_modal').modal('hide');
 }
 
 let comfySaveSearchPopover = null;
@@ -830,13 +797,20 @@ function comfySaveModalSaveNow() {
         }
         saveName = match.value;
     }
+    let image = null;
+    if (getRequiredElementById('comfy_save_use_image').checked) {
+        image = imageToSmallPreviewData(getRequiredElementById('comfy_save_image').getElementsByTagName('img')[0]);
+    }
     $('#comfy_workflow_save_modal').modal('hide');
     comfyNoticeMessage("Saving...");
     comfyBuildParams((params, prompt_text, retained, paramVal, workflow) => {
         prompt_text = JSON.stringify(prompt_text).replaceAll("\"%%_COMFYFIXME_${", "${").replaceAll("}_ENDFIXME_%%\"", "}");
-        genericRequest('ComfySaveWorkflow', { 'name': saveName, 'workflow': JSON.stringify(workflow), 'prompt': prompt_text, 'custom_params': params }, (data) => {
+        genericRequest('ComfySaveWorkflow', { 'name': saveName, 'workflow': JSON.stringify(workflow), 'prompt': prompt_text, 'custom_params': params, image: image }, (data) => {
             comfyNoticeMessage("Saved!");
             comfyReconfigureQuickload();
+            if (comfyWorkflowBrowser.everLoaded) {
+                comfyWorkflowBrowser.refresh();
+            }
         });
     });
 }
@@ -852,7 +826,7 @@ function comfyFillQuickLoad(vals) {
     selector.innerHTML = '<option value="" selected>-- Quick Load --</option>';
     for (let workflow of vals) {
         let option = document.createElement('option');
-        option.innerText = workflow;
+        option.innerText = workflow.name;
         selector.appendChild(option);
     }
 }
@@ -935,6 +909,77 @@ backendsRevisedCallbacks.push(() => {
         comfyReloadObjectInfo();
     }
 });
+
+function comfyListWorkflowsForBrowser(path, isRefresh, callback, depth) {
+    genericRequest('ComfyListWorkflows', {}, (data) => {
+        let relevant = data.workflows.filter(w => w.name.startsWith(path));
+        let workflowsWithSlashes = relevant.map(w => w.name.substring(path.length)).map(w => w.startsWith('/') ? w.substring(1) : w).filter(w => w.includes('/'));
+        let preSlashes = workflowsWithSlashes.map(w => w.substring(0, w.lastIndexOf('/')));
+        let fixedFolders = preSlashes.map(w => w.split('/').map((_, i, a) => a.slice(0, i + 1).join('/'))).flat();
+        let deduped = [...new Set(fixedFolders)];
+        let folders = deduped.sort((a, b) => b.toLowerCase().localeCompare(a.toLowerCase()));
+        let mapped = relevant.map(f => {
+            return { 'name': f.name, 'data': { 'image': f.image } };
+        });
+        callback(folders, mapped);
+    });
+}
+
+function comfyDescribeWorkflowForBrowser(workflow) {
+    let buttons = [
+        {
+            label: 'Replace',
+            onclick: (e) => {
+                getRequiredElementById('comfy_save_modal_name').value = workflow.name;
+                comfySaveWorkflowNow();
+            }
+        },
+        {
+            label: 'Delete',
+            onclick: (e) => {
+                comfyNoticeMessage("Deleting...");
+                genericRequest('ComfyDeleteWorkflow', {'name': workflow.name}, data => {
+                    comfyNoticeMessage("Deleted.");
+                    e.remove();
+                });
+            }
+        }
+    ];
+    return { name: workflow.name, description: `<b>${escapeHtmlNoBr(workflow.name)}</b>`, image: workflow.data.image, buttons: buttons, className: '', searchable: workflow.name };
+}
+
+function comfySelectWorkflowForBrowser(workflow) {
+    comfyLoadByName(workflow.name);
+}
+
+let comfyWorkflowBrowser = new GenPageBrowserClass('comfy_workflow_browser_container', comfyListWorkflowsForBrowser, 'comfyworkflowbrowser', 'Small Thumbnails', comfyDescribeWorkflowForBrowser, comfySelectWorkflowForBrowser);
+comfyWorkflowBrowser.folderTreeVerticalSpacing = '8rem';
+comfyWorkflowBrowser.splitterMinWidth = 16 * 20;
+
+/**
+ * Called when the user wants to browse their workflows (via button press).
+ */
+function comfyBrowseWorkflowsNow() {
+    let holder = getRequiredElementById('comfy_workflow_topbar_holder');
+    let button = getRequiredElementById('comfy_workflow_browse_button');
+    let frameholder = getRequiredElementById('comfy_workflow_frameholder');
+    if (holder.style.display == 'none') {
+        holder.style.display = 'block';
+        if (comfyWorkflowBrowser.everLoaded) {
+            comfyWorkflowBrowser.update(false);
+        }
+        else {
+            comfyWorkflowBrowser.navigate('');
+        }
+        button.innerText = translate('Hide Workflows');
+        frameholder.style.height = 'calc(100% - 20rem)';
+    }
+    else {
+        holder.style.display = 'none';
+        button.innerText = translate('Browse Workflows');
+        frameholder.style.height = '100%';
+    }
+}
 
 /**
  * Prep-callback that can restore the last comfy workflow input you had.

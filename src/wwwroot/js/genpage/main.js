@@ -1050,16 +1050,14 @@ let altPromptSizeHandleFunc;
 let layoutResets = [];
 
 function resetPageSizer() {
-    for (let cookie of listCookies('barspot_')) {
-        deleteCookie(cookie);
+    for (let localStore of Object.keys(localStorage).filter(k => k.startsWith('barspot_'))) {
+        localStorage.removeItem(localStore);
     }
     pageBarTop = -1;
     pageBarTop2 = -1;
     pageBarMid = -1;
     midForceToBottom = false;
     leftShut = false;
-    localStorage.removeItem('barspot_midForceToBottom');
-    localStorage.removeItem('barspot_leftShut');
     setPageBarsFunc();
     for (let runnable of layoutResets) {
         runnable();

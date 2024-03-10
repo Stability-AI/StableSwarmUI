@@ -46,6 +46,9 @@ class GenPageBrowserClass {
         this.tree = new BrowserTreePart('', {}, false, true);
         this.depth = localStorage.getItem(`browser_${id}_depth`) || 3;
         this.filter = localStorage.getItem(`browser_${id}_filter`) || '';
+        this.folderTreeVerticalSpacing = '0';
+        this.splitterMinWidth = 100;
+        this.everLoaded = false;
     }
 
     /**
@@ -163,7 +166,12 @@ class GenPageBrowserClass {
     /**
      * Builds the element view of the folder tree.
      */
-    buildTreeElements(container, path, tree, offset = 16) {
+    buildTreeElements(container, path, tree, offset = 16, isRoot = true) {
+        if (isRoot) {
+            let spacer = createDiv(null, 'browser-folder-tree-spacer');
+            spacer.style.height = this.folderTreeVerticalSpacing;
+            container.appendChild(spacer);
+        }
         let span = createSpan(`${this.id}-foldertree-${tree.name}`, 'browser-folder-tree-part');
         span.style.left = `${offset}px`;
         span.innerHTML = `<span class="browser-folder-tree-part-symbol" data-issymbol="true"></span> ${escapeHtml(tree.name || '..')}`;
@@ -176,7 +184,7 @@ class GenPageBrowserClass {
             span.classList.add('browser-folder-tree-part-open');
             let subContainer = createDiv(`${this.id}-foldertree-${tree.name}-container`, 'browser-folder-tree-part-container');
             for (let subTree of Object.values(tree.children)) {
-                this.buildTreeElements(subContainer, `${path}${subTree.name}/`, subTree, offset + 16);
+                this.buildTreeElements(subContainer, `${path}${subTree.name}/`, subTree, offset + 16, false);
             }
             container.appendChild(subContainer);
         }
@@ -397,7 +405,7 @@ class GenPageBrowserClass {
                 this.fullContentDiv.style.width = `calc(100vw - ${barSpot}px - 0.6rem)`;
             }
             this.lastReset = () => {
-                barSpot = parseInt(localStorage.getItem(`barspot_browser_${this.id}`) || getCookie(`barspot_browser_${this.id}`) || convertRemToPixels(15)); // TODO: Remove the old cookie
+                barSpot = parseInt(localStorage.getItem(`barspot_browser_${this.id}`) || convertRemToPixels(20));
                 setBar();
             };
             this.lastReset();
@@ -407,8 +415,8 @@ class GenPageBrowserClass {
                 e.preventDefault();
             }, true);
             this.lastListen = (e) => {
-                let offX = e.pageX;
-                offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
+                let offX = e.pageX - this.container.getBoundingClientRect().left;
+                offX = Math.min(Math.max(offX, this.splitterMinWidth), window.innerWidth - 100);
                 if (isDrag) {
                     barSpot = offX - 5;
                     localStorage.setItem(`barspot_browser_${this.id}`, barSpot);
@@ -422,7 +430,7 @@ class GenPageBrowserClass {
             document.addEventListener('mouseup', this.lastListenUp);
             layoutResets.push(() => {
                 localStorage.removeItem(`barspot_browser_${this.id}`);
-                this.lastReset()
+                this.lastReset();
             });
         }
         else {
@@ -441,5 +449,6 @@ class GenPageBrowserClass {
         }
         applyTranslations(this.headerBar);
         applyTranslations(this.contentDiv);
+        this.everLoaded = true;
     }
 }
