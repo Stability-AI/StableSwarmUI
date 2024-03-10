@@ -54,9 +54,8 @@ Colab link if you want to try Swarm: https://colab.research.google.com/github/St
 
 - Install `git`, `python3` via your OS package manager if they are not already installed (make sure to include `pip` and `venv` on distros that do not include them in python directly)
     - For example, on recent Ubuntu versions, `sudo apt install git python3-pip python3-venv`
-- Install DotNET 7 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/7.0 (you need `dotnet-sdk-7.0`, as that includes all relevant sub-packages)
+- Install DotNET 8 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/8.0 (you need `dotnet-sdk-8.0`, as that includes all relevant sub-packages)
     - Some users [have said](https://github.com/Stability-AI/StableSwarmUI/pull/6) that certain Linux distros expect `aspnet-runtime` to be installed separately
-- In the near future, Swarm will update to DotNET 8, so to be ready for that: Install DotNET 8 using the instructions at https://dotnet.microsoft.com/en-us/download/dotnet/8.0 (you need `dotnet-sdk-8.0`, as that includes all relevant sub-packages)
 - Open a shell terminal and `cd` to a directory you want to install into
 - Run shell commands:
     - `git clone https://github.com/Stability-AI/StableSwarmUI`
@@ -74,12 +73,7 @@ Colab link if you want to try Swarm: https://colab.research.google.com/github/St
 1. Open Terminal.
 2. Ensure your `brew` packages are updated with `brew update`.
 3. Verify your `brew` installation with `brew doctor`. You should not see any error in the command output.
-4. Install .NET for macOS: (Note this uses a [third party package from isen-ng](https://github.com/isen-ng/homebrew-dotnet-sdk-versions))
-    ````
-    brew tap isen-ng/dotnet-sdk-versions
-    brew install --cask dotnet-sdk7-0-400
-    brew install --cask dotnet-sdk8-0-100
-    ````
+4. Install .NET for macOS: `brew install dotnet`.
 5. Change the directory (`cd`) to the folder where you want to install StableSwarmUI.
 6. Clone the StableSwarmUI GitHub repository: `git clone https://github.com/Stability-AI/StableSwarmUI`.
 7. `cd StableSwarmUI` and run the installation script: `./launch-macos.sh`.

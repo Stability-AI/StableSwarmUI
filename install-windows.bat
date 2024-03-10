@@ -14,7 +14,6 @@ if exist StableSwarmUI.sln (
     exit
 )
 
-winget install Microsoft.DotNet.SDK.7 --accept-source-agreements --accept-package-agreements
 winget install Microsoft.DotNet.SDK.8 --accept-source-agreements --accept-package-agreements
 winget install --id Git.Git -e --source winget --accept-source-agreements --accept-package-agreements
 

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0-bookworm-slim
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim
 
 # Install python
 RUN apt update
