@@ -85,7 +85,7 @@ public class Program
         {
             Logs.Debug($"Unhandled exception: {e.ExceptionObject}");
         };
-        Utilities.CheckDotNet("8");
+        //Utilities.CheckDotNet("8");
         PrepExtensions();
         try
         {
