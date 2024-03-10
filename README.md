@@ -29,7 +29,7 @@ Colab link if you want to try Swarm: https://colab.research.google.com/github/St
 
 # Installing on Windows
 
-- Download [The Install-Windows.bat file](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.5.8-Alpha/install-windows.bat), store it somewhere you want to install at (not `Program Files`), and run it.
+- Download [The Install-Windows.bat file](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.6.1-Beta/install-windows.bat), store it somewhere you want to install at (not `Program Files`), and run it.
     - It should open a command prompt and install itself.
     - If it closes without going further, try running it again, it sometimes needs to run twice. (TODO: Fix that)
     - It will place an icon on your desktop that you can use to re-launch the server at any time.
@@ -43,9 +43,9 @@ Colab link if you want to try Swarm: https://colab.research.google.com/github/St
 
 - Install `git`, `python3` via your OS package manager if they are not already installed (make sure to include `pip` and `venv` on distros that do not include them in python directly)
     - For example, on recent Ubuntu versions, `sudo apt install git python3-pip python3-venv`
-- Download [the install-linux.sh file](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.5.9-Alpha/install-linux.sh), store it somewhere you want to install at, and run it
+- Download [the install-linux.sh file](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.6.1-Beta/install-linux.sh), store it somewhere you want to install at, and run it
     - If you like terminals, you can open a terminal to the folder and run the following commands:
-        - `wget https://github.com/Stability-AI/StableSwarmUI/releases/download/0.5.9-Alpha/install-linux.sh -O install-linux.sh`
+        - `wget https://github.com/Stability-AI/StableSwarmUI/releases/download/0.6.1-Beta/install-linux.sh -O install-linux.sh`
         - `chmod +x install-linux.sh`
 - Run the `./install-linux.sh` script, it will install everything for you and eventually open the webpage in your browser.
 - Follow the install instructions on-page.
