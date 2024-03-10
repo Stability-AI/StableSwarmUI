@@ -874,7 +874,6 @@ public class BackendHandler
                     wasNone = true;
                     Program.TickNoGenerationsEvent?.Invoke();
                 }
-                Program.GlobalProgramCancel.ThrowIfCancellationRequested();
                 if (empty || !anyMoved)
                 {
                     CheckBackendsSignal.WaitAsync(TimeSpan.FromSeconds(1), Program.GlobalProgramCancel).Wait();
@@ -888,7 +887,14 @@ public class BackendHandler
             catch (Exception ex)
             {
                 Logs.Error($"Backend handler loop error: {ex}");
-                Task.Delay(2000, Program.GlobalProgramCancel).Wait(); // Delay a bit to be safe in case of repeating errors.
+                if (Program.GlobalProgramCancel.IsCancellationRequested)
+                {
+                    Task.Delay(500).Wait();
+                }
+                else
+                {
+                    Task.Delay(2000, Program.GlobalProgramCancel).Wait(); // Delay a bit to be safe in case of repeating errors.
+                }
             }
         }
     }
