@@ -39,6 +39,13 @@ Colab link if you want to try Swarm: https://colab.research.google.com/github/St
 
 (TODO): Even easier self-contained pre-installer, a `.msi` or `.exe` that provides a general install screen and lets you pick folder and all.
 
+# Alternate Manual Windows Install
+
+- Install git from https://git-scm.com/download/win
+- Install DotNET 8 SDK from https://dotnet.microsoft.com/en-us/download/dotnet/8.0 (Make sure to get the SDK x64 for Windows)
+- open a terminal to the folder you want swarm in and run `git clone https://github.com/Stability-AI/StableSwarmUI`
+- open the folder and run `launch-windows.bat`
+
 # Installing on Linux
 
 - Install `git`, `python3` via your OS package manager if they are not already installed (make sure to include `pip` and `venv` on distros that do not include them in python directly)
