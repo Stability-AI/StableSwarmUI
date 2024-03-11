@@ -220,7 +220,7 @@ public class T2IParamTypes
     public static T2IRegisteredParam<List<Image>> PromptImages;
     public static T2IRegisteredParam<bool> SaveIntermediateImages, DoNotSave, ControlNetPreviewOnly, RevisionZeroPrompt, SeamlessTileable, RemoveBackground, NoSeedIncrement, NoPreviews, VideoBoomerang;
 
-    public static T2IParamGroup GroupRevision, GroupCore, GroupVariation, GroupResolution, GroupInitImage, GroupRefiners, GroupControlNet,
+    public static T2IParamGroup GroupRevision, GroupCore, GroupVariation, GroupResolution, GroupSampling, GroupInitImage, GroupRefiners, GroupControlNet,
         GroupAdvancedModelAddons, GroupSwarmInternal, GroupFreeU, GroupRegionalPrompting, GroupAdvancedSampling, GroupVideo;
 
     /// <summary>(For extensions) list of functions that provide fake types for given type names.</summary>
@@ -281,6 +281,7 @@ public class T2IParamTypes
         Height = Register<int>(new("Height", "Image height, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
             "512", Min: 128, Max: 4096, Step: 32, Examples: ["512", "768", "1024"], OrderPriority: -9, ViewType: ParamViewType.POT_SLIDER, Group: GroupResolution
             ));
+        GroupSampling = new("Sampling", Toggles: false, Open: false, OrderPriority: -8);
         GroupInitImage = new("Init Image", Toggles: true, Open: false, OrderPriority: -5);
         InitImage = Register<Image>(new("Init Image", "Init-image, to edit an image using diffusion.\nThis process is sometimes called 'img2img' or 'Image To Image'.",
             "", OrderPriority: -5, Group: GroupInitImage, ChangeWeight: 2

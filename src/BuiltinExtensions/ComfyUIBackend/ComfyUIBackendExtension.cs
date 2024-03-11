@@ -281,12 +281,12 @@ public class ComfyUIBackendExtension : Extension
             Clean: (_, val) => CustomWorkflows.ContainsKey(val) ? $"PARSED%{val}%{ComfyUIWebAPI.ReadCustomWorkflow(val)["prompt"]}" : val,
             MetadataFormat: v => v.StartsWith("PARSED%") ? v.After("%").Before("%") : v
             ));
-        SamplerParam = T2IParamTypes.Register<string>(new("Sampler", "Sampler type (for ComfyUI)",
-            "euler", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup,
+        SamplerParam = T2IParamTypes.Register<string>(new("Sampler", "Sampler type (for ComfyUI)\nGenerally, 'Euler' is fine, but for SD1 and SDXL 'dpmpp_2m' is popular when paired with the 'karras' scheduler.",
+            "euler", Toggleable: true, FeatureFlag: "comfyui", Group: T2IParamTypes.GroupSampling,
             GetValues: (_) => Samplers
             ));
-        SchedulerParam = T2IParamTypes.Register<string>(new("Scheduler", "Scheduler type (for ComfyUI)",
-            "normal", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup,
+        SchedulerParam = T2IParamTypes.Register<string>(new("Scheduler", "Scheduler type (for ComfyUI)\nGoes with the Sampler parameter above.",
+            "normal", Toggleable: true, FeatureFlag: "comfyui", Group: T2IParamTypes.GroupSampling,
             GetValues: (_) => Schedulers
             ));
         AITemplateParam = T2IParamTypes.Register<bool>(new("Enable AITemplate", "If checked, enables AITemplate for ComfyUI generations (UNet only). Only compatible with some GPUs.",
