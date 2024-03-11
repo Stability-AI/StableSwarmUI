@@ -167,7 +167,10 @@ public class ImageBatchToolExtension : Extension
             }
             if (controlnet)
             {
-                param.Set(T2IParamTypes.ControlNetImage, image);
+                foreach (T2IParamTypes.ControlNetParamHolder controlnetParams in T2IParamTypes.Controlnets)
+                {
+                    param.Set(controlnetParams.Image, image);
+                }
             }
             tasks.Add(T2IEngine.CreateImageTask(param, $"{imageIndex}", claim, output, setError, isWS, Program.ServerSettings.Backends.PerRequestTimeoutMinutes,
                 (image, metadata) =>

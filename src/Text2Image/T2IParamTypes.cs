@@ -212,16 +212,31 @@ public class T2IParamTypes
     public static T2IRegisteredParam<string> Prompt, NegativePrompt, AspectRatio, BackendType, RefinerMethod, FreeUApplyTo, PersonalNote, VideoFormat, VideoResolution, UnsamplerPrompt, ImageFormat;
     public static T2IRegisteredParam<int> Images, Steps, Width, Height, BatchSize, ExactBackendID, VAETileSize, ClipStopAtLayer, VideoFrames, VideoMotionBucket, VideoFPS, VideoSteps, RefinerSteps, CascadeLatentCompression;
     public static T2IRegisteredParam<long> Seed, VariationSeed, WildcardSeed;
-    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, InitImageResetToNorm, RefinerControl, RefinerUpscale, ControlNetStrength, ReVisionStrength, AltResolutionHeightMult,
-        FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly, SamplerSigmaMin, SamplerSigmaMax, SamplerRho, ControlNetStart, ControlNetEnd, VideoAugmentationLevel, VideoCFG, VideoMinCFG;
-    public static T2IRegisteredParam<Image> InitImage, MaskImage, ControlNetImage;
-    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ControlNetModel, ReVisionModel, RegionalObjectInpaintingModel, VideoModel, RefinerVAE;
+    public static T2IRegisteredParam<double> CFGScale, VariationSeedStrength, InitImageCreativity, InitImageResetToNorm, RefinerControl, RefinerUpscale, ReVisionStrength, AltResolutionHeightMult,
+        FreeUBlock1, FreeUBlock2, FreeUSkip1, FreeUSkip2, GlobalRegionFactor, EndStepsEarly, SamplerSigmaMin, SamplerSigmaMax, SamplerRho, VideoAugmentationLevel, VideoCFG, VideoMinCFG;
+    public static T2IRegisteredParam<Image> InitImage, MaskImage;
+    public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ReVisionModel, RegionalObjectInpaintingModel, VideoModel, RefinerVAE;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
     public static T2IRegisteredParam<List<Image>> PromptImages;
     public static T2IRegisteredParam<bool> SaveIntermediateImages, DoNotSave, ControlNetPreviewOnly, RevisionZeroPrompt, SeamlessTileable, RemoveBackground, NoSeedIncrement, NoPreviews, VideoBoomerang;
 
-    public static T2IParamGroup GroupRevision, GroupCore, GroupVariation, GroupResolution, GroupSampling, GroupInitImage, GroupRefiners, GroupControlNet,
+    public static T2IParamGroup GroupRevision, GroupCore, GroupVariation, GroupResolution, GroupSampling, GroupInitImage, GroupRefiners,
         GroupAdvancedModelAddons, GroupSwarmInternal, GroupFreeU, GroupRegionalPrompting, GroupAdvancedSampling, GroupVideo;
+
+    public class ControlNetParamHolder
+    {
+        public T2IParamGroup Group;
+
+        public T2IRegisteredParam<Image> Image;
+
+        public T2IRegisteredParam<double> Strength, Start, End;
+
+        public T2IRegisteredParam<T2IModel> Model;
+
+        public string NameSuffix = "";
+    }
+
+    public static ControlNetParamHolder[] Controlnets = new ControlNetParamHolder[3];
 
     /// <summary>(For extensions) list of functions that provide fake types for given type names.</summary>
     public static List<Func<string, T2IParamInput, T2IParamType>> FakeTypeProviders = [];
@@ -331,22 +346,31 @@ public class T2IParamTypes
         {
             return ["None", .. Program.T2IModelSets["VAE"].ListModelsFor(s).Select(m => m.Name)];
         }
-        GroupControlNet = new("ControlNet", Toggles: true, Open: false, OrderPriority: -1);
-        ControlNetImage = Register<Image>(new("ControlNet Image Input", "The image to use as the input to ControlNet guidance.\nThis image will be preprocessed by the chosen preprocessor.\nIf ControlNet is enabled, but this input is not, Init Image will be used instead.",
-            "", Toggleable: true, FeatureFlag: "controlnet", Group: GroupControlNet, OrderPriority: 1, ChangeWeight: 2
-            ));
-        ControlNetModel = Register<T2IModel>(new("ControlNet Model", "The ControlNet model to use.",
-            "", FeatureFlag: "controlnet", Group: GroupControlNet, Subtype: "ControlNet", OrderPriority: 5, ChangeWeight: 5
-            ));
-        ControlNetStrength = Register<double>(new("ControlNet Strength", "Higher values make the ControlNet apply more strongly. Weaker values let the prompt overrule the ControlNet.",
-            "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, ViewType: ParamViewType.SLIDER, Group: GroupControlNet
-            ));
-        ControlNetStart = Register<double>(new("ControlNet Start", "When to start applying controlnet, as a fraction of steps.\nFor example, 0.5 starts applying halfway through. Must be less than End.\nExcluding early steps reduces the controlnet's impact on overall image structure.",
-            "0", IgnoreIf: "0", FeatureFlag: "controlnet", Min: 0, Max: 1, Step: 0.05, OrderPriority: 10, IsAdvanced: true, ViewType: ParamViewType.SLIDER, Group: GroupControlNet
-            ));
-        ControlNetEnd = Register<double>(new("ControlNet End", "When to stop applying controlnet, as a fraction of steps.\nFor example, 0.5 stops applying halfway through. Must be greater than Start.\nExcluding later steps reduces the controlnet's impact on finer details.",
-            "1", IgnoreIf: "1", FeatureFlag: "controlnet", Min: 0, Max: 1, Step: 0.05, OrderPriority: 11, IsAdvanced: true, ViewType: ParamViewType.SLIDER, Group: GroupControlNet
-            ));
+        for (int i = 1; i <= 3; i++)
+        {
+            string suffix = i switch { 1 => "", 2 => " Two", 3 => " Three", _ => "Error" };
+            T2IParamGroup group = new($"ControlNet{suffix}", Toggles: true, Open: false, IsAdvanced: i != 1, OrderPriority: -1 + i * 0.1);
+            Controlnets[i - 1] = new()
+            {
+                NameSuffix = suffix,
+                Group = group,
+                Image = Register<Image>(new($"ControlNet{suffix} Image Input", "The image to use as the input to ControlNet guidance.\nThis image will be preprocessed by the chosen preprocessor.\nIf ControlNet is enabled, but this input is not, Init Image will be used instead.",
+                    "", Toggleable: true, FeatureFlag: "controlnet", Group: group, OrderPriority: 1, ChangeWeight: 2
+                    )),
+                Model = Register<T2IModel>(new($"ControlNet{suffix} Model", "The ControlNet model to use.",
+                    "", FeatureFlag: "controlnet", Group: group, Subtype: "ControlNet", OrderPriority: 5, ChangeWeight: 5
+                    )),
+                Strength = Register<double>(new($"ControlNet{suffix} Strength", "Higher values make the ControlNet apply more strongly. Weaker values let the prompt overrule the ControlNet.",
+                    "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, ViewType: ParamViewType.SLIDER, Group: group
+                    )),
+                Start = Register<double>(new($"ControlNet{suffix} Start", "When to start applying controlnet, as a fraction of steps.\nFor example, 0.5 starts applying halfway through. Must be less than End.\nExcluding early steps reduces the controlnet's impact on overall image structure.",
+                    "0", IgnoreIf: "0", FeatureFlag: "controlnet", Min: 0, Max: 1, Step: 0.05, OrderPriority: 10, IsAdvanced: true, ViewType: ParamViewType.SLIDER, Group: group
+                    )),
+                End = Register<double>(new($"ControlNet{suffix} End", "When to stop applying controlnet, as a fraction of steps.\nFor example, 0.5 stops applying halfway through. Must be greater than Start.\nExcluding later steps reduces the controlnet's impact on finer details.",
+                    "1", IgnoreIf: "1", FeatureFlag: "controlnet", Min: 0, Max: 1, Step: 0.05, OrderPriority: 11, IsAdvanced: true, ViewType: ParamViewType.SLIDER, Group: group
+                    )),
+            };
+        }
         ControlNetPreviewOnly = Register<bool>(new("ControlNet Preview Only", "(For API usage) If enabled, requests preview output from ControlNet and no image generation at all.",
             "false", IgnoreIf: "false", FeatureFlag: "controlnet", VisibleNormally: false
             ));

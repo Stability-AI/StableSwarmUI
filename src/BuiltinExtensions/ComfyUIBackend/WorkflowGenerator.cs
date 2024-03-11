@@ -463,118 +463,123 @@ public class WorkflowGenerator
         #region ControlNet
         AddStep(g =>
         {
-            if (g.UserInput.TryGet(T2IParamTypes.ControlNetModel, out T2IModel controlModel)
-                && g.UserInput.TryGet(T2IParamTypes.ControlNetStrength, out double controlStrength))
+            Image firstImage = g.UserInput.Get(T2IParamTypes.Controlnets[0].Image) ?? g.UserInput.Get(T2IParamTypes.InitImage);
+            for (int i = 0; i < 3; i++)
             {
-                string imageInput = "${controlnetimageinput}";
-                if (!g.UserInput.TryGet(T2IParamTypes.ControlNetImage, out Image img))
+                T2IParamTypes.ControlNetParamHolder controlnetParams = T2IParamTypes.Controlnets[i];
+                if (g.UserInput.TryGet(controlnetParams.Model, out T2IModel controlModel)
+                    && g.UserInput.TryGet(controlnetParams.Strength, out double controlStrength))
                 {
-                    if (!g.UserInput.TryGet(T2IParamTypes.InitImage, out img))
+                    string imageInput = "${" + controlnetParams.Image.Type.ID + "}";
+                    if (!g.UserInput.TryGet(controlnetParams.Image, out Image img))
                     {
-                        Logs.Verbose($"Following error relates to parameters: {g.UserInput.ToJSON().ToDenseDebugString()}");
-                        throw new InvalidDataException("Must specify either a ControlNet Image, or Init image. Or turn off ControlNet if not wanted.");
+                        if (firstImage is null)
+                        {
+                            Logs.Verbose($"Following error relates to parameters: {g.UserInput.ToJSON().ToDenseDebugString()}");
+                            throw new InvalidDataException("Must specify either a ControlNet Image, or Init image. Or turn off ControlNet if not wanted.");
+                        }
+                        img = firstImage;
                     }
-                    imageInput = "${initimage}";
-                }
-                string imageNode = g.CreateLoadImageNode(img, imageInput, true);
-                if (!g.UserInput.TryGet(ComfyUIBackendExtension.ControlNetPreprocessorParam, out string preprocessor))
-                {
-                    preprocessor = "none";
-                    string wantedPreproc = controlModel.Metadata?.Preprocesor;
-                    if (!string.IsNullOrWhiteSpace(wantedPreproc))
+                    string imageNode = g.CreateLoadImageNode(img, imageInput, true);
+                    if (!g.UserInput.TryGet(ComfyUIBackendExtension.ControlNetPreprocessorParams[i], out string preprocessor))
                     {
-                        string[] procs = [.. ComfyUIBackendExtension.ControlNetPreprocessors.Keys];
-                        bool getBestFor(string phrase)
+                        preprocessor = "none";
+                        string wantedPreproc = controlModel.Metadata?.Preprocesor;
+                        if (!string.IsNullOrWhiteSpace(wantedPreproc))
                         {
-                            string result = procs.FirstOrDefault(m => m.ToLowerFast().Contains(phrase.ToLowerFast()));
-                            if (result is not null)
+                            string[] procs = [.. ComfyUIBackendExtension.ControlNetPreprocessors.Keys];
+                            bool getBestFor(string phrase)
                             {
-                                preprocessor = result;
-                                return true;
+                                string result = procs.FirstOrDefault(m => m.ToLowerFast().Contains(phrase.ToLowerFast()));
+                                if (result is not null)
+                                {
+                                    preprocessor = result;
+                                    return true;
+                                }
+                                return false;
                             }
-                            return false;
-                        }
-                        if (wantedPreproc == "depth")
-                        {
-                            if (!getBestFor("midas-depthmap") && !getBestFor("depthmap") && !getBestFor("depth") && !getBestFor("midas") && !getBestFor("zoe") && !getBestFor("leres"))
+                            if (wantedPreproc == "depth")
                             {
-                                throw new InvalidDataException("No preprocessor found for depth - please install a Comfy extension that adds eg MiDaS depthmap preprocessors, or select 'none' if using a manual depthmap");
+                                if (!getBestFor("midas-depthmap") && !getBestFor("depthmap") && !getBestFor("depth") && !getBestFor("midas") && !getBestFor("zoe") && !getBestFor("leres"))
+                                {
+                                    throw new InvalidDataException("No preprocessor found for depth - please install a Comfy extension that adds eg MiDaS depthmap preprocessors, or select 'none' if using a manual depthmap");
+                                }
                             }
-                        }
-                        else if (wantedPreproc == "canny")
-                        {
-                            if (!getBestFor("cannyedge") && !getBestFor("canny"))
+                            else if (wantedPreproc == "canny")
                             {
-                                preprocessor = "none";
+                                if (!getBestFor("cannyedge") && !getBestFor("canny"))
+                                {
+                                    preprocessor = "none";
+                                }
                             }
-                        }
-                        else if (wantedPreproc == "sketch")
-                        {
-                            if (!getBestFor("sketch") && !getBestFor("lineart") && !getBestFor("scribble"))
+                            else if (wantedPreproc == "sketch")
                             {
-                                preprocessor = "none";
+                                if (!getBestFor("sketch") && !getBestFor("lineart") && !getBestFor("scribble"))
+                                {
+                                    preprocessor = "none";
+                                }
                             }
                         }
                     }
-                }
-                if (preprocessor.ToLowerFast() != "none")
-                {
-                    JToken objectData = ComfyUIBackendExtension.ControlNetPreprocessors[preprocessor] ?? throw new InvalidDataException($"ComfyUI backend does not have a preprocessor named '{preprocessor}'");
-                    string preProcNode = g.CreateNode(preprocessor, (_, n) =>
+                    if (preprocessor.ToLowerFast() != "none")
                     {
-                        n["inputs"] = new JObject()
+                        JToken objectData = ComfyUIBackendExtension.ControlNetPreprocessors[preprocessor] ?? throw new InvalidDataException($"ComfyUI backend does not have a preprocessor named '{preprocessor}'");
+                        string preProcNode = g.CreateNode(preprocessor, (_, n) =>
                         {
-                            ["image"] = new JArray() { $"{imageNode}", 0 }
-                        };
-                        foreach ((string key, JToken data) in (JObject)objectData["input"]["required"])
-                        {
-                            if (data.Count() == 2 && data[1] is JObject settings && settings.TryGetValue("default", out JToken defaultValue))
+                            n["inputs"] = new JObject()
                             {
-                                n["inputs"][key] = defaultValue;
-                            }
-                        }
-                        if (((JObject)objectData["input"]).TryGetValue("optional", out JToken optional))
-                        {
-                            foreach ((string key, JToken data) in (JObject)optional)
+                                ["image"] = new JArray() { $"{imageNode}", 0 }
+                            };
+                            foreach ((string key, JToken data) in (JObject)objectData["input"]["required"])
                             {
                                 if (data.Count() == 2 && data[1] is JObject settings && settings.TryGetValue("default", out JToken defaultValue))
                                 {
                                     n["inputs"][key] = defaultValue;
                                 }
                             }
+                            if (((JObject)objectData["input"]).TryGetValue("optional", out JToken optional))
+                            {
+                                foreach ((string key, JToken data) in (JObject)optional)
+                                {
+                                    if (data.Count() == 2 && data[1] is JObject settings && settings.TryGetValue("default", out JToken defaultValue))
+                                    {
+                                        n["inputs"][key] = defaultValue;
+                                    }
+                                }
+                            }
+                        });
+                        g.NodeHelpers["controlnet_preprocessor"] = $"{preProcNode}";
+                        if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
+                        {
+                            g.FinalImageOut = [$"{preProcNode}", 0];
+                            g.CreateImageSaveNode(g.FinalImageOut, "9");
+                            g.SkipFurtherSteps = true;
+                            return;
                         }
-                    });
-                    g.NodeHelpers["controlnet_preprocessor"] = $"{preProcNode}";
-                    if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
-                    {
-                        g.FinalImageOut = [$"{preProcNode}", 0];
-                        g.CreateImageSaveNode(g.FinalImageOut, "9");
-                        g.SkipFurtherSteps = true;
-                        return;
+                        imageNode = preProcNode;
                     }
-                    imageNode = preProcNode;
+                    else if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
+                    {
+                        throw new InvalidDataException("Cannot preview a ControlNet preprocessor without any preprocessor enabled.");
+                    }
+                    // TODO: Preprocessor
+                    string controlModelNode = g.CreateNode("ControlNetLoader", new JObject()
+                    {
+                        ["control_net_name"] = controlModel.ToString(g.ModelFolderFormat)
+                    });
+                    string applyNode = g.CreateNode("ControlNetApplyAdvanced", new JObject()
+                    {
+                        ["positive"] = g.FinalPrompt,
+                        ["negative"] = g.FinalNegativePrompt,
+                        ["control_net"] = new JArray() { $"{controlModelNode}", 0 },
+                        ["image"] = new JArray() { $"{imageNode}", 0 },
+                        ["strength"] = controlStrength,
+                        ["start_percent"] = g.UserInput.Get(controlnetParams.Start, 0),
+                        ["end_percent"] = g.UserInput.Get(controlnetParams.End, 1)
+                    });
+                    g.FinalPrompt = [$"{applyNode}", 0];
+                    g.FinalNegativePrompt = [$"{applyNode}", 1];
                 }
-                else if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
-                {
-                    throw new InvalidDataException("Cannot preview a ControlNet preprocessor without any preprocessor enabled.");
-                }
-                // TODO: Preprocessor
-                string controlModelNode = g.CreateNode("ControlNetLoader", new JObject()
-                {
-                    ["control_net_name"] = controlModel.ToString(g.ModelFolderFormat)
-                });
-                string applyNode = g.CreateNode("ControlNetApplyAdvanced", new JObject()
-                {
-                    ["positive"] = g.FinalPrompt,
-                    ["negative"] = g.FinalNegativePrompt,
-                    ["control_net"] = new JArray() { $"{controlModelNode}", 0 },
-                    ["image"] = new JArray() { $"{imageNode}", 0 },
-                    ["strength"] = controlStrength,
-                    ["start_percent"] = g.UserInput.Get(T2IParamTypes.ControlNetStart, 0),
-                    ["end_percent"] = g.UserInput.Get(T2IParamTypes.ControlNetEnd, 1)
-                });
-                g.FinalPrompt = [$"{applyNode}", 0];
-                g.FinalNegativePrompt = [$"{applyNode}", 1];
             }
         }, -6);
         #endregion

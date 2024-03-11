@@ -95,10 +95,16 @@ namespace StableSwarmUI.Text2Image
                         }
                         return true;
                     }
-                    if (!requireModel(T2IParamTypes.Model, "Stable-Diffusion") || !requireModel(T2IParamTypes.RefinerModel, "Stable-Diffusion")
-                        || !requireModel(T2IParamTypes.VAE, "VAE") || !requireModel(T2IParamTypes.ControlNetModel, "ControlNet"))
+                    if (!requireModel(T2IParamTypes.Model, "Stable-Diffusion") || !requireModel(T2IParamTypes.RefinerModel, "Stable-Diffusion") || !requireModel(T2IParamTypes.VAE, "VAE"))
                     {
                         return false;
+                    }
+                    foreach (T2IParamTypes.ControlNetParamHolder controlnet in T2IParamTypes.Controlnets)
+                    {
+                        if (!requireModel(controlnet.Model, "ControlNet"))
+                        {
+                            return false;
+                        }
                     }
                     if (user_input.TryGet(T2IParamTypes.Loras, out List<string> loras) && backend.Backend.Models.TryGetValue("LoRA", out List<string> loraModels))
                     {
@@ -161,7 +167,10 @@ namespace StableSwarmUI.Text2Image
                         user_input = user_input.Clone();
                         user_input.Set(T2IParamTypes.InitImage, multiImg);
                         user_input.Set(T2IParamTypes.InitImageCreativity, 0.7); // TODO: Configurable
-                        user_input.Remove(T2IParamTypes.ControlNetModel);
+                        foreach (T2IParamTypes.ControlNetParamHolder controlnet in T2IParamTypes.Controlnets)
+                        {
+                            user_input.Remove(controlnet.Model);
+                        }
                     }
                 }
             }
