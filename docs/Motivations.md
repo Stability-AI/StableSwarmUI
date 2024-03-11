@@ -8,7 +8,7 @@ This project is built with a C# backend server to maximize performance while onl
 
 It is also hoped that building Stable Diffusion tools in C# will enable a wider range of developers to make use of Stable Diffusion (vs being limited to the Python ecosystem).
 
-\* This is not meant to be an insult to python, simply an explanation of why C# was chosen as being more ideal for the goals of the project than python is. [Some users have disagreed](#3) with this reasoning.
+\* This is not meant to be an insult to python, simply an explanation of why C# was chosen as being more ideal for the goals of the project than python is. [Some users have disagreed](https://github.com/Stability-AI/StableSwarmUI/issues/3) with this reasoning.
 
 ## Modularity
 
