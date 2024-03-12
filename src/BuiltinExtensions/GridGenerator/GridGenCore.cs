@@ -597,12 +597,15 @@ public partial class GridGenCore
         public string BuildHtml(string footerExtra)
         {
             string html = File.ReadAllText($"{ASSETS_DIR}/page.html");
-            string xSelect = "";
-            string ySelect = "";
-            string x2Select = RadioButtonHtml("x2_axis_selector", "x2_none", "None", "None");
-            string y2Select = RadioButtonHtml("y2_axis_selector", "y2_none", "None", "None");
-            string content = "<div style=\"margin: auto; width: fit-content;\"><table class=\"sel_table\">\n";
-            string advancedSettings = "";
+            StringBuilder xSelect = new(1024);
+            StringBuilder ySelect = new(1024);
+            StringBuilder x2Select = new(1024);
+            x2Select.Append(RadioButtonHtml("x2_axis_selector", "x2_none", "None", "None"));
+            StringBuilder y2Select = new(1024);
+            y2Select.Append(RadioButtonHtml("y2_axis_selector", "y2_none", "None", "None"));
+            StringBuilder content = new(1024);
+            content.Append("<div style=\"margin: auto; width: fit-content;\"><table class=\"sel_table\">\n");
+            StringBuilder advancedSettings = new(1024);
             bool primary = true;
             foreach (Axis axis in Grid.Axes)
             {
@@ -610,14 +613,14 @@ public partial class GridGenCore
                 {
                     string axisDescrip = CleanForWeb(axis.Description ?? "");
                     string trClass = primary ? "primary" : "secondary";
-                    content += $"<tr class=\"{trClass}\">\n<td>\n<h4>{EscapeHtml(axis.Title)}</h4>\n";
-                    advancedSettings += $"\n<h4>{axis.Title}</h4><div class=\"timer_box\">Auto cycle every <input style=\"width:30em;\" autocomplete=\"off\" type=\"range\" min=\"0\" max=\"360\" value=\"0\" class=\"form-range timer_range\" id=\"range_tablist_{axis.ID}\"><label class=\"form-check-label\" for=\"range_tablist_{axis.ID}\" id=\"label_range_tablist_{axis.ID}\">0 seconds</label></div>\nShow value: ";
+                    content.Append($"<tr class=\"{trClass}\">\n<td>\n<h4>{EscapeHtml(axis.Title)}</h4>\n");
+                    advancedSettings.Append($"\n<h4>{axis.Title}</h4><div class=\"timer_box\">Auto cycle every <input style=\"width:30em;\" autocomplete=\"off\" type=\"range\" min=\"0\" max=\"360\" value=\"0\" class=\"form-range timer_range\" id=\"range_tablist_{axis.ID}\"><label class=\"form-check-label\" for=\"range_tablist_{axis.ID}\" id=\"label_range_tablist_{axis.ID}\">0 seconds</label></div>\nShow value: ");
                     string axisClass = "axis_table_cell";
                     if (axisDescrip.Trim().Length == 0)
                     {
                         axisClass += " emptytab";
                     }
-                    content += $"<div class=\"{axisClass}\">{axisDescrip}</div></td>\n<td><ul class=\"nav nav-tabs\" role=\"tablist\" id=\"tablist_{axis.ID}\">\n";
+                    content.Append($"<div class=\"{axisClass}\">{axisDescrip}</div></td>\n<td><ul class=\"nav nav-tabs\" role=\"tablist\" id=\"tablist_{axis.ID}\">\n");
                     primary = !primary;
                     bool isFirst = axis.DefaultID is null;
                     foreach (AxisValue val in axis.Values)
@@ -630,11 +633,11 @@ public partial class GridGenCore
                         string active = isFirst ? " active" : "";
                         isFirst = false;
                         string descrip = CleanForWeb(val.Description ?? "");
-                        content += $"<li class=\"nav-item\" role=\"presentation\"><a class=\"nav-link{active}\" data-bs-toggle=\"tab\" href=\"#tab_{axis.ID}__{val.Key}\" id=\"clicktab_{axis.ID}__{val.Key}\" aria-selected=\"{selected}\" role=\"tab\" title=\"{EscapeHtml(val.Title)}: {descrip}\">{EscapeHtml(val.Title)}</a></li>\n";
-                        advancedSettings += $"&nbsp;<div class=\"advanced-checkbox\"><input class=\"form-check-input\" type=\"checkbox\" autocomplete=\"off\" id=\"showval_{axis.ID}__{val.Key}\" checked=\"true\" onchange=\"javascript:toggleShowVal('{axis.ID}', '{val.Key}')\"> <label class=\"form-check-label\" for=\"showval_{axis.ID}__{val.Key}\" title=\"Uncheck this to hide '{val.Title}' from the page.\">{val.Title}</label></div>";
+                        content.Append($"<li class=\"nav-item\" role=\"presentation\"><a class=\"nav-link{active}\" data-bs-toggle=\"tab\" href=\"#tab_{axis.ID}__{val.Key}\" id=\"clicktab_{axis.ID}__{val.Key}\" aria-selected=\"{selected}\" role=\"tab\" title=\"{EscapeHtml(val.Title)}: {descrip}\">{EscapeHtml(val.Title)}</a></li>\n");
+                        advancedSettings.Append($"&nbsp;<div class=\"advanced-checkbox\"><input class=\"form-check-input\" type=\"checkbox\" autocomplete=\"off\" id=\"showval_{axis.ID}__{val.Key}\" checked=\"true\" onchange=\"javascript:toggleShowVal('{axis.ID}', '{val.Key}')\"> <label class=\"form-check-label\" for=\"showval_{axis.ID}__{val.Key}\" title=\"Uncheck this to hide '{val.Title}' from the page.\">{val.Title}</label></div>");
                     }
-                    advancedSettings += $"&nbsp;&nbsp;<button class=\"submit\" onclick=\"javascript:toggleShowAllAxis('{axis.ID}')\">Toggle All</button>";
-                    content += "</ul>\n<div class=\"tab-content\">\n";
+                    advancedSettings.Append($"&nbsp;&nbsp;<button class=\"submit\" onclick=\"javascript:toggleShowAllAxis('{axis.ID}')\">Toggle All</button>");
+                    content.Append("</ul>\n<div class=\"tab-content\">\n");
                     isFirst = axis.DefaultID is null;
                     foreach (AxisValue val in axis.Values)
                     {
@@ -649,27 +652,27 @@ public partial class GridGenCore
                         {
                             active += " emptytab";
                         }
-                        content += $"<div class=\"tab-pane{active}\" id=\"tab_{axis.ID}__{val.Key}\" role=\"tabpanel\"><div class=\"tabval_subdiv\">{descrip}</div></div>\n";
+                        content.Append($"<div class=\"tab-pane{active}\" id=\"tab_{axis.ID}__{val.Key}\" role=\"tabpanel\"><div class=\"tabval_subdiv\">{descrip}</div></div>\n");
                     }
-                    content += "</div></td></tr>\n";
-                    xSelect += RadioButtonHtml("x_axis_selector", $"x_{axis.ID}", axisDescrip, axis.Title);
-                    ySelect += RadioButtonHtml("y_axis_selector", $"y_{axis.ID}", axisDescrip, axis.Title);
-                    x2Select += RadioButtonHtml("x2_axis_selector", $"x2_{axis.ID}", axisDescrip, axis.Title);
-                    y2Select += RadioButtonHtml("y2_axis_selector", $"y2_{axis.ID}", axisDescrip, axis.Title);
+                    content.Append("</div></td></tr>\n");
+                    xSelect.Append(RadioButtonHtml("x_axis_selector", $"x_{axis.ID}", axisDescrip, axis.Title));
+                    ySelect.Append(RadioButtonHtml("y_axis_selector", $"y_{axis.ID}", axisDescrip, axis.Title));
+                    x2Select.Append(RadioButtonHtml("x2_axis_selector", $"x2_{axis.ID}", axisDescrip, axis.Title));
+                    y2Select.Append(RadioButtonHtml("y2_axis_selector", $"y2_{axis.ID}", axisDescrip, axis.Title));
                 }
                 catch (Exception ex)
                 {
                     throw new Exception($"Failed to build HTML for axis '{axis.ID}': {ex}");
                 }
             }
-            content += "</table>\n<div class=\"axis_selectors\">";
-            content += AxisBar("X Axis", xSelect);
-            content += AxisBar("Y Axis", ySelect);
-            content += AxisBar("X Super-Axis", x2Select);
-            content += AxisBar("Y Super-Axis", y2Select);
-            content += "</div></div>\n";
+            content.Append("</table>\n<div class=\"axis_selectors\">");
+            content.Append(AxisBar("X Axis", xSelect.ToString()));
+            content.Append(AxisBar("Y Axis", ySelect.ToString()));
+            content.Append(AxisBar("X Super-Axis", x2Select.ToString()));
+            content.Append(AxisBar("Y Super-Axis", y2Select.ToString()));
+            content.Append("</div></div>\n");
             html = html.Replace("{TITLE}", Grid.Title).Replace("{CLEAN_DESCRIPTION}", CleanForWeb(Grid.Description ?? "")).Replace("{DESCRIPTION}", Grid.Description ?? "")
-                .Replace("{CONTENT}", content).Replace("{ADVANCED_SETTINGS}", advancedSettings).Replace("{AUTHOR}", Grid.Author).Replace("{EXTRA_FOOTER}", EXTRA_FOOTER + footerExtra).Replace("{VERSION}", Utilities.Version);
+                .Replace("{CONTENT}", content.ToString()).Replace("{ADVANCED_SETTINGS}", advancedSettings.ToString()).Replace("{AUTHOR}", Grid.Author).Replace("{EXTRA_FOOTER}", EXTRA_FOOTER + footerExtra).Replace("{VERSION}", Utilities.Version);
             return html;
         }
 
