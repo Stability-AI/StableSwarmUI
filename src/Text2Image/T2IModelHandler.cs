@@ -302,7 +302,13 @@ public class T2IModelHandler
 
     public static readonly string[] AutoImageFormatSuffixes = [".jpg", ".png", ".preview.png", ".preview.jpg", ".jpeg", ".preview.jpeg", ".thumb.jpg", ".thumb.png"];
 
-    public static readonly string[] AltModelMetadataJsonFileSuffixes = [".json", ".cm-info.json"];
+    public static readonly string[] AltModelMetadataJsonFileSuffixes = [".json", ".cm-info.json", ".civitai.info"];
+
+    public static readonly string[] AltMetadataDescriptionKeys = ["VersionName", "VersionDescription", "ModelDescription", "description"];
+
+    public static readonly string[] AltMetadataTriggerWordsKeys = ["TrainedWords", "trainedWords"];
+
+    public static readonly string[] AltMetadataNameKeys = ["UserTitle", "ModelName", "name"];
 
     public string GetAutoFormatImage(T2IModel model)
     {
@@ -377,22 +383,50 @@ public class T2IModelHandler
                 return;
             }
             string altModelPrefix = $"{FolderPath}/{model.Name.BeforeLast('.')}";
-            string altDescription = null, altName = null, altTriggerPhrase = null;
+            string altDescription = "", altName = null;
+            HashSet<string> triggerPhrases = [];
             foreach (string altSuffix in AltModelMetadataJsonFileSuffixes)
             {
                 if (File.Exists(altModelPrefix + altSuffix))
                 {
                     JObject altMetadata = File.ReadAllText(altModelPrefix + altSuffix).ParseToJson();
-                    altName = altMetadata?.Value<string>("UserTitle") ?? altMetadata?.Value<string>("ModelName");
-                    altDescription = altMetadata?.Value<string>("VersionName") + altMetadata?.Value<string>("VersionDescription") + altMetadata?.Value<string>("ModelDescription");
-                    string[] trainedWords = altMetadata.TryGetValue("TrainedWords", out JToken trainedWordsToken) ? trainedWordsToken.ToObject<string[]>() : null;
-                    if (trainedWords is not null && trainedWords.Length > 0)
+                    if (altMetadata.TryGetValue("model", out JToken modelSection) && modelSection is JObject modelSectionObj && modelSectionObj.TryGetValue("name", out JToken subNameTok))
                     {
-                        altTriggerPhrase = trainedWords.JoinString(", ");
+                        altName ??= subNameTok.Value<string>();
+                    }
+                    foreach (string nameKey in AltMetadataNameKeys)
+                    {
+                        if (altMetadata.TryGetValue(nameKey, out JToken nameTok) && nameTok.Type != JTokenType.Null)
+                        {
+                            altName ??= nameTok.Value<string>();
+                        }
+                    }
+                    foreach (string descKey in AltMetadataDescriptionKeys)
+                    {
+                        if (altMetadata.TryGetValue(descKey, out JToken descTok) && descTok.Type != JTokenType.Null)
+                        {
+                            altDescription += descTok.Value<string>() + "\n";
+                        }
+                    }
+                    foreach (string wordsKey in AltMetadataTriggerWordsKeys)
+                    {
+                        if (altMetadata.TryGetValue(wordsKey, out JToken wordsTok) && wordsTok.Type != JTokenType.Null)
+                        {
+                            string[] trainedWords = wordsTok.ToObject<string[]>();
+                            if (trainedWords is not null && trainedWords.Length > 0)
+                            {
+                                triggerPhrases.UnionWith(trainedWords);
+                            }
+                        }
+                    }
+                    if (altMetadata.TryGetValue("activation text", out JToken actTok) && actTok.Type != JTokenType.Null)
+                    {
+                        triggerPhrases.Add(actTok.Value<string>());
                     }
                     break;
                 }
             }
+            string altTriggerPhrase = triggerPhrases.JoinString(", ");
             JObject metaHeader = headerData["__metadata__"] as JObject;
             T2IModelClass clazz = T2IModelClassSorter.IdentifyClassFor(model, headerData);
             string img = metaHeader?.Value<string>("modelspec.thumbnail") ?? metaHeader?.Value<string>("preview_image");
