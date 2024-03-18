@@ -75,6 +75,7 @@ public class WorkflowGenerator
      *
      * 100+: Dynamic
      * 1500+: LoRA Loaders (Stable-Dynamic)
+     * 50,000+: Intermediate Image Saves (Stable-Dynamic)
      */
 
     static WorkflowGenerator()
@@ -730,7 +731,7 @@ public class WorkflowGenerator
             {
                 if (g.UserInput.Get(T2IParamTypes.SaveIntermediateImages, false))
                 {
-                    g.CreateImageSaveNode(g.FinalImageOut);
+                    g.CreateImageSaveNode(g.FinalImageOut, g.GetStableDynamicID(50000, 0));
                 }
                 PromptRegion negativeRegion = new(g.UserInput.Get(T2IParamTypes.NegativePrompt, ""));
                 PromptRegion.Part[] negativeParts = negativeRegion.Parts.Where(p => p.Type == PromptRegion.PartType.Segment).ToArray();
@@ -947,7 +948,7 @@ public class WorkflowGenerator
                             ["quality"] = 95,
                             ["method"] = "default",
                             ["format"] = format
-                        });
+                        }, g.GetStableDynamicID(50000, 0));
                     }
                     if (method == "RIFE")
                     {

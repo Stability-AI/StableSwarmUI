@@ -315,9 +315,9 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                                 type = Image.ImageType.VIDEO;
                             }
                             bool isReal = true;
-                            if (currentNode is not null && int.TryParse(currentNode, out int nodeIdNum) && nodeIdNum < 100 && nodeIdNum != 9)
+                            if (currentNode is not null && int.TryParse(currentNode, out int nodeIdNum) && ((nodeIdNum < 100 && nodeIdNum != 9) || nodeIdNum >= 50000))
                             {
-                                // Reserved nodes that aren't the final output are intermediate outputs.
+                                // Reserved nodes that aren't the final output are intermediate outputs, or nodes in the 50,000+ range.
                                 isReal = false;
                             }
                             if (Program.ServerSettings.AddDebugData)
