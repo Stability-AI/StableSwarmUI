@@ -230,7 +230,7 @@ function alignImageDataFormat() {
     let width = Math.min(imgWidth, height * ratio);
     let remainingWidth = curImg.offsetWidth - width - 20;
     img.style.maxWidth = `calc(min(100%, ${width}px))`;
-    if (remainingWidth > 25 * 16) {
+    if (remainingWidth > 30 * 16) {
         extrasWrapper.style.width = `${remainingWidth}px`;
         extrasWrapper.style.maxWidth = `${remainingWidth}px`;
         extrasWrapper.style.display = 'inline-block';
@@ -240,7 +240,7 @@ function alignImageDataFormat() {
         extrasWrapper.style.width = '100%';
         extrasWrapper.style.maxWidth = `100%`;
         extrasWrapper.style.display = 'block';
-        img.style.maxHeight = `calc(max(15rem, 100% - 5rem))`;
+        img.style.maxHeight = `calc(max(15rem, 100% - 5.1rem))`;
     }
 }
 
