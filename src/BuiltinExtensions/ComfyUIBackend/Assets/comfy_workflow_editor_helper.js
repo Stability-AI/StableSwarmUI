@@ -233,6 +233,7 @@ function comfyBuildParams(callback) {
         let nodeLabelPaths = {};
         let nodeIsRandomize = {};
         let claimedByPrimitives = [];
+        let doAutoClaim = true;
         for (let node of workflow.nodes) {
             if (node.title) {
                 labelAlterations[`${node.id}`] = node.title;
@@ -241,6 +242,9 @@ function comfyBuildParams(callback) {
             let isRandom = node.widgets_values && "includes" in node.widgets_values && node.widgets_values.includes('randomize');
             if (isRandom) {
                 nodeIsRandomize[`${node.id}`] = true;
+            }
+            if (node.type.startsWith("SwarmInput")) {
+                doAutoClaim = false;
             }
             if (node.type == 'PrimitiveNode' && node.title) {
                 let colon = node.title.indexOf(':');
@@ -364,6 +368,60 @@ function comfyBuildParams(callback) {
             }
             else if (groupLabel.includes('KSampler')) {
                 priority = -5;
+            }
+            if (node.class_type.startsWith('SwarmInput') && node.class_type != 'SwarmInputGroup') {
+                let type = '';
+                switch (node.class_type) {
+                    case 'SwarmInputInteger': type = 'integer'; break;
+                    case 'SwarmInputFloat': type = 'decimal'; break;
+                    case 'SwarmInputText': type = 'text'; break;
+                    case 'SwarmInputModelName': type = 'model'; break;
+                    case 'SwarmInputDropdown': type = 'dropdown'; break;
+                    case 'SwarmInputBoolean': type = 'boolean'; break;
+                    default: throw new Error(`Unknown SwarmInput type ${node.class_type}`);
+                }
+                let inputIdDirect = node.inputs['raw_id'] || cleanParamName(node.inputs['title']);
+                let inputId = inputIdDirect;
+                let counter = 0;
+                while (inputId in params) {
+                    inputId = `${inputIdDirect}${numberToLetters(counter++)}`;
+                }
+                let groupObj = { name: 'Ungrouped', id: 'ungrouped', open: true, priority: 0, advanced: false, toggles: false, do_not_save: false };
+                if (node.inputs.group) {
+                    let groupData = prompt[node.inputs.group[0]];
+                    console.log(groupData)
+                    groupObj = {
+                        name: groupData.inputs.title,
+                        id: cleanParamName(groupData.inputs.title),
+                        open: groupData.inputs.open_by_default,
+                        priority: groupData.inputs.order_priority,
+                        advanced: groupData.inputs.is_advanced,
+                        toggles: false,
+                        do_not_save: false
+                    };
+                }
+                params[inputId] = {
+                    name: node.inputs['title'],
+                    id: inputId,
+                    type: type,
+                    description: node.inputs['description'],
+                    default: node.inputs['value'],
+                    values: null,
+                    view_type: node.inputs['view_type'],
+                    min: node.inputs['min'] || 0,
+                    max: node.inputs['max'] || 0,
+                    view_max: node.inputs['view_max'] || 0,
+                    step: node.inputs['step'] || 0,
+                    visible: true,
+                    toggleable: false,
+                    priority: node.inputs['order_priority'],
+                    advanced: node.inputs['is_advanced'],
+                    feature_flag: null,
+                    do_not_save: false,
+                    revalueGetter: null,
+                    no_popover: true,
+                    group: groupObj
+                };
             }
             function injectType(id, type) {
                 if (id.startsWith(inputPrefix)) {
@@ -551,36 +609,38 @@ function comfyBuildParams(callback) {
                 node.inputs[fieldName] = numeric ? "%%_COMFYFIXME_${" + actualId + ":" + val + "}_ENDFIXME_%%" : "${" + actualId + ":" + val.replaceAll('${', '(').replaceAll('}', ')') + "}";
                 return result;
             }
-            if (claimOnce('EmptyLatentImage', 'width', 'width', true) && claimOnce('EmptyLatentImage', 'height', 'height', true) && claimOnce('EmptyLatentImage', 'batchsize', 'batch_size', true)) {
-                defaultParamsRetain.push('aspectratio');
-                defaultParamValue['aspectratio'] = 'Custom';
-                continue;
-            }
-            claimOnce('KSampler', 'seed', 'seed', true);
-            claimOnce('KSampler', 'steps', 'steps', true);
-            claimOnce('KSampler', 'sampler', 'sampler_name', false);
-            claimOnce('KSampler', 'scheduler', 'scheduler', false);
-            claimOnce('KSampler', 'cfg_scale', 'cfg', true);
-            claimOnce('KSamplerAdvanced', 'seed', 'noise_seed', true);
-            claimOnce('KSamplerAdvanced', 'steps', 'steps', true);
-            claimOnce('KSamplerAdvanced', 'sampler', 'sampler_name', false);
-            claimOnce('KSamplerAdvanced', 'scheduler', 'scheduler', false);
-            claimOnce('KSamplerAdvanced', 'cfg_scale', 'cfg', true);
-            claimOnce('SwarmLoadImageB64', 'init_image', 'image_base64', false);
-            claimOnce('LoadImage', 'initimage', 'image', false);
-            claimOnce('SwarmLoraLoader', 'loras', 'lora_names', false);
-            claimOnce('SwarmLoraLoader', 'loraweights', 'lora_weights', false);
-            if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Positive Prompt") && !defaultParamsRetain.includes('prompt') && typeof node.inputs.text == 'string') {
-                defaultParamsRetain.push('prompt');
-                defaultParamValue['prompt'] = node.inputs.text;
-                node.inputs.text = "${prompt}";
-                continue;
-            }
-            else if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Negative Prompt") && !defaultParamsRetain.includes('negativeprompt') && typeof node.inputs.text == 'string') {
-                defaultParamsRetain.push('negativeprompt');
-                defaultParamValue['negativeprompt'] = node.inputs.text;
-                node.inputs.text = "${negativeprompt}";
-                continue;
+            if (doAutoClaim) {
+                if (claimOnce('EmptyLatentImage', 'width', 'width', true) && claimOnce('EmptyLatentImage', 'height', 'height', true) && claimOnce('EmptyLatentImage', 'batchsize', 'batch_size', true)) {
+                    defaultParamsRetain.push('aspectratio');
+                    defaultParamValue['aspectratio'] = 'Custom';
+                    continue;
+                }
+                claimOnce('KSampler', 'seed', 'seed', true);
+                claimOnce('KSampler', 'steps', 'steps', true);
+                claimOnce('KSampler', 'sampler', 'sampler_name', false);
+                claimOnce('KSampler', 'scheduler', 'scheduler', false);
+                claimOnce('KSampler', 'cfg_scale', 'cfg', true);
+                claimOnce('KSamplerAdvanced', 'seed', 'noise_seed', true);
+                claimOnce('KSamplerAdvanced', 'steps', 'steps', true);
+                claimOnce('KSamplerAdvanced', 'sampler', 'sampler_name', false);
+                claimOnce('KSamplerAdvanced', 'scheduler', 'scheduler', false);
+                claimOnce('KSamplerAdvanced', 'cfg_scale', 'cfg', true);
+                claimOnce('SwarmLoadImageB64', 'init_image', 'image_base64', false);
+                claimOnce('LoadImage', 'initimage', 'image', false);
+                claimOnce('SwarmLoraLoader', 'loras', 'lora_names', false);
+                claimOnce('SwarmLoraLoader', 'loraweights', 'lora_weights', false);
+                if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Positive Prompt") && !defaultParamsRetain.includes('prompt') && typeof node.inputs.text == 'string') {
+                    defaultParamsRetain.push('prompt');
+                    defaultParamValue['prompt'] = node.inputs.text;
+                    node.inputs.text = "${prompt}";
+                    continue;
+                }
+                else if (node.class_type == 'CLIPTextEncode' && groupLabel.startsWith("Negative Prompt") && !defaultParamsRetain.includes('negativeprompt') && typeof node.inputs.text == 'string') {
+                    defaultParamsRetain.push('negativeprompt');
+                    defaultParamValue['negativeprompt'] = node.inputs.text;
+                    node.inputs.text = "${negativeprompt}";
+                    continue;
+                }
             }
             for (let inputId of Object.keys(node.inputs)) {
                 if (inputId == 'choose file to upload' || inputId == 'image_upload') {
