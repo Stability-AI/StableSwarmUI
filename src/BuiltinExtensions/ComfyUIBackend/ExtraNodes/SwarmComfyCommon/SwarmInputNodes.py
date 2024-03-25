@@ -10,7 +10,7 @@ class SwarmInputGroup:
                 "title": ("STRING", {"default": "My Group"}),
                 "open_by_default": ("BOOLEAN", {"default": True}),
                 "description": ("STRING", {"default": "", "multiline": True}),
-                "order_priority": ("INT", {"FLOAT": 0, "min": -1024, "max": 1024, "step": 0.5, "round": False}),
+                "order_priority": ("FLOAT", {"default": 0, "min": -1024, "max": 1024, "step": 0.5, "round": False}),
                 "is_advanced": ("BOOLEAN", {"default": False}),
             },
         }
