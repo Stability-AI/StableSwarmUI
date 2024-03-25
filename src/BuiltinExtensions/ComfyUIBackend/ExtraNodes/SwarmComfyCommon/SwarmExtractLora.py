@@ -103,7 +103,7 @@ class SwarmExtractLora:
             }
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/models"
     RETURN_TYPES = ()
     FUNCTION = "extract_lora"
     OUTPUT_NODE = True

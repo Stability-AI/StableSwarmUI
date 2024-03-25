@@ -18,7 +18,7 @@ class SwarmUnsampler:
             }
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/sampling"
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "unsample"
 

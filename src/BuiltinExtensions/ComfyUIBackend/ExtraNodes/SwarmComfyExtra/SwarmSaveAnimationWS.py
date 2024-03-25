@@ -25,7 +25,7 @@ class SwarmSaveAnimationWS:
             },
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/video"
     RETURN_TYPES = ()
     FUNCTION = "save_images"
     OUTPUT_NODE = True

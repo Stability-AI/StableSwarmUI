@@ -18,7 +18,7 @@ class SwarmOffsetEmptyLatentImage:
             }
         }
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/latents"
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "generate"
 

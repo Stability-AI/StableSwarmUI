@@ -15,7 +15,7 @@ class SwarmLatentBlendMasked:
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "blend"
 
-    CATEGORY = "StableSwarmUI"
+    CATEGORY = "StableSwarmUI/images"
 
     def blend(self, samples0, samples1, blend_factor, mask):
         samples_out = samples0.copy()
