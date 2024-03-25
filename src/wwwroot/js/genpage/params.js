@@ -523,22 +523,25 @@ function refreshParameterValues(callback = null) {
         }
         Promise.all(promises).then(() => {
             for (let param of gen_param_types) {
+                let elem = document.getElementById(`input_${param.id}`);
+                if (!elem) {
+                    console.log(`Could not find element for param ${param.id}`);
+                    continue;
+                }
                 if ((param.type == "dropdown" || param.type == "model") && param.values) {
-                    let dropdown = getRequiredElementById(`input_${param.id}`);
-                    let val = dropdown.value;
+                    let val = elem.value;
                     let html = '';
                     for (let value of param.values) {
                         let selected = value == val ? ' selected="true"' : '';
                         html += `<option value="${escapeHtmlNoBr(value)}"${selected}>${escapeHtml(value)}</option>`;
                     }
-                    dropdown.innerHTML = html;
+                    elem.innerHTML = html;
                 }
                 else if (param.type == "list" && param.values) {
-                    let listElem = getRequiredElementById(`input_${param.id}`);
-                    let listOpts = [...listElem.options].map(o => o.value);
+                    let listOpts = [...elem.options].map(o => o.value);
                     let newVals = param.values.filter(v => !listOpts.includes(v));
                     for (let val of newVals) {
-                        $(listElem).append(new Option(val, val, false, false));
+                        $(elem).append(new Option(val, val, false, false));
                     }
                 }
             }
@@ -569,11 +572,14 @@ function setDirectParamValue(param, value, paramElem = null) {
 }
 
 function resetParamsToDefault(exclude = []) {
+    for (let cookie of listCookies('lastparam_')) {
+        deleteCookie(cookie);
+    }
+    localStorage.removeItem('last_comfy_workflow_input');
     getRequiredElementById('alt_prompt_textbox').value = '';
     for (let param of gen_param_types) {
         let id = `input_${param.id}`;
-        deleteCookie(`lastparam_${id}`);
-        if (param.visible && !exclude.includes(param.id)) {
+        if (param.visible && !exclude.includes(param.id) && document.getElementById(id) != null) {
             setDirectParamValue(param, param.default);
             if (param.id == 'prompt') {
                 triggerChangeFor(getRequiredElementById(id));
@@ -874,7 +880,7 @@ class ParamConfigurationClass {
                 }
                 paramHtml += `</select></div>`;
             }
-            if (!param.values) {
+            if (!param.values && param.type != "boolean") {
                 paramHtml += `<div class="param-edit-part">Examples: <input class="param-edit-text" type="text" id="${paramPrefix}__examples" value="${param.examples ? param.examples.join(' || ') : ''}" autocomplete="off"></div>`;
             }
             groupDiv.appendChild(createDiv(null, 'param-edit-container', paramHtml));
