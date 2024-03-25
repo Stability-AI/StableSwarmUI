@@ -389,7 +389,6 @@ function comfyBuildParams(callback) {
                 let groupObj = { name: 'Ungrouped', id: 'ungrouped', open: true, priority: 0, advanced: false, toggles: false, do_not_save: false };
                 if (node.inputs.group) {
                     let groupData = prompt[node.inputs.group[0]];
-                    console.log(groupData)
                     groupObj = {
                         name: groupData.inputs.title,
                         id: cleanParamName(groupData.inputs.title),
@@ -406,7 +405,7 @@ function comfyBuildParams(callback) {
                     type: type,
                     description: node.inputs['description'],
                     default: node.inputs['value'],
-                    values: null,
+                    values: type == 'dropdown' ? node.inputs['values'].split(',').map(s => s.trim()) : null,
                     view_type: node.inputs['view_type'],
                     min: node.inputs['min'] || 0,
                     max: node.inputs['max'] || 0,

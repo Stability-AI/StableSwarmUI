@@ -113,7 +113,7 @@ class SwarmInputModelName:
         } | STANDARD_OTHER_INPUTS
 
     CATEGORY = "StableSwarmUI/inputs"
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("COMBO",)
     FUNCTION = "do_input"
 
     def do_input(self, value, **kwargs):
