@@ -206,9 +206,9 @@ public class ComfyUIBackendExtension : Extension
                 Samplers = Samplers.Concat(swarmksampler["input"]["required"]["sampler_name"][0].Select(u => $"{u}")).Distinct().ToList();
                 Schedulers = Schedulers.Concat(swarmksampler["input"]["required"]["scheduler"][0].Select(u => $"{u}")).Distinct().ToList();
             }
-            if (rawObjectInfo.TryGetValue("IPAdapter", out JToken ipadapter))
+            if (rawObjectInfo.TryGetValue("IPAdapter", out JToken ipadapter) && (ipadapter["input"]["required"] as JObject).TryGetValue("model_name", out JToken ipAdapterModelName))
             {
-                IPAdapterModels = IPAdapterModels.Concat(ipadapter["input"]["required"]["model_name"][0].Select(m => $"{m}")).Distinct().ToList();
+                IPAdapterModels = IPAdapterModels.Concat(ipAdapterModelName[0].Select(m => $"{m}")).Distinct().ToList();
             }
             if (rawObjectInfo.TryGetValue("IPAdapterModelLoader", out JToken ipadapterCubiq))
             {
