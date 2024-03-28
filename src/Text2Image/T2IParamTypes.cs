@@ -122,6 +122,24 @@ public record class T2IParamType(string Name, string Description, string Default
             ["view_type"] = ViewType.ToString().ToLowerFast()
         };
     }
+
+    public static T2IParamType FromNet(JObject data)
+    {
+        string getStr(string key) => data.TryGetValue(key, out JToken tok) && tok.Type != JTokenType.Null ? $"{tok}" : null;
+        double getDouble(string key) => data.TryGetValue(key, out JToken tok) && tok.Type != JTokenType.Null && double.TryParse($"{tok}", out double tokVal) ? tokVal : 0;
+        bool getBool(string key, bool def) => data.TryGetValue(key, out JToken tok) && tok.Type != JTokenType.Null && bool.TryParse($"{tok}", out bool tokVal) ? tokVal : def;
+        T getEnum<T>(string key, T def) where T : struct => data.TryGetValue(key, out JToken tok) && tok.Type != JTokenType.Null && Enum.TryParse($"{tok}", true, out T tokVal) ? tokVal : def;
+        List<string> getList(string key) => data.TryGetValue(key, out JToken tok) && tok.Type != JTokenType.Null ? tok.ToObject<List<string>>() : null;
+        List<string> vals = getList("values");
+        List<string> examples = getList("examples");
+        T2IParamDataType type = getEnum("type", T2IParamDataType.UNSET);
+        return new(Name: getStr("name"), Description: getStr("description"), Default: getStr("default"), ID: getStr("id"),
+            Type: type, SharpType: T2IParamTypes.DataTypeToSharpType(type),
+            Min: getDouble("min"), Max: getDouble("max"), Step: getDouble("step"), ViewMax: getDouble("view_max"), OrderPriority: getDouble("priority"),
+            GetValues: _ => vals, Examples: examples?.ToArray(), Subtype: getStr("subtype"), FeatureFlag: getStr("feature_flag"),
+            VisibleNormally: getBool("visible", true), IsAdvanced: getBool("advanced", false), AlwaysRetain: getBool("always_retain", false),
+            DoNotSave: getBool("do_not_save", false), DoNotPreview: getBool("do_not_preview", false), ViewType: getEnum("view_type", ParamViewType.SMALL));
+    }
 }
 
 /// <summary>Helper class to easily read T2I Parameters.</summary>
@@ -176,6 +194,22 @@ public class T2IParamTypes
         if (t == typeof(List<string>)) return T2IParamDataType.LIST;
         if (t == typeof(List<Image>)) return T2IParamDataType.IMAGE_LIST;
         return T2IParamDataType.UNSET;
+    }
+
+    public static Type DataTypeToSharpType(T2IParamDataType t)
+    {
+        return t switch {
+            T2IParamDataType.INTEGER => typeof(long),
+            T2IParamDataType.DECIMAL => typeof(double),
+            T2IParamDataType.BOOLEAN => typeof(bool),
+            T2IParamDataType.TEXT => typeof(string),
+            T2IParamDataType.DROPDOWN => typeof(string),
+            T2IParamDataType.IMAGE => typeof(Image),
+            T2IParamDataType.MODEL => typeof(T2IModel),
+            T2IParamDataType.LIST => typeof(List<string>),
+            T2IParamDataType.IMAGE_LIST => typeof(List<Image>),
+            _ => null
+        };
     }
 
     /// <summary>Register a new parameter type.</summary>

@@ -66,7 +66,7 @@ class SwarmInputFloat:
             "required": {
                 "title": ("STRING", {"default": "My Floating-Point Number"}),
                 "value": ("FLOAT", {"default": 0, "min": INT_MIN, "max": INT_MAX, "step": 0.1, "round": False}),
-                "step": ("FLOAT", {"default": 1, "min": INT_MIN, "max": INT_MAX, "step": 0.1, "round": False}),
+                "step": ("FLOAT", {"default": 0.1, "min": INT_MIN, "max": INT_MAX, "step": 0.01, "round": False}),
                 "min": ("FLOAT", {"default": 0, "min": INT_MIN, "max": INT_MAX, "step": 0.1, "round": False}),
                 "max": ("FLOAT", {"default": 100, "min": INT_MIN, "max": INT_MAX, "step": 0.1, "round": False}),
                 "view_max": ("FLOAT", {"default": 100, "min": INT_MIN, "max": INT_MAX, "step": 0.1, "round": False}),

@@ -59,54 +59,76 @@ public class ComfyUIBackendExtension : Extension
         T2IParamTypes.FakeTypeProviders.Remove(DynamicParamGenerator);
     }
 
-    public static T2IParamType FakeRawInputType = new("comfyworkflowraw", "", "", Type: T2IParamDataType.TEXT, ID: "comfyworkflowraw", FeatureFlag: "comfyui", HideFromMetadata: true); // TODO: Setting to toggle metadata
+    public static T2IParamType FakeRawInputType = new("comfyworkflowraw", "", "", Type: T2IParamDataType.TEXT, ID: "comfyworkflowraw", FeatureFlag: "comfyui", HideFromMetadata: true), // TODO: Setting to toggle metadata
+        FakeParameterMetadata = new("comfyworkflowparammetadata", "", "", Type: T2IParamDataType.TEXT, ID: "comfyworkflowparammetadata", FeatureFlag: "comfyui", HideFromMetadata: true);
+
+    public static SingleCacheAsync<string, JObject> ParameterMetadataCacheHelper = new(s => s.ParseToJson());
 
     public T2IParamType DynamicParamGenerator(string name, T2IParamInput context)
     {
-        if (name == "comfyworkflowraw")
+        try
         {
-            return FakeRawInputType;
+            if (name == "comfyworkflowraw")
+            {
+                return FakeRawInputType;
+            }
+            if (name == "comfyworkflowparammetadata")
+            {
+                return FakeParameterMetadata;
+            }
+            if (context.TryGetRaw(FakeParameterMetadata, out object paramMetadataObj))
+            {
+                JObject paramMetadata = ParameterMetadataCacheHelper.GetValue((string)paramMetadataObj);
+                if (paramMetadata.TryGetValue(name, out JToken paramTok))
+                {
+                    return T2IParamType.FromNet((JObject)paramTok);
+                }
+            }
+            if (name.StartsWith("comfyrawworkflowinput") && (context.ValuesInput.ContainsKey("comfyworkflowraw") || context.ValuesInput.ContainsKey("comfyuicustomworkflow")))
+            {
+                string nameNoPrefix = name.After("comfyrawworkflowinput");
+                T2IParamDataType type = FakeRawInputType.Type;
+                ParamViewType numberType = ParamViewType.BIG;
+                if (nameNoPrefix.StartsWith("seed"))
+                {
+                    type = T2IParamDataType.INTEGER;
+                    numberType = ParamViewType.SEED;
+                    nameNoPrefix = nameNoPrefix.After("seed");
+                }
+                else
+                {
+                    foreach (T2IParamDataType possible in Enum.GetValues<T2IParamDataType>())
+                    {
+                        string typeId = possible.ToString().ToLowerFast();
+                        if (nameNoPrefix.StartsWith(typeId))
+                        {
+                            nameNoPrefix = nameNoPrefix.After(typeId);
+                            type = possible;
+                            break;
+                        }
+                    }
+                }
+                T2IParamType resType = FakeRawInputType with { Name = nameNoPrefix, ID = name, HideFromMetadata = false, Type = type, ViewType = numberType };
+                if (type == T2IParamDataType.MODEL)
+                {
+                    static string cleanup(string _, string val)
+                    {
+                        val = val.Replace('\\', '/');
+                        while (val.Contains("//"))
+                        {
+                            val = val.Replace("//", "/");
+                        }
+                        val = val.Replace('/', Path.DirectorySeparatorChar);
+                        return val;
+                    }
+                    resType = resType with { Clean = cleanup };
+                }
+                return resType;
+            }
         }
-        else if (name.StartsWith("comfyrawworkflowinput") && (context.ValuesInput.ContainsKey("comfyworkflowraw") || context.ValuesInput.ContainsKey("comfyuicustomworkflow")))
+        catch (Exception e)
         {
-            string nameNoPrefix = name.After("comfyrawworkflowinput");
-            T2IParamDataType type = FakeRawInputType.Type;
-            ParamViewType numberType = ParamViewType.BIG;
-            if (nameNoPrefix.StartsWith("seed"))
-            {
-                type = T2IParamDataType.INTEGER;
-                numberType = ParamViewType.SEED;
-                nameNoPrefix = nameNoPrefix.After("seed");
-            }
-            else
-            {
-                foreach (T2IParamDataType possible in Enum.GetValues<T2IParamDataType>())
-                {
-                    string typeId = possible.ToString().ToLowerFast();
-                    if (nameNoPrefix.StartsWith(typeId))
-                    {
-                        nameNoPrefix = nameNoPrefix.After(typeId);
-                        type = possible;
-                        break;
-                    }
-                }
-            }
-            T2IParamType resType = FakeRawInputType with { Name = nameNoPrefix, ID = name, HideFromMetadata = false, Type = type, ViewType = numberType };
-            if (type == T2IParamDataType.MODEL)
-            {
-                static string cleanup(string _, string val)
-                {
-                    val = val.Replace('\\', '/');
-                    while (val.Contains("//"))
-                    {
-                        val = val.Replace("//", "/");
-                    }
-                    val = val.Replace('/', Path.DirectorySeparatorChar);
-                    return val;
-                }
-                resType = resType with { Clean = cleanup };
-            }
-            return resType;
+            Logs.Error($"Error generating dynamic Comfy param {name}: {e}");
         }
         return null;
     }
