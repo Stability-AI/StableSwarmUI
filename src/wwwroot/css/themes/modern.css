@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Jura:wght@300..700&display=swap');
+@font-face {
+    font-family: 'Jura';
+    src: url('../../fonts/Jura.woff2') format('woff2');
+}
 
 :root {
     /* Shared */
