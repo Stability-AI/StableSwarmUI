@@ -475,7 +475,6 @@ public static class T2IAPI
     {
         Logs.Verbose($"User {session.User.UserID} triggered a data refresh");
         bool botherToRun = RefreshSemaphore.CurrentCount > 0; // no need to run twice at once
-        int was = RefreshSemaphore.CurrentCount;
         try
         {
             await RefreshSemaphore.WaitAsync(Program.GlobalProgramCancel);

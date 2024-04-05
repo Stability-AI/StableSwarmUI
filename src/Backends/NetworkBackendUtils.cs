@@ -364,6 +364,10 @@ public static class NetworkBackendUtils
         BackendStatus status = getStatus();
         bool isShuttingDown = false;
         signalShutdownExpected = () => Volatile.Write(ref isShuttingDown, true);
+        bool shouldContinueErrorLine(string str)
+        {
+            return str.StartsWith("Traceback (") || str.Contains("Error: ") || str.StartsWith("  ");
+        }
         void MonitorLoop()
         {
             try
@@ -372,23 +376,15 @@ public static class NetworkBackendUtils
                 bool keepShowing = false;
                 while ((line = process.StandardOutput.ReadLine()) != null)
                 {
-                    if (line.StartsWith("Traceback ("))
+                    if (line.StartsWith("Traceback (") || line.StartsWith("RuntimeError: "))
                     {
                         keepShowing = true;
-                        Logs.Warning($"{nameSimple} stdout: {line}");
-                    }
-                    else if (line.StartsWith("RuntimeError: "))
-                    {
-                        Logs.Warning($"{nameSimple} stdout: {line}");
-                    }
-                    else if (keepShowing && line.StartsWith("  "))
-                    {
                         Logs.Warning($"{nameSimple} stdout: {line}");
                     }
                     else if (keepShowing)
                     {
                         Logs.Warning($"{nameSimple} stdout: {line}");
-                        keepShowing = false;
+                        keepShowing = shouldContinueErrorLine(line);
                     }
                     else
                     {
@@ -422,11 +418,18 @@ public static class NetworkBackendUtils
         {
             StringBuilder errorLog = new();
             string line;
+            bool keepShowing = false;
             while ((line = process.StandardError.ReadLine()) != null)
             {
                 if (line.StartsWith("Traceback (") || line.StartsWith("RuntimeError: "))
                 {
+                    keepShowing = true;
                     Logs.Warning($"{nameSimple} stderr: {line}");
+                }
+                else if (keepShowing)
+                {
+                    Logs.Warning($"{nameSimple} stderr: {line}");
+                    keepShowing = shouldContinueErrorLine(line);
                 }
                 else
                 {
