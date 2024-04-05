@@ -369,6 +369,12 @@ textarea, input, select {
 .auto-file {
     width: 100%;
 }
+.auto-file-label {
+    display: contents;
+}
+.auto-file-input {
+    display: none;
+}
 .input-group {
     width: 100%;
     border: 1px solid var(--shadow);
