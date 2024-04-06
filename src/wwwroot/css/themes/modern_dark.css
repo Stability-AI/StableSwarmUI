@@ -20,16 +20,11 @@
 	--button-background-hover: color-mix(in srgb, var(--emphasis) 70%, white);
 
     --background-panel: #202020;
+    --background-panel-subtle: rgba(255, 255, 255, 0.03);
     --emphasis-text: var(--button-text);
     --border-color: #4C4C4C;
-    --panel-gap: 7px;
     --button-background: #4b4b4b;
-    --scrollbar: rgba(100, 100, 100, 0.5);
-    --range-value-color: var(--emphasis);
-    --range-track-background: #161616;
     --range-track-color: #1d1d1d;
     --range-thumb-color: #4b4b4b;
-    --range-thumb-color-hover: var(--button-background-hover);
-    --range-thumb-width: 20px;
-    --range-thumb-height: 10px;
+
 }

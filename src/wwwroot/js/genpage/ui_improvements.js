@@ -336,12 +336,17 @@ function showPopover(id, targetX = mouseX, targetY = mouseY) {
 }
 
 /** Toggles the given popover, showing it or hiding it as relevant. */
-function doPopover(id) {
+function doPopover(id, e) {
     let pop = getRequiredElementById(`popover_${id}`);
     if (pop.dataset.visible == "true") {
         hidePopover(id);
     }
     else {
         showPopover(id);
+    }
+    
+    if (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
     }
 }

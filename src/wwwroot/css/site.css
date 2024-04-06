@@ -261,6 +261,9 @@ input[type="range"]::-webkit-slider-thumb, input[type="range"]::-moz-range-thumb
     box-shadow: -407px 0 0 400px var(--emphasis);
     margin-top: -4px;
 }
+.auto-slider-range-wrapper {
+    display: contents;
+}
 .auto-slider-range {
     cursor: pointer;
     width: 90%;

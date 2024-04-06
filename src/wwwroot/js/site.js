@@ -365,6 +365,7 @@ function getToggleHtml(toggles, id, name, extraClass = '', func = 'doToggleEnabl
 }
 
 function load_image_file(e) {
+    updateFileDragging({ target: e }, true);
     let file = e.files[0];
     const parent = e.closest('.auto-input');
     let preview = parent.querySelector('.auto-input-image-preview');
@@ -449,7 +450,7 @@ function getPopoverElemsFor(id, popover_button) {
         format = settingElem.value;
     }
     if (format == 'BUTTON') {
-        return [`<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>`, ''];
+        return [`<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}', arguments[0])">?</span>`, ''];
     }
     else if (format == 'HOVER') {
         return ['', ` onmouseover="doPopoverHover('${id}')" onmouseout="hidePopoverHover('${id}')"`];
@@ -463,7 +464,7 @@ function getRangeStyle(value, min, max) {
 
 function updateRangeStyle(e) {
     const el = e.srcElement;
-    el.style.setProperty("--range-value", `${(el.value-el.min)/(el.max-el.min)*100}%`);
+    el.parentElement.style.setProperty("--range-value", `${(el.value-el.min)/(el.max-el.min)*100}%`);
 }
 
 function makeSliderInput(featureid, id, name, description, value, min, max, view_max = 0, step = 1, isPot = false, toggles = false, popover_button = true) {
@@ -480,7 +481,9 @@ function makeSliderInput(featureid, id, name, description, value, min, max, view
         </label>
         <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false" onchange="autoNumberWidth(this)">
         <br>
-        <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false" style="${getRangeStyle(rangeVal, min, view_max)}" oninput="updateRangeStyle(arguments[0])" onchange="updateRangeStyle(arguments[0])">
+        <div class="auto-slider-range-wrapper" style="${getRangeStyle(rangeVal, min, view_max)}">
+            <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false" oninput="updateRangeStyle(arguments[0])" onchange="updateRangeStyle(arguments[0])">
+        </div>
     </div></div>`;
 }
 
@@ -496,8 +499,8 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
                     <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
                 </label>
                 <input class="auto-number auto-number-seedbox" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
-                <button class="basic-button" title="Random (Set to -1)" onclick="setSeedToRandom('${id}')">&#x1F3B2;</button>
-                <button class="basic-button" title="Reuse (from currently selected image)" onclick="reuseLastParamVal('${id}');">&#128257;</button>
+                <button class="basic-button seed-button seed-random-button" title="Random (Set to -1)" onclick="setSeedToRandom('${id}')">&#x1F3B2;</button>
+                <button class="basic-button seed-button seed-reuse-button" title="Reuse (from currently selected image)" onclick="reuseLastParamVal('${id}');">&#128257;</button>
             </div>`;
     }
     return `
@@ -599,7 +602,7 @@ function makeImageInput(featureid, id, name, description, toggles = false, popov
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         </label>
         <label for="${id}" class="auto-file-label">
-            <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" autocomplete="false">
+            <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" ondragover="updateFileDragging(arguments[0])" ondragleave="updateFileDragging(arguments[0], true)" autocomplete="false">
             <div class="auto-file-input">
                 <a class="auto-file-input-button basic-button">${translateableHtml("Choose File")}</a>
                 <span class="auto-file-input-filename"></span>
@@ -608,6 +611,19 @@ function makeImageInput(featureid, id, name, description, toggles = false, popov
         <div class="auto-input-image-preview"></div>
     </div>`;
     return html;
+}
+
+function updateFileDragging(e, out) {
+    let files = [];
+    if (e.dataTransfer && !out) {
+        files = e.dataTransfer.files;
+        if (!files || !files.length) {
+            files = [...e.dataTransfer.items || []].filter(item => item.kind === "file");
+        }
+    }
+    const el = e.target.nextElementSibling;
+    const mode = files.length ? "add" : "remove";
+    el.classList[mode]("auto-file-input-file-drag");
 }
 
 function describeAspectRatio(width, height) {

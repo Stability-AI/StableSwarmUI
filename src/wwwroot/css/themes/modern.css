@@ -3,6 +3,13 @@
     src: url('../../fonts/Jura.woff2') format('woff2');
 }
 
+@font-face {
+    font-family: 'Material Symbols Outlined';
+    font-style: normal;
+    font-weight: 100 700;
+    src: url('../../fonts/MaterialSymbolsOutlined.woff2') format('woff2');
+}
+
 :root {
     /* Shared */
     --background-danger: #200b0b;
@@ -26,6 +33,16 @@
     --box-selected-background-stronger: color-mix(in srgb, var(--emphasis) 30%, transparent);
     --box-selected-border: color-mix(in srgb, var(--emphasis) 70%, transparent);
     --box-selected-border-stronger: color-mix(in srgb, var(--emphasis) 80%, transparent);
+    /* Theme specific */
+    --panel-gap: 7px;
+    --scrollbar: rgba(100, 100, 100, 0.5);
+    --range-value-color: var(--emphasis);
+    --range-track-background: #161616;
+    --range-thumb-color-hover: var(--button-background-hover);
+    --range-thumb-width: 20px;
+    --range-thumb-height: 10px;
+    --range-track-height: 4px;
+    --range-padding: calc((var(--range-thumb-height) - var(var(--range-track-height))) / 2);
 }
 
 ::-webkit-scrollbar {
@@ -60,13 +77,8 @@ select {
     color: var(--button-text);
     padding: 2px 8px !important;
     text-decoration: none;
-    background-size: var(--button-background-size);
     box-shadow: var(--button-shadow);
     transition: background .2s;
-}
-
-#Text2Image .basic-button:hover {
-    background-position: 100%;
 }
 
 .nav-tabs,
@@ -74,6 +86,12 @@ select {
 #t2i_bottom_bar {
     background-color: var(--background-panel);
     background-image: url(/imgs/noise.png);
+}
+
+.auto-input-qbutton {
+    text-align: center;
+    border-color: var(--border-color) !important;
+    color: var(--border-color) !important;
 }
 
 /* Tabs */
@@ -165,6 +183,11 @@ select {
 /* Left panel */
 #main_inputs_area_wrapper {
     padding: 50px;
+    transition: padding 0.2s;
+}
+
+#main_inputs_area_wrapper.main_inputs_small {
+    padding: 50px 20px;
 }
 
 #main_inputs_filter {
@@ -186,16 +209,27 @@ select {
 
 .input-group.input-group-open {
     border: none;
-    background: transparent;
-    border-bottom: 1px solid var(--border-color);
-    border-radius: 0;
+    position: relative;
+    background-color: transparent;
+}
+
+.input-group.input-group-open .input-group-content {
+    background-color: var(--background-panel-subtle);
+    margin-left: 0 !important;
+    width: 100% !important;
+    border-radius: 10px !important;
 }
 
 .input-group .header-label-wrap {
-    position: unset;
+    position: relative;
     top: unset;
     left: unset;
     margin: unset;
+    width: 100% !important;
+}
+
+.input-group .header-label {
+    font-size: 15px;
 }
 
 .input-group .input-group-header {
@@ -207,7 +241,7 @@ select {
 }
 
 .input-group .input-group-header:hover {
-    color: var(--emphasis);
+    color: var(--button-foreground-hover);
 }
 
 .input-group .input-group-header-activated {
@@ -226,7 +260,6 @@ select {
     width: 32px;
     height: 16px;
     background: var(--button-background);
-    background-size: var(--button-background-size);
     box-shadow: var(--button-shadow);
     border-radius: 4px;
     margin-right: 10px;
@@ -255,31 +288,33 @@ select {
     top: 7px;
 }
 
-.input-group .input-group-header:hover .auto-symbol::after {
+.input-group .input-group-header:hover:not(:has(input:hover)) .auto-symbol::after {
     background-color: var(--button-background-hover);
     background-position: 100%;
 }
 
-.input-group .input-group-header:hover .auto-symbol::before {
+.input-group .input-group-header:hover:not(:has(input:hover)) .auto-symbol::before {
     border-top-color: var(--button-foreground-hover);
     border-bottom-color: var(--button-foreground-hover);
 }
 
 .input-group .input-group-content {
     --spacing: 30px;
-    padding: 0 0 10px 0;
-    margin-left: calc(var(--spacing) * -1) !important;
-    width: calc(100% + var(--spacing));
+    padding: 0;
     max-width: unset;
+    margin-top: 10px;
 }
 
 .input-group .input-group-content>div {
-    padding: 0;
-    margin: 10px 0 5px var(--spacing);
+    padding: 5px 10px;
+    align-items: center;
 }
 
 .input-group .auto-input-name {
     margin-right: 10px;
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 5px;
 }
 
 .input-group input[type="number"] {
@@ -313,22 +348,36 @@ select {
     box-sizing: content-box;
 }
 
-.input-group .auto-slider-range {
-    margin-top: 10px;
+.auto-slider-box {
+    display: flex !important;
+    flex-wrap: wrap;
 }
 
-/* Range */
-input[type="range"] {
+.auto-slider-box .auto-slider-number {
+    margin-left: auto;
+}
+
+.input-group .auto-slider-range-wrapper {
+    height: var(--range-track-height);
+    display: block;
+    background: linear-gradient(to right, var(--range-value-color) 0%, var(--range-value-color) var(--range-value), var(--range-track-color) var(--range-value), var(--range-track-color) 100%);
+    margin-bottom: calc(var(--range-thumb-height) - var(--range-track-height));
+    margin-top: 10px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 2px 0 rgba(0, 0, 0, 0.35) inset;
+    position: relative;
+    width: inherit;
+}
+
+.input-group .auto-slider-range {
     -webkit-appearance: none;
     appearance: none;
-    background: linear-gradient(to right, var(--range-value-color) 0%, var(--range-value-color) var(--range-value), var(--range-track-color) var(--range-value), var(--range-track-color) 100%);
-    border-radius: 20px;
-    height: 4px !important;
-    width: 356px;
+    height: var(--range-thumb-height) !important;
     outline: none;
     cursor: pointer;
-    box-shadow: 0px 0px 2px 0 rgba(0, 0, 0, 0.35) inset;
-    overflow: visible !important;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 /* Separate webkit + firefox styles, as webkit breaks if you use firefox in the same selector */
@@ -362,11 +411,11 @@ input[type="range"]::-moz-range-thumb {
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-    background-color: var(--range-thumb-color-hover);
+    background-color: var(--range-thumb-color-hover) !important;
 }
 
 input[type="range"]::-moz-range-thumb:hover {
-    background-color: var(--range-thumb-color-hover);
+    background-color: var(--range-thumb-color-hover) !important;
 }
 
 input[type="range"]::-webkit-slider-runnable-track,
@@ -439,12 +488,33 @@ input[type="range"]::-moz-range-track {
 }
 
 .auto-file {
-    display: none !important;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    opacity: 0;
+}
+
+.auto-file:hover+.auto-file-input .basic-button {
+    background-color: var(--button-background-hover);
+    color: var(--button-foreground-hover);
+}
+
+.input-group .auto-file-label {
+    display: block !important;
+    position: relative !important;
 }
 
 .auto-file-input {
     display: block !important;
-    margin-top: 5px;
+    margin: 5px -5px;
+    padding: 5px;
+    border: 1px dashed transparent;
+}
+    
+.auto-file-input.auto-file-input-file-drag {
+    border-color: var(--emphasis);
 }
 
 .auto-file-input-button {
@@ -520,8 +590,8 @@ input[type="range"]::-moz-range-track {
 }
 
 #alt_prompt_textbox {
-    background: var(--emphasis);
-    color: var(--emphasis-text);
+    background: var(--background-panel);
+    color: var(--text);
     border-radius: 12px;
     padding: 2px 8px;
     font-size: 20px;
@@ -569,6 +639,37 @@ input[type="range"]::-moz-range-track {
     padding: 0 5px;
 }
 
+#Text2Image .seed-button.basic-button {
+    width: 28px;
+    height: 28px;
+    font-size: 0px;
+    padding: 0 !important;
+}
+
+.seed-button::after {
+    text-align: center;
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -moz-font-feature-settings: 'liga';
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.seed-random-button::after {
+    content: "\e025";
+}
+
+.seed-reuse-button::after {
+    content: "\e627";
+}
 /* Right */
 #current_image_batch_wrapper {
     padding-right: 27px;
@@ -639,7 +740,12 @@ input[type="range"]::-moz-range-track {
     border-radius: 10px;
 }
 
-/* User settings */
+/* Settings */
+.settings-group {
+    padding-left: 0 !important;
+    margin-top: 0;
+}
+
 .settings_submit_confirmer button {
     font-size: unset;
 }

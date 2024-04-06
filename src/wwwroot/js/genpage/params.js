@@ -163,7 +163,7 @@ function genInputs(delay_final = false) {
                     let groupId = param.group.id;
                     if (param.group.description) {
                         html += `<div class="sui-popover" id="popover_group_${groupId}"><b>${translateableHtml(escapeHtml(param.group.name))}</b>:<br>&emsp;${translateableHtml(escapeHtml(param.group.description))}</div>`;
-                        infoButton = `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('group_${groupId}')">?</span>`;
+                        infoButton = `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('group_${groupId}', arguments[0])">?</span>`;
                     }
                     let shouldOpen = getCookie(`group_open_auto-group-${groupId}`) || (param.group.open ? 'open' : 'closed');
                     if (shouldOpen == 'closed') {
