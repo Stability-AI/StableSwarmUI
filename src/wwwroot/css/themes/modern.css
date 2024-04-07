@@ -559,11 +559,11 @@ input[type="range"]::-moz-range-track {
     gap: 20px;
     justify-content: start;
     padding-bottom: 50px;
-    padding-top: 30px;
+    padding-top: 30px !important;
 }
 
 .current_image_small #current_image_img {
-    min-height: 0px;
+    min-height: 100px;
 }
 
 .current_image_small #current-image-extras-wrapper {
