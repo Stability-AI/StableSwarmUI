@@ -92,6 +92,7 @@ select {
     text-align: center;
     border-color: var(--border-color) !important;
     color: var(--border-color) !important;
+    align-self: center;
 }
 
 /* Tabs */
@@ -131,10 +132,12 @@ select {
 /* Specific elements*/
 .welcome-message-wrapper {
     font-size: 1rem;
+    width: 100% !important;
 }
 
 #welcome_message {
     margin: 0;
+    width: 100%;
 }
 
 #top_status_bar:not(:empty)~.tab-hundred .t2i-area-quicktools {
@@ -178,6 +181,8 @@ select {
 #t2i-top-2nd-split-bar {
     margin-top: -8px;
     width: var(--panel-gap);
+    position: relative;
+    z-index: 1;
 }
 
 /* Left panel */
@@ -315,6 +320,8 @@ select {
     display: inline-flex;
     flex-direction: row-reverse;
     gap: 5px;
+    text-align: left;
+    white-space: wrap;
 }
 
 .input-group input[type="number"] {
@@ -346,6 +353,8 @@ select {
 .input-group .auto-dropdown {
     padding: 3px 8px;
     box-sizing: content-box;
+    width: auto !important;
+    max-width: calc(100% - 16px);
 }
 
 .auto-slider-box {
@@ -493,7 +502,7 @@ input[type="range"]::-moz-range-track {
     right: 0;
     bottom: 0;
     left: 0;
-    opacity: 0;
+    opacity: 0 !important;
 }
 
 .auto-file:hover+.auto-file-input .basic-button {
@@ -541,7 +550,7 @@ input[type="range"]::-moz-range-track {
 }
 
 /* Center */
-#current_image {
+.current_image_small {
     border: none;
     display: inline-flex;
     flex-direction: column;
@@ -553,9 +562,10 @@ input[type="range"]::-moz-range-track {
     margin-top: 30px;
 }
 
-#current-image-extras-wrapper {
-    max-width: unset !important;
+.current_image_small #current-image-extras-wrapper {
     width: auto !important;
+    max-width: unset !important;
+    min-width: unset !important;
     display: flex !important;
     flex-direction: column;
     flex: auto;
@@ -579,10 +589,20 @@ input[type="range"]::-moz-range-track {
 
 .current-image-buttons {
     font-size: 15px;
-    display: flex;
+    display: inline-flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 5px;
+    width: 100%;
+}
+
+.current_image_small .current-image-buttons {
+    display: flex;
+    margin-top: 10px;
+}
+
+#alt_prompt_region {
+    background: var(--background-panel);
 }
 
 .alt_prompt_main_line {
