@@ -9,6 +9,7 @@
 - TODO: Account system
 - [Command line arguments](/docs/Command%20Line%20Arguments.md) describes the available command line arguments in detail.
 - TODO: Extensions (what an extension is, what it can do, where to find them, etc)
+    - [Making Extensions](/docs/Making%20Extensions.md) explains how to make extensions.
     - TODO: Backends (what a 'backend' is, supported options, usage, etc)
         - [ComfyUI Backend Extension](/src/BuiltinExtensions/ComfyUIBackend/README.md)
         - [Auto WebUI Backend Extension](/src/BuiltinExtensions/AutoWebUIBackend/README.md)
