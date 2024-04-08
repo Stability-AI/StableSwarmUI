@@ -299,7 +299,7 @@ select {
 .input-group-open .auto-symbol::before {
     border-bottom: 6px solid var(--text-soft);
     border-top: none;
-    top: 7px;
+    top: 8px;
 }
 
 .input-group .input-group-header:hover:not(:has(input:hover)) .auto-symbol::after {
@@ -440,8 +440,17 @@ input[type="range"]::-moz-range-track {
     background: unset !important;
 }
 
+.input-group-header-activated .auto-symbol::after {
+    background: var(--box-selected-border-stronger) !important;
+}
+
 .form-switch {
     position: relative;
+    --toggle-width: 28px;
+    --toggle-height: 12px;
+    --toggle-thumb-size: 12px;
+    width: var(--toggle-width) !important;
+    height: var(--toggle-height) !important;
 }
 
 .group-toggler-switch {
@@ -451,16 +460,20 @@ input[type="range"]::-moz-range-track {
 
 .auto-slider-toggle {
     opacity: 0;
+    width: var(--toggle-width) !important;
+    height: var(--toggle-height) !important;
 }
 
+
+
 .auto-slider-toggle-content {
-    width: 24px;
-    height: 9px;
+    width: var(--toggle-width);
+    height: var(--toggle-height);
     position: absolute;
     left: 1px;
-    top: calc(50% - 4px);
+    top: calc(50% - 6px);
     box-shadow: inset 0px 0px 3px rgba(0, 0, 0, 0.35);
-    border-radius: 10px;
+    border-radius: 16px;
     pointer-events: none;
     background: #ccc;
 }
@@ -469,13 +482,18 @@ input[type="range"]::-moz-range-track {
     content: "";
     position: absolute;
     display: block;
-    top: -2px;
     left: -1px;
-    width: 13px;
-    height: 13px;
+    width: var(--toggle-thumb-size);
+    height: var(--toggle-thumb-size);
     background: #4b4b4b;
     border-radius: 20px;
     transition: left 0.2s, background-color 0.2s;
+}
+
+.input-group-header .form-switch {
+    --toggle-width: 32px;
+    --toggle-height: 16px;
+    --toggle-thumb-size: 16px;
 }
 
 .auto-slider-toggle:checked+.auto-slider-toggle-content {
@@ -483,7 +501,7 @@ input[type="range"]::-moz-range-track {
 }
 
 .auto-slider-toggle:checked+.auto-slider-toggle-content::after {
-    left: 14px;
+    left: calc(var(--toggle-width) - var(--toggle-thumb-size));
     background-color: var(--button-background-hover);
 }
 
