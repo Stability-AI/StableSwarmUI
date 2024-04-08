@@ -484,6 +484,7 @@ input[type="range"]::-moz-range-track {
 
 .auto-slider-toggle:checked+.auto-slider-toggle-content::after {
     left: 14px;
+    background-color: var(--button-background-hover);
 }
 
 .form-switch input:hover+.auto-slider-toggle-content::after {
@@ -622,7 +623,7 @@ input[type="range"]::-moz-range-track {
 }
 
 #alt_prompt_textbox {
-    background: var(--background-panel);
+    background: var(--background);
     color: var(--text);
     border-radius: 12px;
     padding: 2px 8px;
