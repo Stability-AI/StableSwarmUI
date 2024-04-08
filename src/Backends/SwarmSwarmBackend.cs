@@ -446,7 +446,12 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                         {
                             Logs.Verbose($"[{HandlerTypeData.Name}] Got progress from websocket for {batchId}: {response.ToDenseDebugString(true)}");
                         }
-                        objVal["batch_index"] = batchId;
+                        string actualId = batchId;
+                        if (objVal.TryGetValue("batch_index", out JToken batchIndRemote) && int.TryParse($"{batchIndRemote}", out int batchIndRemoteParsed) && batchIndRemoteParsed > 0 && int.TryParse(batchId, out int localInd))
+                        {
+                            actualId = $"{localInd + batchIndRemoteParsed}";
+                        }
+                        objVal["batch_index"] = actualId;
                         takeOutput(objVal);
                     }
                     else if (response.TryGetValue("image", out val))
