@@ -207,6 +207,7 @@ public class WorkflowGenerator
             if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image img))
             {
                 g.CreateLoadImageNode(img, "${initimage}", true, "15");
+                g.FinalInputImage = ["15", 0];
                 g.CreateVAEEncode(g.FinalVae, ["15", 0], "5");
                 if (g.UserInput.TryGet(T2IParamTypes.UnsamplerPrompt, out string unprompt))
                 {
@@ -1008,6 +1009,7 @@ public class WorkflowGenerator
     /// <summary>Lastmost node ID for key input trackers.</summary>
     public JArray FinalModel = ["4", 0],
         FinalClip = ["4", 1],
+        FinalInputImage = null,
         FinalVae = ["4", 2],
         FinalLatentImage = ["5", 0],
         FinalPrompt = ["6", 0],
@@ -1203,6 +1205,103 @@ public class WorkflowGenerator
             willCascadeFix = true;
             defsampler ??= "euler_ancestral";
             defscheduler ??= "simple";
+        }
+        if (FinalLoadedModel?.ModelClass ?.ID == "stable-diffusion-xl-v1-edit")
+        {
+            // TODO: SamplerCustomAdvanced logic should be used for *all* models, not just ip2p
+            if (FinalInputImage is null)
+            {
+                // TODO: Get the correct image (eg if edit is used as a refiner or something silly it should still work)
+                string decoded = CreateVAEDecode(FinalVae, latent);
+                FinalInputImage = [decoded, 0];
+            }
+            string ip2p2condNode = CreateNode("InstructPixToPixConditioning", new JObject()
+            {
+                ["positive"] = pos,
+                ["negative"] = neg,
+                ["vae"] = FinalVae,
+                ["pixels"] = FinalInputImage
+            });
+            string noiseNode = CreateNode("RandomNoise", new JObject()
+            {
+                ["noise_seed"] = seed
+            });
+            // TODO: VarSeed, batching, etc. seed logic
+            string cfgGuiderNode = CreateNode("DualCFGGuider", new JObject()
+            {
+                ["model"] = model,
+                ["cond1"] = new JArray() { ip2p2condNode, 0 },
+                ["cond2"] = new JArray() { ip2p2condNode, 1 },
+                ["negative"] = neg,
+                ["cfg_conds"] = cfg,
+                ["cfg_cond2_negative"] = UserInput.Get(T2IParamTypes.IP2PCFG2, 1.5)
+            });
+            string samplerNode = CreateNode("KSamplerSelect", new JObject()
+            {
+                ["sampler_name"] = UserInput.Get(ComfyUIBackendExtension.SamplerParam, defsampler ?? DefaultSampler)
+            });
+            string scheduler = UserInput.Get(ComfyUIBackendExtension.SchedulerParam, defscheduler ?? DefaultScheduler).ToLowerFast();
+            double denoise = 1.0 - (startStep / (double)steps);
+            JArray schedulerNode;
+            if (scheduler == "turbo")
+            {
+                string turboNode = CreateNode("SDTurboScheduler", new JObject()
+                {
+                    ["model"] = model,
+                    ["steps"] = steps,
+                    ["denoise"] = denoise
+                });
+                schedulerNode = [turboNode, 0];
+            }
+            else if (scheduler == "karras")
+            {
+                string karrasNode = CreateNode("KarrasScheduler", new JObject()
+                {
+                    ["steps"] = steps,
+                    ["sigma_max"] = sigmax <= 0 ? 14.614642 : sigmax,
+                    ["sigma_min"] = sigmin <= 0 ? 0.0291675 : sigmin,
+                    ["rho"] = UserInput.Get(T2IParamTypes.SamplerRho, 7)
+                });
+                schedulerNode = [karrasNode, 0];
+                if (startStep > 0)
+                {
+                    string afterStart = CreateNode("SplitSigmas", new JObject()
+                    {
+                        ["sigmas"] = schedulerNode,
+                        ["step"] = startStep
+                    });
+                    schedulerNode = [afterStart, 1];
+                }
+            }
+            else
+            {
+                string basicNode = CreateNode("BasicScheduler", new JObject()
+                {
+                    ["model"] = model,
+                    ["steps"] = steps,
+                    ["scheduler"] = scheduler,
+                    ["denoise"] = denoise
+                });
+                schedulerNode = [basicNode, 0];
+            }
+            if (endStep < steps)
+            {
+                string beforeEnd = CreateNode("SplitSigmas", new JObject()
+                {
+                    ["sigmas"] = schedulerNode,
+                    ["step"] = endStep
+                });
+                schedulerNode = [beforeEnd, 0];
+            }
+            string finalSampler = CreateNode("SamplerCustomAdvanced", new JObject()
+            {
+                ["sampler"] = new JArray() { samplerNode, 0 },
+                ["guider"] = new JArray() { cfgGuiderNode, 0 },
+                ["sigmas"] = schedulerNode,
+                ["latent_image"] = new JArray() { ip2p2condNode, 2 },
+                ["noise"] = new JArray() { noiseNode, 0 }
+            }, id);
+            return finalSampler;
         }
         string firstId = willCascadeFix ? null : id;
         JObject inputs = new()
