@@ -36,13 +36,14 @@
     /* Theme specific */
     --panel-gap: 7px;
     --scrollbar: rgba(100, 100, 100, 0.5);
+    --range-height: 26px;
     --range-value-color: var(--emphasis);
     --range-track-background: #161616;
     --range-thumb-color-hover: var(--button-background-hover);
     --range-thumb-width: 20px;
     --range-thumb-height: 10px;
     --range-track-height: 4px;
-    --range-padding: calc((var(--range-thumb-height) - var(var(--range-track-height))) / 2);
+    --range-padding: calc((var(--range-height) - var(var(--range-track-height))) / 2);
 }
 
 ::-webkit-scrollbar {
@@ -59,12 +60,6 @@
     background-color: var(--scrollbar);
     border-radius: 20px;
     border: transparent;
-}
-
-body {
-    font-family: "Jura", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 700;
 }
 
 textarea,
@@ -93,6 +88,20 @@ select {
     border-color: var(--border-color) !important;
     color: var(--border-color) !important;
     align-self: center;
+    width: 20px;
+    height: 20px;
+    line-height: 18px;
+}
+
+/* Update font */
+.t2i-area-quicktools,
+.input-group-header,
+.auto-input-name,
+.nav-tabs,
+.basic-button {
+    font-family: "Jura", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
 }
 
 /* Tabs */
@@ -187,12 +196,12 @@ select {
 
 /* Left panel */
 #main_inputs_area_wrapper {
-    padding: 50px;
+    padding: 30px;
     transition: padding 0.2s;
 }
 
 #main_inputs_area_wrapper.main_inputs_small {
-    padding: 50px 20px;
+    padding: 30px 20px;
 }
 
 #main_inputs_filter {
@@ -321,7 +330,6 @@ select {
     flex-direction: row-reverse;
     gap: 5px;
     text-align: left;
-    white-space: wrap;
 }
 
 .input-group input[type="number"] {
@@ -370,7 +378,7 @@ select {
     height: var(--range-track-height);
     display: block;
     background: linear-gradient(to right, var(--range-value-color) 0%, var(--range-value-color) var(--range-value), var(--range-track-color) var(--range-value), var(--range-track-color) 100%);
-    margin-bottom: calc(var(--range-thumb-height) - var(--range-track-height));
+    margin-bottom: calc(var(--range-height) - var(--range-track-height));
     margin-top: 10px;
     border-radius: 10px;
     box-shadow: 0px 0px 2px 0 rgba(0, 0, 0, 0.35) inset;
@@ -381,7 +389,7 @@ select {
 .input-group .auto-slider-range {
     -webkit-appearance: none;
     appearance: none;
-    height: var(--range-thumb-height) !important;
+    height: var(--range-height) !important;
     outline: none;
     cursor: pointer;
     position: absolute;
