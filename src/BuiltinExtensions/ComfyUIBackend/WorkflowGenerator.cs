@@ -1241,7 +1241,7 @@ public class WorkflowGenerator
                 ["sampler_name"] = UserInput.Get(ComfyUIBackendExtension.SamplerParam, defsampler ?? DefaultSampler)
             });
             string scheduler = UserInput.Get(ComfyUIBackendExtension.SchedulerParam, defscheduler ?? DefaultScheduler).ToLowerFast();
-            double denoise = 1.0 - (startStep / (double)steps);
+            double denoise = 1;// 1.0 - (startStep / (double)steps); // NOTE: Edit model breaks on denoise<1
             JArray schedulerNode;
             if (scheduler == "turbo")
             {
