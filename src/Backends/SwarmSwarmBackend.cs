@@ -440,14 +440,14 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     {
                         if (objVal.ContainsKey("preview"))
                         {
-                            Logs.Verbose($"[{HandlerTypeData.Name}] Got progress image from websocket");
+                            Logs.Verbose($"[{HandlerTypeData.Name}] Got progress image from websocket {batchId}");
                         }
                         else
                         {
-                            Logs.Verbose($"[{HandlerTypeData.Name}] Got progress from websocket: {response.ToDenseDebugString(true)}");
+                            Logs.Verbose($"[{HandlerTypeData.Name}] Got progress from websocket for {batchId}: {response.ToDenseDebugString(true)}");
                         }
                         objVal["batch_index"] = batchId;
-                        takeOutput(val);
+                        takeOutput(objVal);
                     }
                     else if (response.TryGetValue("image", out val))
                     {
