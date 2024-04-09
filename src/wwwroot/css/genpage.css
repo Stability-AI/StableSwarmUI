@@ -1111,3 +1111,7 @@ body {
     color:var(--emphasis);
     margin-right: 0.25rem;
 }
+.simpletabbrowserwrapper {
+    width: 100vw;
+    height: calc(100vh - 2rem);
+}

@@ -15,6 +15,9 @@
 }
 
 <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item secretexperimental" role="presentation">
+        <a class="nav-link translate secretexperimental" data-bs-toggle="tab" href="#Simple" id="simpletabbutton" aria-selected="false" tabindex="-1" role="tab">Simple</a>
+    </li>
     <li class="nav-item" role="presentation">
         <a class="nav-link active translate" data-bs-toggle="tab" href="#Text2Image" id="text2imagetabbutton" aria-selected="true" role="tab">Generate</a>
     </li>
@@ -30,6 +33,9 @@
     </li>
 </ul>
 <div class="tab-content tab-hundred">
+    <div class="tab-pane tab-pane-vw secretexperimental" id="Simple" role="tabpanel">
+        <div class="simpletabbrowserwrapper browser_container" id="simpletabbrowserwrapper"></div>
+    </div>
     <div class="tab-pane show active" style="line-height:0" id="Text2Image" role="tabpanel">
         <div class="t2i-top-bar-container" style="line-height:1.5">
             <div class="t2i-top-bar" id="t2i_top_bar">
@@ -655,6 +661,7 @@
     <script src="/js/genpage/params.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/utiltab.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/image_editor.js?vary=@Utilities.VaryID"></script>
+    <script src="/js/genpage/simpletab.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/main.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/settings_editor.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/logs.js?vary=@Utilities.VaryID"></script>

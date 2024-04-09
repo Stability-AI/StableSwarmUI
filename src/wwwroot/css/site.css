@@ -601,6 +601,9 @@ textarea, input, select {
     margin: auto;
     vertical-align: text-top;
 }
+.secretexperimental {
+    display: none;
+}
 
 
 /* All below: imported from modern.css, needs to be split into appropriate locations */
