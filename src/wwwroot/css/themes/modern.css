@@ -70,15 +70,23 @@
     font-optical-sizing: auto;
     font-weight: 700;
 }
+.comfy_workflow_buttons {
+    font-family: var(--bs-body-font-family) !important;
+}
+.comfy_workflow_buttons .basic-button {
+    font-family: var(--bs-body-font-family) !important;
+}
 
 .nav-tabs {
-    margin-bottom: var(--panel-gap);
+    margin-bottom: calc(var(--panel-gap) - 2px);
     border-bottom: none;
     font-size: 20px;
 }
 
 .nav-tabs .nav-item a {
     padding: calc(var(--bs-nav-link-padding-y) + 6px) calc(var(--bs-nav-link-padding-x) + 6px);
+    padding-top: 2px;
+    padding-bottom: 6px;
 }
 
 .nav-tabs .nav-link,
@@ -456,7 +464,7 @@
 /* Bottom */
 #bottombartabcollection {
     margin-bottom: 0;
-    border-bottom: var(--panel-gap) solid var(--background);
+    border-bottom: calc(var(--panel-gap) - 2px) solid var(--background);
 }
 
 .browser_container .browser-folder-tree-container {

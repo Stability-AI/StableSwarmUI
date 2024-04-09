@@ -100,4 +100,5 @@
     margin: 0;
     padding: 0;
     height: 20rem;
+    border-bottom: 7px solid var(--background);
 }

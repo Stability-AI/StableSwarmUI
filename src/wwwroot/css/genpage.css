@@ -667,7 +667,7 @@ body {
 .browser-content-container {
     display: inline-block;
     width: 100%;
-    height: calc(100% - 4rem);
+    height: calc(100% - 3rem);
     overflow: auto;
     vertical-align: top;
     padding-bottom: 3rem;
@@ -678,6 +678,7 @@ body {
     height: 100%;
     overflow: hidden;
     white-space: nowrap;
+    background-color: var(--background-panel);
 }
 .browser-folder-tree-part {
     display: block;
