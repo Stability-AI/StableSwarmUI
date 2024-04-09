@@ -231,12 +231,14 @@ function alignImageDataFormat() {
     let remainingWidth = curImg.offsetWidth - width - 20;
     img.style.maxWidth = `calc(min(100%, ${width}px))`;
     if (remainingWidth > 30 * 16) {
+        curImg.classList.remove('current_image_small');
         extrasWrapper.style.width = `${remainingWidth}px`;
         extrasWrapper.style.maxWidth = `${remainingWidth}px`;
         extrasWrapper.style.display = 'inline-block';
         img.style.maxHeight = `calc(max(15rem, 100%))`;
     }
     else {
+        curImg.classList.add('current_image_small');
         extrasWrapper.style.width = '100%';
         extrasWrapper.style.maxWidth = `100%`;
         extrasWrapper.style.display = 'block';
@@ -1096,6 +1098,7 @@ function pageSizer() {
         let barTopLeft = leftShut ? `0px` : pageBarTop == -1 ? (isSmallWindow ? `14rem` : `28rem`) : `${pageBarTop}px`;
         let barTopRight = pageBarTop2 == -1 ? (isSmallWindow ? `4rem` : `21rem`) : `${pageBarTop2}px`;
         inputSidebar.style.width = `${barTopLeft}`;
+        mainInputsAreaWrapper.classList[pageBarTop < 350 ? "add" : "remove"]("main_inputs_small");
         mainInputsAreaWrapper.style.width = `${barTopLeft}`;
         inputSidebar.style.display = leftShut ? 'none' : '';
         altRegion.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;

@@ -1,0 +1,30 @@
+@import url('./modern.css');
+
+/* General */
+:root {
+    --background-soft: #c0c0c0;
+    --background-gray: #d0d0d0;
+    --background-gray-danger: #e08585;
+    --shadow: #cbcbfd;
+    --light-border: #728787;
+    --popup-back: #aaaaaa;
+    --popup-front: hsl(0, 0%, 6%);
+
+    --button-foreground-disabled: #fff;
+    --text-soft: #525252;
+
+    --background: #aaa;
+    --text: #101010;
+    --emphasis: #c7966b;
+    --button-text: #101010;
+
+    --background-panel: #D9D9D9;
+    --background-panel-subtle: rgba(0, 0, 0, 0.03);
+    --emphasis-text: #fff;
+    --border-color: #aaa;
+    --button-background: #a1a1a1;
+    --range-track-color: #B1B1B1;
+    --range-thumb-color: #a1a1a1;
+    
+    --qbutton: #8b6445;
+}

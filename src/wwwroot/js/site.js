@@ -361,19 +361,24 @@ function doToggleEnable(id) {
 }
 
 function getToggleHtml(toggles, id, name, extraClass = '', func = 'doToggleEnable') {
-    return toggles ? `<span class="form-check form-switch display-inline-block${extraClass}"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="${func}('${id}')" onchange="${func}('${id}')" autocomplete="false"></span>` : '';
+    return toggles ? `<span class="form-check form-switch display-inline-block${extraClass}"><input class="auto-slider-toggle form-check-input" type="checkbox" id="${id}_toggle" title="Enable/disable ${name}" onclick="${func}('${id}')" onchange="${func}('${id}')" autocomplete="false"><div class="auto-slider-toggle-content"></div></span>` : '';
 }
 
 function load_image_file(e) {
+    updateFileDragging({ target: e }, true);
     let file = e.files[0];
-    let preview = e.parentElement.querySelector('.auto-input-image-preview');
+    const parent = e.closest('.auto-input');
+    let preview = parent.querySelector('.auto-input-image-preview');
+    const label = parent.querySelector('.auto-file-input-filename');
     if (file) {
+        label.textContent = file.name;
         let reader = new FileReader();
         reader.addEventListener("load", () => {
             e.dataset.filedata = reader.result;
             preview.innerHTML = `<button class="interrupt-button auto-input-image-remove-button" title="Remove image">&times;</button><img src="${reader.result}" alt="Image preview" />`;
             preview.firstChild.addEventListener('click', () => {
                 delete e.dataset.filedata;
+                label.textContent = "";
                 preview.innerHTML = '';
                 e.value = '';
             });
@@ -382,6 +387,7 @@ function load_image_file(e) {
     }
     else {
         e.dataset.filedata = null;
+        label.textContent = "";
         preview.innerHTML = '';
     }
 }
@@ -444,12 +450,21 @@ function getPopoverElemsFor(id, popover_button) {
         format = settingElem.value;
     }
     if (format == 'BUTTON') {
-        return [`<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}')">?</span>`, ''];
+        return [`<span class="auto-input-qbutton info-popover-button" onclick="doPopover('${id}', arguments[0])">?</span>`, ''];
     }
     else if (format == 'HOVER') {
         return ['', ` onmouseover="doPopoverHover('${id}')" onmouseout="hidePopoverHover('${id}')"`];
     }
     return ['', ''];
+}
+
+function getRangeStyle(value, min, max) {
+    return `--range-value: ${(value-min)/(max-min)*100}%`;
+}
+
+function updateRangeStyle(e) {
+    const el = e.srcElement;
+    el.parentElement.style.setProperty("--range-value", `${(el.value-el.min)/(el.max-el.min)*100}%`);
 }
 
 function makeSliderInput(featureid, id, name, description, value, min, max, view_max = 0, step = 1, isPot = false, toggles = false, popover_button = true) {
@@ -461,10 +476,14 @@ function makeSliderInput(featureid, id, name, description, value, min, max, view
     return `
     <div class="slider-auto-container">
     <div class="auto-input auto-slider-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+        <label>
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+        </label>
         <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false" onchange="autoNumberWidth(this)">
         <br>
-        <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false">
+        <div class="auto-slider-range-wrapper" style="${getRangeStyle(rangeVal, min, view_max)}">
+            <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false" oninput="updateRangeStyle(arguments[0])" onchange="updateRangeStyle(arguments[0])">
+        </div>
     </div></div>`;
 }
 
@@ -476,15 +495,19 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
     if (format == 'seed') {
         return `
             <div class="auto-input auto-number-box auto-input-flex"${featureid}>
-                <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+                <label>
+                    <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+                </label>
                 <input class="auto-number auto-number-seedbox" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
-                <button class="basic-button" title="Random (Set to -1)" onclick="setSeedToRandom('${id}')">&#x1F3B2;</button>
-                <button class="basic-button" title="Reuse (from currently selected image)" onclick="reuseLastParamVal('${id}');">&#128257;</button>
+                <button class="basic-button seed-button seed-random-button" title="Random (Set to -1)" onclick="setSeedToRandom('${id}')">&#x1F3B2;</button>
+                <button class="basic-button seed-button seed-reuse-button" title="Reuse (from currently selected image)" onclick="reuseLastParamVal('${id}');">&#128257;</button>
             </div>`;
     }
     return `
         <div class="auto-input auto-number-box auto-input-flex"${featureid}>
-            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+            <label>
+                <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+            </label>
             <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false" onchange="autoNumberWidth(this)">
         </div>`;
 }
@@ -500,7 +523,9 @@ function makeTextInput(featureid, id, name, description, value, format, placehol
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-text-box${(isBig ? "" : " auto-input-flex")}"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+        <label>
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+        </label>
         ${tokenCounter}
         <textarea class="auto-text${(isBig ? " auto-text-block" : "")} translate translate-no-text" id="${id}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtmlNoBr(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
         <button class="interrupt-button image-clear-button" style="display: none;">${translateableHtml("Clear Images")}</button>
@@ -529,7 +554,9 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
     featureid += featureid2;
     let html = `
     <div class="auto-input auto-dropdown-box auto-input-flex"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+        <label>
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+        </label>
         <select class="auto-dropdown" id="${id}" autocomplete="false" onchange="autoSelectWidth(this)">`;
     for (let i = 0; i < values.length; i++) {
         let value = values[i];
@@ -550,7 +577,9 @@ function makeMultiselectInput(featureid, id, name, description, values, defaultV
     featureid += featureid2;
     let html = `
     <div class="auto-input auto-dropdown-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+        <label>
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+        </label>
         <select class="form-select" id="${id}" autocomplete="false" data-placeholder="${escapeHtmlNoBr(placeholder)}" multiple>`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
@@ -569,11 +598,32 @@ function makeImageInput(featureid, id, name, description, toggles = false, popov
     featureid += featureid2;
     let html = `
     <div class="auto-input auto-file-box"${featureid}>
-        <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
-        <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" autocomplete="false">
+        <label>
+            <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
+        </label>
+        <label for="${id}" class="auto-file-label">
+            <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" ondragover="updateFileDragging(arguments[0])" ondragleave="updateFileDragging(arguments[0], true)" autocomplete="false">
+            <div class="auto-file-input">
+                <a class="auto-file-input-button basic-button">${translateableHtml("Choose File")}</a>
+                <span class="auto-file-input-filename"></span>
+            </div>
+        </label>
         <div class="auto-input-image-preview"></div>
     </div>`;
     return html;
+}
+
+function updateFileDragging(e, out) {
+    let files = [];
+    if (e.dataTransfer && !out) {
+        files = e.dataTransfer.files;
+        if (!files || !files.length) {
+            files = [...e.dataTransfer.items || []].filter(item => item.kind === "file");
+        }
+    }
+    const el = e.target.nextElementSibling;
+    const mode = files.length ? "add" : "remove";
+    el.classList[mode]("auto-file-input-file-drag");
 }
 
 function describeAspectRatio(width, height) {
