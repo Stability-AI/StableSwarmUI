@@ -135,7 +135,7 @@ public class ComfyUIBackendExtension : Extension
 
     public static IEnumerable<ComfyUIAPIAbstractBackend> RunningComfyBackends => Program.Backends.RunningBackendsOfType<ComfyUIAPIAbstractBackend>();
 
-    public record class ComfyCustomWorkflow(string Name, string Workflow, string Prompt, string CustomParams, string Image);
+    public record class ComfyCustomWorkflow(string Name, string Workflow, string Prompt, string CustomParams, string Image, string Description, bool EnableInSimple);
 
     public void LoadWorkflowFiles()
     {
@@ -184,7 +184,9 @@ public class ComfyUIBackendExtension : Extension
         string prompt = json["prompt"]?.ToString();
         string customParams = json["custom_params"]?.ToString();
         string image = json["image"]?.ToString() ?? "/imgs/model_placeholder.jpg";
-        workflow = new(name, workflowData, prompt, customParams, image);
+        string description = json["description"]?.ToString() ?? "";
+        bool enableInSimple = json.TryGetValue("enable_in_simple", out JToken enableInSimpleTok) && enableInSimpleTok.ToObject<bool>();
+        workflow = new(name, workflowData, prompt, customParams, image, description, enableInSimple);
         CustomWorkflows[name] = workflow;
         return workflow;
     }

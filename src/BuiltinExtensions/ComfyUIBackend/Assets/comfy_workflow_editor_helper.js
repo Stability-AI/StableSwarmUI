@@ -866,7 +866,16 @@ function comfySaveModalSaveNow() {
     comfyNoticeMessage("Saving...");
     comfyBuildParams((params, prompt_text, retained, paramVal, workflow) => {
         prompt_text = JSON.stringify(prompt_text).replaceAll("\"%%_COMFYFIXME_${", "${").replaceAll("}_ENDFIXME_%%\"", "}");
-        genericRequest('ComfySaveWorkflow', { 'name': saveName, 'workflow': JSON.stringify(workflow), 'prompt': prompt_text, 'custom_params': params, image: image }, (data) => {
+        let inputs = {
+            'name': saveName,
+            'description': getRequiredElementById('comfy_save_description').value,
+            'enable_in_simple': getRequiredElementById('comfy_save_enable_simple').checked,
+            'workflow': JSON.stringify(workflow),
+            'prompt': prompt_text,
+            'custom_params': params,
+            'image': image
+        };
+        genericRequest('ComfySaveWorkflow', inputs, (data) => {
             comfyNoticeMessage("Saved!");
             comfyReconfigureQuickload();
             if (comfyWorkflowBrowser.everLoaded) {
@@ -980,7 +989,7 @@ function comfyListWorkflowsForBrowser(path, isRefresh, callback, depth) {
         let deduped = [...new Set(fixedFolders)];
         let folders = deduped.sort((a, b) => b.toLowerCase().localeCompare(a.toLowerCase()));
         let mapped = relevant.map(f => {
-            return { 'name': f.name, 'data': { 'image': f.image } };
+            return { 'name': f.name, 'data': f };
         });
         callback(folders, mapped);
     });
@@ -992,6 +1001,8 @@ function comfyDescribeWorkflowForBrowser(workflow) {
             label: 'Replace',
             onclick: (e) => {
                 getRequiredElementById('comfy_save_modal_name').value = workflow.name;
+                getRequiredElementById('comfy_save_description').value = workflow.data.description;
+                getRequiredElementById('comfy_save_enable_simple').value = workflow.data.enable_in_simple;
                 comfySaveWorkflowNow();
             }
         },
@@ -1006,7 +1017,7 @@ function comfyDescribeWorkflowForBrowser(workflow) {
             }
         }
     ];
-    return { name: workflow.name, description: `<b>${escapeHtmlNoBr(workflow.name)}</b>`, image: workflow.data.image, buttons: buttons, className: '', searchable: workflow.name };
+    return { name: workflow.name, description: `<b>${escapeHtmlNoBr(workflow.name)}</b><br>${escapeHtmlNoBr(workflow.data.description ?? "")}`, image: workflow.data.image, buttons: buttons, className: '', searchable: `${workflow.name}\n${workflow.description}` };
 }
 
 function comfySelectWorkflowForBrowser(workflow) {

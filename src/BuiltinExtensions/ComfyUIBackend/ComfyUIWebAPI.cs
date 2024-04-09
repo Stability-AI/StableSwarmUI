@@ -24,7 +24,7 @@ public static class ComfyUIWebAPI
     }
 
     /// <summary>API route to save a comfy workflow object to persistent file.</summary>
-    public static async Task<JObject> ComfySaveWorkflow(string name, string workflow, string prompt, string custom_params, string image)
+    public static async Task<JObject> ComfySaveWorkflow(string name, string workflow, string prompt, string custom_params, string image, string description = "", bool enable_in_simple = false)
     {
         string cleaned = Utilities.StrictFilenameClean(name);
         string path = $"{ComfyUIBackendExtension.Folder}/CustomWorkflows/{cleaned}.json";
@@ -38,13 +38,15 @@ public static class ComfyUIWebAPI
             ComfyUIBackendExtension.ComfyCustomWorkflow oldFlow = ComfyUIBackendExtension.GetWorkflowByName(path);
             image = oldFlow.Image;
         }
-        ComfyUIBackendExtension.CustomWorkflows[path] = new ComfyUIBackendExtension.ComfyCustomWorkflow(cleaned, workflow, prompt, custom_params, image);
+        ComfyUIBackendExtension.CustomWorkflows[path] = new ComfyUIBackendExtension.ComfyCustomWorkflow(cleaned, workflow, prompt, custom_params, image, description, enable_in_simple);
         JObject data = new()
         {
             ["workflow"] = workflow,
             ["prompt"] = prompt,
             ["custom_params"] = custom_params,
-            ["image"] = image
+            ["image"] = string.IsNullOrWhiteSpace(image) ? "/imgs/model_placeholder.jpg" : image,
+            ["description"] = description ?? "",
+            ["enable_in_simple"] = enable_in_simple
         };
         File.WriteAllBytes(path, data.ToString().EncodeUTF8());
         return new JObject() { ["success"] = true };
@@ -64,7 +66,9 @@ public static class ComfyUIWebAPI
             ["workflow"] = workflow.Workflow,
             ["prompt"] = workflow.Prompt,
             ["custom_params"] = workflow.CustomParams,
-            ["image"] = workflow.Image
+            ["image"] = workflow.Image ?? "/imgs/model_placeholder.jpg",
+            ["description"] = workflow.Description ?? "",
+            ["enable_in_simple"] = workflow.EnableInSimple
         };
     }
 
@@ -83,7 +87,13 @@ public static class ComfyUIWebAPI
     public static async Task<JObject> ComfyListWorkflows()
     {
         return new JObject() { ["workflows"] = JToken.FromObject(ComfyUIBackendExtension.CustomWorkflows.Keys.ToList()
-            .Select(ComfyUIBackendExtension.GetWorkflowByName).OrderBy(w => w.Name).Select(w => new JObject() { ["name"] = w.Name, ["image"] = w.Image }).ToList()) };
+            .Select(ComfyUIBackendExtension.GetWorkflowByName).OrderBy(w => w.Name).Select(w => new JObject()
+            {
+                ["name"] = w.Name,
+                ["image"] = w.Image ?? "/imgs/model_placeholder.jpg",
+                ["description"] = w.Description,
+                ["enable_in_simple"] = w.EnableInSimple
+            }).ToList()) };
     }
 
     /// <summary>API route to read a delete a saved Comfy custom workflows.</summary>

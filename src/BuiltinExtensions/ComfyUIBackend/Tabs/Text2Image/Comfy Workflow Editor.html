@@ -44,9 +44,15 @@
         <div class="modal-body">
             <p class="translate">Save workflow...</p>
             <input type="text" id="comfy_save_modal_name" autocomplete="off" style="width: 100%;">
+            <p class="translate">Description:</p>
+            <textarea id="comfy_save_description" style="width: 100%;" placeholder="Description..."></textarea>
             <br>
-            <span class="form-check form-switch display-inline-block">
-                <input class="auto-slider-toggle form-check-input translate" type="checkbox" id="comfy_save_use_image" title="Enable/disable image"> Use Image
+            <span class="form-check form-switch display-inline-block translate">
+                <input class="form-check-input translate" type="checkbox" id="comfy_save_enable_simple" title="Enable this workflow in the Simple tab"> Enable In Simple Tab
+            </span>
+            <br>
+            <span class="form-check form-switch display-inline-block translate">
+                <input class="form-check-input translate" type="checkbox" id="comfy_save_use_image" title="Enable/disable image"> Use Image
             </span>
             <div id="comfy_save_image" class="comfy_save_image"></div>
         </div>
