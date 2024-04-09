@@ -296,19 +296,6 @@
     text-align: left;
 }
 
-/* Hide init image label*/
-#input_group_content_initimage>.auto-input:first-child .auto-input-name {
-    display: none;
-}
-
-#input_group_content_initimage>.auto-input:first-child {
-    margin-top: 2px;
-}
-
-#input_group_content_initimage>.auto-input:first-child label {
-    display: contents;
-}
-
 .current_image_small {
     border: none;
     display: inline-flex !important;

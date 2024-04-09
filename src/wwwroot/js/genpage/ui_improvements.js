@@ -344,7 +344,6 @@ function doPopover(id, e) {
     else {
         showPopover(id);
     }
-    
     if (e) {
         e.preventDefault();
         e.stopImmediatePropagation();

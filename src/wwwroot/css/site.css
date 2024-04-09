@@ -416,7 +416,7 @@ textarea, input, select {
 .input-group-content > div {
     padding: 5px;
     flex: 1 0 0;
-    min-width: 15rem;
+    min-width: 17rem;
  }
 .input-group-header {
     position: relative;
@@ -613,20 +613,24 @@ textarea, input, select {
 }
 ::-webkit-scrollbar-track {
     background: transparent;
+    transition: all 0.5s;
 }
 ::-webkit-scrollbar-thumb {
-    --scrollbar: rgba(100, 100, 100, 0.5);
-    background-color: var(--scrollbar);
+    background: rgba(100, 100, 100, 0.5);
     border-radius: 20px;
     border: transparent;
+    transition: all 0.5s;
+}
+::-webkit-scrollbar-track:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 100, 100, 0.7);
 }
 textarea,
 input,
 select {
     color: var(--text);
-}
-.input-group input[type="number"] {
-    text-align: right;
 }
 .input-group input[type="number"].auto-slider-number {
     padding: 0 4px;
@@ -720,7 +724,7 @@ input[type="range"]::-moz-range-track {
 .input-group-header-activated .auto-symbol::after {
     background: var(--box-selected-border-stronger) !important;
 }
-.form-switch {
+.toggle-switch {
     position: relative;
     --toggle-width: 28px;
     --toggle-height: 12px;
