@@ -765,8 +765,8 @@ input[type="range"]::-moz-range-track {
 }
 .input-group-header .form-switch {
     --toggle-width: 32px;
-    --toggle-height: 16px;
-    --toggle-thumb-size: 16px;
+    --toggle-height: 18px;
+    --toggle-thumb-size: 18px;
 }
 .auto-slider-toggle:checked+.auto-slider-toggle-content {
     background: var(--emphasis);
