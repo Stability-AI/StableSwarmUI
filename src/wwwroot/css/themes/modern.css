@@ -359,7 +359,7 @@
     margin-top: 10px;
 }
 
-#alt_prompt_region {
+.alt_prompt_region {
     background: var(--background-panel);
 }
 
@@ -367,7 +367,7 @@
     padding-right: 1rem;
 }
 
-#alt_prompt_textbox {
+.alt_prompt_textbox {
     background: var(--background);
     color: var(--text);
     border-radius: 12px;
@@ -380,7 +380,7 @@
     min-width: 150px;
 }
 
-#alt_prompt_textbox::placeholder {
+.alt_prompt_textbox::placeholder {
     color: var(--button-foreground);
     opacity: 0.6;
 }

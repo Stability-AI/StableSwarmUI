@@ -1,6 +1,3 @@
-@import url('./modern.css');
-
-/* General */
 :root {
     --background-soft: #27272a;
     --background-gray: #222226;
@@ -9,16 +6,13 @@
     --light-border: #3f3f46;
     --popup-back: #000000;
     --popup-front: #ffffff;
-
     --button-foreground-disabled: #aaaaaa;
     --text-soft: #aaa;
-
     --background: #161616;
     --text: #E4E4E4;
     --emphasis: #7855e1;
     --button-text: #fff;
 	--button-background-hover: color-mix(in srgb, var(--emphasis) 70%, white);
-
     --background-panel: #202020;
     --background-panel-subtle: rgba(255, 255, 255, 0.03);
     --emphasis-text: var(--button-text);
@@ -26,5 +20,4 @@
     --button-background: #4b4b4b;
     --range-track-color: #1d1d1d;
     --range-thumb-color: #4b4b4b;
-
 }

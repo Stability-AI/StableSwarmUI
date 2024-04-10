@@ -405,7 +405,7 @@ public static class BasicAPIFeatures
             {
                 ["name"] = theme.Name,
                 ["is_dark"] = theme.IsDark,
-                ["path"] = theme.Path
+                ["css_paths"] = JArray.FromObject(theme.CSSPaths)
             };
         }
         return new JObject() { ["themes"] = themes, ["settings"] = AdminAPI.AutoConfigToParamData(session.User.Settings) };

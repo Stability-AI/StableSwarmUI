@@ -65,9 +65,9 @@ public class WebServer
     /// <summary>Data about a theme.</summary>
     /// <param name="ID">The registered theme ID.</param>
     /// <param name="Name">The clear name to display to users.</param>
-    /// <param name="Path">The web request path for the theme.</param>
+    /// <param name="CSSPaths">The web request path for CSS files for this theme.</param>
     /// <param name="IsDark">True if the theme is dark, false if light.</param>
-    public record class ThemeData(string ID, string Name, string Path, bool IsDark) { }
+    public record class ThemeData(string ID, string Name, string[] CSSPaths, bool IsDark) { }
 
     /// <summary>Register a theme.</summary>
     public void RegisterTheme(ThemeData theme)
@@ -78,19 +78,19 @@ public class WebServer
     /// <summary>Register a theme from an extension.</summary>
     public void RegisterTheme(string id, string name, string extFile, Extension extension, bool isDark)
     {
-        RegisterTheme(new(id, name, $"/ExtensionFile/{extension.ExtensionName}/{extFile}", isDark));
+        RegisterTheme(new(id, name, [$"/ExtensionFile/{extension.ExtensionName}/{extFile}"], isDark));
     }
 
     /// <summary>Initial prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>
     public void PreInit()
     {
         RegisteredThemes.Clear();
-        RegisterTheme(new("dark_dreams", "Dark Dreams", "/css/themes/dark_dreams.css", true));
-        RegisterTheme(new("gravity_blue", "Gravity Blue", "/css/themes/gravity_blue.css", true));
-        RegisterTheme(new("cyber_swarm", "Cyber Swarm", "/css/themes/cyber_swarm.css", true));
-        RegisterTheme(new("eyesear_white", "Eyesear White", "/css/themes/eyesear_white.css", false));
-        RegisterTheme(new("modern_dark", "Modern Dark", "/css/themes/modern_dark.css", true));
-        RegisterTheme(new("modern_light", "Modern Light", "/css/themes/modern_light.css", false));
+        RegisterTheme(new("dark_dreams", "Dark Dreams", ["/css/themes/dark_dreams.css"], true));
+        RegisterTheme(new("gravity_blue", "Gravity Blue", ["/css/themes/gravity_blue.css"], true));
+        RegisterTheme(new("cyber_swarm", "Cyber Swarm", ["/css/themes/cyber_swarm.css"], true));
+        RegisterTheme(new("eyesear_white", "Eyesear White", ["/css/themes/eyesear_white.css"], false));
+        RegisterTheme(new("modern_dark", "Modern Dark", ["/css/themes/modern.css", "/css/themes/modern_dark.css"], true));
+        RegisterTheme(new("modern_light", "Modern Light", ["/css/themes/modern.css", "/css/themes/modern_light.css"], false));
     }
 
     /// <summary>Main prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>

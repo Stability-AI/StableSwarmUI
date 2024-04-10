@@ -95,9 +95,10 @@ function applyThemeSetting(theme_info) {
             let theme_id = themeSelectorElement.value;
             let theme = theme_info[theme_id];
             setCookie('sui_theme_id', theme_id, 365);
-            let header = getRequiredElementById('theme_sheet_header');
-            header.href = theme.path + '?' + header.href.split('?')[1];
+            let siteHeader = getRequiredElementById('sitecssheader');
             getRequiredElementById('bs_theme_header').href = theme.is_dark ? '/css/bootstrap.min.css' : '/css/bootstrap_light.min.css';
+            let header = getRequiredElementById('theme_sheet_header');
+            header.innerHTML = theme.css_paths.map(path => `<link rel="stylesheet" href="${path}?${siteHeader.href.split('?')[1]}" />`).join('\n');
         }
         themeSelectorElement.addEventListener('change', setTheme);
         setTheme();
