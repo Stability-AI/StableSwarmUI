@@ -357,6 +357,10 @@
     min-width: 150px;
 }
 
+.alt-text-tokencount-wrapper {
+    left: calc(100% - 11rem) !important;
+}
+
 .alt_prompt_textbox::placeholder {
     color: var(--button-foreground);
     opacity: 0.6;
