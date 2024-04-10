@@ -727,9 +727,6 @@ input[type="range"]::-webkit-slider-runnable-track,
 input[type="range"]::-moz-range-track {
     background: unset !important;
 }
-.input-group-header-activated .auto-symbol::after {
-    background: var(--box-selected-border-stronger) !important;
-}
 .toggle-switch {
     position: relative;
     --toggle-width: 28px;

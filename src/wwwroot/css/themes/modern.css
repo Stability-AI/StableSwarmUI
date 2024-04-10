@@ -235,11 +235,6 @@
 }
 
 .auto-symbol {
-    font-size: 0;
-}
-
-.auto-symbol::after {
-    content: "▼";
     display: inline-block;
     text-align: center;
     font-size: 10px;
@@ -252,36 +247,21 @@
     position: relative;
     top: -2px;
     transition: background .2s;
-    color: transparent;
+    color: var(--text) !important;
+
 }
 
-.auto-symbol::before {
-    content: "";
-    position: absolute;
-    top: 8px;
-    left: 10px;
-    z-index: 1;
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid var(--text-soft);
-}
-
-.input-group-open .auto-symbol::before {
-    border-bottom: 6px solid var(--text-soft);
-    border-top: none;
-    top: 8px;
-}
-
-.input-group .input-group-header:hover:not(:has(input:hover)) .auto-symbol::after {
+.input-group .input-group-header:hover .auto-symbol {
     background-color: var(--button-background-hover);
     background-position: 100%;
 }
 
-.input-group .input-group-header:hover:not(:has(input:hover)) .auto-symbol::before {
-    border-top-color: var(--button-foreground-hover);
-    border-bottom-color: var(--button-foreground-hover);
+.input-group .input-group-header:hover .auto-symbol {
+    color: var(--button-foreground-hover) !important;
+}
+
+.input-group-header-activated .auto-symbol {
+    background: var(--box-selected-border-stronger) !important;
 }
 
 .input-group .input-group-content {
@@ -385,10 +365,7 @@
     opacity: 0.6;
 }
 
-#alt_generate_button,
-#alt_center_button,
-#alt_interrupt_button {
-    height: 38px;
+.alt-prompt-buttons {
     font-size: 20px;
 }
 
@@ -402,7 +379,6 @@
 #alt_center_button {
     background: var(--emphasis);
     color: var(--emphasis-text) !important;
-    font-size: 0;
 }
 
 #alt_generate_button:hover,
@@ -412,9 +388,8 @@
 }
 
 #alt_center_button::after {
-    content: "▼";
     font-size: 12px;
-    padding: 0 5px;
+    padding: 0 2px;
 }
 
 #Text2Image .seed-button.basic-button {
