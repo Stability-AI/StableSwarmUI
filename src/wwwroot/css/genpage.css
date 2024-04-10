@@ -758,8 +758,15 @@ body {
     display: flex;
 }
 .alt_prompt_textbox {
-    margin-left: 1rem;
     border-radius: 0.2rem;
+    width: 100%;
+}
+#alt_negativeprompt_textbox {
+    margin-top: 6px;
+}
+.alt_prompt_textboxes {
+    margin-left: 1rem;
+    display: inline-block;
     flex-grow: 10;
 }
 .alt-text-tokencount-wrapper {
@@ -777,7 +784,7 @@ body {
     vertical-align: top;
     padding-top: 0.1rem;
     padding-bottom: 0.2rem;
-    height: 2rem;
+    height: 4rem;
     text-align: center;
     border-radius: 0.7rem;
     margin: 0;

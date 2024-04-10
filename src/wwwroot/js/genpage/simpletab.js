@@ -36,7 +36,3 @@ class SimpleTab {
 }
 
 let simpleTab = new SimpleTab();
-
-sessionReadyCallbacks.push(() => {
-    simpleTab.init();
-});

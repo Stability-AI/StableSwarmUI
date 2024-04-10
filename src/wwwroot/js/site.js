@@ -212,8 +212,8 @@ function triggerChangeFor(elem) {
     }
 }
 
-function textPromptDoCount(elem) {
-    let tokenCount = elem.parentElement.querySelector('.auto-input-prompt-tokencount');
+function textPromptDoCount(elem, countElem = null) {
+    let tokenCount = countElem ?? elem.parentElement.querySelector('.auto-input-prompt-tokencount');
     function countTokens() {
         elem.dataset.has_token_count_running = true;
         genericRequest('CountTokens', { text: elem.value, skipPromptSyntax: true }, data => {

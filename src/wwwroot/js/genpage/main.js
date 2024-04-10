@@ -1081,6 +1081,7 @@ function pageSizer() {
     let topSplitButton = getRequiredElementById('t2i-top-split-quickbutton');
     let altRegion = getRequiredElementById('alt_prompt_region');
     let altText = getRequiredElementById('alt_prompt_textbox');
+    let altNegText = getRequiredElementById('alt_negativeprompt_textbox');
     let altImageRegion = getRequiredElementById('alt_prompt_extra_area');
     let topDrag = false;
     let topDrag2 = false;
@@ -1090,7 +1091,9 @@ function pageSizer() {
         if (altRegion.style.display != 'none') {
             altText.style.height = 'auto';
             altText.style.height = `${Math.max(altText.scrollHeight, 15) + 5}px`;
-            altRegion.style.top = `calc(-${altText.offsetHeight + altImageRegion.offsetHeight}px - 2rem)`;
+            altNegText.style.height = 'auto';
+            altNegText.style.height = `${Math.max(altNegText.scrollHeight, 15) + 5}px`;
+            altRegion.style.top = `calc(-${altText.offsetHeight + altNegText.offsetHeight + altImageRegion.offsetHeight}px - 2rem)`;
         }
         setCookie('barspot_pageBarTop', pageBarTop, 365);
         setCookie('barspot_pageBarTop2', pageBarTop2, 365);
@@ -1114,7 +1117,7 @@ function pageSizer() {
         currentImageBatch.style.width = `${barTopRight}`;
         topSplitButton.innerHTML = leftShut ? '&#x21DB;' : '&#x21DA;';
         midSplitButton.innerHTML = midForceToBottom ? '&#x290A;' : '&#x290B;';
-        let altHeight = altRegion.style.display == 'none' ? '0px' : `(${altText.offsetHeight + altImageRegion.offsetHeight}px + 2rem)`;
+        let altHeight = altRegion.style.display == 'none' ? '0px' : `(${altText.offsetHeight + altNegText.offsetHeight + altImageRegion.offsetHeight}px + 2rem)`;
         if (pageBarMid != -1 || midForceToBottom) {
             let fixed = midForceToBottom ? `6.5rem` : `${pageBarMid}px`;
             topSplit.style.height = `calc(100vh - ${fixed})`;
@@ -1212,6 +1215,7 @@ function pageSizer() {
         setPageBars();
         e.preventDefault();
         triggerChangeFor(altText);
+        triggerChangeFor(altNegText);
     }, true);
     let moveEvt = (e, x, y) => {
         let offX = x;
@@ -1266,21 +1270,35 @@ function pageSizer() {
             inputPrompt.value = altText.value;
         }
         setCookie(`lastparam_input_prompt`, altText.value, 0.25);
-        textPromptDoCount(altText);
+        textPromptDoCount(altText, getRequiredElementById('alt_text_tokencount'));
         monitorPromptChangeForEmbed(altText.value, 'positive');
     });
     altText.addEventListener('input', () => {
         setCookie(`lastparam_input_prompt`, altText.value, 0.25);
         setPageBars();
     });
+    altNegText.addEventListener('input', (e) => {
+        let inputPrompt = document.getElementById('input_negativeprompt');
+        if (inputPrompt) {
+            inputPrompt.value = altNegText.value;
+        }
+        setCookie(`lastparam_input_negativeprompt`, altNegText.value, 0.25);
+        monitorPromptChangeForEmbed(altNegText.value, 'negative');
+    });
+    altNegText.addEventListener('input', () => {
+        setCookie(`lastparam_input_negativeprompt`, altNegText.value, 0.25);
+        setPageBars();
+    });
     function altPromptSizeHandle() {
-        altRegion.style.top = `calc(-${altText.offsetHeight + altImageRegion.offsetHeight}px - 2rem)`;
+        altRegion.style.top = `calc(-${altText.offsetHeight + altNegText.offsetHeight + altImageRegion.offsetHeight}px - 2rem)`;
         setPageBars();
     }
     altPromptSizeHandle();
     new ResizeObserver(altPromptSizeHandle).observe(altText);
+    new ResizeObserver(altPromptSizeHandle).observe(altNegText);
     altPromptSizeHandleFunc = altPromptSizeHandle;
     textPromptAddKeydownHandler(altText);
+    textPromptAddKeydownHandler(altNegText);
     addEventListener("resize", setPageBars);
     textPromptAddKeydownHandler(getRequiredElementById('edit_wildcard_contents'));
 }

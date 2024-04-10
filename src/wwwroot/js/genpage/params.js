@@ -135,10 +135,11 @@ function genInputs(delay_final = false) {
     let runnables = [];
     let groupsClose = [];
     let groupsEnable = [];
-    let defaultPromptVisible = rawGenParamTypesFromServer.find(p => p.id == 'prompt').visible;
-    for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => (p.visible || p.id == 'prompt') && !isParamAdvanced(p), true],
+    let isPrompt = (p) => p.id == 'prompt' || p.id == 'negativeprompt';
+    let defaultPromptVisible = rawGenParamTypesFromServer.find(p => isPrompt(p)).visible;
+    for (let areaData of [['main_inputs_area', 'new_preset_modal_inputs', (p) => (p.visible || isPrompt(p)) && !isParamAdvanced(p), true],
             ['main_inputs_area_advanced', 'new_preset_modal_advanced_inputs', (p) => p.visible && isParamAdvanced(p), false],
-            ['main_inputs_area_hidden', 'new_preset_modal_hidden_inputs', (p) => (!p.visible || p.id == 'prompt'), false]]) {
+            ['main_inputs_area_hidden', 'new_preset_modal_hidden_inputs', (p) => (!p.visible || isPrompt(p)), false]]) {
         let area = getRequiredElementById(areaData[0]);
         area.innerHTML = '';
         let presetArea = areaData[1] ? getRequiredElementById(areaData[1]) : null;
@@ -183,14 +184,14 @@ function genInputs(delay_final = false) {
                 }
                 lastGroup = groupName;
             }
-            if (param.id == 'prompt' ? param.visible == isMain : true) {
+            if (isPrompt(param) ? param.visible == isMain : true) {
                 let newData = getHtmlForParam(param, "input_");
                 html += newData.html;
                 if (newData.runnable) {
                     runnables.push(newData.runnable);
                 }
             }
-            if (param.id == 'prompt' ? isMain : true) {
+            if (isPrompt(param) ? isMain : true) {
                 let presetParam = JSON.parse(JSON.stringify(param));
                 presetParam.toggleable = true;
                 let presetData = getHtmlForParam(presetParam, "preset_input_");
@@ -301,9 +302,13 @@ function genInputs(delay_final = false) {
         }
         let inputNegativePrompt = document.getElementById('input_negativeprompt');
         if (inputNegativePrompt) {
-            inputNegativePrompt.addEventListener('input', () => {
-                monitorPromptChangeForEmbed(inputNegativePrompt.value, 'negative');
-            });
+            let altNegText = getRequiredElementById('alt_negativeprompt_textbox');
+            let update = () => {
+                altNegText.value = inputNegativePrompt.value;
+                triggerChangeFor(altNegText);
+            };
+            inputNegativePrompt.addEventListener('input', update);
+            inputNegativePrompt.addEventListener('change', update);
         }
         let inputLoras = document.getElementById('input_loras');
         if (inputLoras) {
@@ -577,11 +582,12 @@ function resetParamsToDefault(exclude = []) {
     }
     localStorage.removeItem('last_comfy_workflow_input');
     getRequiredElementById('alt_prompt_textbox').value = '';
+    getRequiredElementById('alt_negativeprompt_textbox').value = '';
     for (let param of gen_param_types) {
         let id = `input_${param.id}`;
         if (param.visible && !exclude.includes(param.id) && document.getElementById(id) != null) {
             setDirectParamValue(param, param.default);
-            if (param.id == 'prompt') {
+            if (param.id == 'prompt' || param.id == 'negativeprompt') {
                 triggerChangeFor(getRequiredElementById(id));
             }
             if (param.toggleable) {

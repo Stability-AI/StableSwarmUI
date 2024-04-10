@@ -286,7 +286,7 @@ public class T2IParamTypes
             ));
         GroupAdvancedModelAddons = new("Advanced Model Addons", Open: false, IsAdvanced: true);
         NegativePrompt = Register<string>(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.\nTell the AI things you don't want to see.",
-            "", IgnoreIf: "", Clean: ApplyStringEdit, Examples: ["ugly, bad, gross", "lowres, low quality"], OrderPriority: -90, ViewType: ParamViewType.PROMPT, ChangeWeight: -5
+            "", IgnoreIf: "", Clean: ApplyStringEdit, Examples: ["ugly, bad, gross", "lowres, low quality"], OrderPriority: -90, ViewType: ParamViewType.PROMPT, ChangeWeight: -5, VisibleNormally: false
             ));
         GroupRevision = new("ReVision", Open: false, Toggles: true, OrderPriority: -70);
         ReVisionStrength = Register<double>(new("ReVision Strength", "How strong to apply ReVision image inputs.\nSet to 0 to disable ReVision processing.",
