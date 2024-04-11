@@ -52,6 +52,14 @@ function toggleAutoLoadPreviews() {
     localStorage.setItem('autoLoadPreviews', `${autoLoadPreviewsElem.checked}`);
 }
 
+/** Reference to the auto-load-images toggle checkbox. */
+let autoLoadImagesElem = getRequiredElementById('auto_load_images_checkbox');
+autoLoadImagesElem.checked = localStorage.getItem('autoLoadImages') != 'false';
+/** Called when the user changes auto-load-images toggle to update local storage. */
+function toggleAutoLoadImages() {
+    localStorage.setItem('autoLoadImages', `${autoLoadImagesElem.checked}`);
+}
+
 function clickImageInBatch(div) {
     let imgElem = div.getElementsByTagName('img')[0];
     setCurrentImage(div.dataset.src, div.dataset.metadata, div.dataset.batch_id ?? '', imgElem.dataset.previewGrow == 'true');
@@ -460,7 +468,9 @@ function gotImageResult(image, metadata, batchId) {
     let fname = src && src.includes('/') ? src.substring(src.lastIndexOf('/') + 1) : src;
     let batch_div = appendImage('current_image_batch', src, batchId, fname, metadata, 'batch');
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
-    setCurrentImage(src, metadata, batchId, false, true);
+    if (!document.getElementById('current_image_img') || autoLoadImagesElem.checked) {
+        setCurrentImage(src, metadata, batchId, false, true);
+    }
     return batch_div;
 }
 
@@ -745,7 +755,9 @@ function doGenerate(input_overrides = {}, input_preoverrides = {}) {
                 }
                 else {
                     let imgHolder = images[data.batch_index];
-                    setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`, false, true);
+                    if (!document.getElementById('current_image_img') || autoLoadImagesElem.checked || document.getElementById('current_image_img').dataset.batch_id == `${batch_id}_${data.batch_index}`) {
+                        setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`, false, true);
+                    }
                     let imgElem = imgHolder.div.querySelector('img');
                     imgElem.src = data.image;
                     delete imgElem.dataset.previewGrow;
