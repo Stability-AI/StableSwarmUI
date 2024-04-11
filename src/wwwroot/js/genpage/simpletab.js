@@ -2,15 +2,35 @@
 class SimpleTab {
 
     constructor() {
+        this.hasLoaded = false;
+        this.hasBuilt = false;
+        this.containerDiv = null;
         this.tabButton = getRequiredElementById('simpletabbutton');
+        this.wrapperDiv = getRequiredElementById('simpletabbrowserwrapper');
         this.browser = new GenPageBrowserClass('simpletabbrowserwrapper', this.browserListEntries.bind(this), 'simpletabbrowser', 'Big Thumbnails', this.browserDescribeEntry.bind(this), this.browserSelectEntry.bind(this), '', 10);
         this.browser.depth = 10;
         this.browser.showDepth = false;
         this.browser.showRefresh = false;
         this.browser.showUpFolder = false;
         this.browser.folderTreeShowFiles = true;
-        this.hasLoaded = false;
+        this.browser.folderSelectedEvent = this.onFolderSelected.bind(this);
+        this.browser.builtEvent = this.onBrowserBuilt.bind(this);
         this.tabButton.addEventListener('click', this.onTabClicked.bind(this));
+    }
+
+    onFolderSelected() {
+        this.browser.fullContentDiv.style.display = 'inline-block';
+        this.containerDiv.style.display = 'none';
+    }
+
+    onBrowserBuilt() {
+        if (this.hasBuilt) {
+            return;
+        }
+        this.containerDiv = createDiv('simplebrowsercontainerdiv', 'browser-content-container');
+        this.containerDiv.style.display = 'none';
+        this.wrapperDiv.appendChild(this.containerDiv);
+        this.hasBuilt = true;
     }
 
     onTabClicked() {
@@ -27,7 +47,10 @@ class SimpleTab {
     }
 
     browserSelectEntry(workflow) {
+        this.browser.fullContentDiv.style.display = 'none';
+        this.containerDiv.style.display = 'inline-block';
         // TODO
+        this.containerDiv.innerHTML = `Wowsa, you selected ${workflow.name}!`;
     }
 
     browserListEntries(path, isRefresh, callback, depth) {

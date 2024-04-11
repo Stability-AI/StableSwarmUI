@@ -57,6 +57,8 @@ class GenPageBrowserClass {
         this.showUpFolder = true;
         this.showFilter = true;
         this.folderTreeShowFiles = false;
+        this.folderSelectedEvent = null;
+        this.builtEvent = null;
     }
 
     /**
@@ -209,6 +211,9 @@ class GenPageBrowserClass {
         }
         else {
             span.onclick = (e) => {
+                if (this.folderSelectedEvent) {
+                    this.folderSelectedEvent(path);
+                }
                 tree.hasOpened = true;
                 if (e.target.dataset.issymbol) {
                     tree.isOpen = !tree.isOpen;
@@ -489,5 +494,8 @@ class GenPageBrowserClass {
         applyTranslations(this.headerBar);
         applyTranslations(this.contentDiv);
         this.everLoaded = true;
+        if (this.builtEvent) {
+            this.builtEvent();
+        }
     }
 }
