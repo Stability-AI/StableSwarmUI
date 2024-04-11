@@ -4,7 +4,6 @@
     --background-gray-danger: #361f1f;
     --shadow: #3f3f46;
     --light-border: #3f3f46;
-    --popup-back: #000000;
     --popup-front: #ffffff;
     --button-foreground-disabled: #aaaaaa;
     --text-soft: #aaa;
@@ -12,7 +11,6 @@
     --text: #E4E4E4;
     --emphasis: #7855e1;
     --button-text: #fff;
-	--button-background-hover: color-mix(in srgb, var(--emphasis) 70%, white);
     --background-panel: #202020;
     --background-panel-subtle: rgba(255, 255, 255, 0.03);
     --emphasis-text: var(--button-text);
