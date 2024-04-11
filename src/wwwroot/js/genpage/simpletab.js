@@ -4,11 +4,13 @@ class SimpleTab {
     constructor() {
         this.tabButton = getRequiredElementById('simpletabbutton');
         this.browser = new GenPageBrowserClass('simpletabbrowserwrapper', this.browserListEntries.bind(this), 'simpletabbrowser', 'Big Thumbnails', this.browserDescribeEntry.bind(this), this.browserSelectEntry.bind(this), '', 10);
+        this.browser.depth = 10;
         this.browser.showDepth = false;
         this.browser.showRefresh = false;
         this.browser.showUpFolder = false;
-        this.tabButton.addEventListener('click', this.onTabClicked.bind(this));
+        this.browser.folderTreeShowFiles = true;
         this.hasLoaded = false;
+        this.tabButton.addEventListener('click', this.onTabClicked.bind(this));
     }
 
     onTabClicked() {

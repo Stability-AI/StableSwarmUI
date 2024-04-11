@@ -20,11 +20,13 @@ class BrowserCallHelper {
  * Part of a browser tree.
  */
 class BrowserTreePart {
-    constructor(name, children, hasOpened, isOpen) {
+    constructor(name, children, hasOpened, isOpen, fileData = null, fullPath = '') {
         this.name = name;
         this.children = children;
         this.hasOpened = hasOpened;
         this.isOpen = isOpen;
+        this.fileData = fileData;
+        this.fullPath = '';
     }
 }
 
@@ -43,7 +45,7 @@ class GenPageBrowserClass {
         this.folder = '';
         this.extraHeader = extraHeader;
         this.navCaller = this.navigate.bind(this);
-        this.tree = new BrowserTreePart('', {}, false, true);
+        this.tree = new BrowserTreePart('', {}, false, true, null, null);
         this.depth = localStorage.getItem(`browser_${id}_depth`) || defaultDepth;
         this.filter = localStorage.getItem(`browser_${id}_filter`) || '';
         this.folderTreeVerticalSpacing = '0';
@@ -54,6 +56,7 @@ class GenPageBrowserClass {
         this.showRefresh = true;
         this.showUpFolder = true;
         this.showFilter = true;
+        this.folderTreeShowFiles = false;
     }
 
     /**
@@ -78,7 +81,7 @@ class GenPageBrowserClass {
      */
     update(isRefresh = false) {
         if (isRefresh) {
-            this.tree = new BrowserTreePart('', {}, false);
+            this.tree = new BrowserTreePart('', {}, false, null, null);
         }
         let folder = this.folder;
         this.listFoldersAndFiles(folder, isRefresh, (folders, files) => {
@@ -120,7 +123,7 @@ class GenPageBrowserClass {
     /**
      * Updates tree tracker for the given path.
      */
-    refillTree(path, folders) {
+    refillTree(path, folders, isFile = false) {
         if (path.endsWith('/')) {
             path = path.substring(0, path.length - 1);
         }
@@ -130,13 +133,13 @@ class GenPageBrowserClass {
         let otherFolders = folders.filter(f => f.includes('/'));
         if (otherFolders.length > 0) {
             let baseFolders = folders.filter(f => !f.includes('/'));
-            this.refillTree(path, baseFolders);
+            this.refillTree(path, baseFolders, isFile);
             while (otherFolders.length > 0) {
                 let folder = otherFolders[0];
                 let slash = folder.indexOf('/');
                 let base = folder.substring(0, slash + 1);
                 let same = otherFolders.filter(f => f.startsWith(base)).map(f => f.substring(base.length));
-                this.refillTree(`${path}/${base}`, same);
+                this.refillTree(`${path}/${base}`, same, isFile);
                 otherFolders = otherFolders.filter(f => !f.startsWith(base));
             }
             return;
@@ -145,7 +148,7 @@ class GenPageBrowserClass {
             let copy = Object.assign({}, this.tree.children);
             this.tree.children = {};
             for (let folder of folders) {
-                this.tree.children[folder] = copy[folder] || new BrowserTreePart(folder, {}, false, false);
+                this.tree.children[folder] = copy[folder] || new BrowserTreePart(folder, {}, false, false, isFile ? this.getFileFor(folder) : null, folder);
             }
             this.tree.hasOpened = true;
             return;
@@ -155,7 +158,7 @@ class GenPageBrowserClass {
         for (let part of parts) {
             parent = tree;
             if (!(part in parent.children)) {
-                parent.children[part] = new BrowserTreePart(part, {}, false, false);
+                parent.children[part] = new BrowserTreePart(part, {}, false, false, false, parent.fullPath + '/' + part);
             }
             tree = parent.children[part];
         }
@@ -164,7 +167,7 @@ class GenPageBrowserClass {
         tree = new BrowserTreePart(lastName, {}, true, tree.isOpen);
         parent.children[lastName] = tree;
         for (let folder of folders) {
-            tree.children[folder] = copy[folder] || new BrowserTreePart(folder, {}, false, false);
+            tree.children[folder] = copy[folder] || new BrowserTreePart(folder, {}, false, false, isFile ? this.getFileFor(tree.fullPath + '/' + folder) : null, tree.fullPath + '/' + folder);
         }
     }
 
@@ -182,7 +185,7 @@ class GenPageBrowserClass {
         span.innerHTML = `<span class="browser-folder-tree-part-symbol" data-issymbol="true"></span> ${escapeHtml(tree.name || '..')}`;
         span.dataset.path = path;
         container.appendChild(span);
-        if (Object.keys(tree.children).length == 0 && tree.hasOpened) {
+        if ((Object.keys(tree.children).length == 0 && tree.hasOpened) || tree.fileData) {
             // Default: no class
         }
         else if (tree.isOpen) {
@@ -199,16 +202,23 @@ class GenPageBrowserClass {
         if (this.folder == path) {
             span.classList.add('browser-folder-tree-part-selected');
         }
-        span.onclick = (e) => {
-            tree.hasOpened = true;
-            if (e.target.dataset.issymbol) {
-                tree.isOpen = !tree.isOpen;
-            }
-            else {
-                tree.isOpen = true;
-            }
-            this.navigate(path);
-        };
+        if (tree.fileData) {
+            span.onclick = (e) => {
+                this.select(tree.fileData, null);
+            };
+        }
+        else {
+            span.onclick = (e) => {
+                tree.hasOpened = true;
+                if (e.target.dataset.issymbol) {
+                    tree.isOpen = !tree.isOpen;
+                }
+                else {
+                    tree.isOpen = true;
+                }
+                this.navigate(path);
+            };
+        }
     }
 
     /**
@@ -324,6 +334,13 @@ class GenPageBrowserClass {
     }
 
     /**
+     * Returns the file object for a given path.
+     */
+    getFileFor(path) {
+        return this.lastFiles.find(f => f.name == path);
+    }
+
+    /**
      * Central call to build the browser content area.
      */
     build(path, folders, files) {
@@ -333,7 +350,7 @@ class GenPageBrowserClass {
         let scrollOffset = 0;
         this.lastPath = path;
         if (folders) {
-            this.refillTree(path, folders);
+            this.refillTree(path, folders, false);
         }
         else if (folders == null && this.contentDiv) {
             scrollOffset = this.contentDiv.scrollTop;
@@ -342,6 +359,9 @@ class GenPageBrowserClass {
             files = this.lastFiles;
         }
         this.lastFiles = files;
+        if (files && this.folderTreeShowFiles) {
+            this.refillTree(path, files.map(f => f.name), true);
+        }
         let folderScroll = this.folderTreeDiv ? this.folderTreeDiv.scrollTop : 0;
         if (!this.hasGenerated) {
             this.hasGenerated = true;
