@@ -3,11 +3,20 @@ class SimpleTab {
 
     constructor() {
         this.tabButton = getRequiredElementById('simpletabbutton');
-        this.browser = new GenPageBrowserClass('simpletabbrowserwrapper', this.browserListEntries.bind(this), 'simpletabbrowser', 'Big Thumbnails', this.browserDescribeEntry.bind(this), this.browserSelectEntry.bind(this));
-        this.tabButton.addEventListener('click', () => this.browser.navigate(''));
+        this.browser = new GenPageBrowserClass('simpletabbrowserwrapper', this.browserListEntries.bind(this), 'simpletabbrowser', 'Big Thumbnails', this.browserDescribeEntry.bind(this), this.browserSelectEntry.bind(this), '', 10);
+        this.browser.showDepth = false;
+        this.browser.showRefresh = false;
+        this.browser.showUpFolder = false;
+        this.tabButton.addEventListener('click', this.onTabClicked.bind(this));
+        this.hasLoaded = false;
     }
 
-    init() {
+    onTabClicked() {
+        if (this.hasLoaded) {
+            return;
+        }
+        this.browser.navigate('');
+        this.hasLoaded = true;
     }
 
     browserDescribeEntry(workflow) {

@@ -33,7 +33,7 @@ class BrowserTreePart {
  */
 class GenPageBrowserClass {
 
-    constructor(container, listFoldersAndFiles, id, defaultFormat, describe, select, extraHeader = '') {
+    constructor(container, listFoldersAndFiles, id, defaultFormat, describe, select, extraHeader = '', defaultDepth = 3) {
         this.container = getRequiredElementById(container);
         this.listFoldersAndFiles = listFoldersAndFiles;
         this.id = id;
@@ -44,11 +44,16 @@ class GenPageBrowserClass {
         this.extraHeader = extraHeader;
         this.navCaller = this.navigate.bind(this);
         this.tree = new BrowserTreePart('', {}, false, true);
-        this.depth = localStorage.getItem(`browser_${id}_depth`) || 3;
+        this.depth = localStorage.getItem(`browser_${id}_depth`) || defaultDepth;
         this.filter = localStorage.getItem(`browser_${id}_filter`) || '';
         this.folderTreeVerticalSpacing = '0';
         this.splitterMinWidth = 100;
         this.everLoaded = false;
+        this.showDisplayFormat = true;
+        this.showDepth = true;
+        this.showRefresh = true;
+        this.showUpFolder = true;
+        this.showFilter = true;
     }
 
     /**
@@ -367,13 +372,15 @@ class GenPageBrowserClass {
                 localStorage.setItem(`browser_${this.id}_format`, this.format);
                 this.update();
             });
-            let buttons = createSpan(`${this.id}-button-container`, 'browser-header-buttons', `
-                <button id="${this.id}_refresh_button" title="Refresh" class="refresh-button translate translate-no-text">&#x21BB;</button>
-                <button id="${this.id}_up_button" class="refresh-button translate translate-no-text" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>
-                Depth: <input id="${this.id}_depth_input" class="depth-number-input translate translate-no-text" type="number" min="1" max="10" value="${this.depth}" title="Depth of subfolders to show" autocomplete="false">
-                Filter: <input id="${this.id}_filter_input" type="text" value="${this.filter}" title="Text filter, only show items that contain this text." rows="1" autocomplete="false" class="translate translate-no-text" placeholder="${translate('Filter...')}">
-                ${this.extraHeader}
-                `);
+            if (!this.showDisplayFormat) {
+                formatSelector.style.display = 'none';
+            }
+            let buttons = createSpan(`${this.id}-button-container`, 'browser-header-buttons', 
+                `<button id="${this.id}_refresh_button" title="Refresh" class="refresh-button translate translate-no-text">&#x21BB;</button>\n`
+                + `<button id="${this.id}_up_button" class="refresh-button translate translate-no-text" disabled autocomplete="off" title="Go back up 1 folder">&#x21d1;</button>\n`
+                + `<span class="translate">Depth: <input id="${this.id}_depth_input" class="depth-number-input translate translate-no-text" type="number" min="1" max="10" value="${this.depth}" title="Depth of subfolders to show" autocomplete="false"></span>\n`
+                + `<span><input id="${this.id}_filter_input" type="text" value="${this.filter}" title="Text filter, only show items that contain this text." rows="1" autocomplete="false" class="translate translate-no-text" placeholder="${translate('Filter...')}"></span>\n`
+                + this.extraHeader);
             let inputArr = buttons.getElementsByTagName('input');
             let depthInput = inputArr[0];
             depthInput.addEventListener('change', () => {
@@ -381,15 +388,27 @@ class GenPageBrowserClass {
                 localStorage.setItem(`browser_${this.id}_depth`, this.depth);
                 this.update();
             });
+            if (!this.showDepth) {
+                depthInput.parentElement.style.display = 'none';
+            }
             let filterInput = inputArr[1];
             filterInput.addEventListener('input', () => {
                 this.filter = filterInput.value.toLowerCase();
                 localStorage.setItem(`browser_${this.id}_filter`, this.filter);
                 this.update();
             });
+            if (!this.showFilter) {
+                filterInput.parentElement.style.display = 'none';
+            }
             let buttonArr = buttons.getElementsByTagName('button');
             let refreshButton = buttonArr[0];
             this.upButton = buttonArr[1];
+            if (!this.showRefresh) {
+                refreshButton.style.display = 'none';
+            }
+            if (!this.showUpFolder) {
+                this.upButton.style.display = 'none';
+            }
             this.headerBar.appendChild(formatSelector);
             this.headerBar.appendChild(buttons);
             refreshButton.onclick = this.refresh.bind(this);
