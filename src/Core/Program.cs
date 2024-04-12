@@ -121,7 +121,6 @@ public class Program
         catch (IOException ex)
         {
             Logs.Error($"Failed to create directory for SD models. You may need to check your ModelRoot and SDModelFolder settings. {ex.Message}");
-            return;
         }
         timer.Check("Initial settings load");
         RunOnAllExtensions(e => e.OnPreInit());
@@ -150,7 +149,14 @@ public class Program
         Logs.Init("Loading models list...");
         foreach (T2IModelHandler handler in T2IModelSets.Values)
         {
-            handler.Refresh();
+            try
+            {
+                handler.Refresh();
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Failed to load models for {handler.ModelType}: {ex.Message}");
+            }
         }
         WildcardsHelper.Init();
         timer.Check("Model listing");
