@@ -90,6 +90,11 @@ public static class T2IAPI
             foreach (JToken presetName in presets.Values())
             {
                 T2IPreset presetObj = session.User.GetPreset(presetName.ToString());
+                if (presetObj is null)
+                {
+                    Logs.Warning($"User {session.User.UserID} tried to use preset '{presetName}', but it does not exist!");
+                    continue;
+                }
                 presetObj.ApplyTo(user_input);
             }
         }
