@@ -34,7 +34,16 @@
 </ul>
 <div class="tab-content tab-hundred">
     <div class="tab-pane tab-pane-vw secretexperimental" id="Simple" role="tabpanel">
-        <div class="simpletabbrowserwrapper browser_container" id="simpletabbrowserwrapper"></div>
+        <div class="simpletabbrowserwrapper browser_container" id="simpletabbrowserwrapper">
+            <div class="browser-content-container" id="simpletabmainview" style="display:none;">
+                <div class="input-sidebar" id="simple_input_sidebar">
+                    <div id="simple_inputs_area"></div>
+                    <div id="simple_inputs_area_advanced" class="main_inputs_area_advanced" style="display:none;"></div>
+                    <div id="simple_inputs_area_hidden" class="main_inputs_area_hidden"></div>
+                    <div style="height: 10rem;"></div> <!-- Spacer -->
+                </div>
+            </div>
+        </div>
     </div>
     <div class="tab-pane show active" style="line-height:0" id="Text2Image" role="tabpanel">
         <div class="t2i-top-bar-container" style="line-height:1.5">
@@ -42,7 +51,7 @@
                 <div class="input-sidebar" id="input_sidebar">
                     <span class="interrupt_line"></span>
                     <div class="main_inputs_area_wrapper" id="main_inputs_area_wrapper">
-                        <input type="text translate" class="main_inputs_filter auto-text" id="main_inputs_filter" oninput="hideUnsupportableParams()" placeholder="Filter parameters..."></text>
+                        <input type="text translate" class="main_inputs_filter auto-text" id="main_inputs_filter" oninput="hideUnsupportableParams()" placeholder="Filter parameters..." />
                         <div id="main_inputs_area"></div>
                         <div id="main_inputs_area_advanced" class="main_inputs_area_advanced" style="display:none;"></div>
                         <div id="main_inputs_area_hidden" class="main_inputs_area_hidden"></div>

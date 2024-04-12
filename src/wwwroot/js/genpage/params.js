@@ -5,7 +5,6 @@ let refreshParamsExtra = [];
 
 function getHtmlForParam(param, prefix) {
     try {
-        // Actual HTML popovers are too new at time this code was written (experimental status, not supported on most browsers)
         let example = param.examples ? `<br><br><span class="translate">Examples</span>: <code>${param.examples.map(escapeHtmlNoBr).join(`</code>,&emsp;<code>`)}</code>` : '';
         let pop = param.no_popover ? '' : `<div class="sui-popover" id="popover_${prefix}${param.id}"><b class="translate">${escapeHtmlNoBr(param.name)}</b> (${param.type}):<br>&emsp;<span class="translate">${escapeHtmlNoBr(param.description)}</span>${example}</div>`;
         switch (param.type) {
@@ -725,9 +724,11 @@ function reuseLastParamVal(paramId) {
 
 /** Internal debug function to show the hidden params. */
 function debugShowHiddenParams() {
-    let hiddenArea = getRequiredElementById('main_inputs_area_hidden');
-    hiddenArea.style.display = 'block';
-    hiddenArea.style.visibility = 'visible';
+    for (let id of ['main_inputs_area_hidden', 'simple_inputs_area_hidden']) {
+        let hiddenArea = getRequiredElementById(id);
+        hiddenArea.style.display = 'block';
+        hiddenArea.style.visibility = 'visible';
+    }
 }
 
 /** Loads and shows a preview of ControlNet preprocessing to the user. */

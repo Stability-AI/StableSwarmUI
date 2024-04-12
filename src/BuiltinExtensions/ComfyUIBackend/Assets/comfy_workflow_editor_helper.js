@@ -418,7 +418,7 @@ function comfyBuildParams(callback) {
                     feature_flag: null,
                     do_not_save: false,
                     revalueGetter: null,
-                    no_popover: true,
+                    no_popover: false,
                     group: groupObj
                 };
                 node.inputs['value'] = "${" + inputId + ":" + `${node.inputs['value']}`.replaceAll('${', '(').replaceAll('}', ')') + "}";
@@ -653,6 +653,9 @@ function comfyBuildParams(callback) {
                 if (['KSampler', 'KSamplerAdvanced'].includes(node.class_type) && inputId == 'control_after_generate') {
                     continue;
                 }
+                if (node.class_type.startsWith('SwarmInput')) {
+                    continue;
+                }
                 let redirId = nodeStatics[nodeLabelPaths[`${nodeId}.${inputId}`]];
                 if (redirId) {
                     let title = nodeIdToClean[redirId] || redirId.substring(inputPrefix.length);
@@ -677,8 +680,8 @@ function comfyBuildParams(callback) {
                 }
             }
         }
-        addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false, null);
         addSimpleParam('comfyworkflowparammetadata', JSON.stringify(params), 'text', 'Comfy Workflow Param Metadata', null, 'big', 0, 1, 1, 'comfyworkflowparammetadata', 'comfyworkflow', 10, false, false, null);
+        addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false, null);
         callback(params, prompt, defaultParamsRetain, defaultParamValue, workflow);
     });
 }
