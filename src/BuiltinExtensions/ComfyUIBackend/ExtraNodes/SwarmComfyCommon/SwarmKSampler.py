@@ -54,11 +54,11 @@ def swarm_send_animated_preview(id, images):
     server.send_sync(1, preview_bytes, sid=server.client_id)
 
 def calculate_sigmas_scheduler(model, scheduler_name, steps, sigma_min, sigma_max, rho):
-    model_wrap = comfy.samplers.wrap_model(model)
+    model_sampling = model.get_model_object("model_sampling")
     if scheduler_name == "karras":
-        return comfy.k_diffusion.sampling.get_sigmas_karras(n=steps, sigma_min=sigma_min if sigma_min >= 0 else float(model_wrap.sigma_min), sigma_max=sigma_max if sigma_max >= 0 else float(model_wrap.sigma_max), rho=rho)
+        return comfy.k_diffusion.sampling.get_sigmas_karras(n=steps, sigma_min=sigma_min if sigma_min >= 0 else float(model_sampling.sigma_min), sigma_max=sigma_max if sigma_max >= 0 else float(model_sampling.sigma_max), rho=rho)
     elif scheduler_name == "exponential":
-        return comfy.k_diffusion.sampling.get_sigmas_exponential(n=steps, sigma_min=sigma_min if sigma_min >= 0 else float(model_wrap.sigma_min), sigma_max=sigma_max if sigma_max >= 0 else float(model_wrap.sigma_max))
+        return comfy.k_diffusion.sampling.get_sigmas_exponential(n=steps, sigma_min=sigma_min if sigma_min >= 0 else float(model_sampling.sigma_min), sigma_max=sigma_max if sigma_max >= 0 else float(model_sampling.sigma_max))
     else:
         return None
 
