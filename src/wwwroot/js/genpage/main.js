@@ -1245,7 +1245,7 @@ function pageSizer() {
             const MID_OFF = 85;
             let refY = Math.min(Math.max(e.pageY, MID_OFF), window.innerHeight - MID_OFF);
             setMidForce(refY >= window.innerHeight - MID_OFF);
-            pageBarMid = window.innerHeight - refY + topBar.getBoundingClientRect().top + 15;
+            pageBarMid = window.innerHeight - refY + topBar.getBoundingClientRect().top + 3;
             setPageBars();
         }
     };
