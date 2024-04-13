@@ -9,6 +9,7 @@
     --range-padding: calc((var(--range-height) - var(var(--range-track-height))) / 2);
     --range-track-color: #1d1d1d;
     --range-thumb-color: #4b4b4b;
+    --toggle-thumb-active: var(--button-background-hover);
 }
 .modal-content {
     background-color: var(--background) !important;
@@ -776,11 +777,11 @@ input[type="range"]::-moz-range-track {
 }
 .auto-slider-toggle:checked+.auto-slider-toggle-content::after {
     left: calc(var(--toggle-width) - var(--toggle-thumb-size));
-    background-color: var(--button-background-hover);
+    background-color: var(--toggle-thumb-active);
 }
 .form-switch input:hover+.auto-slider-toggle-content::after {
     background-position: 100%;
-    background-color: var(--button-background-hover);
+    background-color: var(--toggle-thumb-active);
 }
 .input-group .auto-file-box {
     min-width: 100%;
