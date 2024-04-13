@@ -537,3 +537,9 @@
 #user_settings_container .input-group .auto-input {
     display: block;
 }
+
+.input-group .auto-text {
+    border: 1px solid var(--border-color) !important;
+    padding: 5px 10px !important;
+    margin-top: 5px;
+}
