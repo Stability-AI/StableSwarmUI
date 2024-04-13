@@ -532,9 +532,18 @@ function comfyBuildParams(callback) {
                     else {
                         if (paramDataRaw && paramDataRaw.length == 1 && paramDataRaw[0].length > 1) {
                             type = 'dropdown';
-                            values = paramDataRaw[0];
+                            function fixArr(arr) {
+                                arr = JSON.parse(JSON.stringify(arr));
+                                for (let i = 0; i < arr.length; i++) {
+                                    if (Array.isArray(arr[i])) {
+                                        arr[i] = arr[i][0];
+                                    }
+                                }
+                                return arr;
+                            }
+                            values = fixArr(paramDataRaw[0]);
                             revalueGetter = () => {
-                                return comfyObjectData[node.class_type].input.required[inputId][0];
+                                return fixArr(comfyObjectData[node.class_type].input.required[inputId][0]);
                             };
                         }
                         else {
