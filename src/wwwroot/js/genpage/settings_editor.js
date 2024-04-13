@@ -97,7 +97,7 @@ function applyThemeSetting(theme_info) {
             setCookie('sui_theme_id', theme_id, 365);
             let themeCss = document.head.querySelectorAll('.theme_sheet_header');
             let oldPaths = Array.from(themeCss).map(x => x.href.split('?')[0]);
-            if (theme.css_paths.every(x => oldPaths.includes(x))) {
+            if (theme.css_paths.every(x => oldPaths.some(o => o.endsWith(x)))) {
                 return;
             }
             let siteHeader = getRequiredElementById('sitecssheader');
