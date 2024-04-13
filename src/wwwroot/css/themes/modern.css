@@ -380,12 +380,12 @@
 #alt_generate_button {
     margin-left: 10px;
     padding: 0 10px;
-    background: var(--emphasis);
+    background: var(--emphasis-soft);
     color: var(--emphasis-text) !important;
 }
 
 #alt_center_button {
-    background: var(--emphasis);
+    background: var(--emphasis-soft);
     color: var(--emphasis-text) !important;
 }
 
