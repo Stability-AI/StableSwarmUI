@@ -212,6 +212,7 @@ function loadBackendTypesMenu() {
 let backendsListView = document.getElementById('backends_list');
 let backendsCheckRateCounter = 0;
 let hasAppliedFirstRun = false;
+let backendsWereLoadingEver = false;
 
 function isVisible(element) {
     // DOM Element visibility isn't supported in all browsers
@@ -225,6 +226,9 @@ function isVisible(element) {
 
 function backendLoopUpdate() {
     let loading = countBackendsByStatus('loading') + countBackendsByStatus('waiting');
+    if (loading > 0) {
+        backendsWereLoadingEver = true;
+    }
     if (loading > 0 || isVisible(backendsListView)) {
         serverLogs.onTabButtonClick();
         if (backendsCheckRateCounter++ % 3 == 0) {
@@ -234,7 +238,7 @@ function backendLoopUpdate() {
     else {
         if (!hasAppliedFirstRun) {
             hasAppliedFirstRun = true;
-            refreshParameterValues();
+            refreshParameterValues(backendsWereLoadingEver || window.alwaysRefreshOnLoad);
         }
         backendsCheckRateCounter = 0;
     }

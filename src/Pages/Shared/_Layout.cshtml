@@ -13,15 +13,11 @@
         WebServer.ThemeData theme = Program.Web.RegisteredThemes[themeId];
         string bsUrl = theme.IsDark ? "/css/bootstrap.min.css" : "/css/bootstrap_light.min.css";
         <link rel="stylesheet" id="bs_theme_header" href="@bsUrl" />
-        <div id="theme_sheet_header">
-            @{
-                foreach (string path in theme.CSSPaths)
-                {
-                    string themeUrl = $"{path}?vary={Utilities.VaryID}";
-                    <link rel="stylesheet" href="@themeUrl" />
-                }
-            }
-        </div>
+        foreach (string path in theme.CSSPaths)
+        {
+            string themeUrl = $"{path}?vary={Utilities.VaryID}";
+            <link class="theme_sheet_header" rel="stylesheet" href="@themeUrl" />
+        }
     }
     <link rel="stylesheet" href="/css/select2.min.css" />
     <link rel="stylesheet" href="/css/select2_bootstrap.min.css" />

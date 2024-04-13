@@ -157,7 +157,7 @@ class LoraExtractorUtil {
             }
             else if (data.success) {
                 this.textArea.innerText = "Done!";
-                refreshParameterValues();
+                refreshParameterValues(true);
                 overall.style.width = `0%`;
                 current.style.width = `0%`;
             }

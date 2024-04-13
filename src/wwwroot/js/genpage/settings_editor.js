@@ -97,8 +97,9 @@ function applyThemeSetting(theme_info) {
             setCookie('sui_theme_id', theme_id, 365);
             let siteHeader = getRequiredElementById('sitecssheader');
             getRequiredElementById('bs_theme_header').href = theme.is_dark ? '/css/bootstrap.min.css' : '/css/bootstrap_light.min.css';
-            let header = getRequiredElementById('theme_sheet_header');
-            header.innerHTML = theme.css_paths.map(path => `<link rel="stylesheet" href="${path}?${siteHeader.href.split('?')[1]}" />`).join('\n');
+            document.head.querySelectorAll('.theme_sheet_header').forEach(x => x.remove());
+            let newTheme = theme.css_paths.map(path => `<link class="theme_sheet_header" rel="stylesheet" href="${path}?${siteHeader.href.split('?')[1]}" />`).join('\n');
+            document.head.insertAdjacentHTML('beforeend', newTheme);
         }
         themeSelectorElement.addEventListener('change', setTheme);
         setTheme();

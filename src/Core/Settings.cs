@@ -77,6 +77,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("How many minutes to wait after the last generation before automatically freeing up system RAM (to prevent issues with other programs).\nThis has the downside of causing models to fully load from data drive at next usage.\nUse a decimal number to free after seconds.\nDefaults to 60 minutes (one hour).")]
         public double ClearSystemRAMAfterMinutes = 60;
+
+        [ConfigComment("If true, any time you load the UI, trigger a server refresh.\nIf false, only triggers a refresh if you restart Swarm or trigger a refresh manually from the Quick Tools menu.\nDefaults to true.")]
+        public bool AlwaysRefreshOnLoad = true;
     }
 
     /// <summary>Settings related to networking and the webserver.</summary>

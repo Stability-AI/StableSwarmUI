@@ -476,10 +476,10 @@ public static class T2IAPI
     public static SemaphoreSlim RefreshSemaphore = new(1, 1);
 
     /// <summary>API route to trigger a reload of the model list.</summary>
-    public static async Task<JObject> TriggerRefresh(Session session)
+    public static async Task<JObject> TriggerRefresh(Session session, bool strong = true)
     {
-        Logs.Verbose($"User {session.User.UserID} triggered a data refresh");
-        bool botherToRun = RefreshSemaphore.CurrentCount > 0; // no need to run twice at once
+        Logs.Verbose($"User {session.User.UserID} triggered a {(strong ? "strong" : "weak")} data refresh");
+        bool botherToRun = strong && RefreshSemaphore.CurrentCount > 0; // no need to run twice at once
         try
         {
             await RefreshSemaphore.WaitAsync(Program.GlobalProgramCancel);

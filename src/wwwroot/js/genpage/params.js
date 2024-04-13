@@ -508,8 +508,8 @@ function getGenInput(input_overrides = {}, input_preoverrides = {}) {
     return input;
 }
 
-function refreshParameterValues(callback = null) {
-    genericRequest('TriggerRefresh', {}, data => {
+function refreshParameterValues(strong = true, callback = null) {
+    genericRequest('TriggerRefresh', {strong: strong}, data => {
         for (let param of data.list) {
             let origParam = gen_param_types.find(p => p.id == param.id);
             if (origParam) {

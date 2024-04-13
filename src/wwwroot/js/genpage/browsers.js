@@ -73,7 +73,7 @@ class GenPageBrowserClass {
      * Refreshes the browser view from source.
      */
     refresh() {
-        refreshParameterValues(() => {
+        refreshParameterValues(true, () => {
             this.update(true);
         });
     }

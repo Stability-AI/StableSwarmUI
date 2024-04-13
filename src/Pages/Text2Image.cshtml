@@ -1,6 +1,7 @@
 ﻿@page
 @{
     ViewData["Title"] = "Image Generation";
+    string alwaysRefreshOnLoad = Program.ServerSettings.Backends.AlwaysRefreshOnLoad ? "true" : "false";
 }
 @section Header {
     <link rel="stylesheet" href="/css/genpage.css?vary=@Utilities.VaryID" />
@@ -13,6 +14,9 @@
     </script>
     return;
 }
+<script>
+    window.alwaysRefreshOnLoad = @alwaysRefreshOnLoad;
+</script>
 
 <ul class="nav nav-tabs" role="tablist">
     <li class="nav-item secretexperimental" role="presentation">
@@ -129,7 +133,7 @@
                 <div class="model-block-menu-button t2i-area-quicktools translate" onclick="doPopover('quicktools')">Quick Tools</div>
                 <div class="sui-popover sui_popover_model" id="popover_quicktools">
                     <div class="sui_popover_model_button translate" onclick="resetPageSizer()">Reset Page Layout</div>
-                    <div class="sui_popover_model_button translate" onclick="refreshParameterValues()">Reload Parameter Values</div>
+                    <div class="sui_popover_model_button translate" onclick="refreshParameterValues(true)">Reload Parameter Values</div>
                     <div class="sui_popover_model_button translate" onclick="resetParamsToDefault()">Reset Params to Default</div>
                     <div class="sui_popover_model_button translate" onclick="openEmptyEditor()">Open Empty Image Editor</div>
                     <div class="sui_popover_model_button translate" onclick="doInterrupt()">Interrupt Current Session</div>
