@@ -97,6 +97,12 @@ public static class AdminAPI
             Program.ServerSettings.TrySetFieldValue(key, obj);
         }
         Program.SaveSettingsFile();
+        if (settings.Properties().Any(p => p.Name.StartsWith("paths.")))
+        {
+            Program.BuildModelLists();
+            Program.RefreshAllModelSets();
+            Program.ModelPathsChangedEvent?.Invoke();
+        }
         Program.ReapplySettings();
         return new JObject() { ["success"] = true };
     }

@@ -54,11 +54,11 @@ public class Program
     /// <summary>Central web server core.</summary>
     public static WebServer Web;
 
-    /// <summary>Event triggered when a user wants to refresh the models list.</summary>
-    public static Action ModelRefreshEvent;
-
     /// <summary>User-requested launch mode (web, electron, none).</summary>
     public static string LaunchMode;
+
+    /// <summary>Event triggered when a user wants to refresh the models list.</summary>
+    public static Action ModelRefreshEvent;
 
     /// <summary>Event-action fired when the server wasn't generating for a while and is now starting to generate again.</summary>
     public static Action TickIsGeneratingEvent;
@@ -68,6 +68,9 @@ public class Program
 
     /// <summary>Event-action fired once per second (approximately) all the time.</summary>
     public static Action TickEvent;
+
+    /// <summary>Event-action fired when the model paths have changed (eg via settings change).</summary>
+    public static Action ModelPathsChangedEvent;
 
     /// <summary>General data directory root.</summary>
     public static string DataDir = "Data";
@@ -113,25 +116,11 @@ public class Program
             Logs.Error($"Command line arguments given are invalid: {ex.Message}");
             return;
         }
-        string modelRoot = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, ServerSettings.Paths.ModelRoot);
-        try
-        {
-            Directory.CreateDirectory(Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder));
-        }
-        catch (IOException ex)
-        {
-            Logs.Error($"Failed to create directory for SD models. You may need to check your ModelRoot and SDModelFolder settings. {ex.Message}");
-        }
         timer.Check("Initial settings load");
         RunOnAllExtensions(e => e.OnPreInit());
         timer.Check("Extension PreInit");
         Logs.Init("Prepping options...");
-        T2IModelSets["Stable-Diffusion"] = new() { ModelType = "Stable-Diffusion", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder) };
-        T2IModelSets["VAE"] = new() { ModelType = "VAE", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDVAEFolder) };
-        T2IModelSets["LoRA"] = new() { ModelType = "LoRA", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDLoraFolder) };
-        T2IModelSets["Embedding"] = new() { ModelType = "Embedding", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDEmbeddingFolder) };
-        T2IModelSets["ControlNet"] = new() { ModelType = "ControlNet", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDControlNetsFolder) };
-        T2IModelSets["ClipVision"] = new() { ModelType = "ClipVision", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDClipVisionFolder) };
+        BuildModelLists();
         T2IParamTypes.RegisterDefaults();
         Backends = new();
         Backends.SaveFilePath = GetCommandLineFlag("backends_file", Backends.SaveFilePath);
@@ -147,17 +136,7 @@ public class Program
         LanguagesHelper.LoadAll();
         timer.Check("Languages load");
         Logs.Init("Loading models list...");
-        foreach (T2IModelHandler handler in T2IModelSets.Values)
-        {
-            try
-            {
-                handler.Refresh();
-            }
-            catch (Exception ex)
-            {
-                Logs.Error($"Failed to load models for {handler.ModelType}: {ex.Message}");
-            }
-        }
+        RefreshAllModelSets();
         WildcardsHelper.Init();
         timer.Check("Model listing");
         Logs.Init("Loading backends...");
@@ -224,6 +203,47 @@ public class Program
         Logs.Init("Program is running.");
         WebServer.WebApp.WaitForShutdown();
         Shutdown();
+    }
+
+    /// <summary>Build the main model list from settings. Called at init or on settings change.</summary>
+    public static void BuildModelLists()
+    {
+        foreach (string key in T2IModelSets.Keys.ToList())
+        {
+            T2IModelSets[key].Shutdown();
+        }
+        T2IModelSets.Clear();
+        string modelRoot = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, ServerSettings.Paths.ModelRoot);
+        try
+        {
+            Directory.CreateDirectory(Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder));
+        }
+        catch (IOException ex)
+        {
+            Logs.Error($"Failed to create directory for SD models. You may need to check your ModelRoot and SDModelFolder settings. {ex.Message}");
+        }
+        T2IModelSets["Stable-Diffusion"] = new() { ModelType = "Stable-Diffusion", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder) };
+        T2IModelSets["VAE"] = new() { ModelType = "VAE", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDVAEFolder) };
+        T2IModelSets["LoRA"] = new() { ModelType = "LoRA", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDLoraFolder) };
+        T2IModelSets["Embedding"] = new() { ModelType = "Embedding", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDEmbeddingFolder) };
+        T2IModelSets["ControlNet"] = new() { ModelType = "ControlNet", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDControlNetsFolder) };
+        T2IModelSets["ClipVision"] = new() { ModelType = "ClipVision", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDClipVisionFolder) };
+    }
+
+    /// <summary>Refreshes all model sets from file source.</summary>
+    public static void RefreshAllModelSets()
+    {
+        foreach (T2IModelHandler handler in T2IModelSets.Values)
+        {
+            try
+            {
+                handler.Refresh();
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Failed to load models for {handler.ModelType}: {ex.Message}");
+            }
+        }
     }
 
     private volatile static bool HasShutdown = false;

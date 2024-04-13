@@ -46,6 +46,7 @@ public class ComfyUIBackendExtension : Extension
         Folder = FilePath;
         LoadWorkflowFiles();
         Program.ModelRefreshEvent += Refresh;
+        Program.ModelPathsChangedEvent += OnModelPathsChanged;
         ScriptFiles.Add("Assets/comfy_workflow_editor_helper.js");
         StyleSheetFiles.Add("Assets/comfy_workflow_editor.css");
         T2IParamTypes.FakeTypeProviders.Add(DynamicParamGenerator);
@@ -203,6 +204,17 @@ public class ComfyUIBackendExtension : Extension
         if (tasks.Any())
         {
             Task.WaitAll([.. tasks], Program.GlobalProgramCancel);
+        }
+    }
+
+    public void OnModelPathsChanged()
+    {
+        foreach (ComfyUISelfStartBackend backend in Program.Backends.RunningBackendsOfType<ComfyUISelfStartBackend>())
+        {
+            if (backend.IsEnabled)
+            {
+                Program.Backends.ReloadBackend(backend.BackendData).Wait(Program.GlobalProgramCancel);
+            }
         }
     }
 

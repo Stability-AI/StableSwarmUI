@@ -255,9 +255,15 @@ public class BackendHandler
     {
         foreach (T2IBackendData data in T2IBackends.Values.ToArray())
         {
-            await ShutdownBackendCleanly(data);
-            DoInitBackend(data);
+            await ReloadBackend(data);
         }
+    }
+
+    /// <summary>Causes a single backend to restart.</summary>
+    public async Task ReloadBackend(T2IBackendData data)
+    {
+        await ShutdownBackendCleanly(data);
+        DoInitBackend(data);
     }
 
     /// <summary>Loads the backends list from a file.</summary>
