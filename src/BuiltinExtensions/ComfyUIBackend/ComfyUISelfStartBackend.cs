@@ -209,6 +209,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 NetworkBackendUtils.ReportLogsFromProcess(p, $"ComfyUI (Install {pipName})", "");
                 await p.WaitForExitAsync(Program.GlobalProgramCancel);
             }
+            await install("kornia", "kornia"); // ComfyUI added this dependency, didn't used to have it
             await install("rembg", "rembg");
             await install("opencv_python_headless", "opencv-python-headless");
             await install("imageio_ffmpeg", "imageio-ffmpeg");
