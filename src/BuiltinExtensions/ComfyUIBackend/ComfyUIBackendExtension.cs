@@ -193,6 +193,7 @@ public class ComfyUIBackendExtension : Extension
 
     public void Refresh()
     {
+        ObjectInfoReadCacher.ForceExpire();
         LoadWorkflowFiles();
         List<Task> tasks = [];
         foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends.ToArray())
@@ -455,6 +456,12 @@ public class ComfyUIBackendExtension : Extension
     public ConcurrentDictionary<string, ComfyUser> Users = new();
 
     public ConcurrentDictionary<int, int> RecentlyClaimedBackends = new();
+
+    public SingleValueExpiringCacheAsync<JObject> ObjectInfoReadCacher = new(() =>
+    {
+        ComfyBackendData backend = ComfyBackendsDirect().First();
+        return backend.Client.GetAsync($"{backend.Address}/object_info", Utilities.TimedCancel(TimeSpan.FromMinutes(1))).Result.Content.ReadAsStringAsync().Result.ParseToJson();
+    }, TimeSpan.FromMinutes(10));
 
     /// <summary>Web route for viewing output images. This just works as a simple proxy.</summary>
     public async Task ComfyBackendDirectHandler(HttpContext context)
@@ -794,6 +801,15 @@ public class ComfyUIBackendExtension : Extension
                 }
                 await Task.WhenAll(requests);
                 response = requests.Select(r => r.Result).FirstOrDefault(r => r.StatusCode == HttpStatusCode.OK) ?? requests.First().Result;
+            }
+            else if ((path == "object_info" || path.StartsWith("object_info?")) && Program.ServerSettings.Performance.DoBackendDataCache)
+            {
+                JObject data = ObjectInfoReadCacher.GetValue();
+                if (data is null)
+                {
+                    ObjectInfoReadCacher.ForceExpire();
+                }
+                response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(data.ToString(), Encoding.UTF8, "application/json") };
             }
             else
             {
