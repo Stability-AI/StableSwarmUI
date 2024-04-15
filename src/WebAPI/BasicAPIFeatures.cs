@@ -168,13 +168,36 @@ public static class BasicAPIFeatures
                         await output("Downloaded! Extracting... (look in terminal window for details)");
                         Directory.CreateDirectory("dlbackend/tmpcomfy/");
                         await Process.Start("launchtools/7z/win/7za.exe", $"x dlbackend/comfyui_dl.7z -o\"dlbackend/tmpcomfy/\" -y").WaitForExitAsync(Program.GlobalProgramCancel);
-                        if (Directory.Exists("dlbackend/tmpcomfy/ComfyUI_windows_portable"))
+                        void moveFolder()
                         {
-                            Directory.Move("dlbackend/tmpcomfy/ComfyUI_windows_portable", "dlbackend/comfy");
+                            if (Directory.Exists("dlbackend/tmpcomfy/ComfyUI_windows_portable"))
+                            {
+                                Directory.Move("dlbackend/tmpcomfy/ComfyUI_windows_portable", "dlbackend/comfy");
+                            }
+                            else
+                            {
+                                Directory.Move("dlbackend/tmpcomfy/ComfyUI_windows_portable_nightly_pytorch", "dlbackend/comfy");
+                            }
+                        };
+                        try
+                        {
+                            moveFolder();
                         }
-                        else
+                        catch (Exception)
                         {
-                            Directory.Move("dlbackend/tmpcomfy/ComfyUI_windows_portable_nightly_pytorch", "dlbackend/comfy");
+                            // This might fail if eg an antivirus program locks up the folder, so give it a few seconds to do its job then try the move again
+                            await Task.Delay(TimeSpan.FromSeconds(5));
+                            try
+                            {
+                                moveFolder();
+                            }
+                            catch (Exception)
+                            {
+                                // Just in case the lock up is slow.
+                                await Task.Delay(TimeSpan.FromSeconds(15));
+                                moveFolder();
+                                // This has been a 20 second delay now, so either it's done now and works, or the problem can't be resolved by waiting, so don't waste the user's time with more tries.
+                            }
                         }
                         await output("Installing prereqs...");
                         await Utilities.DownloadFile("https://aka.ms/vs/16/release/vc_redist.x64.exe", "dlbackend/vc_redist.x64.exe", updateProgress);
