@@ -560,7 +560,12 @@ public static class Utilities
         {
             return $"{a}{b}";
         }
-        return $"{a}{separator}{b}";
+        string result = $"{a}{separator}{b}";
+        while (result.Contains($"{separator}{separator}"))
+        {
+            result = result.Replace($"{separator}{separator}", $"{separator}");
+        }
+        return result;
     }
 
     /// <summary>Rounds a number to the given precision.</summary>
