@@ -4,6 +4,10 @@ class GenerateHandler {
         this.batchesEver = 0;
         this.totalGensThisRun = 0;
         this.totalGenRunTime = 0;
+        this.validateModel = true;
+        this.imageContainerDivId = 'current_image';
+        this.imageId = 'current_image_img';
+        this.progressBarHtml = `<div class="image-preview-progress-inner"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>`;
     }
 
     resetBatchIfNeeded() {
@@ -25,10 +29,18 @@ class GenerateHandler {
     gotImagePreview(image, metadata, batchId) {
         return gotImagePreview(image, metadata, batchId);
     }
+
+    gotProgress(current, overall, batchId) {
+        // nothing to do here
+    }
     
     appendGenTimeFrom(time) {
         this.totalGensThisRun++;
         this.totalGenRunTime += time;
+    }
+
+    beforeGenRun() {
+        num_current_gens += parseInt(getRequiredElementById('input_images').value);
     }
     
     doGenerate(input_overrides = {}, input_preoverrides = {}) {
@@ -45,12 +57,8 @@ class GenerateHandler {
         if (isPreview) {
             delete input_overrides['_preview'];
         }
-        num_current_gens += parseInt(getRequiredElementById('input_images').value);
-        setCurrentModel(() => {
-            if (getRequiredElementById('current_model').value == '') {
-                showError("Cannot generate, no model selected.");
-                return;
-            }
+        this.beforeGenRun();
+        let run = () => {
             this.resetBatchIfNeeded();
             let images = {};
             let batch_id = this.batchesEver++;
@@ -71,11 +79,14 @@ class GenerateHandler {
                     this.appendGenTimeFrom(timeDiff / 1000);
                     if (!(data.batch_index in images)) {
                         let batch_div = this.gotImageResult(data.image, data.metadata, `${batch_id}_${data.batch_index}`);
-                        images[data.batch_index] = {div: batch_div, image: data.image, metadata: data.metadata, overall_percent: 0, current_percent: 0};
+                        if (batch_div) {
+                            images[data.batch_index] = {div: batch_div, image: data.image, metadata: data.metadata, overall_percent: 0, current_percent: 0};
+                        }
                     }
                     else {
                         let imgHolder = images[data.batch_index];
-                        if (!document.getElementById('current_image_img') || autoLoadImagesElem.checked || document.getElementById('current_image_img').dataset.batch_id == `${batch_id}_${data.batch_index}`) {
+                        let curImgElem = document.getElementById(this.imageId);
+                        if (!curImgElem || autoLoadImagesElem.checked || curImgElem.dataset.batch_id == `${batch_id}_${data.batch_index}`) {
                             this.setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`, false, true);
                         }
                         let imgElem = imgHolder.div.querySelector('img');
@@ -88,43 +99,51 @@ class GenerateHandler {
                         if (progress_bars) {
                             progress_bars.remove();
                         }
+                        this.gotProgress(-1, -1, `${batch_id}_${data.batch_index}`);
                     }
-                    images[data.batch_index].image = data.image;
-                    images[data.batch_index].metadata = data.metadata;
-                    discardable[data.batch_index] = images[data.batch_index];
-                    delete images[data.batch_index];
+                    if (data.batch_index in images) {
+                        images[data.batch_index].image = data.image;
+                        images[data.batch_index].metadata = data.metadata;
+                        discardable[data.batch_index] = images[data.batch_index];
+                        delete images[data.batch_index];
+                    }
                 }
                 if (data.gen_progress) {
+                    let thisBatchId = `${batch_id}_${data.gen_progress.batch_index}`;
                     if (!(data.gen_progress.batch_index in images)) {
-                        let batch_div = this.gotImagePreview(data.gen_progress.preview ?? 'imgs/model_placeholder.jpg', `{"preview": "${data.gen_progress.current_percent}"}`, `${batch_id}_${data.gen_progress.batch_index}`);
-                        images[data.gen_progress.batch_index] = {div: batch_div, image: null, metadata: null, overall_percent: 0, current_percent: 0};
-                        let progress_bars_html = `<div class="image-preview-progress-inner"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>`;
-                        let progress_bars = createDiv(null, 'image-preview-progress-wrapper', progress_bars_html);
-                        batch_div.prepend(progress_bars);
-                    }
-                    let imgHolder = images[data.gen_progress.batch_index];
-                    let overall = imgHolder.div.querySelector('.image-preview-progress-overall');
-                    if (overall && data.gen_progress.overall_percent) {
-                        imgHolder.overall_percent = data.gen_progress.overall_percent;
-                        imgHolder.current_percent = data.gen_progress.current_percent;
-                        overall.style.width = `${imgHolder.overall_percent * 100}%`;
-                        imgHolder.div.querySelector('.image-preview-progress-current').style.width = `${imgHolder.current_percent * 100}%`;
-                        if (data.gen_progress.preview && autoLoadPreviewsElem.checked && imgHolder.image == null) {
-                            this.setCurrentImage(data.gen_progress.preview, `{"preview": "${data.gen_progress.current_percent}"}`, `${batch_id}_${data.gen_progress.batch_index}`, true);
+                        let batch_div = this.gotImagePreview(data.gen_progress.preview ?? 'imgs/model_placeholder.jpg', `{"preview": "${data.gen_progress.current_percent}"}`, thisBatchId);
+                        if (batch_div) {
+                            images[data.gen_progress.batch_index] = {div: batch_div, image: null, metadata: null, overall_percent: 0, current_percent: 0};
+                            let progress_bars = createDiv(null, 'image-preview-progress-wrapper', this.progressBarHtml);
+                            batch_div.prepend(progress_bars);
                         }
-                        let curImgElem = document.getElementById('current_image_img');
-                        if (data.gen_progress.preview && (!imgHolder.image || data.gen_progress.preview != imgHolder.image)) {
-                            if (curImgElem && curImgElem.dataset.batch_id == `${batch_id}_${data.gen_progress.batch_index}`) {
-                                curImgElem.src = data.gen_progress.preview;
-                                let metadata = getRequiredElementById('current_image').querySelector('.current-image-data');
-                                if (metadata) {
-                                    metadata.remove();
-                                }
+                    }
+                    if (data.gen_progress.batch_index in images) {
+                        let imgHolder = images[data.gen_progress.batch_index];
+                        let overall = imgHolder.div.querySelector('.image-preview-progress-overall');
+                        if (overall && data.gen_progress.overall_percent) {
+                            imgHolder.overall_percent = data.gen_progress.overall_percent;
+                            imgHolder.current_percent = data.gen_progress.current_percent;
+                            overall.style.width = `${imgHolder.overall_percent * 100}%`;
+                            imgHolder.div.querySelector('.image-preview-progress-current').style.width = `${imgHolder.current_percent * 100}%`;
+                            if (data.gen_progress.preview && autoLoadPreviewsElem.checked && imgHolder.image == null) {
+                                this.setCurrentImage(data.gen_progress.preview, `{"preview": "${data.gen_progress.current_percent}"}`, thisBatchId, true);
                             }
-                            imgHolder.div.querySelector('img').src = data.gen_progress.preview;
-                            imgHolder.image = data.gen_progress.preview;
+                            let curImgElem = document.getElementById(this.imageId);
+                            if (data.gen_progress.preview && (!imgHolder.image || data.gen_progress.preview != imgHolder.image)) {
+                                if (curImgElem && curImgElem.dataset.batch_id == thisBatchId) {
+                                    curImgElem.src = data.gen_progress.preview;
+                                    let metadata = getRequiredElementById(this.imageContainerDivId).querySelector('.current-image-data');
+                                    if (metadata) {
+                                        metadata.remove();
+                                    }
+                                }
+                                imgHolder.div.querySelector('img').src = data.gen_progress.preview;
+                                imgHolder.image = data.gen_progress.preview;
+                            }
                         }
                     }
+                    this.gotProgress(data.gen_progress.current_percent, data.gen_progress.overall_percent, thisBatchId);
                 }
                 if (data.discard_indices) {
                     let needsNew = false;
@@ -132,7 +151,7 @@ class GenerateHandler {
                         let img = discardable[index] ?? images[index];
                         if (img) {
                             img.div.remove();
-                            let curImgElem = document.getElementById('current_image_img');
+                            let curImgElem = document.getElementById(this.imageId);
                             if (curImgElem && curImgElem.src == img.image) {
                                 needsNew = true;
                                 delete discardable[index];
@@ -153,6 +172,18 @@ class GenerateHandler {
                     }
                 }
             });
-        });
+        };
+        if (this.validateModel) {
+            if (getRequiredElementById('current_model').value == '') {
+                showError("Cannot generate, no model selected.");
+                return;
+            }
+            setCurrentModel(() => {
+                run();
+            });
+        }
+        else {
+            run();
+        }
     }
 }

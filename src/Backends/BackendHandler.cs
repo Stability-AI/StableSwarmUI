@@ -821,7 +821,7 @@ public class BackendHandler
             {
                 BackendQueueTimer.Reset();
             }
-            if (HasShutdown)
+            if (HasShutdown || Program.GlobalProgramCancel.IsCancellationRequested)
             {
                 Logs.Info("Backend request handler loop closing...");
                 foreach (T2IBackendRequest request in T2IBackendRequests.Values.ToArray())

@@ -12,6 +12,7 @@ class SimpleTab {
         this.tabButton = getRequiredElementById('simpletabbutton');
         this.wrapperDiv = getRequiredElementById('simpletabbrowserwrapper');
         this.imageContainer = getRequiredElementById('simple_image_container');
+        this.progressWrapper = getRequiredElementById('simpletab_progress_wrapper');
         this.browser = new GenPageBrowserClass('simpletabbrowserwrapper', this.browserListEntries.bind(this), 'simpletabbrowser', 'Big Thumbnails', this.browserDescribeEntry.bind(this), this.browserSelectEntry.bind(this), '', 10);
         this.browser.depth = 10;
         this.browser.showDepth = false;
@@ -23,6 +24,9 @@ class SimpleTab {
         this.browser.sizeChangedEvent = this.onBrowserSizeChanged.bind(this);
         this.tabButton.addEventListener('click', this.onTabClicked.bind(this));
         this.genHandler = new SimpleTabGenerateHandler();
+        this.genHandler.validateModel = false;
+        this.genHandler.imageContainerDivId = 'simple_image_container';
+        this.genHandler.imageId = 'simple_image_container_img';
     }
 
     onFolderSelected() {
@@ -62,7 +66,6 @@ class SimpleTab {
             let value = getInputVal(elem);
             inputs[id] = value;
         }
-        console.log(inputs);
         this.genHandler.doGenerate(inputs);
     }
 
@@ -75,7 +78,7 @@ class SimpleTab {
             img.src = imgSrc;
         }
         else {
-            this.imageContainer.innerHTML = `<img src="${imgSrc}" />`;
+            this.imageContainer.innerHTML = `<img id="simple_image_container_img" src="${imgSrc}" />`;
         }
     }
 
@@ -133,7 +136,7 @@ class SimpleTab {
                 }
                 areaData[0].innerHTML = html;
             }
-            this.imageContainer.innerHTML = `<img src="${data.result.image}" />`;
+            this.setImage(data.result.image);
             this.browser.fullContentDiv.style.display = 'none';
             this.containerDiv.style.display = 'inline-block';
             for (let group of groupsClose) {
@@ -183,21 +186,55 @@ class SimpleTabGenerateHandler extends GenerateHandler {
     resetBatchIfNeeded() {
         // No batch.
     }
+    beforeGenRun() {
+        // Nothing to do.
+    }
 
     getGenInput(input_overrides = {}, input_preoverrides = {}) {
-        return JSON.parse(JSON.stringify(input_overrides));
+        let data = JSON.parse(JSON.stringify(input_overrides));
+        if (!data['images']) {
+            data['images'] = 1;
+        }
+        if (!data['model']) {
+            let modelSelector = getRequiredElementById('current_model');
+            let model = modelSelector.value;
+            if (!model && modelSelector.options.length > 0) {
+                model = modelSelector.options[0].value;
+            }
+            if (!model) {
+                showError("Something's gone wrong, no models exist.\nIf this is your Swarm instance, make sure you've downloaded models.\nIf this worked before, you might need to refresh the page.\nIf this error persists, report a bug.");
+                throw new Error("No models exist. Cannot process.");
+            }
+            data['model'] = model;
+        }
+        return data;
     }
 
     setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, smoothAdd = false) {
         simpleTab.setImage(src);
+        this.gotProgress(-1, -1, batchId);
     }
 
     gotImageResult(image, metadata, batchId) {
         simpleTab.setImage(image);
+        this.gotProgress(-1, -1, batchId);
     }
 
     gotImagePreview(image, metadata, batchId) {
+        if (image == 'imgs/model_placeholder.jpg') {
+            return;
+        }
         simpleTab.setImage(image);
+    }
+
+    gotProgress(current, overall, batchId) {
+        if (current < 0) {
+            simpleTab.progressWrapper.style.display = 'none';
+            return;
+        }
+        simpleTab.progressWrapper.style.display = '';
+        simpleTab.progressWrapper.querySelector('.image-preview-progress-current').style.width = `${current * 100}%`;
+        simpleTab.progressWrapper.querySelector('.image-preview-progress-overall').style.width = `${overall * 100}%`;
     }
 }
 
