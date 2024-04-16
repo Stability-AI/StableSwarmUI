@@ -32,12 +32,11 @@ public class Settings : AutoConfiguration
     [ManualSettingsOptions(Impl = null, Vals = ["none", "web", "webinstall", "electron"])]
     public string LaunchMode = "webinstall";
 
-    [ConfigComment("The minimum tier of logs that should be visible in the console.\nDefault is 'info'.")]
-    [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<Logs.LogLevel>))]
-    public string LogLevel = "Info";
-
     [ConfigComment("If set true, some additional debugging data will be attached where relevant, such as in image metadata.")]
     public bool AddDebugData = false;
+
+    [ConfigComment("Settings related to logging.")]
+    public LogsData Logs = new();
 
     [ConfigComment("Settings related to the User Interface.")]
     public UIData UI = new();
@@ -47,6 +46,20 @@ public class Settings : AutoConfiguration
 
     [ConfigComment("Settings related to server performance.")]
     public PerformanceData Performance = new();
+
+    /// <summary>Settings related to logging.</summary>
+    public class LogsData : AutoConfiguration
+    {
+        [ConfigComment("The minimum tier of logs that should be visible in the console and saved to file.\nDefault is 'info'.")]
+        [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<Logs.LogLevel>))]
+        public string LogLevel = "Info";
+
+        [ConfigComment("If true, logs will be saved to a file. If false, logs will be available in console and UI while running, but never saved to file.\nDefaults to false.\nMust restart Swarm to apply.")]
+        public bool SaveLogToFile = false;
+
+        [ConfigComment("The path for where to store log file, parsed at time of program start, relative to the Data directory.\nMust restart Swarm to apply.\nCan use [year], [month], [month_name], [day], [day_name], [hour], [minute], [second], [pid].")]
+        public string LogsPath = "Logs/[year]-[month]/[day]-[hour]-[minute].log";
+    }
 
     /// <summary>Settings related to server performance.</summary>
     public class PerformanceData : AutoConfiguration

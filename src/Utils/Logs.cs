@@ -1,4 +1,6 @@
 ﻿using FreneticUtilities.FreneticToolkit;
+using StableSwarmUI.Core;
+using System.IO;
 
 namespace StableSwarmUI.Utils;
 
@@ -7,6 +9,66 @@ public static class Logs
 {
     /// <summary>Thread lock to prevent messages overlapping.</summary>
     public static LockObject ConsoleLock = new();
+
+    /// <summary>Path to the current log file.</summary>
+    public static string LogFilePath;
+
+    /// <summary>Queue of logs to save to file.</summary>
+    public static ConcurrentQueue<string> LogsToSave = new();
+
+    /// <summary>Called during program init, initializes the log saving to file (if enabled).</summary>
+    public static void StartLogSaving()
+    {
+        if (!Program.ServerSettings.Logs.SaveLogToFile)
+        {
+            LogsToSave = null;
+            return;
+        }
+        LogFilePath = Program.ServerSettings.Logs.LogsPath;
+        DateTimeOffset time = DateTimeOffset.Now;
+        LogFilePath = StringConversionHelper.QuickSimpleTagFiller(LogFilePath, "[", "]", part =>
+        {
+            return part switch
+            {
+                "year" => $"{time.Year:0000}",
+                "month" => $"{time.Month:00}",
+                "month_name" => $"{time:MMMM}",
+                "day" => $"{time.Day:00}",
+                "day_name" => $"{time:dddd}",
+                "hour" => $"{time.Hour:00}",
+                "minute" => $"{time.Minute:00}",
+                "second" => $"{time.Second:00}",
+                "pid" => $"{Environment.ProcessId}",
+                _ => $"[{part}]"
+            };
+        }, false);
+        LogFilePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.DataPath, LogFilePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(LogFilePath));
+        Thread thread = new(LogSaveInternalLoop) { Name = "logsaver" };
+        thread.Start();
+    }
+
+    public static void LogSaveInternalLoop()
+    {
+        StringBuilder toStore = new();
+        while (true)
+        {
+            if (Program.GlobalProgramCancel.IsCancellationRequested)
+            {
+                return;
+            }
+            while (LogsToSave.TryDequeue(out string line))
+            {
+                toStore.Append($"{line}\n");
+            }
+            if (toStore.Length > 0)
+            {
+                File.AppendAllText(LogFilePath, toStore.ToString());
+                toStore.Clear();
+            }
+            Task.Delay(TimeSpan.FromSeconds(5)).Wait(Program.GlobalProgramCancel);
+        }
+    }
 
     public enum LogLevel: int
     {
@@ -125,9 +187,10 @@ public static class Logs
             {
                 return;
             }
+            string time = $"{DateTimeOffset.Now:HH:mm:ss.fff}";
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Write($"{DateTimeOffset.Now:HH:mm:ss.fff} [");
+            Console.Write($"{time} [");
             Console.BackgroundColor = prefixBackground;
             Console.ForegroundColor = prefixForeground;
             Console.Write(prefix);
@@ -139,6 +202,7 @@ public static class Logs
             Console.WriteLine(message);
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.White;
+            LogsToSave?.Enqueue($"{time} [{prefix}] {message}");
         }
     }
 }

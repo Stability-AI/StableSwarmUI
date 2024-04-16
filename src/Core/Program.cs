@@ -116,6 +116,7 @@ public class Program
             Logs.Error($"Command line arguments given are invalid: {ex.Message}");
             return;
         }
+        Logs.StartLogSaving();
         timer.Check("Initial settings load");
         RunOnAllExtensions(e => e.OnPreInit());
         timer.Check("Extension PreInit");
@@ -353,6 +354,13 @@ public class Program
             Logs.Error($"Error loading settings file: {ex}");
             return;
         }
+        // TODO: Legacy format patch from Beta 0.6! Remove this before 1.0.
+        string legacyLogLevel = section.GetString("LogLevel", null);
+        string newLogLevel = section.GetString("Logs.LogLevel", null);
+        if (legacyLogLevel is not null && newLogLevel is null)
+        {
+            section.Set("Logs.LogLevel", legacyLogLevel);
+        }
         ServerSettings.Load(section);
     }
 
@@ -440,7 +448,7 @@ public class Program
     /// <summary>Applies runtime-changable settings.</summary>
     public static void ReapplySettings()
     {
-        Logs.MinimumLevel = Enum.Parse<Logs.LogLevel>(GetCommandLineFlag("loglevel", ServerSettings.LogLevel), true);
+        Logs.MinimumLevel = Enum.Parse<Logs.LogLevel>(GetCommandLineFlag("loglevel", ServerSettings.Logs.LogLevel), true);
     }
     #endregion
 
