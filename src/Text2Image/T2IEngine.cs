@@ -87,7 +87,7 @@ namespace StableSwarmUI.Text2Image
                 {
                     bool requireModel(T2IRegisteredParam<T2IModel> param, string type)
                     {
-                        if (user_input.TryGet(param, out T2IModel model) && backend.Backend.Models.TryGetValue(type, out List<string> models) && !models.Contains(model.Name))
+                        if (user_input.TryGet(param, out T2IModel model) && backend.Backend.Models.TryGetValue(type, out List<string> models) && !models.Contains(model.Name) && !models.Contains(model.Name + ".safetensors"))
                         {
                             Logs.Verbose($"Filter out backend {backend.ID} as the request requires {type} model {model.Name}, but the backend does not have that model");
                             user_input.RefusalReasons.Add($"Request requires model '{model.Name}' but the backend does not have that model");
@@ -110,7 +110,7 @@ namespace StableSwarmUI.Text2Image
                     {
                         foreach (string lora in loras)
                         {
-                            if (!loraModels.Contains(lora))
+                            if (!loraModels.Contains(lora) && !loraModels.Contains(lora + ".safetensors"))
                             {
                                 Logs.Verbose($"Filter out backend {backend.ID} as the request requires lora {lora}, but the backend does not have that lora");
                                 user_input.RefusalReasons.Add($"Request requires LoRA '{lora}' but the backend does not have that LoRA");
@@ -122,7 +122,7 @@ namespace StableSwarmUI.Text2Image
                     {
                         foreach (string embed in (List<string>)usedEmbeds)
                         {
-                            if (!embedModels.Contains(embed))
+                            if (!embedModels.Contains(embed) && !embedModels.Contains(embed + ".safetensors"))
                             {
                                 Logs.Verbose($"Filter out backend {backend.ID} as the request requires embedding {embed}, but the backend does not have that embedding");
                                 user_input.RefusalReasons.Add($"Request requires embedding '{embed}' but the backend does not have that embedding");

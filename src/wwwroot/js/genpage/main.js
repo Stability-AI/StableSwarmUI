@@ -1356,8 +1356,9 @@ function updateAllModels(models) {
     selector.appendChild(emptyOption);
     for (let model of allModels) {
         let option = document.createElement('option');
-        option.value = model;
-        option.innerText = model;
+        let clean = cleanModelName(model);
+        option.value = clean;
+        option.innerText = clean;
         selector.appendChild(option);
     }
     selector.value = selectorVal;

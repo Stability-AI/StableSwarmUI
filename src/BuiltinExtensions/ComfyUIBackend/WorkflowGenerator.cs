@@ -113,7 +113,13 @@ public class WorkflowGenerator
                 T2IModelHandler loraHandler = Program.T2IModelSets["LoRA"];
                 for (int i = 0; i < loras.Count; i++)
                 {
-                    T2IModel lora = loraHandler.Models[loras[i]];
+                    if (!loraHandler.Models.TryGetValue(loras[i] + ".safetensors", out T2IModel lora))
+                    {
+                        if (!loraHandler.Models.TryGetValue(loras[i], out lora))
+                        {
+                            throw new InvalidDataException($"LoRA Model '{loras[i]}' not found in the model set.");
+                        }
+                    }
                     float weight = weights == null ? 1 : float.Parse(weights[i]);
                     string newId = g.CreateNode("LoraLoader", new JObject()
                     {

@@ -62,11 +62,19 @@ public static class ModelsAPI
                     return card.GetNetObject();
                 }
             }
-            else if (handler.Models.TryGetValue(modelName, out T2IModel model))
+            else if (handler.Models.TryGetValue(modelName + ".safetensors", out T2IModel model))
             {
                 return new JObject() { ["model"] = model.ToNetObject() };
             }
-            else if (InternalExtraModels(subtype).TryGetValue(modelName, out JObject remoteModel))
+            else if (handler.Models.TryGetValue(modelName, out model))
+            {
+                return new JObject() { ["model"] = model.ToNetObject() };
+            }
+            else if (InternalExtraModels(subtype).TryGetValue(modelName + ".safetensors", out JObject remoteModel))
+            {
+                return new JObject() { ["model"] = remoteModel };
+            }
+            else if (InternalExtraModels(subtype).TryGetValue(modelName, out remoteModel))
             {
                 return new JObject() { ["model"] = remoteModel };
             }
@@ -208,7 +216,7 @@ public static class ModelsAPI
             output(refusal);
             return;
         }
-        if (!Program.MainSDModels.Models.TryGetValue(model, out T2IModel actualModel))
+        if (!Program.MainSDModels.Models.TryGetValue(model + ".safetensors", out T2IModel actualModel) && !Program.MainSDModels.Models.TryGetValue(model, out actualModel))
         {
             Logs.Verbose("SelectModel refused due to unrecognized model");
             output(new JObject() { ["error"] = "Model not found." });

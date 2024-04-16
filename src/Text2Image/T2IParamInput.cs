@@ -270,14 +270,14 @@ public class T2IParamInput
             data = context.Parse(data);
             context.Embeds ??= [.. Program.T2IModelSets["Embedding"].ListModelNamesFor(context.Input.SourceSession)];
             string want = data.ToLowerFast().Replace('\\', '/');
-            string matched = T2IParamTypes.GetBestInList(want, context.Embeds);
+            string matched = T2IParamTypes.GetBestModelInList(want, context.Embeds);
             if (matched is null)
             {
                 Logs.Warning($"Embedding '{want}' does not exist and will be ignored.");
                 return "";
             }
             List<string> usedEmbeds = context.Input.ExtraMeta.GetOrCreate("used_embeddings", () => new List<string>()) as List<string>;
-            usedEmbeds.Add(matched);
+            usedEmbeds.Add(T2IParamTypes.CleanModelName(matched));
             return "\0swarmembed:" + matched + "\0end";
         };
         PromptTagProcessors["embedding"] = PromptTagProcessors["embed"];
@@ -292,7 +292,7 @@ public class T2IParamInput
                 lora = lora[..colonIndex];
             }
             context.Loras ??= [.. Program.T2IModelSets["LoRA"].ListModelNamesFor(context.Input.SourceSession)];
-            string matched = T2IParamTypes.GetBestInList(lora, context.Loras);
+            string matched = T2IParamTypes.GetBestModelInList(lora, context.Loras);
             if (matched is not null)
             {
                 List<string> loraList = context.Input.Get(T2IParamTypes.Loras);
@@ -387,11 +387,11 @@ public class T2IParamInput
         }
         else if (val is List<T2IModel> modelList)
         {
-            return modelList.Select(m => m.Name).JoinString(",");
+            return modelList.Select(m => T2IParamTypes.CleanModelName(m.Name)).JoinString(",");
         }
         else if (val is T2IModel model)
         {
-            return model.Name;
+            return T2IParamTypes.CleanModelName(model.Name);
         }
         else if (val is string str)
         {
@@ -444,7 +444,7 @@ public class T2IParamInput
             }
             if (val is T2IModel model)
             {
-                val = model.Name;
+                val = T2IParamTypes.CleanModelName(model.Name);
             }
             output[key] = JToken.FromObject(val);
         }
@@ -677,7 +677,7 @@ public class T2IParamInput
         T2IModel getModel(string name)
         {
             T2IModelHandler handler = Program.T2IModelSets[param.Subtype ?? "Stable-Diffusion"];
-            string best = T2IParamTypes.GetBestInList(name.Replace('\\', '/'), handler.Models.Keys.ToList());
+            string best = T2IParamTypes.GetBestModelInList(name.Replace('\\', '/'), handler.Models.Keys.ToList());
             return handler.Models.TryGetValue(best ?? name, out T2IModel actualModel) ? actualModel : new T2IModel() { Name = name };
         }
         if (param.IgnoreIf is not null && param.IgnoreIf == val)

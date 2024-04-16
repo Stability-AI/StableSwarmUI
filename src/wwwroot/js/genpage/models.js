@@ -212,6 +212,10 @@ function isModelArchCorrect(model) {
     return true;
 }
 
+function cleanModelName(name) {
+    return name.endsWith('.safetensors') ? name.substring(0, name.length - '.safetensors'.length) : name;
+}
+
 function sortModelName(a, b) {
     let aCorrect = isModelArchCorrect(a);
     let bCorrect = isModelArchCorrect(b);
@@ -373,6 +377,7 @@ class ModelBrowserWrapper {
         }
         let isSelected;
         let selectorElem = document.getElementById(selector);
+        let clean = cleanModelName(model.data.name);
         if (!selectorElem) {
             isSelected = false;
         }
@@ -380,17 +385,17 @@ class ModelBrowserWrapper {
             isSelected = model.data.name == 'Automatic';
         }
         else if (this.subType == 'LoRA') {
-            isSelected = [...selectorElem.selectedOptions].map(option => option.value).filter(value => value == model.data.name).length > 0;
+            isSelected = [...selectorElem.selectedOptions].map(option => option.value).filter(value => value == clean).length > 0;
         }
         else if (this.subType == 'Embedding') {
-            isSelected = promptBox.value.includes(`<embed:${model.data.name}>`);
+            isSelected = promptBox.value.includes(`<embed:${clean}>`);
             let negativePrompt = document.getElementById('input_negativeprompt');
             if (negativePrompt) {
-                isSelected = isSelected || negativePrompt.value.includes(`<embed:${model.data.name}>`);
+                isSelected = isSelected || negativePrompt.value.includes(`<embed:${clean}>`);
             }
         }
         else {
-            isSelected = selectorElem.value == model.data.name;
+            isSelected = selectorElem.value == clean;
         }
         let className = isSelected ? 'model-selected' : (model.data.loaded ? 'model-loaded' : (!isCorrect ? 'model-unavailable' : ''));
         if (!model.data.local) {
@@ -410,7 +415,7 @@ class ModelBrowserWrapper {
 
 let sdModelBrowser = new ModelBrowserWrapper('Stable-Diffusion', 'model_list', 'modelbrowser', (model) => { directSetModel(model.data); });
 let sdVAEBrowser = new ModelBrowserWrapper('VAE', 'vae_list', 'sdvaebrowser', (vae) => { directSetVae(vae.data); });
-let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(lora.data.name); });
+let sdLoraBrowser = new ModelBrowserWrapper('LoRA', 'lora_list', 'sdlorabrowser', (lora) => { toggleSelectLora(cleanModelName(lora.data.name)); });
 let sdEmbedBrowser = new ModelBrowserWrapper('Embedding', 'embedding_list', 'sdembedbrowser', (embed) => { selectEmbedding(embed.data); });
 let sdControlnetBrowser = new ModelBrowserWrapper('ControlNet', 'controlnet_list', 'sdcontrolnetbrowser', (controlnet) => { setControlNet(controlnet.data); });
 let wildcardsBrowser = new ModelBrowserWrapper('Wildcards', 'wildcard_list', 'wildcardsbrowser', (wildcard) => { selectWildcard(wildcard.data); }, `<button id="wildcards_list_create_new_button" class="refresh-button" onclick="create_new_wildcard_button()">Create New Wildcard</button>`);
@@ -431,7 +436,7 @@ function selectWildcard(model) {
 
 function embedClearFromPrompt(model, element) {
     let box = getRequiredElementById(element);
-    let chunk = `<embed:${model.name}>`;
+    let chunk = `<embed:${cleanModelName(model.name)}>`;
     box.value = box.value.replace(` ${chunk}`, '').replace(chunk, '').trim();
     triggerChangeFor(box);
     sdEmbedBrowser.browser.rerender();
@@ -439,14 +444,14 @@ function embedClearFromPrompt(model, element) {
 
 function embedAddToPrompt(model, element) {
     let box = getRequiredElementById(element);
-    box.value += ` <embed:${model.name}>`;
+    box.value += ` <embed:${cleanModelName(model.name)}>`;
     triggerChangeFor(box);
     sdEmbedBrowser.browser.rerender();
 }
 
 function selectEmbedding(model) {
     let promptBox = getRequiredElementById(model.is_negative_embedding ? 'alt_negativeprompt_textbox' : 'alt_prompt_textbox');
-    let chunk = `<embed:${model.name}>`;
+    let chunk = `<embed:${cleanModelName(model.name)}>`;
     if (promptBox.value.endsWith(chunk)) {
         promptBox.value = promptBox.value.substring(0, promptBox.value.length - chunk.length).trim();
     }
@@ -484,7 +489,7 @@ function setControlNet(model) {
     if (!input) {
         return;
     }
-    forceSetDropdownValue(input, model.name);
+    forceSetDropdownValue(input, cleanModelName(model.name));
     let group = document.getElementById('input_group_content_controlnet_toggle');
     if (group) {
         group.checked = true;
@@ -538,7 +543,7 @@ function updateLoraList() {
     for (let lora of currentLoras) {
         let div = createDiv(null, 'preset-in-list');
         div.dataset.lora_name = lora;
-        div.innerText = lora.endsWith('.safetensors') ? lora.substring(0, lora.length - '.safetensors'.length) : lora;
+        div.innerText = cleanModelName(lora);
         let weightInput = document.createElement('input');
         weightInput.className = 'lora-weight-input';
         weightInput.type = 'number';
@@ -595,7 +600,7 @@ function directSetVae(vae) {
         doToggleEnable('input_vae');
         return;
     }
-    forceSetDropdownValue('input_vae', vae.name);
+    forceSetDropdownValue('input_vae', cleanModelName(vae.name));
     toggler.checked = true;
     doToggleEnable('input_vae');
 }
@@ -605,9 +610,10 @@ function directSetModel(model) {
         return;
     }
     if (model.name) {
-        forceSetDropdownValue('input_model', model.name);
-        forceSetDropdownValue('current_model', model.name);
-        setCookie('selected_model', `${model.name},${model.standard_width},${model.standard_height},${model.architecture},${model.compat_class}`, 90);
+        let clean = cleanModelName(model.name);
+        forceSetDropdownValue('input_model', clean);
+        forceSetDropdownValue('current_model', clean);
+        setCookie('selected_model', `${clean},${model.standard_width},${model.standard_height},${model.architecture},${model.compat_class}`, 90);
         curModelWidth = model.standard_width;
         curModelHeight = model.standard_height;
         curModelArch = model.architecture;

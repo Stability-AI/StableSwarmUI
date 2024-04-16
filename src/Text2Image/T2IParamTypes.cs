@@ -233,6 +233,16 @@ public class T2IParamTypes
         return name.ToLowerFast().Replace(" ", "").Replace("[", "").Replace("]", "").Trim();
     }
 
+    /// <summary>Strips ".safetensors" from the end of model name for cleanliness.</summary>
+    public static string CleanModelName(string name)
+    {
+        if (name.EndsWithFast(".safetensors"))
+        {
+            name = name.BeforeLast(".safetensors");
+        }
+        return name;
+    }
+
     /// <summary>Applies a string edit, with support for "{value}" notation.</summary>
     public static string ApplyStringEdit(string prior, string update)
     {
@@ -355,8 +365,8 @@ public class T2IParamTypes
         {
             List<T2IModel> baseList = [.. Program.MainSDModels.ListModelsFor(s).OrderBy(m => m.Name)];
             List<T2IModel> refinerList = baseList.Where(m => m.ModelClass is not null && m.ModelClass.Name.Contains("Refiner")).ToList();
-            List<string> bases = baseList.Select(m => m.Name).ToList();
-            return ["(Use Base)", .. refinerList.Select(m => m.Name), "-----", .. bases];
+            List<string> bases = baseList.Select(m => CleanModelName(m.Name)).ToList();
+            return ["(Use Base)", .. refinerList.Select(m => CleanModelName(m.Name)), "-----", .. bases];
         }
         RefinerModel = Register<T2IModel>(new("Refiner Model", "The model to use for refinement. This should be a model that's good at small-details, and use a structural model as your base model.\n'Use Base' will use your base model rather than switching.\nSDXL 1.0 released with an official refiner model.",
             "(Use Base)", IgnoreIf: "(Use Base)", GetValues: listRefinerModels, OrderPriority: -5, Group: GroupRefiners, FeatureFlag: "refiners", Subtype: "Stable-Diffusion", ChangeWeight: 9, DoNotPreview: true
@@ -378,7 +388,7 @@ public class T2IParamTypes
             ));
         static List<string> listVaes(Session s)
         {
-            return ["None", .. Program.T2IModelSets["VAE"].ListModelsFor(s).Select(m => m.Name)];
+            return ["None", .. Program.T2IModelSets["VAE"].ListModelsFor(s).Select(m => CleanModelName(m.Name))];
         }
         for (int i = 1; i <= 3; i++)
         {
@@ -410,7 +420,7 @@ public class T2IParamTypes
             ));
         GroupVideo = new("Video", Open: false, OrderPriority: 0, Toggles: true);
         VideoModel = Register<T2IModel>(new("Video Model", "The model to use for video generation.\nThis should be an SVD (Stable Video Diffusion) model.\nNote that SVD favors a low CFG (~2.5).",
-            "", GetValues: s => Program.MainSDModels.ListModelsFor(s).Where(m => m.ModelClass is not null && m.ModelClass.ID.Contains("stable-video-diffusion")).OrderBy(m => m.Name).Select(m => m.Name).ToList(),
+            "", GetValues: s => Program.MainSDModels.ListModelsFor(s).Where(m => m.ModelClass is not null && m.ModelClass.ID.Contains("stable-video-diffusion")).OrderBy(m => m.Name).Select(m => CleanModelName(m.Name)).ToList(),
             OrderPriority: 1, Group: GroupVideo, FeatureFlag: "video", Subtype: "Stable-Diffusion", ChangeWeight: 9, DoNotPreview: true
             ));
         VideoFrames = Register<int>(new("Video Frames", "How many frames to generate within the video.",
@@ -450,7 +460,7 @@ public class T2IParamTypes
             "None", IgnoreIf: "None", Permission: "param_model", IsAdvanced: true, Toggleable: true, GetValues: listVaes, Subtype: "VAE", Group: GroupAdvancedModelAddons, ChangeWeight: 7
             ));
         Loras = Register<List<string>>(new("LoRAs", "LoRAs (Low-Rank-Adaptation Models) are a way to customize the content of a model without totally replacing it.\nYou can enable one or several LoRAs over top of one model.",
-            "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelNamesFor(session).Order().ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false, ChangeWeight: 8
+            "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelNamesFor(session).Order().Select(CleanModelName).ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false, ChangeWeight: 8
             ));
         LoraWeights = Register<List<string>>(new("LoRA Weights", "Weight values for the LoRA model list.",
             "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons, VisibleNormally: false
@@ -543,15 +553,22 @@ public class T2IParamTypes
              ));
     }
 
-    /// <summary>Gets the value in the list that best matches the input text (for user input handling), or null if no match.</summary>
-    public static string GetBestInList(string name, IEnumerable<string> list)
+    /// <summary>Gets the value in the list that best matches the input text of a model name (for user input handling), or null if no match.</summary>
+    public static string GetBestModelInList(string name, IEnumerable<string> list)
     {
+        return GetBestInList(name, list, s => CleanNameGeneric(CleanModelName(s)));
+    }
+
+    /// <summary>Gets the value in the list that best matches the input text (for user input handling), or null if no match.</summary>
+    public static string GetBestInList(string name, IEnumerable<string> list, Func<string, string> cleanFunc = null)
+    {
+        cleanFunc ??= CleanNameGeneric;
         string backup = null;
         int bestLen = 999;
-        name = CleanNameGeneric(name);
+        name = cleanFunc(name);
         foreach (string listVal in list)
         {
-            string listValClean = CleanNameGeneric(listVal);
+            string listValClean = cleanFunc(listVal);
             if (listValClean == name)
             {
                 return listVal;
@@ -682,7 +699,7 @@ public class T2IParamTypes
                 {
                     throw new InvalidDataException($"Invalid model sub-type for param {type.Name}: '{type.Subtype}' - are you sure that type name is correct? (Developer error)");
                 }
-                val = GetBestInList(val, handler.ListModelNamesFor(session).ToList());
+                val = GetBestModelInList(val, handler.ListModelNamesFor(session).ToList());
                 if (val is null)
                 {
                     throw new InvalidDataException($"Invalid model value for param {type.Name} - '{origVal}' - are you sure that model name is correct?");
