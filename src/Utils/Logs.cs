@@ -16,11 +16,18 @@ public static class Logs
     /// <summary>Queue of logs to save to file.</summary>
     public static ConcurrentQueue<string> LogsToSave = new();
 
+    /// <summary>Thread for the loop that saves logs to file.</summary>
+    public static Thread LogSaveThread = null;
+
+    /// <summary>Is Set when the log save thread is completed.</summary>
+    public static ManualResetEvent LogSaveCompletion = new(false);
+
     /// <summary>Called during program init, initializes the log saving to file (if enabled).</summary>
     public static void StartLogSaving()
     {
         if (!Program.ServerSettings.Logs.SaveLogToFile)
         {
+            LogSaveCompletion.Set();
             LogsToSave = null;
             return;
         }
@@ -44,29 +51,49 @@ public static class Logs
         }, false);
         LogFilePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.DataPath, LogFilePath);
         Directory.CreateDirectory(Path.GetDirectoryName(LogFilePath));
-        Thread thread = new(LogSaveInternalLoop) { Name = "logsaver" };
-        thread.Start();
+        LogSaveThread = new(LogSaveInternalLoop) { Name = "logsaver" };
+        LogSaveThread.Start();
     }
 
+    /// <summary>Internal thread loop for saving logs to file.</summary>
     public static void LogSaveInternalLoop()
     {
-        StringBuilder toStore = new();
         while (true)
         {
             if (Program.GlobalProgramCancel.IsCancellationRequested)
             {
+                LogSaveCompletion.Set();
                 return;
             }
-            while (LogsToSave.TryDequeue(out string line))
+            SaveLogsToFileOnce();
+            try
             {
-                toStore.Append($"{line}\n");
+                Task.Delay(TimeSpan.FromSeconds(25)).Wait(Program.GlobalProgramCancel);
             }
-            if (toStore.Length > 0)
+            catch (OperationCanceledException)
             {
-                File.AppendAllText(LogFilePath, toStore.ToString());
-                toStore.Clear();
+                LogSaveCompletion.Set();
+                return;
             }
-            Task.Delay(TimeSpan.FromSeconds(5)).Wait(Program.GlobalProgramCancel);
+        }
+    }
+
+    /// <summary>Immediately saves the logs to file.</summary>
+    public static void SaveLogsToFileOnce()
+    {
+        if (LogsToSave.IsEmpty)
+        {
+            return;
+        }
+        StringBuilder toStore = new();
+        while (LogsToSave.TryDequeue(out string line))
+        {
+            toStore.Append($"{line}\n");
+        }
+        if (toStore.Length > 0)
+        {
+            File.AppendAllText(LogFilePath, toStore.ToString());
+            toStore.Clear();
         }
     }
 
