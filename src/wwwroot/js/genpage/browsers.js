@@ -59,6 +59,7 @@ class GenPageBrowserClass {
         this.folderTreeShowFiles = false;
         this.folderSelectedEvent = null;
         this.builtEvent = null;
+        this.sizeChangedEvent = null;
     }
 
     /**
@@ -443,13 +444,16 @@ class GenPageBrowserClass {
                 this.makeVisible(this.contentDiv);
             });
             this.fullContentDiv.appendChild(this.contentDiv);
-            let barSpot;
+            this.barSpot = 0;
             let setBar = () => {
-                this.folderTreeDiv.style.width = `${barSpot}px`;
-                this.fullContentDiv.style.width = `calc(100vw - ${barSpot}px - 0.6rem)`;
+                this.folderTreeDiv.style.width = `${this.barSpot}px`;
+                this.fullContentDiv.style.width = `calc(100vw - ${this.barSpot}px - 0.6rem)`;
+                if (this.sizeChangedEvent) {
+                    this.sizeChangedEvent();
+                }
             }
             this.lastReset = () => {
-                barSpot = parseInt(localStorage.getItem(`barspot_browser_${this.id}`) || convertRemToPixels(20));
+                this.barSpot = parseInt(localStorage.getItem(`barspot_browser_${this.id}`) || convertRemToPixels(20));
                 setBar();
             };
             this.lastReset();
@@ -462,8 +466,8 @@ class GenPageBrowserClass {
                 let offX = e.pageX - this.container.getBoundingClientRect().left;
                 offX = Math.min(Math.max(offX, this.splitterMinWidth), window.innerWidth - 100);
                 if (isDrag) {
-                    barSpot = offX - 5;
-                    localStorage.setItem(`barspot_browser_${this.id}`, barSpot);
+                    this.barSpot = offX - 5;
+                    localStorage.setItem(`barspot_browser_${this.id}`, this.barSpot);
                     setBar();
                 }
             };

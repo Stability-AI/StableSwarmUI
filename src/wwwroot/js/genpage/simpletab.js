@@ -10,6 +10,7 @@ class SimpleTab {
         this.inputsAreaHidden = getRequiredElementById('simple_inputs_area_hidden');
         this.tabButton = getRequiredElementById('simpletabbutton');
         this.wrapperDiv = getRequiredElementById('simpletabbrowserwrapper');
+        this.imageContainer = getRequiredElementById('simple_image_container');
         this.browser = new GenPageBrowserClass('simpletabbrowserwrapper', this.browserListEntries.bind(this), 'simpletabbrowser', 'Big Thumbnails', this.browserDescribeEntry.bind(this), this.browserSelectEntry.bind(this), '', 10);
         this.browser.depth = 10;
         this.browser.showDepth = false;
@@ -18,6 +19,7 @@ class SimpleTab {
         this.browser.folderTreeShowFiles = true;
         this.browser.folderSelectedEvent = this.onFolderSelected.bind(this);
         this.browser.builtEvent = this.onBrowserBuilt.bind(this);
+        this.browser.sizeChangedEvent = this.onBrowserSizeChanged.bind(this);
         this.tabButton.addEventListener('click', this.onTabClicked.bind(this));
     }
 
@@ -40,6 +42,10 @@ class SimpleTab {
         }
         this.browser.navigate('');
         this.hasLoaded = true;
+    }
+
+    onBrowserSizeChanged() {
+        this.containerDiv.style.width = this.browser.fullContentDiv.style.width;
     }
 
     generate() {
@@ -102,6 +108,7 @@ class SimpleTab {
                 }
                 areaData[0].innerHTML = html;
             }
+            this.imageContainer.innerHTML = `<img src="${data.result.image}" />`;
             this.browser.fullContentDiv.style.display = 'none';
             this.containerDiv.style.display = 'inline-block';
             for (let group of groupsClose) {
