@@ -1478,13 +1478,12 @@ function openEmptyEditor() {
     image.src = canvas.toDataURL();
 }
 
-function upvertAutoWebuiMetadataToSwarm(lines) {
+function upvertAutoWebuiMetadataToSwarm(metadata) {
     let realData = {};
-    realData['prompt'] = lines[0];
-    if (lines.length == 3) {
-        realData['negativeprompt'] = lines[1];
-    }
-    let dataParts = lines[lines.length - 1].split(',').map(x => x.split(':').map(y => y.trim()));
+    [realData['prompt'], remains] = metadata.split("\nNegative prompt: ");
+    let remain_lines = remains.split('\n');
+    realData['negativeprompt'] = remain_lines.slice(0, -1).join('\n');
+    let dataParts = remain_lines[remain_lines.length-1].split(',').map(x => x.split(':').map(y => y.trim()));
     for (let part of dataParts) {
         if (part.length == 2) {
             let clean = cleanParamName(part[0]);
@@ -1603,7 +1602,7 @@ function imageInputHandler() {
                             else {
                                 let lines = metadata.split('\n');
                                 if (lines.length > 1) {
-                                    metadata = upvertAutoWebuiMetadataToSwarm(lines);
+                                    metadata = upvertAutoWebuiMetadataToSwarm(metadata);
                                 }
                                 else {
                                     // ???
