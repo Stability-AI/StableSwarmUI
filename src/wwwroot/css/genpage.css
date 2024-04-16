@@ -1153,6 +1153,6 @@ body {
     margin-right: 0;
     background-color: var(--background);
 }
-.simpletab-progress-wrapper > .image-preview-progress-inner {
+.simpletab-progress-wrapper .image-preview-progress-inner {
     top: calc(-10rem + 5px);
 }

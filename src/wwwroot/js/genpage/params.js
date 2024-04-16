@@ -78,11 +78,16 @@ function toggleGroupOpen(elem, shouldOpen = null) {
 }
 
 function doGroupOpenUpdate(group, parent, isOpen) {
-    if (isOpen) {
+    let header = parent.querySelector('.input-group-header');
+    parent.classList.remove('input-group-closed');
+    parent.classList.remove('input-group-open');
+    let symbol = parent.querySelector('.auto-symbol');
+    if (isOpen || header.classList.contains('input-group-noshrink')) {
         group.style.display = 'flex';
-        parent.classList.remove('input-group-closed');
         parent.classList.add('input-group-open');
-        parent.querySelector('.auto-symbol').innerHTML = '&#x2B9F;';
+        if (symbol) {
+            symbol.innerHTML = '&#x2B9F;';
+        }
         if (!group.dataset.do_not_save) {
             setCookie(`group_open_${parent.id}`, 'open', 365);
         }
@@ -90,8 +95,9 @@ function doGroupOpenUpdate(group, parent, isOpen) {
     else {
         group.style.display = 'none';
         parent.classList.add('input-group-closed');
-        parent.classList.remove('input-group-open');
-        parent.querySelector('.auto-symbol').innerHTML = '&#x2B9E;';
+        if (symbol) {
+            symbol.innerHTML = '&#x2B9E;';
+        }
         if (!group.dataset.do_not_save) {
             setCookie(`group_open_${parent.id}`, 'closed', 365);
         }
@@ -176,10 +182,12 @@ function genInputs(delay_final = false) {
                             groupsEnable.push(groupId);
                         }
                     }
+                    let symbol = param.group.can_shrink ? '<span class="auto-symbol">&#x2B9F;</span>' : '';
+                    let shrinkClass = param.group.can_shrink ? 'input-group-shrinkable' : 'input-group-noshrink';
                     let toggler = getToggleHtml(param.group.toggles, `input_group_content_${groupId}`, escapeHtml(param.group.name), ' group-toggler-switch', 'doToggleGroup');
-                    html += `<div class="input-group input-group-open" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header"><span class="header-label-wrap"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${translateableHtml(escapeHtml(param.group.name))}</span>${toggler}${infoButton}</span></span><div class="input-group-content" id="input_group_content_${groupId}">`;
+                    html += `<div class="input-group input-group-open" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header ${shrinkClass}"><span class="header-label-wrap">${symbol}<span class="header-label">${translateableHtml(escapeHtml(param.group.name))}</span>${toggler}${infoButton}</span></span><div class="input-group-content" id="input_group_content_${groupId}">`;
                     if (presetArea) {
-                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" class="input-group-header"><span class="auto-symbol">&#x2B9F;</span>${translateableHtml(escapeHtml(param.group.name))}</span><div class="input-group-content">`;
+                        presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" class="input-group-header ${shrinkClass}">${symbol}${translateableHtml(escapeHtml(param.group.name))}</span><div class="input-group-content">`;
                     }
                 }
                 lastGroup = groupName;
@@ -659,29 +667,28 @@ function hideUnsupportableParams() {
     applyTranslations();
 }
 
-function paramSorter(a, b) {
-    let aPrio = a.priority, bPrio = b.priority;
-    if (a.group && b.group && a.group.name == b.group.name) {
-    }
-    else if (a.group && !b.group) {
-        aPrio = a.group.priority;
-    }
-    else if (!a.group && b.group) {
-        bPrio = b.group.priority;
-    }
-    else if (a.group && b.group) {
-        aPrio = a.group.priority;
-        bPrio = b.group.priority;
-    }
-    if (aPrio == bPrio) {
-        let aGroup = a.group ? a.group.name : '';
-        let bGroup = b.group ? b.group.name : '';
-        if (aGroup == bGroup) {
-            return a.name.localeCompare(b.name);
+/**
+ * Returns a sorted list of parameters, with the parameters in the order of top, then groupless, then otherParams, then all remaining grouped.
+ * Within each section, parameters are sorted by group priority, then group id, then parameter priority, then parameter id.
+ */
+function sortParameterList(params, top = [], otherParams = []) {
+    function sortFunc(a, b) {
+        if (a.group != null && b.group != null) {
+            if (a.group.priority != b.group.priority) {
+                return a.group.priority - b.group.priority;
+            }
+            if (a.group.id != b.group.id) {
+                return a.group.id.localeCompare(b.group.id);
+            }
         }
-        return aGroup.localeCompare(bGroup);
+        if (a.priority != b.priority) {
+            return a.priority - b.priority;
+        }
+        return a.id.localeCompare(b.id);
     }
-    return aPrio - bPrio;
+    let prims = Object.values(params).filter(p => p.group == null).sort(sortFunc);
+    let others = Object.values(params).filter(p => p.group != null).sort(sortFunc);
+    return top.concat(prims).concat(otherParams).concat(others);
 }
 
 /** Returns a copy of the parameter name, cleaned for ID format input. */

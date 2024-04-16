@@ -100,7 +100,7 @@ class SimpleTab {
                     html += `<button class="generate-button" id="simple_generate_button" onclick="simpleTab.generate()">Generate</button>
                     <button class="interrupt-button legacy-interrupt interrupt-button-none" id="simple_interrupt_button" onclick="simpleTab.interrupt()">&times;</button>`;
                 }
-                for (let param of params.filter(areaData[1])) {
+                for (let param of sortParameterList(params.filter(areaData[1]))) {
                     let groupName = param.group ? param.group.name : null;
                     if (groupName != lastGroup) {
                         if (lastGroup) {
@@ -123,8 +123,10 @@ class SimpleTab {
                                     groupsEnable.push(groupId);
                                 }
                             }
+                            let symbol = param.group.can_shrink ? '<span class="auto-symbol">&#x2B9F;</span>' : '';
+                            let shrinkClass = param.group.can_shrink ? 'input-group-shrinkable' : 'input-group-noshrink';
                             let toggler = getToggleHtml(param.group.toggles, `simpleinput_group_content_${groupId}`, escapeHtml(param.group.name), ' group-toggler-switch', 'doToggleGroup');
-                            html += `<div class="input-group input-group-open" id="auto-group-${groupId}"><span id="simpleinput_group_${groupId}" class="input-group-header"><span class="header-label-wrap"><span class="auto-symbol">&#x2B9F;</span><span class="header-label">${translateableHtml(escapeHtml(param.group.name))}</span>${toggler}${infoButton}</span></span><div class="input-group-content" id="simpleinput_group_content_${groupId}">`;
+                            html += `<div class="input-group input-group-open" id="auto-group-${groupId}"><span id="simpleinput_group_${groupId}" class="input-group-header ${shrinkClass}"><span class="header-label-wrap">${symbol}<span class="header-label">${translateableHtml(escapeHtml(param.group.name))}</span>${toggler}${infoButton}</span></span><div class="input-group-content" id="simpleinput_group_content_${groupId}">`;
                         }
                         lastGroup = groupName;
                     }

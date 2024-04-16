@@ -429,6 +429,8 @@ textarea, input, select {
     left: 0.5rem;
     top: -0.7rem;
     height: 0.5rem;
+}
+.input-group-shrinkable {
     cursor: pointer;
 }
 .header-label-wrap {

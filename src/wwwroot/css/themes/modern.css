@@ -233,7 +233,7 @@
     user-select: none;
 }
 
-.input-group .input-group-header:hover {
+.input-group .input-group-header-shrinkable:hover {
     color: var(--button-foreground-hover);
 }
 

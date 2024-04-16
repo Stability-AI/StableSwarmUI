@@ -1501,7 +1501,7 @@ function genpageLoad() {
         genericRequest('ListT2IParams', {}, data => {
             updateAllModels(data.models);
             allWildcards = data.wildcards;
-            rawGenParamTypesFromServer = data.list.sort(paramSorter);
+            rawGenParamTypesFromServer = sortParameterList(data.list);
             gen_param_types = rawGenParamTypesFromServer;
             paramConfig.preInit();
             paramConfig.applyParamEdits(data.param_edits);

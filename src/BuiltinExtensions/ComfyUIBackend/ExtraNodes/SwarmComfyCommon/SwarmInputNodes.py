@@ -12,6 +12,7 @@ class SwarmInputGroup:
                 "description": ("STRING", {"default": "", "multiline": True}),
                 "order_priority": ("FLOAT", {"default": 0, "min": -1024, "max": 1024, "step": 0.5, "round": False}),
                 "is_advanced": ("BOOLEAN", {"default": False}),
+                "can_shrink": ("BOOLEAN", {"default": True}),
             },
         }
 

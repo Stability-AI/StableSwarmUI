@@ -156,8 +156,9 @@ public class T2IRegisteredParam<T>
 /// <param name="Open">If true, the group defaults open. If false, it defaults to closed.</param>
 /// <param name="OrderPriority">The priority order position to put this group in.</param>
 /// <param name="Description">Optional description/explanation text of the group.</param>
-/// <param name="IsAdvanced">If 'false', this is an advanced setting group that should be hidden by a dropdown.</param>
-public record class T2IParamGroup(string Name, bool Toggles = false, bool Open = true, double OrderPriority = 10, string Description = "", bool IsAdvanced = false)
+/// <param name="IsAdvanced">If true, this is an advanced setting group that should be hidden by a dropdown.</param>
+/// <param name="CanShrink">If true, the group can be shrunk on-page to hide it. If false, it is always open.</param>
+public record class T2IParamGroup(string Name, bool Toggles = false, bool Open = true, double OrderPriority = 10, string Description = "", bool IsAdvanced = false, bool CanShrink = true)
 {
     public JObject ToNet(Session session)
     {
@@ -169,7 +170,8 @@ public record class T2IParamGroup(string Name, bool Toggles = false, bool Open =
             ["open"] = Open,
             ["priority"] = OrderPriority,
             ["description"] = Description,
-            ["advanced"] = IsAdvanced
+            ["advanced"] = IsAdvanced,
+            ["can_shrink"] = CanShrink
         };
     }
 }

@@ -201,8 +201,8 @@ function comfyBuildParams(callback) {
                 open: false,
                 priority: priority,
                 advanced: groupId != 'primitives',
-                toggles: false,
-                do_not_save: false
+                can_shrink: true,
+                toggles: false
             };
             params[inputId] = {
                 name: name,
@@ -386,7 +386,7 @@ function comfyBuildParams(callback) {
                 while (inputId in params) {
                     inputId = `${inputIdDirect}${numberToLetters(counter++)}`;
                 }
-                let groupObj = { name: 'Ungrouped', id: 'ungrouped', open: true, priority: 0, advanced: false, toggles: false, do_not_save: false };
+                let groupObj = { name: 'Ungrouped', id: 'ungrouped', open: true, priority: 0, advanced: false, toggles: false, can_shrink: false };
                 if (node.inputs.group) {
                     let groupData = prompt[node.inputs.group[0]];
                     groupObj = {
@@ -395,8 +395,8 @@ function comfyBuildParams(callback) {
                         open: groupData.inputs.open_by_default,
                         priority: groupData.inputs.order_priority,
                         advanced: groupData.inputs.is_advanced,
-                        toggles: false,
-                        do_not_save: false
+                        can_shrink: groupData.inputs.can_shrink,
+                        toggles: false
                     };
                 }
                 params[inputId] = {
@@ -738,10 +738,7 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
     let isSortTop = p => p.id == 'prompt' || p.id == 'negativeprompt' || p.id == 'comfyworkflowraw';
     let prompt = Object.values(actualParams).filter(isSortTop);
     let otherParams = Object.values(actualParams).filter(p => !isSortTop(p));
-    let prims = Object.values(params).filter(p => p.group == null);
-    let others = Object.values(params).filter(p => p.group != null).sort((a, b) => a.group.id.localeCompare(b.group.id));
-    actualParams = prompt.concat(prims).concat(otherParams).concat(others);
-    gen_param_types = actualParams;
+    gen_param_types = sortParameterList(params, prompt, otherParams);
     genInputs(true);
     let buttonHolder = getRequiredElementById('comfy_workflow_disable_button');
     buttonHolder.style.display = 'block';
