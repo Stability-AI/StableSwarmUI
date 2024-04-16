@@ -640,8 +640,14 @@ function filterDistinctBy(array, map) {
  * Gets the current value of an input element (in a checkbox-compatible way).
  */
 function getInputVal(input) {
-    if (input.type && input.type == 'checkbox') {
+    if (input.tagName == 'INPUT' && input.type == 'checkbox') {
         return input.checked;
+    }
+    else if (input.tagName == 'INPUT' && input.type == 'file') {
+        if (elem.dataset.filedata) {
+            return elem.dataset.filedata;
+        }
+        return null;
     }
     else if (input.tagName == 'SELECT' && input.multiple) {
         let valSet = [...input.selectedOptions].map(option => option.value);

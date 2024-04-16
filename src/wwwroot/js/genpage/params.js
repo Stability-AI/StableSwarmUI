@@ -447,22 +447,9 @@ function getGenInput(input_overrides = {}, input_preoverrides = {}) {
         if (parent && parent.dataset.disabled == 'true') {
             continue;
         }
-        if (type.type == "boolean") {
-            input[type.id] = elem.checked;
-        }
-        else if (type.type == "image") {
-            if (elem.dataset.filedata) {
-                input[type.id] = elem.dataset.filedata;
-            }
-        }
-        else if (type.type == "list" && elem.tagName == "SELECT") {
-            let valSet = [...elem.selectedOptions].map(option => option.value);
-            if (valSet.length > 0) {
-                input[type.id] = valSet.join(',');
-            }
-        }
-        else {
-            input[type.id] = elem.value;
+        let val = getInputVal(elem);
+        if (val != null) {
+            input[type.id] = val;
         }
         if (type.id == 'prompt') {
             let container = findParentOfClass(elem, 'auto-input');

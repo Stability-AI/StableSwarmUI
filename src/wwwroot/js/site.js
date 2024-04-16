@@ -479,7 +479,7 @@ function makeSliderInput(featureid, id, name, description, value, min, max, view
         <label>
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         </label>
-        <input class="auto-slider-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false" onchange="autoNumberWidth(this)">
+        <input class="auto-slider-number" type="number" id="${id}" data-param_id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false" onchange="autoNumberWidth(this)">
         <br>
         <div class="auto-slider-range-wrapper" style="${getRangeStyle(rangeVal, min, view_max)}">
             <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false" oninput="updateRangeStyle(arguments[0])" onchange="updateRangeStyle(arguments[0])">
@@ -498,7 +498,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
                 <label>
                     <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
                 </label>
-                <input class="auto-number auto-number-seedbox" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
+                <input class="auto-number auto-number-seedbox" type="number" id="${id}" data-param_id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false">
                 <button class="basic-button seed-button seed-random-button" title="Random (Set to -1)" onclick="setSeedToRandom('${id}')">&#x1F3B2;</button>
                 <button class="basic-button seed-button seed-reuse-button" title="Reuse (from currently selected image)" onclick="reuseLastParamVal('${id}');">&#128257;</button>
             </div>`;
@@ -508,7 +508,7 @@ function makeNumberInput(featureid, id, name, description, value, min, max, step
             <label>
                 <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
             </label>
-            <input class="auto-number" type="number" id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false" onchange="autoNumberWidth(this)">
+            <input class="auto-number" type="number" id="${id}" data-param_id="${id}" value="${value}" min="${min}" max="${max}" step="${step}" data-name="${name}" autocomplete="false" onchange="autoNumberWidth(this)">
         </div>`;
 }
 
@@ -527,7 +527,7 @@ function makeTextInput(featureid, id, name, description, value, format, placehol
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         </label>
         ${tokenCounter}
-        <textarea class="auto-text${(isBig ? " auto-text-block" : "")} translate translate-no-text" id="${id}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtmlNoBr(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
+        <textarea class="auto-text${(isBig ? " auto-text-block" : "")} translate translate-no-text" id="${id}" data-param_id="${id}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtmlNoBr(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
         <button class="interrupt-button image-clear-button" style="display: none;">${translateableHtml("Clear Images")}</button>
         <div class="added-image-area"></div>
     </div>`;
@@ -543,7 +543,7 @@ function makeCheckboxInput(featureid, id, name, description, value, toggles = fa
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
     <div class="auto-input auto-checkbox-box auto-input-flex"${featureid}>
         <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
-        <input class="auto-checkbox" type="checkbox" data-name="${name}" id="${id}"${checked}>
+        <input class="auto-checkbox" type="checkbox" data-name="${name}" id="${id}" data-param_id="${id}"${checked}>
     </div>`;
 }
 
@@ -557,7 +557,7 @@ function makeDropdownInput(featureid, id, name, description, values, defaultVal,
         <label>
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         </label>
-        <select class="auto-dropdown" id="${id}" autocomplete="false" onchange="autoSelectWidth(this)">`;
+        <select class="auto-dropdown" id="${id}" data-param_id="${id}" autocomplete="false" onchange="autoSelectWidth(this)">`;
     for (let i = 0; i < values.length; i++) {
         let value = values[i];
         let alt_name = alt_names && alt_names[i] ? alt_names[i] : value;
@@ -580,7 +580,7 @@ function makeMultiselectInput(featureid, id, name, description, values, defaultV
         <label>
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         </label>
-        <select class="form-select" id="${id}" autocomplete="false" data-placeholder="${escapeHtmlNoBr(placeholder)}" multiple>`;
+        <select class="form-select" id="${id}" data-param_id="${id}" autocomplete="false" data-placeholder="${escapeHtmlNoBr(placeholder)}" multiple>`;
     for (let value of values) {
         let selected = value == defaultVal ? ' selected="true"' : '';
         html += `<option value="${escapeHtmlNoBr(value)}"${selected}>${escapeHtml(value)}</option>`;
@@ -602,7 +602,7 @@ function makeImageInput(featureid, id, name, description, toggles = false, popov
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         </label>
         <label for="${id}" class="auto-file-label">
-            <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" onchange="load_image_file(this)" ondragover="updateFileDragging(arguments[0])" ondragleave="updateFileDragging(arguments[0], true)" autocomplete="false">
+            <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" data-param_id="${id}" onchange="load_image_file(this)" ondragover="updateFileDragging(arguments[0])" ondragleave="updateFileDragging(arguments[0], true)" autocomplete="false">
             <div class="auto-file-input">
                 <a class="auto-file-input-button basic-button">${translateableHtml("Choose File")}</a>
                 <span class="auto-file-input-filename"></span>
