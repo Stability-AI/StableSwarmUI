@@ -10,7 +10,7 @@ function getHtmlForParam(param, prefix) {
         switch (param.type) {
             case 'text':
                 let runnable = param.view_type == 'prompt' ? () => textPromptAddKeydownHandler(getRequiredElementById(`${prefix}${param.id}`)) : null;
-                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.view_type, param.description, param.toggleable, false, !param.no_popover) + pop, runnable: runnable};
+                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, param.view_type, param.description, param.toggleable, false, !param.no_popover) + pop, runnable: runnable};
             case 'decimal':
             case 'integer':
                 let min = param.min;
@@ -21,42 +21,42 @@ function getHtmlForParam(param, prefix) {
                 }
                 switch (param.view_type) {
                     case 'small':
-                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, 'small', param.toggleable, !param.no_popover) + pop,
+                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, param.min, param.max, param.step, 'small', param.toggleable, !param.no_popover) + pop,
                         runnable: () => autoNumberWidth(getRequiredElementById(`${prefix}${param.id}`))};
                     case 'normal':
                     case 'big':
-                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, 'big', param.toggleable, !param.no_popover) + pop,
+                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, param.min, param.max, param.step, 'big', param.toggleable, !param.no_popover) + pop,
                         runnable: () => autoNumberWidth(getRequiredElementById(`${prefix}${param.id}`))};
                     case 'seed':
-                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.step, 'seed', param.toggleable, !param.no_popover) + pop};
+                        return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, param.min, param.max, param.step, 'seed', param.toggleable, !param.no_popover) + pop};
                     case 'slider':
-                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.view_max || param.max, param.step, false, param.toggleable, !param.no_popover) + pop,
+                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, param.min, param.max, param.view_max || param.max, param.step, false, param.toggleable, !param.no_popover) + pop,
                             runnable: () => enableSliderForBox(findParentOfClass(getRequiredElementById(`${prefix}${param.id}`), 'auto-slider-box'))};
                     case 'pot_slider':
-                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.min, param.max, param.view_max || param.max, param.step, true, param.toggleable, !param.no_popover) + pop,
+                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, param.min, param.max, param.view_max || param.max, param.step, true, param.toggleable, !param.no_popover) + pop,
                             runnable: () => enableSliderForBox(findParentOfClass(getRequiredElementById(`${prefix}${param.id}`), 'auto-slider-box'))};
                 }
                 break;
             case 'boolean':
-                return {html: makeCheckboxInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.toggleable, false, !param.no_popover) + pop};
+                return {html: makeCheckboxInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, param.toggleable, false, !param.no_popover) + pop};
             case 'dropdown':
-                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, param.toggleable, !param.no_popover, param['value_names']) + pop,
+                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.values, param.default, param.toggleable, !param.no_popover, param['value_names']) + pop,
                         runnable: () => autoSelectWidth(getRequiredElementById(`${prefix}${param.id}`))};
             case 'list':
                 if (param.values) {
-                    return {html: makeMultiselectInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.values, param.default, "Select...", param.toggleable, !param.no_popover) + pop,
+                    return {html: makeMultiselectInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.values, param.default, "Select...", param.toggleable, !param.no_popover) + pop,
                         runnable: () => $(`#${prefix}${param.id}`).select2({ theme: "bootstrap-5", width: 'style', placeholder: $(this).data('placeholder'), closeOnSelect: false }) };
                 }
-                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.default, param.view_type, param.description, param.toggleable, false, !param.no_popover) + pop};
+                return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, param.view_type, param.description, param.toggleable, false, !param.no_popover) + pop};
             case 'model':
                 let modelList = param.values && param.values.length > 0 ? param.values : coreModelMap[param.subtype || 'Stable-Diffusion'];
                 modelList = modelList.map(m => cleanModelName(m));
-                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, modelList, param.default, param.toggleable, !param.no_popover) + pop,
+                return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, modelList, param.default, param.toggleable, !param.no_popover) + pop,
                     runnable: () => autoSelectWidth(getRequiredElementById(`${prefix}${param.id}`))};
             case 'image':
-                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop};
+                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.toggleable) + pop};
             case 'image_list':
-                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.name, param.description, param.toggleable) + pop};
+                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.toggleable) + pop};
         }
         console.log(`Cannot generate input for param ${param.id} of type ${param.type} - unknown type`);
         return null;

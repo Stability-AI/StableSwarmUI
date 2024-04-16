@@ -22,6 +22,8 @@ let lastHistoryImage = null, lastHistoryImageDiv = null;
 
 let currentMetadataVal = null, currentImgSrc = null;
 
+let mainGenHandler = new GenerateHandler();
+
 function updateOtherInfoSpan() {
     let span = getRequiredElementById('other_info_span');
     span.innerHTML = otherInfoSpanContent.join(' ');
@@ -389,7 +391,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
                 'width': width * 2,
                 'height': height * 2
             };
-            doGenerate(input_overrides, { 'initimagecreativity': 0.6 });
+            mainGenHandler.doGenerate(input_overrides, { 'initimagecreativity': 0.6 });
         }));
     }, '', 'Runs an instant generation with this image as the input and scale doubled');
     let metaParsed = JSON.parse(metadata) ?? { is_starred: false };
@@ -487,14 +489,6 @@ function gotImagePreview(image, metadata, batchId) {
     return batch_div;
 }
 
-let totalGensThisRun = 0;
-let totalGenRunTime = 0;
-
-function appendGenTimeFrom(time) {
-    totalGensThisRun++;
-    totalGenRunTime += time;
-}
-
 function updateCurrentStatusDirect(data) {
     if (data) {
         num_current_gens = data.waiting_gens;
@@ -519,8 +513,8 @@ function updateCurrentStatusDirect(data) {
         return `<span class="interrupt-line-part">${num} ${text.replaceAll('%', autoS(num))},</span> `;
     }
     let timeEstimate = '';
-    if (total > 0 && totalGensThisRun > 0) {
-        let avgGenTime = totalGenRunTime / totalGensThisRun;
+    if (total > 0 && mainGenHandler.totalGensThisRun > 0) {
+        let avgGenTime = mainGenHandler.totalGenRunTime / mainGenHandler.totalGensThisRun;
         let estTime = avgGenTime * total;
         timeEstimate = ` (est. ${durationStringify(estTime)})`;
     }
@@ -577,7 +571,7 @@ function doGenForeverOnce() {
         }
         lastGenForeverParams = allParams;
     }
-    doGenerate();
+    mainGenHandler.doGenerate();
 }
 
 function toggleGenerateForever() {
@@ -708,132 +702,6 @@ function toggleGeneratePreviews(override_preview_req = false) {
         button.innerText = 'Generate Previews';
         clearInterval(genPreviewsInterval);
     }
-}
-
-let batchesEver = 0;
-
-function doGenerate(input_overrides = {}, input_preoverrides = {}) {
-    if (session_id == null) {
-        if (Date.now() - time_started > 1000 * 60) {
-            showError("Cannot generate, session not started. Did the server crash?");
-        }
-        else {
-            showError("Cannot generate, session not started. Please wait a moment for the page to load.");
-        }
-        return;
-    }
-    let isPreview = '_preview' in input_overrides;
-    if (isPreview) {
-        delete input_overrides['_preview'];
-    }
-    num_current_gens += parseInt(getRequiredElementById('input_images').value);
-    setCurrentModel(() => {
-        if (getRequiredElementById('current_model').value == '') {
-            showError("Cannot generate, no model selected.");
-            return;
-        }
-        resetBatchIfNeeded();
-        let images = {};
-        let batch_id = batchesEver++;
-        let discardable = {};
-        let timeLastGenHit = Date.now();
-        makeWSRequestT2I('GenerateText2ImageWS', getGenInput(input_overrides, input_preoverrides), data => {
-            if (isPreview) {
-                if (data.image) {
-                    setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`, false, true);
-                }
-                return;
-            }
-            if (data.image) {
-                let timeNow = Date.now();
-                let timeDiff = timeNow - timeLastGenHit;
-                timeLastGenHit = timeNow;
-                appendGenTimeFrom(timeDiff / 1000);
-                if (!(data.batch_index in images)) {
-                    let batch_div = gotImageResult(data.image, data.metadata, `${batch_id}_${data.batch_index}`);
-                    images[data.batch_index] = {div: batch_div, image: data.image, metadata: data.metadata, overall_percent: 0, current_percent: 0};
-                }
-                else {
-                    let imgHolder = images[data.batch_index];
-                    if (!document.getElementById('current_image_img') || autoLoadImagesElem.checked || document.getElementById('current_image_img').dataset.batch_id == `${batch_id}_${data.batch_index}`) {
-                        setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`, false, true);
-                    }
-                    let imgElem = imgHolder.div.querySelector('img');
-                    imgElem.src = data.image;
-                    delete imgElem.dataset.previewGrow;
-                    imgHolder.image = data.image;
-                    imgHolder.div.dataset.src = data.image;
-                    imgHolder.div.dataset.metadata = data.metadata;
-                    let progress_bars = imgHolder.div.querySelector('.image-preview-progress-wrapper');
-                    if (progress_bars) {
-                        progress_bars.remove();
-                    }
-                }
-                images[data.batch_index].image = data.image;
-                images[data.batch_index].metadata = data.metadata;
-                discardable[data.batch_index] = images[data.batch_index];
-                delete images[data.batch_index];
-            }
-            if (data.gen_progress) {
-                if (!(data.gen_progress.batch_index in images)) {
-                    let batch_div = gotImagePreview(data.gen_progress.preview ?? 'imgs/model_placeholder.jpg', `{"preview": "${data.gen_progress.current_percent}"}`, `${batch_id}_${data.gen_progress.batch_index}`);
-                    images[data.gen_progress.batch_index] = {div: batch_div, image: null, metadata: null, overall_percent: 0, current_percent: 0};
-                    let progress_bars_html = `<div class="image-preview-progress-inner"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>`;
-                    let progress_bars = createDiv(null, 'image-preview-progress-wrapper', progress_bars_html);
-                    batch_div.prepend(progress_bars);
-                }
-                let imgHolder = images[data.gen_progress.batch_index];
-                let overall = imgHolder.div.querySelector('.image-preview-progress-overall');
-                if (overall && data.gen_progress.overall_percent) {
-                    imgHolder.overall_percent = data.gen_progress.overall_percent;
-                    imgHolder.current_percent = data.gen_progress.current_percent;
-                    overall.style.width = `${imgHolder.overall_percent * 100}%`;
-                    imgHolder.div.querySelector('.image-preview-progress-current').style.width = `${imgHolder.current_percent * 100}%`;
-                    if (data.gen_progress.preview && autoLoadPreviewsElem.checked && imgHolder.image == null) {
-                        setCurrentImage(data.gen_progress.preview, `{"preview": "${data.gen_progress.current_percent}"}`, `${batch_id}_${data.gen_progress.batch_index}`, true);
-                    }
-                    let curImgElem = document.getElementById('current_image_img');
-                    if (data.gen_progress.preview && (!imgHolder.image || data.gen_progress.preview != imgHolder.image)) {
-                        if (curImgElem && curImgElem.dataset.batch_id == `${batch_id}_${data.gen_progress.batch_index}`) {
-                            curImgElem.src = data.gen_progress.preview;
-                            let metadata = getRequiredElementById('current_image').querySelector('.current-image-data');
-                            if (metadata) {
-                                metadata.remove();
-                            }
-                        }
-                        imgHolder.div.querySelector('img').src = data.gen_progress.preview;
-                        imgHolder.image = data.gen_progress.preview;
-                    }
-                }
-            }
-            if (data.discard_indices) {
-                let needsNew = false;
-                for (let index of data.discard_indices) {
-                    let img = discardable[index] ?? images[index];
-                    if (img) {
-                        img.div.remove();
-                        let curImgElem = document.getElementById('current_image_img');
-                        if (curImgElem && curImgElem.src == img.image) {
-                            needsNew = true;
-                            delete discardable[index];
-                        }
-                    }
-                }
-                if (needsNew) {
-                    let imgs = Object.values(discardable);
-                    if (imgs.length > 0) {
-                        setCurrentImage(imgs[0].image, imgs[0].metadata);
-                    }
-                }
-                if (Object.keys(discardable).length > 0) {
-                    // clear any lingering previews
-                    for (let img of Object.values(images)) {
-                        img.div.remove();
-                    }
-                }
-            }
-        });
-    });
 }
 
 function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
@@ -1481,9 +1349,9 @@ function openEmptyEditor() {
 function upvertAutoWebuiMetadataToSwarm(metadata) {
     let realData = {};
     [realData['prompt'], remains] = metadata.split("\nNegative prompt: ");
-    let remain_lines = remains.split('\n');
-    realData['negativeprompt'] = remain_lines.slice(0, -1).join('\n');
-    let dataParts = remain_lines[remain_lines.length-1].split(',').map(x => x.split(':').map(y => y.trim()));
+    let lines = remains.split('\n');
+    realData['negativeprompt'] = lines.slice(0, -1).join('\n');
+    let dataParts = lines[lines.length - 1].split(',').map(x => x.split(':').map(y => y.trim()));
     for (let part of dataParts) {
         if (part.length == 2) {
             let clean = cleanParamName(part[0]);

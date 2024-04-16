@@ -5,6 +5,7 @@ class SimpleTab {
         this.hasLoaded = false;
         this.hasBuilt = false;
         this.containerDiv = getRequiredElementById('simpletabmainview');
+        this.inputsSidebar = getRequiredElementById('simple_input_sidebar');
         this.inputsArea = getRequiredElementById('simple_inputs_area');
         this.inputsAreaAdvanced = getRequiredElementById('simple_inputs_area_advanced');
         this.inputsAreaHidden = getRequiredElementById('simple_inputs_area_hidden');
@@ -21,6 +22,7 @@ class SimpleTab {
         this.browser.builtEvent = this.onBrowserBuilt.bind(this);
         this.browser.sizeChangedEvent = this.onBrowserSizeChanged.bind(this);
         this.tabButton.addEventListener('click', this.onTabClicked.bind(this));
+        this.genHandler = new SimpleTabGenerateHandler();
     }
 
     onFolderSelected() {
@@ -49,9 +51,32 @@ class SimpleTab {
     }
 
     generate() {
+        let inputs = {};
+        let elems = [...this.inputsSidebar.querySelectorAll('.auto-input')].map(i => i.querySelector('[data-param_id]'));
+        for (let elem of elems) {
+            let toggler = document.getElementById(`${elem.id}_toggle`);
+            if (toggler && !toggler.checked) {
+                continue;
+            }
+            let id = elem.dataset.param_id;
+            let value = getInputVal(elem);
+            inputs[id] = value;
+        }
+        console.log(inputs);
+        this.genHandler.doGenerate(inputs);
     }
 
     interrupt() {
+    }
+
+    setImage(imgSrc) {
+        let img = this.imageContainer.querySelector('img');
+        if (img) {
+            img.src = imgSrc;
+        }
+        else {
+            this.imageContainer.innerHTML = `<img src="${imgSrc}" />`;
+        }
     }
 
     browserDescribeEntry(workflow) {
@@ -146,6 +171,33 @@ class SimpleTab {
             });
             callback(folders, mapped);
         });
+    }
+}
+
+class SimpleTabGenerateHandler extends GenerateHandler {
+
+    constructor() {
+        super();
+    }
+
+    resetBatchIfNeeded() {
+        // No batch.
+    }
+
+    getGenInput(input_overrides = {}, input_preoverrides = {}) {
+        return JSON.parse(JSON.stringify(input_overrides));
+    }
+
+    setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, smoothAdd = false) {
+        simpleTab.setImage(src);
+    }
+
+    gotImageResult(image, metadata, batchId) {
+        simpleTab.setImage(image);
+    }
+
+    gotImagePreview(image, metadata, batchId) {
+        simpleTab.setImage(image);
     }
 }
 

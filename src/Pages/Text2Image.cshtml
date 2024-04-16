@@ -112,13 +112,13 @@
                                 <br>
                                 <textarea id="alt_negativeprompt_textbox" class="alt_prompt_textbox translate" rows="1" placeholder="Optionally, type a negative prompt here..."></textarea>
                             </div>
-                            <button class="alt-prompt-buttons alt-prompt-generate-button basic-button translate" id="alt_generate_button" oncontextmenu="doPopover('generate'); return false;" onclick="doGenerate()">Generate</button>
+                            <button class="alt-prompt-buttons alt-prompt-generate-button basic-button translate" id="alt_generate_button" oncontextmenu="doPopover('generate'); return false;" onclick="mainGenHandler.doGenerate()">Generate</button>
                             <button class="alt-prompt-buttons alt-prompt-center-button basic-button" id="alt_center_button" oncontextmenu="doPopover('generate_center'); return false;" onclick="doPopover('generate_center')">&#x2B9F;</button>
                             <button class="alt-prompt-buttons interrupt-button interrupt-button-none alt-interrupt" id="alt_interrupt_button" oncontextmenu="doPopover('interrupt'); return false;" onclick="doInterrupt()">&times;</button>
                         </div>
                     </div>
                     <div class="sui-popover sui_popover_model" id="popover_generate_center">
-                        <div class="sui_popover_model_button translate" onclick="doGenerate()">Generate</div>
+                        <div class="sui_popover_model_button translate" onclick="mainGenHandler.doGenerate()">Generate</div>
                         <div class="sui_popover_model_button translate" id="generate_forever_button" onclick="toggleGenerateForever()">Generate Forever</div>
                         <div class="sui_popover_model_button translate" id="generate_previews_button" onclick="toggleGeneratePreviews()">Generate Previews</div>
                         <div class="sui_popover_model_button translate" onclick="doInterrupt()">Interrupt Current Session</div>
@@ -126,7 +126,7 @@
                         <div class="sui_popover_model_button translate" onclick="showPromptTokenizen('alt_prompt_textbox')">Show Prompt Tokenization</div>
                     </div>
                     <div class="sui-popover sui_popover_model" id="popover_generate">
-                        <div class="sui_popover_model_button translate" onclick="doGenerate()">Generate</div>
+                        <div class="sui_popover_model_button translate" onclick="mainGenHandler.doGenerate()">Generate</div>
                         <div class="sui_popover_model_button translate" id="generate_forever_button" onclick="toggleGenerateForever()">Generate Forever</div>
                         <div class="sui_popover_model_button translate" id="generate_previews_button" onclick="toggleGeneratePreviews()">Generate Previews</div>
                     </div>
@@ -688,6 +688,7 @@
     <script src="/js/genpage/params.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/utiltab.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/image_editor.js?vary=@Utilities.VaryID"></script>
+    <script src="/js/genpage/generatehandler.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/simpletab.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/main.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/settings_editor.js?vary=@Utilities.VaryID"></script>

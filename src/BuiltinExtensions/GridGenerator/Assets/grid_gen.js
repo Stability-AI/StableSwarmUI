@@ -379,7 +379,7 @@ class GridGenClass {
                 let timeNow = Date.now();
                 let timeDiff = timeNow - timeLastGenHit;
                 timeLastGenHit = timeNow;
-                appendGenTimeFrom(timeDiff / 1000);
+                mainGenHandler.appendGenTimeFrom(timeDiff / 1000);
                 gotImageResult(data.image, data.metadata);
                 generatedCount++;
                 let timeProgress = Math.round((Date.now() - startTime) / 1000);
@@ -449,18 +449,18 @@ class GridGenClass {
             ${modalFooter()}
             <div id="grid-gen-info-box">...</div>
             <div id="grid-gen-page-config">
-                ${makeTextInput(null, 'grid-gen-output-folder-name', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.\nYou can use auto-fills [date], [time], [year], [month], [day], [hour], [minute], [second]', '', 'normal', 'Output folder name...', false, true)}
+                ${makeTextInput(null, 'grid-gen-output-folder-name', '', 'Output Folder Name', 'Name of the folder to save this grid under in your Image History.\nYou can use auto-fills [date], [time], [year], [month], [day], [hour], [minute], [second]', '', 'normal', 'Output folder name...', false, true)}
             </div>
             <br>
             <div class="grid-gen-checkboxes">
-                ${makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false, false, true)}&emsp;
-                ${makeCheckboxInput(null, 'grid-gen-opt-fast-skip', 'Fast Skip', 'If checked, uses faster skipping algorithm (prevents validation of skipped axes).', false, false, true)}&emsp;
-                ${makeCheckboxInput(null, 'grid-gen-opt-generate-page', 'Generate Page', 'If unchecked, will prevent regenerating the page for the grid.', true, false, true)}&emsp;
-                ${makeCheckboxInput(null, 'grid-gen-opt-publish-metadata', 'Publish Generation Metadata', 'If unchecked, will hide the image generation metadata.', true, false, true)}&emsp;
-                ${makeCheckboxInput(null, 'grid-gen-opt-dry-run', 'Dry Run', 'If checked, will not actually generate any images - useful to validate your grid.', false, false, true)}&emsp;
-                ${makeCheckboxInput(null, 'grid-gen-opt-weight-order', 'Allow Reordering', 'If checked, the grid generator will reorder processing order of axes to maximize generation speed.', true, false, true)}&emsp;
-                ${makeCheckboxInput(null, 'grid-gen-opt-continue-on-error', 'Continue On Error', 'If checked, if any generations failure, those will be skipped and the grid will continue.', false, false, true)}&emsp;
-                ${makeCheckboxInput(null, 'grid-gen-opt-show-outputs', 'Show Outputs', 'If checked, shows the images on-page as they come in. If not checked, only the final result is shown.', true, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-do-overwrite', '', 'Overwrite Existing Files', 'If checked, will overwrite any already-generated images.', false, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-fast-skip', '', 'Fast Skip', 'If checked, uses faster skipping algorithm (prevents validation of skipped axes).', false, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-generate-page', '', 'Generate Page', 'If unchecked, will prevent regenerating the page for the grid.', true, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-publish-metadata', '', 'Publish Generation Metadata', 'If unchecked, will hide the image generation metadata.', true, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-dry-run', '', 'Dry Run', 'If checked, will not actually generate any images - useful to validate your grid.', false, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-weight-order', '', 'Allow Reordering', 'If checked, the grid generator will reorder processing order of axes to maximize generation speed.', true, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-continue-on-error', '', 'Continue On Error', 'If checked, if any generations failure, those will be skipped and the grid will continue.', false, false, true)}&emsp;
+                ${makeCheckboxInput(null, 'grid-gen-opt-show-outputs', '', 'Show Outputs', 'If checked, shows the images on-page as they come in. If not checked, only the final result is shown.', true, false, true)}&emsp;
             </div>
             <div class="hoverable-minor-hint-text">
                 When using numbered parameters, you can type for example "<code>1, 2, .., 10</code>" to automatically have the "<code>..</code>" part filled in.

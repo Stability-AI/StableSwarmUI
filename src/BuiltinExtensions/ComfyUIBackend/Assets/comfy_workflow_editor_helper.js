@@ -689,7 +689,7 @@ function comfyBuildParams(callback) {
                 }
             }
         }
-        addSimpleParam('comfyworkflowparammetadata', JSON.stringify(params), 'text', 'Comfy Workflow Param Metadata', null, 'big', 0, 1, 1, 'comfyworkflowparammetadata', 'comfyworkflow', 10, false, false, null);
+        addSimpleParam('comfyworkflowparammetadata', JSON.stringify(params), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowparammetadata', 'comfyworkflow', 10, false, false, null);
         addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false, null);
         callback(params, prompt, defaultParamsRetain, defaultParamValue, workflow);
     });
