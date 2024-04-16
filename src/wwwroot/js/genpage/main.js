@@ -1112,13 +1112,20 @@ function pageSizer() {
         setCookie('barspot_pageBarMidPx', pageBarMid, 365);
         let barTopLeft = leftShut ? `0px` : pageBarTop == -1 ? (isSmallWindow ? `14rem` : `28rem`) : `${pageBarTop}px`;
         let barTopRight = pageBarTop2 == -1 ? (isSmallWindow ? `4rem` : `21rem`) : `${pageBarTop2}px`;
+        let curImgWidth = `100vw - ${barTopLeft} - ${barTopRight} - 10px`;
+        // TODO: this 'eval()' hack to read the size in advance is a bit cursed.
+        let fontRem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        let curImgWidthNum = eval(curImgWidth.replace(/vw/g, `* ${window.innerWidth * 0.01}`).replace(/rem/g, `* ${fontRem}`).replace(/px/g, ''));
+        if (curImgWidthNum < 400) {
+            barTopRight = `${barTopRight} + ${400 - curImgWidthNum}px`;
+            curImgWidth = `100vw - ${barTopLeft} - ${barTopRight} - 10px`;
+        }
         inputSidebar.style.width = `${barTopLeft}`;
         mainInputsAreaWrapper.classList[pageBarTop < 350 ? "add" : "remove"]("main_inputs_small");
         mainInputsAreaWrapper.style.width = `${barTopLeft}`;
         inputSidebar.style.display = leftShut ? 'none' : '';
         altRegion.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         mainImageArea.style.width = `calc(100vw - ${barTopLeft})`;
-        let curImgWidth = `100vw - ${barTopLeft} - ${barTopRight} - 10px`;
         if (imageEditor.active) {
             currentImage.style.width = `calc((${curImgWidth}) / 2)`;
             imageEditor.inputDiv.style.width = `calc((${curImgWidth}) / 2)`;
