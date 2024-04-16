@@ -2,6 +2,7 @@
 using FreneticUtilities.FreneticToolkit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Backends;
@@ -750,7 +751,12 @@ public class ComfyUIBackendExtension : Extension
                                     address = client.Address;
                                     parsed["client_id"] = client.SID;
                                     client.FixUpPrompt(parsed["prompt"] as JObject);
-                                    Logs.Info($"Sent Comfy backend direct prompt requested to backend #{backend.BackendData.ID}");
+                                    string userText = "";
+                                    if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id))
+                                    {
+                                        userText = $" (from user {user_id[0]}";
+                                    }
+                                    Logs.Info($"Sent Comfy backend direct prompt requested to backend #{backend.BackendData.ID}{userText}");
                                     redirected = true;
                                 }
                             }
