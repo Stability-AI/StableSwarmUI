@@ -1241,7 +1241,7 @@ function pageSizer() {
         offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
         if (topDrag) {
             pageBarTop = Math.min(offX - 5, 51 * 16);
-            setLeftShut(pageBarTop < 280);
+            setLeftShut(pageBarTop < 300);
             setPageBars();
         }
         if (topDrag2) {
