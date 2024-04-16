@@ -35,6 +35,9 @@ public class Settings : AutoConfiguration
     [ConfigComment("If set true, some additional debugging data will be attached where relevant, such as in image metadata.")]
     public bool AddDebugData = false;
 
+    [ConfigComment("If set true, new/upcoming/experimental features will be visible.")]
+    public bool ShowExperimentalFeatures = false;
+
     [ConfigComment("Settings related to logging.")]
     public LogsData Logs = new();
 

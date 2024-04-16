@@ -43,10 +43,11 @@ class SimpleTab {
     }
 
     onTabClicked() {
+        this.browser.navigate('');
         if (this.hasLoaded) {
+            this.onFolderSelected();
             return;
         }
-        this.browser.navigate('');
         this.hasLoaded = true;
     }
 
