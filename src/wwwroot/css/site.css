@@ -68,6 +68,9 @@ body {
     flex-wrap: wrap;
     align-items: baseline;
 }
+.auto-input-flex-wide {
+    flex-basis: 100% !important;
+}
 .auto-input-image-preview {
     width: fit-content;
     margin: auto;

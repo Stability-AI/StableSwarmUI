@@ -522,7 +522,7 @@ function makeTextInput(featureid, id, name, description, value, format, placehol
     let isBig = format == "prompt" || format == "big";
     return `
     ${genPopover ? makeGenericPopover(id, name, 'Boolean', description, '') : ''}
-    <div class="auto-input auto-text-box${(isBig ? "" : " auto-input-flex")}"${featureid}>
+    <div class="auto-input auto-text-box${(isBig ? "" : " auto-input-flex")} auto-input-flex-wide"${featureid}>
         <label>
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         </label>
