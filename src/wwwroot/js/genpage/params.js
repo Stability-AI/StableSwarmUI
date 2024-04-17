@@ -686,9 +686,10 @@ function sortParameterList(params, top = [], otherParams = []) {
         }
         return a.id.localeCompare(b.id);
     }
-    let prims = Object.values(params).filter(p => p.group == null).sort(sortFunc);
-    let others = Object.values(params).filter(p => p.group != null).sort(sortFunc);
-    return top.concat(prims).concat(otherParams).concat(others);
+    let first = params.filter(p => p.always_first).sort(sortFunc);
+    let prims = params.filter(p => p.group == null && !p.always_first).sort(sortFunc);
+    let others = params.filter(p => p.group != null && !p.always_first).sort(sortFunc);
+    return first.concat(top).concat(prims).concat(otherParams).concat(others);
 }
 
 /** Returns a copy of the parameter name, cleaned for ID format input. */

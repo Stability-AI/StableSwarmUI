@@ -418,7 +418,7 @@ function comfyBuildParams(callback) {
                     feature_flag: null,
                     do_not_save: false,
                     revalueGetter: null,
-                    no_popover: false,
+                    no_popover: node.inputs['description'].length == 0,
                     group: groupObj
                 };
                 node.inputs['value'] = "${" + inputId + ":" + `${node.inputs['value']}`.replaceAll('${', '(').replaceAll('}', ')') + "}";
@@ -689,9 +689,14 @@ function comfyBuildParams(callback) {
                 }
             }
         }
-        addSimpleParam('comfyworkflowparammetadata', JSON.stringify(params), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowparammetadata', 'comfyworkflow', 10, false, false, null);
-        addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow Raw', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', 10, false, false, null);
-        callback(params, prompt, defaultParamsRetain, defaultParamValue, workflow);
+        addSimpleParam('comfyworkflowparammetadata', JSON.stringify(params), 'text', 'Comfy Workflow', null, 'big', 0, 1, 1, 'comfyworkflowparammetadata', 'comfyworkflow', -999999, false, false, null);
+        addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', -999999, false, false, null);
+        let sorted = sortAndFixComfyParameters(params, defaultParamsRetain, false, null);
+        let newParams = {};
+        for (let param of sorted) {
+            newParams[param.id] = param;
+        }
+        callback(newParams, prompt, defaultParamsRetain, defaultParamValue, workflow);
     });
 }
 
@@ -706,39 +711,52 @@ function replaceParamsToComfy() {
 
 let comfyInfoSpanNotice = '<b>(Custom Comfy Workflow <button class="basic-button interrupt-button" onclick="comfyParamsDisable()">Disable</button>)</b>';
 
-function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
-    localStorage.setItem('last_comfy_workflow_input', JSON.stringify({params, retained, paramVal}));
+function sortAndFixComfyParameters(params, retained, applyValues = false, paramVal = null) {
     let actualParams = [];
-    params['comfyworkflowraw'].extra_hidden = true;
+    for (let pid of ['comfyworkflowraw', 'comfyworkflowparammetadata']) {
+        params[pid].extra_hidden = true;
+        params[pid].always_first = true;
+    }
     actualParams.push(params['comfyworkflowraw']); // must be first
     delete params['comfyworkflowraw'];
-    let setModelVal = null;
     for (let param of rawGenParamTypesFromServer.filter(p => retained.includes(p.id) || p.always_retain)) {
         actualParams.push(param);
+        if (applyValues) {
         let val = paramVal[param.id];
         if (val) {
-            // Comfy can do full 2^64 but that causes backend issues (can't have 2^64 *and* -1 as options, so...) so cap to 2^63
-            if (param.type == 'integer' && param.view_type == 'seed' && val > 2**63) {
-                val = -1;
-            }
-            if (applyValues && val !== null && val !== undefined) {
-                if (param.id == 'model') {
-                    val = val.replaceAll('\\', '/');
-                    setCookie('selected_model', val, 90);
-                    forceSetDropdownValue('input_model', val);
-                    forceSetDropdownValue('current_model', val);
-                    setModelVal = val;
+                // Comfy can do full 2^64 but that causes backend issues (can't have 2^64 *and* -1 as options, so...) so cap to 2^63
+                if (param.type == 'integer' && param.view_type == 'seed' && val > 2**63) {
+                    val = -1;
                 }
-                else {
-                    setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
+                if (val !== null && val !== undefined) {
+                    if (param.id == 'model') {
+                        val = val.replaceAll('\\', '/');
+                        setCookie('selected_model', val, 90);
+                        forceSetDropdownValue('input_model', val);
+                        forceSetDropdownValue('current_model', val);
+                        let setModelVal = val;
+                        setTimeout(() => {
+                            setCookie('selected_model', setModelVal, 90);
+                            forceSetDropdownValue('input_model', setModelVal);
+                            forceSetDropdownValue('current_model', setModelVal);
+                        }, 100);
+                    }
+                    else {
+                        setCookie(`lastparam_input_${param.id}`, `${val}`, 0.5);
+                    }
                 }
             }
         }
     }
-    let isSortTop = p => p.id == 'prompt' || p.id == 'negativeprompt' || p.id == 'comfyworkflowraw';
+    let isSortTop = p => p.id == 'prompt' || p.id == 'negativeprompt' || p.id == 'comfyworkflowraw' || p.id == 'comfyworkflowparammetadata';
     let prompt = Object.values(actualParams).filter(isSortTop);
     let otherParams = Object.values(actualParams).filter(p => !isSortTop(p));
-    gen_param_types = sortParameterList(params, prompt, otherParams);
+    return sortParameterList(Object.values(params), prompt, otherParams);
+}
+
+function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
+    localStorage.setItem('last_comfy_workflow_input', JSON.stringify({params, retained, paramVal}));
+    gen_param_types = sortAndFixComfyParameters(params, retained, applyValues, paramVal);
     genInputs(true);
     let buttonHolder = getRequiredElementById('comfy_workflow_disable_button');
     buttonHolder.style.display = 'block';
@@ -746,13 +764,6 @@ function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
         otherInfoSpanContent.push(comfyInfoSpanNotice);
         updateOtherInfoSpan();
     }
-    setTimeout(() => {
-        if (setModelVal) {
-            setCookie('selected_model', setModelVal, 90);
-            forceSetDropdownValue('input_model', setModelVal);
-            forceSetDropdownValue('current_model', setModelVal);
-        }
-    }, 100);
 }
 
 /**
