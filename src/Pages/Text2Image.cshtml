@@ -437,8 +437,8 @@
                 </div>
                 <div class="card-center-container">
                     <table class="spaced_util_table">
-                        <tr class="translate">
-                            <th>Type</th><th>Count</th><th>Convert</th>
+                        <tr>
+                            <th class="translate">Type</th><th class="translate">Count</th><th class="translate">Convert</th>
                         </tr>
                         <tr><td class="translate">Models</td><td><span id="pickle2safetensor_stable-diffusion_count">?</span></td><td><button id="pickle2safetensor_stable-diffusion_button" class="basic-button translate" onclick="pickle2safetensor_run('Stable-Diffusion')">Convert Models</button></td></tr>
                         <tr><td class="translate">LoRAs</td><td><span id="pickle2safetensor_lora_count">?</span></td><td><button id="pickle2safetensor_lora_button" class="basic-button translate" onclick="pickle2safetensor_run('LoRA')">Convert LoRAs</button></td></tr>
@@ -677,7 +677,7 @@
         <div style="height: 10rem"></div> <!-- Spacer -->
             </div>
             <div class="tab-pane" id="Server-Logs" role="tabpanel">
-                <center>View: <select id="server_log_type_selector"></select> Filter: <input type="text" id="server_log_filter" placeholder="Filter"></input></center>
+                <center>View: <select id="server_log_type_selector"></select> Filter: <input type="text" id="server_log_filter" placeholder="Filter" /></center>
                 <div id="server_logs_container" class="server_logs_container"></div>
             </div>
         </div>

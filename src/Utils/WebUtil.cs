@@ -26,11 +26,12 @@ public static class WebUtil
 
     public static HtmlString ModalHeader(string id, string title)
     {
+        string translate = title.Contains('<') ? "" : " translate";
         return new($"""
             <div class="modal" tabindex="-1" role="dialog" id="{id}">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
-                        <div class="modal-header"><h5 class="modal-title translate">{title}</h5></div>
+                        <div class="modal-header"><h5 class="modal-title{translate}">{title}</h5></div>
             """);
     }
 
