@@ -34,8 +34,6 @@
     --box-selected-border: color-mix(in srgb, var(--emphasis) 70%, transparent);
     --box-selected-border-stronger: color-mix(in srgb, var(--emphasis) 80%, transparent);
 
-    --toggle-thumb-active: color-mix(in srgb, var(--emphasis) 70%, white) !important;
-
     /* Theme specific */
     --panel-gap: 7px;
     --scrollbar: rgba(100, 100, 100, 0.5);
@@ -269,6 +267,10 @@
 
 .input-group-header-activated .auto-symbol {
     background: var(--box-selected-border-stronger) !important;
+}
+
+.input-group-header-activated:hover .auto-symbol {
+    background: color-mix(in srgb, var(--emphasis) 70%, white) !important;
 }
 
 .input-group .input-group-content {
