@@ -644,8 +644,8 @@ function getInputVal(input) {
         return input.checked;
     }
     else if (input.tagName == 'INPUT' && input.type == 'file') {
-        if (elem.dataset.filedata) {
-            return elem.dataset.filedata;
+        if (input.dataset.filedata) {
+            return input.dataset.filedata;
         }
         return null;
     }
