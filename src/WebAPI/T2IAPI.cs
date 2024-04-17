@@ -80,9 +80,17 @@ public static class T2IAPI
         T2IParamInput user_input = new(session);
         foreach ((string key, JToken val) in rawInput)
         {
-            if (T2IParamTypes.TryGetType(key, out _, user_input))
+            if (key == "session_id" || key == "presets")
+            {
+                // Skip
+            }
+            else if (T2IParamTypes.TryGetType(key, out _, user_input))
             {
                 T2IParamTypes.ApplyParameter(key, val.ToString(), user_input);
+            }
+            else
+            {
+                Logs.Warning($"T2I image request from user {session.User.UserID} had request parameter '{key}', but that parameter is unrecognized, skipping...");
             }
         }
         if (rawInput.TryGetValue("presets", out JToken presets))
@@ -130,6 +138,10 @@ public static class T2IAPI
             return;
         }
         Logs.Info($"User {session.User.UserID} requested {images} image{(images == 1 ? "": "s")} with model '{user_input.Get(T2IParamTypes.Model)?.Name}'...");
+        if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
+        {
+            Logs.Verbose($"User {session.User.UserID} above image request had parameters: {user_input}");
+        }
         List<T2IEngine.ImageOutput> imageSet = [];
         List<Task> tasks = [];
         void removeDoneTasks()

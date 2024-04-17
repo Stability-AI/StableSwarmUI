@@ -751,6 +751,7 @@ public class T2IParamInput
         }
     }
 
+    /// <summary>Returns a simple text representation of the input data.</summary>
     public override string ToString()
     {
         static string stringifyVal(object obj)

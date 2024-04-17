@@ -604,6 +604,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     _ => fillDynamic()
                 };
                 filled ??= defVal;
+                if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
+                {
+                    Logs.Verbose($"Filled tag '{tag}' with '{filled}'");
+                }
                 return Utilities.EscapeJsonString(filled);
             }, false);
             Logs.Verbose("Workflow filled.");
