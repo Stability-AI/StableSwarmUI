@@ -1138,6 +1138,7 @@ body {
     padding-right: 1rem;
     height: calc(100vh - 2rem);
     overflow: auto;
+    min-width: 20rem;
 }
 .simpleimagearea {
     flex-grow: 10;
@@ -1157,6 +1158,7 @@ body {
 .simple-outer-wall {
     height: 100vh;
     width: 5px;
+    min-width: 5px;
     margin-left: 1rem;
     margin-right: 0;
     background-color: var(--background);
