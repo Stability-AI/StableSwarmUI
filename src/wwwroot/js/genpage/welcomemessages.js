@@ -51,8 +51,9 @@ function automaticWelcomeMessage(override = null) {
         `New feature (2024-01-15): Translations!\nAI-translated text across the UI.\nSpeak one of these other languages? Submit a PR to fix up the AI translators mistakes! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8131492">(Feature Announcement Link)</a>`,
         `New feature (2024-02-19): Stable Cascade\nNatively supported in Swarm with the modern Comfy-style All-In-One format. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8521943">(Feature Announcement Link)</a>`,
         `New feature (2024-03-10): Comfy Workflow Browser\nAn easy browser for Comfy workflows in the Comfy tab. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8736304">(Feature Announcement Link)</a>`,
+        `New feature (2024-04-18): Modern Dark and Light themes!\nBuilt by an actual designer this time! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9153506">(Feature Announcement Link)</a>\n<button class="btn btn-secondary" onclick="aggressivelySetTheme('modern_dark')">Click here to try Modern Dark</button>\n(go to User Settings to change back)`,
         /* Version release notes */
-        `Release notes (2024-01-08): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.0-Alpha">Release Notes for version 0.6.0 (Alpha)</a>\nIncludes new features like Unsampling, Image Starring, and more!\nSwarm will be moving to Beta soon!`
+        `Release notes (2024-03-10): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.1-Beta">Release Notes for version 0.6.1 (Beta)</a>\nSwarm is in Beta now! MIT license!`
     ];
     let dotnetNotice = document.getElementById('dotnet_missing_message');
     if (dotnetNotice) {

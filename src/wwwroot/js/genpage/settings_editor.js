@@ -88,6 +88,13 @@ function getUserSetting(id, def = 'require') {
     }
 }
 
+function aggressivelySetTheme(them_id) {
+    let themeSelectorElement = getRequiredElementById('usersettings_theme');
+    themeSelectorElement.value = them_id;
+    triggerChangeFor(themeSelectorElement);
+    save_user_settings();
+}
+
 function applyThemeSetting(theme_info) {
     setTimeout(() => {
         let themeSelectorElement = getRequiredElementById('usersettings_theme');
