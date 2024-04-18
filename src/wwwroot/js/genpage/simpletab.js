@@ -12,7 +12,9 @@ class SimpleTab {
         this.tabButton = getRequiredElementById('simpletabbutton');
         this.wrapperDiv = getRequiredElementById('simpletabbrowserwrapper');
         this.imageContainer = getRequiredElementById('simple_image_container');
+        this.imageElem = getRequiredElementById('simple_image_container_img');
         this.progressWrapper = getRequiredElementById('simpletab_progress_wrapper');
+        this.loadingSpinner = getRequiredElementById('simple_loading_spinner');
         this.browser = new GenPageBrowserClass('simpletabbrowserwrapper', this.browserListEntries.bind(this), 'simpletabbrowser', 'Big Thumbnails', this.browserDescribeEntry.bind(this), this.browserSelectEntry.bind(this), '', 10);
         this.browser.depth = 10;
         this.browser.showDepth = false;
@@ -56,6 +58,7 @@ class SimpleTab {
     }
 
     generate() {
+        this.markLoading();
         let inputs = {};
         let elems = [...this.inputsSidebar.querySelectorAll('.auto-input')].map(i => i.querySelector('[data-param_id]'));
         for (let elem of elems) {
@@ -74,13 +77,17 @@ class SimpleTab {
     }
 
     setImage(imgSrc) {
-        let img = this.imageContainer.querySelector('img');
-        if (img) {
-            img.src = imgSrc;
-        }
-        else {
-            this.imageContainer.innerHTML = `<img id="simple_image_container_img" src="${imgSrc}" />`;
-        }
+        this.imageElem.src = imgSrc;
+    }
+
+    markLoading() {
+        this.loadingSpinner.style.display = '';
+        this.imageElem.style.filter = 'blur(5px)';
+    }
+
+    markDoneLoading() {
+        this.loadingSpinner.style.display = 'none';
+        this.imageElem.style.filter = '';
     }
 
     browserDescribeEntry(workflow) {
@@ -205,11 +212,13 @@ class SimpleTabGenerateHandler extends GenerateHandler {
     }
 
     setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, smoothAdd = false) {
+        simpleTab.markDoneLoading();
         simpleTab.setImage(src);
         this.gotProgress(-1, -1, batchId);
     }
 
     gotImageResult(image, metadata, batchId) {
+        simpleTab.markDoneLoading();
         simpleTab.setImage(image);
         this.gotProgress(-1, -1, batchId);
     }

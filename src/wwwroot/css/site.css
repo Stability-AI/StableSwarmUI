@@ -610,6 +610,45 @@ textarea, input, select {
 .secretexperimental {
     display: none;
 }
+.loading-spinner {
+    display: block;
+    position: relative;
+    width: 80vh;
+    height: 80vh;
+    margin: auto;
+}
+.loading-spinner div {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: calc(100% - 64px);
+    height: calc(100% - 64px);
+    margin: 32px;
+    border: 32px solid var(--emphasis);
+    border-radius: 50%;
+    animation: loading-spinner 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    border-color: var(--emphasis) transparent transparent transparent;
+}
+.loading-spinner .loadspin1 {
+    animation-delay: -0.45s;
+}
+.loading-spinner .loadspin2 {
+    animation-delay: -0.3s;
+}
+.loading-spinner .loadspin3 {
+    animation-delay: -0.15s;
+}
+@keyframes loading-spinner {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 
 
 
