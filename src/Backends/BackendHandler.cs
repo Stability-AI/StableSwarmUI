@@ -463,6 +463,10 @@ public class BackendHandler
     /// <summary>Tells all backends to load a given model. Returns true if any backends have loaded it, or false if not.</summary>
     public async Task<bool> LoadModelOnAll(T2IModel model, Func<T2IBackendData, bool> filter = null)
     {
+        if (model.Name.ToLowerFast() == "(none)")
+        {
+            return true;
+        }
         Logs.Verbose($"Got request to load model on all: {model.Name}");
         bool any = false;
         T2IBackendData[] filtered = T2IBackends.Values.Where(b => b.Backend.Status == BackendStatus.RUNNING && b.Backend.CanLoadModels).ToArray();
@@ -989,7 +993,14 @@ public class BackendHandler
                                 Thread.Sleep(100);
                             }
                             Utilities.CleanRAM();
-                            availableBackend.Backend.LoadModel(highestPressure.Model).Wait(cancel);
+                            if (highestPressure.Model.Name.ToLowerFast() == "(none)")
+                            {
+                                availableBackend.Backend.CurrentModelName = highestPressure.Model.Name;
+                            }
+                            else
+                            {
+                                availableBackend.Backend.LoadModel(highestPressure.Model).Wait(cancel);
+                            }
                             Logs.Debug($"[BackendHandler] backend #{availableBackend.ID} loaded model, returning to pool");
                         }
                         catch (Exception ex)

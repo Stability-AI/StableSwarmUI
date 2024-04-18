@@ -508,11 +508,11 @@ function comfyBuildParams(callback) {
                     node.inputs[inputId] = "%%_COMFYFIXME_${" + inputIdDirect + (asSeed ? "+seed" : "") + ":" + val + "}_ENDFIXME_%%";
                 }
                 else if (typeof val == 'string') {
-                    if (node.class_type == 'SaveImage' && inputId == 'filename_prefix') {
+                    if (doAutoClaim && node.class_type == 'SaveImage' && inputId == 'filename_prefix') {
                         node.inputs[inputId] = "${prefix:}";
                         return inputIdDirect;
                     }
-                    else if (node.class_type == 'CheckpointLoaderSimple' && inputId == 'ckpt_name') {
+                    else if (doAutoClaim && node.class_type == 'CheckpointLoaderSimple' && inputId == 'ckpt_name') {
                         if (!('model' in defaultParamValue) && !claimedByPrimitives.includes('model')) {
                             defaultParamValue['model'] = node.inputs[inputId];
                             node.inputs[inputId] = "${model:error_missing_model}";

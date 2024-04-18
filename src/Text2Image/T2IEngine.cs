@@ -87,7 +87,7 @@ namespace StableSwarmUI.Text2Image
                 {
                     bool requireModel(T2IRegisteredParam<T2IModel> param, string type)
                     {
-                        if (user_input.TryGet(param, out T2IModel model) && backend.Backend.Models.TryGetValue(type, out List<string> models) && !models.Contains(model.Name) && !models.Contains(model.Name + ".safetensors"))
+                        if (user_input.TryGet(param, out T2IModel model) && model.Name.ToLowerFast() != "(none)" && backend.Backend.Models.TryGetValue(type, out List<string> models) && !models.Contains(model.Name) && !models.Contains(model.Name + ".safetensors"))
                         {
                             Logs.Verbose($"Filter out backend {backend.ID} as the request requires {type} model {model.Name}, but the backend does not have that model");
                             user_input.RefusalReasons.Add($"Request requires model '{model.Name}' but the backend does not have that model");

@@ -199,16 +199,7 @@ class SimpleTabGenerateHandler extends GenerateHandler {
             data['images'] = 1;
         }
         if (!data['model']) {
-            let modelSelector = getRequiredElementById('current_model');
-            let model = modelSelector.value;
-            if (!model && modelSelector.options.length > 0) {
-                model = modelSelector.options[0].value;
-            }
-            if (!model) {
-                showError("Something's gone wrong, no models exist.\nIf this is your Swarm instance, make sure you've downloaded models.\nIf this worked before, you might need to refresh the page.\nIf this error persists, report a bug.");
-                throw new Error("No models exist. Cannot process.");
-            }
-            data['model'] = model;
+            data['model'] = '(none)';
         }
         return data;
     }

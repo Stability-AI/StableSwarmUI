@@ -38,6 +38,9 @@ public static class ModelsAPI
         return sets.Aggregate((a, b) => a.Union(b).PairsToDictionary(false));
     }
 
+    /// <summary>Placeholder model indicating the lack of a model.</summary>
+    public static T2IModel NoneModel = new() { Name = "(None)", Description = "No model selected.", RawFilePath = "(ERROR_NONE_MODEL_USED_LITERALLY)" };
+
     /// <summary>API route to describe a single model.</summary>
     public static async Task<JObject> DescribeModel(Session session, string modelName, string subtype = "Stable-Diffusion")
     {
@@ -61,6 +64,10 @@ public static class ModelsAPI
                 {
                     return card.GetNetObject();
                 }
+            }
+            else if (subtype == "Stable-Diffusion" && modelName.ToLowerFast() == "(none)")
+            {
+                return new JObject() { ["model"] = NoneModel.ToNetObject() };
             }
             else if (handler.Models.TryGetValue(modelName + ".safetensors", out T2IModel model))
             {

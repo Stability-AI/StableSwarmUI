@@ -754,7 +754,7 @@ public class ComfyUIBackendExtension : Extension
                                     string userText = "";
                                     if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id))
                                     {
-                                        userText = $" (from user {user_id[0]}";
+                                        userText = $" (from user {user_id[0]})";
                                     }
                                     Logs.Info($"Sent Comfy backend direct prompt requested to backend #{backend.BackendData.ID}{userText}");
                                     redirected = true;
