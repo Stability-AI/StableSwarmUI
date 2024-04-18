@@ -84,6 +84,7 @@ public enum ParamViewType
 /// <param name="Type">The type of the type - text vs integer vs etc (will be set when registering).</param>
 /// <param name="DoNotSave">Can be set to forbid tracking/saving of a param value.</param>
 /// <param name="ImageShouldResize">(For Image-type params) If true, the image should resize to match the target resolution.</param>
+/// <param name="ImageAlwaysB64">(For Image-type params) If true, always use B64 (never file).</param>
 /// <param name="DoNotPreview">If this is true, the parameter is unfit for previewing (eg long generation addons or unnecessary refinements).</param>
 /// <param name="Subtype">The sub-type of the type - for models, this might be eg "Stable-Diffusion".</param>
 /// <param name="ID">The raw ID of this parameter (will be set when registering).</param>
@@ -93,7 +94,7 @@ public record class T2IParamType(string Name, string Description, string Default
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null, string IgnoreIf = null,
     ParamViewType ViewType = ParamViewType.SMALL, bool HideFromMetadata = false, Func<string, string> MetadataFormat = null, bool AlwaysRetain = false, double ChangeWeight = 0, bool ExtraHidden = false,
-    T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, bool DoNotPreview = false, string Subtype = null, string ID = null, Type SharpType = null)
+    T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, bool ImageAlwaysB64 = false, bool DoNotPreview = false, string Subtype = null, string ID = null, Type SharpType = null)
 {
     public JObject ToNet(Session session)
     {
@@ -140,6 +141,7 @@ public record class T2IParamType(string Name, string Description, string Default
             Min: getDouble("min"), Max: getDouble("max"), Step: getDouble("step"), ViewMax: getDouble("view_max"), OrderPriority: getDouble("priority"),
             GetValues: _ => vals, Examples: examples?.ToArray(), Subtype: getStr("subtype"), FeatureFlag: getStr("feature_flag"),
             VisibleNormally: getBool("visible", true), IsAdvanced: getBool("advanced", false), AlwaysRetain: getBool("always_retain", false),
+            ImageShouldResize: getBool("image_should_resize", true), ImageAlwaysB64: getBool("image_always_b64", false),
             DoNotSave: getBool("do_not_save", false), DoNotPreview: getBool("do_not_preview", false), ViewType: getEnum("view_type", ParamViewType.SMALL));
     }
 }

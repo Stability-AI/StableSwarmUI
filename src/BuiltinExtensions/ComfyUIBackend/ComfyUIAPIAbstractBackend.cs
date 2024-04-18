@@ -648,7 +648,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             void TryApply(string key, Image img, bool resize)
             {
                 Image fixedImage = resize ? img.Resize(user_input.Get(T2IParamTypes.Width), user_input.GetImageHeight()) : img;
-                if (key.Contains("swarmloadimageb"))
+                if (key.Contains("swarmloadimageb") || key.Contains("swarminputimage"))
                 {
                     user_input.ValuesInput[key] = fixedImage;
                     return;
@@ -685,11 +685,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             foreach ((string key, object val) in user_input.ValuesInput)
             {
                 bool resize = !T2IParamTypes.TryGetType(key, out T2IParamType type, user_input) || type.ImageShouldResize;
-                if (val is Image img)
+                if (val is Image img && !type.ImageAlwaysB64)
                 {
                     TryApply(key, img, resize);
                 }
-                else if (val is List<Image> imgs)
+                else if (val is List<Image> imgs && !type.ImageAlwaysB64)
                 {
                     for (int i = 0; i < imgs.Count; i++)
                     {

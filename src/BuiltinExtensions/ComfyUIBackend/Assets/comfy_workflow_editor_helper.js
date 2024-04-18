@@ -378,6 +378,7 @@ function comfyBuildParams(callback) {
                     case 'SwarmInputModelName': type = 'model'; break;
                     case 'SwarmInputDropdown': type = 'dropdown'; break;
                     case 'SwarmInputBoolean': type = 'boolean'; break;
+                    case 'SwarmInputImage': type = 'image'; break;
                     default: throw new Error(`Unknown SwarmInput type ${node.class_type}`);
                 }
                 let inputIdDirect = node.inputs['raw_id'] || cleanParamName(node.inputs['title']);
@@ -421,6 +422,10 @@ function comfyBuildParams(callback) {
                     no_popover: node.inputs['description'].length == 0,
                     group: groupObj
                 };
+                if (node.class_type == 'SwarmInputImage') {
+                    params[inputId].image_should_resize = node.inputs['auto_resize'];
+                    params[inputId].image_always_b64 = true;
+                }
                 node.inputs['value'] = "${" + inputId + ":" + `${node.inputs['value']}`.replaceAll('${', '(').replaceAll('}', ')') + "}";
             }
             function injectType(id, type) {

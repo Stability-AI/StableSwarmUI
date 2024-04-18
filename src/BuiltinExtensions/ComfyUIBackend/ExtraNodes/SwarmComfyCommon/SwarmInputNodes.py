@@ -1,3 +1,4 @@
+from . import SwarmLoadImageB64
 
 INT_MAX = 0xffffffffffffffff
 INT_MIN = -INT_MAX
@@ -158,6 +159,25 @@ class SwarmInputBoolean:
         return (value, )
 
 
+class SwarmInputImage:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "title": ("STRING", {"default": "My Image"}),
+                "value": ("STRING", {"default": "(Do Not Set Me)", "multiline": True}),
+                "auto_resize": ("BOOLEAN", {"default": True}),
+            } | STANDARD_REQ_INPUTS,
+        } | STANDARD_OTHER_INPUTS
+
+    CATEGORY = "StableSwarmUI/inputs"
+    RETURN_TYPES = ("IMAGE","MASK",)
+    FUNCTION = "do_input"
+
+    def do_input(self, value, **kwargs):
+        return SwarmLoadImageB64.b64_to_img_and_mask(value)
+
+
 NODE_CLASS_MAPPINGS = {
     "SwarmInputGroup": SwarmInputGroup,
     "SwarmInputInteger": SwarmInputInteger,
@@ -166,4 +186,5 @@ NODE_CLASS_MAPPINGS = {
     "SwarmInputModelName": SwarmInputModelName,
     "SwarmInputDropdown": SwarmInputDropdown,
     "SwarmInputBoolean": SwarmInputBoolean,
+    "SwarmInputImage": SwarmInputImage,
 }
