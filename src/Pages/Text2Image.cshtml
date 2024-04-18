@@ -502,6 +502,20 @@
             <div class="tab-pane show active translate" id="user-info" role="tabpanel">
                 (TODO: info n stuff here)
                 <br>
+                <div class="card border-secondary mb-3 card-center-container">
+                    <div class="card-header translate">Stability API Key</div>
+                    <div class="card-body">
+                        <p class="card-text translate">
+                            To use the Stability API in StableSwarmUI, you must set your key.
+                            <br>To get your key, <a href="https://platform.stability.ai/account/keys" target="_blank" rel="noreferrer noopener">go here</a>.
+                            <br>
+                            <br>Once you have your key, enter it below and click save:
+                            <br><input type="text" id="stability_api_key" placeholder="Stability API Key" autocomplete="off" oninput="stabilityAPIHelper.onKeyInput()" />
+                            <button class="basic-button translate" id="stability_key_submit" onclick="stabilityAPIHelper.onSaveButton()" disabled>Save</button>
+                            <br>Your key: <span id="stability_key_status">(Unknown)</span>
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="tab-pane" id="Settings-User" role="tabpanel">
                 <div class="settings-container">
@@ -696,6 +710,7 @@
     <script src="/js/genpage/models.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/params.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/utiltab.js?vary=@Utilities.VaryID"></script>
+    <script src="/js/genpage/usertab.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/image_editor.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/generatehandler.js?vary=@Utilities.VaryID"></script>
     <script src="/js/genpage/simpletab.js?vary=@Utilities.VaryID"></script>

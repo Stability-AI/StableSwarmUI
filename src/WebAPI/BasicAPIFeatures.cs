@@ -37,6 +37,8 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(SetParamEdits);
         API.RegisterAPICall(GetLanguage);
         API.RegisterAPICall(ServerDebugMessage);
+        API.RegisterAPICall(SetStabilityAPIKey);
+        API.RegisterAPICall(GetStabilityAPIKeyStatus);
         T2IAPI.Register();
         ModelsAPI.Register();
         BackendAPI.Register();
@@ -478,5 +480,23 @@ public static class BasicAPIFeatures
     {
         Logs.Info($"User '{session.User.UserID}' sent a debug message: {message}");
         return new JObject() { ["success"] = true };
+    }
+
+    public static async Task<JObject> SetStabilityAPIKey(Session session, string key)
+    {
+        session.User.SaveGenericData("stability_api", "key", key);
+        session.User.SaveGenericData("stability_api", "key_last_updated", $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm}");
+        session.User.Save();
+        return new JObject() { ["success"] = true };
+    }
+
+    public static async Task<JObject> GetStabilityAPIKeyStatus(Session session)
+    {
+        string updated = session.User.GetGenericData("stability_api", "key_last_updated");
+        if (string.IsNullOrWhiteSpace(updated))
+        {
+            return new JObject() { ["status"] = "not set" };
+        }
+        return new JObject() { ["status"] = $"last updated {updated}" };
     }
 }
