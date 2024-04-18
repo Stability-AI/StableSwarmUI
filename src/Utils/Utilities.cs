@@ -621,7 +621,7 @@ public static class Utilities
             {
                 return $"[ {resultStr} ]";
             }
-            return $"[\n{subSpaces}[{resultStr}\n{spaces}]";
+            return $"[\n{subSpaces}{resultStr}\n{spaces}]";
         }
         else
         {
