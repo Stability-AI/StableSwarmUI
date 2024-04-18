@@ -72,7 +72,11 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }).WaitForExit();
                 }
             }
-            List<Task> tasks = [Task.Run(async () => await EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding"))];
+            List<Task> tasks =
+            [
+                Task.Run(async () => await EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding")),
+                Task.Run(async () => await EnsureNodeRepo("https://github.com/Stability-AI/ComfyUI-SAI_API"))
+            ];
             await Task.WhenAll(tasks);
         }
         catch (Exception ex)

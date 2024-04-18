@@ -224,6 +224,7 @@ class SimpleTabGenerateHandler extends GenerateHandler {
     }
 
     gotImagePreview(image, metadata, batchId) {
+        simpleTab.markLoading();
         if (image == 'imgs/model_placeholder.jpg') {
             return;
         }
@@ -235,6 +236,7 @@ class SimpleTabGenerateHandler extends GenerateHandler {
             simpleTab.progressWrapper.style.display = 'none';
             return;
         }
+        simpleTab.markLoading();
         simpleTab.progressWrapper.style.display = '';
         simpleTab.progressWrapper.querySelector('.image-preview-progress-current').style.width = `${current * 100}%`;
         simpleTab.progressWrapper.querySelector('.image-preview-progress-overall').style.width = `${overall * 100}%`;
