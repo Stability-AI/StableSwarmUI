@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - StableSwarmUI</title>
     @{
-        string themeId = "dark_dreams";
+        string themeId = "modern_dark";
         // TODO: Identify user by auth header and use their settings to determine theme
         if (ViewContext.HttpContext.Request.Cookies.TryGetValue("sui_theme_id", out string themeCookie) && Program.Web.RegisteredThemes.ContainsKey(themeCookie)) {
             themeId = themeCookie;

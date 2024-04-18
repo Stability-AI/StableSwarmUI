@@ -35,10 +35,18 @@ class InstallerClass {
     themeChanged() {
         let theme = getRadioSelectionInFieldset('theme_selection_field');
         let css_paths = [`/css/themes/${theme}.css`];
-        let isDark = theme != 'eyesear_white';
+        let isDark = !['eyesear_white', 'modern_light'].includes(theme);
+        if (theme.startsWith('modern')) {
+            css_paths.unshift('/css/themes/modern.css');
+        }
+        let themeCss = document.head.querySelectorAll('.theme_sheet_header');
+        let oldPaths = Array.from(themeCss).map(x => x.href.split('?')[0]);
+        if (css_paths.every(x => oldPaths.some(o => o.endsWith(x)))) {
+            return;
+        }
         let siteHeader = getRequiredElementById('sitecssheader');
         getRequiredElementById('bs_theme_header').href = isDark ? '/css/bootstrap.min.css' : '/css/bootstrap_light.min.css';
-        document.head.querySelectorAll('.theme_sheet_header').forEach(x => x.remove());
+        themeCss.forEach(x => x.remove());
         let newTheme = css_paths.map(path => `<link class="theme_sheet_header" rel="stylesheet" href="${path}?${siteHeader.href.split('?')[1]}" />`).join('\n');
         document.head.insertAdjacentHTML('beforeend', newTheme);
     }

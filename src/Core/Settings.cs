@@ -236,9 +236,9 @@ public class Settings : AutoConfiguration
             public override string[] Names => Program.Web.RegisteredThemes.Values.Select(v => v.Name).ToArray();
         }
 
-        [ConfigComment("What theme to use. Default is 'dark_dreams'.")]
+        [ConfigComment("What theme to use. Default is 'modern_dark'.")]
         [SettingsOptions(Impl = typeof(ThemesImpl))]
-        public string Theme = "dark_dreams";
+        public string Theme = "modern_dark";
 
         [ConfigComment("If enabled, batch size will be reset to 1 when parameters are loaded.\nThis can prevent accidents that might thrash your GPU or cause compatibility issues, especially for example when importing a comfy workflow.\nYou can still set the batch size at will in the GUI.")]
         public bool ResetBatchSizeToOne = false;

@@ -36,22 +36,40 @@
     display: block;
     height: 2rem;
     font-weight: bold;
-    border: 1px solid;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     text-align: center;
     width: fit-content;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
     margin-top: 2rem;
     margin-left: auto;
     margin-right: auto;
+    padding-top: 3px;
+}
+.theme_preview_modern_dark {
+    background-color: #202020;
+    color: #E4E4E4;
+}
+.theme_preview_modern_dark .button_example {
+    border: 1px solid #3f3f46;
+    background-color: #4b4b4b;
+    color: #ffffff;
+}
+.theme_preview_modern_light {
+    background-color: #D9D9D9;
+    color: #101010;
+}
+.theme_preview_modern_light .button_example {
+    border: 1px solid #3f3f46;
+    background-color: #a1a1a1;
+    color: #101010;
 }
 .theme_preview_dark_dreams {
     background-color: #18181b;
     color: #eeeeee;
 }
 .theme_preview_dark_dreams .button_example {
-    border-color: #3f3f46;
+    border: 1px solid #3f3f46;
     background-color: #7855e1;
     color: #ffffff;
 }
@@ -60,7 +78,7 @@
     color: #eeeeee;
 }
 .theme_preview_cyber_swarm .button_example {
-    border-color: #3f3f46;
+    border: 1px solid #3f3f46;
     background-color: #00bc8c;
     color: #ffffff;
     border-radius: 1rem;
@@ -73,7 +91,7 @@
     color: #eeeeee;
 }
 .theme_preview_gravity_blue .button_example {
-    border-color: #3f3f46;
+    border: 1px solid #3f3f46;
     background-color: orange;
     color: #101010;
 }
@@ -82,7 +100,7 @@
     color: #101010;
 }
 .theme_preview_eyesear_white .button_example {
-    border-color: #3f3f46;
+    border: 1px solid #3f3f46;
     background-color: #a1a1a1;
     color: #101010;
 }
