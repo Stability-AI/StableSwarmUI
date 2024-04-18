@@ -9,7 +9,9 @@
     --range-padding: calc((var(--range-height) - var(var(--range-track-height))) / 2);
     --range-track-color: #1d1d1d;
     --range-thumb-color: #4b4b4b;
-    --toggle-thumb-active: var(--button-background-hover);
+    --toggle-thumb-active: color-mix(in srgb, var(--emphasis) 50%, white);
+    --toggle-thumb-hover: var(--button-background-hover);
+    --toggle-thumb-active-hover: color-mix(in srgb, var(--emphasis) 25%, white);
 }
 .modal-content {
     background-color: var(--background) !important;
@@ -786,15 +788,19 @@ input[type="range"]::-moz-range-track {
 }
 .auto-slider-toggle {
     opacity: 0;
-    width: var(--toggle-width) !important;
-    height: var(--toggle-height) !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    position: absolute;
+    left: 0;
+    border-radius: 0;
 }
 .auto-slider-toggle-content {
     width: var(--toggle-width);
     height: var(--toggle-height);
     position: absolute;
     left: 1px;
-    top: calc(50% - 6px);
+    top: calc(50% - (var(--toggle-height) / 2));
     box-shadow: inset 0px 0px 3px rgba(0, 0, 0, 0.35);
     border-radius: 16px;
     pointer-events: none;
@@ -823,9 +829,11 @@ input[type="range"]::-moz-range-track {
     left: calc(var(--toggle-width) - var(--toggle-thumb-size));
     background-color: var(--toggle-thumb-active);
 }
+.form-switch input:checked:hover+.auto-slider-toggle-content::after {
+    background-color: var(--toggle-thumb-active-hover);
+}
 .form-switch input:hover+.auto-slider-toggle-content::after {
-    background-position: 100%;
-    background-color: var(--toggle-thumb-active);
+    background-color: var(--toggle-thumb-hover);
 }
 .input-group .auto-file-box {
     min-width: 100%;
