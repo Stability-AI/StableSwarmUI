@@ -54,9 +54,9 @@ function getHtmlForParam(param, prefix) {
                 return {html: makeDropdownInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, modelList, param.default, param.toggleable, !param.no_popover) + pop,
                     runnable: () => autoSelectWidth(getRequiredElementById(`${prefix}${param.id}`))};
             case 'image':
-                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.toggleable) + pop};
+                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.toggleable, !param.no_popover) + pop};
             case 'image_list':
-                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.toggleable) + pop};
+                return {html: makeImageInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.toggleable, !param.no_popover) + pop};
         }
         console.log(`Cannot generate input for param ${param.id} of type ${param.type} - unknown type`);
         return null;
@@ -240,11 +240,11 @@ function genInputs(delay_final = false) {
             }
         }
         let inputAspectRatio = document.getElementById('input_aspectratio');
-        if (inputAspectRatio) {
-            let inputWidth = getRequiredElementById('input_width');
+        let inputWidth = document.getElementById('input_width');
+        let inputHeight = document.getElementById('input_height');
+        if (inputAspectRatio && inputWidth && inputHeight) {
             let inputWidthParent = findParentOfClass(inputWidth, 'slider-auto-container');
             let inputWidthSlider = getRequiredElementById('input_width_rangeslider');
-            let inputHeight = getRequiredElementById('input_height');
             let inputHeightParent = findParentOfClass(inputHeight, 'slider-auto-container');
             let inputHeightSlider = getRequiredElementById('input_height_rangeslider');
             let resGroupLabel = findParentOfClass(inputWidth, 'input-group').querySelector('.header-label');

@@ -54,6 +54,8 @@ public class ComfyUIBackendExtension : Extension
         // Temporary: remove old pycache files where we used to have python files, to prevent Comfy boot errors
         Utilities.RemoveBadPycacheFrom($"{Folder}/ExtraNodes");
         Utilities.RemoveBadPycacheFrom($"{Folder}/ExtraNodes/SwarmWebHelper");
+        T2IAPI.AlwaysTopKeys.Add("comfyworkflowraw");
+        T2IAPI.AlwaysTopKeys.Add("comfyworkflowparammetadata");
     }
 
     public override void OnShutdown()
@@ -85,6 +87,7 @@ public class ComfyUIBackendExtension : Extension
                 {
                     return T2IParamType.FromNet((JObject)paramTok);
                 }
+                //Logs.Verbose($"Failed to find param metadata for {name} in {paramMetadata.Properties().Select(p => p.Name).JoinString(", ")}");
             }
             if (name.StartsWith("comfyrawworkflowinput") && (context.ValuesInput.ContainsKey("comfyworkflowraw") || context.ValuesInput.ContainsKey("comfyuicustomworkflow")))
             {

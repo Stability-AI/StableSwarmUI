@@ -74,11 +74,15 @@ public static class T2IAPI
         return new JObject() { ["images"] = new JArray(imageOutputs.Values.ToArray()) };
     }
 
+    public static HashSet<string> AlwaysTopKeys = [];
+
     /// <summary>Helper util to take a user-supplied JSON object of parameter data and turn it into a valid T2I request object.</summary>
     public static T2IParamInput RequestToParams(Session session, JObject rawInput)
     {
         T2IParamInput user_input = new(session);
-        foreach ((string key, JToken val) in rawInput)
+        List<string> keys = rawInput.Properties().Select(p => p.Name).ToList();
+        keys = keys.Where(AlwaysTopKeys.Contains).Concat(keys.Where(k => !AlwaysTopKeys.Contains(k))).ToList();
+        foreach (string key in keys)
         {
             if (key == "session_id" || key == "presets")
             {
@@ -86,7 +90,7 @@ public static class T2IAPI
             }
             else if (T2IParamTypes.TryGetType(key, out _, user_input))
             {
-                T2IParamTypes.ApplyParameter(key, val.ToString(), user_input);
+                T2IParamTypes.ApplyParameter(key, rawInput[key].ToString(), user_input);
             }
             else
             {
