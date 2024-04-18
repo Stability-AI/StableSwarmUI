@@ -484,8 +484,16 @@ public static class BasicAPIFeatures
 
     public static async Task<JObject> SetStabilityAPIKey(Session session, string key)
     {
-        session.User.SaveGenericData("stability_api", "key", key);
-        session.User.SaveGenericData("stability_api", "key_last_updated", $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm}");
+        if (key == "none")
+        {
+            session.User.DeleteGenericData("stability_api", "key");
+            session.User.DeleteGenericData("stability_api", "key_last_updated");
+        }
+        else
+        {
+            session.User.SaveGenericData("stability_api", "key", key);
+            session.User.SaveGenericData("stability_api", "key_last_updated", $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm}");
+        }
         session.User.Save();
         return new JObject() { ["success"] = true };
     }

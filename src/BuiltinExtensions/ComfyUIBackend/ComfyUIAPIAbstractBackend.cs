@@ -586,6 +586,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 }
                 string filled = tagBasic switch
                 {
+                    "stability_api_key" => user_input.SourceSession.User.GetGenericData("stability_api", "key") ?? throw new InvalidDataException("Stability API key not set - please go to the User tab to set it."),
                     "prompt" => user_input.Get(T2IParamTypes.Prompt),
                     "negative_prompt" => user_input.Get(T2IParamTypes.NegativePrompt),
                     "seed" => $"{fixSeed(user_input.Get(T2IParamTypes.Seed)) + (int.TryParse(tagExtra, out int add) ? add : 0)}",

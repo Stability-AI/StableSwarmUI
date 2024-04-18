@@ -1,25 +1,39 @@
 
 class StabilityAPIHelper {
+    constructor() {
+        this.keyInput = getRequiredElementById('stability_api_key');
+        this.keySubmit = getRequiredElementById('stability_key_submit');
+        this.keyRemove = getRequiredElementById('stability_key_remove');
+        this.keyStatus = getRequiredElementById('stability_key_status');
+    }
+
     onKeyInput() {
-        let key = getRequiredElementById('stability_api_key').value;
-        getRequiredElementById('stability_key_submit').disabled = !key;
+        let key = this.keyInput.value;
+        this.keySubmit.disabled = !key;
     }
 
     onSaveButton() {
-        let key = getRequiredElementById('stability_api_key').value;
+        let key = this.keyInput.value;
         if (!key) {
             alert('Please enter a key');
             return;
         }
-        getRequiredElementById('stability_key_submit').disabled = true;
+        this.keySubmit.disabled = true;
         genericRequest('SetStabilityAPIKey', { key: key }, data => {
+            this.updateStatus();
+        });
+    }
+
+    onRemoveButton() {
+        genericRequest('SetStabilityAPIKey', { key: 'none' }, data => {
             this.updateStatus();
         });
     }
 
     updateStatus() {
         genericRequest('GetStabilityAPIKeyStatus', {}, data => {
-            getRequiredElementById('stability_key_status').innerText = data.status;
+            this.keyStatus.innerText = data.status;
+            this.keyRemove.disabled = data.status == 'not set';
         });
     }
 }
