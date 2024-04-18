@@ -691,7 +691,7 @@ function comfyBuildParams(callback) {
         }
         addSimpleParam('comfyworkflowparammetadata', JSON.stringify(params), 'text', 'Comfy Workflow', null, 'big', 0, 1, 1, 'comfyworkflowparammetadata', 'comfyworkflow', -999999, false, false, null);
         addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', -999999, false, false, null);
-        let sorted = sortAndFixComfyParameters(params, defaultParamsRetain, false, null);
+        let sorted = sortAndFixComfyParameters(params, [], false, null);
         let newParams = {};
         for (let param of sorted) {
             newParams[param.id] = param;

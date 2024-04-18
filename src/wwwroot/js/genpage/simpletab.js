@@ -208,6 +208,7 @@ class SimpleTabGenerateHandler extends GenerateHandler {
         if (!data['model']) {
             data['model'] = '(none)';
         }
+        delete data['stability_api_key'];
         return data;
     }
 

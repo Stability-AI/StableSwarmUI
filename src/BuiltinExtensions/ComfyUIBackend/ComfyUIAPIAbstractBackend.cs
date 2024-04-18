@@ -430,6 +430,16 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         {
             Logs.Verbose($"ComfyUI history said: {output.ToDenseDebugString()}");
         }
+        if ((output as JObject).TryGetValue("status", out JToken status) && (status as JObject).TryGetValue("messages", out JToken messages))
+        {
+            foreach (JToken msg in messages)
+            {
+                if (msg[0].ToString() == "execution_error" && (msg[1] as JObject).TryGetValue("exception_message", out JToken actualMessage))
+                {
+                    throw new InvalidOperationException($"ComfyUI execution error: {actualMessage}");
+                }
+            }
+        }
         List<Image> outputs = [];
         List<string> outputFailures = [];
         foreach (JToken outData in output["outputs"].Values())

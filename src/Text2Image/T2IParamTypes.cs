@@ -80,6 +80,7 @@ public enum ParamViewType
 /// <param name="MetadataFormat">Optional function to reformat value for display in metadata.</param>
 /// <param name="AlwaysRetain">If true, the parameter will be retained when otherwise it would be removed (for example, by comfy workflow usage).</param>
 /// <param name="ChangeWeight">Weighting value used to indicate, as a relative weight, how much processing time is needed to change the value of this parameter type - this is used for example for grids to do speed priority sorting. 0 is normal, 10 is model change.</param>
+/// <param name="ExtraHidden">If true, agressively hide from anything.</param>
 /// <param name="Type">The type of the type - text vs integer vs etc (will be set when registering).</param>
 /// <param name="DoNotSave">Can be set to forbid tracking/saving of a param value.</param>
 /// <param name="ImageShouldResize">(For Image-type params) If true, the image should resize to match the target resolution.</param>
@@ -91,7 +92,7 @@ public enum ParamViewType
 public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMax = 0,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null, string IgnoreIf = null,
-    ParamViewType ViewType = ParamViewType.SMALL, bool HideFromMetadata = false, Func<string, string> MetadataFormat = null, bool AlwaysRetain = false, double ChangeWeight = 0,
+    ParamViewType ViewType = ParamViewType.SMALL, bool HideFromMetadata = false, Func<string, string> MetadataFormat = null, bool AlwaysRetain = false, double ChangeWeight = 0, bool ExtraHidden = false,
     T2IParamDataType Type = T2IParamDataType.UNSET, bool DoNotSave = false, bool ImageShouldResize = true, bool DoNotPreview = false, string Subtype = null, string ID = null, Type SharpType = null)
 {
     public JObject ToNet(Session session)
@@ -119,7 +120,8 @@ public record class T2IParamType(string Name, string Description, string Default
             ["always_retain"] = AlwaysRetain,
             ["do_not_save"] = DoNotSave,
             ["do_not_preview"] = DoNotPreview,
-            ["view_type"] = ViewType.ToString().ToLowerFast()
+            ["view_type"] = ViewType.ToString().ToLowerFast(),
+            ["extra_hidden"] = ExtraHidden
         };
     }
 

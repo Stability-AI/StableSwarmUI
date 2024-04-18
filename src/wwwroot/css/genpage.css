@@ -1120,6 +1120,7 @@ body {
 }
 .simpletabmainview {
     overflow: hidden;
+    height: calc(100% - 0.6rem);
 }
 .simpletabbrowserwrapper {
     width: 100vw;
@@ -1130,6 +1131,13 @@ body {
     height: fit-content;
     display: flex;
     justify-content: flex-start;
+}
+.simpleinputsidebar {
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    height: calc(100vh - 2rem);
+    overflow: auto;
 }
 .simpleimagearea {
     flex-grow: 10;

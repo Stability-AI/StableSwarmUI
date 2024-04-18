@@ -293,14 +293,24 @@ namespace StableSwarmUI.Text2Image
                     claim.Extend(gens: 1);
                     await CreateImageTask(user_input, batchId, claim, output, setError, isWS, backendTimeoutMin, saveImages, false);
                 }
-                else if (ex.InnerException is InvalidOperationException ioe)
+                else if (ex is InvalidOperationException ioe)
                 {
                     setError($"Invalid operation: {ioe.Message}");
                     return;
                 }
-                else if (ex.InnerException is InvalidDataException ide)
+                else if (ex is InvalidDataException ide)
                 {
                     setError($"Invalid data: {ide.Message}");
+                    return;
+                }
+                else if (ex.InnerException is InvalidOperationException ioe2)
+                {
+                    setError($"Invalid operation: {ioe2.Message}");
+                    return;
+                }
+                else if (ex.InnerException is InvalidDataException ide2)
+                {
+                    setError($"Invalid data: {ide2.Message}");
                     return;
                 }
                 else if (ex is TaskCanceledException)
