@@ -105,8 +105,7 @@ class SimpleTab {
                     [this.inputsAreaHidden, (p) => !p.visible, false]]) {
                 let html = '';
                 if (areaData[2]) {
-                    html += `<button class="generate-button" id="simple_generate_button" onclick="simpleTab.generate()">Generate</button>
-                    <button class="interrupt-button legacy-interrupt interrupt-button-none" id="simple_interrupt_button" onclick="simpleTab.interrupt()">&times;</button>`;
+                    html += `<button class="generate-button" id="simple_generate_button" onclick="simpleTab.generate()">Generate</button>`;
                 }
                 for (let param of sortParameterList(params.filter(areaData[1]))) {
                     let groupName = param.group ? param.group.name : null;
