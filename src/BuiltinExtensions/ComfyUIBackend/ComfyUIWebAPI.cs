@@ -38,7 +38,7 @@ public static class ComfyUIWebAPI
             ComfyUIBackendExtension.ComfyCustomWorkflow oldFlow = ComfyUIBackendExtension.GetWorkflowByName(path);
             image = oldFlow.Image;
         }
-        if (string.IsNullOrWhiteSpace("image"))
+        if (string.IsNullOrWhiteSpace(image))
         {
             image = "/imgs/model_placeholder.jpg";
         }
