@@ -58,13 +58,8 @@ public static class Logs
     /// <summary>Internal thread loop for saving logs to file.</summary>
     public static void LogSaveInternalLoop()
     {
-        while (true)
+        while (!Program.GlobalProgramCancel.IsCancellationRequested)
         {
-            if (Program.GlobalProgramCancel.IsCancellationRequested)
-            {
-                LogSaveCompletion.Set();
-                return;
-            }
             SaveLogsToFileOnce();
             try
             {
@@ -72,10 +67,10 @@ public static class Logs
             }
             catch (OperationCanceledException)
             {
-                LogSaveCompletion.Set();
-                return;
+                break;
             }
         }
+        LogSaveCompletion.Set();
     }
 
     /// <summary>Immediately saves the logs to file.</summary>
