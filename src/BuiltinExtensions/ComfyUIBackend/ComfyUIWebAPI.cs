@@ -38,13 +38,17 @@ public static class ComfyUIWebAPI
             ComfyUIBackendExtension.ComfyCustomWorkflow oldFlow = ComfyUIBackendExtension.GetWorkflowByName(path);
             image = oldFlow.Image;
         }
+        if (string.IsNullOrWhiteSpace("image"))
+        {
+            image = "/imgs/model_placeholder.jpg";
+        }
         ComfyUIBackendExtension.CustomWorkflows[cleaned] = new ComfyUIBackendExtension.ComfyCustomWorkflow(cleaned, workflow, prompt, custom_params, image, description, enable_in_simple);
         JObject data = new()
         {
             ["workflow"] = workflow,
             ["prompt"] = prompt,
             ["custom_params"] = custom_params,
-            ["image"] = string.IsNullOrWhiteSpace(image) ? "/imgs/model_placeholder.jpg" : image,
+            ["image"] = image,
             ["description"] = description ?? "",
             ["enable_in_simple"] = enable_in_simple
         };
