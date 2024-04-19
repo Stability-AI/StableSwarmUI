@@ -957,6 +957,7 @@ function pageSizer() {
     let mainImageArea = getRequiredElementById('main_image_area');
     let currentImage = getRequiredElementById('current_image');
     let currentImageBatch = getRequiredElementById('current_image_batch_wrapper');
+    let currentImageBatchCore = getRequiredElementById('current_image_batch');
     let midSplitButton = getRequiredElementById('t2i-mid-split-quickbutton');
     let topSplitButton = getRequiredElementById('t2i-top-split-quickbutton');
     let altRegion = getRequiredElementById('alt_prompt_region');
@@ -1001,7 +1002,13 @@ function pageSizer() {
         else {
             currentImage.style.width = `calc(${curImgWidth})`;
         }
-        currentImageBatch.style.width = `${barTopRight}`;
+        currentImageBatch.style.width = `calc(${barTopRight} - 22px)`;
+        if (currentImageBatchCore.offsetWidth < 425) {
+            currentImageBatchCore.classList.add('current_image_batch_core_small');
+        }
+        else {
+            currentImageBatchCore.classList.remove('current_image_batch_core_small');
+        }
         topSplitButton.innerHTML = leftShut ? '&#x21DB;' : '&#x21DA;';
         midSplitButton.innerHTML = midForceToBottom ? '&#x290A;' : '&#x290B;';
         let altHeight = altRegion.style.display == 'none' ? '0px' : `(${altText.offsetHeight + altNegText.offsetHeight + altImageRegion.offsetHeight}px + 2rem)`;

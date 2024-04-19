@@ -433,17 +433,17 @@
 .seed-reuse-button::after {
     content: "\e627";
 }
-/* Right */
-#current_image_batch_wrapper {
-    padding-right: 27px;
-    box-sizing: border-box;
-}
 
-#current_image_batch {
+.current_image_batch_core {
     max-height: calc(100% - 50px);
     overflow: auto;
     padding: 50px;
     text-align: center;
+}
+
+.current_image_batch_core_small {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 /* Bottom */

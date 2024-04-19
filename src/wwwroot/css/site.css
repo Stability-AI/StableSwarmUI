@@ -692,7 +692,6 @@ select {
 .input-group .auto-text {
     padding: 0 10px;
     transition: background-color 0.2s;
-    border: 1px solid transparent;
     color: var(--text);
 }
 .input-group input[type="number"]:hover,
