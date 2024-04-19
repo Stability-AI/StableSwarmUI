@@ -249,6 +249,12 @@ public class T2IParamTypes
         return name;
     }
 
+    /// <summary>Strips ".safetensors" from the end of model name comma-separated-lists for cleanliness.</summary>
+    public static string CleanModelNameList(string names)
+    {
+        return names.SplitFast(',').Select(s => CleanModelName(s.Trim())).JoinString(",");
+    }
+
     /// <summary>Applies a string edit, with support for "{value}" notation.</summary>
     public static string ApplyStringEdit(string prior, string update)
     {
@@ -466,7 +472,7 @@ public class T2IParamTypes
             "None", IgnoreIf: "None", Permission: "param_model", IsAdvanced: true, Toggleable: true, GetValues: listVaes, Subtype: "VAE", Group: GroupAdvancedModelAddons, ChangeWeight: 7
             ));
         Loras = Register<List<string>>(new("LoRAs", "LoRAs (Low-Rank-Adaptation Models) are a way to customize the content of a model without totally replacing it.\nYou can enable one or several LoRAs over top of one model.",
-            "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, Clean: (_, s) => CleanModelName(s), GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelNamesFor(session).Order().Select(CleanModelName).ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false, ChangeWeight: 8
+            "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, Clean: (_, s) => CleanModelNameList(s), GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelNamesFor(session).Order().Select(CleanModelName).ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false, ChangeWeight: 8
             ));
         LoraWeights = Register<List<string>>(new("LoRA Weights", "Weight values for the LoRA model list.",
             "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons, VisibleNormally: false

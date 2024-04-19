@@ -717,7 +717,7 @@ public class T2IParamInput
     {
         if (param.Type.Clean is not null)
         {
-            Set(param.Type, val.ToString());
+            Set(param.Type, val is List<string> list ? list.JoinString(",") : val.ToString());
             return;
         }
         if (param.Type.IgnoreIf is not null && param.Type.IgnoreIf == $"{val}")
