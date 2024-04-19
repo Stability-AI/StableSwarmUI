@@ -348,7 +348,8 @@ function comfyBuildParams(callback) {
             document.getElementById('maintab_comfyworkfloweditor').click();
             return;
         }
-        let defaultParamsRetain = ['images', 'model', 'comfyuicustomworkflow'];
+        let initialRetainSet = ['images', 'model', 'comfyuicustomworkflow'];
+        let defaultParamsRetain = [...initialRetainSet];
         let defaultParamValue = {};
         let groups = [];
         for (let nodeId of Object.keys(prompt)) {
@@ -519,8 +520,12 @@ function comfyBuildParams(callback) {
                     }
                     else if (doAutoClaim && node.class_type == 'CheckpointLoaderSimple' && inputId == 'ckpt_name') {
                         if (!('model' in defaultParamValue) && !claimedByPrimitives.includes('model')) {
-                            defaultParamValue['model'] = node.inputs[inputId];
-                            node.inputs[inputId] = "${model:error_missing_model}";
+                            let model = node.inputs[inputId];
+                            node.inputs[inputId] = "${model:" + model.replaceAll('${', '(').replaceAll('}', ')') + "}";
+                            if (model.endsWith('.safetensors')) {
+                                model = model.substring(0, model.length - '.safetensors'.length);
+                            }
+                            defaultParamValue['model'] = model.replaceAll('\\', '/');
                             return inputIdDirect;
                         }
                         type = 'model';
@@ -696,7 +701,16 @@ function comfyBuildParams(callback) {
         }
         addSimpleParam('comfyworkflowparammetadata', JSON.stringify(params), 'text', 'Comfy Workflow', null, 'big', 0, 1, 1, 'comfyworkflowparammetadata', 'comfyworkflow', -999999, false, false, null);
         addSimpleParam('comfyworkflowraw', JSON.stringify(prompt), 'text', 'Comfy Workflow', null, 'big', 0, 1, 1, 'comfyworkflowraw', 'comfyworkflow', -999999, false, false, null);
-        let sorted = sortAndFixComfyParameters(params, [], false, null);
+        let coreRetain = [];
+        if (defaultParamValue['model']) {
+            coreRetain.push('model');
+        }
+        for (let param of defaultParamsRetain) {
+            if (!initialRetainSet.includes(param) && param in defaultParamValue) {
+                coreRetain.push(param);
+            }
+        }
+        let sorted = sortAndFixComfyParameters(params, coreRetain, false, defaultParamValue, false);
         let newParams = {};
         for (let param of sorted) {
             newParams[param.id] = param;
@@ -716,7 +730,7 @@ function replaceParamsToComfy() {
 
 let comfyInfoSpanNotice = '<b>(Custom Comfy Workflow <button class="basic-button interrupt-button" onclick="comfyParamsDisable()">Disable</button>)</b>';
 
-function sortAndFixComfyParameters(params, retained, applyValues = false, paramVal = null) {
+function sortAndFixComfyParameters(params, retained, applyValues = false, paramVal = null, includeAlwaysRetain = true) {
     let actualParams = [];
     for (let pid of ['comfyworkflowraw', 'comfyworkflowparammetadata']) {
         params[pid].extra_hidden = true;
@@ -724,11 +738,17 @@ function sortAndFixComfyParameters(params, retained, applyValues = false, paramV
     }
     actualParams.push(params['comfyworkflowraw']); // must be first
     delete params['comfyworkflowraw'];
-    for (let param of rawGenParamTypesFromServer.filter(p => retained.includes(p.id) || p.always_retain)) {
+    let handled = {};
+    for (let param of rawGenParamTypesFromServer.filter(p => retained.includes(p.id) || (p.always_retain && includeAlwaysRetain))) {
+        if (paramVal && param.id in paramVal) {
+            param = JSON.parse(JSON.stringify(param));
+            param.default = paramVal[param.id];
+        }
         actualParams.push(param);
+        handled[param.id] = true;
         if (applyValues) {
-        let val = paramVal[param.id];
-        if (val) {
+            let val = paramVal[param.id];
+            if (val) {
                 // Comfy can do full 2^64 but that causes backend issues (can't have 2^64 *and* -1 as options, so...) so cap to 2^63
                 if (param.type == 'integer' && param.view_type == 'seed' && val > 2**63) {
                     val = -1;
@@ -756,12 +776,12 @@ function sortAndFixComfyParameters(params, retained, applyValues = false, paramV
     let isSortTop = p => p.id == 'prompt' || p.id == 'negativeprompt' || p.id == 'comfyworkflowraw' || p.id == 'comfyworkflowparammetadata';
     let prompt = Object.values(actualParams).filter(isSortTop);
     let otherParams = Object.values(actualParams).filter(p => !isSortTop(p));
-    return sortParameterList(Object.values(params), prompt, otherParams);
+    return sortParameterList(Object.values(params).filter(p => !handled[p.id]), prompt, otherParams);
 }
 
 function setComfyWorkflowInput(params, retained, paramVal, applyValues) {
     localStorage.setItem('last_comfy_workflow_input', JSON.stringify({params, retained, paramVal}));
-    gen_param_types = sortAndFixComfyParameters(params, retained, applyValues, paramVal);
+    gen_param_types = sortAndFixComfyParameters(params, retained, applyValues, paramVal, true);
     genInputs(true);
     let buttonHolder = getRequiredElementById('comfy_workflow_disable_button');
     buttonHolder.style.display = 'block';
