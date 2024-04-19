@@ -1027,7 +1027,7 @@ function comfyDescribeWorkflowForBrowser(workflow) {
             onclick: (e) => {
                 getRequiredElementById('comfy_save_modal_name').value = workflow.name;
                 getRequiredElementById('comfy_save_description').value = workflow.data.description;
-                getRequiredElementById('comfy_save_enable_simple').value = workflow.data.enable_in_simple;
+                getRequiredElementById('comfy_save_enable_simple').checked = workflow.data.enable_in_simple;
                 comfySaveWorkflowNow();
             }
         },
