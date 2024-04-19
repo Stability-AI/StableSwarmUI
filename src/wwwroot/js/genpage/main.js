@@ -1113,7 +1113,7 @@ function pageSizer() {
     }, true);
     let moveEvt = (e, x, y) => {
         let offX = x;
-        offX = Math.min(Math.max(offX, 100), window.innerWidth - 100);
+        offX = Math.min(Math.max(offX, 100), window.innerWidth - 10);
         if (topDrag) {
             pageBarTop = Math.min(offX - 5, 51 * 16);
             setLeftShut(pageBarTop < 300);
@@ -1121,6 +1121,9 @@ function pageSizer() {
         }
         if (topDrag2) {
             pageBarTop2 = window.innerWidth - offX + 15;
+            if (pageBarTop2 < 100) {
+                pageBarTop2 = 22;
+            }
             setPageBars();
         }
         if (midDrag) {
