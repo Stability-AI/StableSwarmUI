@@ -100,13 +100,10 @@ class SimpleTab {
             let params = Object.values(JSON.parse(data.result.custom_params));
             let groupsEnable = [], groupsClose = [], runnables = [];
             let lastGroup = null;
-            for (let areaData of [[this.inputsArea, (p) => p.visible && !isParamAdvanced(p), true],
-                    [this.inputsAreaAdvanced, (p) => p.visible && isParamAdvanced(p), false],
-                    [this.inputsAreaHidden, (p) => !p.visible, false]]) {
+            for (let areaData of [[this.inputsArea, (p) => p.visible && !isParamAdvanced(p)],
+                    [this.inputsAreaAdvanced, (p) => p.visible && isParamAdvanced(p)],
+                    [this.inputsAreaHidden, (p) => !p.visible]]) {
                 let html = '';
-                if (areaData[2]) {
-                    html += `<button class="generate-button" id="simple_generate_button" onclick="simpleTab.generate()">Generate</button>`;
-                }
                 for (let param of sortParameterList(params.filter(areaData[1]))) {
                     let groupName = param.group ? param.group.name : null;
                     if (groupName != lastGroup) {

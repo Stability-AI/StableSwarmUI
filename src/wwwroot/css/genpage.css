@@ -1137,8 +1137,29 @@ body {
     padding-left: 1rem;
     padding-right: 1rem;
     height: calc(100vh - 2rem);
-    overflow: auto;
     min-width: 20rem;
+}
+.simpleinput-top-section {
+    width: 100%;
+    height: calc(100vh - 2rem - 7rem);
+    overflow: auto;
+}
+.simpleinputsidebar .auto-input-prompt-tokencount {
+    display: none;
+}
+.simple-gen-button-wrapper {
+    display: block;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--light-border);
+}
+.simple-gen-button-wrapper .generate-button {
+    display: block;
+    width: 90%;
+    margin: auto;
 }
 .simpleimagearea {
     flex-grow: 10;

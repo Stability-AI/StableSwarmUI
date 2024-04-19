@@ -43,10 +43,15 @@
             <div class="browser-content-container simpletabmainview" id="simpletabmainview" style="display:none;">
                 <div class="simple-wrapper-flex">
                     <div class="input-sidebar simpleinputsidebar" id="simple_input_sidebar">
-                        <div id="simple_inputs_area"></div>
-                        <div id="simple_inputs_area_advanced" class="main_inputs_area_advanced" style="display:none;"></div>
-                        <div id="simple_inputs_area_hidden" class="main_inputs_area_hidden"></div>
-                        <div style="height: 2rem;"></div> <!-- Spacer -->
+                        <div class="simpleinput-top-section">
+                            <div id="simple_inputs_area"></div>
+                            <div id="simple_inputs_area_advanced" class="main_inputs_area_advanced" style="display:none;"></div>
+                            <div id="simple_inputs_area_hidden" class="main_inputs_area_hidden"></div>
+                            <div style="height: 2rem;"></div> <!-- Spacer -->
+                        </div>
+                        <div class="simple-gen-button-wrapper">
+                            <button class="generate-button" id="simple_generate_button" onclick="simpleTab.generate()">Generate</button>
+                        </div>
                     </div>
                     <div class="simple-outer-wall" style="margin-left:0;margin-right: 1rem;"></div>
                     <div id="simple_image_container" class="simpleimagearea">
