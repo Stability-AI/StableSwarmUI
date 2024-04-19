@@ -636,7 +636,7 @@ public class WorkflowGenerator
                     g.NoVAEOverride = false;
                 }
                 bool doSave = g.UserInput.Get(T2IParamTypes.SaveIntermediateImages, false);
-                bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale > 1;
+                bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale != 1;
                 // TODO: Better same-VAE check
                 bool doPixelUpscale = doUspcale && (upscaleMethod.StartsWith("pixel-") || upscaleMethod.StartsWith("model-"));
                 if (modelMustReencode || doPixelUpscale || doSave)
