@@ -299,7 +299,7 @@ public class ComfyUIBackendExtension : Extension
 
     public static ConcurrentDictionary<string, JToken> ControlNetPreprocessors = new() { ["None"] = null };
 
-    /// <summary>All current custom workflow IDs. Values are just a copy of the name (because C# lacks a ConcurrentList).</summary>
+    /// <summary>All current custom workflow IDs mapped to their data.</summary>
     public static ConcurrentDictionary<string, ComfyCustomWorkflow> CustomWorkflows = new();
 
     public static T2IParamGroup ComfyGroup, ComfyAdvancedGroup;

@@ -38,7 +38,7 @@ public static class ComfyUIWebAPI
             ComfyUIBackendExtension.ComfyCustomWorkflow oldFlow = ComfyUIBackendExtension.GetWorkflowByName(path);
             image = oldFlow.Image;
         }
-        ComfyUIBackendExtension.CustomWorkflows[path] = new ComfyUIBackendExtension.ComfyCustomWorkflow(cleaned, workflow, prompt, custom_params, image, description, enable_in_simple);
+        ComfyUIBackendExtension.CustomWorkflows[cleaned] = new ComfyUIBackendExtension.ComfyCustomWorkflow(cleaned, workflow, prompt, custom_params, image, description, enable_in_simple);
         JObject data = new()
         {
             ["workflow"] = workflow,
