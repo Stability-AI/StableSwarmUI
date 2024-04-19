@@ -102,7 +102,7 @@ class GenPageBrowserClass {
             return pathGen;
         }
         let partial = '';
-        for (let part of ("../" + path).split('/')) {
+        for (let part of ("Root/" + path).split('/')) {
             partial += part + '/';
             let span = document.createElement('span');
             span.className = 'path-list-part';
@@ -185,7 +185,7 @@ class GenPageBrowserClass {
         }
         let span = createSpan(`${this.id}-foldertree-${tree.name}`, 'browser-folder-tree-part');
         span.style.left = `${offset}px`;
-        span.innerHTML = `<span class="browser-folder-tree-part-symbol" data-issymbol="true"></span> ${escapeHtml(tree.name || '..')}`;
+        span.innerHTML = `<span class="browser-folder-tree-part-symbol" data-issymbol="true"></span> ${escapeHtml(tree.name || 'Root')}`;
         span.dataset.path = path;
         container.appendChild(span);
         if ((Object.keys(tree.children).length == 0 && tree.hasOpened) || tree.fileData) {
