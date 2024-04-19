@@ -279,7 +279,7 @@ public static class T2IAPI
         output(new JObject() { ["discard_indices"] = JToken.FromObject(discard) });
     }
 
-    public static HashSet<string> ImageExtensions = ["png", "jpg", "html", "gif", "webm", "mp4", "webp"];
+    public static HashSet<string> ImageExtensions = ["png", "jpg", "html", "gif", "webm", "mp4", "webp", "mov"];
 
     public enum ImageHistorySortMode { Name, Date }
 

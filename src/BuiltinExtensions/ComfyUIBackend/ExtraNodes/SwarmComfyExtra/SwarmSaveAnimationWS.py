@@ -21,7 +21,7 @@ class SwarmSaveAnimationWS:
                 "lossless": ("BOOLEAN", {"default": True}),
                 "quality": ("INT", {"default": 80, "min": 0, "max": 100}),
                 "method": (list(s.methods.keys()),),
-                "format": (["webp", "gif", "h264-mp4", "webm"],),
+                "format": (["webp", "gif", "h264-mp4", "webm", "prores"],),
             },
         }
 
@@ -58,6 +58,10 @@ class SwarmSaveAnimationWS:
                 args += ["-pix_fmt", "yuv420p", "-crf", "23"]
                 ext = "webm"
                 type_num = 6
+            elif format == "prores":
+                args += ["-c:v", "prores_ks", "-profile:v", "3", "-pix_fmt", "yuv422p10le"]
+                ext = "mov"
+                type_num = 7
             path = folder_paths.get_save_image_path("swarm_tmp_", folder_paths.get_temp_directory())[0]
             rand = '%016x' % random.getrandbits(64)
             file = os.path.join(path, f"swarm_tmp_{rand}.{ext}")

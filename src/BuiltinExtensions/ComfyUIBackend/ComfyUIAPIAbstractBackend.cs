@@ -409,7 +409,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             index = (format >> 4) & 0xffff;
             format &= 7;
         }
-        string formatLabel = format switch { 1 => "jpg", 2 => "png", 3 => "webp", 4 => "gif", 5 => "mp4", 6 => "webm", _ => "jpg" };
+        string formatLabel = format switch { 1 => "jpg", 2 => "png", 3 => "webp", 4 => "gif", 5 => "mp4", 6 => "webm", 7 => "mov", _ => "jpg" };
         return (formatLabel, index, eventId);
     }
 
@@ -421,6 +421,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         "gif" => Image.ImageType.ANIMATION,
         "mp4" => Image.ImageType.VIDEO,
         "webm" => Image.ImageType.VIDEO,
+        "mov" => Image.ImageType.VIDEO,
         _ => Image.ImageType.IMAGE
     };
 
@@ -464,7 +465,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 {
                     type = Image.ImageType.ANIMATION;
                 }
-                else if (ext == "mp4" || ext == "webm" || format.StartsWith("video/"))
+                else if (ext == "mp4" || ext == "mov" || ext == "webm" || format.StartsWith("video/"))
                 {
                     type = Image.ImageType.VIDEO;
                 }

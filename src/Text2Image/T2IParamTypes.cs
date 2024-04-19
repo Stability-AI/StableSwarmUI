@@ -457,7 +457,7 @@ public class T2IParamTypes
             "Image Aspect, Model Res", GetValues: _ => new() { "Image Aspect, Model Res", "Model Preferred", "Image" }, OrderPriority: 19, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
             ));
         VideoFormat = Register<string>(new("Video Format", "What format to save videos in.",
-            "webp", GetValues: _ => new() { "webp", "gif", "webm", "h264-mp4" }, OrderPriority: 20, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
+            "webp", GetValues: _ => new() { "webp", "gif", "webm", "h264-mp4", "prores" }, OrderPriority: 20, Group: GroupVideo, FeatureFlag: "video", DoNotPreview: true
             ));
         Model = Register<T2IModel>(new("Model", "What main checkpoint model should be used.",
             "", Permission: "param_model", VisibleNormally: false, Subtype: "Stable-Diffusion", ChangeWeight: 10

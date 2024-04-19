@@ -83,7 +83,7 @@ function fix_video(path) {
     let ext = getExtension(path);
     let matches = document.querySelectorAll(`img[data-img_path="${path}"]`);
     for (let match of matches) {
-        if (ext != 'webm' && ext != 'mp4') {
+        if (ext != 'webm' && ext != 'mp4' && ext != 'mov') {
             if (!match.src.endsWith(ext)) {
                 match.src = `${path}.${ext}`;
             }
@@ -329,7 +329,7 @@ function getXAxisContent(x, y, xAxis, yval, x2Axis, x2val, y2Axis, y2val) {
         let actualUrl = slashed + '.' + ext;
         let id = scoreTrackCounter++;
         newContent += `<td id="td-img-${id}"><span></span>`;
-        if (ext == 'mp4' || ext == 'webm') {
+        if (ext == 'mp4' || ext == 'webm' || ext == 'mov') {
             newContent += `<video loop autoplay muted class="table_img" data-img_path="${slashed}" onclick="doPopupFor(this)" onerror="setImgPlaceholder(this)" alt="${actualUrl}"><source src="${actualUrl}" type="video/${ext}"></source></video>`;
         }
         else {

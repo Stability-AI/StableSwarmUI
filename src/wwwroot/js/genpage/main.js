@@ -295,7 +295,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         return;
     }
     let curImg = getRequiredElementById('current_image');
-    let isVideo = src.endsWith(".mp4") || src.endsWith(".webm");
+    let isVideo = src.endsWith(".mp4") || src.endsWith(".webm") || src.endsWith(".mov");
     let img;
     let isReuse = false;
     if (isVideo) {

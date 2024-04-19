@@ -393,6 +393,7 @@ public static class Utilities
             { "xml", "text/xml" },
             { "mp4", "video/mp4" },
             { "mpeg", "video/mpeg" },
+            { "mov", "video/quicktime" },
             { "webm", "video/webm" }
         };
 
