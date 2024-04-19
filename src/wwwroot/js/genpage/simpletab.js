@@ -50,6 +50,11 @@ class SimpleTab {
             this.onFolderSelected();
             return;
         }
+        for (let key in sessionStorage) {
+            if (key.startsWith('simpletablast_')) {
+                sessionStorage.removeItem(key);
+            }
+        }
         this.hasLoaded = true;
     }
 
@@ -160,6 +165,14 @@ class SimpleTab {
                 if (param.toggleable) {
                     doToggleEnable(`simpleinput_${param.id}`);
                 }
+                let elem = getRequiredElementById(`simpleinput_${param.id}`);
+                let lastVal = sessionStorage.getItem(`simpletablast_${workflow.name}_simpleinput_${param.id}`);
+                if (lastVal) {
+                    setInputVal(elem, lastVal);
+                }
+                elem.addEventListener('change', () => {
+                    sessionStorage.setItem(`simpletablast_${workflow.name}_simpleinput_${param.id}`, getInputVal(elem));
+                });
             }
             for (let runnable of runnables) {
                 runnable();
