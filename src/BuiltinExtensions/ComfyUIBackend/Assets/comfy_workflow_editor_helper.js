@@ -851,13 +851,13 @@ comfySaveModalName.addEventListener('input', e => {
     let rect = e.target.getBoundingClientRect();
     let selector = getRequiredElementById('comfy_quickload_select');
     let search = e.target.value.toLowerCase();
-    let buttons = [...selector.options].filter(o => !o.value.startsWith("-- ") && o.value.toLowerCase().includes(search));
+    let buttons = [...selector.options].filter(o => o.value && !o.value.startsWith("--") && o.value.toLowerCase().includes(search));
     buttons = buttons.map(o => { return { key: o.innerText, action: () => { e.target.value = o.value; } }; });
     if (comfySaveSearchPopover) {
         comfySaveSearchPopover.remove();
         comfySaveSearchPopover = null;
     }
-    if (buttons.length > 1) {
+    if (buttons.length > 0) {
         comfySaveSearchPopover = new AdvancedPopover(popId, buttons, false, rect.x, rect.y + e.target.offsetHeight + 6, e.target.parentElement, null, e.target.offsetHeight + 6);
     }
 });
