@@ -112,6 +112,21 @@ class SimpleTab {
         this.browser.rerender();
         genericRequest('ComfyReadWorkflow', { name: workflow.name }, (data) => {
             let params = Object.values(JSON.parse(data.result.custom_params));
+            let fakeInternalGroup = { name: 'SimpleTabInternalGroup', id: 'simpletabinternalgroup', open: false, priority: -99999, advanced: true, can_shrink: true, toggles: false };
+            function getFakeParam(name, val) {
+                return { name: name, default: val, id: cleanParamName(name), type: 'text', description: '', values: null, view_type: 'normal', min: 0, max: 0, step: 0, visible: false, toggleable: false, priority: -99999, advanced: true, feature_flag: null, do_not_save: true, no_popover: true, group: fakeInternalGroup };
+            }
+            params.push(getFakeParam('comfyworkflowraw', data.result.prompt));
+            params.push(getFakeParam('comfyworkflowparammetadata', data.result.custom_params));
+            if (data.result.param_values) {
+                let paramVals = JSON.parse(data.result.param_values);
+                for (let key in paramVals) {
+                    let param = params.find(p => p.id == key);
+                    if (param) {
+                        param.default = paramVals[key];
+                    }
+                }
+            }
             let groupsEnable = [], groupsClose = [], runnables = [];
             let lastGroup = null;
             for (let areaData of [[this.inputsArea, (p) => p.visible && !isParamAdvanced(p), 0],

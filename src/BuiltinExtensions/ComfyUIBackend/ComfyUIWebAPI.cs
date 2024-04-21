@@ -24,7 +24,7 @@ public static class ComfyUIWebAPI
     }
 
     /// <summary>API route to save a comfy workflow object to persistent file.</summary>
-    public static async Task<JObject> ComfySaveWorkflow(string name, string workflow, string prompt, string custom_params, string image, string description = "", bool enable_in_simple = false)
+    public static async Task<JObject> ComfySaveWorkflow(string name, string workflow, string prompt, string custom_params, string param_values, string image, string description = "", bool enable_in_simple = false)
     {
         string cleaned = Utilities.StrictFilenameClean(name);
         string path = $"{ComfyUIBackendExtension.Folder}/CustomWorkflows/{cleaned}.json";
@@ -42,12 +42,13 @@ public static class ComfyUIWebAPI
         {
             image = "/imgs/model_placeholder.jpg";
         }
-        ComfyUIBackendExtension.CustomWorkflows[cleaned] = new ComfyUIBackendExtension.ComfyCustomWorkflow(cleaned, workflow, prompt, custom_params, image, description, enable_in_simple);
+        ComfyUIBackendExtension.CustomWorkflows[cleaned] = new ComfyUIBackendExtension.ComfyCustomWorkflow(cleaned, workflow, prompt, custom_params, param_values, image, description, enable_in_simple);
         JObject data = new()
         {
-            ["workflow"] = workflow,
-            ["prompt"] = prompt,
-            ["custom_params"] = custom_params,
+            ["workflow"] = workflow.ParseToJson(),
+            ["prompt"] = prompt.ParseToJson(),
+            ["custom_params"] = custom_params.ParseToJson(),
+            ["param_values"] = param_values.ParseToJson(),
             ["image"] = image,
             ["description"] = description ?? "",
             ["enable_in_simple"] = enable_in_simple

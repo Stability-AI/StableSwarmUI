@@ -910,7 +910,9 @@ function comfySaveModalSaveNow() {
     $('#comfy_workflow_save_modal').modal('hide');
     comfyNoticeMessage("Saving...");
     comfyBuildParams((params, prompt_text, retained, paramVal, workflow) => {
-        prompt_text = JSON.stringify(prompt_text).replaceAll("\"%%_COMFYFIXME_${", "${").replaceAll("}_ENDFIXME_%%\"", "}");
+        params = JSON.parse(JSON.stringify(params));
+        delete params.comfyworkflowparammetadata;
+        delete params.comfyworkflowraw;
         let inputs = {
             'name': saveName,
             'description': getRequiredElementById('comfy_save_description').value,
@@ -918,6 +920,7 @@ function comfySaveModalSaveNow() {
             'workflow': JSON.stringify(workflow),
             'prompt': prompt_text,
             'custom_params': params,
+            'param_values': paramVal,
             'image': image
         };
         genericRequest('ComfySaveWorkflow', inputs, (data) => {
