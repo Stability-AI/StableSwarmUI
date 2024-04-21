@@ -804,7 +804,7 @@ let imageHistoryBrowser = new GenPageBrowserClass('image_history', listImageHist
 
 let hasAppliedFirstRun = false;
 let backendsWereLoadingEver = false;
-let reviseStatusInterval;
+let reviseStatusInterval = null;
 function reviseStatusBar() {
     if (session_id == null) {
         statusBarElem.innerText = 'Loading...';
@@ -829,13 +829,15 @@ function reviseStatusBar() {
                     refreshParameterValues(backendsWereLoadingEver || window.alwaysRefreshOnLoad);
                 }
             }
-            if (status.class != '') {
-                clearInterval(reviseStatusInterval);
-                reviseStatusInterval = setInterval(reviseStatusBar, 2 * 1000);
-            }
-            else {
-                clearInterval(reviseStatusInterval);
-                reviseStatusInterval = setInterval(reviseStatusBar, 60 * 1000);
+            if (reviseStatusInterval != null) {
+                if (status.class != '') {
+                    clearInterval(reviseStatusInterval);
+                    reviseStatusInterval = setInterval(reviseStatusBar, 2 * 1000);
+                }
+                else {
+                    clearInterval(reviseStatusInterval);
+                    reviseStatusInterval = setInterval(reviseStatusBar, 60 * 1000);
+                }
             }
         }
         statusBarElem.innerText = translate(status.message);
