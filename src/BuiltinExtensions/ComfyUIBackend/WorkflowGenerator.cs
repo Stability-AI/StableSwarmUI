@@ -1439,6 +1439,7 @@ public class WorkflowGenerator
             double mult = isPositive ? 1.5 : 0.8;
             int width = UserInput.Get(T2IParamTypes.Width, 1024);
             int height = UserInput.GetImageHeight();
+            bool enhance = UserInput.Get(T2IParamTypes.ModelSpecificEnhancements, true);
             node = CreateNode("CLIPTextEncodeSDXL", new JObject()
             {
                 ["clip"] = clip,
@@ -1446,8 +1447,8 @@ public class WorkflowGenerator
                 ["text_l"] = prompt,
                 ["crop_w"] = 0,
                 ["crop_h"] = 0,
-                ["width"] = (int)Utilities.RoundToPrecision(width * mult, 64),
-                ["height"] = (int)Utilities.RoundToPrecision(height * mult, 64),
+                ["width"] = enhance ? (int)Utilities.RoundToPrecision(width * mult, 64) : width,
+                ["height"] = enhance ? (int)Utilities.RoundToPrecision(height * mult, 64) : height,
                 ["target_width"] = width,
                 ["target_height"] = height
             }, id);

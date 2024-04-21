@@ -274,7 +274,7 @@ public class T2IParamTypes
     public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ReVisionModel, RegionalObjectInpaintingModel, VideoModel, RefinerVAE;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights;
     public static T2IRegisteredParam<List<Image>> PromptImages;
-    public static T2IRegisteredParam<bool> SaveIntermediateImages, DoNotSave, ControlNetPreviewOnly, RevisionZeroPrompt, SeamlessTileable, RemoveBackground, NoSeedIncrement, NoPreviews, VideoBoomerang;
+    public static T2IRegisteredParam<bool> SaveIntermediateImages, DoNotSave, ControlNetPreviewOnly, RevisionZeroPrompt, SeamlessTileable, RemoveBackground, NoSeedIncrement, NoPreviews, VideoBoomerang, ModelSpecificEnhancements;
 
     public static T2IParamGroup GroupRevision, GroupCore, GroupVariation, GroupResolution, GroupSampling, GroupInitImage, GroupRefiners,
         GroupAdvancedModelAddons, GroupSwarmInternal, GroupFreeU, GroupRegionalPrompting, GroupAdvancedSampling, GroupVideo;
@@ -511,6 +511,9 @@ public class T2IParamTypes
             ));
         ImageFormat = Register<string>(new("Image Format", "Optional override for the final image file format.",
             "PNG", GetValues: (_) => new() { "PNG", "JPG", "JPG90", "JPG75" }, IsAdvanced: true, Group: GroupSwarmInternal, AlwaysRetain: true, Toggleable: true, OrderPriority: 1
+            ));
+        ModelSpecificEnhancements = Register<bool>(new("Model Specific Enhancements", "If checked, enables model-specific enhancements.\nFor example, on SDXL, smarter res-cond will be used.\nIf unchecked, will prefer more 'raw' behavior.",
+            "true", IgnoreIf: "true", IsAdvanced: true, Group: GroupSwarmInternal, OrderPriority: 2
             ));
         GroupFreeU = new("FreeU", Open: false, OrderPriority: 10, IsAdvanced: true, Toggles: true, Description: "Implements 'FreeU: Free Lunch in Diffusion U-Net' https://arxiv.org/abs/2309.11497");
         FreeUApplyTo = Register<string>(new("[FreeU] Apply To", "Which models to apply FreeU to, as base, refiner, or both. Irrelevant when not using refiner.",
