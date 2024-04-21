@@ -49,13 +49,14 @@ public class WildcardsHelper
     /// <summary>Refreshes the wildcard tracker, reloading from folder.</summary>
     public static void Refresh()
     {
-        WildcardFiles.Clear();
+        ConcurrentDictionary<string, Wildcard> newWildcards = new();
         Directory.CreateDirectory(Folder);
         foreach (string str in Directory.EnumerateFiles(Folder, "*.txt", SearchOption.AllDirectories))
         {
             string path = Path.GetRelativePath(Folder, str).Replace("\\", "/").TrimStart('/').BeforeLast('.');
-            WildcardFiles.TryAdd(path, new() { Name = path });
+            newWildcards.TryAdd(path, new() { Name = path });
         }
+        WildcardFiles = newWildcards;
     }
 
     /// <summary>Gets the wildcard data for the specified exact wildcard name.</summary>
