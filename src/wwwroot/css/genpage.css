@@ -1164,6 +1164,10 @@ body {
 .simpleimagearea {
     flex-grow: 10;
     text-align: center;
+    padding-top: 20px;
+}
+.simpleimagearea .loading-spinner {
+    top: -50%;
 }
 .simpleimagearea img {
     max-width: 100%;
@@ -1184,7 +1188,7 @@ body {
     height: calc(85vh - 1rem);
     width: 2px;
     margin: 1rem;
-    background-color: var(--background);
+    background-color: var(--light-border);
 }
 .simple-outer-wall {
     height: 100vh;
@@ -1192,7 +1196,7 @@ body {
     min-width: 5px;
     margin-left: 1rem;
     margin-right: 0;
-    background-color: var(--background);
+    background-color: var(--light-border);
 }
 .simpletab-progress-wrapper .image-preview-progress-inner {
     top: calc(-10rem + 5px);

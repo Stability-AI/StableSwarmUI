@@ -625,10 +625,10 @@ textarea, input, select {
     position: absolute;
     top: 0;
     left: 0;
-    width: calc(100% - 64px);
-    height: calc(100% - 64px);
-    margin: 32px;
-    border: 32px solid var(--emphasis);
+    width: calc(100% - 32px);
+    height: calc(100% - 32px);
+    margin: 16px;
+    border: 16px solid var(--emphasis);
     border-radius: 50%;
     animation: loading-spinner 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
     border-color: var(--emphasis) transparent transparent transparent;

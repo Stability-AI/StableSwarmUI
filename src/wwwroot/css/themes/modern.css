@@ -548,3 +548,10 @@
     padding: 5px 10px !important;
     margin-top: 5px;
 }
+
+.tiny-vertical-bar {
+    background-color: var(--background);
+}
+.simple-outer-wall {
+    background-color: var(--background);
+}

@@ -84,7 +84,7 @@ class SimpleTab {
 
     setImage(imgSrc) {
         this.imageElem.src = imgSrc;
-        this.imageElem.style.display = '';
+        this.imageElem.style.opacity = 1;
     }
 
     markLoading() {
@@ -99,7 +99,7 @@ class SimpleTab {
     }
 
     setNoImage() {
-        this.imageElem.style.display = 'none';
+        this.imageElem.style.opacity = 0;
     }
 
     browserDescribeEntry(workflow) {
