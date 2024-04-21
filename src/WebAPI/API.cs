@@ -22,9 +22,9 @@ public class API
     }
 
     /// <summary>Register a new API call handler.</summary>
-    public static void RegisterAPICall(Delegate method)
+    public static void RegisterAPICall(Delegate method, bool isUserUpdate = false)
     {
-        RegisterAPICall(APICallReflectBuilder.BuildFor(method.Target, method.Method));
+        RegisterAPICall(APICallReflectBuilder.BuildFor(method.Target, method.Method, isUserUpdate));
     }
 
     /// <summary>Web access call route, triggered from <see cref="WebServer"/>.</summary>
@@ -110,6 +110,14 @@ public class API
                 Error("API route is not a websocket but request is");
                 context.Response.Redirect("/Error/BasicAPI");
                 return;
+            }
+            if (session is not null)
+            {
+                session.User.TickIsPresent();
+                if (handler.IsUserUpdate)
+                {
+                    session.UpdateLastUsedTime();
+                }
             }
             JObject output = await handler.Call(context, session, socket, input);
             if (socket is not null)

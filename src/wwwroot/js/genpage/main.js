@@ -530,10 +530,7 @@ function updateGenCount() {
     }
     doesHaveGenCountUpdateQueued = true;
     setTimeout(() => {
-        genericRequest('GetCurrentStatus', {}, data => {
-            doesHaveGenCountUpdateQueued = false;
-            updateCurrentStatusDirect(data.status);
-        });
+        reviseStatusBar();
     }, 500);
 }
 
@@ -805,49 +802,49 @@ function selectImageInHistory(image, div) {
 let imageHistoryBrowser = new GenPageBrowserClass('image_history', listImageHistoryFolderAndFiles, 'imagehistorybrowser', 'Thumbnails', describeImage, selectImageInHistory,
     `<label for="image_history_sort_by">Sort:</label> <select id="image_history_sort_by"><option>Name</option><option>Date</option></select> <input type="checkbox" id="image_history_sort_reverse"> <label for="image_history_sort_reverse">Reverse</label>`);
 
-function getCurrentStatus() {
-    if (versionIsWrong) {
-        return ['error', 'The server has updated since you opened the page, please refresh.'];
-    }
-    if (!hasLoadedBackends) {
-        return ['warn', 'Loading...'];
-    }
-    if (Object.values(backends_loaded).length == 0) {
-        return ['warn', 'No backends present. You must configure backends in the Backends section of the Server tab before you can continue.'];
-    }
-    if (Object.values(backends_loaded).filter(x => x.enabled).length == 0) {
-        return ['warn', 'All backends are disabled. You must enable backends in the Backends section of the Server tab before you can continue.'];
-    }
-    let loading = countBackendsByStatus('waiting') + countBackendsByStatus('loading');
-    if (countBackendsByStatus('running') == 0) {
-        if (loading > 0) {
-            return ['warn', 'Backends are still loading on the server...'];
-        }
-        if (countBackendsByStatus('errored') > 0) {
-            return ['error', 'Some backends have errored on the server. Check the server logs for details.'];
-        }
-        if (countBackendsByStatus('disabled') > 0) {
-            return ['warn', 'Some backends are disabled. Please enable or configure them to continue.'];
-        }
-        if (countBackendsByStatus('idle') > 0) {
-            return ['warn', 'All backends are idle. Cannot generate until at least one backend is running.'];
-        }
-        return ['error', 'Something is wrong with your backends. Please check the Backends section of the Server tab, or the server logs.'];
-    }
-    if (loading > 0) {
-        return ['soft', 'Some backends are ready, but others are still loading...'];
-    }
-    return ['', ''];
-}
-
+let hasAppliedFirstRun = false;
+let backendsWereLoadingEver = false;
+let reviseStatusInterval;
 function reviseStatusBar() {
-    let status = getCurrentStatus();
-    statusBarElem.innerText = status[1];
-    statusBarElem.className = `top-status-bar status-bar-${status[0]}`;
+    if (session_id == null) {
+        statusBarElem.innerText = 'Loading...';
+        statusBarElem.className = `top-status-bar status-bar-warn`;
+        return;
+    }
+    genericRequest('GetCurrentStatus', {}, data => {
+        doesHaveGenCountUpdateQueued = false;
+        updateCurrentStatusDirect(data.status);
+        let status;
+        if (versionIsWrong) {
+            status = { 'class': 'error', 'message': 'The server has updated since you opened the page, please refresh.' };
+        }
+        else {
+            status = data.backend_status;
+            if (data.backend_status.any_loading) {
+                backendsWereLoadingEver = true;
+            }
+            else {
+                if (!hasAppliedFirstRun) {
+                    hasAppliedFirstRun = true;
+                    refreshParameterValues(backendsWereLoadingEver || window.alwaysRefreshOnLoad);
+                }
+            }
+            if (status.class != '') {
+                clearInterval(reviseStatusInterval);
+                reviseStatusInterval = setInterval(reviseStatusBar, 2 * 1000);
+            }
+            else {
+                clearInterval(reviseStatusInterval);
+                reviseStatusInterval = setInterval(reviseStatusBar, 60 * 1000);
+            }
+        }
+        statusBarElem.innerText = translate(status.message);
+        statusBarElem.className = `top-status-bar status-bar-${status.class}`;
+    });
 }
 
 function serverResourceLoop() {
-    if (getRequiredElementById('servertabbutton').classList.contains('active') && getRequiredElementById('serverinfotabbutton').classList.contains('active')) {
+    if (isVisible(getRequiredElementById('Server-Info'))) {
         genericRequest('GetServerResourceInfo', {}, data => {
             let target = getRequiredElementById('resource_usage_area');
             if (data.gpus) {
@@ -860,13 +857,19 @@ function serverResourceLoop() {
                 target.innerHTML = html;
             }
         });
+        genericRequest('ListConnectedUsers', {}, data => {
+            let target = getRequiredElementById('connected_users_list');
+            let html = '<table class="simple-table"><tr><th>Name</th><th>Last Seen</th></tr>';
+            for (let user of data.users) {
+                html += `<tr><td>${user.id}</td><td>${user.last_active}</td></tr>`;
+            }
+            html += '</table>';
+            target.innerHTML = html;
+        });
     }
-}
-
-function genpageLoop() {
-    backendLoopUpdate();
-    reviseStatusBar();
-    serverResourceLoop();
+    if (isVisible(backendsListView)) {
+        backendLoopUpdate();
+    }
 }
 
 let toolSelector = getRequiredElementById('tool_selector');
@@ -1528,8 +1531,9 @@ function genpageLoad() {
             }
             automaticWelcomeMessage();
         });
+        reviseStatusInterval = setInterval(reviseStatusBar, 2000);
+        window.resLoopInterval = setInterval(serverResourceLoop, 1000);
     });
-    setInterval(genpageLoop, 1000);
 }
 
 setTimeout(genpageLoad, 1);

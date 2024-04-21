@@ -52,6 +52,9 @@ public class BackendHandler
     /// <summary>The number of currently loaded backends.</summary>
     public int Count => T2IBackends.Count;
 
+    /// <summary>Getter for the current overall backend status report.</summary>
+    public SingleValueExpiringCacheAsync<JObject> CurrentBackendStatus;
+
     public BackendHandler()
     {
         RegisterBackendType<SwarmSwarmBackend>("swarmswarmbackend", "Swarm-API-Backend", "Connection StableSwarmUI to another instance of StableSwarmUI as a backend.", true, true);
@@ -62,6 +65,99 @@ public class BackendHandler
                 backend.TriggerRefresh();
             }
         };
+        CurrentBackendStatus = new(() =>
+        {
+            T2IBackendData[] backends = [.. T2IBackends.Values];
+            if (backends.Length == 0)
+            {
+                return new()
+                {
+                    ["status"] = "empty",
+                    ["class"] = "error",
+                    ["message"] = "No backends present. You must configure backends in the Backends section of the Server tab before you can continue.",
+                    ["any_loading"] = false
+                };
+            }
+            if (backends.All(b => !b.Backend.IsEnabled))
+            {
+                return new()
+                {
+                    ["status"] = "all_disabled",
+                    ["class"] = "error",
+                    ["message"] = "All backends are disabled. You must enable backends in the Backends section of the Server tab before you can continue.",
+                    ["any_loading"] = false
+                };
+            }
+            BackendStatus[] statuses = backends.Select(b => b.Backend.Status).ToArray();
+            int loading = statuses.Count(s => s == BackendStatus.LOADING || s == BackendStatus.WAITING);
+            if (statuses.Any(s => s == BackendStatus.ERRORED))
+            {
+                return new()
+                {
+                    ["status"] = "errored",
+                    ["class"] = "error",
+                    ["message"] = "Some backends have errored on the server. Check the server logs for details.",
+                    ["any_loading"] = loading > 0
+                };
+            }
+            if (statuses.Any(s => s == BackendStatus.RUNNING))
+            {
+                if (loading > 0)
+                {
+                    return new()
+                    {
+                        ["status"] = "some_loading",
+                        ["class"] = "warn",
+                        ["message"] = "Some backends are ready, but others are still loading...",
+                        ["any_loading"] = true
+                    };
+                }
+                return new()
+                {
+                    ["status"] = "running",
+                    ["class"] = "",
+                    ["message"] = "",
+                    ["any_loading"] = false
+                };
+            }
+            if (loading > 0)
+            {
+                return new()
+                {
+                    ["status"] = "loading",
+                    ["class"] = "soft",
+                    ["message"] = "Backends are still loading on the server...",
+                    ["any_loading"] = true
+                };
+            }
+            if (statuses.Any(s => s == BackendStatus.DISABLED))
+            {
+                return new()
+                {
+                    ["status"] = "disabled",
+                    ["class"] = "warn",
+                    ["message"] = "Some backends are disabled. Please enable or configure them to continue.",
+                    ["any_loading"] = false
+                };
+            }
+            if (statuses.Any(s => s == BackendStatus.IDLE))
+            {
+                return new()
+                {
+                    ["status"] = "idle",
+                    ["class"] = "warn",
+                    ["message"] = "All backends are idle. Cannot generate until at least one backend is running.",
+                    ["any_loading"] = false
+                };
+            }
+            return new()
+            {
+                ["status"] = "unknown",
+                ["class"] = "error",
+                ["message"] = "Something is wrong with your backends. Please check the Backends section of the Server tab, or the server logs.",
+                ["any_loading"] = false
+            };
+        }, TimeSpan.FromSeconds(1));
     }
 
     /// <summary>Metadata about backend types.</summary>

@@ -15,8 +15,8 @@ public static class UtilAPI
     {
         API.RegisterAPICall(CountTokens);
         API.RegisterAPICall(TokenizeInDetail);
-        API.RegisterAPICall(Pickle2SafeTensor);
-        API.RegisterAPICall(WipeMetadata);
+        API.RegisterAPICall(Pickle2SafeTensor, true);
+        API.RegisterAPICall(WipeMetadata, true);
     }
 
     public static ConcurrentDictionary<string, CliplikeTokenizer> Tokenizers = new();

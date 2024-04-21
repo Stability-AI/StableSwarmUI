@@ -13,12 +13,12 @@ public class BackendAPI
     {
         API.RegisterAPICall(ListBackendTypes);
         API.RegisterAPICall(ListBackends);
-        API.RegisterAPICall(DeleteBackend);
-        API.RegisterAPICall(ToggleBackend);
-        API.RegisterAPICall(EditBackend);
-        API.RegisterAPICall(AddNewBackend);
-        API.RegisterAPICall(RestartBackends);
-        API.RegisterAPICall(FreeBackendMemory);
+        API.RegisterAPICall(DeleteBackend, true);
+        API.RegisterAPICall(ToggleBackend, true);
+        API.RegisterAPICall(EditBackend, true);
+        API.RegisterAPICall(AddNewBackend, true);
+        API.RegisterAPICall(RestartBackends, true);
+        API.RegisterAPICall(FreeBackendMemory, true);
     }
 
     /// <summary>API route to list currently available backend-types.</summary>

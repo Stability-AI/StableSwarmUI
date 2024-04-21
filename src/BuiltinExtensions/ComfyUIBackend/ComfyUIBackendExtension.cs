@@ -769,8 +769,9 @@ public class ComfyUIBackendExtension : Extension
                                     parsed["client_id"] = client.SID;
                                     client.FixUpPrompt(parsed["prompt"] as JObject);
                                     string userText = "";
-                                    if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id))
+                                    if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id)) // TODO: Temporary: hacky header user ID tracker
                                     {
+                                        Program.Sessions.GetUser(user_id[0]).UpdateLastUsedTime();
                                         userText = $" (from user {user_id[0]})";
                                     }
                                     Logs.Info($"Sent Comfy backend direct prompt requested to backend #{backend.BackendData.ID}{userText}");

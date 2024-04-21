@@ -34,7 +34,9 @@ function addBackendToHtml(backend, disable, spot = null) {
     toggleSwitch.checked = backend.enabled;
     toggleSwitch.addEventListener('change', () => {
         backend.enabled = toggleSwitch.checked;
-        genericRequest('ToggleBackend', {'backend_id': backend.id, 'enabled': toggleSwitch.checked}, data => {});
+        genericRequest('ToggleBackend', {'backend_id': backend.id, 'enabled': toggleSwitch.checked}, data => {
+            loadBackendsList();
+        });
     });
     togglerSpan.appendChild(toggleSwitch);
     cardHeader.appendChild(togglerSpan);
@@ -137,6 +139,7 @@ function addBackendToHtml(backend, disable, spot = null) {
 }
 
 function loadBackendsList() {
+    reviseStatusBar();
     genericRequest('ListBackends', {}, data => {
         hasLoadedBackends = true;
         for (let oldBack of Object.values(backends_loaded)) {
@@ -171,6 +174,7 @@ function loadBackendsList() {
         for (let callback of backendsRevisedCallbacks) {
             callback();
         }
+        reviseStatusBar();
     });
 }
 
@@ -211,8 +215,6 @@ function loadBackendTypesMenu() {
 
 let backendsListView = document.getElementById('backends_list');
 let backendsCheckRateCounter = 0;
-let hasAppliedFirstRun = false;
-let backendsWereLoadingEver = false;
 
 function isVisible(element) {
     // DOM Element visibility isn't supported in all browsers
@@ -225,21 +227,13 @@ function isVisible(element) {
 }
 
 function backendLoopUpdate() {
-    let loading = countBackendsByStatus('loading') + countBackendsByStatus('waiting');
-    if (loading > 0) {
-        backendsWereLoadingEver = true;
-    }
-    if (loading > 0 || isVisible(backendsListView)) {
+    if (isVisible(backendsListView)) {
         serverLogs.onTabButtonClick();
         if (backendsCheckRateCounter++ % 3 == 0) {
             loadBackendsList(); // TODO: only if have permission
         }
     }
     else {
-        if (!hasAppliedFirstRun) {
-            hasAppliedFirstRun = true;
-            refreshParameterValues(backendsWereLoadingEver || window.alwaysRefreshOnLoad);
-        }
         backendsCheckRateCounter = 0;
     }
 }

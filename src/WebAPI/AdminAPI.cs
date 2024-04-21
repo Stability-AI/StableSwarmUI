@@ -1,5 +1,6 @@
 ﻿using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
+using FreneticUtilities.FreneticToolkit;
 using Hardware.Info;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
@@ -15,12 +16,13 @@ public static class AdminAPI
     public static void Register()
     {
         API.RegisterAPICall(ListServerSettings);
-        API.RegisterAPICall(ChangeServerSettings);
+        API.RegisterAPICall(ChangeServerSettings, true);
         API.RegisterAPICall(ListLogTypes);
         API.RegisterAPICall(ListRecentLogMessages);
-        API.RegisterAPICall(ShutdownServer);
+        API.RegisterAPICall(ShutdownServer, true);
         API.RegisterAPICall(GetServerResourceInfo);
-        API.RegisterAPICall(DebugLanguageAdd);
+        API.RegisterAPICall(DebugLanguageAdd, true);
+        API.RegisterAPICall(ListConnectedUsers);
     }
 
     public static JObject AutoConfigToParamData(AutoConfiguration config)
@@ -229,5 +231,17 @@ public static class AdminAPI
     {
         LanguagesHelper.TrackSet(raw["set"].ToArray().Select(v => $"{v}").ToArray());
         return new JObject() { ["success"] = true };
+    }
+
+    /// <summary>API Route to get a list of currently connected users.</summary>
+    public static async Task<JObject> ListConnectedUsers(Session session)
+    {
+        JArray list = new(Program.Sessions.Users.Values.Where(u => u.MsSinceLastPresent.TotalMinutes < 5 && !u.UserID.StartsWith("__")).OrderBy(u => u.UserID).Select(u => new JObject()
+        {
+            ["id"] = u.UserID,
+            ["last_active_seconds"] = u.MsSinceLastUsed.TotalSeconds,
+            ["last_active"] = $"{u.MsSinceLastUsed.SimpleFormat(false, false)} ago"
+        }).ToArray());
+        return new JObject() { ["users"] = list };
     }
 }

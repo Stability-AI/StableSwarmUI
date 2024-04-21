@@ -25,19 +25,19 @@ public static class BasicAPIFeatures
     public static void Register()
     {
         API.RegisterAPICall(GetNewSession);
-        API.RegisterAPICall(InstallConfirmWS);
+        API.RegisterAPICall(InstallConfirmWS, true);
         API.RegisterAPICall(GetMyUserData);
-        API.RegisterAPICall(AddNewPreset);
-        API.RegisterAPICall(DuplicatePreset);
-        API.RegisterAPICall(DeletePreset);
+        API.RegisterAPICall(AddNewPreset, true);
+        API.RegisterAPICall(DuplicatePreset, true);
+        API.RegisterAPICall(DeletePreset, true);
         API.RegisterAPICall(GetCurrentStatus);
-        API.RegisterAPICall(InterruptAll);
+        API.RegisterAPICall(InterruptAll, true);
         API.RegisterAPICall(GetUserSettings);
-        API.RegisterAPICall(ChangeUserSettings);
-        API.RegisterAPICall(SetParamEdits);
+        API.RegisterAPICall(ChangeUserSettings, true);
+        API.RegisterAPICall(SetParamEdits, true);
         API.RegisterAPICall(GetLanguage);
         API.RegisterAPICall(ServerDebugMessage);
-        API.RegisterAPICall(SetStabilityAPIKey);
+        API.RegisterAPICall(SetStabilityAPIKey, true);
         API.RegisterAPICall(GetStabilityAPIKeyStatus);
         T2IAPI.Register();
         ModelsAPI.Register();
@@ -386,17 +386,19 @@ public static class BasicAPIFeatures
     /// <summary>Gets current session status. Not an API call.</summary>
     public static JObject GetCurrentStatusRaw(Session session)
     {
+        JObject backendStatus = Program.Backends.CurrentBackendStatus.GetValue();
         lock (session.StatsLocker)
         {
-            return new JObject()
+            return new JObject
             {
-                ["status"] = new JObject()
+                ["status"] = new JObject
                 {
                     ["waiting_gens"] = session.WaitingGenerations,
                     ["loading_models"] = session.LoadingModels,
                     ["waiting_backends"] = session.WaitingBackends,
                     ["live_gens"] = session.LiveGens
-                }
+                },
+                ["backend_status"] = backendStatus
             };
         }
     }

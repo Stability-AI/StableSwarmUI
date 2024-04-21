@@ -19,12 +19,12 @@ public static class ModelsAPI
         API.RegisterAPICall(ListModels);
         API.RegisterAPICall(DescribeModel);
         API.RegisterAPICall(ListLoadedModels);
-        API.RegisterAPICall(SelectModel);
-        API.RegisterAPICall(SelectModelWS);
-        API.RegisterAPICall(DeleteWildcard);
+        API.RegisterAPICall(SelectModel, true);
+        API.RegisterAPICall(SelectModelWS, true);
+        API.RegisterAPICall(DeleteWildcard, true);
         API.RegisterAPICall(TestPromptFill);
-        API.RegisterAPICall(EditWildcard);
-        API.RegisterAPICall(EditModelMetadata);
+        API.RegisterAPICall(EditWildcard, true);
+        API.RegisterAPICall(EditModelMetadata, true);
     }
 
     public static Dictionary<string, JObject> InternalExtraModels(string subtype)

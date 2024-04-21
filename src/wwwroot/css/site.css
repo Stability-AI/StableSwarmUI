@@ -591,6 +591,7 @@ textarea, input, select {
 .simple-table tr td, .simple-table tr th {
     padding: 0.4rem;
     border: 1px solid var(--shadow);
+    min-width: 85px;
 }
 .translate-block-sm {
     display: inline-block;

@@ -25,12 +25,12 @@ public static class T2IAPI
 {
     public static void Register()
     {
-        API.RegisterAPICall(GenerateText2Image);
-        API.RegisterAPICall(GenerateText2ImageWS);
+        API.RegisterAPICall(GenerateText2Image, true);
+        API.RegisterAPICall(GenerateText2ImageWS, true);
         API.RegisterAPICall(ListImages);
-        API.RegisterAPICall(ToggleImageStarred);
-        API.RegisterAPICall(OpenImageFolder);
-        API.RegisterAPICall(DeleteImage);
+        API.RegisterAPICall(ToggleImageStarred, true);
+        API.RegisterAPICall(OpenImageFolder, true);
+        API.RegisterAPICall(DeleteImage, true);
         API.RegisterAPICall(ListT2IParams);
         API.RegisterAPICall(TriggerRefresh);
     }

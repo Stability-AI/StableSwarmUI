@@ -16,8 +16,10 @@ public class Session : IEquatable<Session>
     /// <summary>The relevant <see cref="User"/>.</summary>
     public User User;
 
+    /// <summary>Token to interrupt this session.</summary>
     public CancellationTokenSource SessInterrupt = new();
 
+    /// <summary>All current generation claims.</summary>
     public List<GenClaim> Claims = [];
 
     /// <summary>Statistics about the generations currently waiting in this session.</summary>
@@ -25,6 +27,19 @@ public class Session : IEquatable<Session>
 
     /// <summary>Locker for interacting with this session's statsdata.</summary>
     public LockObject StatsLocker = new();
+
+    /// <summary><see cref="Environment.TickCount64"/> value for the last time this session triggered a generation, updated a setting, or other 'core action'.</summary>
+    public long LastUsedTime = Environment.TickCount64;
+
+    /// <summary>Updates the <see cref="LastUsedTime"/> to the current time.</summary>
+    public void UpdateLastUsedTime()
+    {
+        Volatile.Write(ref LastUsedTime, Environment.TickCount64);
+        User.UpdateLastUsedTime();
+    }
+
+    /// <summary>Time since the last action was performed in this session.</summary>
+    public TimeSpan MsSinceLastUsed => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref LastUsedTime));
 
     /// <summary>Use "using <see cref="GenClaim"/> claim = session.Claim(image_count);" to track generation requests pending on this session.</summary>
     public GenClaim Claim(int gens = 0, int modelLoads = 0, int backendWaits = 0, int liveGens = 0)

@@ -194,7 +194,32 @@ public class User
     /// <summary>Path to the output directory appropriate to this session.</summary>
     public string OutputDirectory => Program.ServerSettings.Paths.AppendUserNameToOutputPath ? $"{Program.ServerSettings.Paths.OutputPath}/{UserID}" : Program.ServerSettings.Paths.OutputPath;
 
+    /// <summary>Lock object for this user's data.</summary>
     public LockObject UserLock = new();
+
+    /// <summary><see cref="Environment.TickCount64"/> value for the last time this user was seen as currently connected.</summary>
+    public long LastTickedPresent = Environment.TickCount64;
+
+    /// <summary><see cref="Environment.TickCount64"/> value for the last time this user triggered a generation, updated a setting, or other 'core action'.</summary>
+    public long LastUsedTime = Environment.TickCount64;
+
+    /// <summary>Updates the <see cref="LastTickedPresent"/> to the current time.</summary>
+    public void TickIsPresent()
+    {
+        Volatile.Write(ref LastTickedPresent, Environment.TickCount64);
+    }
+
+    /// <summary>Updates the <see cref="LastUsedTime"/> to the current time.</summary>
+    public void UpdateLastUsedTime()
+    {
+        Volatile.Write(ref LastUsedTime, Environment.TickCount64);
+    }
+
+    /// <summary>Time since the last action was performed by this user.</summary>
+    public TimeSpan MsSinceLastUsed => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref LastUsedTime));
+
+    /// <summary>Time since the last time this user was seen as currently connected.</summary>
+    public TimeSpan MsSinceLastPresent => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref LastTickedPresent));
 
     /// <summary>Returns whether this user has the given generic permission flag.</summary>
     public bool HasGenericPermission(string permName)

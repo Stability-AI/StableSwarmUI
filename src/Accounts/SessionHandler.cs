@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using LiteDB;
 using StableSwarmUI.Text2Image;
 using FreneticUtilities.FreneticToolkit;
+using FreneticUtilities.FreneticExtensions;
 
 namespace StableSwarmUI.Accounts;
 
@@ -15,6 +16,9 @@ public class SessionHandler
 
     /// <summary>Map of currently tracked sessions by ID.</summary>
     public ConcurrentDictionary<string, Session> Sessions = new();
+
+    /// <summary>Temporary map of current users. Do not use this directly, use <see cref="GetUser(string)"/>.</summary>
+    public ConcurrentDictionary<string, User> Users = new();
 
     /// <summary>ID to use for the local user when in single-user mode.</summary>
     public static string LocalUserID = "local";
@@ -88,9 +92,12 @@ public class SessionHandler
         {
             userId = "_";
         }
-        User.DatabaseEntry userData = UserDatabase.FindById(userId);
-        userData ??= new() { ID = userId, RawSettings = "\n" };
-        return new(this, userData);
+        return Users.GetOrCreate(userId, () =>
+        {
+            User.DatabaseEntry userData = UserDatabase.FindById(userId);
+            userData ??= new() { ID = userId, RawSettings = "\n" };
+            return new(this, userData);
+        });
     }
 
     /// <summary>Tries to get the session for an id.</summary>
