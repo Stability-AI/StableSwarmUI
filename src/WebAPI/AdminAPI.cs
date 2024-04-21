@@ -236,11 +236,26 @@ public static class AdminAPI
     /// <summary>API Route to get a list of currently connected users.</summary>
     public static async Task<JObject> ListConnectedUsers(Session session)
     {
-        JArray list = new(Program.Sessions.Users.Values.Where(u => u.MsSinceLastPresent.TotalMinutes < 5 && !u.UserID.StartsWith("__")).OrderBy(u => u.UserID).Select(u => new JObject()
+        JArray sessWrangle(IEnumerable<string> addresses)
+        {
+            Dictionary<string, int> counts = [];
+            foreach (string addr in addresses)
+            {
+                counts[addr] = counts.GetValueOrDefault(addr, 0) + 1;
+            }
+            JArray result = [];
+            foreach ((string addr, int count) in counts)
+            {
+                result.Add(new JObject() { ["address"] = addr, ["count"] = count });
+            }
+            return result;
+        }
+        JArray list = new(Program.Sessions.Users.Values.Where(u => u.TimeSinceLastPresent.TotalMinutes < 3 && !u.UserID.StartsWith("__")).OrderBy(u => u.UserID).Select(u => new JObject()
         {
             ["id"] = u.UserID,
-            ["last_active_seconds"] = u.MsSinceLastUsed.TotalSeconds,
-            ["last_active"] = $"{u.MsSinceLastUsed.SimpleFormat(false, false)} ago"
+            ["last_active_seconds"] = u.TimeSinceLastUsed.TotalSeconds,
+            ["active_sessions"] = sessWrangle(u.CurrentSessions.Values.Where(s => s.TimeSinceLastUsed.TotalMinutes < 3).Select(s => s.OriginAddress)),
+            ["last_active"] = $"{u.TimeSinceLastUsed.SimpleFormat(false, false)} ago"
         }).ToArray());
         return new JObject() { ["users"] = list };
     }

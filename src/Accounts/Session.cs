@@ -31,6 +31,9 @@ public class Session : IEquatable<Session>
     /// <summary><see cref="Environment.TickCount64"/> value for the last time this session triggered a generation, updated a setting, or other 'core action'.</summary>
     public long LastUsedTime = Environment.TickCount64;
 
+    /// <summary>Originating remote IP address of the session.</summary>
+    public string OriginAddress;
+
     /// <summary>Updates the <see cref="LastUsedTime"/> to the current time.</summary>
     public void UpdateLastUsedTime()
     {
@@ -39,7 +42,7 @@ public class Session : IEquatable<Session>
     }
 
     /// <summary>Time since the last action was performed in this session.</summary>
-    public TimeSpan MsSinceLastUsed => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref LastUsedTime));
+    public TimeSpan TimeSinceLastUsed => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref LastUsedTime));
 
     /// <summary>Use "using <see cref="GenClaim"/> claim = session.Claim(image_count);" to track generation requests pending on this session.</summary>
     public GenClaim Claim(int gens = 0, int modelLoads = 0, int backendWaits = 0, int liveGens = 0)

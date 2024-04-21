@@ -73,6 +73,7 @@ public class SessionHandler
             Session sess = new()
             {
                 ID = Utilities.SecureRandomHex(SessionIDLength),
+                OriginAddress = source,
                 User = user
             };
             if (Sessions.TryAdd(sess.ID, sess))

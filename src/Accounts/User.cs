@@ -216,10 +216,10 @@ public class User
     }
 
     /// <summary>Time since the last action was performed by this user.</summary>
-    public TimeSpan MsSinceLastUsed => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref LastUsedTime));
+    public TimeSpan TimeSinceLastUsed => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref LastUsedTime));
 
     /// <summary>Time since the last time this user was seen as currently connected.</summary>
-    public TimeSpan MsSinceLastPresent => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref LastTickedPresent));
+    public TimeSpan TimeSinceLastPresent => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref LastTickedPresent));
 
     /// <summary>Returns whether this user has the given generic permission flag.</summary>
     public bool HasGenericPermission(string permName)

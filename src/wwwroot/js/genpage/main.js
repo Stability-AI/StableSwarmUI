@@ -859,9 +859,9 @@ function serverResourceLoop() {
         });
         genericRequest('ListConnectedUsers', {}, data => {
             let target = getRequiredElementById('connected_users_list');
-            let html = '<table class="simple-table"><tr><th>Name</th><th>Last Seen</th></tr>';
+            let html = '<table class="simple-table"><tr><th>Name</th><th>Last Seen</th><th>Active Sessions</th></tr>';
             for (let user of data.users) {
-                html += `<tr><td>${user.id}</td><td>${user.last_active}</td></tr>`;
+                html += `<tr><td>${user.id}</td><td>${user.last_active}</td><td>${user.active_sessions.map(sess => `${sess.count}x from ${sess.address}`).join(', ')}</td></tr>`;
             }
             html += '</table>';
             target.innerHTML = html;
