@@ -33,7 +33,11 @@ class GenerateHandler {
     gotProgress(current, overall, batchId) {
         // nothing to do here
     }
-    
+
+    hadError(msg) {
+        showError(msg);
+    }
+
     appendGenTimeFrom(time) {
         this.totalGensThisRun++;
         this.totalGenRunTime += time;
@@ -46,10 +50,10 @@ class GenerateHandler {
     doGenerate(input_overrides = {}, input_preoverrides = {}) {
         if (session_id == null) {
             if (Date.now() - time_started > 1000 * 60) {
-                showError("Cannot generate, session not started. Did the server crash?");
+                this.hadError("Cannot generate, session not started. Did the server crash?");
             }
             else {
-                showError("Cannot generate, session not started. Please wait a moment for the page to load.");
+                this.hadError("Cannot generate, session not started. Please wait a moment for the page to load.");
             }
             return;
         }
@@ -171,11 +175,13 @@ class GenerateHandler {
                         }
                     }
                 }
+            }, e => {
+                this.hadError(e);
             });
         };
         if (this.validateModel) {
             if (getRequiredElementById('current_model').value == '') {
-                showError("Cannot generate, no model selected.");
+                this.hadError("Cannot generate, no model selected.");
                 return;
             }
             setCurrentModel(() => {

@@ -615,15 +615,15 @@ textarea, input, select {
 .loading-spinner {
     display: block;
     position: relative;
-    width: 80vh;
-    height: 80vh;
+    width: 360px;
+    height: 360px;
     margin: auto;
 }
 .loading-spinner div {
     box-sizing: border-box;
     display: block;
     position: absolute;
-    top: -100%;
+    top: 0;
     left: 0;
     width: calc(100% - 64px);
     height: calc(100% - 64px);

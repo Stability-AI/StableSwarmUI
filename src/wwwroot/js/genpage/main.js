@@ -537,7 +537,7 @@ function updateGenCount() {
     }, 500);
 }
 
-function makeWSRequestT2I(url, in_data, callback) {
+function makeWSRequestT2I(url, in_data, callback, errorHandle = null) {
     makeWSRequest(url, in_data, data => {
         if (data.status) {
             updateCurrentStatusDirect(data.status);
@@ -545,7 +545,7 @@ function makeWSRequestT2I(url, in_data, callback) {
         else {
             callback(data);
         }
-    });
+    }, 0, errorHandle);
 }
 
 function doInterrupt(allSessions = false) {

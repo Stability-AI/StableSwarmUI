@@ -70,8 +70,9 @@ function showError(message) {
     container.parentNode.replaceChild(new_container, container);
 }
 
+let genericServerErrorMsg = translatable(`Failed to send request to server. Did the server crash?`);
 function genericServerError() {
-    showError('Failed to send request to server. Did the server crash?');
+    showError(genericServerErrorMsg.get());
 }
 
 let failedWSAddr = translatable(`Failed to get WebSocket address. You may be connecting to the server in an unexpected way. Please use "http" or "https" URLs.`);
@@ -118,7 +119,7 @@ function makeWSRequest(url, in_data, callback, depth = 0, errorHandle = null) {
         }
         callback(data);
     }
-    socket.onerror = errorHandle || genericServerError;
+    socket.onerror = errorHandle ? () => errorHandle(genericServerErrorMsg.get()) : genericServerError;
 }
 
 let failedCrash = translatable(`Failed to send request to server. Did the server crash?`);

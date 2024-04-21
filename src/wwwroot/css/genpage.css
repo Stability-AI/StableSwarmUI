@@ -1170,6 +1170,16 @@ body {
     height: 85vh;
     object-fit: contain;
 }
+.simpletab-workflow-header {
+    display: block;
+    text-align: center;
+    font-size: 150%;
+    font-weight: bold;
+}
+.simpletabbrowserwrapper .image-preview-text,
+.simpletabbrowserwrapper .model-descblock {
+    font-size: 100%;
+}
 .tiny-vertical-bar {
     height: calc(85vh - 1rem);
     width: 2px;

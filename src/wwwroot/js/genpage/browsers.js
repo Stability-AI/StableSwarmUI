@@ -43,6 +43,7 @@ class GenPageBrowserClass {
         this.describe = describe;
         this.select = select;
         this.folder = '';
+        this.selected = null;
         this.extraHeader = extraHeader;
         this.navCaller = this.navigate.bind(this);
         this.tree = new BrowserTreePart('', {}, false, true, null, null);
@@ -67,6 +68,7 @@ class GenPageBrowserClass {
      */
     navigate(folder) {
         this.folder = folder;
+        this.selected = null;
         this.update();
     }
 
@@ -202,7 +204,8 @@ class GenPageBrowserClass {
         else {
             span.classList.add('browser-folder-tree-part-closed');
         }
-        if (this.folder == path) {
+        let matchMe = this.selected || this.folder;
+        if (matchMe == path || `${matchMe}/` == path) {
             span.classList.add('browser-folder-tree-part-selected');
         }
         if (tree.fileData) {

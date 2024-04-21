@@ -67,7 +67,10 @@
 .input-group-header,
 .auto-input-name,
 .nav-tabs,
-.basic-button {
+.basic-button,
+.simpletab-workflow-header,
+.simpletabbrowserwrapper .image-preview-text,
+.simpletabbrowserwrapper .model-descblock {
     font-family: "Inter", sans-serif;
     font-weight: 500;
 }

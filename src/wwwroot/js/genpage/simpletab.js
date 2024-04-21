@@ -63,6 +63,7 @@ class SimpleTab {
     }
 
     generate() {
+        this.setNoImage();
         this.markLoading();
         let inputs = {};
         let elems = [...this.inputsSidebar.querySelectorAll('.auto-input')].map(i => i.querySelector('[data-param_id]'));
@@ -83,6 +84,7 @@ class SimpleTab {
 
     setImage(imgSrc) {
         this.imageElem.src = imgSrc;
+        this.imageElem.style.display = '';
     }
 
     markLoading() {
@@ -93,6 +95,11 @@ class SimpleTab {
     markDoneLoading() {
         this.loadingSpinner.style.display = 'none';
         this.imageElem.style.filter = '';
+        this.genHandler.gotProgress(-1, -1, '');
+    }
+
+    setNoImage() {
+        this.imageElem.style.display = 'none';
     }
 
     browserDescribeEntry(workflow) {
@@ -101,14 +108,19 @@ class SimpleTab {
     }
 
     browserSelectEntry(workflow) {
+        this.browser.selected = workflow.name;
+        this.browser.rerender();
         genericRequest('ComfyReadWorkflow', { name: workflow.name }, (data) => {
             let params = Object.values(JSON.parse(data.result.custom_params));
             let groupsEnable = [], groupsClose = [], runnables = [];
             let lastGroup = null;
-            for (let areaData of [[this.inputsArea, (p) => p.visible && !isParamAdvanced(p)],
-                    [this.inputsAreaAdvanced, (p) => p.visible && isParamAdvanced(p)],
-                    [this.inputsAreaHidden, (p) => !p.visible]]) {
+            for (let areaData of [[this.inputsArea, (p) => p.visible && !isParamAdvanced(p), 0],
+                    [this.inputsAreaAdvanced, (p) => p.visible && isParamAdvanced(p), 1],
+                    [this.inputsAreaHidden, (p) => !p.visible, 2]]) {
                 let html = '';
+                if (areaData[2] == 0) {
+                    html += `<div class="simpletab-workflow-header">${escapeHtml(workflow.name)}</div>`;
+                }
                 for (let param of sortParameterList(params.filter(areaData[1]))) {
                     let groupName = param.group ? param.group.name : null;
                     if (groupName != lastGroup) {
@@ -147,7 +159,7 @@ class SimpleTab {
                 }
                 areaData[0].innerHTML = html;
             }
-            this.setImage(data.result.image);
+            this.setNoImage();
             this.browser.fullContentDiv.style.display = 'none';
             this.containerDiv.style.display = 'inline-block';
             for (let group of groupsClose) {
@@ -205,6 +217,7 @@ class SimpleTabGenerateHandler extends GenerateHandler {
     resetBatchIfNeeded() {
         // No batch.
     }
+
     beforeGenRun() {
         // Nothing to do.
     }
@@ -224,13 +237,11 @@ class SimpleTabGenerateHandler extends GenerateHandler {
     setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, smoothAdd = false) {
         simpleTab.markDoneLoading();
         simpleTab.setImage(src);
-        this.gotProgress(-1, -1, batchId);
     }
 
     gotImageResult(image, metadata, batchId) {
         simpleTab.markDoneLoading();
         simpleTab.setImage(image);
-        this.gotProgress(-1, -1, batchId);
     }
 
     gotImagePreview(image, metadata, batchId) {
@@ -250,6 +261,12 @@ class SimpleTabGenerateHandler extends GenerateHandler {
         simpleTab.progressWrapper.style.display = '';
         simpleTab.progressWrapper.querySelector('.image-preview-progress-current').style.width = `${current * 100}%`;
         simpleTab.progressWrapper.querySelector('.image-preview-progress-overall').style.width = `${overall * 100}%`;
+    }
+
+    hadError(msg) {
+        simpleTab.markDoneLoading();
+        simpleTab.setNoImage();
+        super.hadError(msg);
     }
 }
 
