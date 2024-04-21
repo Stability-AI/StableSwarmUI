@@ -391,7 +391,7 @@ textarea, input, select {
     width: 100%;
 }
 .auto-file-label {
-    display: contents;
+    display: block;
 }
 .auto-file-input {
     display: none;
