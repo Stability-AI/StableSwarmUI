@@ -56,6 +56,17 @@ function comfyOnLoadCallback() {
             }
         });
         comfyReconfigureQuickload();
+        let comfyRefreshControlInterval = setInterval(() => {
+            let app = comfyFrame().contentWindow.app;
+            let origRefreshFunc = app.refreshComboInNodes.bind(app);
+            app.refreshComboInNodes = async function () {
+                await new Promise(r => {
+                    genericRequest('ComfyEnsureRefreshable', {}, () => r(), 0, () => r());
+                });
+                return await origRefreshFunc();
+            };
+            clearInterval(comfyRefreshControlInterval);
+        }, 500);
         if (getCookie('comfy_domulti') == 'true') {
             comfyEnableInterval = setInterval(() => {
                 let api = comfyFrame().contentWindow.swarmApiDirect;

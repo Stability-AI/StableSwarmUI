@@ -483,11 +483,11 @@ public class ComfyUIBackendExtension : Extension
         }
     }
 
-    public ConcurrentDictionary<string, ComfyUser> Users = new();
+    public static ConcurrentDictionary<string, ComfyUser> Users = new();
 
-    public ConcurrentDictionary<int, int> RecentlyClaimedBackends = new();
+    public static ConcurrentDictionary<int, int> RecentlyClaimedBackends = new();
 
-    public SingleValueExpiringCacheAsync<JObject> ObjectInfoReadCacher = new(() =>
+    public static SingleValueExpiringCacheAsync<JObject> ObjectInfoReadCacher = new(() =>
     {
         ComfyBackendData backend = ComfyBackendsDirect().First();
         return backend.Client.GetAsync($"{backend.Address}/object_info", Utilities.TimedCancel(TimeSpan.FromMinutes(1))).Result.Content.ReadAsStringAsync().Result.ParseToJson();

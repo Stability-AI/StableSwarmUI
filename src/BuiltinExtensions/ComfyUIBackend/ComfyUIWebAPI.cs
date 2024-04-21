@@ -21,6 +21,7 @@ public static class ComfyUIWebAPI
         API.RegisterAPICall(ComfyDeleteWorkflow);
         API.RegisterAPICall(ComfyGetGeneratedWorkflow);
         API.RegisterAPICall(DoLoraExtractionWS);
+        API.RegisterAPICall(ComfyEnsureRefreshable);
     }
 
     /// <summary>API route to save a comfy workflow object to persistent file.</summary>
@@ -134,6 +135,13 @@ public static class ComfyUIWebAPI
         string format = ComfyUIBackendExtension.ComfyBackendsDirect().FirstOrDefault().Backend.SupportedFeatures.Contains("folderbackslash") ? "\\" : "/";
         string flow = ComfyUIAPIAbstractBackend.CreateWorkflow(input, w => w, format);
         return new JObject() { ["workflow"] = flow };
+    }
+
+    /// <summary>API route to ensure that a ComfyUI refresh hit will actually do a native refresh.</summary>
+    public static async Task<JObject> ComfyEnsureRefreshable(Session session)
+    {
+        ComfyUIBackendExtension.ObjectInfoReadCacher.ForceExpire();
+        return new JObject() { ["success"] = true };
     }
 
     /// <summary>API route to extract a LoRA from two models.</summary>
