@@ -236,7 +236,7 @@ public static class AdminAPI
     /// <summary>API Route to get a list of currently connected users.</summary>
     public static async Task<JObject> ListConnectedUsers(Session session)
     {
-        JArray sessWrangle(IEnumerable<string> addresses)
+        static JArray sessWrangle(IEnumerable<string> addresses)
         {
             Dictionary<string, int> counts = [];
             foreach (string addr in addresses)
