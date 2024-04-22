@@ -394,6 +394,9 @@ function genInputs(delay_final = false) {
         let controlnetGroup = document.getElementById('input_group_content_controlnet');
         if (controlnetGroup) {
             controlnetGroup.append(createDiv(`controlnet_button_preview`, null, `<button class="basic-button" onclick="controlnetShowPreview()">Preview</button>`));
+            if (!currentBackendFeatureSet.includes('controlnetpreprocessors')) {
+                controlnetGroup.append(createDiv(`controlnet_install_preprocessors`, null, `<button class="basic-button" onclick="installControlnetPreprocessors()">Install Controlnet Preprocessors</button>`));
+            }
         }
         let revisionGroup = document.getElementById('input_group_content_revision');
         if (revisionGroup && !currentBackendFeatureSet.includes('ipadapter')) {
@@ -621,6 +624,10 @@ function hideUnsupportableParams() {
     let ipadapterInstallButton = document.getElementById('revision_install_ipadapter');
     if (ipadapterInstallButton && currentBackendFeatureSet.includes('ipadapter')) {
         ipadapterInstallButton.remove();
+    }
+    let controlnetInstallButton = document.getElementById('controlnet_install_preprocessors');
+    if (controlnetInstallButton && currentBackendFeatureSet.includes('controlnetpreprocessors')) {
+        controlnetInstallButton.remove();
     }
     let filter = getRequiredElementById('main_inputs_filter').value.toLowerCase();
     let groups = {};

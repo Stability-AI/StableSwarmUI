@@ -1289,14 +1289,14 @@ function setTitles() {
 }
 setTitles();
 
-function revisionInstallIPAdapter() {
-    if (!confirm("This will install https://github.com/cubiq/ComfyUI_IPAdapter_plus which is a third-party extension maintained by community developer 'cubiq'.\nWe cannot make any guarantees about it.\nDo you wish to install?")) {
+function doFeatureInstaller(path, author, name, button_div_id) {
+    if (!confirm(`This will install ${path} which is a third-party extension maintained by community developer '${author}'.\nWe cannot make any guarantees about it.\nDo you wish to install?`)) {
         return;
     }
-    let buttonDiv = getRequiredElementById('revision_install_ipadapter');
+    let buttonDiv = getRequiredElementById(button_div_id);
     buttonDiv.querySelector('button').disabled = true;
     buttonDiv.appendChild(createDiv('', null, 'Installing...'));
-    genericRequest('ComfyInstallFeatures', {'feature': 'ipadapter'}, data => {
+    genericRequest('ComfyInstallFeatures', {'feature': name}, data => {
         buttonDiv.appendChild(createDiv('', null, "Installed! Please wait while backends restart. If it doesn't work, you may need to restart Swarm."));
         reviseStatusBar();
         setTimeout(() => {
@@ -1309,6 +1309,14 @@ function revisionInstallIPAdapter() {
         buttonDiv.appendChild(createDiv('', null, 'Failed to install!'));
         buttonDiv.querySelector('button').disabled = false;
     });
+}
+
+function revisionInstallIPAdapter() {
+    doFeatureInstaller('https://github.com/cubiq/ComfyUI_IPAdapter_plus', 'cubiq', 'ipadapter', 'revision_install_ipadapter');
+}
+
+function installControlnetPreprocessors() {
+    doFeatureInstaller('https://https://github.com/Fannovel16/comfyui_controlnet_aux', 'Fannovel16', 'controlnet_preprocessors', 'controlnet_install_preprocessors');
 }
 
 function hideRevisionInputs() {

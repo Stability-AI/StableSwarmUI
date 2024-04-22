@@ -41,6 +41,7 @@ public class ComfyUIBackendExtension : Extension
         ["IPAdapterApply"] = "ipadapter",
         ["IPAdapterModelLoader"] = "cubiqipadapter",
         ["IPAdapterUnifiedLoader"] = "cubiqipadapterunified",
+        ["MiDaS-DepthMapPreprocessor"] = "controlnetpreprocessors",
         ["RIFE VFI"] = "frameinterps"
     };
 

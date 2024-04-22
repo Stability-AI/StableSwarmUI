@@ -159,6 +159,12 @@ public static class ComfyUIWebAPI
             _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
             return new JObject() { ["success"] = true };
         }
+        if (feature == "controlnet_preprocessors")
+        {
+            await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/Fannovel16/comfyui_controlnet_aux");
+            _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
+            return new JObject() { ["success"] = true };
+        }
         else
         {
             Logs.Warning($"User {session.User.UserID} tried to install unknown feature '{feature}'.");
