@@ -65,6 +65,17 @@ public class ComfyUIBackendExtension : Extension
         T2IParamTypes.FakeTypeProviders.Remove(DynamicParamGenerator);
     }
 
+    /// <summary>Forces all currently running comfy backends to restart.</summary>
+    public static async Task RestartAllComfyBackends()
+    {
+        List<Task> tasks = [];
+        foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends)
+        {
+            tasks.Add(Program.Backends.ReloadBackend(backend.BackendData));
+        }
+        await Task.WhenAll(tasks);
+    }
+
     public static T2IParamType FakeRawInputType = new("comfyworkflowraw", "", "", Type: T2IParamDataType.TEXT, ID: "comfyworkflowraw", FeatureFlag: "comfyui", HideFromMetadata: true), // TODO: Setting to toggle metadata
         FakeParameterMetadata = new("comfyworkflowparammetadata", "", "", Type: T2IParamDataType.TEXT, ID: "comfyworkflowparammetadata", FeatureFlag: "comfyui", HideFromMetadata: true);
 

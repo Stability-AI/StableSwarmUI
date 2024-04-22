@@ -7,7 +7,6 @@ using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -51,6 +50,21 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
 
     public static bool IsComfyModelFileEmitted = false;
 
+    /// <summary>Downloads or updates the named relevant ComfyUI custom node repo.</summary>
+    public static async Task EnsureNodeRepo(string url)
+    {
+        string nodePath = Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes");
+        string folderName = url.AfterLast('/');
+        if (!Directory.Exists($"{nodePath}/{folderName}"))
+        {
+            Process.Start(new ProcessStartInfo("git", $"clone {url}") { WorkingDirectory = nodePath }).WaitForExit();
+        }
+        else
+        {
+            Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }).WaitForExit();
+        }
+    }
+
     public static async Task EnsureNodeRepos()
     {
         try
@@ -60,23 +74,20 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             {
                 Directory.CreateDirectory(nodePath);
             }
-            async Task EnsureNodeRepo(string url)
-            {
-                string folderName = url.AfterLast('/');
-                if (!Directory.Exists($"{nodePath}/{folderName}"))
-                {
-                    Process.Start(new ProcessStartInfo("git", $"clone {url}") { WorkingDirectory = nodePath }).WaitForExit();
-                }
-                else
-                {
-                    Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }).WaitForExit();
-                }
-            }
             List<Task> tasks =
             [
                 Task.Run(async () => await EnsureNodeRepo("https://github.com/mcmonkeyprojects/sd-dynamic-thresholding")),
                 Task.Run(async () => await EnsureNodeRepo("https://github.com/Stability-AI/ComfyUI-SAI_API"))
             ];
+            await Task.WhenAll(tasks);
+            tasks.Clear();
+            foreach (string node in Directory.EnumerateDirectories(nodePath))
+            {
+                if (Directory.Exists($"{node}/.git"))
+                {
+                    tasks.Add(Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = node }).WaitForExitAsync());
+                }
+            }
             await Task.WhenAll(tasks);
         }
         catch (Exception ex)

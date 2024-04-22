@@ -1289,6 +1289,28 @@ function setTitles() {
 }
 setTitles();
 
+function revisionInstallIPAdapter() {
+    if (!confirm("This will install https://github.com/cubiq/ComfyUI_IPAdapter_plus which is a third-party extension maintained by community developer 'cubiq'.\nWe cannot make any guarantees about it.\nDo you wish to install?")) {
+        return;
+    }
+    let buttonDiv = getRequiredElementById('revision_install_ipadapter');
+    buttonDiv.querySelector('button').disabled = true;
+    buttonDiv.appendChild(createDiv('', null, 'Installing...'));
+    genericRequest('ComfyInstallFeatures', {'feature': 'ipadapter'}, data => {
+        buttonDiv.appendChild(createDiv('', null, "Installed! Please wait while backends restart. If it doesn't work, you may need to restart Swarm."));
+        reviseStatusBar();
+        setTimeout(() => {
+            buttonDiv.remove();
+            hasAppliedFirstRun = false;
+            reviseStatusBar();
+        }, 8000);
+    }, 0, (e) => {
+        showError(e);
+        buttonDiv.appendChild(createDiv('', null, 'Failed to install!'));
+        buttonDiv.querySelector('button').disabled = false;
+    });
+}
+
 function hideRevisionInputs() {
     let promptImageArea = getRequiredElementById('alt_prompt_image_area');
     promptImageArea.innerHTML = '';

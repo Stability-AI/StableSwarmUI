@@ -22,6 +22,7 @@ public static class ComfyUIWebAPI
         API.RegisterAPICall(ComfyGetGeneratedWorkflow);
         API.RegisterAPICall(DoLoraExtractionWS);
         API.RegisterAPICall(ComfyEnsureRefreshable);
+        API.RegisterAPICall(ComfyInstallFeatures);
     }
 
     /// <summary>API route to save a comfy workflow object to persistent file.</summary>
@@ -142,6 +143,27 @@ public static class ComfyUIWebAPI
     {
         ComfyUIBackendExtension.ObjectInfoReadCacher.ForceExpire();
         return new JObject() { ["success"] = true };
+    }
+
+    /// <summary>API route to ensure to install a given ComfyUI custom node feature.</summary>
+    public static async Task<JObject> ComfyInstallFeatures(Session session, string feature)
+    {
+        if (Program.Backends.RunningBackendsOfType<ComfyUISelfStartBackend>().IsEmpty())
+        {
+            Logs.Warning($"User {session.User.UserID} tried to install unknown '{feature}' but have no comfy self-start backends.");
+            return new JObject() { ["error"] = $"Cannot install Comfy features as this Swarm instance has no running ComfyUI Self-Start backends currently." };
+        }
+        if (feature == "ipadapter")
+        {
+            await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/cubiq/ComfyUI_IPAdapter_plus");
+            _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
+            return new JObject() { ["success"] = true };
+        }
+        else
+        {
+            Logs.Warning($"User {session.User.UserID} tried to install unknown feature '{feature}'.");
+            return new JObject() { ["error"] = $"Unknown feature ID {feature}." };
+        }
     }
 
     /// <summary>API route to extract a LoRA from two models.</summary>

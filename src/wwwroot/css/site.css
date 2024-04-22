@@ -710,7 +710,7 @@ select {
     max-width: calc(100% - 16px);
 }
 .auto-slider-box {
-    display: flex !important;
+    display: flex;
     flex-wrap: wrap;
 }
 .auto-slider-box .auto-slider-number {

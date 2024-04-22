@@ -395,6 +395,10 @@ function genInputs(delay_final = false) {
         if (controlnetGroup) {
             controlnetGroup.append(createDiv(`controlnet_button_preview`, null, `<button class="basic-button" onclick="controlnetShowPreview()">Preview</button>`));
         }
+        let revisionGroup = document.getElementById('input_group_content_revision');
+        if (revisionGroup && !currentBackendFeatureSet.includes('ipadapter')) {
+            revisionGroup.append(createDiv(`revision_install_ipadapter`, null, `<button class="basic-button" onclick="revisionInstallIPAdapter()">Install IP Adapter</button>`));
+        }
         hideUnsupportableParams();
         for (let runnable of postParamBuildSteps) {
             runnable();
@@ -613,6 +617,10 @@ function resetParamsToDefault(exclude = []) {
 function hideUnsupportableParams() {
     if (!gen_param_types) {
         return;
+    }
+    let ipadapterInstallButton = document.getElementById('revision_install_ipadapter');
+    if (ipadapterInstallButton && currentBackendFeatureSet.includes('ipadapter')) {
+        ipadapterInstallButton.remove();
     }
     let filter = getRequiredElementById('main_inputs_filter').value.toLowerCase();
     let groups = {};
