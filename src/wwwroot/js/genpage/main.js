@@ -805,6 +805,7 @@ let imageHistoryBrowser = new GenPageBrowserClass('image_history', listImageHist
 let hasAppliedFirstRun = false;
 let backendsWereLoadingEver = false;
 let reviseStatusInterval = null;
+let currentBackendFeatureSet = [];
 function reviseStatusBar() {
     if (session_id == null) {
         statusBarElem.innerText = 'Loading...';
@@ -812,6 +813,10 @@ function reviseStatusBar() {
         return;
     }
     genericRequest('GetCurrentStatus', {}, data => {
+        if (JSON.stringify(data.supported_features) != JSON.stringify(currentBackendFeatureSet)) {
+            currentBackendFeatureSet = data.supported_features;
+            hideUnsupportableParams();
+        }
         doesHaveGenCountUpdateQueued = false;
         updateCurrentStatusDirect(data.status);
         let status;

@@ -55,6 +55,12 @@ public class BackendHandler
     /// <summary>Getter for the current overall backend status report.</summary>
     public SingleValueExpiringCacheAsync<JObject> CurrentBackendStatus;
 
+    /// <summary>Gets a hashset of all supported features across all backends.</summary>
+    public HashSet<string> GetAllSupportedFeatures()
+    {
+        return RunningBackendsOfType<AbstractT2IBackend>().SelectMany(b => b.SupportedFeatures).ToHashSet();
+    }
+
     public BackendHandler()
     {
         RegisterBackendType<SwarmSwarmBackend>("swarmswarmbackend", "Swarm-API-Backend", "Connection StableSwarmUI to another instance of StableSwarmUI as a backend.", true, true);

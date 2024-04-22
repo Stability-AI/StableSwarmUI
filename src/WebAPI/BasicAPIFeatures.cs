@@ -398,7 +398,8 @@ public static class BasicAPIFeatures
                     ["waiting_backends"] = session.WaitingBackends,
                     ["live_gens"] = session.LiveGens
                 },
-                ["backend_status"] = backendStatus
+                ["backend_status"] = backendStatus,
+                ["supported_features"] = new JArray(Program.Backends.GetAllSupportedFeatures().ToArray())
             };
         }
     }
