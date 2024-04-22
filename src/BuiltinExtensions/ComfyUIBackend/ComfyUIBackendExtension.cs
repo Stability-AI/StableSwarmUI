@@ -40,6 +40,7 @@ public class ComfyUIBackendExtension : Extension
         ["IPAdapter"] = "ipadapter",
         ["IPAdapterApply"] = "ipadapter",
         ["IPAdapterModelLoader"] = "cubiqipadapter",
+        ["IPAdapterUnifiedLoader"] = "cubiqipadapterunified",
         ["RIFE VFI"] = "frameinterps"
     };
 
@@ -268,6 +269,10 @@ public class ComfyUIBackendExtension : Extension
             if (rawObjectInfo.TryGetValue("IPAdapterModelLoader", out JToken ipadapterCubiq))
             {
                 IPAdapterModels = IPAdapterModels.Concat(ipadapterCubiq["input"]["required"]["ipadapter_file"][0].Select(m => $"{m}")).Distinct().ToList();
+            }
+            if (rawObjectInfo.TryGetValue("IPAdapterUnifiedLoader", out JToken ipadapterCubiqUnified))
+            {
+                IPAdapterModels = IPAdapterModels.Concat(ipadapterCubiqUnified["input"]["required"]["preset"][0].Select(m => $"{m}")).Distinct().ToList();
             }
             if (rawObjectInfo.TryGetValue("GLIGENLoader", out JToken gligenLoader))
             {

@@ -127,6 +127,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     unet
                 gligen: |
                     gligen
+                ipadapter: |
+                    ipadapter
                 custom_nodes: |
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes")}
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/ExtraNodes")}

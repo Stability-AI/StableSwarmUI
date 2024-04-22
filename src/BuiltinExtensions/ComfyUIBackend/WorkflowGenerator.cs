@@ -36,6 +36,9 @@ public class WorkflowGenerator
     /// <summary>Helper tracker for Vision Models that are loaded (to skip a datadrive read from being reused every time).</summary>
     public static HashSet<string> VisionModelsValid = [];
 
+    /// <summary>Helper tracker for IP Adapter Models that are loaded (to skip a datadrive read from being reused every time).</summary>
+    public static HashSet<string> IPAdapterModelsValid = [];
+
     /// <summary>Register a new step to the workflow generator.</summary>
     public static void AddStep(Action<WorkflowGenerator> step, double priority)
     {
@@ -320,13 +323,8 @@ public class WorkflowGenerator
         {
             if (g.UserInput.TryGet(T2IParamTypes.PromptImages, out List<Image> images) && images.Any())
             {
-                void requireVisionModel(string name, string url)
+                void downloadModel(string name, string filePath, string url)
                 {
-                    if (!VisionModelsValid.Add(name))
-                    {
-                        return;
-                    }
-                    string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, name);
                     if (!File.Exists(filePath))
                     {
                         lock (ModelDownloaderLock)
@@ -349,6 +347,15 @@ public class WorkflowGenerator
                             }
                         }
                     }
+                }
+                void requireVisionModel(string name, string url)
+                {
+                    if (!VisionModelsValid.Add(name))
+                    {
+                        return;
+                    }
+                    string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, name);
+                    downloadModel(name, filePath, url);
                 }
                 string visModelName = "clip_vision_g.safetensors";
                 if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
@@ -408,14 +415,22 @@ public class WorkflowGenerator
                 if (g.UserInput.TryGet(ComfyUIBackendExtension.UseIPAdapterForRevision, out string ipAdapter) && ipAdapter != "None")
                 {
                     string ipAdapterVisionLoader = visionLoader;
-                    if ((ipAdapter.Contains("sd15") && !ipAdapter.Contains("vit-G")) || ipAdapter.Contains("vit-h"))
+                    if (g.Features.Contains("cubiqipadapterunified"))
                     {
-                        string targetName = "clip_vision_h.safetensors";
-                        requireVisionModel(targetName, "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors");
-                        ipAdapterVisionLoader = g.CreateNode("CLIPVisionLoader", new JObject()
+                        requireVisionModel("CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors");
+                        requireVisionModel("CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/image_encoder/model.safetensors");
+                    }
+                    else
+                    {
+                        if ((ipAdapter.Contains("sd15") && !ipAdapter.Contains("vit-G")) || ipAdapter.Contains("vit-h"))
                         {
-                            ["clip_name"] = targetName
-                        });
+                            string targetName = "clip_vision_h.safetensors";
+                            requireVisionModel(targetName, "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors");
+                            ipAdapterVisionLoader = g.CreateNode("CLIPVisionLoader", new JObject()
+                            {
+                                ["clip_name"] = targetName
+                            });
+                        }
                     }
                     string lastImage = g.CreateLoadImageNode(images[0], "${promptimages.0}", false);
                     for (int i = 1; i < images.Count; i++)
@@ -427,7 +442,103 @@ public class WorkflowGenerator
                             ["image2"] = new JArray() { newImg, 0 }
                         });
                     }
-                    if (g.Features.Contains("cubiqipadapter"))
+                    if (g.Features.Contains("cubiqipadapterunified"))
+                    {
+                        string presetLow = ipAdapter.ToLowerFast();
+                        bool isXl = g.CurrentCompatClass() == "stable-diffusion-xl-v1";
+                        void requireIPAdapterModel(string name, string url)
+                        {
+                            if (!IPAdapterModelsValid.Add(name))
+                            {
+                                return;
+                            }
+                            string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, "ipadapter", name);
+                            downloadModel(name, filePath, url);
+                        }
+                        if (presetLow.StartsWith("light"))
+                        {
+                            if (isXl)
+                            {
+                                throw new InvalidOperationException("IP-Adapter light model is not supported for SDXL");
+                            }
+                            else
+                            {
+                                requireIPAdapterModel("sd15_light_v11.bin", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15_light_v11.bin");
+                            }
+                        }
+                        else if (presetLow.StartsWith("standard"))
+                        {
+                            if (isXl)
+                            {
+                                requireIPAdapterModel("ip-adapter_sdxl_vit-h.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter_sdxl_vit-h.safetensors");
+                            }
+                            else
+                            {
+                                requireIPAdapterModel("ip-adapter_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15.safetensors");
+                            }
+                        }
+                        else if (presetLow.StartsWith("vit-g"))
+                        {
+                            if (isXl)
+                            {
+                                requireIPAdapterModel("ip-adapter_sdxl.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter_sdxl.safetensors");
+                            }
+                            else
+                            {
+                                requireIPAdapterModel("ip-adapter_sd15_vit-G.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15_vit-G.safetensors");
+                            }
+                        }
+                        else if (presetLow.StartsWith("plus ("))
+                        {
+                            if (isXl)
+                            {
+                                requireIPAdapterModel("ip-adapter-plus_sdxl_vit-h.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors");
+                            }
+                            else
+                            {
+                                requireIPAdapterModel("ip-adapter-plus_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-plus_sd15.safetensors");
+                            }
+                        }
+                        else if (presetLow.StartsWith("plus face"))
+                        {
+                            if (isXl)
+                            {
+                                requireIPAdapterModel("ip-adapter-plus-face_sdxl_vit-h.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus-face_sdxl_vit-h.safetensors");
+                            }
+                            else
+                            {
+                                requireIPAdapterModel("ip-adapter-plus-face_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-plus-face_sd15.safetensors");
+                            }
+                        }
+                        else if (presetLow.StartsWith("full"))
+                        {
+                            if (isXl)
+                            {
+                                throw new InvalidOperationException("IP-Adapter full face model is not supported for SDXL");
+                            }
+                            else
+                            {
+                                requireIPAdapterModel("full_face_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/full_face_sd15.safetensors");
+                            }
+                        }
+                        string ipAdapterLoader = g.CreateNode("IPAdapterUnifiedLoader", new JObject()
+                        {
+                            ["model"] = g.FinalModel,
+                            ["preset"] = ipAdapter
+                        });
+                        string ipAdapterNode = g.CreateNode("IPAdapter", new JObject()
+                        {
+                            ["model"] = new JArray() { ipAdapterLoader, 0 },
+                            ["ipadapter"] = new JArray() { ipAdapterLoader, 1 },
+                            ["image"] = new JArray() { lastImage, 0 },
+                            ["weight"] = g.UserInput.Get(ComfyUIBackendExtension.IPAdapterWeight, 1),
+                            ["start_at"] = 0.0,
+                            ["end_at"] = 1.0,
+                            ["weight_type"] = "standard" // TODO: ...???
+                        });
+                        g.FinalModel = [$"{ipAdapterNode}", 0];
+                    }
+                    else if (g.Features.Contains("cubiqipadapter"))
                     {
                         string ipAdapterLoader = g.CreateNode("IPAdapterModelLoader", new JObject()
                         {
