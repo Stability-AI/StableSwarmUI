@@ -21,7 +21,8 @@
 - `[width]`: the Width parameter
 - `[height]`: the Height parameter
 - `[steps]`: the Steps number parameter
-- `[model]`: the name of the model
+- `[model]`: the filename of the model
+- `[model_title]`: the metadata title of the model
 - `[user_name]`: the name of the user
 - `[batch_id]`: the index # of this image within the batch
 - `[some parameter name here]`: the value of the parameter named. Must have exact parameter name. For example `[refinermodel]` will get you the name of the refiner model.

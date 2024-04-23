@@ -252,6 +252,7 @@ public class User
                 "height" => $"{user_input.GetImageHeight()}",
                 "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
                 "model" => user_input.Get(T2IParamTypes.Model)?.Name ?? "unknown",
+                "model_title" => user_input.Get(T2IParamTypes.Model)?.Metadata?.Title ?? "unknown",
                 "batch_id" => $"{batchIndex}",
                 "user_name" => UserID,
                 "number" => "[number]",
