@@ -213,13 +213,13 @@ function triggerChangeFor(elem) {
     }
 }
 
-function textPromptDoCount(elem, countElem = null) {
+function textPromptDoCount(elem, countElem = null, prefix = '') {
     let tokenCount = countElem ?? elem.parentElement.querySelector('.auto-input-prompt-tokencount');
     function countTokens() {
         elem.dataset.has_token_count_running = true;
         genericRequest('CountTokens', { text: elem.value, skipPromptSyntax: true }, data => {
             let chunks = Math.max(75, Math.ceil(data.count / 75) * 75);
-            tokenCount.innerText = `${data.count}/${chunks}`;
+            tokenCount.innerText = `${prefix}${data.count}/${chunks}`;
             delete elem.dataset.has_token_count_running;
             if (elem.dataset.needs_token_recount) {
                 delete elem.dataset.needs_token_recount;

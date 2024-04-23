@@ -1194,11 +1194,19 @@ function pageSizer() {
         setPageBars();
     });
     altNegText.addEventListener('input', (e) => {
-        let inputPrompt = document.getElementById('input_negativeprompt');
-        if (inputPrompt) {
-            inputPrompt.value = altNegText.value;
+        let inputNegPrompt = document.getElementById('input_negativeprompt');
+        if (inputNegPrompt) {
+            inputNegPrompt.value = altNegText.value;
         }
         setCookie(`lastparam_input_negativeprompt`, altNegText.value, 0.25);
+        let negTokCount = getRequiredElementById('alt_negtext_tokencount');
+        if (altNegText.value == '') {
+            negTokCount.style.display = 'none';
+        }
+        else {
+            negTokCount.style.display = '';
+        }
+        textPromptDoCount(altNegText, negTokCount, ', Neg: ');
         monitorPromptChangeForEmbed(altNegText.value, 'negative');
     });
     altNegText.addEventListener('input', () => {
