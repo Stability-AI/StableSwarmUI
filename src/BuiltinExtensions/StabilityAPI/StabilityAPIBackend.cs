@@ -110,6 +110,24 @@ public class StabilityAPIBackend : AbstractT2IBackend
         Logs.Info($"StabilityAPI balance: {Credits}");
     }
 
+    public async Task<JObject> PostFormData(string url, JObject obj)
+    {
+        using (var formData = new MultipartFormDataContent())
+        {
+            // Add data to the form, ensuring each part has a 'name' attribute.
+            foreach (var property in obj.Properties())
+            {
+                formData.Add(new StringContent(property.Value.ToString()), "\"" + property.Name + "\"");
+            }
+
+            HttpResponseMessage response = await WebClient.PostAsync(url, formData);
+            Console.WriteLine($"Response: {response}"); 
+            string responseContent = await response.Content.ReadAsStringAsync();
+            return JObject.Parse(responseContent);
+        }
+    }
+
+
     public override async Task<Image[]> Generate(T2IParamInput user_input)
     {
         user_input.ProcessPromptEmbeds(x => throw new InvalidDataException("Cannot use embeddings with StabilityAPI")); 
@@ -140,14 +158,15 @@ public class StabilityAPIBackend : AbstractT2IBackend
         }
         JObject obj = new()
         {
-            ["cfg_scale"] = user_input.Get(T2IParamTypes.CFGScale),
-            ["height"] = user_input.GetImageHeight(),
-            ["width"] = user_input.Get(T2IParamTypes.Width),
-            ["samples"] = 1,
-            ["steps"] = user_input.Get(T2IParamTypes.Steps),
+            // ["cfg_scale"] = user_input.Get(T2IParamTypes.CFGScale),
+            // ["height"] = user_input.GetImageHeight(),
+            // ["width"] = user_input.Get(T2IParamTypes.Width),
+            // ["samples"] = 1,
+            // ["steps"] = user_input.Get(T2IParamTypes.Steps),
             // ["sampler"] = user_input.Get(StabilityAPIExtension.SamplerParam) ?? "K_EULER",
-            ["text_prompts"] = prompts,
-            ["seed"] = user_input.Get(T2IParamTypes.Seed)
+            // ["text_prompts"] = prompts,
+            ["prompt"] = "flying car"
+            // ["seed"] = user_input.Get(T2IParamTypes.Seed)
         };
         T2IModel model = user_input.Get(T2IParamTypes.Model);
         string sapiEngineForModel = model.ModelClass?.ID switch
@@ -161,11 +180,13 @@ public class StabilityAPIBackend : AbstractT2IBackend
             _ => "stable-diffusion-v1-5"
         };
         string engine = user_input.Get(StabilityAPIExtension.EngineParam, sapiEngineForModel);
+        Console.WriteLine($"Using engine: {engine}");
         // TODO: Model tracking.
         JObject response = null;
         try
         {
-            response = await WebClient.PostJson($"{Settings.Endpoint}/generation/{engine}/text-to-image", obj);
+            response = await PostFormData($"{Settings.Endpoint}/stable-image/generate/core", obj);
+            Console.WriteLine($"Response: {response}"); 
             if (!response.ContainsKey("artifacts") && response.TryGetValue("message", out JToken message))
             {
                 throw new InvalidDataException($"StabilityAPI refused to generate: {message}");
