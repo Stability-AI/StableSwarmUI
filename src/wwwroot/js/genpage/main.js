@@ -806,13 +806,19 @@ let hasAppliedFirstRun = false;
 let backendsWereLoadingEver = false;
 let reviseStatusInterval = null;
 let currentBackendFeatureSet = [];
+let lastStatusRequestPending = 0;
 function reviseStatusBar() {
+    if (lastStatusRequestPending + 20 * 1000 > Date.now()) {
+        return;
+    }
     if (session_id == null) {
         statusBarElem.innerText = 'Loading...';
         statusBarElem.className = `top-status-bar status-bar-warn`;
         return;
     }
+    lastStatusRequestPending = Date.now();
     genericRequest('GetCurrentStatus', {}, data => {
+        lastStatusRequestPending = 0;
         if (JSON.stringify(data.supported_features) != JSON.stringify(currentBackendFeatureSet)) {
             currentBackendFeatureSet = data.supported_features;
             hideUnsupportableParams();
