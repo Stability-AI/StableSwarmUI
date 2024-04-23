@@ -123,7 +123,6 @@ public class StabilityAPIBackend : AbstractT2IBackend
             }
 
             HttpResponseMessage response = await WebClient.PostAsync(url, formData);
-            Console.WriteLine($"Response: {response}"); 
             string responseContent = await response.Content.ReadAsStringAsync();
             return JObject.Parse(responseContent);
         }
@@ -189,23 +188,24 @@ public class StabilityAPIBackend : AbstractT2IBackend
         {
             response = await PostFormData($"{Settings.Endpoint}/stable-image/generate/core", obj);
             Console.WriteLine($"Response: {response}"); 
-            if (!response.ContainsKey("artifacts") && response.TryGetValue("message", out JToken message))
-            {
-                throw new InvalidDataException($"StabilityAPI refused to generate: {message}");
-            }
+            // if (!response.ContainsKey("artifacts") && response.TryGetValue("message", out JToken message))
+            // {
+            //     throw new InvalidDataException($"StabilityAPI refused to generate: {message}");
+            // }
             List<Image> images = [];
-            foreach (JObject img in response["artifacts"].Cast<JObject>())
-            {
-                if (img["finishReason"].ToString() == "ERROR")
-                {
-                    Logs.Error($"StabilityAPI returned error for request.");
-                }
-                else
-                {
-                    images.Add(new(img["base64"].ToString(), Image.ImageType.IMAGE, "png"));
-                }
-            }
-            _ = Utilities.RunCheckedTask(() => UpdateBalance().Wait());
+            images.Add(new(response["image"].ToString(), Image.ImageType.IMAGE, "png"));
+            // foreach (JObject img in response["artifacts"].Cast<JObject>())
+            // {
+            //     if (img["finishReason"].ToString() == "ERROR")
+            //     {
+            //         Logs.Error($"StabilityAPI returned error for request.");
+            //     }
+            //     else
+            //     {
+            //         images.Add(new(img["base64"].ToString(), Image.ImageType.IMAGE, "png"));
+            //     }
+            // }
+            // _ = Utilities.RunCheckedTask(() => UpdateBalance().Wait());
             return [.. images];
         }
         catch (Exception ex)
