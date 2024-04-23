@@ -5,6 +5,7 @@
 - [Presets](/docs/Presets.md) for info about presets, and a download of an official list of high quality SDXL presets.
 - [Advanced usage](/docs/Advanced%20Usage.md) for various examples of advanced usages and explanations of them.
 - [Model Support](/docs/Model%20Support.md) for details about support of different model types.
+- [Autocompletions](/docs/Autocompletions.md) for details about the prompt autocompletions engine.
 - TODO: Settings
 - TODO: Account system
 - [Command line arguments](/docs/Command%20Line%20Arguments.md) describes the available command line arguments in detail.

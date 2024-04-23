@@ -1193,12 +1193,6 @@ class PromptTabCompleteClass {
             let apply = name;
             let isClickable = true;
             let index = lastBrace;
-            if (val.startsWith(`<raw>`)) {
-                name = val.substring(5);
-                desc = '';
-                apply = name;
-                index = wordIndex;
-            }
             if (typeof val == 'object') {
                 [name, desc] = val;
                 if (this.prefixes[name].selfStanding) {
@@ -1207,6 +1201,12 @@ class PromptTabCompleteClass {
                 else {
                     apply = `<${name}:`;
                 }
+            }
+            else if (val.startsWith(`<raw>`)) {
+                name = val.substring(5);
+                desc = '';
+                apply = name;
+                index = wordIndex;
             }
             else if (val.startsWith('\n')) {
                 isClickable = false;
