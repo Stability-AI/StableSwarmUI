@@ -160,12 +160,12 @@ public class StabilityAPIBackend : AbstractT2IBackend
             "stable-diffusion-v2-512" => "stable-diffusion-512-v2-1",
             _ => "stable-diffusion-v1-5"
         };
-        // string engine = user_input.Get(StabilityAPIExtension.EngineParam, sapiEngineForModel);
+        string engine = user_input.Get(StabilityAPIExtension.EngineParam, sapiEngineForModel);
         // TODO: Model tracking.
         JObject response = null;
         try
         {
-            response = await WebClient.PostJson($"{Settings.Endpoint}/generation/text-to-image", obj);
+            response = await WebClient.PostJson($"{Settings.Endpoint}/generation/{engine}/text-to-image", obj);
             if (!response.ContainsKey("artifacts") && response.TryGetValue("message", out JToken message))
             {
                 throw new InvalidDataException($"StabilityAPI refused to generate: {message}");
