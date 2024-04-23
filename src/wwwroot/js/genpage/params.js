@@ -1102,6 +1102,8 @@ class PromptTabCompleteClass {
         this.registerPrefix('break', 'Split this prompt across multiple lines of conditioning to the model (helps separate concepts for long prompts).', (prefix) => {
             return [];
         }, true);
+        this.lastWord = null;
+        this.lastResults = null;
     }
 
     enableFor(box) {
@@ -1133,18 +1135,39 @@ class PromptTabCompleteClass {
         let word = prompt.substring(this.findLastWordIndex(prompt));
         let baseList = [];
         if (word.length > 1 && autoCompletionsList) {
-            let completionSet = autoCompletionsList[word[0]];
+            let completionSet;
+            if (this.lastWord && word.startsWith(this.lastWord)) {
+                completionSet = this.lastResults;
+            }
+            else {
+                completionSet = autoCompletionsOptimize ? autoCompletionsList[word[0]] : autoCompletionsList['all'];
+            }
             let wordLow = word.toLowerCase();
+            let rawMatchSet = { low: [], raw: [] };
             if (completionSet) {
+                let startWithList = [];
+                let containList = [];
                 for (let i = 0; i < completionSet.low.length; i++) {
-                    if (completionSet.low[i].startsWith(wordLow)) {
-                        baseList.push(`<raw>${completionSet.raw[i]}`);
-                        if (baseList.length > 30) {
-                            break;
+                    if (completionSet.low[i].includes(wordLow)) {
+                        if (completionSet.low[i].startsWith(wordLow)) {
+                            startWithList.push(completionSet.raw[i]);
                         }
+                        else {
+                            containList.push(completionSet.raw[i]);
+                        }
+                        rawMatchSet.low.push(completionSet.low[i]);
+                        rawMatchSet.raw.push(completionSet.raw[i]);
                     }
                 }
+                startWithList.sort((a, b) => a.length - b.length || a.localeCompare(b));
+                containList.sort((a, b) => a.length - b.length || a.localeCompare(b));
+                baseList = startWithList.concat(containList).map(w => `<raw>${w}`);
+                if (baseList.length > 50) {
+                    baseList = baseList.slice(0, 50);
+                }
             }
+            this.lastWord = word;
+            this.lastResults = rawMatchSet;
         }
         let lastBrace = prompt.lastIndexOf('<');
         if (lastBrace == -1) {

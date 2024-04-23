@@ -23,6 +23,7 @@ let lastHistoryImage = null, lastHistoryImageDiv = null;
 let currentMetadataVal = null, currentImgSrc = null;
 
 let autoCompletionsList = null;
+let autoCompletionsOptimize = false;
 
 let mainGenHandler = new GenerateHandler();
 
@@ -1229,6 +1230,8 @@ function loadUserData(callback) {
     genericRequest('GetMyUserData', {}, data => {
         autoCompletionsList = {};
         if (data.autocompletions) {
+            let allSet = { low: [], raw: [] };
+            autoCompletionsList['all'] = allSet;
             for (let val of data.autocompletions) {
                 let datalist = autoCompletionsList[val[0]];
                 if (!datalist) {
@@ -1237,6 +1240,8 @@ function loadUserData(callback) {
                 }
                 datalist.low.push(val.toLowerCase());
                 datalist.raw.push(val);
+                allSet.low.push(val.toLowerCase());
+                allSet.raw.push(val);
             }
         }
         else {
