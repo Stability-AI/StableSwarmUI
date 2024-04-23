@@ -1576,12 +1576,25 @@ public class WorkflowGenerator
     public JArray CreateConditioningDirect(string prompt, JArray clip, T2IModel model, bool isPositive, string id = null)
     {
         string node;
-        if (model is not null && model.ModelClass is not null && model.ModelClass.ID == "stable-diffusion-xl-v1-base")
+        double mult = isPositive ? 1.5 : 0.8;
+        int width = UserInput.Get(T2IParamTypes.Width, 1024);
+        int height = UserInput.GetImageHeight();
+        bool enhance = UserInput.Get(T2IParamTypes.ModelSpecificEnhancements, true);
+        if (Features.Contains("variation_seed") && prompt.Contains('[') && prompt.Contains(']'))
         {
-            double mult = isPositive ? 1.5 : 0.8;
-            int width = UserInput.Get(T2IParamTypes.Width, 1024);
-            int height = UserInput.GetImageHeight();
-            bool enhance = UserInput.Get(T2IParamTypes.ModelSpecificEnhancements, true);
+            node = CreateNode("SwarmClipTextEncodeAdvanced", new JObject()
+            {
+                ["clip"] = clip,
+                ["steps"] = UserInput.Get(T2IParamTypes.Steps),
+                ["prompt"] = prompt,
+                ["width"] = enhance ? (int)Utilities.RoundToPrecision(width * mult, 64) : width,
+                ["height"] = enhance ? (int)Utilities.RoundToPrecision(height * mult, 64) : height,
+                ["target_width"] = width,
+                ["target_height"] = height
+            }, id);
+        }
+        else if (model is not null && model.ModelClass is not null && model.ModelClass.ID == "stable-diffusion-xl-v1-base")
+        {
             node = CreateNode("CLIPTextEncodeSDXL", new JObject()
             {
                 ["clip"] = clip,
