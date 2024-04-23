@@ -7,7 +7,7 @@ namespace StableSwarmUI.Builtin_StabilityAPIExtension;
 
 public class StabilityAPIExtension : Extension
 {
-    public static List<string> Engines = ["stable-diffusion-v1-5"]; // Auto populated when it loads.
+    public static List<string> Engines = ["sd3", "sd3-turbo"];
 
     public static LockObject TrackerLock = new();
 
@@ -20,8 +20,8 @@ public class StabilityAPIExtension : Extension
     {
         T2IParamGroup sapiGroup = new("StabilityAPI", Toggles: false, Open: true);
         Program.Backends.RegisterBackendType<StabilityAPIBackend>("stability_api", "StabilityAPI", "A backend powered by the Stability API.", true);
-        EngineParam = T2IParamTypes.Register<string>(new("[SAPI] Engine", "Engine for StabilityAPI to use.",
-            "stable-diffusion-v1-5", Toggleable: true, FeatureFlag: "sapi", Group: sapiGroup, GetValues: (_) => Engines
+        EngineParam = T2IParamTypes.Register<string>(new("[SAPI] Model", "Model for StabilityAPI to use.",
+            "sd3", Toggleable: false, FeatureFlag: "sapi", Group: sapiGroup, GetValues: (_) => Engines
             ));
     }
 }
