@@ -286,6 +286,10 @@ public class ComfyUIBackendExtension : Extension
             {
                 IPAdapterModels = IPAdapterModels.Concat(ipadapterCubiq["input"]["required"]["ipadapter_file"][0].Select(m => $"{m}")).Distinct().ToList();
             }
+            if (rawObjectInfo.TryGetValue("IPAdapterUnifiedLoaderFaceID", out JToken ipadapterCubiqUnifiedFace))
+            {
+                IPAdapterModels = IPAdapterModels.Concat(ipadapterCubiqUnifiedFace["input"]["required"]["preset"][0].Select(m => $"{m}")).Distinct().ToList();
+            }
             if (rawObjectInfo.TryGetValue("GLIGENLoader", out JToken gligenLoader))
             {
                 GligenModels = GligenModels.Concat(gligenLoader["input"]["required"]["gligen_name"][0].Select(m => $"{m}")).Distinct().ToList();

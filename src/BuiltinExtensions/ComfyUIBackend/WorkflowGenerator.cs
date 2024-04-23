@@ -452,80 +452,102 @@ public class WorkflowGenerator
                             {
                                 return;
                             }
-                            string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, "ipadapter", name);
+                            string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, $"ipadapter/{name}");
+                            downloadModel(name, filePath, url);
+                        }
+                        void requireLora(string name, string url)
+                        {
+                            if (!IPAdapterModelsValid.Add($"LORA-{name}"))
+                            {
+                                return;
+                            }
+                            string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDLoraFolder, $"ipadapter/{name}");
                             downloadModel(name, filePath, url);
                         }
                         if (presetLow.StartsWith("light"))
                         {
-                            if (isXl)
-                            {
-                                throw new InvalidOperationException("IP-Adapter light model is not supported for SDXL");
-                            }
-                            else
-                            {
-                                requireIPAdapterModel("sd15_light_v11.bin", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15_light_v11.bin");
-                            }
+                            if (isXl) { throw new InvalidOperationException("IP-Adapter light model is not supported for SDXL"); }
+                            else { requireIPAdapterModel("sd15_light_v11.bin", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15_light_v11.bin"); }
                         }
                         else if (presetLow.StartsWith("standard"))
                         {
-                            if (isXl)
-                            {
-                                requireIPAdapterModel("ip-adapter_sdxl_vit-h.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter_sdxl_vit-h.safetensors");
-                            }
-                            else
-                            {
-                                requireIPAdapterModel("ip-adapter_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15.safetensors");
-                            }
+                            if (isXl) { requireIPAdapterModel("ip-adapter_sdxl_vit-h.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter_sdxl_vit-h.safetensors"); }
+                            else { requireIPAdapterModel("ip-adapter_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15.safetensors"); }
                         }
                         else if (presetLow.StartsWith("vit-g"))
                         {
-                            if (isXl)
-                            {
-                                requireIPAdapterModel("ip-adapter_sdxl.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter_sdxl.safetensors");
-                            }
-                            else
-                            {
-                                requireIPAdapterModel("ip-adapter_sd15_vit-G.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15_vit-G.safetensors");
-                            }
+                            if (isXl) { requireIPAdapterModel("ip-adapter_sdxl.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter_sdxl.safetensors"); }
+                            else { requireIPAdapterModel("ip-adapter_sd15_vit-G.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter_sd15_vit-G.safetensors"); }
                         }
                         else if (presetLow.StartsWith("plus ("))
                         {
-                            if (isXl)
-                            {
-                                requireIPAdapterModel("ip-adapter-plus_sdxl_vit-h.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors");
-                            }
-                            else
-                            {
-                                requireIPAdapterModel("ip-adapter-plus_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-plus_sd15.safetensors");
-                            }
+                            if (isXl) { requireIPAdapterModel("ip-adapter-plus_sdxl_vit-h.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors"); }
+                            else { requireIPAdapterModel("ip-adapter-plus_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-plus_sd15.safetensors"); }
                         }
                         else if (presetLow.StartsWith("plus face"))
                         {
-                            if (isXl)
-                            {
-                                requireIPAdapterModel("ip-adapter-plus-face_sdxl_vit-h.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus-face_sdxl_vit-h.safetensors");
-                            }
-                            else
-                            {
-                                requireIPAdapterModel("ip-adapter-plus-face_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-plus-face_sd15.safetensors");
-                            }
+                            if (isXl) { requireIPAdapterModel("ip-adapter-plus-face_sdxl_vit-h.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus-face_sdxl_vit-h.safetensors"); }
+                            else { requireIPAdapterModel("ip-adapter-plus-face_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-plus-face_sd15.safetensors"); }
                         }
                         else if (presetLow.StartsWith("full"))
                         {
+                            if (isXl) { throw new InvalidOperationException("IP-Adapter full face model is not supported for SDXL"); }
+                            else { requireIPAdapterModel("full_face_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/full_face_sd15.safetensors"); }
+                        }
+                        else if (presetLow == "faceid")
+                        {
                             if (isXl)
                             {
-                                throw new InvalidOperationException("IP-Adapter full face model is not supported for SDXL");
+                                requireIPAdapterModel("ip-adapter-faceid_sdxl.bin", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin");
+                                requireLora("ip-adapter-faceid_sdxl_lora.safetensors", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl_lora.safetensors");
                             }
                             else
                             {
-                                requireIPAdapterModel("full_face_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/full_face_sd15.safetensors");
+                                requireIPAdapterModel("ip-adapter-faceid_sd15.bin", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sd15.bin");
+                                requireLora("ip-adapter-faceid_sd15_lora.safetensors", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sd15_lora.safetensors");
                             }
                         }
-                        string ipAdapterLoader = g.CreateNode("IPAdapterUnifiedLoader", new JObject()
+                        else if (presetLow.StartsWith("faceid plus -"))
                         {
-                            ["model"] = g.FinalModel,
-                            ["preset"] = ipAdapter
-                        });
+                            if (isXl) { throw new InvalidOperationException("IP-Adapter FaceID plus model is not supported for SDXL"); }
+                            else
+                            {
+                                requireIPAdapterModel("ip-adapter-faceid-plus_sd15.bin", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plus_sd15.bin");
+                                requireLora("ip-adapter-faceid-plus_sd15_lora.safetensors", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plus_sd15_lora.safetensors");
+                            }
+                        }
+                        else if (presetLow.StartsWith("faceid plus v2"))
+                        {
+                            if (isXl)
+                            {
+                                requireIPAdapterModel("ip-adapter-faceid-plusv2_sdxl.bin", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sdxl.bin");
+                                requireLora("ip-adapter-faceid-plusv2_sdxl_lora.safetensors", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sdxl_lora.safetensors");
+                            }
+                            else
+                            {
+                                requireIPAdapterModel("ip-adapter-faceid-plusv2_sd15.bin", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sd15.bin");
+                                requireLora("ip-adapter-faceid-plusv2_sd15_lora.safetensors", "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sd15_lora.safetensors");
+                            }
+                        }
+                        string ipAdapterLoader;
+                        if (presetLow.StartsWith("faceid"))
+                        {
+                            ipAdapterLoader = g.CreateNode("IPAdapterUnifiedLoaderFaceID", new JObject()
+                            {
+                                ["model"] = g.FinalModel,
+                                ["preset"] = ipAdapter,
+                                ["lora_strength"] = 0.6,
+                                ["provider"] = "CPU"
+                            });
+                        }
+                        else
+                        {
+                            ipAdapterLoader = g.CreateNode("IPAdapterUnifiedLoader", new JObject()
+                            {
+                                ["model"] = g.FinalModel,
+                                ["preset"] = ipAdapter
+                            });
+                        }
                         string ipAdapterNode = g.CreateNode("IPAdapter", new JObject()
                         {
                             ["model"] = new JArray() { ipAdapterLoader, 0 },

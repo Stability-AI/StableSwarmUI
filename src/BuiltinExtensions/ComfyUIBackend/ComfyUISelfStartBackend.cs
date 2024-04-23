@@ -222,6 +222,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 {
                     return;
                 }
+                Logs.Debug($"Installing '{pipName}' for ComfyUI...");
                 Process p = DoPythonCall($"-s -m pip install {pipName}");
                 NetworkBackendUtils.ReportLogsFromProcess(p, $"ComfyUI (Install {pipName})", "");
                 await p.WaitForExitAsync(Program.GlobalProgramCancel);
@@ -230,6 +231,20 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             await install("rembg", "rembg");
             await install("opencv_python_headless", "opencv-python-headless");
             await install("imageio_ffmpeg", "imageio-ffmpeg");
+            if (Directory.Exists($"{ComfyUIBackendExtension.Folder}/DLNodes/ComfyUI_IPAdapter_plus"))
+            {
+                // FaceID IPAdapter models need these, really inconvenient to make dependencies conditional, so...
+                await install("Cython", "cython");
+                if (File.Exists($"{lib}/../python311.dll"))
+                {
+                    // TODO: This is deeply cursed. This is published by the comfyui-ReActor-node developer so at least it's not a complete rando, but, jeesh. Insightface please fix your pip package.
+                    await install("insightface", "https://github.com/Gourieff/Assets/raw/main/Insightface/insightface-0.7.3-cp311-cp311-win_amd64.whl");
+                }
+                else
+                {
+                    await install("insightface", "insightface");
+                }
+            }
         }
         await NetworkBackendUtils.DoSelfStart(settings.StartScript, this, $"ComfyUI-{BackendData.ID}", $"backend-{BackendData.ID}", settings.GPU_ID, settings.ExtraArgs.Trim() + " --port {PORT}" + addedArgs, InitInternal, (p, r) => { Port = p; RunningProcess = r; });
     }
