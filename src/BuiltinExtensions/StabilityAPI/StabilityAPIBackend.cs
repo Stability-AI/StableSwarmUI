@@ -52,7 +52,6 @@ public class StabilityAPIBackend : AbstractT2IBackend
         //     Status = BackendStatus.DISABLED;
         //     return;
         // }
-        // await RefreshEngines();
         Status = BackendStatus.RUNNING;
     }
 
