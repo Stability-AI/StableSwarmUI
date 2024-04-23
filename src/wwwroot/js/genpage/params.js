@@ -1065,6 +1065,9 @@ class PromptTabCompleteClass {
         this.registerPrefix('random[2-4]', 'Selects multiple options from a set of random words to include', (prefix) => {
             return ['\nSpecify a comma-separated list of words to choose from, like "<random[2]:cat,dog,elephant>". You can use "||" instead of "," if you need to include commas in your values. You can use eg "1-5" to pick a random number in a range. Put a comma in the input (eg "random[2,]:") to make the output have commas too.'];
         });
+        this.registerPrefix('alternate', 'Cause multiple different words or phrases to be alternated between.', (prefix) => {
+            return ['\nSpecify a comma-separated list of words to choose from, like "<alternate:cat,dog>". You can use "||" instead of "," if you need to include commas in your values.'];
+        });
         this.registerPrefix('wildcard', 'Select a random line from a wildcard file (presaved list of options)', (prefix) => {
             let prefixLow = prefix.toLowerCase();
             return allWildcards.filter(w => w.toLowerCase().includes(prefixLow));

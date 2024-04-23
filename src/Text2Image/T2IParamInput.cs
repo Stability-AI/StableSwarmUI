@@ -158,6 +158,18 @@ public class T2IParamInput
             }
             return longestStr;
         };
+        PromptTagProcessors["alternate"] = (data, context) =>
+        {
+            string separator = data.Contains("||") ? "||" : (data.Contains('|') ? "|" : ",");
+            string[] rawVals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (rawVals.Length == 0)
+            {
+                Logs.Warning($"Alternate input '{data}' is empty and will be ignored.");
+                return null;
+            }
+            return $"[{rawVals.JoinString("|")}]";
+        };
+        PromptTagLengthEstimators["alternate"] = PromptTagLengthEstimators["random"];
         PromptTagProcessors["wildcard"] = (data, context) =>
         {
             (int count, string partSeparator) = InterpretPredataForRandom("random", context.PreData, data);
