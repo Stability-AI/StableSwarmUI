@@ -1230,18 +1230,18 @@ function loadUserData(callback) {
     genericRequest('GetMyUserData', {}, data => {
         autoCompletionsList = {};
         if (data.autocompletions) {
-            let allSet = { low: [], raw: [] };
+            let allSet = [];
             autoCompletionsList['all'] = allSet;
             for (let val of data.autocompletions) {
+                let split = val.split(',');
                 let datalist = autoCompletionsList[val[0]];
+                let entry = { low: split[0].toLowerCase(), raw: val };
                 if (!datalist) {
-                    datalist = { low: [], raw: [] };
+                    datalist = [];
                     autoCompletionsList[val[0]] = datalist;
                 }
-                datalist.low.push(val.toLowerCase());
-                datalist.raw.push(val);
-                allSet.low.push(val.toLowerCase());
-                allSet.raw.push(val);
+                datalist.push(entry);
+                allSet.push(entry);
             }
         }
         else {

@@ -651,6 +651,24 @@ textarea, input, select {
         transform: rotate(360deg);
     }
 }
+.tag-type-0 {
+    color: color-mix(in srgb, var(--text) 70%, #009be6) !important;
+}
+.tag-type-1 {
+    color: color-mix(in srgb, var(--text) 70%, #ff8a8b) !important;
+}
+.tag-type-2 {
+    color: color-mix(in srgb, var(--text) 70%, #009b9b) !important;
+}
+.tag-type-3 {
+    color: color-mix(in srgb, var(--text) 70%, #c797ff) !important;
+}
+.tag-type-4 {
+    color: color-mix(in srgb, var(--text) 70%, #35c64a) !important;
+}
+.tag-type-5 {
+    color: color-mix(in srgb, var(--text) 70%, #ead084) !important;
+}
 
 
 

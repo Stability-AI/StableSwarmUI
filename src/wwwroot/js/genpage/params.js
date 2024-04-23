@@ -1143,25 +1143,25 @@ class PromptTabCompleteClass {
                 completionSet = autoCompletionsOptimize ? autoCompletionsList[word[0]] : autoCompletionsList['all'];
             }
             let wordLow = word.toLowerCase();
-            let rawMatchSet = { low: [], raw: [] };
+            let rawMatchSet = [];
             if (completionSet) {
                 let startWithList = [];
                 let containList = [];
-                for (let i = 0; i < completionSet.low.length; i++) {
-                    if (completionSet.low[i].includes(wordLow)) {
-                        if (completionSet.low[i].startsWith(wordLow)) {
-                            startWithList.push(completionSet.raw[i]);
+                for (let i = 0; i < completionSet.length; i++) {
+                    let entry = completionSet[i];
+                    if (entry.low.includes(wordLow)) {
+                        if (entry.low.startsWith(wordLow)) {
+                            startWithList.push(entry);
                         }
                         else {
-                            containList.push(completionSet.raw[i]);
+                            containList.push(entry);
                         }
-                        rawMatchSet.low.push(completionSet.low[i]);
-                        rawMatchSet.raw.push(completionSet.raw[i]);
+                        rawMatchSet.push(entry);
                     }
                 }
-                startWithList.sort((a, b) => a.length - b.length || a.localeCompare(b));
-                containList.sort((a, b) => a.length - b.length || a.localeCompare(b));
-                baseList = startWithList.concat(containList).map(w => `<raw>${w}`);
+                startWithList.sort((a, b) => a.low.length - b.low.length || a.low.localeCompare(b.low));
+                containList.sort((a, b) => a.low.length - b.low.length || a.low.localeCompare(b.low));
+                baseList = startWithList.concat(containList).map(w => `<raw>${w.raw}`);
                 if (baseList.length > 50) {
                     baseList = baseList.slice(0, 50);
                 }
@@ -1216,6 +1216,7 @@ class PromptTabCompleteClass {
             let apply = name;
             let isClickable = true;
             let index = lastBrace;
+            let className = null;
             if (typeof val == 'object') {
                 [name, desc] = val;
                 if (this.prefixes[name].selfStanding) {
@@ -1226,8 +1227,13 @@ class PromptTabCompleteClass {
                 }
             }
             else if (val.startsWith(`<raw>`)) {
-                name = val.substring(5);
+                name = val.substring(`<raw>`.length);
                 desc = '';
+                let split = name.split(',');
+                name = split[0];
+                if (split.length > 1) {
+                    className = `tag-type-${split[1]}`;
+                }
                 apply = name;
                 index = wordIndex;
             }
@@ -1236,7 +1242,7 @@ class PromptTabCompleteClass {
                 name = '';
                 desc = val.substring(1);
             }
-            let button = { key: desc.length == 0 ? name : `${name} - ${desc}` };
+            let button = { key: desc.length == 0 ? name: `${name} - ${desc}`, className: className };
             if (isClickable) {
                 button.action = () => {
                     let areaPre = prompt.substring(0, index);

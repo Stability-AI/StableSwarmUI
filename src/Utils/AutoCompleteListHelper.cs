@@ -50,12 +50,7 @@ public class AutoCompleteListHelper
         }
         return AutoCompletionLists.GetOrCreate(name, () =>
         {
-            string[] lines = File.ReadAllText($"{FolderPath}/{name}").Replace('\r', '\n').SplitFast('\n').Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s) && !s.StartsWithFast('#')).ToArray();
-            if (name.EndsWithFast(".csv"))
-            {
-                lines = lines.Select(s => s.Before(',')).ToArray();
-            }
-            return lines;
+            return File.ReadAllText($"{FolderPath}/{name}").Replace('\r', '\n').SplitFast('\n').Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s) && !s.StartsWithFast('#')).ToArray();
         });
     }
 }

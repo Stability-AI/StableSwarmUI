@@ -16,7 +16,9 @@ The first way it will try to help you is with regards to advanced prompt syntax,
 
 If you want to have autocompletions for word lists (*such as anime booru tags*), you can! You just need to set it up first:
 
-- Find a word-list file. There are [several here you can use](https://github.com/DominikDoom/a1111-sd-webui-tagcomplete/tree/main/tags). Any `.csv` will do (if the word is the first entry per row), or `.txt` files (for newline-separated wordlists, allowing `#` to mark comments).
+- Find a word-list file. There are [several here you can use](https://github.com/DominikDoom/a1111-sd-webui-tagcomplete/tree/main/tags).
+    - Any `.csv` will do (if the word is the first entry per row). Optionally second column can be an ID number 0-5 for unique colorations to distinguish categories.
+    - or `.txt` files (for newline-separated wordlists, allowing `#` to mark comments).
 - Save the file into `StableSwarmUI/Data/Autocompletions`.
 - Restart swarm or reload parameter values if necessary.
 - Go to `User` -> `User Settings`
