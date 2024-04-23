@@ -8,13 +8,14 @@ class AdvancedPopover {
      * eg: new AdvancedPopover('my_popover', [ { key: 'Button 1', action: () => console.log("Clicked!") } ], true, mouseX, mouseY, 'Button 1', document.body);
      * Buttons can optionally exclude action to make unclickable.
      */
-    constructor(id, buttons, canSearch, x, y, root, preSelect = null, flipYHeight = null) {
+    constructor(id, buttons, canSearch, x, y, root, preSelect = null, flipYHeight = null, heightLimit = 999999) {
         this.id = id;
         this.buttons = buttons;
         this.popover = createDiv(`popover_${id}`, 'sui-popover sui_popover_model sui-popover-notransition');
         this.textInput = null;
         this.flipYHeight = flipYHeight;
         this.preSelect = preSelect;
+        this.heightLimit = heightLimit;
         if (canSearch) {
             this.textInput = document.createElement('input');
             this.textInput.type = 'text';
@@ -174,10 +175,11 @@ class AdvancedPopover {
         let y;
         let maxHeight;
         let extraHeight = (this.textInput ? this.textInput.offsetHeight : 0) + 32;
-        let expected = this.expectedHeight + extraHeight;
+        let rawExpected = Math.min(this.expectedHeight, this.heightLimit);
+        let expected = rawExpected + extraHeight;
         if (this.targetY + expected < window.innerHeight) {
             y = this.targetY;
-            maxHeight = this.expectedHeight;
+            maxHeight = rawExpected;
         }
         else if (this.flipYHeight != null && this.targetY > window.innerHeight / 2) {
             y = Math.max(0, this.targetY - this.flipYHeight - expected);

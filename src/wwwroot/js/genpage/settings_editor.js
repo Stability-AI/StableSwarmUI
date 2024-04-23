@@ -163,6 +163,7 @@ function save_user_settings() {
     genericRequest('ChangeUserSettings', { settings: userSettingsData.altered }, data => {
         getRequiredElementById(`usersettings_confirmer`).style.display = 'none';
         loadUserSettings();
+        loadUserData();
     });
 }
 

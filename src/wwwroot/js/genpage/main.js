@@ -22,6 +22,8 @@ let lastHistoryImage = null, lastHistoryImageDiv = null;
 
 let currentMetadataVal = null, currentImgSrc = null;
 
+let autoCompletionsList = null;
+
 let mainGenHandler = new GenerateHandler();
 
 function updateOtherInfoSpan() {
@@ -1225,6 +1227,21 @@ function resetBatchIfNeeded() {
 
 function loadUserData(callback) {
     genericRequest('GetMyUserData', {}, data => {
+        autoCompletionsList = {};
+        if (data.autocompletions) {
+            for (let val of data.autocompletions) {
+                let datalist = autoCompletionsList[val[0]];
+                if (!datalist) {
+                    datalist = { low: [], raw: [] };
+                    autoCompletionsList[val[0]] = datalist;
+                }
+                datalist.low.push(val.toLowerCase());
+                datalist.raw.push(val);
+            }
+        }
+        else {
+            autoCompletionsList = null;
+        }
         allPresets = data.presets;
         if (!language) {
             language = data.language;

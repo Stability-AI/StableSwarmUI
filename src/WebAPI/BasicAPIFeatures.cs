@@ -318,7 +318,8 @@ public static class BasicAPIFeatures
         {
             ["user_name"] = session.User.UserID,
             ["presets"] = new JArray(session.User.GetAllPresets().Select(p => p.NetData()).ToArray()),
-            ["language"] = session.User.Settings.Language
+            ["language"] = session.User.Settings.Language,
+            ["autocompletions"] = string.IsNullOrWhiteSpace(session.User.Settings.AutoCompletionsSource) ? null : new JArray(AutoCompleteListHelper.GetData(session.User.Settings.AutoCompletionsSource))
         };
     }
 

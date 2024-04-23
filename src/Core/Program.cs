@@ -139,6 +139,7 @@ public class Program
         Logs.Init("Loading models list...");
         RefreshAllModelSets();
         WildcardsHelper.Init();
+        AutoCompleteListHelper.Init();
         timer.Check("Model listing");
         Logs.Init("Loading backends...");
         Backends.Load();

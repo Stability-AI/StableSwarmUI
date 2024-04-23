@@ -295,6 +295,15 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("Comma-separated list of parameters to exclude from 'Reuse Parameters'.\nFor example, set 'model' to not copy the model, or 'model,refinermodel,videomodel' to really never copy any models.")]
         public string ReuseParamExcludeList = "";
+
+        public class AutocompletionsImpl : SettingsOptionsAttribute.AbstractImpl
+        {
+            public override string[] GetOptions => new string[] { "" }.Concat(AutoCompleteListHelper.FileNames).ToArray();
+        }
+
+        [ConfigComment("Optional source file for auto-completion texts (inside Data/Autocompletions).")]
+        [SettingsOptions(Impl = typeof(AutocompletionsImpl))]
+        public string AutoCompletionsSource = "";
     }
 
     /// <summary>UI-related settings.</summary>

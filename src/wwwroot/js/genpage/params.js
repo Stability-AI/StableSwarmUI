@@ -513,6 +513,7 @@ function getGenInput(input_overrides = {}, input_preoverrides = {}) {
 
 function refreshParameterValues(strong = true, callback = null) {
     genericRequest('TriggerRefresh', {strong: strong}, data => {
+        loadUserData();
         for (let param of data.list) {
             let origParam = gen_param_types.find(p => p.id == param.id);
             if (origParam) {
@@ -1116,15 +1117,42 @@ class PromptTabCompleteClass {
         return box.value.substring(0, box.selectionStart);
     }
 
+    findLastWordIndex(text) {
+        let index = -1;
+        for (let cut of [' ', ',', '.', '\n']) {
+            let i = text.lastIndexOf(cut);
+            if (i > index) {
+                index = i;
+            }
+        }
+        return index + 1;
+    }
+
     getPossibleList(box) {
         let prompt = this.getPromptBeforeCursor(box);
+        let word = prompt.substring(this.findLastWordIndex(prompt));
+        let baseList = [];
+        if (word.length > 1 && autoCompletionsList) {
+            let completionSet = autoCompletionsList[word[0]];
+            let wordLow = word.toLowerCase();
+            if (completionSet) {
+                for (let i = 0; i < completionSet.low.length; i++) {
+                    if (completionSet.low[i].startsWith(wordLow)) {
+                        baseList.push(`<raw>${completionSet.raw[i]}`);
+                        if (baseList.length > 30) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         let lastBrace = prompt.lastIndexOf('<');
         if (lastBrace == -1) {
-            return [];
+            return baseList;
         }
         let lastClose = prompt.lastIndexOf('>');
         if (lastClose > lastBrace) {
-            return [];
+            return baseList;
         }
         let content = prompt.substring(lastBrace + 1);
         let colon = content.indexOf(':');
@@ -1158,13 +1186,19 @@ class PromptTabCompleteClass {
         let buttons = [];
         let prompt = this.getPromptBeforeCursor(box);
         let lastBrace = prompt.lastIndexOf('<');
-        let areaPre = prompt.substring(0, lastBrace);
-        let areaPost = box.value.substring(box.selectionStart);
+        let wordIndex = this.findLastWordIndex(prompt);
         for (let val of possible) {
             let name = val;
             let desc = '';
             let apply = name;
             let isClickable = true;
+            let index = lastBrace;
+            if (val.startsWith(`<raw>`)) {
+                name = val.substring(5);
+                desc = '';
+                apply = name;
+                index = wordIndex;
+            }
             if (typeof val == 'object') {
                 [name, desc] = val;
                 if (this.prefixes[name].selfStanding) {
@@ -1182,6 +1216,8 @@ class PromptTabCompleteClass {
             let button = { key: desc.length == 0 ? name : `${name} - ${desc}` };
             if (isClickable) {
                 button.action = () => {
+                    let areaPre = prompt.substring(0, index);
+                    let areaPost = box.value.substring(box.selectionStart);
                     box.value = areaPre + apply + areaPost;
                     box.selectionStart = areaPre.length + apply.length;
                     box.selectionEnd = areaPre.length + apply.length;
@@ -1192,7 +1228,7 @@ class PromptTabCompleteClass {
             buttons.push(button);
         }
         let rect = box.getBoundingClientRect();
-        this.popover = new AdvancedPopover('prompt_suggest', buttons, false, rect.x, rect.y + box.offsetHeight + 6, box.parentElement, null, box.offsetHeight + 6);
+        this.popover = new AdvancedPopover('prompt_suggest', buttons, false, rect.x, rect.y + box.offsetHeight + 6, box.parentElement, null, box.offsetHeight + 6, 250);
     }
 }
 
