@@ -584,7 +584,7 @@ public class ComfyUIBackendExtension : Extension
                 ClientWebSocket outSocket = new();
                 outSocket.Options.KeepAliveInterval = TimeSpan.FromSeconds(30);
                 await outSocket.ConnectAsync(new Uri($"{scheme}://{addr}/{path}"), Program.GlobalProgramCancel);
-                ComfyClientData client = new() { Address = addressLocal, Backend = backendLocal };
+                ComfyClientData client = new() { Address = addressLocal, Backend = backendLocal, Socket = outSocket };
                 user.Clients.TryAdd(client, client);
                 tasks.Add(Task.Run(async () =>
                 {
@@ -688,7 +688,11 @@ public class ComfyUIBackendExtension : Extension
                     }
                     catch (Exception ex)
                     {
-                        Logs.Debug($"ComfyUI redirection failed: {ex}");
+                        if (ex is OperationCanceledException)
+                        {
+                            return;
+                        }
+                        Logs.Debug($"ComfyUI redirection failed (outsocket): {ex}");
                     }
                     finally
                     {
@@ -726,7 +730,11 @@ public class ComfyUIBackendExtension : Extension
                 }
                 catch (Exception ex)
                 {
-                    Logs.Debug($"ComfyUI redirection failed: {ex}");
+                    if (ex is OperationCanceledException)
+                    {
+                        return;
+                    }
+                    Logs.Debug($"ComfyUI redirection failed (in-socket): {ex}");
                 }
                 finally
                 {
