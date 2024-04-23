@@ -17,7 +17,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
     public class StabilityAPIBackendSettings : AutoConfiguration
     {
         [ConfigComment("The endpoint route for the API, normally do not change this.")]
-        public string Endpoint = "https://api.stability.ai/v1";
+        public string Endpoint = "https://api.stability.ai/v2beta";
 
         [ConfigComment("The name of a file under your 'Data/' directory that is a plaintext file containing the SAPI key.")]
         public string KeyFile = "sapi_key.dat";
@@ -43,13 +43,13 @@ public class StabilityAPIBackend : AbstractT2IBackend
         Key = File.ReadAllText(fn).Trim();
         WebClient = NetworkBackendUtils.MakeHttpClient();
         WebClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Key}");
-        await UpdateBalance();
-        if (Credits == -1)
-        {
-            Logs.Warning($"StabilityAPI Backend init failed.");
-            Status = BackendStatus.DISABLED;
-            return;
-        }
+        // await UpdateBalance();
+        // if (Credits == -1)
+        // {
+        //     Logs.Warning($"StabilityAPI Backend init failed.");
+        //     Status = BackendStatus.DISABLED;
+        //     return;
+        // }
         // await RefreshEngines();
         Status = BackendStatus.RUNNING;
     }
