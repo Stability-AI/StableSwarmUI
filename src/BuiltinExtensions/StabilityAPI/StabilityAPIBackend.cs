@@ -79,23 +79,6 @@ public class StabilityAPIBackend : AbstractT2IBackend
         return data.ParseToJson();
     }
 
-    // public async Task RefreshEngines()
-    // {
-    //     JObject engines = await Get("engines/list");
-    //     List<string> engineIds = engines["data"].Select(o => o["id"].ToString()).ToList();
-    //     Logs.Debug($"Engines: {engines}");
-    //     lock (StabilityAPIExtension.TrackerLock)
-    //     {
-    //         foreach (string eng in engineIds)
-    //         {
-    //             if (!StabilityAPIExtension.Engines.Contains(eng))
-    //             {
-    //                 StabilityAPIExtension.Engines.Add(eng);
-    //             }
-    //         }
-    //     }
-    // }
-
     public async Task UpdateBalance()
     {
         JObject response = await Get("user/balance");
@@ -171,16 +154,6 @@ public class StabilityAPIBackend : AbstractT2IBackend
             // ["seed"] = user_input.Get(T2IParamTypes.Seed)
         };
         T2IModel model = user_input.Get(T2IParamTypes.Model);
-        string sapiEngineForModel = model.ModelClass?.ID switch
-        {
-            "stable-diffusion-xl-v1-base" or "stable-diffusion-xl-v1-refiner" => "stable-diffusion-xl-1024-v1-0",
-            "stable-diffusion-v2-inpainting" => "stable-inpainting-512-v2-0",
-            "stable-diffusion-v2-depth" => "stable-diffusion-depth-v2-0",
-            "stable-diffusion-v1-inpainting" => "stable-inpainting-v1-0",
-            "stable-diffusion-v2-768-v" => "stable-diffusion-768-v2-1",
-            "stable-diffusion-v2-512" => "stable-diffusion-512-v2-1",
-            _ => "stable-diffusion-v1-5"
-        };
         string engine = user_input.Get(StabilityAPIExtension.EngineParam);
         Console.WriteLine($"Using engine: {engine}");
         // TODO: Model tracking.
