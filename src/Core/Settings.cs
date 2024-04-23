@@ -186,6 +186,9 @@ public class Settings : AutoConfiguration
 
         /// <summary>Returns the maximum simultaneous text-2-image requests appropriate to this user's restrictions and the available backends.</summary>
         public int CalcMaxT2ISimultaneous => Math.Max(1, Math.Min(MaxT2ISimultaneous, Program.Backends.RunningBackendsOfType<AbstractT2IBackend>().Sum(b => b.MaxUsages) * 2));
+
+        [ConfigComment("Whether the '.' symbol can be used in OutPath - if enabled, users may cause file system issues or perform folder escapes.")]
+        public bool AllowUnsafeOutpaths = false;
     }
 
     /// <summary>Settings per-user.</summary>

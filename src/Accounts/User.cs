@@ -266,11 +266,15 @@ public class User
             {
                 data = data[..maxLen];
             }
-            data = data.Replace('\\', '/').Replace("/", "");
+            data = Utilities.StrictFilenameClean(data.Replace('\\', '/').Replace("/", ""));
             return data;
         }
         string path = Settings.OutPathBuilder.Format;
         path = StringConversionHelper.QuickSimpleTagFiller(path, "[", "]", buildPathPart, false);
+        if (Restrictions.AllowUnsafeOutpaths)
+        {
+            return path;
+        }
         return Utilities.StrictFilenameClean(path);
     }
 }
