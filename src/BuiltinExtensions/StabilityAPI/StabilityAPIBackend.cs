@@ -9,6 +9,7 @@ using StableSwarmUI.Utils;
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace StableSwarmUI.Builtin_StabilityAPIExtension;
 
@@ -43,6 +44,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
         Key = File.ReadAllText(fn).Trim();
         WebClient = NetworkBackendUtils.MakeHttpClient();
         WebClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {Key}");
+        WebClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         // await UpdateBalance();
         // if (Credits == -1)
         // {
