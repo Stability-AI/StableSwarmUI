@@ -261,6 +261,15 @@ public class WorkflowGenerator
                         ["image"] = new JArray() { maskNode, 0 },
                         ["channel"] = "red"
                     });
+                    string maskBehavior = g.UserInput.Get(T2IParamTypes.MaskBehavior, "Differential");
+                    if (maskBehavior == "Differential")
+                    {
+                        string diffNode = g.CreateNode("DifferentialDiffusion", new JObject()
+                        {
+                            ["model"] = g.FinalModel
+                        });
+                        g.FinalModel = [diffNode, 0];
+                    }
                 }
                 if (g.UserInput.TryGet(T2IParamTypes.InitImageResetToNorm, out double resetFactor))
                 {
