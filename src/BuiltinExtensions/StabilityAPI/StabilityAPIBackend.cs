@@ -50,7 +50,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
             Status = BackendStatus.DISABLED;
             return;
         }
-        await RefreshEngines();
+        // await RefreshEngines();
         Status = BackendStatus.RUNNING;
     }
 
@@ -77,22 +77,22 @@ public class StabilityAPIBackend : AbstractT2IBackend
         return data.ParseToJson();
     }
 
-    public async Task RefreshEngines()
-    {
-        JObject engines = await Get("engines/list");
-        List<string> engineIds = engines["data"].Select(o => o["id"].ToString()).ToList();
-        Logs.Debug($"Engines: {engines}");
-        lock (StabilityAPIExtension.TrackerLock)
-        {
-            foreach (string eng in engineIds)
-            {
-                if (!StabilityAPIExtension.Engines.Contains(eng))
-                {
-                    StabilityAPIExtension.Engines.Add(eng);
-                }
-            }
-        }
-    }
+    // public async Task RefreshEngines()
+    // {
+    //     JObject engines = await Get("engines/list");
+    //     List<string> engineIds = engines["data"].Select(o => o["id"].ToString()).ToList();
+    //     Logs.Debug($"Engines: {engines}");
+    //     lock (StabilityAPIExtension.TrackerLock)
+    //     {
+    //         foreach (string eng in engineIds)
+    //         {
+    //             if (!StabilityAPIExtension.Engines.Contains(eng))
+    //             {
+    //                 StabilityAPIExtension.Engines.Add(eng);
+    //             }
+    //         }
+    //     }
+    // }
 
     public async Task UpdateBalance()
     {
