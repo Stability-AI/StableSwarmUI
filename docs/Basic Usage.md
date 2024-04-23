@@ -72,6 +72,7 @@ StableSwarmUI is designed on the principle of exposing all the parameters to you
 ## More Than Text: Playing with Prompts
 
 Prompting is, primarily, just text input. However, there are some special options also available (on both Prompt and Negative Prompt):
+    - If using SDXL or UnClip, you can use *ReVision* by just dragging an image into the prompt box. This will have the model interpret the image (using ClipVision) and include it in the prompt.
     - You can do things like `<random:cat, dog>` to randomly select different options
     - You can type a `<` in the prompt box at any time to see some options
     - See [Prompt Syntax](/docs/Prompt%20Syntax.md) for more

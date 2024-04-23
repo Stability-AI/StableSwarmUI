@@ -1068,6 +1068,9 @@ class PromptTabCompleteClass {
         this.registerPrefix('alternate', 'Cause multiple different words or phrases to be alternated between.', (prefix) => {
             return ['\nSpecify a comma-separated list of words to choose from, like "<alternate:cat,dog>". You can use "||" instead of "," if you need to include commas in your values.'];
         });
+        this.registerPrefix('fromto[0.5]', 'Have the prompt change after a given timestep.', (prefix) => {
+            return ['\nSpecify in the brackets a timestep like 10 (for step 10) or 0.5 (for halfway through). In the data area specify the before and the after separate by "," or "|". For example, "<fromto[10]:cat,dog>" switches from "cat" to "dog" at step 10.'];
+        });
         this.registerPrefix('wildcard', 'Select a random line from a wildcard file (presaved list of options)', (prefix) => {
             let prefixLow = prefix.toLowerCase();
             return allWildcards.filter(w => w.toLowerCase().includes(prefixLow));

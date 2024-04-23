@@ -95,7 +95,7 @@ public class T2IParamInput
             double? countVal = InterpretNumber(preData);
             if (!countVal.HasValue)
             {
-                Logs.Warning($"Random input '{prefix}[{preData}:{data}' has invalid predata count (not a number) and will be ignored.");
+                Logs.Warning($"Random input '{prefix}[{preData}]:{data}' has invalid predata count (not a number) and will be ignored.");
                 return (0, null);
             }
             count = (int)countVal.Value;
@@ -170,6 +170,24 @@ public class T2IParamInput
             return $"[{rawVals.JoinString("|")}]";
         };
         PromptTagLengthEstimators["alternate"] = PromptTagLengthEstimators["random"];
+        PromptTagProcessors["fromto"] = (data, context) =>
+        {
+            double? stepIndex = InterpretNumber(context.PreData);
+            if (!stepIndex.HasValue)
+            {
+                Logs.Warning($"FromTo input 'fromto[{context.PreData}]:{data}' has invalid predata step-index (not a number) and will be ignored.");
+                return null;
+            }
+            string separator = data.Contains("||") ? "||" : (data.Contains('|') ? "|" : ",");
+            string[] rawVals = data.Split(separator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (rawVals.Length != 2)
+            {
+                Logs.Warning($"Alternate input '{data}' is invalid (len=${rawVals.Length}, should be 2) and will be ignored.");
+                return null;
+            }
+            return $"[{rawVals.JoinString(":")}:{stepIndex}]";
+        };
+        PromptTagLengthEstimators["fromto"] = PromptTagLengthEstimators["random"];
         PromptTagProcessors["wildcard"] = (data, context) =>
         {
             (int count, string partSeparator) = InterpretPredataForRandom("random", context.PreData, data);
