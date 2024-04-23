@@ -119,49 +119,25 @@ public class StabilityAPIBackend : AbstractT2IBackend
         {
             // TODO: img2img
         }
-        JArray prompts = [];
-        if (!string.IsNullOrWhiteSpace(user_input.Get(T2IParamTypes.Prompt)))
+        if (string.IsNullOrEmpty(user_input.Get(T2IParamTypes.Prompt)))
         {
-            prompts.Add(new JObject()
-            {
-                ["text"] = user_input.Get(T2IParamTypes.Prompt),
-                ["weight"] = 1
-            });
+            throw new InvalidDataException("Invalid StabilityAPI generation input: missing prompt!");
         }
-        if (!string.IsNullOrWhiteSpace(user_input.Get(T2IParamTypes.NegativePrompt)))
-        {
-            prompts.Add(new JObject()
-            {
-                ["text"] = user_input.Get(T2IParamTypes.NegativePrompt),
-                ["weight"] = -1
-            });
-        }
-        if (prompts.IsEmpty())
-        {
-            throw new InvalidDataException($"Invalid StabilityAPI generation input: missing prompt!");
-        }
-        JObject obj = new()
-        {
-            // ["cfg_scale"] = user_input.Get(T2IParamTypes.CFGScale),
-            // ["height"] = user_input.GetImageHeight(),
-            // ["width"] = user_input.Get(T2IParamTypes.Width),
-            // ["samples"] = 1,
-            // ["steps"] = user_input.Get(T2IParamTypes.Steps),
-            // ["sampler"] = user_input.Get(StabilityAPIExtension.SamplerParam) ?? "K_EULER",
-            // ["text_prompts"] = prompts,
-            ["prompt"] = user_input.Get(T2IParamTypes.Prompt),
-            ["negative_prompt"] = user_input.Get(T2IParamTypes.NegativePrompt),
-            // ["seed"] = user_input.Get(T2IParamTypes.Seed)
-        };
-        T2IModel model = user_input.Get(T2IParamTypes.Model);
+        // T2IModel model = user_input.Get(T2IParamTypes.Model);
         string engine = user_input.Get(StabilityAPIExtension.EngineParam);
         Console.WriteLine($"Using engine: {engine}");
+        JObject obj = new()
+        {
+            ["prompt"] = user_input.Get(T2IParamTypes.Prompt),
+            // ["negative_prompt"] = user_input.Get(T2IParamTypes.NegativePrompt), // Does not work on sd3-turbo
+            ["model"] = engine,
+            ["seed"] = user_input.Get(T2IParamTypes.Seed)
+        };
         // TODO: Model tracking.
         JObject response = null;
         try
         {
             response = await PostFormData($"{Settings.Endpoint}/stable-image/generate/core", obj);
-            Console.WriteLine($"Response: {response}"); 
             List<Image> images = [];
             images.Add(new(response["image"].ToString(), Image.ImageType.IMAGE, "png"));
             return [.. images];
