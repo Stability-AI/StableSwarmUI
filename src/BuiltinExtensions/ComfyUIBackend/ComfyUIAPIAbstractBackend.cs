@@ -22,7 +22,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     public abstract string Address { get; }
 
     /// <summary>Internal HTTP handler.</summary>
-    public HttpClient HttpClient = NetworkBackendUtils.MakeHttpClient();
+    public static HttpClient HttpClient = NetworkBackendUtils.MakeHttpClient();
 
     public JObject RawObjectInfo;
 

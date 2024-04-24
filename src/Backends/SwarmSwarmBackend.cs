@@ -25,7 +25,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
     }
 
     /// <summary>Internal HTTP handler.</summary>
-    public HttpClient HttpClient = NetworkBackendUtils.MakeHttpClient();
+    public static HttpClient HttpClient = NetworkBackendUtils.MakeHttpClient();
 
     public SwarmSwarmBackendSettings Settings => SettingsRaw as SwarmSwarmBackendSettings;
 

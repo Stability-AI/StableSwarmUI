@@ -144,7 +144,6 @@ public static class BasicAPIFeatures
             // TODO: better way to send these out without waiting
             socket.SendJson(new JObject() { ["progress"] = progress, ["total"] = total, ["steps"] = stepsThusFar, ["total_steps"] = totalSteps }, API.WebsocketTimeout).Wait();
         }
-        HttpClient client = NetworkBackendUtils.MakeHttpClient();
         switch (backend)
         {
             case "comfyui":

@@ -57,7 +57,7 @@ public class ScorersExtension : Extension
         }
     }
 
-    public HttpClient WebClient;
+    public static HttpClient WebClient;
 
     public int Port;
 
@@ -84,7 +84,7 @@ public class ScorersExtension : Extension
             {
                 return;
             }
-            WebClient = NetworkBackendUtils.MakeHttpClient();
+            WebClient ??= NetworkBackendUtils.MakeHttpClient();
             async Task<bool> Check(bool _)
             {
                 try

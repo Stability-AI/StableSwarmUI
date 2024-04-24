@@ -423,11 +423,11 @@ public class ComfyUIBackendExtension : Extension
     {
         foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends)
         {
-            yield return new(backend.HttpClient, backend.Address, backend);
+            yield return new(ComfyUIAPIAbstractBackend.HttpClient, backend.Address, backend);
         }
         foreach (SwarmSwarmBackend swarmBackend in Program.Backends.RunningBackendsOfType<SwarmSwarmBackend>().Where(b => b.RemoteBackendTypes.Any(b => b.StartsWith("comfyui_"))))
         {
-            yield return new(swarmBackend.HttpClient, $"{swarmBackend.Settings.Address}/ComfyBackendDirect", swarmBackend);
+            yield return new(SwarmSwarmBackend.HttpClient, $"{swarmBackend.Settings.Address}/ComfyBackendDirect", swarmBackend);
         }
     }
 
@@ -508,10 +508,31 @@ public class ComfyUIBackendExtension : Extension
 
     public static ConcurrentDictionary<int, int> RecentlyClaimedBackends = new();
 
+    /// <summary>Backup for <see cref="ObjectInfoReadCacher"/>.</summary>
+    public static volatile JObject LastObjectInfo;
+
+    /// <summary>Cache handler to prevent "object_info" reads from spamming and killing the comfy backend (which handles them sequentially, and rather slowly per call).</summary>
     public static SingleValueExpiringCacheAsync<JObject> ObjectInfoReadCacher = new(() =>
     {
         ComfyBackendData backend = ComfyBackendsDirect().First();
-        return backend.Client.GetAsync($"{backend.Address}/object_info", Utilities.TimedCancel(TimeSpan.FromMinutes(1))).Result.Content.ReadAsStringAsync().Result.ParseToJson();
+        try
+        {
+            JObject result = backend.Client.GetAsync($"{backend.Address}/object_info", Utilities.TimedCancel(TimeSpan.FromMinutes(1))).Result.Content.ReadAsStringAsync().Result.ParseToJson();
+            if (result is not null)
+            {
+                LastObjectInfo = result;
+                return result;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logs.Error($"object_info read failure: {ex}");
+            if (LastObjectInfo is null)
+            {
+                throw;
+            }
+        }
+        return LastObjectInfo;
     }, TimeSpan.FromMinutes(10));
 
     /// <summary>Web route for viewing output images. This just works as a simple proxy.</summary>

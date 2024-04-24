@@ -63,7 +63,7 @@ public class StabilityAPIBackend : AbstractT2IBackend
 
     public override Task Shutdown()
     {
-        // Nothing to do.
+        NetworkBackendUtils.ClearOldHttpClient(WebClient);
         return Task.CompletedTask;
     }
 

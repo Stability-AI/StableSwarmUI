@@ -496,12 +496,14 @@ public static class Utilities
         }
     }
 
+    /// <summary>Reusable general web client.</summary>
+    public static HttpClient UtilWebClient = NetworkBackendUtils.MakeHttpClient();
+
     /// <summary>Downloads a file from a given URL and saves it to a given filepath.</summary>
     public static async Task DownloadFile(string url, string filepath, Action<long, long> progressUpdate)
     {
         using FileStream writer = File.OpenWrite(filepath);
-        HttpClient client = NetworkBackendUtils.MakeHttpClient();
-        using HttpResponseMessage response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseHeadersRead, Program.GlobalProgramCancel);
+        using HttpResponseMessage response = await UtilWebClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseHeadersRead, Program.GlobalProgramCancel);
         long length = response.Content.Headers.ContentLength ?? 0;
         byte[] buffer = new byte[Math.Min(length + 1024, 1024 * 1024 * 64)]; // up to 64 megabytes, just grab as big a chunk as we can at a time
         long progress = 0;

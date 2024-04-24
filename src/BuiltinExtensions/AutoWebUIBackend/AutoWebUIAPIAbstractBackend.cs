@@ -19,7 +19,7 @@ public abstract class AutoWebUIAPIAbstractBackend : AbstractT2IBackend
     public abstract string Address { get; }
 
     /// <summary>Internal HTTP handler.</summary>
-    public HttpClient HttpClient = NetworkBackendUtils.MakeHttpClient();
+    public static HttpClient HttpClient = NetworkBackendUtils.MakeHttpClient();
 
     public async Task InitInternal(bool ignoreWebError)
     {
