@@ -261,15 +261,7 @@ public class WorkflowGenerator
                         ["image"] = new JArray() { maskNode, 0 },
                         ["channel"] = "red"
                     });
-                    string maskBehavior = g.UserInput.Get(T2IParamTypes.MaskBehavior, "Differential");
-                    if (maskBehavior == "Differential")
-                    {
-                        string diffNode = g.CreateNode("DifferentialDiffusion", new JObject()
-                        {
-                            ["model"] = g.FinalModel
-                        });
-                        g.FinalModel = [diffNode, 0];
-                    }
+                    g.EnableDifferential();
                 }
                 if (g.UserInput.TryGet(T2IParamTypes.InitImageResetToNorm, out double resetFactor))
                 {
@@ -939,6 +931,7 @@ public class WorkflowGenerator
                         ["samples"] = new JArray() { vaeEncoded, 0 },
                         ["mask"] = new JArray() { croppedMask, 0 }
                     });
+                    g.EnableDifferential();
                     JArray prompt = g.CreateConditioning(part.Prompt, g.FinalClip, g.FinalLoadedModel, true);
                     string neg = negativeParts.FirstOrDefault(p => p.DataText == part.DataText)?.Prompt ?? negativeRegion.GlobalPrompt;
                     JArray negPrompt = g.CreateConditioning(neg, g.FinalClip, g.FinalLoadedModel, false);
@@ -1193,6 +1186,9 @@ public class WorkflowGenerator
     /// <summary>If true, the main sampler should add noise. If false, it shouldn't.</summary>
     public bool MainSamplerAddNoise = true;
 
+    /// <summary>If true, Differential Diffusion node has been attached to the current model.</summary>
+    public bool IsDifferentialDiffusion = false;
+
     /// <summary>Gets the current loaded model compat class.</summary>
     public string CurrentCompatClass()
     {
@@ -1298,6 +1294,7 @@ public class WorkflowGenerator
     /// <summary>Creates a model loader and adapts it with any registered model adapters, and returns (Model, Clip, VAE).</summary>
     public (T2IModel, JArray, JArray, JArray) CreateStandardModelLoader(T2IModel model, string type, string id = null, bool noCascadeFix = false)
     {
+        IsDifferentialDiffusion = false;
         LoadingModelType = type;
         if (!noCascadeFix && model.ModelClass?.ID == "stable-cascade-v1-stage-b" && model.Name.Contains("stage_b") && Program.MainSDModels.Models.TryGetValue(model.Name.Replace("stage_b", "stage_c"), out T2IModel altCascadeModel))
         {
@@ -1572,6 +1569,21 @@ public class WorkflowGenerator
         }
     }
 
+    /// <summary>Enables Differential Diffusion on the current model if is enabled in user settings.</summary>
+    public void EnableDifferential()
+    {
+        if (IsDifferentialDiffusion || UserInput.Get(T2IParamTypes.MaskBehavior, "Differential") != "Differential")
+        {
+            return;
+        }
+        IsDifferentialDiffusion = true;
+        string diffNode = CreateNode("DifferentialDiffusion", new JObject()
+        {
+            ["model"] = FinalModel
+        });
+        FinalModel = [diffNode, 0];
+    }
+
     /// <summary>Creates a "CLIPTextEncode" or equivalent node for the given input.</summary>
     public JArray CreateConditioningDirect(string prompt, JArray clip, T2IModel model, bool isPositive, string id = null)
     {
@@ -1735,6 +1747,7 @@ public class WorkflowGenerator
             ["strength"] = 1 - globalStrength,
             ["set_cond_area"] = "default"
         });
+        EnableDifferential();
         DebugMask([maskBackground, 0]);
         void DebugMask(JArray mask)
         {
