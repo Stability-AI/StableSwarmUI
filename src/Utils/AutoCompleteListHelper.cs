@@ -33,7 +33,6 @@ public class AutoCompleteListHelper
             if (file.EndsWith(".txt") || file.EndsWith(".csv"))
             {
                 string path = Path.GetRelativePath(FolderPath, file).Replace("\\", "/").TrimStart('/');
-                Logs.Debug($"Found file {path}");
                 files.Add(path);
             }
         }

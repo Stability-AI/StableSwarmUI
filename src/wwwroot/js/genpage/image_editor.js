@@ -1270,7 +1270,7 @@ class ImageEditor {
         canvas.width = this.realWidth;
         canvas.height = this.realHeight;
         let ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = this.layers.some(l => l.isMask) ? '#000000' : '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         for (let layer of this.layers) {
             if (layer.isMask) {
