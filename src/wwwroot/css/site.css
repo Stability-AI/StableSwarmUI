@@ -371,6 +371,7 @@ textarea, input, select {
     z-index: 10000;
     white-space: pre-wrap;
     transition: visibility 0s, opacity 0.3s linear;
+    min-width: 10rem;
 }
 .sui-popover-visible {
     visibility: visible;
@@ -734,7 +735,13 @@ select {
 .auto-slider-box .auto-slider-number {
     margin-left: auto;
 }
+.auto-slider-range-wrapper {
+    width: 100%;
+}
 .input-group .auto-slider-range-wrapper {
+    width: inherit;
+}
+.auto-slider-range-wrapper {
     height: var(--range-track-height);
     display: block;
     background: linear-gradient(to right, var(--range-value-color) 0%, var(--range-value-color) var(--range-value), var(--range-track-color) var(--range-value), var(--range-track-color) 100%);
@@ -743,9 +750,8 @@ select {
     border-radius: 10px;
     box-shadow: 0px 0px 2px 0 rgba(0, 0, 0, 0.35) inset;
     position: relative;
-    width: inherit;
 }
-.input-group .auto-slider-range {
+.auto-slider-range {
     -webkit-appearance: none;
     appearance: none;
     height: var(--range-height) !important;

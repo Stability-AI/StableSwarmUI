@@ -39,7 +39,7 @@
     --scrollbar: rgba(100, 100, 100, 0.5);
 }
 
-#Text2Image .basic-button {
+#Text2Image .basic-button:not(.image_editor_newlayer_button) {
     color: var(--button-text);
     padding: 2px 8px !important;
     box-shadow: var(--button-shadow);
@@ -67,7 +67,7 @@
 .input-group-header,
 .auto-input-name,
 .nav-tabs,
-.basic-button,
+.basic-button:not(.image_editor_newlayer_button),
 .simpletab-workflow-header,
 .simpletabbrowserwrapper .image-preview-text,
 .simpletabbrowserwrapper .model-descblock {

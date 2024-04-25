@@ -432,12 +432,16 @@ class ImageEditorToolBrush extends ImageEditorTool {
         let radiusHtml = `<div class="image-editor-tool-block id-rad-block">
                 <label>Radius:&nbsp;</label>
                 <input type="number" style="width: 40px;" class="auto-number id-rad1" min="1" max="1024" step="1" value="10">
-                <input type="range" style="flex-grow: 2" data-ispot="true" class="auto-slider-range id-rad2" min="1" max="1024" step="1" value="10">
+                <div class="auto-slider-range-wrapper" style="${getRangeStyle(10, 1, 1024)}">
+                    <input type="range" style="flex-grow: 2" data-ispot="true" class="auto-slider-range id-rad2" min="1" max="1024" step="1" value="10" oninput="updateRangeStyle(arguments[0])" onchange="updateRangeStyle(arguments[0])">
+                </div>
             </div>`
         let opacityHtml = `<div class="image-editor-tool-block id-opac-block">
                 <label>Opacity:&nbsp;</label>
                 <input type="number" style="width: 40px;" class="auto-number id-opac1" min="1" max="100" step="1" value="100">
-                <input type="range" style="flex-grow: 2" class="auto-slider-range id-opac2" min="1" max="100" step="1" value="100">
+                <div class="auto-slider-range-wrapper" style="${getRangeStyle(100, 1, 100)}">
+                    <input type="range" style="flex-grow: 2" class="auto-slider-range id-opac2" min="1" max="100" step="1" value="100" oninput="updateRangeStyle(arguments[0])" onchange="updateRangeStyle(arguments[0])">
+                </div>
             </div>`;
         if (isEraser) {
             this.configDiv.innerHTML = radiusHtml + opacityHtml;
@@ -1026,6 +1030,7 @@ class ImageEditor {
         layer.div.layer = layer;
         let popId = `image_editor_layer_preview_${this.layers.length - 1}`;
         let menuPopover = createDiv(`popover_${popId}`, 'sui-popover');
+        menuPopover.style.minWidth = '15rem';
         layer.menuPopover = menuPopover;
         let buttonDelete = createDiv(null, 'sui_popover_model_button');
         buttonDelete.innerText = 'Delete Layer';
@@ -1035,12 +1040,16 @@ class ImageEditor {
             this.removeLayer(layer);
         }, true);
         menuPopover.appendChild(buttonDelete);
+        let sliderWrapper = createDiv(null, 'auto-slider-range-wrapper');
         let opacitySlider = document.createElement('input');
         opacitySlider.type = 'range';
+        opacitySlider.className = 'auto-slider-range';
         opacitySlider.min = '0';
         opacitySlider.max = '100';
         opacitySlider.step = '1';
         opacitySlider.value = layer.opacity * 100;
+        opacitySlider.oninput = e => updateRangeStyle(e);
+        opacitySlider.onchange = e => updateRangeStyle(e);
         opacitySlider.addEventListener('input', () => {
             layer.opacity = parseInt(opacitySlider.value) / 100;
             layer.canvas.style.opacity = layer.opacity;
@@ -1050,7 +1059,8 @@ class ImageEditor {
         opacityLabel.innerHTML = 'Opacity&nbsp;';
         let opacityDiv = createDiv(null, 'sui-popover-inline-block');
         opacityDiv.appendChild(opacityLabel);
-        opacityDiv.appendChild(opacitySlider);
+        sliderWrapper.appendChild(opacitySlider);
+        opacityDiv.appendChild(sliderWrapper);
         menuPopover.appendChild(opacityDiv);
         layer.canvas.style.opacity = layer.opacity;
         layer.div.addEventListener('contextmenu', (e) => {
@@ -1061,6 +1071,7 @@ class ImageEditor {
         });
         this.canvasList.appendChild(menuPopover);
         this.canvasList.insertBefore(layer.div, this.canvasList.firstChild);
+        updateRangeStyle(opacitySlider);
         this.setActiveLayer(layer);
     }
 

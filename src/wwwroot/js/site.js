@@ -464,7 +464,7 @@ function getRangeStyle(value, min, max) {
 }
 
 function updateRangeStyle(e) {
-    const el = e.srcElement;
+    const el = e.srcElement ? e.srcElement : e;
     el.parentElement.style.setProperty("--range-value", `${(el.value-el.min)/(el.max-el.min)*100}%`);
 }
 
