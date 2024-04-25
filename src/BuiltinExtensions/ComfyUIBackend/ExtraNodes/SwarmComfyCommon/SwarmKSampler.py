@@ -4,6 +4,8 @@ from io import BytesIO
 import latent_preview
 import comfy
 from server import PromptServer
+from comfy.model_base import SDXL, SVD_img2vid
+import numpy as np
 
 def slerp(val, low, high):
     low_norm = low / torch.norm(low, dim=1, keepdim=True)
@@ -88,6 +90,26 @@ def make_swarm_sampler_callback(steps, device, model, previews):
     return callback
 
 
+def loglinear_interp(t_steps, num_steps):
+    """
+    Performs log-linear interpolation of a given array of decreasing numbers.
+    """
+    xs = np.linspace(0, 1, len(t_steps))
+    ys = np.log(t_steps[::-1])
+
+    new_xs = np.linspace(0, 1, num_steps)
+    new_ys = np.interp(new_xs, xs, ys)
+
+    interped_ys = np.exp(new_ys)[::-1].copy()
+    return interped_ys
+
+AYS_NOISE_LEVELS = {
+    "SD1": [14.6146412293, 6.4745760956,  3.8636745985,  2.6946151520, 1.8841921177,  1.3943805092,  0.9642583904,  0.6523686016, 0.3977456272,  0.1515232662,  0.0291671582],
+    "SDXL":[14.6146412293, 6.3184485287,  3.7681790315,  2.1811480769, 1.3405244945,  0.8620721141,  0.5550693289,  0.3798540708, 0.2332364134,  0.1114188177,  0.0291671582],
+    "SVD": [700.00, 54.5, 15.886, 7.977, 4.248, 1.789, 0.981, 0.403, 0.173, 0.034, 0.002]
+}
+
+
 class SwarmKSampler:
     @classmethod
     def INPUT_TYPES(s):
@@ -98,7 +120,7 @@ class SwarmKSampler:
                 "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step": 0.5, "round": 0.001}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                "scheduler": (["turbo"] + comfy.samplers.KSampler.SCHEDULERS, ),
+                "scheduler": (["turbo", "align_your_steps"] + comfy.samplers.KSampler.SCHEDULERS, ),
                 "positive": ("CONDITIONING", ),
                 "negative": ("CONDITIONING", ),
                 "latent_image": ("LATENT", ),
@@ -134,12 +156,24 @@ class SwarmKSampler:
             noise_mask = latent_image["noise_mask"]
 
         sigmas = None
-        if sigma_min >= 0 and sigma_max >= 0 and scheduler in ["karras", "exponential", "turbo"]:
+        if sigma_min >= 0 and sigma_max >= 0 and scheduler in ["karras", "exponential", "turbo", "align_your_steps"]:
             real_model, _, _, _, _ = comfy.sample.prepare_sampling(model, noise.shape, positive, negative, noise_mask)
             if scheduler == "turbo":
                 timesteps = torch.flip(torch.arange(1, 11) * 100 - 1, (0,))[:steps]
                 sigmas = model.model.model_sampling.sigma(timesteps)
                 sigmas = torch.cat([sigmas, sigmas.new_zeros([1])])
+            elif scheduler == "align_your_steps":
+                if isinstance(model.model, SDXL):
+                    model_type = "SDXL"
+                elif isinstance(model.model, SVD_img2vid):
+                    model_type = "SVD"
+                else:
+                    model_type = "SD1"
+                sigmas = AYS_NOISE_LEVELS[model_type]
+                if (steps + 1) != len(sigmas):
+                    sigmas = loglinear_interp(sigmas, steps + 1)
+                sigmas[-1] = 0
+                sigmas = torch.FloatTensor(sigmas)
             elif sampler_name in ['dpm_2', 'dpm_2_ancestral']:
                 sigmas = calculate_sigmas_scheduler(real_model, scheduler, steps + 1, sigma_min, sigma_max, rho)
                 sigmas = torch.cat([sigmas[:-2], sigmas[-1:]])
