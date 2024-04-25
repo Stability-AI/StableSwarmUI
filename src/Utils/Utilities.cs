@@ -27,6 +27,7 @@ public static class Utilities
     /// <summary>Preps various utilities during server start.</summary>
     public static void PrepUtils()
     {
+        ThreadPool.SetMinThreads(512, 512);
         Program.TickIsGeneratingEvent += () => WebhookManager.WaitUntilCanStartGenerating().Wait();
         Program.TickNoGenerationsEvent += () => WebhookManager.TickNoGenerations().Wait();
         Program.TickIsGeneratingEvent += MemCleaner.TickIsGenerating;
