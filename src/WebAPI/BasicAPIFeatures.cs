@@ -390,19 +390,15 @@ public static class BasicAPIFeatures
         JObject backendStatus = Program.Backends.CurrentBackendStatus.GetValue();
         if (do_debug) { Logs.Verbose("Got backend status, will get feature set..."); }
         string[] features = [.. Program.Backends.GetAllSupportedFeatures()];
-        JObject stats;
-        if (do_debug) { Logs.Verbose("Got backend stats, will enter session lock..."); }
-        lock (session.StatsLocker)
+        if (do_debug) { Logs.Verbose("Got backend stats, will get session data...."); }
+        Interlocked.MemoryBarrier();
+        JObject stats = new JObject
         {
-            if (do_debug) { Logs.Verbose("Entered session lock."); }
-            stats = new JObject
-            {
-                ["waiting_gens"] = session.WaitingGenerations,
-                ["loading_models"] = session.LoadingModels,
-                ["waiting_backends"] = session.WaitingBackends,
-                ["live_gens"] = session.LiveGens
-            };
-        }
+            ["waiting_gens"] = session.WaitingGenerations,
+            ["loading_models"] = session.LoadingModels,
+            ["waiting_backends"] = session.WaitingBackends,
+            ["live_gens"] = session.LiveGens
+        };
         if (do_debug) { Logs.Verbose("Exited session lock. Done."); }
         return new JObject
         {
