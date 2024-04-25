@@ -384,13 +384,17 @@ public static class BasicAPIFeatures
     }
 
     /// <summary>Gets current session status. Not an API call.</summary>
-    public static JObject GetCurrentStatusRaw(Session session)
+    public static JObject GetCurrentStatusRaw(Session session, bool do_debug = false)
     {
+        if (do_debug) { Logs.Verbose($"Getting current status for session {session.User.UserID}..."); }
         JObject backendStatus = Program.Backends.CurrentBackendStatus.GetValue();
+        if (do_debug) { Logs.Verbose("Got backend status, will get feature set..."); }
         string[] features = [.. Program.Backends.GetAllSupportedFeatures()];
         JObject stats;
+        if (do_debug) { Logs.Verbose("Got backend stats, will enter session lock..."); }
         lock (session.StatsLocker)
         {
+            if (do_debug) { Logs.Verbose("Entered session lock."); }
             stats = new JObject
             {
                 ["waiting_gens"] = session.WaitingGenerations,
@@ -399,6 +403,7 @@ public static class BasicAPIFeatures
                 ["live_gens"] = session.LiveGens
             };
         }
+        if (do_debug) { Logs.Verbose("Exited session lock. Done."); }
         return new JObject
         {
             ["status"] = stats,
@@ -408,9 +413,9 @@ public static class BasicAPIFeatures
     }
 
     /// <summary>API Route to get current waiting generation count, model loading count, etc.</summary>
-    public static async Task<JObject> GetCurrentStatus(Session session)
+    public static async Task<JObject> GetCurrentStatus(Session session, bool do_debug = false)
     {
-        return GetCurrentStatusRaw(session);
+        return GetCurrentStatusRaw(session, do_debug);
     }
 
     /// <summary>API Route to tell all waiting generations in this session to interrupt.</summary>
