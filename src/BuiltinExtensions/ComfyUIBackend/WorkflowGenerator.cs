@@ -982,6 +982,10 @@ public class WorkflowGenerator
                 JArray model = [loader, 0];
                 JArray clipVision = [loader, 1];
                 JArray vae = [loader, 2];
+                if (g.UserInput.TryGet(T2IParamTypes.VAE, out _))
+                {
+                    vae = g.FinalVae;
+                }
                 double minCfg = g.UserInput.Get(T2IParamTypes.VideoMinCFG, 1);
                 if (minCfg >= 0)
                 {

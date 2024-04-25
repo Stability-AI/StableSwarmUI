@@ -392,7 +392,7 @@ public static class BasicAPIFeatures
         string[] features = [.. Program.Backends.GetAllSupportedFeatures()];
         if (do_debug) { Logs.Verbose("Got backend stats, will get session data...."); }
         Interlocked.MemoryBarrier();
-        JObject stats = new JObject
+        JObject stats = new()
         {
             ["waiting_gens"] = session.WaitingGenerations,
             ["loading_models"] = session.LoadingModels,
