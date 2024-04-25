@@ -387,21 +387,24 @@ public static class BasicAPIFeatures
     public static JObject GetCurrentStatusRaw(Session session)
     {
         JObject backendStatus = Program.Backends.CurrentBackendStatus.GetValue();
+        string[] features = [.. Program.Backends.GetAllSupportedFeatures()];
+        JObject stats;
         lock (session.StatsLocker)
         {
-            return new JObject
+            stats = new JObject
             {
-                ["status"] = new JObject
-                {
-                    ["waiting_gens"] = session.WaitingGenerations,
-                    ["loading_models"] = session.LoadingModels,
-                    ["waiting_backends"] = session.WaitingBackends,
-                    ["live_gens"] = session.LiveGens
-                },
-                ["backend_status"] = backendStatus,
-                ["supported_features"] = new JArray(Program.Backends.GetAllSupportedFeatures().ToArray())
+                ["waiting_gens"] = session.WaitingGenerations,
+                ["loading_models"] = session.LoadingModels,
+                ["waiting_backends"] = session.WaitingBackends,
+                ["live_gens"] = session.LiveGens
             };
         }
+        return new JObject
+        {
+            ["status"] = stats,
+            ["backend_status"] = backendStatus,
+            ["supported_features"] = new JArray(features)
+        };
     }
 
     /// <summary>API Route to get current waiting generation count, model loading count, etc.</summary>
