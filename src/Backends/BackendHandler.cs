@@ -954,7 +954,15 @@ public class BackendHandler
                         wasNone = false;
                         Program.TickIsGeneratingEvent?.Invoke();
                     }
-                    request.TryFind();
+                    try
+                    {
+                        request.TryFind();
+                    }
+                    catch (Exception ex)
+                    {
+                        request.Failure = ex;
+                        Logs.Error($"[BackendHandler] Backend request #{request.ID} failed: {ex}");
+                    }
                     if (request.Result is not null || request.Failure is not null)
                     {
                         T2IBackendRequests.TryRemove(request.ID, out _);
