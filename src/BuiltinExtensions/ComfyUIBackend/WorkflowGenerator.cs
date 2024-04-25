@@ -299,12 +299,20 @@ public class WorkflowGenerator
                 }
                 if (maskImageNode is not null)
                 {
-                    string appliedNode = g.CreateNode("SetLatentNoiseMask", new JObject()
+                    if (g.UserInput.TryGet(T2IParamTypes.MaskShrinkGrow, out int shrinkGrow))
                     {
-                        ["samples"] = g.FinalLatentImage,
-                        ["mask"] = new JArray() { maskImageNode, 0 }
-                    });
-                    g.FinalLatentImage = [appliedNode, 0];
+                        g.MaskShrunkInfo = g.CreateImageMaskCrop([maskImageNode, 0], g.FinalInputImage, shrinkGrow);
+                        g.FinalLatentImage = [g.MaskShrunkInfo.Item3, 0];
+                    }
+                    else
+                    {
+                        string appliedNode = g.CreateNode("SetLatentNoiseMask", new JObject()
+                        {
+                            ["samples"] = g.FinalLatentImage,
+                            ["mask"] = new JArray() { maskImageNode, 0 }
+                        });
+                        g.FinalLatentImage = [appliedNode, 0];
+                    }
                 }
             }
             else
@@ -862,6 +870,12 @@ public class WorkflowGenerator
         AddStep(g =>
         {
             g.CreateVAEDecode(g.FinalVae, g.FinalSamples, "8");
+            (string boundsNode, string croppedMask, string masked) = g.MaskShrunkInfo;
+            if (boundsNode is not null)
+            {
+                string composited = g.RecompositeCropped(boundsNode, croppedMask, g.FinalInputImage, ["8", 0]);
+                g.FinalImageOut = [composited, 0];
+            }
         }, 1);
         #endregion
         #region Segmentation Processing
@@ -897,40 +911,7 @@ public class WorkflowGenerator
                         ["expand"] = 16,
                         ["tapered_corners"] = true
                     });
-                    string boundsNode = g.CreateNode("SwarmMaskBounds", new JObject()
-                    {
-                        ["mask"] = new JArray() { growNode, 0 },
-                        ["grow"] = 8
-                    });
-                    string croppedImage = g.CreateNode("SwarmImageCrop", new JObject()
-                    {
-                        ["image"] = g.FinalImageOut,
-                        ["x"] = new JArray() { boundsNode, 0 },
-                        ["y"] = new JArray() { boundsNode, 1 },
-                        ["width"] = new JArray() { boundsNode, 2 },
-                        ["height"] = new JArray() { boundsNode, 3 }
-                    });
-                    string croppedMask = g.CreateNode("CropMask", new JObject()
-                    {
-                        ["mask"] = new JArray() { growNode, 0 },
-                        ["x"] = new JArray() { boundsNode, 0 },
-                        ["y"] = new JArray() { boundsNode, 1 },
-                        ["width"] = new JArray() { boundsNode, 2 },
-                        ["height"] = new JArray() { boundsNode, 3 }
-                    });
-                    string scaledImage = g.CreateNode("SwarmImageScaleForMP", new JObject()
-                    {
-                        ["image"] = new JArray() { croppedImage, 0 },
-                        ["width"] = g.UserInput.Get(T2IParamTypes.Width, 1024),
-                        ["height"] = g.UserInput.GetImageHeight(),
-                        ["can_shrink"] = false
-                    });
-                    string vaeEncoded = g.CreateVAEEncode(g.FinalVae, [scaledImage, 0], null, true);
-                    string masked = g.CreateNode("SetLatentNoiseMask", new JObject()
-                    {
-                        ["samples"] = new JArray() { vaeEncoded, 0 },
-                        ["mask"] = new JArray() { croppedMask, 0 }
-                    });
+                    (string boundsNode, string croppedMask, string masked) = g.CreateImageMaskCrop([growNode, 0], g.FinalImageOut, 8);
                     g.EnableDifferential();
                     JArray prompt = g.CreateConditioning(part.Prompt, g.FinalClip, g.FinalLoadedModel, true);
                     string neg = negativeParts.FirstOrDefault(p => p.DataText == part.DataText)?.Prompt ?? negativeRegion.GlobalPrompt;
@@ -940,28 +921,8 @@ public class WorkflowGenerator
                     long seed = g.UserInput.Get(T2IParamTypes.Seed) + 2 + i;
                     double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
                     string sampler = g.CreateKSampler(g.FinalModel, prompt, negPrompt, [masked, 0], cfg, steps, startStep, 10000, seed, false, true);
-                    string decoded = g.CreateNode("VAEDecode", new JObject()
-                    {
-                        ["samples"] = new JArray() { sampler, 0 },
-                        ["vae"] = g.FinalVae
-                    });
-                    string scaledBack = g.CreateNode("ImageScale", new JObject()
-                    {
-                        ["image"] = new JArray() { decoded, 0 },
-                        ["width"] = new JArray() { boundsNode, 2 },
-                        ["height"] = new JArray() { boundsNode, 3 },
-                        ["upscale_method"] = "bilinear",
-                        ["crop"] = "disabled"
-                    });
-                    string composited = g.CreateNode("ImageCompositeMasked", new JObject()
-                    {
-                        ["destination"] = g.FinalImageOut,
-                        ["source"] = new JArray() { scaledBack, 0 },
-                        ["mask"] = new JArray() { croppedMask, 0 },
-                        ["x"] = new JArray() { boundsNode, 0 },
-                        ["y"] = new JArray() { boundsNode, 1 },
-                        ["resize_source"] = false
-                    });
+                    string decoded = g.CreateVAEDecode(g.FinalVae, [sampler, 0]);
+                    string composited = g.RecompositeCropped(boundsNode, croppedMask, g.FinalImageOut, [decoded, 0]);
                     g.FinalImageOut = [composited, 0];
                 }
             }
@@ -1189,6 +1150,9 @@ public class WorkflowGenerator
     /// <summary>If true, Differential Diffusion node has been attached to the current model.</summary>
     public bool IsDifferentialDiffusion = false;
 
+    /// <summary>Outputs of <see cref="CreateImageMaskCrop(JArray, JArray, int)"/> if used for the main image.</summary>
+    public (string, string, string) MaskShrunkInfo = (null, null, null);
+
     /// <summary>Gets the current loaded model compat class.</summary>
     public string CurrentCompatClass()
     {
@@ -1248,6 +1212,84 @@ public class WorkflowGenerator
                 ["image"] = param
             }, nodeId);
         }
+    }
+
+    /// <summary>Creates an automatic image mask-crop before sampling, to be followed by <see cref="RecompositeCropped(string, string, JArray, JArray)"/> after sampling.</summary>
+    /// <param name="mask">The mask node input.</param>
+    /// <param name="image">The image node input.</param>
+    /// <param name="growBy">Number of pixels to grow the boundary by.</param>
+    /// <param name="threshold">Optional minimum value threshold.</param>
+    /// <returns>(boundsNode, croppedMask, maskedLatent).</returns>
+    public (string, string, string) CreateImageMaskCrop(JArray mask, JArray image, int growBy, double threshold = 0.01)
+    {
+        if (threshold > 0)
+        {
+            string thresholded = CreateNode("SwarmMaskThreshold", new JObject()
+            {
+                ["mask"] = mask,
+                ["min"] = threshold,
+                ["max"] = 1
+            });
+            mask = [thresholded, 0];
+        }
+        string boundsNode = CreateNode("SwarmMaskBounds", new JObject()
+        {
+            ["mask"] = mask,
+            ["grow"] = growBy
+        });
+        string croppedImage = CreateNode("SwarmImageCrop", new JObject()
+        {
+            ["image"] = image,
+            ["x"] = new JArray() { boundsNode, 0 },
+            ["y"] = new JArray() { boundsNode, 1 },
+            ["width"] = new JArray() { boundsNode, 2 },
+            ["height"] = new JArray() { boundsNode, 3 }
+        });
+        string croppedMask = CreateNode("CropMask", new JObject()
+        {
+            ["mask"] = mask,
+            ["x"] = new JArray() { boundsNode, 0 },
+            ["y"] = new JArray() { boundsNode, 1 },
+            ["width"] = new JArray() { boundsNode, 2 },
+            ["height"] = new JArray() { boundsNode, 3 }
+        });
+        string scaledImage = CreateNode("SwarmImageScaleForMP", new JObject()
+        {
+            ["image"] = new JArray() { croppedImage, 0 },
+            ["width"] = UserInput.Get(T2IParamTypes.Width, 1024),
+            ["height"] = UserInput.GetImageHeight(),
+            ["can_shrink"] = false
+        });
+        string vaeEncoded = CreateVAEEncode(FinalVae, [scaledImage, 0], null, true);
+        string masked = CreateNode("SetLatentNoiseMask", new JObject()
+        {
+            ["samples"] = new JArray() { vaeEncoded, 0 },
+            ["mask"] = new JArray() { croppedMask, 0 }
+        });
+        return (boundsNode, croppedMask, masked);
+    }
+
+    /// <summary>Recomposites a masked image edit, after <see cref="CreateImageMaskCrop(JArray, JArray, int)"/> was used.</summary>
+    public string RecompositeCropped(string boundsNode, string croppedMask, JArray firstImage, JArray newImage)
+    {
+        string scaledBack = CreateNode("ImageScale", new JObject()
+        {
+            ["image"] = newImage,
+            ["width"] = new JArray() { boundsNode, 2 },
+            ["height"] = new JArray() { boundsNode, 3 },
+            ["upscale_method"] = "bilinear",
+            ["crop"] = "disabled"
+        });
+        string composited = CreateNode("ImageCompositeMasked", new JObject()
+        {
+            ["destination"] = firstImage,
+            ["source"] = new JArray() { scaledBack, 0 },
+            ["mask"] = new JArray() { croppedMask, 0 },
+            ["x"] = new JArray() { boundsNode, 0 },
+            ["y"] = new JArray() { boundsNode, 1 },
+            ["resize_source"] = false
+        });
+        return composited;
     }
 
     /// <summary>Call to run the generation process and get the result.</summary>
