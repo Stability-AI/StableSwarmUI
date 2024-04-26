@@ -219,7 +219,7 @@ public class WebServer
     /// <summary>Test the validity of a user-given file path. Returns (path, consoleError, userError).</summary>
     public static (string, string, string) CheckFilePath(string root, string path)
     {
-        path = path.Replace('\\', '/');
+        path = path.Replace('\\', '/').Replace("%20", " ");
         path = Utilities.FilePathForbidden.TrimToNonMatches(path);
         while (path.Contains(".."))
         {

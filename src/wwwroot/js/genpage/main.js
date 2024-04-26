@@ -199,9 +199,9 @@ function shiftToNextImagePreview(next = true, expand = false) {
     }
     let newImg = imgs[newIndex];
     let block = findParentOfClass(newImg, 'image-block');
-    setCurrentImage(newImg.src, block.dataset.metadata, block.dataset.batch_id, newImg.dataset.previewGrow == 'true');
+    setCurrentImage(block.dataset.src, block.dataset.metadata, block.dataset.batch_id, newImg.dataset.previewGrow == 'true');
     if (expand) {
-        expandCurrentImage(newImg.src, block.dataset.metadata);
+        expandCurrentImage(block.dataset.src, block.dataset.metadata);
     }
 }
 
