@@ -229,6 +229,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             }
             await install("kornia", "kornia"); // ComfyUI added this dependency, didn't used to have it
             await install("rembg", "rembg");
+            await install("matplotlib", "matplotlib");
             await install("opencv_python_headless", "opencv-python-headless");
             await install("imageio_ffmpeg", "imageio-ffmpeg");
             if (Directory.Exists($"{ComfyUIBackendExtension.Folder}/DLNodes/ComfyUI_IPAdapter_plus"))
