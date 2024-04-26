@@ -290,7 +290,7 @@ function genInputs(delay_final = false) {
             });
             resTrick();
         }
-        hideRevisionInputs();
+        autoRevealRevision();
         let inputPrompt = document.getElementById('input_prompt');
         if (inputPrompt) {
             let altText = getRequiredElementById('alt_prompt_textbox');

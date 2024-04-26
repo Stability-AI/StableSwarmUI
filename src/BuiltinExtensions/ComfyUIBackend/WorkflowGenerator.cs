@@ -501,7 +501,7 @@ public class WorkflowGenerator
                         else if (presetLow.StartsWith("full"))
                         {
                             if (isXl) { throw new InvalidOperationException("IP-Adapter full face model is not supported for SDXL"); }
-                            else { requireIPAdapterModel("full_face_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/full_face_sd15.safetensors"); }
+                            else { requireIPAdapterModel("full_face_sd15.safetensors", "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-full-face_sd15.safetensors"); }
                         }
                         else if (presetLow == "faceid")
                         {

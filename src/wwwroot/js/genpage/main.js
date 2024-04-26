@@ -1371,6 +1371,29 @@ function hideRevisionInputs() {
     altPromptSizeHandleFunc();
 }
 
+function showRevisionInputs(toggleOn = false) {
+    let revisionGroup = document.getElementById('input_group_revision');
+    let revisionToggler = document.getElementById('input_group_content_revision_toggle');
+    if (revisionGroup) {
+        toggleGroupOpen(revisionGroup, true);
+        if (toggleOn) {
+            revisionToggler.checked = true;
+            triggerChangeFor(revisionToggler);
+        }
+        revisionGroup.style.display = '';
+    }
+}
+
+function autoRevealRevision() {
+    let promptImageArea = getRequiredElementById('alt_prompt_image_area');
+    if (promptImageArea.children.length > 0) {
+        showRevisionInputs();
+    }
+    else {
+        hideRevisionInputs();
+    }
+}
+
 function revisionInputHandler() {
     let dragArea = getRequiredElementById('alt_prompt_region');
     dragArea.addEventListener('dragover', (e) => {
@@ -1397,14 +1420,7 @@ function revisionInputHandler() {
                         imageObject.className = 'alt-prompt-image';
                         imageObject.dataset.filedata = data;
                         clearButton.style.display = '';
-                        let revisionGroup = document.getElementById('input_group_revision');
-                        let revisionToggler = document.getElementById('input_group_content_revision_toggle');
-                        if (revisionGroup) {
-                            toggleGroupOpen(revisionGroup, true);
-                            revisionToggler.checked = true;
-                            triggerChangeFor(revisionToggler);
-                            revisionGroup.style.display = '';
-                        }
+                        showRevisionInputs(true);
                         promptImageArea.appendChild(imageObject);
                         altPromptSizeHandleFunc();
                     };
