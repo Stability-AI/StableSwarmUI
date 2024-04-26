@@ -51,18 +51,43 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
     public static bool IsComfyModelFileEmitted = false;
 
     /// <summary>Downloads or updates the named relevant ComfyUI custom node repo.</summary>
-    public static async Task EnsureNodeRepo(string url)
+    public static async Task<bool> EnsureNodeRepo(string url)
     {
         string nodePath = Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes");
         string folderName = url.AfterLast('/');
         if (!Directory.Exists($"{nodePath}/{folderName}"))
         {
-            Process.Start(new ProcessStartInfo("git", $"clone {url}") { WorkingDirectory = nodePath }).WaitForExit();
+            await Process.Start(new ProcessStartInfo("git", $"clone {url}") { WorkingDirectory = nodePath }).WaitForExitAsync(Program.GlobalProgramCancel);
+            string reqFile = $"{nodePath}/{folderName}/requirements.txt";
+            ComfyUISelfStartBackend[] backends = [.. Program.Backends.RunningBackendsOfType<ComfyUISelfStartBackend>()];
+            ComfyUISelfStartBackend avaialble = backends.FirstOrDefault();
+            if (File.Exists(reqFile) && backends.Any())
+            {
+                Task[] tasks = [.. backends.Select(b => Program.Backends.ShutdownBackendCleanly(b.BackendData))];
+                await Task.WhenAll(tasks);
+                try
+                {
+                    Logs.Debug($"Will install requirements file {reqFile}");
+                    Process p = backends.FirstOrDefault().DoPythonCall($"-s -m pip install -r {Path.GetFullPath(reqFile)}");
+                    NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Requirements Install)", "");
+                    await p.WaitForExitAsync(Program.GlobalProgramCancel);
+                }
+                catch (Exception ex)
+                {
+                    Logs.Error($"Failed to install comfy backend node requirements: {ex}");
+                }
+                foreach (ComfyUISelfStartBackend backend in backends)
+                {
+                    Program.Backends.DoInitBackend(backend.BackendData);
+                }
+                return true;
+            }
         }
         else
         {
-            Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }).WaitForExit();
+            await Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }).WaitForExitAsync(Program.GlobalProgramCancel);
         }
+        return false;
     }
 
     public static async Task EnsureNodeRepos()

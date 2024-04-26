@@ -155,14 +155,20 @@ public static class ComfyUIWebAPI
         }
         if (feature == "ipadapter")
         {
-            await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/cubiq/ComfyUI_IPAdapter_plus");
-            _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
+            bool didRestart = await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/cubiq/ComfyUI_IPAdapter_plus");
+            if (!didRestart)
+            {
+                _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
+            }
             return new JObject() { ["success"] = true };
         }
         if (feature == "controlnet_preprocessors")
         {
-            await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/Fannovel16/comfyui_controlnet_aux");
-            _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
+            bool didRestart = await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/Fannovel16/comfyui_controlnet_aux");
+            if (!didRestart)
+            {
+                _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
+            }
             return new JObject() { ["success"] = true };
         }
         else
