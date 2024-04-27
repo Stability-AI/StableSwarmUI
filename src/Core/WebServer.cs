@@ -124,6 +124,17 @@ public class WebServer
         timer.Check("[Web] StartStop handler");
         WebApp.UseStaticFiles(new StaticFileOptions());
         timer.Check("[Web] static files");
+        WebApp.Use(async (context, next) =>
+        {
+            string referrer = (context.Request.Headers.Referer.FirstOrDefault() ?? "").After("://").After('/').ToLowerFast();
+            string path = context.Request.Path.Value.ToLowerFast();
+            if (referrer.StartsWith("comfybackenddirect/") && !path.StartsWith("/comfybackenddirect/"))
+            {
+                context.Request.Path = $"/ComfyBackendDirect{context.Request.Path}";
+                Logs.Debug($"ComfyBackendDirect call was misrouted, rerouting to '{context.Request.Path}'");
+            }
+            await next();
+        });
         WebApp.UseRouting();
         WebApp.UseWebSockets(new WebSocketOptions() { KeepAliveInterval = TimeSpan.FromSeconds(30) });
         WebApp.MapRazorPages();
@@ -143,7 +154,8 @@ public class WebServer
                 {
                     return;
                 }
-                if (!context.Request.Path.Value.ToLowerFast().StartsWith("/error/"))
+                string path = context.Request.Path.Value.ToLowerFast();
+                if (!path.StartsWith("/error/"))
                 {
                     try
                     {
