@@ -440,7 +440,9 @@
 .current_image_batch_core {
     max-height: calc(100% - 50px);
     overflow: auto;
-    padding: 50px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    padding: 20px;
     text-align: center;
 }
 
