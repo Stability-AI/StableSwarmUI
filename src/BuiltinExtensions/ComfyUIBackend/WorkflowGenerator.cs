@@ -607,7 +607,7 @@ public class WorkflowGenerator
         #region Negative Prompt
         AddStep(g =>
         {
-            g.FinalNegativePrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model), false, "7");
+            g.FinalNegativePrompt = g.CreateConditioning(g.UserInput.Get(T2IParamTypes.NegativePrompt, ""), g.FinalClip, g.UserInput.Get(T2IParamTypes.Model), false, "7");
         }, -7);
         #endregion
         #region ControlNet
@@ -752,8 +752,15 @@ public class WorkflowGenerator
                 endStep = (int)(steps * (1 - endEarly));
             }
             double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
-            g.CreateKSampler(g.FinalModel, g.FinalPrompt, g.FinalNegativePrompt, g.FinalLatentImage, cfg, steps, startStep, endStep,
-                g.UserInput.Get(T2IParamTypes.Seed), g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy", g.MainSamplerAddNoise, id: "10");
+            if (steps == 0 || endStep <= startStep)
+            {
+                g.FinalSamples = g.FinalLatentImage;
+            }
+            else
+            {
+                g.CreateKSampler(g.FinalModel, g.FinalPrompt, g.FinalNegativePrompt, g.FinalLatentImage, cfg, steps, startStep, endStep,
+                    g.UserInput.Get(T2IParamTypes.Seed), g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy", g.MainSamplerAddNoise, id: "10");
+            }
         }, -5);
         #endregion
         #region Refiner

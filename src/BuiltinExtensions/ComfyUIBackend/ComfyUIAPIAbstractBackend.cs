@@ -738,8 +738,19 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     /// <inheritdoc/>
     public override async Task<bool> LoadModel(T2IModel model)
     {
-        string workflow = ComfyUIBackendExtension.Workflows["just_load_model"].Replace("${model:error_missing_model}", Utilities.EscapeJsonString(model.ToString(ModelFolderFormat)));
-        await AwaitJobLive(workflow, "0", _ => { }, new(null), Program.GlobalProgramCancel);
+        T2IParamInput input = new(null);
+        input.Set(T2IParamTypes.Model, model);
+        input.Set(T2IParamTypes.Steps, 0);
+        input.Set(T2IParamTypes.Width, 256);
+        input.Set(T2IParamTypes.Height, 256);
+        input.Set(T2IParamTypes.Prompt, "(load the model please)");
+        input.Set(T2IParamTypes.NegativePrompt, "");
+        input.Set(T2IParamTypes.Images, 1);
+        input.Set(T2IParamTypes.CFGScale, 7);
+        input.Set(T2IParamTypes.Seed, 1);
+        WorkflowGenerator wg = new() { UserInput = input, ModelFolderFormat = ModelFolderFormat, Features = [.. SupportedFeatures] };
+        JObject workflow = wg.Generate();
+        await AwaitJobLive(workflow.ToString(), "0", _ => { }, new(null), Program.GlobalProgramCancel);
         CurrentModelName = model.Name;
         return true;
     }
