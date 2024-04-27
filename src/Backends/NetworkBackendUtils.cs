@@ -14,14 +14,11 @@ namespace StableSwarmUI.Backends;
 /// <summary>General utility for backends that self-start or use network APIs.</summary>
 public static class NetworkBackendUtils
 {
-    /// <summary>Instance of <see cref="HttpMessageHandler"/> used by <see cref="MakeHttpClient"/> to ensure <see cref="HttpClient"/> instances have appropriate timeouts.</summary>
-    public static HttpMessageHandler CoreHttpHandler = new SocketsHttpHandler() { PooledConnectionLifetime = TimeSpan.FromMinutes(10) };
-
     #region Network
     /// <summary>Create and preconfigure a basic <see cref="HttpClient"/> instance to make web requests with.</summary>
     public static HttpClient MakeHttpClient()
     {
-        HttpClient client = new(CoreHttpHandler);
+        HttpClient client = new(new SocketsHttpHandler() { PooledConnectionLifetime = TimeSpan.FromMinutes(10) });
         client.DefaultRequestHeaders.UserAgent.ParseAdd($"StableSwarmUI/{Utilities.Version}");
         client.Timeout = TimeSpan.FromMinutes(10);
         return client;
