@@ -169,7 +169,7 @@ class SwarmKSampler:
                     model_type = "SVD"
                 else:
                     model_type = "SD1"
-                sigmas = AYS_NOISE_LEVELS[model_type]
+                sigmas = AYS_NOISE_LEVELS[model_type][:]
                 if (steps + 1) != len(sigmas):
                     sigmas = loglinear_interp(sigmas, steps + 1)
                 sigmas[-1] = 0
