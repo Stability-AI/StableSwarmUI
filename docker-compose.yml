@@ -1,0 +1,25 @@
+services:
+  stableswarmui:
+    image: stableswarmui
+    build: .
+    container_name: stableswarmui
+    # uncomment `networks: host` if you want to access other services on the host network (eg a separated comfy instance)
+    # networks: host
+    volumes:
+      - swarmdata:/Data
+      - swarmbackend:/dlbackend
+      - ./Models:/Models
+      - ./Output:/Output
+    ports:
+      - "7801:7801"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              # change the count to the number of GPUs you want to use.
+              count: 1
+              capabilities: [gpu]
+volumes:
+  swarmdata:
+  swarmbackend:
