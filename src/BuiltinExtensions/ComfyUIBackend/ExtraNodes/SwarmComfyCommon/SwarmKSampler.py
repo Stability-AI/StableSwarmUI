@@ -156,25 +156,25 @@ class SwarmKSampler:
             noise_mask = latent_image["noise_mask"]
 
         sigmas = None
-        if sigma_min >= 0 and sigma_max >= 0 and scheduler in ["karras", "exponential", "turbo", "align_your_steps"]:
+        if scheduler == "turbo":
+            timesteps = torch.flip(torch.arange(1, 11) * 100 - 1, (0,))[:steps]
+            sigmas = model.model.model_sampling.sigma(timesteps)
+            sigmas = torch.cat([sigmas, sigmas.new_zeros([1])])
+        elif scheduler == "align_your_steps":
+            if isinstance(model.model, SDXL):
+                model_type = "SDXL"
+            elif isinstance(model.model, SVD_img2vid):
+                model_type = "SVD"
+            else:
+                model_type = "SD1"
+            sigmas = AYS_NOISE_LEVELS[model_type][:]
+            if (steps + 1) != len(sigmas):
+                sigmas = loglinear_interp(sigmas, steps + 1)
+            sigmas[-1] = 0
+            sigmas = torch.FloatTensor(sigmas)
+        elif sigma_min >= 0 and sigma_max >= 0 and scheduler in ["karras", "exponential"]:
             real_model, _, _, _, _ = comfy.sample.prepare_sampling(model, noise.shape, positive, negative, noise_mask)
-            if scheduler == "turbo":
-                timesteps = torch.flip(torch.arange(1, 11) * 100 - 1, (0,))[:steps]
-                sigmas = model.model.model_sampling.sigma(timesteps)
-                sigmas = torch.cat([sigmas, sigmas.new_zeros([1])])
-            elif scheduler == "align_your_steps":
-                if isinstance(model.model, SDXL):
-                    model_type = "SDXL"
-                elif isinstance(model.model, SVD_img2vid):
-                    model_type = "SVD"
-                else:
-                    model_type = "SD1"
-                sigmas = AYS_NOISE_LEVELS[model_type][:]
-                if (steps + 1) != len(sigmas):
-                    sigmas = loglinear_interp(sigmas, steps + 1)
-                sigmas[-1] = 0
-                sigmas = torch.FloatTensor(sigmas)
-            elif sampler_name in ['dpm_2', 'dpm_2_ancestral']:
+            if sampler_name in ['dpm_2', 'dpm_2_ancestral']:
                 sigmas = calculate_sigmas_scheduler(real_model, scheduler, steps + 1, sigma_min, sigma_max, rho)
                 sigmas = torch.cat([sigmas[:-2], sigmas[-1:]])
             else:
