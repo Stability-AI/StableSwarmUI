@@ -155,6 +155,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
     /// <param name="interrupt">Interrupt token to use.</param>
     public async Task AwaitJobLive(string workflow, string batchId, Action<object> takeOutput, T2IParamInput user_input, CancellationToken interrupt)
     {
+        if (interrupt.IsCancellationRequested)
+        {
+            return;
+        }
         Logs.Verbose("Will await a job, do parse...");
         JObject workflowJson = Utilities.ParseToJson(workflow);
         Logs.Verbose("JSON parsed.");
@@ -276,6 +280,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                             case "execution_cached":
                                 nodesDone++;
                                 curPercent = 0;
+                                hasInterrupted = false;
                                 yieldProgressUpdate();
                                 break;
                             case "progress":
