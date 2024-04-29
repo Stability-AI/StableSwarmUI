@@ -1394,6 +1394,25 @@ function autoRevealRevision() {
     }
 }
 
+function revisionAddImage(file) {
+    let clearButton = getRequiredElementById('alt_prompt_image_clear_button');
+    let promptImageArea = getRequiredElementById('alt_prompt_image_area');
+    let reader = new FileReader();
+    reader.onload = (e) => {
+        let data = e.target.result;
+        let imageObject = new Image();
+        imageObject.src = data;
+        imageObject.height = 128;
+        imageObject.className = 'alt-prompt-image';
+        imageObject.dataset.filedata = data;
+        clearButton.style.display = '';
+        showRevisionInputs(true);
+        promptImageArea.appendChild(imageObject);
+        altPromptSizeHandleFunc();
+    };
+    reader.readAsDataURL(file);
+}
+
 function revisionInputHandler() {
     let dragArea = getRequiredElementById('alt_prompt_region');
     dragArea.addEventListener('dragover', (e) => {
@@ -1401,7 +1420,6 @@ function revisionInputHandler() {
         e.stopPropagation();
     });
     let clearButton = getRequiredElementById('alt_prompt_image_clear_button');
-    let promptImageArea = getRequiredElementById('alt_prompt_image_area');
     clearButton.addEventListener('click', () => {
         hideRevisionInputs();
     });
@@ -1411,26 +1429,25 @@ function revisionInputHandler() {
             e.stopPropagation();
             for (let file of e.dataTransfer.files) {
                 if (file.type.startsWith('image/')) {
-                    let reader = new FileReader();
-                    reader.onload = (e) => {
-                        let data = e.target.result;
-                        let imageObject = new Image();
-                        imageObject.src = data;
-                        imageObject.height = 128;
-                        imageObject.className = 'alt-prompt-image';
-                        imageObject.dataset.filedata = data;
-                        clearButton.style.display = '';
-                        showRevisionInputs(true);
-                        promptImageArea.appendChild(imageObject);
-                        altPromptSizeHandleFunc();
-                    };
-                    reader.readAsDataURL(file);
+                    revisionAddImage(file);
                 }
             }
         }
     });
 }
 revisionInputHandler();
+
+function revisionImagePaste(e) {
+    let items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (let item of items) {
+        if (item.kind === 'file') {
+            let file = item.getAsFile();
+            if (file.type.startsWith('image/')) {
+                revisionAddImage(file);
+            }
+        }
+    }
+}
 
 function openEmptyEditor() {
     let canvas = document.createElement('canvas');
