@@ -392,6 +392,7 @@ textarea, input, select {
     width: 100%;
 }
 .auto-file-label {
+    position: relative;
     display: block;
 }
 .auto-file-input {
