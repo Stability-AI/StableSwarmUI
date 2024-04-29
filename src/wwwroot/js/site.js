@@ -603,7 +603,7 @@ function makeImageInput(featureid, id, paramid, name, description, toggles = fal
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         </label>
         <label for="${id}" class="auto-file-label">
-            <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" data-param_id="${paramid}" onchange="load_image_file(this)" ondragover="updateFileDragging(arguments[0])" ondragleave="updateFileDragging(arguments[0], true)" autocomplete="false">
+            <input class="auto-file" type="file" accept="image/png, image/jpeg" id="${id}" data-param_id="${paramid}" onchange="load_image_file(this)" ondragover="updateFileDragging(arguments[0], false)" ondragleave="updateFileDragging(arguments[0], true)" autocomplete="false">
             <div class="auto-file-input">
                 <a class="auto-file-input-button basic-button">${translateableHtml("Choose File")}</a>
                 <span class="auto-file-input-filename"></span>
@@ -614,17 +614,64 @@ function makeImageInput(featureid, id, paramid, name, description, toggles = fal
     return html;
 }
 
+// This is a giant hackpile to force dragging images onto inputs to treat them like files and thus actually work
+window.addEventListener('drop', e => {
+    if (e.dataTransfer && e.dataTransfer.files.length) {
+        return;
+    }
+    let uris = e.dataTransfer.getData('text/uri-list');
+    if (!uris) {
+        return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    let file = uris.split('\n')[0];
+    let xhr = new XMLHttpRequest();
+    xhr.responseType = 'blob';
+    xhr.onload = () => {
+        let blob = xhr.response;
+        let reader = new FileReader();
+        reader.onload = () => {
+            // idk why but I can't just "new DropEvent", and "new DragEvent('drop')" errors
+            let dropEvent = document.createEvent('Event');
+            dropEvent.initEvent('drop', true, true);
+            dropEvent.dataTransfer = new DataTransfer();
+            let outFile = new File([blob], file.split('/').pop(), { type: blob.type });
+            dropEvent.dataTransfer.items.add(outFile);
+            dropEvent.dataTransfer.files = [outFile];
+            e.target.dispatchEvent(dropEvent);
+            if (e.target.tagName == 'INPUT' && e.target.type == 'file') {
+                e.target.files = dropEvent.dataTransfer.files;
+                triggerChangeFor(e.target);
+            }
+        };
+        reader.readAsDataURL(blob);
+    };
+    xhr.open('GET', file);
+    xhr.send();
+    return false;
+});
+
 function updateFileDragging(e, out) {
     let files = [];
     if (e.dataTransfer && !out) {
         files = e.dataTransfer.files;
         if (!files || !files.length) {
-            files = [...e.dataTransfer.items || []].filter(item => item.kind === "file");
+            files = [...e.dataTransfer.items || []].filter(item => item.kind == "file");
+        }
+        if (!files.length) {
+            let uris = e.dataTransfer.getData('text/uri-list');
+            if (uris) {
+                files = uris.split('\n');
+            }
         }
     }
     const el = e.target.nextElementSibling;
     const mode = files.length ? "add" : "remove";
     el.classList[mode]("auto-file-input-file-drag");
+    if (files.length) {
+        e.preventDefault();
+    }
 }
 
 function describeAspectRatio(width, height) {

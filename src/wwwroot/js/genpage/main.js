@@ -1406,9 +1406,9 @@ function revisionInputHandler() {
         hideRevisionInputs();
     });
     dragArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
             for (let file of e.dataTransfer.files) {
                 if (file.type.startsWith('image/')) {
                     let reader = new FileReader();
