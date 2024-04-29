@@ -5,6 +5,7 @@ class GenerateHandler {
         this.totalGensThisRun = 0;
         this.totalGenRunTime = 0;
         this.validateModel = true;
+        this.interrupted = -1;
         this.imageContainerDivId = 'current_image';
         this.imageId = 'current_image_img';
         this.progressBarHtml = `<div class="image-preview-progress-inner"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>`;
@@ -45,6 +46,11 @@ class GenerateHandler {
 
     beforeGenRun() {
         num_current_gens += parseInt(getRequiredElementById('input_images').value);
+    }
+
+    doInterrupt(allSessions = false) {
+        this.interrupted = this.batchesEver;
+        doInterrupt(allSessions);
     }
     
     doGenerate(input_overrides = {}, input_preoverrides = {}) {
@@ -176,6 +182,9 @@ class GenerateHandler {
                     }
                 }
             }, e => {
+                if (this.interrupted >= this.batchesEver) {
+                    return;
+                }
                 this.hadError(e);
             });
         };

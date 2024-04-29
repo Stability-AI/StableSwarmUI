@@ -132,15 +132,15 @@
                             </div>
                             <button class="alt-prompt-buttons alt-prompt-generate-button basic-button translate" id="alt_generate_button" oncontextmenu="doPopover('generate'); return false;" onclick="mainGenHandler.doGenerate()">Generate</button>
                             <button class="alt-prompt-buttons alt-prompt-center-button basic-button" id="alt_center_button" oncontextmenu="doPopover('generate_center'); return false;" onclick="doPopover('generate_center')">&#x2B9F;</button>
-                            <button class="alt-prompt-buttons interrupt-button interrupt-button-none alt-interrupt" id="alt_interrupt_button" oncontextmenu="doPopover('interrupt'); return false;" onclick="doInterrupt()">&times;</button>
+                            <button class="alt-prompt-buttons interrupt-button interrupt-button-none alt-interrupt" id="alt_interrupt_button" oncontextmenu="doPopover('interrupt'); return false;" onclick="mainGenHandler.doInterrupt()">&times;</button>
                         </div>
                     </div>
                     <div class="sui-popover sui_popover_model" id="popover_generate_center">
                         <div class="sui_popover_model_button translate" onclick="mainGenHandler.doGenerate()">Generate</div>
                         <div class="sui_popover_model_button translate" id="generate_forever_button" onclick="toggleGenerateForever()">Generate Forever</div>
                         <div class="sui_popover_model_button translate" id="generate_previews_button" onclick="toggleGeneratePreviews()">Generate Previews</div>
-                        <div class="sui_popover_model_button translate" onclick="doInterrupt()">Interrupt Current Session</div>
-                        <div class="sui_popover_model_button translate" onclick="doInterrupt(true)">Interrupt All Sessions</div>
+                        <div class="sui_popover_model_button translate" onclick="mainGenHandler.doInterrupt()">Interrupt Current Session</div>
+                        <div class="sui_popover_model_button translate" onclick="mainGenHandler.doInterrupt(true)">Interrupt All Sessions</div>
                         <div class="sui_popover_model_button translate" onclick="showPromptTokenizen('alt_prompt_textbox')">Show Prompt Tokenization</div>
                     </div>
                     <div class="sui-popover sui_popover_model" id="popover_generate">
@@ -149,8 +149,8 @@
                         <div class="sui_popover_model_button translate" id="generate_previews_button" onclick="toggleGeneratePreviews()">Generate Previews</div>
                     </div>
                     <div class="sui-popover sui_popover_model" id="popover_interrupt">
-                        <div class="sui_popover_model_button translate" onclick="doInterrupt()">Interrupt Current Session</div>
-                        <div class="sui_popover_model_button translate" onclick="doInterrupt(true)">Interrupt All Sessions</div>
+                        <div class="sui_popover_model_button translate" onclick="mainGenHandler.doInterrupt()">Interrupt Current Session</div>
+                        <div class="sui_popover_model_button translate" onclick="mainGenHandler.doInterrupt(true)">Interrupt All Sessions</div>
                     </div>
                 </div>
                 <div class="model-block-menu-button t2i-area-quicktools translate" onclick="doPopover('quicktools')">Quick Tools</div>
@@ -159,8 +159,8 @@
                     <div class="sui_popover_model_button translate" onclick="refreshParameterValues(true)">Reload Parameter Values</div>
                     <div class="sui_popover_model_button translate" onclick="resetParamsToDefault()">Reset Params to Default</div>
                     <div class="sui_popover_model_button translate" onclick="openEmptyEditor()">Open Empty Image Editor</div>
-                    <div class="sui_popover_model_button translate" onclick="doInterrupt()">Interrupt Current Session</div>
-                    <div class="sui_popover_model_button translate" onclick="doInterrupt(true)">Interrupt All Sessions</div>
+                    <div class="sui_popover_model_button translate" onclick="mainGenHandler.doInterrupt()">Interrupt Current Session</div>
+                    <div class="sui_popover_model_button translate" onclick="mainGenHandler.doInterrupt(true)">Interrupt All Sessions</div>
                     <div class="sui_popover_model_button translate" onclick="forceShowWelcomeMessage()">Reshow Welcome Message</div>
                 </div>
                 @WebUtil.ModalHeader("gen_previews_missing_preset_modal", "Missing Preview Preset")

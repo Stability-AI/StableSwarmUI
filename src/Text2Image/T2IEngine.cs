@@ -264,8 +264,16 @@ namespace StableSwarmUI.Text2Image
                     });
                     if (numImagesGenned == 0)
                     {
-                        Logs.Info("No images were generated (all refused, or failed).");
-                        setError("No images were generated (all refused, or failed - check server logs for details).");
+                        if (claim.ShouldCancel)
+                        {
+                            Logs.Info("Generation session interrupted.");
+                            setError("Generation session interrupted.");
+                        }
+                        else
+                        {
+                            Logs.Info("No images were generated (all refused, or failed).");
+                            setError("No images were generated (all refused, or failed - check server logs for details).");
+                        }
                     }
                     else if (numImagesGenned == 1)
                     {
