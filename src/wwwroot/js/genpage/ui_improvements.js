@@ -269,6 +269,71 @@ class UIImprovementHandler {
                 return false;
             }
         }, {capture:true, passive:false});
+        let lastX = 0, lastY = 0;
+        let stepDist = 10;
+        let clickedElem = null;
+        window.addEventListener('mousemove', (e) => {
+            if (clickedElem) {
+                if (e.buttons != 1) {
+                    clickedElem.style.cursor = '';
+                    return;
+                }
+                clickedElem.style.cursor = 'ew-resize';
+                if (lastX == 0 && lastY == 0) {
+                    lastX = e.pageX;
+                    lastY = e.pageY;
+                    return;
+                }
+                let moveX = e.pageX - lastX;
+                let moveY = e.pageY - lastY;
+                if (Math.abs(moveX) < stepDist && Math.abs(moveY) < stepDist) {
+                    return;
+                }
+                moveX = Math.round(moveX / stepDist);
+                moveY = Math.round(moveY / stepDist);
+                lastX = e.pageX;
+                lastY = e.pageY;
+                let step = parseFloat(clickedElem.step) || 1;
+                let value = parseFloat(clickedElem.value) || 0;
+                let newVal = value + (moveX - moveY) * step;
+                if (clickedElem.min !== undefined) {
+                    newVal = Math.max(newVal, parseFloat(clickedElem.min));
+                }
+                if (clickedElem.max !== undefined) {
+                    newVal = Math.min(newVal, parseFloat(clickedElem.max));
+                }
+                clickedElem.value = roundToStrAuto(newVal, step);
+                triggerChangeFor(clickedElem);
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, {capture:true, passive:false});
+        window.addEventListener('mousedown', (e) => {
+            clickedElem = null;
+            if (e.target.tagName == 'INPUT' && e.target.type == 'number') {
+                lastX = 0;
+                lastY = 0;
+                window.getSelection().empty();
+                clickedElem = e.target;
+            }
+        }, true);
+        window.addEventListener('mouseup', (e) => {
+            clickedElem = null;
+            if (e.target.tagName == 'INPUT' && e.target.type == 'number') {
+                e.target.style.cursor = '';
+                lastX = 0;
+                lastY = 0;
+                window.getSelection().empty();
+            }
+        }, true);
+        window.addEventListener('selectstart', (e) => {
+            if (e.target.tagName == 'INPUT' && e.target.type == 'number') {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, {capture:true, passive:false});
     }
 
     onSelectClicked(elem, e) {
