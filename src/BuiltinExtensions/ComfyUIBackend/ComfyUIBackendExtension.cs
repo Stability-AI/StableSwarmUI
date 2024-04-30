@@ -26,7 +26,10 @@ public class ComfyUIBackendExtension : Extension
     public static Dictionary<string, string> Workflows;
 
     /// <summary>Set of all feature-ids supported by ComfyUI backends.</summary>
-    public static HashSet<string> FeaturesSupported = ["comfyui", "refiners", "controlnet", "endstepsearly", "seamless", "video"];
+    public static HashSet<string> FeaturesSupported = ["comfyui", "refiners", "controlnet", "endstepsearly", "seamless", "video", "variation_seed", "freeu"];
+
+    /// <summary>Set of feature-ids that were added presumptively during loading and should be removed if the backend turns out to be missing them.</summary>
+    public static HashSet<string> FeaturesDiscardIfNotFound = ["variation_seed", "freeu"];
 
     /// <summary>Extensible map of ComfyUI Node IDs to supported feature IDs.</summary>
     public static Dictionary<string, string> NodeToFeatureMap = new()
@@ -59,6 +62,16 @@ public class ComfyUIBackendExtension : Extension
         Utilities.RemoveBadPycacheFrom($"{Folder}/ExtraNodes/SwarmWebHelper");
         T2IAPI.AlwaysTopKeys.Add("comfyworkflowraw");
         T2IAPI.AlwaysTopKeys.Add("comfyworkflowparammetadata");
+        if (Directory.Exists($"{Folder}/DLNodes/ComfyUI_IPAdapter_plus"))
+        {
+            FeaturesSupported.UnionWith(["ipadapter", "cubiqipadapterunified"]);
+            FeaturesDiscardIfNotFound.UnionWith(["ipadapter", "cubiqipadapterunified"]);
+        }
+        if (Directory.Exists($"{Folder}/DLNodes/comfyui_controlnet_aux"))
+        {
+            FeaturesSupported.UnionWith(["controlnetpreprocessors"]);
+            FeaturesDiscardIfNotFound.UnionWith(["controlnetpreprocessors"]);
+        }
     }
 
     public override void OnShutdown()
@@ -307,7 +320,12 @@ public class ComfyUIBackendExtension : Extension
                 if (NodeToFeatureMap.TryGetValue(key, out string featureId))
                 {
                     FeaturesSupported.Add(featureId);
+                    FeaturesDiscardIfNotFound.Remove(featureId);
                 }
+            }
+            foreach (string feature in FeaturesDiscardIfNotFound)
+            {
+                FeaturesSupported.Remove(feature);
             }
         }
     }
@@ -326,7 +344,7 @@ public class ComfyUIBackendExtension : Extension
 
     public static List<string> UpscalerModels = ["latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic", "pixel-lanczos"],
         Samplers = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2"],
-        Schedulers = ["normal", "karras", "exponential", "simple", "ddim_uniform"];
+        Schedulers = ["normal", "karras", "exponential", "simple", "ddim_uniform", "sgm_uniform", "turbo", "align_your_steps"];
 
     public static List<string> IPAdapterModels = ["None"];
 

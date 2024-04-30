@@ -58,7 +58,7 @@ public class BackendHandler
     /// <summary>Gets a hashset of all supported features across all backends.</summary>
     public HashSet<string> GetAllSupportedFeatures()
     {
-        return RunningBackendsOfType<AbstractT2IBackend>().SelectMany(b => b.SupportedFeatures).ToHashSet();
+        return T2IBackends.Values.Where(b => b is not null && b.Backend.IsEnabled && b.Backend.Status != BackendStatus.IDLE).SelectMany(b => b.Backend.SupportedFeatures).ToHashSet();
     }
 
     public BackendHandler()

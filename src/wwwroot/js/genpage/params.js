@@ -184,8 +184,11 @@ function genInputs(delay_final = false) {
                     }
                     let symbol = param.group.can_shrink ? '<span class="auto-symbol">&#x2B9F;</span>' : '';
                     let shrinkClass = param.group.can_shrink ? 'input-group-shrinkable' : 'input-group-noshrink';
+                    let extraSpanInfo = param.group.id == 'revision' ? ' style="display: none;"' : '';
+                    let openClass = shouldOpen == 'closed' ? 'input-group-closed' : 'input-group-open';
+                    let extraContentInfo = shouldOpen == 'closed' ? ' style="display: none;"' : '';
                     let toggler = getToggleHtml(param.group.toggles, `input_group_content_${groupId}`, escapeHtml(param.group.name), ' group-toggler-switch', 'doToggleGroup');
-                    html += `<div class="input-group input-group-open" id="auto-group-${groupId}"><span id="input_group_${groupId}" class="input-group-header ${shrinkClass}"><span class="header-label-wrap">${symbol}<span class="header-label">${translateableHtml(escapeHtml(param.group.name))}</span>${toggler}${infoButton}</span></span><div class="input-group-content" id="input_group_content_${groupId}">`;
+                    html += `<div class="input-group ${openClass}" id="auto-group-${groupId}"><span${extraSpanInfo} id="input_group_${groupId}" class="input-group-header ${shrinkClass}"><span class="header-label-wrap">${symbol}<span class="header-label">${translateableHtml(escapeHtml(param.group.name))}</span>${toggler}${infoButton}</span></span><div${extraContentInfo} class="input-group-content" id="input_group_content_${groupId}">`;
                     if (presetArea) {
                         presetHtml += `<div class="input-group"><span id="input_group_preset_${groupId}" class="input-group-header ${shrinkClass}">${symbol}${translateableHtml(escapeHtml(param.group.name))}</span><div class="input-group-content">`;
                     }
@@ -214,16 +217,17 @@ function genInputs(delay_final = false) {
             presetArea.innerHTML = presetHtml;
         }
     }
+    hideUnsupportableParams();
     let final = () => {
         for (let runnable of runnables) {
             runnable();
         }
         for (let group of groupsClose) {
             let elem = getRequiredElementById(`input_group_${group}`);
-            toggleGroupOpen(elem);
+            toggleGroupOpen(elem, false);
             let pelem = document.getElementById(`input_group_preset_${group}`);
             if (pelem) {
-                toggleGroupOpen(pelem);
+                toggleGroupOpen(pelem, false);
             }
         }
         for (let group of groupsEnable) {
