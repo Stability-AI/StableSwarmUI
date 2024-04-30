@@ -38,6 +38,9 @@ public class Settings : AutoConfiguration
     [ConfigComment("If set true, new/upcoming/experimental features will be visible.")]
     public bool ShowExperimentalFeatures = false;
 
+    [ConfigComment("If true, Swarm will check if there's any updates available during startup. If false, it will not check for updates.\nUpdate check only downloads a simple JSON from GitHub to get the current version info, it does not transmit any telemetry nor does it download any files or apply the update.\nDefaults to true.")]
+    public bool CheckForUpdates = true;
+
     [ConfigComment("Settings related to logging.")]
     public LogsData Logs = new();
 

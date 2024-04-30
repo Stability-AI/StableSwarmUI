@@ -4,6 +4,7 @@ using FreneticUtilities.FreneticToolkit;
 using LiteDB;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Backends;
@@ -75,6 +76,9 @@ public class Program
     /// <summary>General data directory root.</summary>
     public static string DataDir = "Data";
 
+    /// <summary>If a version update is available, this is the message.</summary>
+    public static string VersionUpdateMessage = null;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -118,6 +122,24 @@ public class Program
         }
         Logs.StartLogSaving();
         timer.Check("Initial settings load");
+        if (ServerSettings.CheckForUpdates)
+        {
+            Utilities.RunCheckedTask(async () =>
+            {
+                JObject vers = (await Utilities.UtilWebClient.GetStringAsync("https://mcmonkeyprojects.github.io/swarm/update.json", GlobalProgramCancel)).ParseToJson();
+                string versId = $"{vers["version"]}";
+                string message = $"{vers["message"]}";
+                if (versId != Utilities.Version)
+                {
+                    Logs.Warning($"A new version of StableSwarmUI is available: {versId}! You are running version {Utilities.Version}. Has message: {message}");
+                    VersionUpdateMessage = $"Update available: {versId} (you are running {Utilities.Version}):\n{message}";
+                }
+                else
+                {
+                    Logs.Info($"Swarm is up to date! Version {Utilities.Version} is the latest.");
+                }
+            });
+        }
         RunOnAllExtensions(e => e.OnPreInit());
         timer.Check("Extension PreInit");
         Logs.Init("Prepping options...");
