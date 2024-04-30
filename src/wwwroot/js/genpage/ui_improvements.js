@@ -248,13 +248,21 @@ class UIImprovementHandler {
                 let input = e.target;
                 let step = parseFloat(input.step) || 1;
                 let value = parseFloat(input.value) || 0;
-                if (e.deltaY > 0) {
-                    input.value = value - step;
+                function updateVal(newVal) {
+                    if (input.min !== undefined) {
+                        newVal = Math.max(newVal, parseFloat(input.min));
+                    }
+                    if (input.max !== undefined) {
+                        newVal = Math.min(newVal, parseFloat(input.max));
+                    }
+                    input.value = roundToStrAuto(newVal, step);
                     triggerChangeFor(input);
                 }
+                if (e.deltaY > 0) {
+                    updateVal(value - step);
+                }
                 else if (e.deltaY < 0) {
-                    input.value = value + step;
-                    triggerChangeFor(input);
+                    updateVal(value + step);
                 }
                 e.preventDefault();
                 e.stopPropagation();

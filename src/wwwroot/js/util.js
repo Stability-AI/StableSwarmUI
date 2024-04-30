@@ -386,15 +386,37 @@ function roundTo(val, step) {
 }
 
 /**
+ * Returns a string of the given value rounded to the nearest multiple of the given step, and fixed to have a reasonable number of digits after the decimal.
+ */
+function roundToStrAuto(val, step) {
+    let stepStr = `${step}`;
+    let dot = stepStr.indexOf('.');
+    let decimals = dot < 0 ? 0 : stepStr.length - dot - 1;
+    return roundToStr(roundTo(val, step), decimals + 2);
+}
+
+/**
  * Returns a string of the given value rounded to have the given max number of digits after the decimal.
  */
 function roundToStr(val, decimals) {
-    let valStr = `${roundTo(val, 10 ** -decimals)}`;
+    let frac = 10 ** -decimals;
+    let newVal = roundTo(val, frac) + frac * 0.001 * Math.sign(val);
+    if (newVal < frac && newVal > -frac) {
+        return '0';
+    }
+    let valStr = `${newVal}`;
     let dot = valStr.indexOf('.');
-    if (dot < 0) {
+    if (dot < 0 || valStr.includes('e')) {
         return valStr;
     }
-    return valStr.substring(0, dot + 1 + 2);
+    let subStr = valStr.substring(0, dot + 1 + 2);
+    while (subStr.endsWith('0')) {
+        subStr = subStr.substring(0, subStr.length - 1);
+    }
+    if (subStr.endsWith('.')) {
+        subStr = subStr.substring(0, subStr.length - 1);
+    }
+    return subStr;
 }
 
 /**
