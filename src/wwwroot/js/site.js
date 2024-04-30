@@ -205,11 +205,11 @@ function doGlobalErrorDebug() {
 function triggerChangeFor(elem) {
     elem.dispatchEvent(new Event('input'));
     if (elem.oninput) {
-        elem.oninput();
+        elem.oninput(elem);
     }
     elem.dispatchEvent(new Event('change'));
     if (elem.onchange) {
-        elem.onchange();
+        elem.onchange(elem);
     }
 }
 

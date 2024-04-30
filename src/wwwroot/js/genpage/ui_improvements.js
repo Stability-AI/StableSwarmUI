@@ -243,6 +243,24 @@ class UIImprovementHandler {
                 return false;
             }
         }, true);
+        window.addEventListener('wheel', (e) => {
+            if (e.target.tagName == 'INPUT' && (e.target.type == 'number' || e.target.type == 'range')) {
+                let input = e.target;
+                let step = parseFloat(input.step) || 1;
+                let value = parseFloat(input.value) || 0;
+                if (e.deltaY > 0) {
+                    input.value = value - step;
+                    triggerChangeFor(input);
+                }
+                else if (e.deltaY < 0) {
+                    input.value = value + step;
+                    triggerChangeFor(input);
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, {capture:true, passive:false});
     }
 
     onSelectClicked(elem, e) {
