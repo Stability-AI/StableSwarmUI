@@ -129,10 +129,10 @@ function isHtmlSpanStyleAllowed(text) {
     return true;
 }
 
-let allowedHtmlTagNames = ['a', 'b', 'i', 's', 'span', 'u', 'br', 'hr', 'p', 'li', 'ul', 'strong', 'h6', 'h5', 'h4', 'em'];
+let allowedHtmlTagNames = ['a', 'abbr', 'acronym', 'b', 'i', 's', 'span', 'u', 'br', 'hr', 'p', 'li', 'ul', 'ol', 'strong', 'h6', 'h5', 'h4', 'em', 'mark', 'aside', 'blockquote', 'q', 'pre', 'code', 'strike'];
 let htmlTagSafeRemaps = { 'h3': 'h4', 'h2': 'h4', 'h1': 'h4'};
 let allowedHtmlTagAttrs = ['href', 'title', 'style'];
-let allowedHtmlFullAttrs = ['target="_blank"', 'rel="noopener noreferrer"', 'rel="noopener"', 'rel="noreferrer"', 'rel="ugc"'];
+let allowedHtmlFullAttrs = ['target="_blank"', 'target="_new"', 'rel="noopener noreferrer"', 'rel="noopener"', 'rel="noreferrer"', 'rel="ugc"'];
 let autoExcludeHtmlAttrs = ['id', 'class'];
 /** Partially escapes HTML, allowing 'basic format' codes (bold, italic, etc) to remain. */
 function safeHtmlOnly(text) {
