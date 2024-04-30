@@ -1,6 +1,4 @@
-/**
- * Dirt-simple direct POST request sender.
- */
+/** Dirt-simple direct POST request sender. */
 function sendJsonToServer(url, json_input, callback, error_callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
@@ -13,9 +11,7 @@ function sendJsonToServer(url, json_input, callback, error_callback) {
     xhr.send(JSON.stringify(json_input));
 };
 
-/**
- * Dirt-simple direct GET request sender.
- */
+/** Dirt-simple direct GET request sender. */
 function getJsonDirect(url, callback, error_callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -28,9 +24,7 @@ function getJsonDirect(url, callback, error_callback) {
     xhr.send();
 };
 
-/**
- * Gets the appropriate current WebSocket address for the server.
- */
+/** Gets the appropriate current WebSocket address for the server. */
 function getWSAddress() {
     let url = document.URL;
     let wsPrefix = null;
@@ -53,9 +47,7 @@ function getWSAddress() {
     return wsPrefix + url;
 }
 
-/**
- * Creates a new HTML span with the given ID and classnames.
- */
+/** Creates a new HTML span with the given ID and classnames. */
 function createSpan(id, classes, html = null) {
     let span = document.createElement('span');
     if (id != null) {
@@ -83,25 +75,109 @@ function createDiv(id, classes, html = null) {
     return div;
 }
 
-/**
- * Escapes a string for use in HTML.
- */
+/** Escapes a string for use in HTML. */
 function escapeHtml(text) {
     return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;').replaceAll('\n', '\n<br>');
 }
 
-/**
- * Escapes a string for use in HTML (no line break handling).
- */
+/** Escapes a string for use in HTML (no line break handling). */
 function escapeHtmlNoBr(text) {
     return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }
 
-/**
- * Escapes a string for use in a JavaScript string literal.
- */
+/** Escapes a string for use in a JavaScript string literal. */
 function escapeJsString(text) {
     return text.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll("'", "\\'").replaceAll('\n', '\\n').replaceAll('\r', '\\r').replaceAll('\t', '\\t');
+}
+
+function isHtmlSpanStyleAllowed(text) {
+    if (text.startsWith('"') && text.endsWith('"')) {
+        text = text.substring(1, text.length - 1);
+    }
+    let parts = text.split(';');
+    for (let part of parts) {
+        if (part.trim() == '') {
+            continue;
+        }
+        let split = part.split(':');
+        if (split.length != 2) {
+            return false;
+        }
+        let key = split[0].trim();
+        let value = split[1].trim();
+        if (key == 'color' || key == 'background-color') {
+            // #ff00ff or rgb(255, 0, 255)
+            if (!value.match(/^#[0-9a-fA-F]{6}$/) && !value.match(/^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/)) { return false; }
+        }
+        else if (key == 'font-weight') {
+            if (value != 'bold' && value != 'normal') { return false; }
+        }
+        else if (key == 'text-decoration') {
+            if (value != 'underline' && value != 'line-through' && value != 'none') { return false; }
+        }
+        else if (key == 'font-style') {
+            if (value != 'italic' && value != 'normal') { return false; }
+        }
+        else if (key == 'font-size') {
+            // percentages in limited range
+            if (!value.match(/^[0-2]?[0-9][0-9]%$/)) { return false; }
+        }
+        else {
+            return false;
+        }
+    }
+    return true;
+}
+
+let allowedHtmlTagNames = ['a', 'b', 'i', 's', 'span', 'u', 'br', 'br/', 'br /', 'p', 'li', 'ul', 'strong'];
+allowedHtmlTagNames = allowedHtmlTagNames.concat(allowedHtmlTagNames.map(tag => `/${tag}`));
+let allowedHtmlTagAttrs = ['href', 'title', 'style'];
+/** Partially escapes HTML, allowing 'basic format' codes (bold, italic, etc) to remain. */
+function safeHtmlOnly(text) {
+    let tagStart = text.indexOf('<');
+    if (tagStart < 0) {
+        return text;
+    }
+    let tagEnd = text.indexOf('>', tagStart);
+    if (tagEnd < 0) {
+        return escapeHtml(text);
+    }
+    let prefix = escapeHtmlNoBr(text.substring(0, tagStart));
+    let tag = text.substring(tagStart + 1, tagEnd);
+    let suffix = safeHtmlOnly(text.substring(tagEnd + 1));
+    let parts = splitWithQuoting(tag, ' ');
+    let tagName = parts[0];
+    parts.shift();
+    let splitParts = parts.map(part => splitWithQuoting(part, '='));
+    let styleAttr = splitParts.find(part => part[0] == 'style');
+    if (allowedHtmlTagNames.includes(tagName)
+        && splitParts.every(part => part.length == 2)
+        && splitParts.every(part => allowedHtmlTagAttrs.includes(part[0]))
+        && (!styleAttr || isHtmlSpanStyleAllowed(styleAttr[1]))
+        && splitParts.filter(part => part[0] == 'style').length <= 1) {
+            return `${prefix}<${tag}>${suffix}`;
+    }
+    return `${prefix}&lt;${escapeHtml(tag)}&gt;${suffix}`;
+}
+
+/** Splits the text around the splitChar, but allowing for "quoted sections" to be contained. */
+function splitWithQuoting(text, splitChar) {
+    let parts = [];
+    let startInd = 0;
+    let inQuote = false;
+    for (let i = 0; i < text.length; i++) {
+        let c = text.charAt(i);
+        if (c == '"') {
+            inQuote = !inQuote;
+        }
+        else if (c == splitChar && !inQuote) {
+            parts.push(text.substring(startInd, i));
+            startInd = i + 1;
+            continue;
+        }
+    }
+    parts.push(text.substring(startInd));
+    return parts;
 }
 
 let shiftMonitor = false;
