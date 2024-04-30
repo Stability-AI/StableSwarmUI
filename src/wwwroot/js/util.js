@@ -144,7 +144,7 @@ function safeHtmlOnly(text) {
     if (tagEnd < 0) {
         return escapeHtml(text);
     }
-    let prefix = escapeHtmlNoBr(text.substring(0, tagStart));
+    let prefix = text.substring(0, tagStart).replaceAll('\n', '<br>\n').replaceAll('>', '&gt;');
     let tag = text.substring(tagStart + 1, tagEnd);
     let suffix = safeHtmlOnly(text.substring(tagEnd + 1));
     let tagForSplit = tag.endsWith('/') ? tag.substring(0, tag.length - 1).trim() : tag;
