@@ -129,9 +129,11 @@ function isHtmlSpanStyleAllowed(text) {
     return true;
 }
 
-let allowedHtmlTagNames = ['a', 'b', 'i', 's', 'span', 'u', 'br', 'br/', 'br /', 'p', 'li', 'ul', 'strong'];
-allowedHtmlTagNames = allowedHtmlTagNames.concat(allowedHtmlTagNames.map(tag => `/${tag}`));
+let allowedHtmlTagNames = ['a', 'b', 'i', 's', 'span', 'u', 'br', 'hr', 'p', 'li', 'ul', 'strong', 'h6', 'h5', 'h4', 'em'];
+let htmlTagSafeRemaps = { 'h3': 'h4', 'h2': 'h4', 'h1': 'h4'};
 let allowedHtmlTagAttrs = ['href', 'title', 'style'];
+let allowedHtmlFullAttrs = ['target="_blank"', 'rel="noopener noreferrer"', 'rel="noopener"', 'rel="noreferrer"', 'rel="ugc"'];
+let autoExcludeHtmlAttrs = ['id', 'class'];
 /** Partially escapes HTML, allowing 'basic format' codes (bold, italic, etc) to remain. */
 function safeHtmlOnly(text) {
     let tagStart = text.indexOf('<');
@@ -145,17 +147,35 @@ function safeHtmlOnly(text) {
     let prefix = escapeHtmlNoBr(text.substring(0, tagStart));
     let tag = text.substring(tagStart + 1, tagEnd);
     let suffix = safeHtmlOnly(text.substring(tagEnd + 1));
-    let parts = splitWithQuoting(tag, ' ');
+    let tagForSplit = tag.endsWith('/') ? tag.substring(0, tag.length - 1).trim() : tag;
+    tagForSplit = tag.startsWith('/') ? tagForSplit.substring(1) : tagForSplit;
+    let parts = splitWithQuoting(tagForSplit, ' ').filter(part => !allowedHtmlFullAttrs.includes(part));
     let tagName = parts[0];
+    if (htmlTagSafeRemaps[tagName]) {
+        tagName = htmlTagSafeRemaps[tagName];
+    }
     parts.shift();
-    let splitParts = parts.map(part => splitWithQuoting(part, '='));
+    let splitParts = parts.map(part => splitWithQuoting(part, '=')).filter(part => !autoExcludeHtmlAttrs.includes(part[0]));
     let styleAttr = splitParts.find(part => part[0] == 'style');
     if (allowedHtmlTagNames.includes(tagName)
         && splitParts.every(part => part.length == 2)
         && splitParts.every(part => allowedHtmlTagAttrs.includes(part[0]))
         && (!styleAttr || isHtmlSpanStyleAllowed(styleAttr[1]))
         && splitParts.filter(part => part[0] == 'style').length <= 1) {
-            return `${prefix}<${tag}>${suffix}`;
+            let result = `${prefix}<`;
+            if (tag.startsWith('/')) {
+                result += '/';
+            }
+            else {
+                if (!suffix.includes(`</${tagName}>`)) {
+                    suffix += `</${tagName}>`;
+                }
+            }
+            result += tagName;
+            for (let part of splitParts) {
+                result += ` ${part[0]}="${part[1]}"`;
+            }
+            return `${result}>${suffix}`;
     }
     return `${prefix}&lt;${escapeHtml(tag)}&gt;${suffix}`;
 }
