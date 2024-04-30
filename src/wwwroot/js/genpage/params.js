@@ -533,6 +533,7 @@ function refreshParameterValues(strong = true, callback = null) {
         Promise.all(promises).then(() => {
             for (let param of gen_param_types) {
                 let elem = document.getElementById(`input_${param.id}`);
+                let presetElem = document.getElementById(`preset_input_${param.id}`);
                 if (!elem) {
                     console.log(`Could not find element for param ${param.id}`);
                     continue;
@@ -545,12 +546,14 @@ function refreshParameterValues(strong = true, callback = null) {
                         html += `<option value="${escapeHtmlNoBr(value)}"${selected}>${escapeHtml(value)}</option>`;
                     }
                     elem.innerHTML = html;
+                    presetElem.innerHTML = html;
                 }
                 else if (param.type == "list" && param.values) {
                     let listOpts = [...elem.options].map(o => o.value);
                     let newVals = param.values.filter(v => !listOpts.includes(v));
                     for (let val of newVals) {
                         $(elem).append(new Option(val, val, false, false));
+                        $(presetElem).append(new Option(val, val, false, false));
                     }
                 }
             }
