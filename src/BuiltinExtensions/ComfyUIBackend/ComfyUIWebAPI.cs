@@ -141,7 +141,7 @@ public static class ComfyUIWebAPI
     /// <summary>API route to ensure that a ComfyUI refresh hit will actually do a native refresh.</summary>
     public static async Task<JObject> ComfyEnsureRefreshable(Session session)
     {
-        ComfyUIBackendExtension.ObjectInfoReadCacher.ForceExpire();
+        ComfyUIRedirectHelper.ObjectInfoReadCacher.ForceExpire();
         return new JObject() { ["success"] = true };
     }
 
