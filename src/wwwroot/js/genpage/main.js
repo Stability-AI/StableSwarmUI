@@ -1727,6 +1727,10 @@ function imageInputHandler() {
 }
 imageInputHandler();
 
+function debugGenAPIDocs() {
+    genericRequest('DebugGenDocs', { }, data => { });
+}
+
 let hashSubTabMapping = {
     'utilities_tab': 'utilitiestablist',
     'user_tab': 'usertablist',

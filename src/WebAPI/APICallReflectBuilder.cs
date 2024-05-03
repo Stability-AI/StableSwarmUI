@@ -124,7 +124,7 @@ public class APICallReflectBuilder
                 throw new Exception($"Invalid API parameter type '{param.ParameterType.Name}' for param '{param.Name}' of method '{method.DeclaringType.Name}.{method.Name}'");
             }
         }
-        return new APICall(method.Name, caller.Call, isWebSocket, isUserUpdate);
+        return new APICall(method.Name, method, caller.Call, isWebSocket, isUserUpdate);
     }
 
     public record class APICaller(object Obj, MethodInfo Method, List<Func<HttpContext, Session, WebSocket, JObject, (string, object)>> InputMappers)

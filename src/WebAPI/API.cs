@@ -5,7 +5,9 @@ using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
 using StableSwarmUI.Core;
 using StableSwarmUI.Utils;
+using System.IO;
 using System.Net.WebSockets;
+using System.Reflection;
 
 namespace StableSwarmUI.WebAPI;
 
@@ -203,5 +205,80 @@ public class API
         }
         await handler(session, val, takeOutput, false);
         return [.. outputs];
+    }
+
+    /// <summary>Helper to generate API documentation.</summary>
+    public static async Task GenerateAPIDocs()
+    {
+        Logs.Info("Generating API docs...");
+        string path = $"{Program.ServerSettings.Paths.DataPath}/DebugNewAPIDocs";
+        Directory.CreateDirectory(path);
+        Dictionary<string, (StringBuilder, StringBuilder)> docs = [];
+        foreach (APICall call in APIHandlers.Values.OrderBy(v => v.Name))
+        {
+            Type type = call.Original.DeclaringType;
+            (StringBuilder docText, StringBuilder toc) = docs.GetOrCreate(type.Name, () => (new(), new()));
+            if (docText.Length == 0)
+            {
+                docText.Append($"# StableSwarmUI API Documentation - {type.Name}\n\n> This is a subset of the API docs, see [/Docs/API.md](/Docs/API.md) for general info.\n\n");
+                docText.Append(type.GetCustomAttribute<APIClassAttribute>()?.Description ?? "(CLASS DESCRIPTION NOT SET)");
+                docText.Append("\n\n#### Table of Contents:\n\n!!!TABLE_OF_CONTENTS!!!\n");
+            }
+            if (call.IsWebSocket)
+            {
+                docText.Append($"## WebSocket Route /API/{call.Name}\n\n");
+                toc.Append($"- WebSocket Route [{call.Name}](#websocket-route-api{call.Name.ToLowerFast()})\n");
+            }
+            else
+            {
+                docText.Append($"## HTTP Route /API/{call.Name}\n\n");
+                toc.Append($"- HTTP Route [{call.Name}](#http-route-api{call.Name.ToLowerFast()})\n");
+            }
+            APIDescriptionAttribute methodDesc = call.Original.GetCustomAttribute<APIDescriptionAttribute>();
+            docText.Append($"#### Description\n\n{methodDesc?.Description ?? "(ROUTE DESCRIPTION NOT SET)"}\n\n#### Parameters\n\n");
+            ParameterInfo[] paramInf = [.. call.Original.GetParameters().Where(m => m.ParameterType != typeof(Session) && m.ParameterType != typeof(WebSocket))];
+            if (paramInf.Length == 0)
+            {
+                docText.Append("**None.**\n\n");
+            }
+            else
+            {
+                docText.Append("| Name | Type | Description | Default |\n| --- | --- | --- | --- |\n");
+                foreach (ParameterInfo param in paramInf)
+                {
+                    string description = param.GetCustomAttribute<APIParameterAttribute>()?.Description ?? "(PARAMETER DESCRIPTION NOT SET)";
+                    string defaultVal = param.HasDefaultValue ? $"`{param.DefaultValue}`" : "**(REQUIRED)**";
+                    docText.Append($"| {param.Name} | {param.ParameterType.Name} | {description} | {defaultVal} |\n");
+                }
+                docText.Append('\n');
+            }
+            docText.Append($"#### Return Format\n\n```json\n{methodDesc?.ReturnInfo ?? "(RETURN INFO NOT SET)"}\n```\n\n");
+        }
+        Logs.Info("Writing API docs...");
+        foreach ((string clazz, (StringBuilder content, StringBuilder toc)) in docs)
+        {
+            await File.WriteAllTextAsync($"{path}/{clazz}.md", content.ToString().Replace("!!!TABLE_OF_CONTENTS!!!", toc.ToString()));
+        }
+        Logs.Info($"API docs generated and stored to '{path}'.");
+    }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class APIClassAttribute(string description) : Attribute
+    {
+        public string Description = description;
+    }
+
+    [AttributeUsage(AttributeTargets.Method)]
+    public class APIDescriptionAttribute(string description, string returnInfo) : Attribute
+    {
+        public string Description = description;
+
+        public string ReturnInfo = returnInfo;
+    }
+
+    [AttributeUsage(AttributeTargets.Parameter)]
+    public class APIParameterAttribute(string description) : Attribute
+    {
+        public string Description = description;
     }
 }

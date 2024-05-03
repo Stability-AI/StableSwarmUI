@@ -22,6 +22,7 @@ public static class AdminAPI
         API.RegisterAPICall(ShutdownServer, true);
         API.RegisterAPICall(GetServerResourceInfo);
         API.RegisterAPICall(DebugLanguageAdd, true);
+        API.RegisterAPICall(DebugGenDocs, true);
         API.RegisterAPICall(ListConnectedUsers);
     }
 
@@ -234,6 +235,13 @@ public static class AdminAPI
     }
 
     /// <summary>API Route to get a list of currently connected users.</summary>
+    [API.APIDescription("(Internal/Debug route), generates API docs.", "\"success\": true")]
+    public static async Task<JObject> DebugGenDocs(Session session)
+    {
+        await API.GenerateAPIDocs();
+        return new JObject() { ["success"] = true };
+    }
+
     public static async Task<JObject> ListConnectedUsers(Session session)
     {
         static JArray sessWrangle(IEnumerable<string> addresses)
