@@ -37,7 +37,7 @@ public class WildcardsHelper
     public static string Folder => Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.DataPath, Program.ServerSettings.Paths.WildcardsFolder);
 
     /// <summary>Returns a list of all known wildcard files.</summary>
-    public static string[] ListFiles => WildcardFiles.Keys.ToArray();
+    public static string[] ListFiles => [.. WildcardFiles.Keys];
 
     /// <summary>Initializes the engine.</summary>
     public static void Init()

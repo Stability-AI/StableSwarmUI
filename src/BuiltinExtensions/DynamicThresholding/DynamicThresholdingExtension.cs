@@ -27,7 +27,7 @@ public class DynamicThresholdingExtension : Extension
             ));
         CFGScaleMode = T2IParamTypes.Register<string>(new("[DT] CFG Scale Mode", "[Dynamic Thresholding]\nMode for the CFG Scale scheduler.",
             "Constant", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 3,
-            GetValues: (_) => new() { "Constant", "Linear Down", "Half Cosine Down", "Cosine Down", "Linear Up", "Half Cosine Up", "Cosine Up", "Power Up", "Power Down", "Linear Repeating", "Cosine Repeating" }
+            GetValues: (_) => ["Constant", "Linear Down", "Half Cosine Down", "Cosine Down", "Linear Up", "Half Cosine Up", "Cosine Up", "Power Up", "Power Down", "Linear Repeating", "Cosine Repeating"]
             ));
         CFGScaleMin = T2IParamTypes.Register<double>(new("[DT] CFG Scale Minimum", "[Dynamic Thresholding]\nCFG Scale minimum value (for non-constant CFG mode).",
             "0", Min: 0, Max: 100, Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 4,
@@ -35,7 +35,7 @@ public class DynamicThresholdingExtension : Extension
             ));
         MimicScaleMode = T2IParamTypes.Register<string>(new("[DT] Mimic Scale Mode", "[Dynamic Thresholding]\nMode for the Mimic Scale scheduler.",
             "Constant", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 5,
-            GetValues: (_) => new() { "Constant", "Linear Down", "Half Cosine Down", "Cosine Down", "Linear Up", "Half Cosine Up", "Cosine Up", "Power Up", "Power Down", "Linear Repeating", "Cosine Repeating" }
+            GetValues: (_) => ["Constant", "Linear Down", "Half Cosine Down", "Cosine Down", "Linear Up", "Half Cosine Up", "Cosine Up", "Power Up", "Power Down", "Linear Repeating", "Cosine Repeating"]
             ));
         MimicScaleMin = T2IParamTypes.Register<double>(new("[DT] Mimic Scale Minimum", "[Dynamic Thresholding]\nMimic Scale minimum value (for non-constant mimic mode).",
             "0", Min: 0, Max: 100, Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 6,
@@ -49,10 +49,10 @@ public class DynamicThresholdingExtension : Extension
             "true", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 8
             ));
         ScalingStartpoint = T2IParamTypes.Register<string>(new("[DT] Scaling Startpoint", "[Dynamic Thresholding]\nWhether to scale relative to the mean value or to zero.\nUse 'MEAN' normally. If you want RCFG logic, use 'ZERO'.",
-            "MEAN", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 9, GetValues: (_) => new() { "MEAN", "ZERO" }
+            "MEAN", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 9, GetValues: (_) => ["MEAN", "ZERO"]
             ));
         VariabilityMeasure = T2IParamTypes.Register<string>(new("[DT] Variability Measure", "[Dynamic Thresholding]\nWhether to use standard deviation ('STD') or thresholded absolute values ('AD').\nNormally use 'AD'. Use 'STD' if wanting RCFG logic.",
-            "AD", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 10, GetValues: (_) => new() { "AD", "STD" }
+            "AD", Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 10, GetValues: (_) => ["AD", "STD"]
             ));
         InterpolatePhi = T2IParamTypes.Register<double>(new("[DT] Interpolate Phi", "[Dynamic Thresholding]\n'phi' interpolation factor.\nInterpolates between original value and DT value, such that 0.0 = use original, and 1.0 = use DT.\n(This exists because RCFG is bad and so half-removing it un-breaks it - better to just not do RCFG).",
             "1", Min: 0, Max: 1, Step: 0.05, Group: dynThreshGroup, FeatureFlag: "dynamic_thresholding", OrderPriority: 11,

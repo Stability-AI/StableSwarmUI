@@ -26,7 +26,7 @@ public class StabilityAPIExtension : Extension
             "stable-diffusion-v1-5", Toggleable: true, FeatureFlag: "sapi", Group: sapiGroup, GetValues: (_) => Engines
             ));
         SamplerParam = T2IParamTypes.Register<string>(new("[SAPI] Sampler", "Sampler for StabilityAPI to use.",
-            "K_EULER", Toggleable: true, FeatureFlag: "sapi", Group: sapiGroup, GetValues: (_) => Samplers.ToList()
+            "K_EULER", Toggleable: true, FeatureFlag: "sapi", Group: sapiGroup, GetValues: (_) => [.. Samplers]
             ));
     }
 }

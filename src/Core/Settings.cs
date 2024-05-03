@@ -237,7 +237,7 @@ public class Settings : AutoConfiguration
 
         public class ThemesImpl : SettingsOptionsAttribute.AbstractImpl
         {
-            public override string[] GetOptions => Program.Web.RegisteredThemes.Keys.ToArray();
+            public override string[] GetOptions => [.. Program.Web.RegisteredThemes.Keys];
 
             public override string[] Names => Program.Web.RegisteredThemes.Values.Select(v => v.Name).ToArray();
         }
@@ -304,7 +304,7 @@ public class Settings : AutoConfiguration
 
         public class AutocompletionsImpl : SettingsOptionsAttribute.AbstractImpl
         {
-            public override string[] GetOptions => new string[] { "" }.Concat(AutoCompleteListHelper.FileNames).ToArray();
+            public override string[] GetOptions => ["", .. AutoCompleteListHelper.FileNames];
         }
 
         [ConfigComment("Optional source file for auto-completion texts (inside Data/Autocompletions).")]

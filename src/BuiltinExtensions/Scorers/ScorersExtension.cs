@@ -31,7 +31,7 @@ public class ScorersExtension : Extension
         T2IEngine.PostBatchEvent += PostBatchEvent;
         T2IParamGroup scoreGroup = new("Scoring", Toggles: true, IsAdvanced: true, Open: false);
         AutomaticScorer = T2IParamTypes.Register<List<string>>(new("Automatic Scorer", "Scoring engine(s) to use when scoring this image. Multiple scorers can be used and will be averaged together. Scores are saved in image metadata.",
-                       "schuhmann_clip_plus_mlp", Group: scoreGroup, GetValues: (_) => ScoringEngines.ToList()
+                       "schuhmann_clip_plus_mlp", Group: scoreGroup, GetValues: (_) => [.. ScoringEngines]
                        ));
         ScoreMustExceed = T2IParamTypes.Register<double>(new("Score Must Exceed", "Only keep images with a generated score above this minimum.",
                        "0.5", Min: 0, Max: 1, Step: 0.1, Toggleable: true, Group: scoreGroup, Examples: ["0.25", "0.5", "0.75", "0.9"]
