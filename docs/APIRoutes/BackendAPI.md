@@ -29,7 +29,7 @@ Add a new backend of the specified type.
 
 #### Return Format
 
-```json
+```js
     "id": "idhere",
     "type": "typehere",
     "status": "statushere",
@@ -59,7 +59,7 @@ Shuts down and deletes a registered backend by ID.
 
 #### Return Format
 
-```json
+```js
     "result": "Deleted."
     // OR
     "result": "Already didn't exist."
@@ -81,7 +81,7 @@ Modify and re-init an already registered backend.
 
 #### Return Format
 
-```json
+```js
     "id": "idhere",
     "type": "typehere",
     "status": "statushere",
@@ -112,7 +112,7 @@ Free memory from all backends or a specific one.
 
 #### Return Format
 
-```json
+```js
     "result": true,
     "count": 1 // Number of backends memory was freed from
 ```
@@ -132,7 +132,7 @@ Returns a list of currently registered backends.
 
 #### Return Format
 
-```json
+```js
     "idhere":
     {
         "id": "idhere",
@@ -164,7 +164,7 @@ Returns of a list of all available backend types.
 
 #### Return Format
 
-```json
+```js
     "list":
     [
         "id": "idhere",
@@ -197,7 +197,7 @@ Restart all backends or a specific one.
 
 #### Return Format
 
-```json
+```js
     "result": "Success.",
     "count": 1 // Number of backends restarted
 ```
@@ -217,7 +217,7 @@ Disables or re-enables a backend by ID.
 
 #### Return Format
 
-```json
+```js
     "result": "Success."
     // OR
     "result": "No change."

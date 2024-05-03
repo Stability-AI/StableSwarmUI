@@ -30,7 +30,7 @@ Changes server settings.
 
 #### Return Format
 
-```json
+```js
 "success": true
 ```
 
@@ -46,7 +46,7 @@ Changes server settings.
 
 #### Return Format
 
-```json
+```js
 "success": true
 ```
 
@@ -64,7 +64,7 @@ Changes server settings.
 
 #### Return Format
 
-```json
+```js
 "success": true
 ```
 
@@ -80,7 +80,7 @@ Returns information about the server's resource usage.
 
 #### Return Format
 
-```json
+```js
     "cpu": {
         "usage": 0.0,
         "cores": 0
@@ -116,12 +116,13 @@ Returns a list of currently connected users.
 
 #### Return Format
 
-```json
-    "users" = [
+```js
+    "users":
+    [
         {
             "id": "useridhere",
             "last_active_seconds": 0,
-            "active_sessions": [ "addresshere", ... ],
+            "active_sessions": [ "addresshere", "..." ],
             "last_active": "10 seconds ago"
         }
     ]
@@ -139,7 +140,7 @@ Returns a list of the available log types.
 
 #### Return Format
 
-```json
+```js
     "types_available": [
         {
             "name": "namehere",
@@ -163,7 +164,7 @@ Returns a list of recent server log messages.
 
 #### Return Format
 
-```json
+```js
   "last_sequence_id": 123,
   "data": {
         "info": [
@@ -188,7 +189,7 @@ Returns a list of the server settings, will full metadata.
 
 #### Return Format
 
-```json
+```js
     "settings": {
         "settingname": {
             "type": "typehere",
@@ -213,7 +214,7 @@ Shuts the server down. Returns success before the server is gone.
 
 #### Return Format
 
-```json
+```js
 "success": true
 ```
 

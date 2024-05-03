@@ -252,7 +252,7 @@ public class API
                 }
                 docText.Append('\n');
             }
-            docText.Append($"#### Return Format\n\n```json\n{methodDesc?.ReturnInfo ?? "(RETURN INFO NOT SET)"}\n```\n\n");
+            docText.Append($"#### Return Format\n\n```js\n{methodDesc?.ReturnInfo ?? "(RETURN INFO NOT SET)"}\n```\n\n");
         }
         Logs.Info("Writing API docs...");
         foreach ((string clazz, (StringBuilder content, StringBuilder toc)) in docs)

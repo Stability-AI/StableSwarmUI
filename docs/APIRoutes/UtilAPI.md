@@ -28,7 +28,7 @@ Count the CLIP-like tokens in a given text prompt.
 
 #### Return Format
 
-```json
+```js
 "count": 0
 ```
 
@@ -47,7 +47,7 @@ Trigger bulk conversion of models from pickle format to safetensors.
 
 #### Return Format
 
-```json
+```js
 "success": true
 ```
 
@@ -67,7 +67,7 @@ Tokenize some prompt text and get thorough detail about it.
 
 #### Return Format
 
-```json
+```js
     "tokens":
     [
         {
@@ -90,7 +90,7 @@ Trigger a mass metadata reset.
 
 #### Return Format
 
-```json
+```js
 "success": true
 ```
 

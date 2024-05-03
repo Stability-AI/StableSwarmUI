@@ -303,11 +303,12 @@ public static class AdminAPI
 
     [API.APIDescription("Returns a list of currently connected users.",
         """
-            "users" = [
+            "users":
+            [
                 {
                     "id": "useridhere",
                     "last_active_seconds": 0,
-                    "active_sessions": [ "addresshere", ... ],
+                    "active_sessions": [ "addresshere", "..." ],
                     "last_active": "10 seconds ago"
                 }
             ]
