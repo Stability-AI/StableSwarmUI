@@ -131,13 +131,14 @@ function formatMetadata(metadata) {
                     for (let cleaner of metadataKeyFormatCleaners) {
                         key = cleaner(key);
                     }
+                    let hash = Math.abs(hashCode(key.toLowerCase().replaceAll(' ', '').replaceAll('_', ''))) % 10;
                     if (typeof val == 'object') {
-                        result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: `;
+                        result += `<span class="param_view_block tag-text tag-type-${hash}"><span class="param_view_name">${escapeHtml(key)}</span>: `;
                         appendObject(val);
                         result += `</span>, `;
                     }
                     else {
-                        result += `<span class="param_view_block"><span class="param_view_name">${escapeHtml(key)}</span>: <span class="param_view">${escapeHtml(`${val}`)}</span></span>, `;
+                        result += `<span class="param_view_block tag-text tag-type-${hash}"><span class="param_view_name">${escapeHtml(key)}</span>: <span class="param_view tag-text-soft tag-type-${hash}">${escapeHtml(`${val}`)}</span></span>, `;
                     }
                 }
             }

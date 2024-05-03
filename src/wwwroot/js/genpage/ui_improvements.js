@@ -79,7 +79,9 @@ class AdvancedPopover {
                     });
                 }
                 if (button.className) {
-                    optionDiv.classList.add(button.className);
+                    for (let className of button.className.split(' ')) {
+                        optionDiv.classList.add(className);
+                    }
                 }
                 this.optionArea.appendChild(optionDiv);
                 this.expectedHeight += this.blockHeight;

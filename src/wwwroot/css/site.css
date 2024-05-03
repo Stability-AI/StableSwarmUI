@@ -667,24 +667,22 @@ textarea, input, select {
         transform: rotate(360deg);
     }
 }
-.tag-type-0 {
-    color: color-mix(in srgb, var(--text) 70%, #009be6) !important;
+.tag-text {
+    --tag-color-percent: 80%;
 }
-.tag-type-1 {
-    color: color-mix(in srgb, var(--text) 70%, #ff8a8b) !important;
+.tag-text-soft {
+    --tag-color-percent: 90%;
 }
-.tag-type-2 {
-    color: color-mix(in srgb, var(--text) 70%, #009b9b) !important;
-}
-.tag-type-3 {
-    color: color-mix(in srgb, var(--text) 70%, #c797ff) !important;
-}
-.tag-type-4 {
-    color: color-mix(in srgb, var(--text) 70%, #35c64a) !important;
-}
-.tag-type-5 {
-    color: color-mix(in srgb, var(--text) 70%, #ead084) !important;
-}
+.tag-type-0 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #009be6) !important; }
+.tag-type-1 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #ff8a8b) !important; }
+.tag-type-2 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #009b9b) !important; }
+.tag-type-3 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #c797ff) !important; }
+.tag-type-4 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #35c64a) !important; }
+.tag-type-5 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #ead084) !important; }
+.tag-type-6 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #7c4444) !important; }
+.tag-type-7 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #3a753a) !important; }
+.tag-type-8 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #41419b) !important; }
+.tag-type-9 { color: color-mix(in srgb, var(--text) var(--tag-color-percent), #a03fa0) !important; }
 
 
 

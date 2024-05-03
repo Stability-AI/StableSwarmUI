@@ -1247,7 +1247,7 @@ class PromptTabCompleteClass {
                 let split = name.split(',');
                 name = split[0];
                 if (split.length > 1) {
-                    className = `tag-type-${split[1]}`;
+                    className = `tag-text tag-type-${split[1]}`;
                 }
                 apply = name;
                 index = wordIndex;
