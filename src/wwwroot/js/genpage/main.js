@@ -231,6 +231,7 @@ class ImageFullViewHelper {
         if (!this.isDragging) {
             return;
         }
+        this.detachImg();
         let xDiff = e.clientX - this.lastMouseX;
         let yDiff = e.clientY - this.lastMouseY;
         this.lastMouseX = e.clientX;
@@ -241,15 +242,20 @@ class ImageFullViewHelper {
         }
     }
 
-    onWheel(e) {
+    detachImg() {
         let wrap = getRequiredElementById('imageview_modal_imagewrap');
-        let img = this.getImg();
         if (wrap.style.textAlign == 'center') {
+            let img = this.getImg();
             let actualLeft = img.parentElement.offsetWidth / 2 - img.width / 2;
             wrap.style.textAlign = 'left';
             img.style.left = `${actualLeft}px`;
             img.style.top = '0px';
         }
+    }
+
+    onWheel(e) {
+        this.detachImg();
+        let img = this.getImg();
         let origHeight = this.getHeightPercent();
         let zoom = Math.pow(this.zoomRate, -e.deltaY / 100);
         let newHeight = Math.max(50, origHeight * zoom);
