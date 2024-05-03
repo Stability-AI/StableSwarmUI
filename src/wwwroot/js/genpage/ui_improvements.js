@@ -315,7 +315,6 @@ class UIImprovementHandler {
             if (e.target.tagName == 'INPUT' && e.target.type == 'number') {
                 lastX = 0;
                 lastY = 0;
-                window.getSelection().empty();
                 clickedElem = e.target;
             }
         }, true);
@@ -325,7 +324,6 @@ class UIImprovementHandler {
                 e.target.style.cursor = '';
                 lastX = 0;
                 lastY = 0;
-                window.getSelection().empty();
             }
         }, true);
     }
