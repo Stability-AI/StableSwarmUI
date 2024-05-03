@@ -22,10 +22,13 @@ Route documentation is categorized into a few sections:
 - [AdminAPI](/docs/APIRoutes/AdminAPI.md) - Administrative server management APIs.
 - [BackendAPI](/docs/APIRoutes/BackendAPI.md) - Backend management APIs.
 - [UtilAPI](/docs/APIRoutes/UtilAPI.md) - General utility APIs.
-- [ModelsAPI](/docs/ModelsAPI.md) - API routes related to handling models (including loras, wildcards, etc).
-- (TODO: T2IAPI) - Text2Image APIs.
-- (TODO: BasicAPIFeatures) - Basic general API routes, primarily for users and session handling.
-- (TODO: Extension APIs)
+- [ModelsAPI](/docs/APIRoutes/ModelsAPI.md) - API routes related to handling models (including loras, wildcards, etc).
+- [T2IAPI](/docs/APIRoutes/T2IAPI.md) - Text2Image APIs.
+- [BasicAPIFeatures](/docs/APIRoutes/BasicAPIFeatures.md) - Basic general API routes, primarily for users and session handling.
+- Built-in-Extension APIs:
+    - [GridGeneratorExtension](/docs/APIRoutes/GridGeneratorExtension.md)
+    - [ComfyUIWebAPI](/docs/APIRoutes/ComfyUIWebAPI.md)
+    - [ImageBatchToolExtension](/docs/APIRoutes/ImageBatchToolExtension.md)
 
 ### GET Routes
 
