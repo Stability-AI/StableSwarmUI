@@ -11,6 +11,7 @@ using System.Reflection;
 
 namespace StableSwarmUI.WebAPI;
 
+[API.APIClass("Administrative APIs related to server management.")]
 public static class AdminAPI
 {
     public static void Register()
@@ -72,15 +73,27 @@ public static class AdminAPI
         if (t == typeof(List<string>)) { return ((JArray)val).Select(v => (string)v).ToList(); }
         return null;
     }
-
-    /// <summary>API Route to list the server settings metadata.</summary>
+    [API.APIDescription("Returns a list of the server settings, will full metadata.",
+        """
+            "settings": {
+                "settingname": {
+                    "type": "typehere",
+                    "name": "namehere",
+                    "value": somevaluehere,
+                    "description": "sometext",
+                    "values": [...] or null,
+                    "value_names": [...] or null
+                }
+            }
+        """)]
     public static async Task<JObject> ListServerSettings(Session session)
     {
         return new JObject() { ["settings"] = AutoConfigToParamData(Program.ServerSettings) };
     }
 
-    /// <summary>API Route to change server settings.</summary>
-    public static async Task<JObject> ChangeServerSettings(Session session, JObject rawData)
+    [API.APIDescription("Changes server settings.", "\"success\": true")]
+    public static async Task<JObject> ChangeServerSettings(Session session,
+        [API.APIParameter("Dynamic input of `\"settingname\": valuehere`.")] JObject rawData)
     {
         JObject settings = (JObject)rawData["settings"];
         foreach ((string key, JToken val) in settings)
@@ -110,7 +123,16 @@ public static class AdminAPI
         return new JObject() { ["success"] = true };
     }
 
-    /// <summary>API Route to list the current available log types.</summary>
+    [API.APIDescription("Returns a list of the available log types.",
+        """
+            "types_available": [
+                {
+                    "name": "namehere",
+                    "color": "#RRGGBB",
+                    "identifier": "identifierhere"
+                }
+            ]
+        """)]
     public static async Task<JObject> ListLogTypes(Session session)
     {
         JArray types = [];
@@ -129,8 +151,21 @@ public static class AdminAPI
         return new JObject() { ["types_available"] = types };
     }
 
-    /// <summary>API Route to get recent server logs.</summary>
-    public static async Task<JObject> ListRecentLogMessages(Session session, JObject raw)
+    [API.APIDescription("Returns a list of recent server log messages.",
+        """
+          "last_sequence_id": 123,
+          "data": {
+                "info": [
+                    {
+                        "sequence_id": 123,
+                        "timestamp": "yyyy-MM-dd HH:mm:ss.fff",
+                        "message": "messagehere"
+                    }, ...
+                ]
+            }
+        """)]
+    public static async Task<JObject> ListRecentLogMessages(Session session,
+        [API.APIParameter("Optionally input `\"last_sequence_ids\": { \"info\": 123 }` to set the start point.")] JObject raw)
     {
         JObject result = await ListLogTypes(session);
         long lastSeq = Interlocked.Read(ref Logs.LogTracker.LastSequenceID);
@@ -179,14 +214,38 @@ public static class AdminAPI
         return result;
     }
 
-    /// <summary>API Route to shut the server down.</summary>
+    [API.APIDescription("Shuts the server down. Returns success before the server is gone.", "\"success\": true")]
     public static async Task<JObject> ShutdownServer(Session session)
     {
         _ = Task.Run(Program.Shutdown);
         return new JObject() { ["success"] = true };
     }
 
-    /// <summary>API Route to get information about server resource usage.</summary>
+    [API.APIDescription("Returns information about the server's resource usage.",
+        """
+            "cpu": {
+                "usage": 0.0,
+                "cores": 0
+            },
+            "system_ram": {
+                "total": 0,
+                "used": 0,
+                "free": 0
+            },
+            "gpus": {
+                "0": {
+                    "id": 0,
+                    "name": "namehere",
+                    "temperature": 0,
+                    "utilization_gpu": 0,
+                    "utilization_memory": 0,
+                    "total_memory": 0,
+                    "free_memory": 0,
+                    "used_memory": 0
+                }
+            }
+        """
+               )]
     public static async Task<JObject> GetServerResourceInfo(Session session)
     {
         NvidiaUtil.NvidiaInfo[] gpuInfo = NvidiaUtil.QueryNvidia();
@@ -227,14 +286,14 @@ public static class AdminAPI
         return result;
     }
 
-    /// <summary>API Route to shut the server down.</summary>
-    public static async Task<JObject> DebugLanguageAdd(Session session, JObject raw)
+    [API.APIDescription("(Internal/Debug route), adds language data to the language file builder.", "\"success\": true")]
+    public static async Task<JObject> DebugLanguageAdd(Session session,
+        [API.APIParameter("\"set\": [ \"word\", ... ]")] JObject raw)
     {
         LanguagesHelper.TrackSet(raw["set"].ToArray().Select(v => $"{v}").ToArray());
         return new JObject() { ["success"] = true };
     }
 
-    /// <summary>API Route to get a list of currently connected users.</summary>
     [API.APIDescription("(Internal/Debug route), generates API docs.", "\"success\": true")]
     public static async Task<JObject> DebugGenDocs(Session session)
     {
@@ -242,6 +301,17 @@ public static class AdminAPI
         return new JObject() { ["success"] = true };
     }
 
+    [API.APIDescription("Returns a list of currently connected users.",
+        """
+            "users" = [
+                {
+                    "id": "useridhere",
+                    "last_active_seconds": 0,
+                    "active_sessions": [ "addresshere", ... ],
+                    "last_active": "10 seconds ago"
+                }
+            ]
+        """)]
     public static async Task<JObject> ListConnectedUsers(Session session)
     {
         static JArray sessWrangle(IEnumerable<string> addresses)

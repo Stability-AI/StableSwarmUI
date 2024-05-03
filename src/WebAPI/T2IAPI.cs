@@ -20,11 +20,12 @@ using ISImageRGBA = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats
 
 namespace StableSwarmUI.WebAPI;
 
-/// <summary>Text-to-Image API routes.</summary>
+[API.APIClass("API routes for actual text-to-image processing and directly related features.")]
 public static class T2IAPI
 {
     public static void Register()
     {
+        // TODO: Some of these shouldn't be here?
         API.RegisterAPICall(GenerateText2Image, true);
         API.RegisterAPICall(GenerateText2ImageWS, true);
         API.RegisterAPICall(ListImages);

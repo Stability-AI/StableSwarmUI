@@ -18,7 +18,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace StableSwarmUI.WebAPI;
 
-/// <summary>Internal helper for all the basic API routes.</summary>
+[API.APIClass("Basic general API routes, primarily for users and session handling.")]
 public static class BasicAPIFeatures
 {
     /// <summary>Called by <see cref="Program"/> to register the core API calls.</summary>

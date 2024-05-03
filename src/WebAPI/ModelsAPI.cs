@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace StableSwarmUI.WebAPI;
 
+[API.APIClass("API routes related to handling models (including loras, wildcards, etc).")]
 public static class ModelsAPI
 {
     public static void Register()
