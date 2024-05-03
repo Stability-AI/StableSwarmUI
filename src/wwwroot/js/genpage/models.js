@@ -70,6 +70,7 @@ function editWildcard(card) {
         let newImg = curImg.cloneNode(true);
         newImg.id = 'edit_wildcard_image_img';
         newImg.style.maxWidth = '100%';
+        newImg.style.maxHeight = '';
         newImg.removeAttribute('width');
         newImg.removeAttribute('height');
         imageInput.appendChild(newImg);
@@ -131,6 +132,7 @@ function editModel(model, browser) {
         let newImg = curImg.cloneNode(true);
         newImg.id = 'edit_model_image_img';
         newImg.style.maxWidth = '100%';
+        newImg.style.maxHeight = '';
         newImg.removeAttribute('width');
         newImg.removeAttribute('height');
         imageInput.appendChild(newImg);
