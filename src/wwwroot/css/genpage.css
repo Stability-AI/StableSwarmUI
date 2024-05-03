@@ -314,12 +314,13 @@ body {
 }
 .model-block img {
     max-height: 8rem;
-    max-width: 8rem;
+    width: 8rem;
     display: inline-block;
     margin: 0.5rem;
     margin-bottom: 0px;
     vertical-align: top;
     cursor: pointer;
+    object-fit: contain;
 }
 .model-descblock {
     width: 21rem;
@@ -353,11 +354,11 @@ body {
 }
 .model-block-small img {
     max-height: 7rem;
-    max-width: 7rem;
+    width: 7rem;
 }
 .model-block-big img {
     max-height: 14rem;
-    max-width: 14rem;
+    width: 14rem;
 }
 .model-block-menu-button {
     display: block;
