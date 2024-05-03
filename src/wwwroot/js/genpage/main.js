@@ -150,7 +150,7 @@ function formatMetadata(metadata) {
 /** Central helper class to handle the 'image full view' modal. */
 class ImageFullViewHelper {
     constructor() {
-        this.zoomDivisor = 20;
+        this.zoomRate = 1.1;
         this.modal = getRequiredElementById('image_fullview_modal');
         this.content = getRequiredElementById('image_fullview_modal_content');
         this.modalJq = $('#image_fullview_modal');
@@ -251,7 +251,8 @@ class ImageFullViewHelper {
             img.style.top = '0px';
         }
         let origHeight = this.getHeightPercent();
-        let newHeight = Math.max(50, origHeight - (e.deltaY / this.zoomDivisor));
+        let zoom = Math.pow(this.zoomRate, -e.deltaY / 100);
+        let newHeight = Math.max(50, origHeight * zoom);
         this.getImg().style.cursor = 'grab';
         let [imgLeft, imgTop] = [this.getImgLeft(), this.getImgTop()];
         let [mouseX, mouseY] = [e.clientX - img.offsetLeft, e.clientY - img.offsetTop];
