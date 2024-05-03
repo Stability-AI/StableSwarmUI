@@ -135,7 +135,7 @@
 | custom_params | String | (PARAMETER DESCRIPTION NOT SET) | **(REQUIRED)** |
 | param_values | String | (PARAMETER DESCRIPTION NOT SET) | **(REQUIRED)** |
 | image | String | (PARAMETER DESCRIPTION NOT SET) | **(REQUIRED)** |
-| description | String | (PARAMETER DESCRIPTION NOT SET) | `` |
+| description | String | (PARAMETER DESCRIPTION NOT SET) | (Empty String) |
 | enable_in_simple | Boolean | (PARAMETER DESCRIPTION NOT SET) | `False` |
 
 #### Return Format

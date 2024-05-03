@@ -187,7 +187,7 @@ Forcibly loads a model immediately on some or all backends.
 | Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | model | String | The full filepath of the model to load. | **(REQUIRED)** |
-| backendId | String | The ID of a backend to load the model on, or null to load on all. | `` |
+| backendId | String | The ID of a backend to load the model on, or null to load on all. | (null) |
 
 #### Return Format
 

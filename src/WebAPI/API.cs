@@ -247,7 +247,11 @@ public class API
                 foreach (ParameterInfo param in paramInf)
                 {
                     string description = param.GetCustomAttribute<APIParameterAttribute>()?.Description ?? "(PARAMETER DESCRIPTION NOT SET)";
-                    string defaultVal = param.HasDefaultValue ? $"`{param.DefaultValue}`" : "**(REQUIRED)**";
+                    string defaultVal;
+                    if (!param.HasDefaultValue) { defaultVal = "**(REQUIRED)**"; }
+                    else if (param.DefaultValue is string valStr && valStr == "") { defaultVal = "(Empty String)"; }
+                    else if (param.DefaultValue is null) { defaultVal = "(null)"; }
+                    else { defaultVal = $"`{param.DefaultValue}`"; }
                     docText.Append($"| {param.Name} | {param.ParameterType.Name} | {description} | {defaultVal} |\n");
                 }
                 docText.Append('\n');

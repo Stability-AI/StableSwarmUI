@@ -35,9 +35,9 @@ Basic general API routes, primarily for users and session handling.
 | title | String | (PARAMETER DESCRIPTION NOT SET) | **(REQUIRED)** |
 | description | String | (PARAMETER DESCRIPTION NOT SET) | **(REQUIRED)** |
 | raw | JObject | (PARAMETER DESCRIPTION NOT SET) | **(REQUIRED)** |
-| preview_image | String | (PARAMETER DESCRIPTION NOT SET) | `` |
+| preview_image | String | (PARAMETER DESCRIPTION NOT SET) | (null) |
 | is_edit | Boolean | (PARAMETER DESCRIPTION NOT SET) | `False` |
-| editing | String | (PARAMETER DESCRIPTION NOT SET) | `` |
+| editing | String | (PARAMETER DESCRIPTION NOT SET) | (null) |
 
 #### Return Format
 
