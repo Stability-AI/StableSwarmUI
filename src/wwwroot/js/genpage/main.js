@@ -1607,11 +1607,68 @@ function imageInputHandler() {
 }
 imageInputHandler();
 
+let hashSubTabMapping = {
+    'utilities_tab': 'utilitiestablist',
+    'user_tab': 'usertablist',
+    'server_tab': 'servertablist',
+};
+
+function updateHash() {
+    let tabList = getRequiredElementById('toptablist');
+    let bottomTabList = getRequiredElementById('bottombartabcollection');
+    let activeTopTab = tabList.querySelector('.active');
+    let activeBottomTab = bottomTabList.querySelector('.active');
+    let activeTopTabHref = activeTopTab.href.split('#')[1];
+    let hash = `#${activeBottomTab.href.split('#')[1]},${activeTopTabHref}`;
+    let subMapping = hashSubTabMapping[activeTopTabHref];
+    if (subMapping) {
+        let subTabList = getRequiredElementById(subMapping);
+        let activeSubTab = subTabList.querySelector('.active');
+        hash += `,${activeSubTab.href.split('#')[1]}`;
+    }
+    history.pushState(null, null, hash);
+}
+
+function loadHashHelper() {
+    let tabList = getRequiredElementById('toptablist');
+    let bottomTabList = getRequiredElementById('bottombartabcollection');
+    let tabs = [... tabList.getElementsByTagName('a')];
+    tabs = tabs.concat([... bottomTabList.getElementsByTagName('a')]);
+    for (let subMapping of Object.values(hashSubTabMapping)) {
+        tabs = tabs.concat([... getRequiredElementById(subMapping).getElementsByTagName('a')]);
+    }
+    if (location.hash) {
+        let split = location.hash.substring(1).split(',');
+        let bottomTarget = bottomTabList.querySelector(`a[href='#${split[0]}']`);
+        if (bottomTarget) {
+            bottomTarget.click();
+        }
+        let target = tabList.querySelector(`a[href='#${split[1]}']`);
+        if (target) {
+            target.click();
+        }
+        let subMapping = hashSubTabMapping[split[1]];
+        if (subMapping && split.length > 2) {
+            let subTabList = getRequiredElementById(subMapping);
+            let subTarget = subTabList.querySelector(`a[href='#${split[2]}']`);
+            if (subTarget) {
+                subTarget.click();
+            }
+        }
+    }
+    for (let tab of tabs) {
+        tab.addEventListener('click', (e) => {
+            updateHash();
+        });
+    }
+}
+
 function genpageLoad() {
     console.log('Load page...');
     window.imageEditor = new ImageEditor(getRequiredElementById('image_editor_input'), true, true, () => setPageBarsFunc(), () => needsNewPreview());
     pageSizer();
     reviseStatusBar();
+    loadHashHelper();
     getSession(() => {
         console.log('First session loaded - prepping page.');
         imageHistoryBrowser.navigate('');

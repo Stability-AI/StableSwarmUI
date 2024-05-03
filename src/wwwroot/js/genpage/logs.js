@@ -7,7 +7,7 @@ class ServerLogsHelper {
         this.tabButton = getRequiredElementById('logtabbutton');
         this.tabButton.addEventListener('click', () => this.onTabButtonClick());
         this.tabBody = getRequiredElementById('Server-Logs');
-        this.serverTabBody = getRequiredElementById('server_tab_body');
+        this.serverTabBody = getRequiredElementById('server_tab');
         this.typeSelectors = getRequiredElementById('server_log_type_selector');
         this.actualLogContainer = getRequiredElementById('server_logs_container');
         this.filterInput = getRequiredElementById('server_log_filter');

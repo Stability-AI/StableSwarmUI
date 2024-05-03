@@ -19,7 +19,7 @@
     window.alwaysRefreshOnLoad = @alwaysRefreshOnLoad;
 </script>
 
-<ul class="nav nav-tabs" role="tablist">
+<ul class="nav nav-tabs" role="tablist" id="toptablist">
     <li class="nav-item @experimentalHide" role="presentation">
         <a class="nav-link translate @experimentalHide" data-bs-toggle="tab" href="#Simple" id="simpletabbutton" aria-selected="false" tabindex="-1" role="tab">Simple</a>
     </li>
@@ -28,13 +28,13 @@
     </li>
     @WebServer.T2ITabHeader
     <li class="nav-item" role="presentation">
-        <a class="nav-link translate" data-bs-toggle="tab" href="#Utilities-Tab" id="utilitiestabbutton" aria-selected="false" tabindex="-1" role="tab">Utilities</a>
+        <a class="nav-link translate" data-bs-toggle="tab" href="#utilities_tab" id="utilitiestabbutton" aria-selected="false" tabindex="-1" role="tab">Utilities</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link translate" data-bs-toggle="tab" href="#User-Settings" id="usersettingstabbutton" aria-selected="false" tabindex="-1" role="tab">User</a>
+        <a class="nav-link translate" data-bs-toggle="tab" href="#user_tab" id="usersettingstabbutton" aria-selected="false" tabindex="-1" role="tab">User</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link translate" data-bs-toggle="tab" href="#server_tab_body" id="servertabbutton" aria-selected="false" tabindex="-1" role="tab">Server</a>
+        <a class="nav-link translate" data-bs-toggle="tab" href="#server_tab" id="servertabbutton" aria-selected="false" tabindex="-1" role="tab">Server</a>
     </li>
 </ul>
 <div class="tab-content tab-hundred">
@@ -370,8 +370,8 @@
         </div>
     </div>
     @WebServer.T2ITabBody
-    <div class="tab-pane tab-pane-vw" id="Utilities-Tab" role="tabpanel">
-        <ul class="nav nav-tabs" role="tablist">
+    <div class="tab-pane tab-pane-vw" id="utilities_tab" role="tabpanel">
+        <ul class="nav nav-tabs" role="tablist" id="utilitiestablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link active translate" data-bs-toggle="tab" href="#Utilities-Info-Tab" aria-selected="true" role="tab">Info</a>
             </li>
@@ -495,8 +495,8 @@
         </div>
         <div style="height: 10rem"></div> <!-- Spacer -->
     </div>
-    <div class="tab-pane tab-pane-vw" id="User-Settings" role="tabpanel">
-        <ul class="nav nav-tabs" role="tablist">
+    <div class="tab-pane tab-pane-vw" id="user_tab" role="tabpanel">
+        <ul class="nav nav-tabs" role="tablist" id="usertablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link active translate" data-bs-toggle="tab" href="#user-info" aria-selected="true" role="tab">User Info</a>
             </li>
@@ -571,8 +571,8 @@
         </div>
         <div style="height: 10rem"></div> <!-- Spacer -->
     </div>
-    <div class="tab-pane tab-pane-vw" id="server_tab_body" role="tabpanel">
-        <ul class="nav nav-tabs" role="tablist">
+    <div class="tab-pane tab-pane-vw" id="server_tab" role="tabpanel">
+        <ul class="nav nav-tabs" role="tablist" id="servertablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link active translate" data-bs-toggle="tab" href="#Server-Info" id="serverinfotabbutton" aria-selected="true" role="tab">Server Info</a>
             </li>
@@ -597,7 +597,7 @@
                             <br>&bullet; The <a href="#Settings-Server" onclick="getRequiredElementById('serverconfigtabbutton').click()">Server Configuration</a> tab, which allows you to configure and manage Swarm's settings (such as models directory, server host port, etc)
                             <br>&bullet; The <a href="#Server-Logs" onclick="getRequiredElementById('logtabbutton').click()">Logs</a> tab, which allows you to view the server logs (eg if you get an error, check Logs -&gt; Debug)
                             <br>
-                            <br>This is not to be confused with the <a href="#User-Settings" onclick="getRequiredElementById('usersettingstabbutton').click();getRequiredElementById('userconfigtabbutton').click()">User Settings</a> tab, which allows you to configure your user settings (eg save path/format, default VAE choice, etc)
+                            <br>This is not to be confused with the <a href="#user_tab" onclick="getRequiredElementById('usersettingstabbutton').click();getRequiredElementById('userconfigtabbutton').click()">User Settings</a> tab, which allows you to configure your user settings (eg save path/format, default VAE choice, etc)
                         </p>
                     </div>
                 </div>
