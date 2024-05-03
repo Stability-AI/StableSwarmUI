@@ -40,14 +40,28 @@ body {
     50% {background-color: #880000;}
     100% {background-color: #bb2020;}
 }
+.top-status-bar-wrapper {
+    position: absolute;
+    top: 0px;
+    width: 100vw;
+    height: 2rem;
+    transition: opacity 0.25s;
+    z-index: 0;
+}
+.top-status-bar-wrapper:hover {
+    display: none;
+    opacity: 0.5;
+}
 .top-status-bar {
-    position: sticky;
+    position: absolute;
     color: #000000;
     top: 0px;
+    width: 100vw;
     z-index: 100;
     animation-duration: 5s;
     animation-iteration-count: infinite;
     padding-left: 1rem;
+    opacity: 0.8;
 }
 .status-bar-warn {
     animation-name: status_glow-warn;
