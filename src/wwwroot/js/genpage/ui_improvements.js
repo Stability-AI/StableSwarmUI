@@ -328,13 +328,6 @@ class UIImprovementHandler {
                 window.getSelection().empty();
             }
         }, true);
-        window.addEventListener('selectstart', (e) => {
-            if (e.target.tagName == 'INPUT' && e.target.type == 'number') {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        }, {capture:true, passive:false});
     }
 
     onSelectClicked(elem, e) {
