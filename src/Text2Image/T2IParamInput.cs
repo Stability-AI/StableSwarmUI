@@ -395,7 +395,15 @@ public class T2IParamInput
     public T2IParamInput Clone()
     {
         T2IParamInput toret = MemberwiseClone() as T2IParamInput;
-        toret.ValuesInput = new Dictionary<string, object>(ValuesInput);
+        toret.ValuesInput = new Dictionary<string, object>(ValuesInput.Count);
+        foreach ((string key, object val) in ValuesInput)
+        {
+            object useVal = val;
+            if (useVal is List<string> strs) { useVal = new List<string>(strs); }
+            else if (useVal is List<Image> imgs) { useVal = new List<Image>(imgs); }
+            else if (useVal is List<T2IModel> models) { useVal = new List<T2IModel>(models); }
+            toret.ValuesInput[key] = useVal;
+        }
         toret.ExtraMeta = new Dictionary<string, object>(ExtraMeta);
         toret.RequiredFlags = new HashSet<string>(RequiredFlags);
         return toret;
