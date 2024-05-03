@@ -516,33 +516,6 @@
     font-size: unset;
 }
 
-#user_settings_container {
-    display: grid;
-    grid-template-columns: min-content auto;
-    justify-content: start;
-    gap: 10px;
-}
-
-#user_settings_container .auto-input {
-    display: contents;
-}
-
-#user_settings_container .auto-input-name {
-    text-align: left;
-}
-
-#user_settings_container .auto-checkbox {
-    justify-self: start;
-}
-
-#user_settings_container .input-group {
-    grid-column: 1/-1;
-}
-
-#user_settings_container .input-group .auto-input {
-    display: block;
-}
-
 .input-group .auto-text {
     border: 1px solid var(--border-color) !important;
     padding: 5px 10px !important;
