@@ -670,10 +670,15 @@ public class T2IParamTypes
                     List<string> possible = type.GetValues(session);
                     for (int i = 0; i < vals.Length; i++)
                     {
-                        vals[i] = GetBestInList(vals[i], possible);
+                        string search = vals[i];
+                        vals[i] = GetBestInList(search, possible);
                         if (vals[i] is null)
                         {
-                            throw new InvalidDataException($"Invalid value for param {type.Name} - '{origVal}' - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
+                            vals[i] = GetBestModelInList(CleanModelName(search), possible);
+                            if (vals[i] is null)
+                            {
+                                throw new InvalidDataException($"Invalid value for param {type.Name} - '{origVal}' - must be one of: `{string.Join("`, `", type.GetValues(session))}`");
+                            }
                         }
                     }
                     return vals.JoinString(",");
