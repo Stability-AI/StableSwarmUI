@@ -481,7 +481,6 @@
 }
 
 .t2i-mid-split-quickbutton {
-    z-index: 2000;
     height: 40px;
     line-height: 40px;
     top: -1rem !important;
