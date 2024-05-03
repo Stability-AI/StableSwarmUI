@@ -90,7 +90,7 @@ public static class SwarmAPI
                 ["donotsave"] = true,
                 ["prompt"] = prompt,
                 ["negativeprompt"] = "",
-                ["model"] = "OfficialStableDiffusion/sd_xl_base_1.0.safetensors",
+                ["model"] = "OfficialStableDiffusion/sd_xl_base_1.0",
                 ["width"] = 1024,
                 ["height"] = 1024,
                 ["cfgscale"] = 7.5,
