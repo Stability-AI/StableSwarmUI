@@ -13,7 +13,13 @@ function getHtmlForParam(param, prefix) {
                 return {html: makeTextInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, param.view_type, param.description, param.toggleable, false, !param.no_popover) + pop, runnable: runnable};
             case 'decimal':
             case 'integer':
-                let min = param.min || -9999999, max = param.max || 9999999, step = param.step || 1;
+                let min = param.min, max = param.max, step = param.step || 1;
+                if (!min && min != 0) {
+                    min = -9999999;
+                }
+                if (!max && max != 0) {
+                    max = 9999999;
+                }
                 switch (param.view_type) {
                     case 'small':
                         return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, min, max, step, 'small', param.toggleable, !param.no_popover) + pop,
