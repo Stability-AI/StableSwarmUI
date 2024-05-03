@@ -6,7 +6,7 @@
 - [Advanced usage](/docs/Advanced%20Usage.md) for various examples of advanced usages and explanations of them.
 - [Model Support](/docs/Model%20Support.md) for details about support of different model types.
 - [Autocompletions](/docs/Autocompletions.md) for details about the prompt autocompletions engine.
-- TODO: Settings
+- TODO: Settings guide (server & user)
 - TODO: Account system
 - [Command line arguments](/docs/Command%20Line%20Arguments.md) describes the available command line arguments in detail.
 - TODO: Extensions (what an extension is, what it can do, where to find them, etc)
@@ -19,8 +19,7 @@
         - [ImageBatchTool](/src/BuiltinExtensions/ImageBatchTool/README.md)
     - Other:
         - [Dynamic Thresholding](/src/BuiltinExtensions/DynamicThresholding/README.md)
-- TODO: HTTP API
-- TODO: WebSocket API
+- [API](/docs/API.md) for details about the HTTP&WebSocket network API, to use swarm externally.
 - TODO: Custom expansion
     - TODO: Building your own extensions
     - TODO: Building your own backends

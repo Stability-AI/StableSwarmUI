@@ -220,7 +220,7 @@ public class API
             (StringBuilder docText, StringBuilder toc) = docs.GetOrCreate(type.Name, () => (new(), new()));
             if (docText.Length == 0)
             {
-                docText.Append($"# StableSwarmUI API Documentation - {type.Name}\n\n> This is a subset of the API docs, see [/Docs/API.md](/Docs/API.md) for general info.\n\n");
+                docText.Append($"# StableSwarmUI API Documentation - {type.Name}\n\n> This is a subset of the API docs, see [/docs/API.md](/docs/API.md) for general info.\n\n");
                 docText.Append(type.GetCustomAttribute<APIClassAttribute>()?.Description ?? "(CLASS DESCRIPTION NOT SET)");
                 docText.Append("\n\n#### Table of Contents:\n\n!!!TABLE_OF_CONTENTS!!!\n");
             }
