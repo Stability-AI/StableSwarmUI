@@ -163,11 +163,29 @@ function genericRequest(url, in_data, callback, depth = 0, errorHandle = null) {
 
 let lastServerVersion = null;
 let versionIsWrong = false;
+let lastSessionCheck = 0;
+let haveBadSession = false;
 
 let serverHasUpdated = translatable(`The server has updated since you opened the page, please refresh.`);
 
 function getSession(callback) {
+    if (lastSessionCheck + 1000 > Date.now()) {
+        setTimeout(() => {
+            if (haveBadSession) {
+                getSession(callback);
+            }
+            else {
+                if (callback) {
+                    callback();
+                }
+            }
+        }, 1000);
+        return;
+    }
+    lastSessionCheck = Date.now();
+    haveBadSession = true;
     genericRequest('GetNewSession', {}, data => {
+        haveBadSession = false;
         console.log("Session started.");
         session_id = data.session_id;
         user_id = data.user_id;
