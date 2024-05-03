@@ -71,11 +71,10 @@
 .simpletab-workflow-header,
 .simpletabbrowserwrapper .image-preview-text,
 .simpletabbrowserwrapper .model-descblock {
-    font-family: "Inter", sans-serif;
+    font-family: "Inter", sans-serif, var(--bs-font-sans-serif);
     font-weight: 500;
 }
 .auto-input-name {
-    font-family: "Inter", sans-serif;
     font-weight: normal !important;
 }
 .comfy_workflow_buttons {
