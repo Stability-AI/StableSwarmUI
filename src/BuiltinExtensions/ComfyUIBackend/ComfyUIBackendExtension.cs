@@ -343,7 +343,7 @@ public class ComfyUIBackendExtension : Extension
 
     public static T2IRegisteredParam<string>[] ControlNetPreprocessorParams = new T2IRegisteredParam<string>[3];
 
-    public static List<string> UpscalerModels = ["latent-nearest-exact", "latent-bilinear", "latent-area", "latent-bicubic", "latent-bislerp", "pixel-nearest-exact", "pixel-bilinear", "pixel-area", "pixel-bicubic", "pixel-lanczos"],
+    public static List<string> UpscalerModels = ["pixel-lanczos", "pixel-bicubic", "pixel-area", "pixel-bilinear", "pixel-nearest-exact", "latent-bislerp", "latent-bicubic", "latent-area", "latent-bilinear", "latent-nearest-exact"],
         Samplers = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_2m", "dpmpp_2m_sde", "ddim", "uni_pc", "uni_pc_bh2"],
         Schedulers = ["normal", "karras", "exponential", "simple", "ddim_uniform", "sgm_uniform", "turbo", "align_your_steps"];
 
