@@ -42,7 +42,6 @@ public class T2IModel
             ["title"] = Metadata?.Title,
             ["author"] = Metadata?.Author,
             ["description"] = Description,
-            ["model_class"] = ModelClass?.Name,
             ["preview_image"] = PreviewImage,
             ["loaded"] = AnyBackendsHaveLoaded,
             ["architecture"] = ModelClass?.ID,

@@ -42,8 +42,36 @@ public static class ModelsAPI
     /// <summary>Placeholder model indicating the lack of a model.</summary>
     public static T2IModel NoneModel = new() { Name = "(None)", Description = "No model selected.", RawFilePath = "(ERROR_NONE_MODEL_USED_LITERALLY)" };
 
-    /// <summary>API route to describe a single model.</summary>
-    public static async Task<JObject> DescribeModel(Session session, string modelName, string subtype = "Stable-Diffusion")
+    [API.APIDescription("Returns a full description for a single model.",
+        """
+            "model":
+            {
+                "name": "namehere",
+                "title": "titlehere",
+                "author": "authorhere",
+                "description": "descriptionhere",
+                "preview_image": "data:image/jpg;base64,abc123",
+                "loaded": false, // true if any backend has the model loaded currently
+                "architecture": "archhere", // model class ID
+                "class": "classhere", // user-friendly class name
+                "compat_class": "compatclasshere", // compatibility class name
+                "standard_width": 1024,
+                "standard_height": 1024,
+                "license": "licensehere",
+                "date": "datehere",
+                "usage_hint": "usagehinthere",
+                "trigger_phrase": "triggerphrasehere",
+                "merged_from": "mergedfromhere",
+                "tags": ["tag1", "tag2"],
+                "is_safetensors": true,
+                "is_negative_embedding": false,
+                "local": true // false means remote servers (Swarm-API-Backend) have this model, but this server does not
+            }
+        """
+        )]
+    public static async Task<JObject> DescribeModel(Session session,
+        [API.APIParameter("Full filepath name of the model being requested.")] string modelName,
+        [API.APIParameter("What model sub-type to use, can be eg `LoRA` or `Wildcards` or etc.")] string subtype = "Stable-Diffusion")
     {
         if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler) && subtype != "Wildcards")
         {
@@ -91,8 +119,22 @@ public static class ModelsAPI
         return new JObject() { ["error"] = "Model not found." };
     }
 
-    /// <summary>API route to get a list of available models.</summary>
-    public static async Task<JObject> ListModels(Session session, string path, int depth, string subtype = "Stable-Diffusion")
+    [API.APIDescription("Returns a list of models available on the server within a given folder, with their metadata.",
+        """
+            "folders": ["folder1", "folder2"],
+            "files":
+            [
+                {
+                    "name": "namehere",
+                    // etc., see `DescribeModel` for the full model description
+                }
+            ]
+        """
+        )]
+    public static async Task<JObject> ListModels(Session session,
+        [API.APIParameter("What folder path to search within. Use empty string for root.")] string path,
+        [API.APIParameter("Maximum depth (number of recursive folders) to search.")] int depth,
+        [API.APIParameter("Model sub-type - `LoRA`, `Wildcards`, etc.")] string subtype = "Stable-Diffusion")
     {
         if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler) && subtype != "Wildcards")
         {
@@ -167,7 +209,17 @@ public static class ModelsAPI
         };
     }
 
-    /// <summary>API route to get a list of currently loaded Stable-Diffusion models.</summary>
+    [API.APIDescription("Returns a list of currently loaded Stable-Diffusion models (ie at least one backend has it loaded).",
+        """
+            "models":
+            [
+                {
+                    "name": "namehere",
+                    // see `DescribeModel` for the full model description
+                }
+            ]
+            """
+        )]
     public static async Task<JObject> ListLoadedModels(Session session)
     {
         string allowedStr = session.User.Restrictions.AllowedModels;
@@ -175,17 +227,19 @@ public static class ModelsAPI
         List<T2IModel> matches = Program.MainSDModels.Models.Values.Where(m => m.AnyBackendsHaveLoaded && (allowed is null || allowed.IsMatch(m.Name))).ToList();
         return new JObject()
         {
-            ["models"] = JToken.FromObject(matches.Select(m => m.ToNetObject()).ToList())
+            ["models"] = JArray.FromObject(matches.Select(m => m.ToNetObject()).ToList())
         };
     }
 
-    /// <summary>API route to select a model for loading.</summary>
-    public static async Task<JObject> SelectModel(Session session, string model, string backendId = null)
+    [API.APIDescription("Forcibly loads a model immediately on some or all backends.", "\"success\": true")]
+    public static async Task<JObject> SelectModel(Session session,
+        [API.APIParameter("The full filepath of the model to load.")] string model,
+        [API.APIParameter("The ID of a backend to load the model on, or null to load on all.")] string backendId = null)
     {
         return (await API.RunWebsocketHandlerCallDirect(SelectModelInternal, session, (model, backendId)))[0];
     }
 
-    /// <summary>API route to select a model for loading, as a websocket with live status updates.</summary>
+    [API.APIDescription("Forcibly loads a model immediately on some or all backends, with live status updates over websocket.", "\"success\": true")]
     public static async Task<JObject> SelectModelWS(WebSocket socket, Session session, string model)
     {
         await API.RunWebsocketHandlerCallWS(SelectModelInternal, session, (model, (string)null), socket);
@@ -245,8 +299,9 @@ public static class ModelsAPI
         output(new JObject() { ["success"] = true });
     }
 
-    /// <summary>API route to delete a wildcard.</summary>
-    public static async Task<JObject> DeleteWildcard(Session session, string card)
+    [API.APIDescription("Deletes a wildcard file.", "\"success\": true")]
+    public static async Task<JObject> DeleteWildcard(Session session,
+        [API.APIParameter("Exact filepath name of the wildcard.")] string card)
     {
         card = Utilities.StrictFilenameClean(card);
         if (TryGetRefusalForModel(session, card, out JObject refusal))
@@ -265,8 +320,12 @@ public static class ModelsAPI
         return new JObject() { ["success"] = true };
     }
 
-    /// <summary>API route to test how a prompt fills.</summary>
-    public static async Task<JObject> TestPromptFill(Session session, string prompt)
+    [API.APIDescription("Tests how a prompt fills. Useful for testing wildcards, `<random:...`, etc.",
+        """
+            "result": "your filled prompt"
+        """)]
+    public static async Task<JObject> TestPromptFill(Session session,
+        [API.APIParameter("The prompt to fill.")] string prompt)
     {
         T2IParamInput input = new(session);
         input.Set(T2IParamTypes.Seed, Random.Shared.Next(int.MaxValue));
@@ -276,8 +335,11 @@ public static class ModelsAPI
         return new JObject() { ["result"] = input.Get(T2IParamTypes.Prompt) };
     }
 
-    /// <summary>API route to modify a wildcard.</summary>
-    public static async Task<JObject> EditWildcard(Session session, string card, string options, string preview_image)
+    [API.APIDescription("Edits a wildcard file.", "\"success\": true")]
+    public static async Task<JObject> EditWildcard(Session session,
+        [API.APIParameter("Exact filepath name of the wildcard.")] string card,
+        [API.APIParameter("Newline-separated string listing of wildcard options.")] string options,
+        [API.APIParameter("Image-data-string of a preview, or null to not change.")] string preview_image)
     {
         card = Utilities.StrictFilenameClean(card);
         if (TryGetRefusalForModel(session, card, out JObject refusal))
@@ -297,9 +359,23 @@ public static class ModelsAPI
         return new JObject() { ["success"] = true };
     }
 
-    /// <summary>API route to modify the metadata of a model.</summary>
-    public static async Task<JObject> EditModelMetadata(Session session, string model, string title, string author, string type, string description,
-        int standard_width, int standard_height, string preview_image, string usage_hint, string date, string license, string trigger_phrase, string tags, bool is_negative_embedding = false, string subtype = "Stable-Diffusion")
+    [API.APIDescription("Modifies the metadata of a model. Returns before the file update is necessarily saved.", "\"success\": true")]
+    public static async Task<JObject> EditModelMetadata(Session session,
+        [API.APIParameter("Exact filepath name of the model.")] string model,
+        [API.APIParameter("New model `title` metadata value.")] string title,
+        [API.APIParameter("New model `author` metadata value.")] string author,
+        [API.APIParameter("New model `description` metadata value (architecture ID).")] string type,
+        [API.APIParameter("New model `description` metadata value.")] string description,
+        [API.APIParameter("New model `standard_width` metadata value.")] int standard_width,
+        [API.APIParameter("New model `standard_height` metadata value.")] int standard_height,
+        [API.APIParameter("New model `preview_image` metadata value (image-data-string format, or null to not change).")] string preview_image,
+        [API.APIParameter("New model `usage_hint` metadata value.")] string usage_hint,
+        [API.APIParameter("New model `date` metadata value.")] string date,
+        [API.APIParameter("New model `license` metadata value.")] string license,
+        [API.APIParameter("New model `trigger_phrase` metadata value.")] string trigger_phrase,
+        [API.APIParameter("New model `tags` metadata value (comma-separated list).")] string tags,
+        [API.APIParameter("New model `is_negative_embedding` metadata value.")] bool is_negative_embedding = false,
+        [API.APIParameter("The model's sub-type, eg `Stable-Diffusion`, `LoRA`, etc.")] string subtype = "Stable-Diffusion")
     {
         if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler))
         {
