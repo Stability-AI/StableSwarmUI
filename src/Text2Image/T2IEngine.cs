@@ -226,16 +226,21 @@ namespace StableSwarmUI.Text2Image
                     }
                     long fullTime = Environment.TickCount64 - timeStart;
                     genTimeReport = $"{(fullTime - img.GenTimeMS) / 1000.0:0.00} (prep) and {img.GenTimeMS / 1000.0:0.00} (gen) seconds";
-                    user_input.ExtraMeta["generation_time"] = genTimeReport;
+                    T2IParamInput copyInput = user_input.Clone();
+                    copyInput.ExtraMeta["generation_time"] = genTimeReport;
+                    if (!img.IsReal)
+                    {
+                        copyInput.ExtraMeta["intermediate"] = "intermediate output";
+                    }
                     bool refuse = false;
-                    PostGenerateEvent?.Invoke(new(img.Img, user_input, () => refuse = true));
+                    PostGenerateEvent?.Invoke(new(img.Img, copyInput, () => refuse = true));
                     if (refuse)
                     {
                         Logs.Info($"Refused an image.");
                     }
                     else
                     {
-                        (img.Img, string metadata) = user_input.SourceSession.ApplyMetadata(img.Img, user_input, numImagesGenned);
+                        (img.Img, string metadata) = copyInput.SourceSession.ApplyMetadata(img.Img, copyInput, numImagesGenned);
                         saveImages(img, metadata);
                         numImagesGenned++;
                     }
