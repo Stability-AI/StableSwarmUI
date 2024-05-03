@@ -243,26 +243,31 @@ class UIImprovementHandler {
                 return false;
             }
         }, true);
+        function updateVal(input, newVal, step) {
+            let min = parseFloat(input.min);
+            if (typeof min == 'number' && !isNaN(min)) {
+                newVal = Math.max(newVal, min);
+            }
+            let max = parseFloat(input.max);
+            if (typeof max == 'number' && !isNaN(max)) {
+                newVal = Math.min(newVal, max);
+            }
+            input.value = roundToStrAuto(newVal, step);
+            triggerChangeFor(input);
+        }
         window.addEventListener('wheel', (e) => {
             if (e.target.tagName == 'INPUT' && (e.target.type == 'number' || e.target.type == 'range')) {
                 let input = e.target;
-                let step = parseFloat(input.step) || 1;
-                let value = parseFloat(input.value) || 0;
-                function updateVal(newVal) {
-                    if (input.min !== undefined) {
-                        newVal = Math.max(newVal, parseFloat(input.min));
-                    }
-                    if (input.max !== undefined) {
-                        newVal = Math.min(newVal, parseFloat(input.max));
-                    }
-                    input.value = roundToStrAuto(newVal, step);
-                    triggerChangeFor(input);
+                let step = parseFloat(input.step);
+                if (typeof step != 'number' || isNaN(step)) {
+                    step = 1;
                 }
+                let value = parseFloat(input.value) || 0;
                 if (e.deltaY > 0) {
-                    updateVal(value - step);
+                    updateVal(input, value - step, step);
                 }
                 else if (e.deltaY < 0) {
-                    updateVal(value + step);
+                    updateVal(input, value + step, step);
                 }
                 e.preventDefault();
                 e.stopPropagation();
@@ -293,17 +298,13 @@ class UIImprovementHandler {
                 moveY = Math.round(moveY / stepDist);
                 lastX = e.pageX;
                 lastY = e.pageY;
-                let step = parseFloat(clickedElem.step) || 1;
+                let step = parseFloat(clickedElem.step);
+                if (typeof step != 'number' || isNaN(step)) {
+                    step = 1;
+                }
                 let value = parseFloat(clickedElem.value) || 0;
                 let newVal = value + (moveX - moveY) * step;
-                if (clickedElem.min !== undefined) {
-                    newVal = Math.max(newVal, parseFloat(clickedElem.min));
-                }
-                if (clickedElem.max !== undefined) {
-                    newVal = Math.min(newVal, parseFloat(clickedElem.max));
-                }
-                clickedElem.value = roundToStrAuto(newVal, step);
-                triggerChangeFor(clickedElem);
+                updateVal(clickedElem, newVal, step);
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
