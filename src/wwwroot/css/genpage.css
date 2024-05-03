@@ -617,11 +617,14 @@ body {
 .imageview_popup_modal_background {
     font-family: monospace, monospace;
     background-color: rgb(50, 50, 50, 0.7);
-    text-align: center;
 }
-.imageview_popup_modal_img {
+.imageview_modal_imagewrap {
     height: calc(min(100vw, 100vh - 5em));
     max-width: 95vw;
+    overflow: hidden;
+}
+.imageview_popup_modal_img {
+    height: 100%;
     position: relative;
     margin: auto;
 }
@@ -630,9 +633,11 @@ body {
     overflow-wrap: break-word;
     height: 5em;
     overflow-y: auto;
+    text-align: center;
 }
 .imageview_modal_inner_div {
     max-width: 95vw;
+    overflow: hidden;
     margin: auto;
 }
 .browser-folder-tree-container {

@@ -395,12 +395,6 @@ document.addEventListener('click', (e) => {
         return; // it's impossible on the genpage to actually click body, so this indicates a bugged click, so ignore it
     }
     doPopHideCleanup(e.target);
-    if (getRequiredElementById('image_fullview_modal').style.display == 'block' && !findParentOfClass(e.target, 'imageview_popup_modal_undertext')) {
-        closeImageFullview();
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
 }, true);
 
 /** Ensures the popover for the given ID is hidden. */

@@ -147,14 +147,133 @@ function formatMetadata(metadata) {
     return result;
 }
 
-function expandCurrentImage(src, metadata) {
-    getRequiredElementById('image_fullview_modal_content').innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="imageview_modal_inner_div"><img class="imageview_popup_modal_img" src="${src}"><br><div class="imageview_popup_modal_undertext">${formatMetadata(metadata)}</div>`;
-    $('#image_fullview_modal').modal('show');
+/** Central helper class to handle the 'image full view' modal. */
+class ImageFullViewHelper {
+    constructor() {
+        this.zoomDivisor = 20;
+        this.modal = getRequiredElementById('image_fullview_modal');
+        this.content = getRequiredElementById('image_fullview_modal_content');
+        this.modalJq = $('#image_fullview_modal');
+        this.noClose = false;
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName == 'BODY') {
+                return; // it's impossible on the genpage to actually click body, so this indicates a bugged click, so ignore it
+            }
+            if (!this.noClose && this.modal.style.display == 'block' && !findParentOfClass(e.target, 'imageview_popup_modal_undertext')) {
+                this.close();
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            this.noClose = false;
+        }, true);
+        this.lastMouseX = 0;
+        this.lastMouseY = 0;
+        this.isDragging = false;
+        this.didDrag = false;
+        this.content.addEventListener('wheel', this.onWheel.bind(this));
+        this.content.addEventListener('mousedown', this.onMouseDown.bind(this));
+        document.addEventListener('mouseup', this.onGlobalMouseUp.bind(this));
+        document.addEventListener('mousemove', this.onGlobalMouseMove.bind(this));
+    }
+
+    getImg() {
+        return getRequiredElementById('imageview_popup_modal_img');
+    }
+
+    getHeightPercent() {
+        return parseFloat((this.getImg().style.height || '100%').replaceAll('%', ''));
+    }
+
+    getImgLeft() {
+        return parseFloat((this.getImg().style.left || '0').replaceAll('px', ''));
+    }
+
+    getImgTop() {
+        return parseFloat((this.getImg().style.top || '0').replaceAll('px', ''));
+    }
+
+    onMouseDown(e) {
+        if (this.modal.style.display != 'block') {
+            return;
+        }
+        this.lastMouseX = e.clientX;
+        this.lastMouseY = e.clientY;
+        this.isDragging = true;
+        this.getImg().style.cursor = 'grabbing';
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    onGlobalMouseUp(e) {
+        if (!this.isDragging) {
+            return;
+        }
+        this.getImg().style.cursor = 'grab';
+        this.isDragging = false;
+        this.noClose = this.didDrag;
+        this.didDrag = false;
+    }
+
+    moveImg(xDiff, yDiff) {
+        let img = this.getImg();
+        let newLeft = this.getImgLeft() + xDiff;
+        let newTop = this.getImgTop() + yDiff;
+        let overWidth = img.parentElement.offsetWidth / 2;
+        let overHeight = img.parentElement.offsetHeight / 2;
+        newLeft = Math.min(overWidth, Math.max(newLeft, img.parentElement.offsetWidth - img.width - overWidth));
+        newTop = Math.min(overHeight, Math.max(newTop, img.parentElement.offsetHeight - img.height - overHeight));
+        img.style.left = `${newLeft}px`;
+        img.style.top = `${newTop}px`;
+    }
+
+    onGlobalMouseMove(e) {
+        if (!this.isDragging) {
+            return;
+        }
+        let xDiff = e.clientX - this.lastMouseX;
+        let yDiff = e.clientY - this.lastMouseY;
+        this.lastMouseX = e.clientX;
+        this.lastMouseY = e.clientY;
+        this.moveImg(xDiff, yDiff);
+        if (Math.abs(xDiff) > 1 || Math.abs(yDiff) > 1) {
+            this.didDrag = true;
+        }
+    }
+
+    onWheel(e) {
+        let wrap = getRequiredElementById('imageview_modal_imagewrap');
+        let img = this.getImg();
+        if (wrap.style.textAlign == 'center') {
+            let actualLeft = img.parentElement.offsetWidth / 2 - img.width / 2;
+            wrap.style.textAlign = 'left';
+            img.style.left = `${actualLeft}px`;
+            img.style.top = '0px';
+        }
+        let origHeight = this.getHeightPercent();
+        let newHeight = Math.max(50, origHeight - (e.deltaY / this.zoomDivisor));
+        this.getImg().style.cursor = 'grab';
+        let [imgLeft, imgTop] = [this.getImgLeft(), this.getImgTop()];
+        let [mouseX, mouseY] = [e.clientX - img.offsetLeft, e.clientY - img.offsetTop];
+        let [origX, origY] = [mouseX / origHeight - imgLeft, mouseY / origHeight - imgTop];
+        let [newX, newY] = [mouseX / newHeight - imgLeft, mouseY / newHeight - imgTop];
+        this.moveImg((newX - origX) * newHeight, (newY - origY) * newHeight);
+        img.style.height = `${newHeight}%`;
+    }
+
+    expandCurrentImage(src, metadata) {
+        this.content.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="imageview_modal_inner_div"><div class="imageview_modal_imagewrap" id="imageview_modal_imagewrap" style="text-align:center;"><img class="imageview_popup_modal_img" id="imageview_popup_modal_img" style="cursor:grab;" src="${src}"></div><div class="imageview_popup_modal_undertext">${formatMetadata(metadata)}</div>`;
+        this.modalJq.modal('show');
+    }
+
+    close() {
+        this.isDragging = false;
+        this.didDrag = false;
+        this.modalJq.modal('hide');
+    }
 }
 
-function closeImageFullview() {
-    $('#image_fullview_modal').modal('hide');
-}
+let imageFullView = new ImageFullViewHelper();
 
 function shiftToNextImagePreview(next = true, expand = false) {
     let curImgElem = document.getElementById('current_image_img');
@@ -178,7 +297,7 @@ function shiftToNextImagePreview(next = true, expand = false) {
         divs[newIndex].querySelector('img').click();
         if (expand) {
             divs[newIndex].querySelector('img').click();
-            expandCurrentImage(currentImgSrc, currentMetadataVal);
+            imageFullView.expandCurrentImage(currentImgSrc, currentMetadataVal);
         }
         return;
     }
@@ -201,7 +320,7 @@ function shiftToNextImagePreview(next = true, expand = false) {
     let block = findParentOfClass(newImg, 'image-block');
     setCurrentImage(block.dataset.src, block.dataset.metadata, block.dataset.batch_id, newImg.dataset.previewGrow == 'true');
     if (expand) {
-        expandCurrentImage(block.dataset.src, block.dataset.metadata);
+        imageFullView.expandCurrentImage(block.dataset.src, block.dataset.metadata);
     }
 }
 
@@ -327,7 +446,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
     img.id = 'current_image_img';
     img.dataset.src = src;
     img.dataset.batch_id = batchId;
-    img.onclick = () => expandCurrentImage(src, metadata);
+    img.onclick = () => imageFullView.expandCurrentImage(src, metadata);
     let extrasWrapper = isReuse ? document.getElementById('current-image-extras-wrapper') : createDiv('current-image-extras-wrapper', 'current-image-extras-wrapper');
     extrasWrapper.innerHTML = '';
     let buttons = createDiv(null, 'current-image-buttons');
