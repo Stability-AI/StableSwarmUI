@@ -138,13 +138,13 @@ let autoExcludeHtmlAttrs = ['id', 'class'];
 function safeHtmlOnly(text) {
     let tagStart = text.indexOf('<');
     if (tagStart < 0) {
-        return text;
+        return text.replaceAll('>', '&gt;').replaceAll('\n', '\n<br>');
     }
     let tagEnd = text.indexOf('>', tagStart);
     if (tagEnd < 0) {
         return escapeHtml(text);
     }
-    let prefix = text.substring(0, tagStart).replaceAll('\n', '<br>\n').replaceAll('>', '&gt;');
+    let prefix = text.substring(0, tagStart).replaceAll('>', '&gt;').replaceAll('\n', '\n<br>');
     let tag = text.substring(tagStart + 1, tagEnd);
     let suffix = safeHtmlOnly(text.substring(tagEnd + 1));
     let tagForSplit = tag.endsWith('/') ? tag.substring(0, tag.length - 1).trim() : tag;
