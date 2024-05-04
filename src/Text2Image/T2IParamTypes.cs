@@ -523,7 +523,7 @@ public class T2IParamTypes
         ModelSpecificEnhancements = Register<bool>(new("Model Specific Enhancements", "If checked, enables model-specific enhancements.\nFor example, on SDXL, smarter res-cond will be used.\nIf unchecked, will prefer more 'raw' behavior.",
             "true", IgnoreIf: "true", IsAdvanced: true, Group: GroupSwarmInternal, OrderPriority: 2
             ));
-        GroupFreeU = new("FreeU", Open: false, OrderPriority: 10, IsAdvanced: true, Toggles: true, Description: "Implements 'FreeU: Free Lunch in Diffusion U-Net' https://arxiv.org/abs/2309.11497");
+        GroupFreeU = new("FreeU", Open: false, OrderPriority: 10, IsAdvanced: true, Toggles: true, Description: "<a class=\"translate\" href=\"https://arxiv.org/abs/2309.11497\">Implements 'FreeU: Free Lunch in Diffusion U-Net'</a>");
         FreeUApplyTo = Register<string>(new("[FreeU] Apply To", "Which models to apply FreeU to, as base, refiner, or both. Irrelevant when not using refiner.",
             "Both", GetValues: (_) => ["Both", "Base", "Refiner"], IsAdvanced: true, Group: GroupFreeU, FeatureFlag: "freeu"
             ));

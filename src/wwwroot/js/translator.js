@@ -144,5 +144,8 @@ function changeLanguage(code) {
 }
 
 function translateableHtml(key) {
+    if (key.replaceAll('<br>', '').includes('<')) {
+        return key;
+    }
     return `<span class="translate" data-pretranslated="${key}">${translate(key)}</span>`;
 }

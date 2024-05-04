@@ -6,7 +6,7 @@ let refreshParamsExtra = [];
 function getHtmlForParam(param, prefix) {
     try {
         let example = param.examples ? `<br><br><span class="translate">Examples</span>: <code>${param.examples.map(escapeHtmlNoBr).join(`</code>,&emsp;<code>`)}</code>` : '';
-        let pop = param.no_popover ? '' : `<div class="sui-popover" id="popover_${prefix}${param.id}"><b class="translate">${escapeHtmlNoBr(param.name)}</b> (${param.type}):<br>&emsp;<span class="translate">${escapeHtmlNoBr(param.description)}</span>${example}</div>`;
+        let pop = param.no_popover ? '' : `<div class="sui-popover" id="popover_${prefix}${param.id}"><b class="translate">${escapeHtmlNoBr(param.name)}</b> (${param.type}):<br>&emsp;<span class="translate">${safeHtmlOnly(param.description)}</span>${example}</div>`;
         switch (param.type) {
             case 'text':
                 let runnable = param.view_type == 'prompt' ? () => textPromptAddKeydownHandler(getRequiredElementById(`${prefix}${param.id}`)) : null;
@@ -170,7 +170,7 @@ function genInputs(delay_final = false) {
                     let infoButton = '';
                     let groupId = param.group.id;
                     if (param.group.description) {
-                        html += `<div class="sui-popover" id="popover_group_${groupId}"><b>${translateableHtml(escapeHtml(param.group.name))}</b>:<br>&emsp;${translateableHtml(escapeHtml(param.group.description))}</div>`;
+                        html += `<div class="sui-popover" id="popover_group_${groupId}"><b>${translateableHtml(escapeHtml(param.group.name))}</b>:<br>&emsp;${translateableHtml(safeHtmlOnly(param.group.description))}</div>`;
                         infoButton = `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('group_${groupId}', arguments[0])">?</span>`;
                     }
                     let shouldOpen = getCookie(`group_open_auto-group-${groupId}`) || (param.group.open ? 'open' : 'closed');

@@ -132,7 +132,7 @@ function isHtmlSpanStyleAllowed(text) {
 let allowedHtmlTagNames = ['a', 'abbr', 'acronym', 'b', 'i', 's', 'span', 'u', 'br', 'hr', 'p', 'li', 'ul', 'ol', 'strong', 'h6', 'h5', 'h4', 'em', 'mark', 'aside', 'blockquote', 'q', 'pre', 'code', 'strike'];
 let htmlTagSafeRemaps = { 'h3': 'h4', 'h2': 'h4', 'h1': 'h4'};
 let allowedHtmlTagAttrs = ['href', 'title', 'style'];
-let allowedHtmlFullAttrs = ['target="_blank"', 'target="_new"', 'rel="noopener noreferrer"', 'rel="noopener"', 'rel="noreferrer"', 'rel="ugc"'];
+let allowedHtmlFullAttrs = ['target="_blank"', 'target="_new"', 'rel="noopener noreferrer"', 'rel="noopener"', 'rel="noreferrer"', 'rel="ugc"', 'class="translate"'];
 let autoExcludeHtmlAttrs = ['id', 'class'];
 /** Partially escapes HTML, allowing 'basic format' codes (bold, italic, etc) to remain. */
 function safeHtmlOnly(text) {
@@ -149,7 +149,9 @@ function safeHtmlOnly(text) {
     let suffix = safeHtmlOnly(text.substring(tagEnd + 1));
     let tagForSplit = tag.endsWith('/') ? tag.substring(0, tag.length - 1).trim() : tag;
     tagForSplit = tag.startsWith('/') ? tagForSplit.substring(1) : tagForSplit;
-    let parts = splitWithQuoting(tagForSplit, ' ').filter(part => !allowedHtmlFullAttrs.includes(part));
+    let parts = splitWithQuoting(tagForSplit, ' ');
+    let readdParts = parts.filter(part => allowedHtmlFullAttrs.includes(part));
+    parts = parts.filter(part => !allowedHtmlFullAttrs.includes(part));
     let tagName = parts[0];
     if (htmlTagSafeRemaps[tagName]) {
         tagName = htmlTagSafeRemaps[tagName];
@@ -158,7 +160,7 @@ function safeHtmlOnly(text) {
     let splitParts = parts.map(part => splitWithQuoting(part, '=')).filter(part => !autoExcludeHtmlAttrs.includes(part[0]));
     let styleAttr = splitParts.find(part => part[0] == 'style');
     if (allowedHtmlTagNames.includes(tagName)
-        && splitParts.every(part => part.length == 2)
+        && splitParts.every(part => part.length == 2 && part[1].startsWith('"') && part[1].endsWith('"'))
         && splitParts.every(part => allowedHtmlTagAttrs.includes(part[0]))
         && (!styleAttr || isHtmlSpanStyleAllowed(styleAttr[1]))
         && splitParts.filter(part => part[0] == 'style').length <= 1) {
@@ -173,7 +175,10 @@ function safeHtmlOnly(text) {
             }
             result += tagName;
             for (let part of splitParts) {
-                result += ` ${part[0]}="${part[1]}"`;
+                result += ` ${part[0]}=${part[1]}`;
+            }
+            for (let part of readdParts) {
+                result += ` ${part}`;
             }
             return `${result}>${suffix}`;
     }
