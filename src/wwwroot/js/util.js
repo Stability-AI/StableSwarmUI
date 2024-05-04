@@ -216,7 +216,6 @@ document.addEventListener('keyup', (event) => {
  * (This is as opposed to a normal linear slider, which would have very small steps that are hard to land on exactly the number you want if the range is too high.)
  */
 function linearToPot(val, max, min, step) {
-    console.log(`linearToPot(${val}, ${max}, ${min}, ${step})`)
     if (val < min + step) {
         return min;
     }

@@ -247,10 +247,22 @@ class ImageFullViewHelper {
         let wrap = getRequiredElementById('imageview_modal_imagewrap');
         if (wrap.style.textAlign == 'center') {
             let img = this.getImg();
-            let actualLeft = img.parentElement.offsetWidth / 2 - img.width / 2;
             wrap.style.textAlign = 'left';
-            img.style.left = `${actualLeft}px`;
-            img.style.top = '0px';
+            let imgAspectRatio = img.naturalWidth / img.naturalHeight;
+            let wrapAspectRatio = wrap.offsetWidth / wrap.offsetHeight;
+            let targetWidth = wrap.offsetHeight * imgAspectRatio;
+            if (targetWidth > wrap.offsetWidth) {
+                img.style.top = `${(wrap.offsetHeight - (wrap.offsetWidth / imgAspectRatio)) / 2}px`;
+                img.style.height = `${(wrapAspectRatio / imgAspectRatio) * 100}%`;
+                img.style.left = '0px';
+            }
+            else {
+                img.style.top = '0px';
+                img.style.left = `${(wrap.offsetWidth - targetWidth) / 2}px`;
+                img.style.height = `100%`;
+            }
+            img.style.objectFit = '';
+            img.style.maxWidth = '';
         }
     }
 
@@ -259,8 +271,15 @@ class ImageFullViewHelper {
         let img = this.getImg();
         let origHeight = this.getHeightPercent();
         let zoom = Math.pow(this.zoomRate, -e.deltaY / 100);
-        let newHeight = Math.max(50, origHeight * zoom);
-        this.getImg().style.cursor = 'grab';
+        let maxHeight = Math.sqrt(img.naturalWidth * img.naturalHeight) * 2;
+        let newHeight = Math.max(10, Math.min(origHeight * zoom, maxHeight));
+        if (newHeight > maxHeight / 5) {
+            img.style.imageRendering = 'pixelated';
+        }
+        else {
+            img.style.imageRendering = '';
+        }
+        img.style.cursor = 'grab';
         let [imgLeft, imgTop] = [this.getImgLeft(), this.getImgTop()];
         let [mouseX, mouseY] = [e.clientX - img.offsetLeft, e.clientY - img.offsetTop];
         let [origX, origY] = [mouseX / origHeight - imgLeft, mouseY / origHeight - imgTop];
@@ -269,8 +288,17 @@ class ImageFullViewHelper {
         img.style.height = `${newHeight}%`;
     }
 
-    expandCurrentImage(src, metadata) {
-        this.content.innerHTML = `<div class="modal-dialog" style="display:none">(click outside image to close)</div><div class="imageview_modal_inner_div"><div class="imageview_modal_imagewrap" id="imageview_modal_imagewrap" style="text-align:center;"><img class="imageview_popup_modal_img" id="imageview_popup_modal_img" style="cursor:grab;" src="${src}"></div><div class="imageview_popup_modal_undertext">${formatMetadata(metadata)}</div>`;
+    showImage(src, metadata) {
+        this.content.innerHTML = `
+        <div class="modal-dialog" style="display:none">(click outside image to close)</div>
+        <div class="imageview_modal_inner_div">
+            <div class="imageview_modal_imagewrap" id="imageview_modal_imagewrap" style="text-align:center;">
+                <img class="imageview_popup_modal_img" id="imageview_popup_modal_img" style="cursor:grab;max-width:100%;object-fit:contain;" src="${src}">
+            </div>
+            <div class="imageview_popup_modal_undertext">
+            ${formatMetadata(metadata)}
+            </div>
+        </div>`;
         this.modalJq.modal('show');
     }
 
@@ -305,7 +333,7 @@ function shiftToNextImagePreview(next = true, expand = false) {
         divs[newIndex].querySelector('img').click();
         if (expand) {
             divs[newIndex].querySelector('img').click();
-            imageFullView.expandCurrentImage(currentImgSrc, currentMetadataVal);
+            imageFullView.showImage(currentImgSrc, currentMetadataVal);
         }
         return;
     }
@@ -328,7 +356,7 @@ function shiftToNextImagePreview(next = true, expand = false) {
     let block = findParentOfClass(newImg, 'image-block');
     setCurrentImage(block.dataset.src, block.dataset.metadata, block.dataset.batch_id, newImg.dataset.previewGrow == 'true');
     if (expand) {
-        imageFullView.expandCurrentImage(block.dataset.src, block.dataset.metadata);
+        imageFullView.showImage(block.dataset.src, block.dataset.metadata);
     }
 }
 
@@ -454,7 +482,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
     img.id = 'current_image_img';
     img.dataset.src = src;
     img.dataset.batch_id = batchId;
-    img.onclick = () => imageFullView.expandCurrentImage(src, metadata);
+    img.onclick = () => imageFullView.showImage(src, metadata);
     let extrasWrapper = isReuse ? document.getElementById('current-image-extras-wrapper') : createDiv('current-image-extras-wrapper', 'current-image-extras-wrapper');
     extrasWrapper.innerHTML = '';
     let buttons = createDiv(null, 'current-image-buttons');
