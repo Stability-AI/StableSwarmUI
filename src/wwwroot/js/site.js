@@ -486,7 +486,7 @@ function updateRangeStyle(e) {
     el.parentElement.style.setProperty("--range-value", `${(el.value-el.min)/(el.max-el.min)*100}%`);
 }
 
-function makeSliderInput(featureid, id, paramid, name, description, value, min, max, view_max = 0, step = 1, isPot = false, toggles = false, popover_button = true) {
+function makeSliderInput(featureid, id, paramid, name, description, value, min, max, view_min = 0, view_max = 0, step = 1, isPot = false, toggles = false, popover_button = true) {
     name = escapeHtml(name);
     featureid = featureid ? ` data-feature-require="${featureid}"` : '';
     let rangeVal = isPot ? potToLinear(value, max, min, step) : value;
@@ -500,8 +500,8 @@ function makeSliderInput(featureid, id, paramid, name, description, value, min, 
         </label>
         <input class="auto-slider-number" type="number" id="${id}" data-param_id="${paramid}" value="${value}" min="${min}" max="${max}" step="${step}" data-ispot="${isPot}" autocomplete="false" onchange="autoNumberWidth(this)">
         <br>
-        <div class="auto-slider-range-wrapper" style="${getRangeStyle(rangeVal, min, view_max)}">
-            <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false" oninput="updateRangeStyle(arguments[0])" onchange="updateRangeStyle(arguments[0])">
+        <div class="auto-slider-range-wrapper" style="${getRangeStyle(rangeVal, view_min, view_max)}">
+            <input class="auto-slider-range" type="range" id="${id}_rangeslider" value="${rangeVal}" min="${view_min}" max="${view_max}" step="${step}" data-ispot="${isPot}" autocomplete="false" oninput="updateRangeStyle(arguments[0])" onchange="updateRangeStyle(arguments[0])">
         </div>
     </div></div>`;
 }

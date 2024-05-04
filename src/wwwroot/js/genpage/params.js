@@ -31,10 +31,10 @@ function getHtmlForParam(param, prefix) {
                     case 'seed':
                         return {html: makeNumberInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, min, max, step, 'seed', param.toggleable, !param.no_popover) + pop};
                     case 'slider':
-                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, min, max, param.view_max || max, step, false, param.toggleable, !param.no_popover) + pop,
+                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, min, max, param.view_min || min, param.view_max || max, step, false, param.toggleable, !param.no_popover) + pop,
                             runnable: () => enableSliderForBox(findParentOfClass(getRequiredElementById(`${prefix}${param.id}`), 'auto-slider-box'))};
                     case 'pot_slider':
-                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, min, max, param.view_max || max, step, true, param.toggleable, !param.no_popover) + pop,
+                        return {html: makeSliderInput(param.feature_flag, `${prefix}${param.id}`, param.id, param.name, param.description, param.default, min, max, param.view_min || min, param.view_max || max, step, true, param.toggleable, !param.no_popover) + pop,
                             runnable: () => enableSliderForBox(findParentOfClass(getRequiredElementById(`${prefix}${param.id}`), 'auto-slider-box'))};
                 }
                 break;

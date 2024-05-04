@@ -60,6 +60,7 @@ public enum ParamViewType
 /// <param name="Default">A default value for this parameter.</param>
 /// <param name="Min">(For numeric types) the minimum value.</param>
 /// <param name="Max">(For numeric types) the maximum value.</param>
+/// <param name="ViewMax">(For numeric types) the *visual* minimum value (allowed to exceed).</param>
 /// <param name="ViewMax">(For numeric types) the *visual* maximum value (allowed to exceed).</param>
 /// <param name="Step">(For numeric types) the step rate for UI usage.</param>
 /// <param name="Clean">An optional special method to clean up text input (input = prior,new). Prior can be null.</param>
@@ -90,7 +91,7 @@ public enum ParamViewType
 /// <param name="ID">The raw ID of this parameter (will be set when registering).</param>
 /// <param name="SharpType">The C# datatype.</param>
 /// 
-public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMax = 0,
+public record class T2IParamType(string Name, string Description, string Default, double Min = 0, double Max = 0, double Step = 1, double ViewMin = 0, double ViewMax = 0,
     Func<string, string, string> Clean = null, Func<Session, List<string>> GetValues = null, string[] Examples = null, Func<List<string>, List<string>> ParseList = null, bool ValidateValues = true,
     bool VisibleNormally = true, bool IsAdvanced = false, string FeatureFlag = null, string Permission = null, bool Toggleable = false, double OrderPriority = 10, T2IParamGroup Group = null, string IgnoreIf = null,
     ParamViewType ViewType = ParamViewType.SMALL, bool HideFromMetadata = false, Func<string, string> MetadataFormat = null, bool AlwaysRetain = false, double ChangeWeight = 0, bool ExtraHidden = false,
@@ -108,6 +109,7 @@ public record class T2IParamType(string Name, string Description, string Default
             ["default"] = Default,
             ["min"] = Min,
             ["max"] = Max,
+            ["view_min"] = ViewMin,
             ["view_max"] = ViewMax,
             ["step"] = Step,
             ["values"] = GetValues == null ? null : JToken.FromObject(GetValues(session)),
@@ -347,10 +349,10 @@ public class T2IParamTypes
             "1:1", GetValues: (_) => ["1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom"], OrderPriority: -11, Group: GroupResolution
             ));
         Width = Register<int>(new("Width", "Image width, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
-            "512", Min: 128, Max: 4096, Step: 32, Examples: ["512", "768", "1024"], OrderPriority: -10, ViewType: ParamViewType.POT_SLIDER, Group: GroupResolution
+            "512", Min: 64, ViewMin: 256, Max: 16384, ViewMax: 2048, Step: 32, Examples: ["512", "768", "1024"], OrderPriority: -10, ViewType: ParamViewType.POT_SLIDER, Group: GroupResolution
             ));
         Height = Register<int>(new("Height", "Image height, in pixels.\nSDv1 uses 512, SDv2 uses 768, SDXL prefers 1024.\nSome models allow variation within a range (eg 512 to 768) but almost always want a multiple of 64.",
-            "512", Min: 128, Max: 4096, Step: 32, Examples: ["512", "768", "1024"], OrderPriority: -9, ViewType: ParamViewType.POT_SLIDER, Group: GroupResolution
+            "512", Min: 64, ViewMin: 256, Max: 16384, ViewMax: 2048, Step: 32, Examples: ["512", "768", "1024"], OrderPriority: -9, ViewType: ParamViewType.POT_SLIDER, Group: GroupResolution
             ));
         GroupSampling = new("Sampling", Toggles: false, Open: false, OrderPriority: -8);
         SeamlessTileable = Register<bool>(new("Seamless Tileable", "Makes the generated image seamlessly tileable (like a 3D texture would be).",
