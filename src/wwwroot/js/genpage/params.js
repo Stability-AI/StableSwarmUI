@@ -627,6 +627,19 @@ function resetParamsToDefault(exclude = []) {
     hideUnsupportableParams();
 }
 
+function hideUnalteredParameters() {
+    let filterBox = getRequiredElementById('main_inputs_filter');
+    let filter = filterBox.value.toLowerCase();
+    if (filter.includes('<unaltered>')) {
+        filter = filter.replaceAll('<unaltered>', '');
+    }
+    else {
+        filter += '<unaltered>';
+    }
+    filterBox.value = filter;
+    hideUnsupportableParams();
+}
+
 function hideUnsupportableParams() {
     if (!gen_param_types) {
         return;
@@ -640,6 +653,10 @@ function hideUnsupportableParams() {
         controlnetInstallButton.remove();
     }
     let filter = getRequiredElementById('main_inputs_filter').value.toLowerCase();
+    let hideUnaltered = filter.includes('<unaltered>');
+    if (hideUnaltered) {
+        filter = filter.replaceAll('<unaltered>', '');
+    }
     let groups = {};
     let advancedCount = 0;
     let toggler = getRequiredElementById('advanced_options_checkbox');
@@ -653,8 +670,16 @@ function hideUnsupportableParams() {
                 let searchText = `${param.id} ${param.name} ${param.description} ${param.group ? param.group.name : ''}`.toLowerCase();
                 filterShow = searchText.includes(filter);
             }
+            let paramToggler = document.getElementById(`input_${param.id}_toggle`);
+            let isAltered = paramToggler ? paramToggler.checked : `${getInputVal(elem)}` != param.default;
+            if (param.group && param.group.toggles && !getRequiredElementById(`input_group_content_${param.group.id}_toggle`).checked) {
+                isAltered = false;
+            }
             param.feature_missing = !supported;
             let show = supported;
+            if (hideUnaltered && !isAltered) {
+                show = false;
+            }
             if (param.advanced && !toggler.checked) {
                 show = false;
             }

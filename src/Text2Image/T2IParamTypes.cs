@@ -422,7 +422,7 @@ public class T2IParamTypes
                     "", Toggleable: true, FeatureFlag: "controlnet", Group: group, OrderPriority: 1, ChangeWeight: 2
                     )),
                 Model = Register<T2IModel>(new($"ControlNet{suffix} Model", "The ControlNet model to use.",
-                    "", FeatureFlag: "controlnet", Group: group, Subtype: "ControlNet", OrderPriority: 5, ChangeWeight: 5
+                    "(None)", FeatureFlag: "controlnet", Group: group, Subtype: "ControlNet", OrderPriority: 5, ChangeWeight: 5
                     )),
                 Strength = Register<double>(new($"ControlNet{suffix} Strength", "Higher values make the ControlNet apply more strongly. Weaker values let the prompt overrule the ControlNet.",
                     "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, ViewType: ParamViewType.SLIDER, Group: group
