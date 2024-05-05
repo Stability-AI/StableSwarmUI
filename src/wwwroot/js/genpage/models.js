@@ -549,9 +549,10 @@ function updateLoraList() {
         let weightInput = document.createElement('input');
         weightInput.className = 'lora-weight-input';
         weightInput.type = 'number';
-        weightInput.min = -10;
-        weightInput.max = 10;
-        weightInput.step = 0.1;
+        let weightsParam = gen_param_types.find(p => p.id == 'loraweights');
+        weightInput.min = weightsParam ? weightsParam.min : -10;
+        weightInput.max = weightsParam ? weightsParam.max : 10;
+        weightInput.step = weightsParam ? weightsParam.step : 0.1;
         weightInput.value = loraWeightPref[lora] || 1;
         weightInput.addEventListener('change', () => {
             loraWeightPref[lora] = weightInput.value;

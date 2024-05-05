@@ -483,7 +483,7 @@ public class T2IParamTypes
             "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, Clean: (_, s) => CleanModelNameList(s), GetValues: (session) => Program.T2IModelSets["LoRA"].ListModelNamesFor(session).Order().Select(CleanModelName).ToList(), Group: GroupAdvancedModelAddons, VisibleNormally: false, ChangeWeight: 8
             ));
         LoraWeights = Register<List<string>>(new("LoRA Weights", "Weight values for the LoRA model list.",
-            "", IgnoreIf: "", IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons, VisibleNormally: false
+            "", IgnoreIf: "", Min: -10, Max: 10, Step: 0.1, IsAdvanced: true, Toggleable: true, Group: GroupAdvancedModelAddons, VisibleNormally: false
             ));
         GroupSwarmInternal = new("Swarm Internal", Open: false, OrderPriority: 0, IsAdvanced: true);
         BatchSize = Register<int>(new("Batch Size", "Batch size - generates more images at once on a single GPU.\nThis increases VRAM usage.\nMay in some cases increase overall speed by a small amount (runs slower to get the images, but slightly faster per-image).",
