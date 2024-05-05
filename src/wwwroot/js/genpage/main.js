@@ -106,6 +106,7 @@ function copy_current_image_params() {
             doToggleEnable(elem.id);
         }
     }
+    hideUnsupportableParams();
 }
 
 let metadataKeyFormatCleaners = [];

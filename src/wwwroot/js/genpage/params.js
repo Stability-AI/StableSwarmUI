@@ -670,15 +670,17 @@ function hideUnsupportableParams() {
                 let searchText = `${param.id} ${param.name} ${param.description} ${param.group ? param.group.name : ''}`.toLowerCase();
                 filterShow = searchText.includes(filter);
             }
-            let paramToggler = document.getElementById(`input_${param.id}_toggle`);
-            let isAltered = paramToggler ? paramToggler.checked : `${getInputVal(elem)}` != param.default;
-            if (param.group && param.group.toggles && !getRequiredElementById(`input_group_content_${param.group.id}_toggle`).checked) {
-                isAltered = false;
-            }
             param.feature_missing = !supported;
-            let show = supported;
-            if (hideUnaltered && !isAltered) {
-                show = false;
+            let show = supported && param.visible;
+            if (hideUnaltered) {
+                let paramToggler = document.getElementById(`input_${param.id}_toggle`);
+                let isAltered = paramToggler ? paramToggler.checked : `${getInputVal(elem)}` != param.default;
+                if (param.group && param.group.toggles && !getRequiredElementById(`input_group_content_${param.group.id}_toggle`).checked) {
+                    isAltered = false;
+                }
+                if (!isAltered) {
+                    show = false;
+                }
             }
             if (param.advanced && !toggler.checked) {
                 show = false;
@@ -691,12 +693,11 @@ function hideUnsupportableParams() {
             }
             if (!box.dataset.visible_controlled) {
                 box.style.display = show ? '' : 'none';
-                box.dataset.disabled = supported ? 'false' : 'true';
             }
-            let group = findParentOfClass(elem, 'input-group');
-            if (group) {
-                let groupData = groups[group.id] || { visible: 0 };
-                groups[group.id] = groupData;
+            box.dataset.disabled = supported ? 'false' : 'true';
+            if (param.group) {
+                let groupData = groups[param.group.id] || { visible: 0 };
+                groups[param.group.id] = groupData;
                 if (show) {
                     groupData.visible++;
                 }
@@ -706,7 +707,7 @@ function hideUnsupportableParams() {
     getRequiredElementById('advanced_hidden_count').innerText = `(${advancedCount})`;
     for (let group in groups) {
         let groupData = groups[group];
-        let groupElem = getRequiredElementById(group);
+        let groupElem = getRequiredElementById(`auto-group-${group}`);
         if (groupData.visible == 0) {
             groupElem.style.display = 'none';
         }
@@ -714,7 +715,6 @@ function hideUnsupportableParams() {
             groupElem.style.display = 'block';
         }
     }
-    applyTranslations();
 }
 
 /**
