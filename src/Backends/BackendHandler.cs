@@ -772,6 +772,7 @@ public class BackendHandler
             {
                 if (!currentBackends.Any(b => b.Backend.Status == BackendStatus.LOADING || b.Backend.Status == BackendStatus.WAITING))
                 {
+                    Logs.Verbose($"[BackendHandler] count notEnabled = {currentBackends.Count(b => !b.Backend.IsEnabled)}, shutDownReserve = {currentBackends.Count(b => b.Backend.ShutDownReserve)}, directReserved = {currentBackends.Count(b => b.Backend.Reservations > 0)}, statusNotRunning = {currentBackends.Count(b => b.Backend.Status != BackendStatus.RUNNING)}");
                     Logs.Warning("[BackendHandler] No backends are available! Cannot generate anything.");
                     Failure = new InvalidOperationException("No backends available!");
                 }
