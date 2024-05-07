@@ -310,7 +310,7 @@ public class ComfyUIRedirectHelper
                     {
                         Users.TryRemove(client.SID, out _);
                         user.Clients.TryRemove(client, out _);
-                        if (client.SID == user.MasterSID)
+                        if (client.SID == user.Reserved?.SID)
                         {
                             user.Unreserve();
                         }
