@@ -26,18 +26,25 @@ public class AutoCompleteListHelper
     /// <summary>Reloads the list of files.</summary>
     public static void Reload()
     {
-        HashSet<string> files = [];
-        Directory.CreateDirectory(FolderPath);
-        foreach (string file in Directory.GetFiles(FolderPath, "*", SearchOption.AllDirectories))
+        try
         {
-            if (file.EndsWith(".txt") || file.EndsWith(".csv"))
+            HashSet<string> files = [];
+            Directory.CreateDirectory(FolderPath);
+            foreach (string file in Directory.GetFiles(FolderPath, "*", SearchOption.AllDirectories))
             {
-                string path = Path.GetRelativePath(FolderPath, file).Replace("\\", "/").TrimStart('/');
-                files.Add(path);
+                if (file.EndsWith(".txt") || file.EndsWith(".csv"))
+                {
+                    string path = Path.GetRelativePath(FolderPath, file).Replace("\\", "/").TrimStart('/');
+                    files.Add(path);
+                }
             }
+            FileNames = files;
+            AutoCompletionLists.Clear();
         }
-        FileNames = files;
-        AutoCompletionLists.Clear();
+        catch (Exception ex)
+        {
+            Logs.Error($"Error while refreshing autocomplete lists: {ex}");
+        }
     }
 
     /// <summary>Gets a specific data list.</summary>

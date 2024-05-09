@@ -171,16 +171,23 @@ public class T2IModelHandler
         {
             return;
         }
-        Directory.CreateDirectory(FolderPath);
-        lock (ModificationLock)
+        try
         {
-            Models.Clear();
+            Directory.CreateDirectory(FolderPath);
+            lock (ModificationLock)
+            {
+                Models.Clear();
+            }
+            AddAllFromFolder("");
+            if (UnathorizedAccessSet.Any())
+            {
+                Logs.Warning($"Got UnauthorizedAccessException while loading {ModelType} model paths: {UnathorizedAccessSet.Select(m => $"'{m}'").JoinString(", ")}");
+                UnathorizedAccessSet.Clear();
+            }
         }
-        AddAllFromFolder("");
-        if (UnathorizedAccessSet.Any())
+        catch (Exception e)
         {
-            Logs.Warning($"Got UnauthorizedAccessException while loading {ModelType} model paths: {UnathorizedAccessSet.Select(m => $"'{m}'").JoinString(", ")}");
-            UnathorizedAccessSet.Clear();
+            Logs.Error($"Error while refreshing {ModelType} models: {e}");
         }
     }
 

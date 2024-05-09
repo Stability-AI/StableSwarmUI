@@ -49,14 +49,21 @@ public class WildcardsHelper
     /// <summary>Refreshes the wildcard tracker, reloading from folder.</summary>
     public static void Refresh()
     {
-        ConcurrentDictionary<string, Wildcard> newWildcards = new();
-        Directory.CreateDirectory(Folder);
-        foreach (string str in Directory.EnumerateFiles(Folder, "*.txt", SearchOption.AllDirectories))
+        try
         {
-            string path = Path.GetRelativePath(Folder, str).Replace("\\", "/").TrimStart('/').BeforeLast('.');
-            newWildcards.TryAdd(path, new() { Name = path });
+            ConcurrentDictionary<string, Wildcard> newWildcards = new();
+            Directory.CreateDirectory(Folder);
+            foreach (string str in Directory.EnumerateFiles(Folder, "*.txt", SearchOption.AllDirectories))
+            {
+                string path = Path.GetRelativePath(Folder, str).Replace("\\", "/").TrimStart('/').BeforeLast('.');
+                newWildcards.TryAdd(path, new() { Name = path });
+            }
+            WildcardFiles = newWildcards;
         }
-        WildcardFiles = newWildcards;
+        catch (Exception ex)
+        {
+            Logs.Error($"Error while refreshing wildcards: {ex}");
+        }
     }
 
     /// <summary>Gets the wildcard data for the specified exact wildcard name.</summary>

@@ -240,16 +240,23 @@ public class ComfyUIBackendExtension : Extension
 
     public void Refresh()
     {
-        ComfyUIRedirectHelper.ObjectInfoReadCacher.ForceExpire();
-        LoadWorkflowFiles();
-        List<Task> tasks = [];
-        foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends.ToArray())
+        try
         {
-            tasks.Add(backend.LoadValueSet());
+            ComfyUIRedirectHelper.ObjectInfoReadCacher.ForceExpire();
+            LoadWorkflowFiles();
+            List<Task> tasks = [];
+            foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends.ToArray())
+            {
+                tasks.Add(backend.LoadValueSet());
+            }
+            if (tasks.Any())
+            {
+                Task.WaitAll([.. tasks], Program.GlobalProgramCancel);
+            }
         }
-        if (tasks.Any())
+        catch (Exception ex)
         {
-            Task.WaitAll([.. tasks], Program.GlobalProgramCancel);
+            Logs.Error($"Error refreshing ComfyUI: {ex}");
         }
     }
 
