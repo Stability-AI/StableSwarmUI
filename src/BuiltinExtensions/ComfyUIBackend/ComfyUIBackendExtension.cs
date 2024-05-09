@@ -240,24 +240,37 @@ public class ComfyUIBackendExtension : Extension
 
     public void Refresh()
     {
-        try
+        void tryCall(double timeout, bool canRetry)
         {
-            ComfyUIRedirectHelper.ObjectInfoReadCacher.ForceExpire();
-            LoadWorkflowFiles();
-            List<Task> tasks = [];
-            foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends.ToArray())
+            try
             {
-                tasks.Add(backend.LoadValueSet());
+                ComfyUIRedirectHelper.ObjectInfoReadCacher.ForceExpire();
+                LoadWorkflowFiles();
+                List<Task> tasks = [];
+                foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends.ToArray())
+                {
+                    tasks.Add(backend.LoadValueSet(timeout));
+                }
+                if (tasks.Any())
+                {
+                    Task.WaitAll([.. tasks], Program.GlobalProgramCancel);
+                }
             }
-            if (tasks.Any())
+            catch (Exception ex)
             {
-                Task.WaitAll([.. tasks], Program.GlobalProgramCancel);
+                Logs.Debug("ComfyUI refresh failed, will retry in background");
+                Logs.Verbose($"Error refreshing ComfyUI: {ex}");
+                if (canRetry)
+                {
+                    _ = Utilities.RunCheckedTask(() => tryCall(5, false));
+                }
+                else
+                {
+                    Logs.Error($"Error refreshing ComfyUI: {ex}");
+                }
             }
         }
-        catch (Exception ex)
-        {
-            Logs.Error($"Error refreshing ComfyUI: {ex}");
-        }
+        tryCall(0.5, true);
     }
 
     public void OnModelPathsChanged()

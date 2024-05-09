@@ -34,10 +34,10 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
 
     public string WSID;
 
-    public async Task LoadValueSet()
+    public async Task LoadValueSet(double maxMinutes = 1)
     {
         Logs.Verbose($"Comfy backend {BackendData.ID} loading value set...");
-        JObject result = await SendGet<JObject>("object_info", Utilities.TimedCancel(TimeSpan.FromMinutes(1)));
+        JObject result = await SendGet<JObject>("object_info", Utilities.TimedCancel(TimeSpan.FromMinutes(maxMinutes)));
         if (result.TryGetValue("error", out JToken errorToken))
         {
             Logs.Verbose($"Comfy backend {BackendData.ID} failed to load value set: {errorToken}");
