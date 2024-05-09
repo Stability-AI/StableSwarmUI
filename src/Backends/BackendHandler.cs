@@ -247,10 +247,7 @@ public class BackendHandler
         public void UpdateLastReleaseTime()
         {
             TimeLastRelease = Environment.TickCount64;
-            if (Parent is not null)
-            {
-                Parent.UpdateLastReleaseTime();
-            }
+            Parent?.UpdateLastReleaseTime();
         }
 
         public void Claim()

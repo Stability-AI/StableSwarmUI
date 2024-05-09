@@ -476,6 +476,9 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         }
         else {
             isReuse = true;
+            delete img.dataset.previewGrow;
+            img.removeAttribute('width');
+            img.removeAttribute('height');
         }
         img.src = src;
     }
