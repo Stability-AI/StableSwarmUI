@@ -219,6 +219,9 @@ public class BackendHandler
     {
         public AbstractT2IBackend Backend;
 
+        /// <summary>If the backend is non-real, this is the parent backend.</summary>
+        public T2IBackendData Parent;
+
         public volatile bool ReserveModelLoad = false;
 
         public volatile int Usages = 0;
@@ -241,10 +244,19 @@ public class BackendHandler
 
         public BackendType BackType;
 
+        public void UpdateLastReleaseTime()
+        {
+            TimeLastRelease = Environment.TickCount64;
+            if (Parent is not null)
+            {
+                Parent.UpdateLastReleaseTime();
+            }
+        }
+
         public void Claim()
         {
             Interlocked.Increment(ref Usages);
-            TimeLastRelease = Environment.TickCount64;
+            UpdateLastReleaseTime();
         }
     }
 
@@ -271,11 +283,12 @@ public class BackendHandler
     }
 
     /// <summary>Adds a new backend that is not a 'real' backend (it will not save nor show in the UI, but is available for generation calls).</summary>
-    public T2IBackendData AddNewNonrealBackend(BackendType type, AutoConfiguration config = null)
+    public T2IBackendData AddNewNonrealBackend(BackendType type, T2IBackendData parent, AutoConfiguration config = null)
     {
         T2IBackendData data = new()
         {
             Backend = Activator.CreateInstance(type.BackendClass) as AbstractT2IBackend,
+            Parent = parent,
             BackType = type
         };
         data.Backend.BackendData = data;
@@ -1170,7 +1183,7 @@ public class T2IBackendAccess : IDisposable
         if (!IsDisposed)
         {
             IsDisposed = true;
-            Data.TimeLastRelease = Environment.TickCount64;
+            Data.UpdateLastReleaseTime();
             Interlocked.Decrement(ref Data.Usages);
             Backend.Handler.CheckBackendsSignal.Set();
             GC.SuppressFinalize(this);

@@ -79,7 +79,7 @@ function addBackendToHtml(backend, disable, spot = null) {
     let cardBody = createDiv(null, 'card-body');
     let buttons = document.createElement('div');
     let isLogAvailable = serverLogs.matchIdentifier(`backend-${backend.id}`) != null;
-    buttons.innerHTML = `<button class="basic-button backend-restart-button" disabled onclick="restart_backend('${backend.id}')">Restart</button> <button class="basic-button backend-log-view-button"${isLogAvailable ? '' : ' disabled'} onclick="serverLogs.showLogsForIdentifier('backend-${backend.id}')">View Logs</button>`;
+    buttons.innerHTML = `<button class="basic-button backend-restart-button" disabled onclick="restart_backend('${backend.id}')">Restart</button> <button class="basic-button backend-log-view-button"${isLogAvailable ? '' : ' disabled'} onclick="serverLogs.showLogsForIdentifier('backend-${backend.id}')">View Logs</button> <span class="backend-last-used-time">Last used: <code>${backend.time_since_used}</code></span>`;
     cardBody.appendChild(buttons);
     for (let setting of type.settings) {
         let input = document.createElement('div');
@@ -158,6 +158,7 @@ function loadBackendsList() {
                 }
                 card.querySelector('.backend-restart-button').disabled = newBack.status != 'errored' && newBack.status != 'running';
                 card.querySelector('.backend-log-view-button').disabled = serverLogs.matchIdentifier(`backend-${newBack.id}`) == null;
+                card.querySelector('.backend-last-used-time').innerHTML = `Last used: <code>${newBack.time_since_used}</code>`;
                 if (newBack.modcount > oldBack.modcount) {
                     addBackendToHtml(newBack, true, spot);
                 }

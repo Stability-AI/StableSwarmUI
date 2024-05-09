@@ -400,6 +400,7 @@ public class ComfyUIRedirectHelper
                                         {
                                             client = user.Reserved;
                                             Interlocked.Increment(ref client.Backend.Reservations);
+                                            client.Backend.BackendData.UpdateLastReleaseTime();
                                         }
                                     }
                                 }
@@ -416,6 +417,7 @@ public class ComfyUIRedirectHelper
                                         userText = $" (from user {user_id[0]})";
                                     }
                                     Logs.Info($"Sent Comfy backend direct prompt requested to backend #{backend.BackendData.ID}{userText}");
+                                    backend.BackendData.UpdateLastReleaseTime();
                                     redirected = true;
                                 }
                             }

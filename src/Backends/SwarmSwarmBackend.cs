@@ -179,7 +179,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     if (IsReal && !ids.Remove(id))
                     {
                         Logs.Verbose($"{HandlerTypeData.Name} {BackendData.ID} adding remote backend {id} ({type})");
-                        BackendHandler.T2IBackendData newData = Handler.AddNewNonrealBackend(HandlerTypeData, SettingsRaw);
+                        BackendHandler.T2IBackendData newData = Handler.AddNewNonrealBackend(HandlerTypeData, BackendData, SettingsRaw);
                         SwarmSwarmBackend newSwarm = newData.Backend as SwarmSwarmBackend;
                         newSwarm.LinkedRemoteBackendID = id;
                         newSwarm.Models = Models;

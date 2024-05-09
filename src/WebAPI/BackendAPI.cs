@@ -50,6 +50,8 @@ public class BackendAPI
     /// <summary>Create a network object to represent a backend cleanly.</summary>
     public static JObject BackendToNet(BackendHandler.T2IBackendData backend, bool full = false)
     {
+        long timeLastRelease = backend.TimeLastRelease;
+        long timeSinceUsed = timeLastRelease == 0 ? 0 : (Environment.TickCount64 - timeLastRelease) / 1000;
         JObject data = new()
         {
             ["type"] = backend.Backend.HandlerTypeData.ID,
@@ -61,7 +63,9 @@ public class BackendAPI
             ["enabled"] = backend.Backend.IsEnabled,
             ["title"] = backend.Backend.Title,
             ["can_load_models"] = backend.Backend.CanLoadModels,
-            ["max_usages"] = backend.Backend.MaxUsages
+            ["max_usages"] = backend.Backend.MaxUsages,
+            ["seconds_since_used"] = timeSinceUsed,
+            ["time_since_used"] = timeLastRelease == 0 ? "Never" : TimeSpan.FromSeconds(-timeSinceUsed).SimpleFormat(true, false)
         };
         if (full)
         {
