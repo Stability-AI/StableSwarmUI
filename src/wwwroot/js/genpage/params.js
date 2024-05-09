@@ -1232,6 +1232,10 @@ class PromptTabCompleteClass {
     }
 
     onKeyDown(e) {
+        // block pageup/down because chrome is silly
+        if (e.keyCode == 33 || e.keyCode == 34) {
+            e.preventDefault();
+        }
         if (this.popover) {
             this.popover.onKeyDown(e);
         }

@@ -1165,6 +1165,7 @@ function pageSizer() {
         inputSidebar.style.display = leftShut ? 'none' : '';
         altRegion.style.width = `calc(100vw - ${barTopLeft} - ${barTopRight} - 10px)`;
         mainImageArea.style.width = `calc(100vw - ${barTopLeft})`;
+        mainImageArea.scrollTop = 0;
         if (imageEditor.active) {
             currentImage.style.width = `calc((${curImgWidth}) / 2)`;
             imageEditor.inputDiv.style.width = `calc((${curImgWidth}) / 2)`;
