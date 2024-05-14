@@ -141,7 +141,7 @@ public record class T2IParamType(string Name, string Description, string Default
         return new(Name: getStr("name"), Description: getStr("description"), Default: getStr("default"), ID: getStr("id"),
             Type: type, SharpType: T2IParamTypes.DataTypeToSharpType(type),
             Min: getDouble("min"), Max: getDouble("max"), Step: getDouble("step"), ViewMax: getDouble("view_max"), OrderPriority: getDouble("priority"),
-            GetValues: _ => vals, Examples: examples?.ToArray(), Subtype: getStr("subtype"), FeatureFlag: getStr("feature_flag"),
+            GetValues: vals is null ? null : _ => vals, Examples: examples?.ToArray(), Subtype: getStr("subtype"), FeatureFlag: getStr("feature_flag"),
             VisibleNormally: getBool("visible", true), IsAdvanced: getBool("advanced", false), AlwaysRetain: getBool("always_retain", false),
             ImageShouldResize: getBool("image_should_resize", true), ImageAlwaysB64: getBool("image_always_b64", false),
             DoNotSave: getBool("do_not_save", false), DoNotPreview: getBool("do_not_preview", false), ViewType: getEnum("view_type", ParamViewType.SMALL));
