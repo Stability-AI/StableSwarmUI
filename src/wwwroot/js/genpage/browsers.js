@@ -66,10 +66,42 @@ class GenPageBrowserClass {
     /**
      * Navigates the browser to a given folder path.
      */
-    navigate(folder) {
+    navigate(folder, callback = null) {
         this.folder = folder;
         this.selected = null;
-        this.update();
+        this.update(false, callback);
+    }
+
+    /**
+     * Clicks repeatedly into a path to fully open it.
+     */
+    clickPath(path) {
+        let tree = this.tree;
+        if (!tree.isOpen) {
+            tree.clickme(() => {
+                this.clickPath(path, tree);
+            });
+            return;
+        }
+        if (path.length == 0) {
+            return;
+        }
+        let split = path.split('/');
+        for (let part of split) {
+            if (part == '') {
+                continue;
+            }
+            if (!(part in tree.children)) {
+                return;
+            }
+            tree = tree.children[part];
+            if (!tree.isOpen) {
+                tree.clickme(() => {
+                    this.clickPath(path);
+                });
+                return;
+            }
+        }
     }
 
     /**
@@ -77,20 +109,26 @@ class GenPageBrowserClass {
      */
     refresh() {
         refreshParameterValues(true, () => {
-            this.update(true);
+            let path = this.folder;
+            this.update(true, () => {
+                this.clickPath(path);
+            });
         });
     }
 
     /**
      * Updates/refreshes the browser view.
      */
-    update(isRefresh = false) {
+    update(isRefresh = false, callback = null) {
         if (isRefresh) {
             this.tree = new BrowserTreePart('', {}, false, null, null, '');
         }
         let folder = this.folder;
         this.listFoldersAndFiles(folder, isRefresh, (folders, files) => {
             this.build(folder, folders, files);
+            if (callback) {
+                setTimeout(() => callback(), 100);
+            }
         }, this.depth);
     }
 
@@ -212,22 +250,26 @@ class GenPageBrowserClass {
             span.onclick = (e) => {
                 this.select(tree.fileData, null);
             };
+            tree.clickme = (callback) => span.onclick(null);
         }
         else {
-            span.onclick = (e) => {
+            let clicker = (isSymbol, callback) => {
                 if (this.folderSelectedEvent) {
                     this.folderSelectedEvent(path);
                 }
                 tree.hasOpened = true;
-                if (e.target.dataset.issymbol) {
+                if (isSymbol) {
                     tree.isOpen = !tree.isOpen;
                 }
                 else {
                     tree.isOpen = true;
                 }
-                this.navigate(path);
+                this.navigate(path, callback);
             };
+            span.onclick = (e) => clicker(e.target.dataset.issymbol, null);
+            tree.clickme = (callback) => clicker(false, callback);
         }
+        tree.span = span;
     }
 
     /**
