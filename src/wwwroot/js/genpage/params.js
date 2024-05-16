@@ -593,8 +593,11 @@ function resetParamsToDefault(exclude = []) {
         deleteCookie(cookie);
     }
     localStorage.removeItem('last_comfy_workflow_input');
-    getRequiredElementById('alt_prompt_textbox').value = '';
-    getRequiredElementById('alt_negativeprompt_textbox').value = '';
+    for (let box of ['alt_prompt_textbox', 'alt_negativeprompt_textbox']) {
+        let elem = getRequiredElementById(box);
+        elem.value = '';
+        triggerChangeFor(elem);
+    }
     for (let param of gen_param_types) {
         let id = `input_${param.id}`;
         if (param.visible && !exclude.includes(param.id) && document.getElementById(id) != null) {
