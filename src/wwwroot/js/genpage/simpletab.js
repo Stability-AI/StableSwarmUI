@@ -29,11 +29,13 @@ class SimpleTab {
         this.genHandler.validateModel = false;
         this.genHandler.imageContainerDivId = 'simple_image_container';
         this.genHandler.imageId = 'simple_image_container_img';
+        this.mustSelectTarget = null;
     }
 
     onFolderSelected() {
         this.browser.fullContentDiv.style.display = 'inline-block';
         this.containerDiv.style.display = 'none';
+        setTimeout(() => updateHash(), 10);
     }
 
     onBrowserBuilt() {
@@ -42,6 +44,11 @@ class SimpleTab {
         }
         this.wrapperDiv.appendChild(this.containerDiv);
         this.hasBuilt = true;
+        if (this.mustSelectTarget) {
+            let target = this.mustSelectTarget;
+            setTimeout(() => this.browser.clickPath(target), 500);
+            this.mustSelectTarget = null;
+        }
     }
 
     onTabClicked() {
@@ -109,6 +116,7 @@ class SimpleTab {
 
     browserSelectEntry(workflow) {
         this.browser.selected = workflow.name;
+        updateHash();
         this.browser.rerender();
         genericRequest('ComfyReadWorkflow', { name: workflow.name }, (data) => {
             let params = Object.values(JSON.parse(data.result.custom_params));

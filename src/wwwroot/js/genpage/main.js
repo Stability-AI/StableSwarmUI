@@ -1785,6 +1785,12 @@ function updateHash() {
         let activeSubTab = subTabList.querySelector('.active');
         hash += `,${activeSubTab.href.split('#')[1]}`;
     }
+    else if (activeTopTabHref == 'Simple') {
+        let target = simpleTab.browser.selected || simpleTab.browser.folder;
+        if (target) {
+            hash += `,${encodeURIComponent(target)}`;
+        }
+    }
     history.pushState(null, null, hash);
 }
 
@@ -1813,6 +1819,10 @@ function loadHashHelper() {
             if (subTarget) {
                 subTarget.click();
             }
+        }
+        else if (split[1] == 'Simple' && split.length > 2) {
+            let target = decodeURIComponent(split[2]);
+            simpleTab.mustSelectTarget = target;
         }
     }
     for (let tab of tabs) {
