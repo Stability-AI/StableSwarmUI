@@ -177,7 +177,6 @@ body {
     object-fit: contain;
 }
 .current-image-data {
-    white-space: pre-wrap;
     font-size: 80%;
 }
 .current-image-img {
