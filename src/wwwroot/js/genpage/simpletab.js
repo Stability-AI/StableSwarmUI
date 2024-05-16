@@ -104,7 +104,7 @@ class SimpleTab {
 
     browserDescribeEntry(workflow) {
         let buttons = [];
-        return { name: workflow.name, description: `<b>${escapeHtmlNoBr(workflow.name)}</b><br>${escapeHtmlNoBr(workflow.data.description ?? "")}`, image: workflow.data.image, buttons: buttons, className: '', searchable: `${workflow.name}\n${workflow.description}` };
+        return { name: workflow.name, description: `<b>${escapeHtmlNoBr(workflow.name)}</b><br>${escapeHtmlNoBr(workflow.data.description ?? "")}`, image: workflow.data.image, buttons: buttons, className: '', searchable: `${workflow.name}\n${workflow.data.description}` };
     }
 
     browserSelectEntry(workflow) {
@@ -134,7 +134,7 @@ class SimpleTab {
                     [this.inputsAreaHidden, (p) => !p.visible, 2]]) {
                 let html = '';
                 if (areaData[2] == 0) {
-                    html += `<div class="simpletab-workflow-header">${escapeHtml(workflow.name)}</div>`;
+                    html += `<div class="simpletab-workflow-header">${escapeHtml(workflow.name)}</div><div class="simpletab-workflow-description">${safeHtmlOnly(workflow.data.description)}</div>`;
                 }
                 for (let param of sortParameterList(params.filter(areaData[1]))) {
                     let groupName = param.group ? param.group.name : null;
@@ -146,7 +146,7 @@ class SimpleTab {
                             let infoButton = '';
                             let groupId = param.group.id;
                             if (param.group.description) {
-                                html += `<div class="sui-popover" id="popover_group_${groupId}"><b>${translateableHtml(escapeHtml(param.group.name))}</b>:<br>&emsp;${translateableHtml(escapeHtml(param.group.description))}</div>`;
+                                html += `<div class="sui-popover" id="popover_group_${groupId}"><b>${translateableHtml(escapeHtml(param.group.name))}</b>:<br>&emsp;${translateableHtml(safeHtmlOnly(param.group.description))}</div>`;
                                 infoButton = `<span class="auto-input-qbutton info-popover-button" onclick="doPopover('group_${groupId}', arguments[0])">?</span>`;
                             }
                             let shouldOpen = getCookie(`group_open_auto-group-${groupId}`) || (param.group.open ? 'open' : 'closed');
