@@ -1,4 +1,6 @@
 from . import SwarmLoadImageB64
+import folder_paths
+from nodes import CheckpointLoaderSimple
 
 INT_MAX = 0xffffffffffffffff
 INT_MIN = -INT_MAX
@@ -122,6 +124,24 @@ class SwarmInputModelName:
         return (value, )
 
 
+class SwarmInputCheckpoint:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "title": ("STRING", {"default": "My Checkpoint Model Name Input"}),
+                "value": (folder_paths.get_filename_list("checkpoints"),),
+            } | STANDARD_REQ_INPUTS,
+        } | STANDARD_OTHER_INPUTS
+
+    CATEGORY = "StableSwarmUI/inputs"
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE")
+    FUNCTION = "do_input"
+
+    def do_input(self, value, **kwargs):
+        return CheckpointLoaderSimple().load_checkpoint(value)
+
+
 class SwarmInputDropdown:
     @classmethod
     def INPUT_TYPES(s):
@@ -184,6 +204,7 @@ NODE_CLASS_MAPPINGS = {
     "SwarmInputFloat": SwarmInputFloat,
     "SwarmInputText": SwarmInputText,
     "SwarmInputModelName": SwarmInputModelName,
+    "SwarmInputCheckpoint": SwarmInputCheckpoint,
     "SwarmInputDropdown": SwarmInputDropdown,
     "SwarmInputBoolean": SwarmInputBoolean,
     "SwarmInputImage": SwarmInputImage,

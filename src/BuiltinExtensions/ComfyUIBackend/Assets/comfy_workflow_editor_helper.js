@@ -389,11 +389,13 @@ function comfyBuildParams(callback) {
             }
             if (node.class_type.startsWith('SwarmInput') && node.class_type != 'SwarmInputGroup') {
                 let type = '';
+                let subtype = null;
                 switch (node.class_type) {
                     case 'SwarmInputInteger': type = 'integer'; break;
                     case 'SwarmInputFloat': type = 'decimal'; break;
                     case 'SwarmInputText': type = 'text'; break;
-                    case 'SwarmInputModelName': type = 'model'; break;
+                    case 'SwarmInputModelName': type = 'model'; subtype = node.inputs['subtype']; break;
+                    case 'SwarmInputCheckpoint': type = 'model'; subtype = 'Stable-Diffusion'; break;
                     case 'SwarmInputDropdown': type = 'dropdown'; break;
                     case 'SwarmInputBoolean': type = 'boolean'; break;
                     case 'SwarmInputImage': type = 'image'; break;
@@ -422,6 +424,7 @@ function comfyBuildParams(callback) {
                     name: node.inputs['title'],
                     id: inputId,
                     type: type,
+                    subtype: subtype,
                     description: node.inputs['description'],
                     default: node.inputs['value'],
                     values: type == 'dropdown' ? node.inputs['values'].split(',').map(s => s.trim()) : null,
