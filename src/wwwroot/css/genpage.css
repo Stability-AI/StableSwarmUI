@@ -1029,6 +1029,16 @@ body {
     width: 46px;
     height: 46px;
 }
+.image_editor_layer_info {
+    position: relative;
+    overflow: visible;
+    width: 0;
+    height: 0;
+    top: -55px;
+    margin: 0;
+    padding: 0;
+    font-size: 70%;
+}
 .image_editor_newlayer_button {
     margin: auto;
     text-align: center;
