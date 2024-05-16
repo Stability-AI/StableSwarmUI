@@ -36,6 +36,9 @@ function comfyFrame() {
 
 let comfyEnableInterval = null;
 
+let comfyFailedToLoad = translatable(`Failed to load ComfyUI Workflow backend. The server may still be loading.`);
+let comfyTryAgain = translatable(`Try Again?`);
+
 /**
  * Callback triggered when the ComfyUI workflow frame loads.
  */
@@ -44,7 +47,7 @@ function comfyOnLoadCallback() {
         hasComfyLoaded = false;
         comfyButtonsArea.style.display = 'none';
         comfyFrame().remove();
-        getRequiredElementById('comfy_workflow_frameholder').innerHTML = `<h2>Failed to load ComfyUI workflow editor. <button onclick="comfyTryToLoad()">Try Again?</button></h2>`;
+        getRequiredElementById('comfy_workflow_frameholder').innerHTML = `<h2>${comfyFailedToLoad.get()} <button onclick="comfyTryToLoad()">${comfyTryAgain.get()}</button></h2>`;
     }
     else {
         getJsonDirect('/ComfyBackendDirect/object_info', (_, data) => {
@@ -362,7 +365,7 @@ function comfyBuildParams(callback) {
         }
         if (!hasSaves) {
             showError('ComfyUI Workflow must have at least one SaveImage node!');
-            document.getElementById('maintab_comfyworkfloweditor').click();
+            document.getElementById('maintab_comfyworkflow').click();
             return;
         }
         let initialRetainSet = ['images', 'model', 'comfyuicustomworkflow'];
@@ -1035,13 +1038,13 @@ function comfyImportWorkflow() {
     });
 }
 
-getRequiredElementById('maintab_comfyworkfloweditor').addEventListener('click', comfyTryToLoad);
+getRequiredElementById('maintab_comfyworkflow').addEventListener('click', comfyTryToLoad);
 
 backendsRevisedCallbacks.push(() => {
     let hasAny = Object.values(backends_loaded).filter(x => x.type.startsWith('comfyui_')
         || x.type == 'swarmswarmbackend' // TODO: Actually check if the backend has a comfy instance rather than just assuming swarmback==comfy
         ).length > 0;
-    getRequiredElementById('maintab_comfyworkfloweditor').style.display = hasAny ? 'block' : 'none';
+    getRequiredElementById('maintab_comfyworkflow').style.display = hasAny ? 'block' : 'none';
     if (hasAny && !comfyHasTriedToLoad) {
         comfyHasTriedToLoad = true;
         comfyReloadObjectInfo();
