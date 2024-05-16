@@ -129,7 +129,10 @@ public class Program
                 JObject vers = (await Utilities.UtilWebClient.GetStringAsync("https://mcmonkeyprojects.github.io/swarm/update.json", GlobalProgramCancel)).ParseToJson();
                 string versId = $"{vers["version"]}";
                 string message = $"{vers["message"]}";
-                if (versId != Utilities.Version)
+                Version remote = Version.Parse(versId);
+                Version local = Version.Parse(Utilities.Version);
+                Logs.Debug($"Local version is {local}, remote version is {remote}, relative is {local.CompareTo(remote)}");
+                if (remote > local)
                 {
                     Logs.Warning($"A new version of StableSwarmUI is available: {versId}! You are running version {Utilities.Version}. Has message: {message}");
                     VersionUpdateMessage = $"Update available: {versId} (you are running {Utilities.Version}):\n{message}";
