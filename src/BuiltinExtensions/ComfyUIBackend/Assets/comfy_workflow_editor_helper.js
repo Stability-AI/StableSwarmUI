@@ -737,6 +737,10 @@ function comfyBuildParams(callback) {
         if (defaultParamValue['model']) {
             coreRetain.push('model');
         }
+        if (defaultParamsRetain.includes('width') && defaultParamsRetain.includes('height') && !defaultParamsRetain.includes('aspectratio')) {
+            defaultParamsRetain.push('aspectratio');
+            defaultParamValue['aspectratio'] = 'Custom';
+        }
         for (let param of defaultParamsRetain) {
             if (!initialRetainSet.includes(param) && param in defaultParamValue) {
                 coreRetain.push(param);
