@@ -53,7 +53,7 @@ function automaticWelcomeMessage(override = null) {
         `New feature (2024-03-10): Comfy Workflow Browser\nAn easy browser for Comfy workflows in the Comfy tab. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8736304">(Feature Announcement Link)</a>`,
         `New feature (2024-04-18): Modern Dark and Light themes!\nBuilt by an actual designer this time! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9153506">(Feature Announcement Link)</a>\n<button class="btn btn-secondary" onclick="aggressivelySetTheme('modern_dark')">Click here to try Modern Dark</button>\n(go to User Settings to change back)`,
         /* Version release notes */
-        `Release notes (2024-03-10): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.1-Beta">Release Notes for version 0.6.1 (Beta)</a>\nSwarm is in Beta now! MIT license!`
+        `Release notes (2024-05-15): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.2-Beta">Release Notes for version 0.6.2 (Beta)</a>`
     ];
     let dotnetNotice = document.getElementById('dotnet_missing_message');
     if (dotnetNotice) {
