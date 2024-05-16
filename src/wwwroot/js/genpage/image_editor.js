@@ -418,7 +418,7 @@ class ImageEditorToolBrush extends ImageEditorTool {
     constructor(editor, id, icon, name, description, isEraser) {
         super(editor, id, icon, name, description);
         this.cursor = 'none';
-        this.color = '#000000';
+        this.color = '#ffffff';
         this.radius = 10;
         this.opacity = 1;
         this.brushing = false;
@@ -426,8 +426,8 @@ class ImageEditorToolBrush extends ImageEditorTool {
         let colorHTML = `
         <div class="image-editor-tool-block">
             <label>Color:&nbsp;</label>
-            <input type="text" class="auto-number id-col1" style="width:75px;flex-grow:0;" value="#000000">
-            <input type="color" class="id-col2" value="#000000">
+            <input type="text" class="auto-number id-col1" style="width:75px;flex-grow:0;" value="#ffffff">
+            <input type="color" class="id-col2" value="#ffffff">
         </div>`;
         let radiusHtml = `<div class="image-editor-tool-block id-rad-block">
                 <label>Radius:&nbsp;</label>
