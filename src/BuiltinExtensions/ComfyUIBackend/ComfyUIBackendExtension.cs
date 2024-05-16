@@ -21,9 +21,6 @@ public class ComfyUIBackendExtension : Extension
 
     public record class ComfyCustomWorkflow(string Name, string Workflow, string Prompt, string CustomParams, string ParamValues, string Image, string Description, bool EnableInSimple);
 
-    /// <summary>Internal/legacy workflow objects.</summary>
-    public static Dictionary<string, string> Workflows;
-
     /// <summary>All current custom workflow IDs mapped to their data.</summary>
     public static ConcurrentDictionary<string, ComfyCustomWorkflow> CustomWorkflows = new();
 
@@ -173,15 +170,6 @@ public class ComfyUIBackendExtension : Extension
 
     public void LoadWorkflowFiles()
     {
-        Workflows = [];
-        foreach (string workflow in Directory.EnumerateFiles($"{FilePath}/Workflows", "*.json", new EnumerationOptions() { RecurseSubdirectories = true }).Order())
-        {
-            string fileName = workflow.Replace('\\', '/').After("/Workflows/");
-            if (fileName.EndsWith(".json"))
-            {
-                Workflows.Add(fileName.BeforeLast('.'), File.ReadAllText(workflow));
-            }
-        }
         CustomWorkflows.Clear();
         if (Directory.Exists($"{FilePath}/CustomWorkflows"))
         {
@@ -393,11 +381,7 @@ public class ComfyUIBackendExtension : Extension
             ));
         ComfyGroup = new("ComfyUI", Toggles: false, Open: false);
         ComfyAdvancedGroup = new("ComfyUI Advanced", Toggles: false, IsAdvanced: true, Open: false);
-        WorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Workflow", "What hand-written specialty workflow to use in ComfyUI (files in 'Workflows' folder within the ComfyUI extension)",
-            "basic", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyAdvancedGroup, IsAdvanced: true, VisibleNormally: false, ChangeWeight: 8,
-            GetValues: (_) => [.. Workflows.Keys]
-            ));
-        CustomWorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Custom Workflow", "What custom workflow to use in ComfyUI (built in the Comfy Workflow Editor tab)",
+        CustomWorkflowParam = T2IParamTypes.Register<string>(new("[ComfyUI] Custom Workflow", "What custom workflow to use in ComfyUI (built in the Comfy Workflow Editor tab).\nGenerally, do not use this directly.",
             "", Toggleable: true, FeatureFlag: "comfyui", Group: ComfyGroup, IsAdvanced: true, ValidateValues: false, ChangeWeight: 8,
             GetValues: (_) => [.. CustomWorkflows.Keys.Order()],
             Clean: (_, val) => CustomWorkflows.ContainsKey(val) ? $"PARSED%{val}%{ComfyUIWebAPI.ReadCustomWorkflow(val)["prompt"]}" : val,

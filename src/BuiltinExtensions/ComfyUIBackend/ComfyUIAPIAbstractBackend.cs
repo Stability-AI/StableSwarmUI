@@ -557,13 +557,6 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             workflow = (string)workflowRaw;
             workflow = workflow.Replace("\"%%_COMFYFIXME_${", "${").Replace("}_ENDFIXME_%%\"", "}");
         }
-        else if (user_input.TryGet(ComfyUIBackendExtension.WorkflowParam, out string workflowName))
-        {
-            if (!ComfyUIBackendExtension.Workflows.TryGetValue(workflowName, out workflow))
-            {
-                throw new InvalidDataException("Unrecognized ComfyUI Workflow name.");
-            }
-        }
         if (workflow is not null && !user_input.Get(T2IParamTypes.ControlNetPreviewOnly))
         {
             Logs.Verbose("Will fill a workflow...");
