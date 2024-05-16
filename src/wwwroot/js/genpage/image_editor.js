@@ -1082,6 +1082,9 @@ class ImageEditor {
         this.addLayer(layer);
         let layer2 = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
         this.addLayer(layer2);
+        let maskLayer = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
+        maskLayer.isMask = true;
+        this.addLayer(maskLayer);
         this.realWidth = img.naturalWidth;
         this.realHeight = img.naturalHeight;
         if (this.active) {
