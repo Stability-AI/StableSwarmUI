@@ -1,6 +1,6 @@
 # StableSwarmUI
 
-**StableSwarmUI 0.6.2 Beta**.
+**StableSwarmUI 0.6.3 Beta**.
 
 A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powertools easily accessible, high performance, and extensibility.
 
