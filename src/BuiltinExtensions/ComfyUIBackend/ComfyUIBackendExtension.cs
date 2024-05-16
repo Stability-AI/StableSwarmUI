@@ -168,20 +168,32 @@ public class ComfyUIBackendExtension : Extension
 
     public static IEnumerable<ComfyUIAPIAbstractBackend> RunningComfyBackends => Program.Backends.RunningBackendsOfType<ComfyUIAPIAbstractBackend>();
 
+    public static string[] ExampleWorkflowNames;
+
     public void LoadWorkflowFiles()
     {
         CustomWorkflows.Clear();
-        if (Directory.Exists($"{FilePath}/CustomWorkflows"))
+        Directory.CreateDirectory($"{FilePath}/CustomWorkflows");
+        Directory.CreateDirectory($"{FilePath}/CustomWorkflows/Examples");
+        string[] getCustomFlows(string path) => [.. Directory.EnumerateFiles($"{FilePath}/{path}", "*.*", new EnumerationOptions() { RecurseSubdirectories = true }).Select(f => f.Replace('\\', '/').After($"/{path}/")).Order()];
+        ExampleWorkflowNames = getCustomFlows("ExampleWorkflows");
+        string[] customFlows = getCustomFlows("CustomWorkflows");
+        bool anyCopied = false;
+        foreach (string workflow in ExampleWorkflowNames.Where(f => f.EndsWith(".json")))
         {
-            foreach (string workflow in Directory.EnumerateFiles($"{FilePath}/CustomWorkflows", "*.json", new EnumerationOptions() { RecurseSubdirectories = true }).Order())
+            if (!customFlows.Contains($"Examples/{workflow}") && !customFlows.Contains($"Examples/{workflow}.deleted"))
             {
-                string fileName = workflow.Replace('\\', '/').After("/CustomWorkflows/");
-                if (fileName.EndsWith(".json"))
-                {
-                    string name = fileName.BeforeLast('.');
-                    CustomWorkflows.TryAdd(name, null);
-                }
+                File.Copy($"{FilePath}/ExampleWorkflows/{workflow}", $"{FilePath}/CustomWorkflows/Examples/{workflow}");
+                anyCopied = true;
             }
+        }
+        if (anyCopied)
+        {
+            customFlows = getCustomFlows("CustomWorkflows");
+        }
+        foreach (string workflow in customFlows.Where(f => f.EndsWith(".json")))
+        {
+            CustomWorkflows.TryAdd(workflow.BeforeLast('.'), null);
         }
     }
 
