@@ -542,6 +542,11 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         }
     }, '', 'Sets this image as the Init Image parameter input');
     quickAppendButton(buttons, 'Edit Image', () => {
+        let initImageGroupToggle = getRequiredElementById('input_group_content_initimage_toggle');
+        if (initImageGroupToggle) {
+            initImageGroupToggle.checked = true;
+            triggerChangeFor(initImageGroupToggle);
+        }
         imageEditor.setBaseImage(img);
         imageEditor.activate();
     }, '', 'Opens an Image Editor for this image');
