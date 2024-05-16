@@ -240,37 +240,44 @@ public class ComfyUIBackendExtension : Extension
 
     public void Refresh()
     {
-        void tryCall(double timeout, bool canRetry)
+        List<Task> tasks = [];
+        try
         {
-            try
+            ComfyUIRedirectHelper.ObjectInfoReadCacher.ForceExpire();
+            LoadWorkflowFiles();
+            foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends.ToArray())
             {
-                ComfyUIRedirectHelper.ObjectInfoReadCacher.ForceExpire();
-                LoadWorkflowFiles();
-                List<Task> tasks = [];
-                foreach (ComfyUIAPIAbstractBackend backend in RunningComfyBackends.ToArray())
-                {
-                    tasks.Add(backend.LoadValueSet(timeout));
-                }
-                if (tasks.Any())
-                {
-                    Task.WaitAll([.. tasks], Program.GlobalProgramCancel);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logs.Debug("ComfyUI refresh failed, will retry in background");
-                Logs.Verbose($"Error refreshing ComfyUI: {ex}");
-                if (canRetry)
-                {
-                    _ = Utilities.RunCheckedTask(() => tryCall(5, false));
-                }
-                else
-                {
-                    Logs.Error($"Error refreshing ComfyUI: {ex}");
-                }
+                tasks.Add(backend.LoadValueSet(5));
             }
         }
-        tryCall(0.5, true);
+        catch (Exception ex)
+        {
+            Logs.Error($"Error refreshing ComfyUI: {ex}");
+        }
+        if (!tasks.Any())
+        {
+            return;
+        }
+        try
+        {
+            Task.WaitAll([.. tasks], Utilities.TimedCancel(TimeSpan.FromMinutes(0.5)));
+        }
+        catch (Exception ex)
+        {
+            Logs.Debug("ComfyUI refresh failed, will retry in background");
+            Logs.Verbose($"Error refreshing ComfyUI: {ex}");
+            Utilities.RunCheckedTask(() =>
+            {
+                try
+                {
+                    Task.WaitAll([.. tasks], Utilities.TimedCancel(TimeSpan.FromMinutes(5)));
+                }
+                catch (Exception ex2)
+                {
+                    Logs.Error($"Error refreshing ComfyUI: {ex2}");
+                }
+            });
+        }
     }
 
     public void OnModelPathsChanged()
