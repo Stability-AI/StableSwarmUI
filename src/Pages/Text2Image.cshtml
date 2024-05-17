@@ -173,7 +173,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary basic-button translate" onclick="toggleGeneratePreviews(true);$('#gen_previews_missing_preset_modal').modal('hide')">Start Anyway</button>
-                        <button type="button" class="btn btn-secondary translate" onclick="$('#gen_previews_missing_preset_modal').modal('hide')">Cancel</button>
+                        <button type="button" class="btn btn-secondary basic-button translate" onclick="$('#gen_previews_missing_preset_modal').modal('hide')">Cancel</button>
                     </div>
                 @WebUtil.ModalFooter()
             </div>
@@ -241,7 +241,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary basic-button translate" onclick="exportPresetsDownload()">Download</button>
-                            <button type="button" class="btn btn-secondary translate" onclick="closeExportPresetViewer()">Close</button>
+                            <button type="button" class="btn btn-secondary basic-button translate" onclick="closeExportPresetViewer()">Close</button>
                         </div>
                     @WebUtil.ModalFooter()
                     @WebUtil.ModalHeader("import_presets_modal", "Import Presets")
@@ -257,7 +257,7 @@
                         <div class="modal-footer">
                             <span id="import_preset_modal_error" class="modal_error_bottom"></span>
                             <button type="button" class="btn btn-primary basic-button translate" id="import_presets_activate_button" onclick="importPresetsActivate()" disabled autocomplete="off">Import</button>
-                            <button type="button" class="btn btn-secondary translate" onclick="closeImportPresetViewer()">Cancel</button>
+                            <button type="button" class="btn btn-secondary basic-button translate" onclick="closeImportPresetViewer()">Cancel</button>
                         </div>
                     @WebUtil.ModalFooter()
                     @WebUtil.ModalHeader("add_preset_modal", """Create New Preset: <input type="text" id="new_preset_name" placeholder="Preset Name" />""")
@@ -285,7 +285,7 @@
                         <div class="modal-footer">
                             <span id="new_preset_modal_error" class="modal_error_bottom"></span>
                             <button type="button" class="btn btn-primary basic-button translate" onclick="save_new_preset()">Save</button>
-                            <button type="button" class="btn btn-secondary translate" onclick="close_create_new_preset()">Cancel</button>
+                            <button type="button" class="btn btn-secondary basic-button translate" onclick="close_create_new_preset()">Cancel</button>
                         </div>
                     @WebUtil.ModalFooter()
                     <div class="browser_container preset_list_container" id="preset_list"></div>
@@ -341,7 +341,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary basic-button translate" onclick="save_edit_model()">Save</button>
-                    <button type="button" class="btn btn-secondary translate" onclick="close_edit_model()">Cancel</button>
+                    <button type="button" class="btn btn-secondary basic-button translate" onclick="close_edit_model()">Cancel</button>
                 </div>
             @WebUtil.ModalFooter()
             @WebUtil.ModalHeader("edit_wildcard_modal", """Edit Wildcard: <input type="text" class="modal_text_extra" id="edit_wildcard_name" placeholder="Wildcard Name" />""")
@@ -356,7 +356,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary basic-button translate" onclick="save_edit_wildcard()">Save</button>
-                    <button type="button" class="btn btn-secondary translate" onclick="close_edit_wildcard()">Cancel</button>
+                    <button type="button" class="btn btn-secondary basic-button translate" onclick="close_edit_wildcard()">Cancel</button>
                 </div>
             @WebUtil.ModalFooter()
             @WebUtil.ModalHeader("test_wildcard_modal", """Test Wildcard: <span id="test_wildcard_name"></span>""")
@@ -365,7 +365,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" id="test_wildcard_again_button" class="btn btn-primary basic-button translate" onclick="test_wildcard_again()">Test Again</button>
-                    <button type="button" class="btn btn-secondary translate" onclick="close_test_wildcard()">Cancel</button>
+                    <button type="button" class="btn btn-secondary basic-button translate" onclick="close_test_wildcard()">Cancel</button>
                 </div>
             @WebUtil.ModalFooter()
         </div>
@@ -556,7 +556,7 @@
                 <div class="settings_submit_confirmer" id="usersettings_confirmer">
                     <span class="settings_submit_confirmer_text">Save <span id="usersettings_edit_count">0</span> edited setting(s)?</span>
                     <button type="button" class="btn btn-primary basic-button translate" onclick="save_user_settings()">Save</button>
-                    <button type="button" class="btn btn-secondary translate" onclick="cancel_user_settings_edit()">Cancel</button>
+                    <button type="button" class="btn btn-secondary basic-button translate" onclick="cancel_user_settings_edit()">Cancel</button>
                 </div>
             </div>
             <div class="tab-pane" id="Param-Config-User" role="tabpanel">
@@ -566,7 +566,7 @@
                 <div class="settings_submit_confirmer" id="user_param_config_confirmer">
                     <span class="settings_submit_confirmer_text">Save <span id="user_param_config_edit_count">0</span> edited parameter setting(s)?</span>
                     <button type="button" class="btn btn-primary basic-button translate" onclick="paramConfig.saveEdits()">Save</button>
-                    <button type="button" class="btn btn-secondary translate" onclick="paramConfig.cancelEdits()">Cancel</button>
+                    <button type="button" class="btn btn-secondary basic-button translate" onclick="paramConfig.cancelEdits()">Cancel</button>
                 </div>
             </div>
         </div>
@@ -708,7 +708,7 @@
                 <div class="settings_submit_confirmer" id="serversettings_confirmer">
                     <span class="settings_submit_confirmer_text">Save <span id="serversettings_edit_count">0</span> edited setting(s)?</span>
                     <button type="button" class="btn btn-primary basic-button translate" onclick="save_server_settings()">Save</button>
-                    <button type="button" class="btn btn-secondary translate" onclick="cancel_server_settings_edit()">Cancel</button>
+                    <button type="button" class="btn btn-secondary basic-button translate" onclick="cancel_server_settings_edit()">Cancel</button>
                 </div>
         <div style="height: 10rem"></div> <!-- Spacer -->
             </div>

@@ -477,9 +477,15 @@ textarea, input, select {
     cursor: pointer;
     text-decoration: none;
 }
+.basic-button.btn-primary {
+    background-color: var(--emphasis);
+}
 .basic-button:hover {
     background-color: var(--button-background-hover);
     color: var(--button-foreground-hover);
+}
+.basic-button.btn-primary:hover {
+    background-color: color-mix(in srgb, var(--button-background-hover) 50%, var(--emphasis));
 }
 .basic-button:disabled {
     background-color: color-mix(in srgb, var(--button-background) 40%, rgba(100, 0, 0, 0.5));
