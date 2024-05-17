@@ -5,7 +5,7 @@ let lastPopoverTime = 0, lastPopover = null;
 
 class AdvancedPopover {
     /**
-     * eg: new AdvancedPopover('my_popover', [ { key: 'Button 1', action: () => console.log("Clicked!") } ], true, mouseX, mouseY, 'Button 1', document.body);
+     * eg: new AdvancedPopover('my_popover', [ { key: 'Button 1', action: () => console.log("Clicked!") } ], true, mouseX, mouseY, document.body, null);
      * Buttons can optionally exclude action to make unclickable.
      */
     constructor(id, buttons, canSearch, x, y, root, preSelect = null, flipYHeight = null, heightLimit = 999999) {
@@ -62,14 +62,20 @@ class AdvancedPopover {
         this.expectedHeight = 0;
         for (let button of this.buttons) {
             if (button.key.toLowerCase().includes(searchText)) {
-                let optionDiv = document.createElement('div');
+                let optionDiv = document.createElement(button.href ? 'a' : 'div');
                 optionDiv.classList.add('sui_popover_model_button');
                 optionDiv.innerText = button.key;
                 if (button.key == selected) {
                     optionDiv.classList.add('sui_popover_model_button_selected');
                     didSelect = true;
                 }
-                if (!button.action) {
+                if (button.href) {
+                    optionDiv.href = button.href;
+                    if (button.is_download) {
+                        optionDiv.download = '';
+                    }
+                }
+                else if (!button.action) {
                     optionDiv.classList.add('sui_popover_model_button_disabled');
                 }
                 else {

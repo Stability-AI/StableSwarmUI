@@ -721,7 +721,7 @@ function describeAspectRatio(width, height) {
 function quickAppendButton(div, name, func, classes = '', title = '') {
     let button = document.createElement('button');
     button.className = `basic-button${classes}`;
-    button.innerText = name;
+    button.innerHTML = name;
     button.title = title;
     button.onclick = (e) => func(e, button);
     div.appendChild(button);

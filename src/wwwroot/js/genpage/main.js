@@ -566,15 +566,29 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         toggleStar(imagePathClean, src);
     }, (metaParsed.is_starred ? ' star-button button-starred-image' : ' star-button'), 'Toggles this image as starred - starred images get moved to a separate folder and highlighted');
     quickAppendButton(buttons, 'Reuse Parameters', copy_current_image_params, '', 'Copies the parameters used to generate this image to the current generation settings');
-    quickAppendButton(buttons, 'View In History', () => {
-        let folder = imagePathClean;
-        let lastSlash = folder.lastIndexOf('/');
-        if (lastSlash != -1) {
-            folder = folder.substring(0, lastSlash);
+    quickAppendButton(buttons, 'More &#x2B9F;', (e, button) => {
+        let subButtons = [];
+        for (let added of buttonsForImage(imagePathClean, src)) {
+            if (added.href) {
+                subButtons.push({ key: added.label, href: added.href, is_download: added.is_download });
+            }
+            else {
+                subButtons.push({ key: added.label, action: added.onclick });
+            }
         }
-        getRequiredElementById('imagehistorytabclickable').click();
-        imageHistoryBrowser.navigate(folder);
-    }, '', 'Opens the Image History tab and navigates to the folder containing this image');
+        subButtons.push({ key: 'View In History', action: () => {
+            let folder = imagePathClean;
+            let lastSlash = folder.lastIndexOf('/');
+            if (lastSlash != -1) {
+                folder = folder.substring(0, lastSlash);
+            }
+            getRequiredElementById('imagehistorytabclickable').click();
+            imageHistoryBrowser.navigate(folder);
+        } });
+        let rect = button.getBoundingClientRect();
+        new AdvancedPopover('image_more_popover', subButtons, false, rect.x, rect.y + button.offsetHeight + 6, document.body, null);
+
+    });
     extrasWrapper.appendChild(buttons);
     let data = createDiv(null, 'current-image-data');
     data.innerHTML = formatMetadata(metadata);
@@ -903,28 +917,51 @@ function listImageHistoryFolderAndFiles(path, isRefresh, callback, depth) {
     });
 }
 
-function describeImage(image) {
-    let buttons = [
+function buttonsForImage(fullsrc, src) {
+    return [
+        {
+            label: 'Star',
+            onclick: (e) => {
+                toggleStar(fullsrc, src);
+            }
+        },
         {
             label: 'Open In Folder',
             onclick: (e) => {
-                genericRequest('OpenImageFolder', {'path': image.data.fullsrc}, data => {});
+                genericRequest('OpenImageFolder', {'path': fullsrc}, data => {});
             }
         },
         {
             label: 'Download',
-            href: image.data.src,
+            href: src,
             is_download: true
         },
         {
             label: 'Delete',
             onclick: (e) => {
-                genericRequest('DeleteImage', {'path': image.data.fullsrc}, data => {
-                    e.remove();
+                genericRequest('DeleteImage', {'path': fullsrc}, data => {
+                    if (e) {
+                        e.remove();
+                    }
+                    else {
+                        let historySection = getRequiredElementById('imagehistorybrowser-content');
+                        let div = historySection.querySelector(`.image-block[data-src="${src}"]`);
+                        if (div) {
+                            div.remove();
+                        }
+                    }
+                    let currentImage = document.getElementById('current_image_img');
+                    if (currentImage && currentImage.dataset.src == src) {
+                        forceShowWelcomeMessage();
+                    }
                 });
             }
         }
-    ];
+    ];;
+}
+
+function describeImage(image) {
+    let buttons = buttonsForImage(image.data.fullsrc, image.data.src);
     let parsedMeta = { is_starred: false };
     if (image.data.metadata) {
         try {
