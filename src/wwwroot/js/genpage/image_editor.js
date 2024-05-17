@@ -179,6 +179,7 @@ class ImageEditorToolGeneral extends ImageEditorTool {
         this.currentDragCircle = null;
         for (let circle of this.activeLayerControlCircles()) {
             if (this.editor.isMouseInCircle(circle.x, circle.y, circle.radius)) {
+                this.editor.activeLayer.savePositions();
                 this.currentDragCircle = circle.name;
                 break;
             }
@@ -341,6 +342,10 @@ class ImageEditorToolGeneral extends ImageEditorTool {
 class ImageEditorToolMove extends ImageEditorTool {
     constructor(editor) {
         super(editor, 'move', 'move', 'Move', 'Free-move the current layer.');
+    }
+
+    onMouseDown(e) {
+        this.editor.activeLayer.savePositions();
     }
 
     onGlobalMouseMove(e) {
@@ -529,6 +534,7 @@ class ImageEditorToolBrush extends ImageEditorTool {
         if (this.brushing) {
             this.editor.activeLayer.childLayers.pop();
             let offset = this.editor.activeLayer.getOffset();
+            this.editor.activeLayer.saveBeforeEdit();
             this.bufferLayer.drawToBackDirect(this.editor.activeLayer.ctx, -offset[0], -offset[1], 1);
             this.bufferLayer = null;
             this.brushing = false;
@@ -676,6 +682,53 @@ class ImageEditorLayer {
             this.drawToBackDirect(ctx, offsetX, offsetY, zoom);
         }
     }
+
+    saveBeforeEdit() {
+        let oldCanvas = document.createElement('canvas');
+        oldCanvas.width = this.canvas.width;
+        oldCanvas.height = this.canvas.height;
+        let oldCtx = oldCanvas.getContext('2d');
+        oldCtx.drawImage(this.canvas, 0, 0);
+        let history = new ImageEditorHistoryEntry(this.editor, 'layer_canvas_edit', { layer: this, oldCanvas: oldCanvas, oldOffsetX: this.offsetX, oldOffsetY: this.offsetY, oldRotation: this.rotation, oldWidth: this.width, oldHeight: this.height });
+        this.editor.addHistoryEntry(history);
+    }
+
+    savePositions() {
+        let history = new ImageEditorHistoryEntry(this.editor, 'layer_reposition', { layer: this, oldOffsetX: this.offsetX, oldOffsetY: this.offsetY, oldRotation: this.rotation, oldWidth: this.width, oldHeight: this.height });
+        this.editor.addHistoryEntry(history);
+    }
+}
+
+/**
+ * A single history entry for the image editor, for Undo processing.
+ */
+class ImageEditorHistoryEntry {
+    constructor(editor, type, data) {
+        this.editor = editor;
+        this.type = type;
+        this.data = data;
+    }
+
+    undo() {
+        if (this.type == 'layer_canvas_edit') {
+            let oldCanvas = this.data.oldCanvas;
+            let ctx = this.data.layer.ctx;
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.drawImage(oldCanvas, 0, 0);
+            this.data.layer.offsetX = this.data.oldOffsetX;
+            this.data.layer.offsetY = this.data.oldOffsetY;
+            this.data.layer.rotation = this.data.oldRotation;
+            this.data.layer.width = this.data.oldWidth;
+            this.data.layer.height = this.data.oldHeight;
+        }
+        else if (this.type == 'layer_reposition') {
+            this.data.layer.offsetX = this.data.oldOffsetX;
+            this.data.layer.offsetY = this.data.oldOffsetY;
+            this.data.layer.rotation = this.data.oldRotation;
+            this.data.layer.width = this.data.oldWidth;
+            this.data.layer.height = this.data.oldHeight;
+        }
+    }
 }
 
 /**
@@ -768,6 +821,7 @@ class ImageEditor {
         this.addTool(new ImageEditorToolSelect(this));
         this.addTool(new ImageEditorToolBrush(this, 'brush', 'paintbrush', 'Paintbrush', 'Draw on the image.', false));
         this.addTool(new ImageEditorToolBrush(this, 'eraser', 'eraser', 'Eraser', 'Erase parts of the image.', true));
+        this.maxHistory = 10;
     }
 
     clearVars() {
@@ -788,6 +842,22 @@ class ImageEditor {
         this.selectWidth = 0;
         this.selectHeight = 0;
         this.hasSelection = false;
+        this.editHistory = [];
+    }
+
+    addHistoryEntry(entry) {
+        if (this.editHistory.length >= this.maxHistory) {
+            this.editHistory.splice(1);
+        }
+        this.editHistory.push(entry);
+    }
+
+    undoOnce() {
+        if (this.editHistory.length > 0) {
+            let entry = this.editHistory.pop();
+            entry.undo();
+            this.redraw();
+        }
     }
 
     addTool(tool) {
@@ -842,6 +912,10 @@ class ImageEditor {
         if (e.key === 'Alt') {
             e.preventDefault();
             this.handleAltDown();
+        }
+        if (e.ctrlKey && e.key == 'z') {
+            e.preventDefault();
+            this.undoOnce();
         }
     }
 
