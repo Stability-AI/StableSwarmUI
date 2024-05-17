@@ -299,6 +299,15 @@ public class WorkflowGenerator
                 }
                 if (maskImageNode is not null)
                 {
+                    if (g.UserInput.TryGet(T2IParamTypes.MaskBlur, out int blurAmount))
+                    {
+                        maskImageNode = g.CreateNode("SwarmMaskBlur", new JObject()
+                        {
+                            ["mask"] = new JArray() { maskImageNode, 0 },
+                            ["blur_radius"] = blurAmount,
+                            ["sigma"] = 1.0
+                        });
+                    }
                     if (g.UserInput.TryGet(T2IParamTypes.MaskShrinkGrow, out int shrinkGrow))
                     {
                         g.MaskShrunkInfo = g.CreateImageMaskCrop([maskImageNode, 0], g.FinalInputImage, shrinkGrow);

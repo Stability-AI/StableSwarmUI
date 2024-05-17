@@ -187,7 +187,8 @@ class SwarmMaskBlur:
             return (mask,)
         kernel_size = blur_radius * 2 + 1
         kernel = gaussian_kernel(kernel_size, sigma, device=mask.device).repeat(1, 1, 1).unsqueeze(1)
-        mask = mask.unsqueeze(0).unsqueeze(0)
+        while mask.ndim < 4:
+            mask = mask.unsqueeze(0)
         padded_mask = torch.nn.functional.pad(mask, (blur_radius,blur_radius,blur_radius,blur_radius), 'reflect')
         blurred = torch.nn.functional.conv2d(padded_mask, kernel, padding=kernel_size // 2, groups=1)[:,:,blur_radius:-blur_radius, blur_radius:-blur_radius]
         blurred = blurred.squeeze(0).squeeze(0)
