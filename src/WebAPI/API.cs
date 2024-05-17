@@ -20,7 +20,7 @@ public class API
     /// <summary>Register a new API call handler.</summary>
     public static void RegisterAPICall(APICall call)
     {
-        APIHandlers.Add(call.Name, call);
+        APIHandlers.Add(call.Name.ToLowerFast(), call);
     }
 
     /// <summary>Register a new API call handler.</summary>
@@ -78,8 +78,8 @@ public class API
                 context.Response.Redirect("/Error/BasicAPI");
                 return;
             }
-            string path = context.Request.Path.ToString().After("/API/");
-            if (path != "GetNewSession")
+            string path = context.Request.Path.ToString().ToLowerFast().After("/api/");
+            if (path != "getnewsession")
             {
                 if (!input.TryGetValue("session_id", out JToken session_id))
                 {
