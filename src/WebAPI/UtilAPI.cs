@@ -75,12 +75,18 @@ public static class UtilAPI
             text = T2IParamInput.ProcessPromptLikeForLength(text);
         }
         (JObject error, CliplikeTokenizer tokenizer) = GetTokenizerForAPI(text, tokenset);
-        if (error != null)
+        if (error is not null)
         {
             return error;
         }
-        CliplikeTokenizer.Token[] tokens = weighting ? tokenizer.EncodeWithWeighting(text) : tokenizer.Encode(text);
-        return new JObject() { ["count"] = tokens.Length };
+        if (!weighting)
+        {
+            CliplikeTokenizer.Token[] rawTokens = tokenizer.Encode(text);
+            return new JObject() { ["count"] = rawTokens.Length };
+        }
+        string[] sections = text.Split("<break>");
+        int biggest = sections.Select(text => tokenizer.EncodeWithWeighting(text).Length).Max();
+        return new JObject() { ["count"] = biggest };
     }
 
     [API.APIDescription("Tokenize some prompt text and get thorough detail about it.",
@@ -100,7 +106,7 @@ public static class UtilAPI
         [API.APIParameter("If true, process weighting (like `(word:1.5)`). If false, don't process that.")] bool weighting = true)
     {
         (JObject error, CliplikeTokenizer tokenizer) = GetTokenizerForAPI(text, tokenset);
-        if (error != null)
+        if (error is not null)
         {
             return error;
         }

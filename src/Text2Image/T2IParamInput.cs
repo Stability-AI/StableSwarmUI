@@ -345,10 +345,13 @@ public class T2IParamInput
         {
             return "<break>";
         };
+        PromptTagLengthEstimators["break"] = (data) =>
+        {
+            return "<break>";
+        };
         PromptTagLengthEstimators["embed"] = PromptTagLengthEstimators["preset"];
         PromptTagLengthEstimators["embedding"] = PromptTagLengthEstimators["preset"];
         PromptTagLengthEstimators["lora"] = PromptTagLengthEstimators["preset"];
-        PromptTagLengthEstimators["break"] = PromptTagLengthEstimators["preset"];
     }
 
     /// <summary>The raw values in this input. Do not use this directly, instead prefer:
