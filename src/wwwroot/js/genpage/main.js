@@ -267,6 +267,29 @@ class ImageFullViewHelper {
         }
     }
 
+    copyState() {
+        let img = this.getImg();
+        if (img.style.objectFit) {
+            return {};
+        }
+        return {
+            left: this.getImgLeft(),
+            top: this.getImgTop(),
+            height: this.getHeightPercent()
+        };
+    }
+
+    pasteState(state) {
+        if (!state || !state.left) {
+            return;
+        }
+        let img = this.getImg();
+        this.detachImg();
+        img.style.left = `${state.left}px`;
+        img.style.top = `${state.top}px`;
+        img.style.height = `${state.height}%`;
+    }
+
     onWheel(e) {
         this.detachImg();
         let img = this.getImg();
@@ -308,6 +331,10 @@ class ImageFullViewHelper {
         this.didDrag = false;
         this.modalJq.modal('hide');
     }
+
+    isOpen() {
+        return this.modalJq.is(':visible');
+    }
 }
 
 let imageFullView = new ImageFullViewHelper();
@@ -317,6 +344,7 @@ function shiftToNextImagePreview(next = true, expand = false) {
     if (!curImgElem) {
         return;
     }
+    let expandedState = imageFullView.isOpen() ? imageFullView.copyState() : {};
     if (curImgElem.dataset.batch_id == 'history') {
         let divs = [...lastHistoryImageDiv.parentElement.children].filter(div => div.classList.contains('image-block'));
         let index = divs.findIndex(div => div == lastHistoryImageDiv);
@@ -335,6 +363,7 @@ function shiftToNextImagePreview(next = true, expand = false) {
         if (expand) {
             divs[newIndex].querySelector('img').click();
             imageFullView.showImage(currentImgSrc, currentMetadataVal);
+            imageFullView.pasteState(expandedState);
         }
         return;
     }
@@ -358,11 +387,12 @@ function shiftToNextImagePreview(next = true, expand = false) {
     setCurrentImage(block.dataset.src, block.dataset.metadata, block.dataset.batch_id, newImg.dataset.previewGrow == 'true');
     if (expand) {
         imageFullView.showImage(block.dataset.src, block.dataset.metadata);
+        imageFullView.pasteState(expandedState);
     }
 }
 
 window.addEventListener('keydown', function(kbevent) {
-    let isFullView = $('#image_fullview_modal').is(':visible');
+    let isFullView = imageFullView.isOpen();
     let isCurImgFocused = document.activeElement && 
         (findParentOfClass(document.activeElement, 'current_image')
         || findParentOfClass(document.activeElement, 'current_image_batch')

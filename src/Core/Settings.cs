@@ -70,7 +70,7 @@ public class Settings : AutoConfiguration
     /// <summary>Settings related to server performance.</summary>
     public class PerformanceData : AutoConfiguration
     {
-        [ConfigComment("How like an outdated image metadata entry is to be revalidated (ie have it's mtime checked against storage) each time an image's metadata is pulled.\nDefault 0.05 means 5% chance.\nSSD users can safely set it higher. HDD users may be happier setting it to 0.\nMetadata is always loaded the first time an image is seen.")]
+        [ConfigComment("How likely an outdated image metadata entry is to be revalidated (ie have it's mtime checked against storage) each time an image's metadata is pulled.\nDefault 0.05 means 5% chance.\nSSD users can safely set it higher. HDD users may be happier setting it to 0.\nMetadata is always loaded the first time an image is seen.")]
         public float ImageDataValidationChance = 0.05f;
 
         [ConfigComment("Can be enabled to cache certain backend data.\nFor example, with ComfyUI backends this will add an extended cache on the object_info data.\nDefaults to false.")]
