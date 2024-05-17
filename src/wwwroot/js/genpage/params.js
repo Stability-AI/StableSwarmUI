@@ -582,6 +582,9 @@ function setDirectParamValue(param, value, paramElem = null) {
         $(paramElem).val(vals);
         $(paramElem).trigger('change');
     }
+    else if (param.type == "image" || param.type == "image_list") {
+        // do not edit images directly, this will just misbehave
+    }
     else {
         paramElem.value = value;
     }
