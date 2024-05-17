@@ -22,6 +22,9 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
         [ConfigComment("Whether the backend is allowed to revert to an 'idle' state if the API address is unresponsive.\nAn idle state is not considered an error, but cannot generate.\nIt will automatically return to 'running' if the API becomes available.")]
         public bool AllowIdle = false;
+
+        [ConfigComment("Whether remote Swarm backends should be followed through.\nIf false, only backends directly local to the remote machine are used.\nIf true, the remote backend can chain further connected backends.")]
+        public bool AllowForwarding = true;
     }
 
     /// <summary>Internal HTTP handler.</summary>
@@ -176,7 +179,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                     features.UnionWith(backend["features"].ToArray().Select(f => f.ToString()));
                     string type = backend["type"].ToString();
                     types.Add(type);
-                    if (IsReal && !ids.Remove(id))
+                    if (IsReal && !ids.Remove(id) && (Settings.AllowForwarding || type != "swarmswarmbackend"))
                     {
                         Logs.Verbose($"{HandlerTypeData.Name} {BackendData.ID} adding remote backend {id} ({type})");
                         BackendHandler.T2IBackendData newData = Handler.AddNewNonrealBackend(HandlerTypeData, BackendData, SettingsRaw);
