@@ -135,11 +135,11 @@ class AdvancedPopover {
 
     onKeyDown(e) {
         if (e.shiftKey || e.ctrlKey) {
-            return;
+            return true;
         }
         let possible = this.possible();
         if (!possible) {
-            return;
+            return true;
         }
         if (e.key == 'Escape') {
             this.remove();
@@ -147,9 +147,11 @@ class AdvancedPopover {
         else if (e.key == 'Tab' || e.key == 'Enter') {
             let selected = this.popover.querySelector('.sui_popover_model_button_selected');
             if (selected) {
+                this.hide();
                 selected.click();
             }
             e.preventDefault();
+            e.stopPropagation();
             return false;
         }
         else if (e.key == 'ArrowUp') {
@@ -165,7 +167,7 @@ class AdvancedPopover {
             this.scrollFix();
         }
         else {
-            return;
+            return true;
         }
         e.preventDefault();
         return false;
@@ -177,6 +179,10 @@ class AdvancedPopover {
             this.popover.dataset.visible = "false";
             popHide.splice(popHide.indexOf(this), 1);
         }
+    }
+
+    isHidden() {
+        return this.popover.dataset.visible != "true";
     }
 
     reposition() {
