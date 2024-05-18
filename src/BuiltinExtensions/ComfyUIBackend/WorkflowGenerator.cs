@@ -215,9 +215,29 @@ public class WorkflowGenerator
         {
             if (g.UserInput.TryGet(T2IParamTypes.InitImage, out Image img))
             {
+                string maskImageNode = null;
+                if (g.UserInput.TryGet(T2IParamTypes.MaskImage, out Image mask))
+                {
+                    string maskNode = g.CreateLoadImageNode(mask, "${maskimage}", true);
+                    maskImageNode = g.CreateNode("ImageToMask", new JObject()
+                    {
+                        ["image"] = new JArray() { maskNode, 0 },
+                        ["channel"] = "red"
+                    });
+                    g.EnableDifferential();
+                    if (g.UserInput.TryGet(T2IParamTypes.MaskBlur, out int blurAmount))
+                    {
+                        maskImageNode = g.CreateNode("SwarmMaskBlur", new JObject()
+                        {
+                            ["mask"] = new JArray() { maskImageNode, 0 },
+                            ["blur_radius"] = blurAmount,
+                            ["sigma"] = 1.0
+                        });
+                    }
+                }
                 g.CreateLoadImageNode(img, "${initimage}", true, "15");
                 g.FinalInputImage = ["15", 0];
-                g.CreateVAEEncode(g.FinalVae, ["15", 0], "5");
+                g.CreateVAEEncode(g.FinalVae, ["15", 0], "5", mask: [maskImageNode, 0]);
                 if (g.UserInput.TryGet(T2IParamTypes.UnsamplerPrompt, out string unprompt))
                 {
                     int steps = g.UserInput.Get(T2IParamTypes.Steps);
@@ -251,26 +271,6 @@ public class WorkflowGenerator
                         ["amount"] = batchSize
                     });
                     g.FinalLatentImage = [batchNode, 0];
-                }
-                string maskImageNode = null;
-                if (g.UserInput.TryGet(T2IParamTypes.MaskImage, out Image mask))
-                {
-                    string maskNode = g.CreateLoadImageNode(mask, "${maskimage}", true);
-                    maskImageNode = g.CreateNode("ImageToMask", new JObject()
-                    {
-                        ["image"] = new JArray() { maskNode, 0 },
-                        ["channel"] = "red"
-                    });
-                    g.EnableDifferential();
-                    if (g.UserInput.TryGet(T2IParamTypes.MaskBlur, out int blurAmount))
-                    {
-                        maskImageNode = g.CreateNode("SwarmMaskBlur", new JObject()
-                        {
-                            ["mask"] = new JArray() { maskImageNode, 0 },
-                            ["blur_radius"] = blurAmount,
-                            ["sigma"] = 1.0
-                        });
-                    }
                 }
                 if (g.UserInput.TryGet(T2IParamTypes.InitImageResetToNorm, out double resetFactor))
                 {
@@ -1179,11 +1179,17 @@ public class WorkflowGenerator
     /// <summary>Outputs of <see cref="CreateImageMaskCrop(JArray, JArray, int)"/> if used for the main image.</summary>
     public (string, string, string) MaskShrunkInfo = (null, null, null);
 
+    /// <summary>Gets the current loaded model class.</summary>
+    public T2IModelClass CurrentModelClass()
+    {
+        FinalLoadedModel ??= UserInput.Get(T2IParamTypes.Model, null);
+        return FinalLoadedModel?.ModelClass;
+    }
+
     /// <summary>Gets the current loaded model compat class.</summary>
     public string CurrentCompatClass()
     {
-        FinalLoadedModel ??= UserInput.Get(T2IParamTypes.Model, null);
-        return FinalLoadedModel?.ModelClass?.CompatClass;
+        return CurrentModelClass()?.CompatClass;
     }
 
     /// <summary>Returns true if the current model is Stable Cascade.</summary>
@@ -1562,7 +1568,7 @@ public class WorkflowGenerator
     }
 
     /// <summary>Creates a VAE Encode node.</summary>
-    public string CreateVAEEncode(JArray vae, JArray image, string id = null, bool noCascade = false)
+    public string CreateVAEEncode(JArray vae, JArray image, string id = null, bool noCascade = false, JArray mask = null)
     {
         if (!noCascade && IsCascade())
         {
@@ -1575,6 +1581,16 @@ public class WorkflowGenerator
         }
         else
         {
+            if (mask is not null && (UserInput.Get(T2IParamTypes.UseInpaintingEncode) || (CurrentModelClass()?.ID ?? "").EndsWith("/inpaint")))
+            {
+                return CreateNode("VAEEncodeForInpaint", new JObject()
+                {
+                    ["vae"] = vae,
+                    ["pixels"] = image,
+                    ["mask"] = mask,
+                    ["grow_mask_by"] = 6
+                }, id);
+            }
             return CreateNode("VAEEncode", new JObject()
             {
                 ["vae"] = vae,

@@ -8,6 +8,10 @@ Swarm supports models of all the common architectures:
 
 SDv1/SDv2 models work exactly as normal. Even legacy (pre-[ModelSpec](https://github.com/Stability-AI/ModelSpec) models are supported).
 
+### Stable Diffusion v1 Inpainting Models
+
+SDv1 inpaint models (RunwayML) are supported, but will work best if you manually edit the Architecture ID to be `stable-diffusion-v1/inpaint`.
+
 ### Stable Diffusion XL
 
 SDXL models work as normal, with the bonus that by default enhanced inference settings will be used (eg scaled up rescond).
