@@ -21,14 +21,13 @@ class SwarmLatentBlendMasked:
         samples_out = samples0.copy()
         samples0 = samples0["samples"]
         samples1 = samples1["samples"]
-        if len(mask.shape) == 2:
+        while mask.ndim < 4:
             mask = mask.unsqueeze(0)
-        mask = mask.unsqueeze(0)
 
         if samples0.shape != samples1.shape:
-            samples1 = torch.nn.functional.interpolate(samples1, size=(samples0.shape[3], samples0.shape[2]), mode="bicubic")
+            samples1 = torch.nn.functional.interpolate(samples1, size=(samples0.shape[2], samples0.shape[3]), mode="bicubic")
         if samples0.shape != mask.shape:
-            mask = torch.nn.functional.interpolate(mask, size=(samples0.shape[3], samples0.shape[2]), mode="bicubic")
+            mask = torch.nn.functional.interpolate(mask, size=(samples0.shape[2], samples0.shape[3]), mode="bicubic")
 
         samples_blended = samples0 * (1 - mask * blend_factor) + samples1 * (mask * blend_factor)
         samples_out["samples"] = samples_blended
