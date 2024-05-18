@@ -1,6 +1,7 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
+using StableSwarmUI.Backends;
 using StableSwarmUI.Builtin_ComfyUIBackend;
 using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
@@ -141,8 +142,9 @@ public static class ComfyUIWebAPI
         {
             return new JObject() { ["error"] = ex.Message };
         }
-        string format = ComfyUIBackendExtension.ComfyBackendsDirect().FirstOrDefault().Backend.SupportedFeatures.Contains("folderbackslash") ? "\\" : "/";
-        string flow = ComfyUIAPIAbstractBackend.CreateWorkflow(input, w => w, format);
+        ComfyUIAPIAbstractBackend backend = ComfyUIBackendExtension.ComfyBackendsDirect().FirstOrDefault().Backend as ComfyUIAPIAbstractBackend;
+        string format = backend.SupportedFeatures.Contains("folderbackslash") ? "\\" : "/";
+        string flow = ComfyUIAPIAbstractBackend.CreateWorkflow(input, w => w, format, features: backend.SupportedFeatures.ToHashSet());
         return new JObject() { ["workflow"] = flow };
     }
 

@@ -1214,7 +1214,7 @@ public class WorkflowGenerator
     /// <summary>Creates a new node to load an image.</summary>
     public string CreateLoadImageNode(Image img, string param, bool resize, string nodeId = null)
     {
-        if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_loadimage_b64") && !RestrictCustomNodes)
+        if (Features.Contains("comfy_loadimage_b64") && !RestrictCustomNodes)
         {
             return CreateNode("SwarmLoadImageB64", new JObject()
             {
@@ -1332,7 +1332,7 @@ public class WorkflowGenerator
     /// <summary>Creates a node to save an image output.</summary>
     public string CreateImageSaveNode(JArray image, string id = null)
     {
-        if (ComfyUIBackendExtension.FeaturesSupported.Contains("comfy_saveimage_ws") && !RestrictCustomNodes)
+        if (Features.Contains("comfy_saveimage_ws") && !RestrictCustomNodes)
         {
             return CreateNode("SwarmSaveImageWS", new JObject()
             {
@@ -1525,7 +1525,7 @@ public class WorkflowGenerator
             ["add_noise"] = addNoise ? "enable" : "disable"
         };
         string created;
-        if (ComfyUIBackendExtension.FeaturesSupported.Contains("variation_seed") && !RestrictCustomNodes)
+        if (Features.Contains("variation_seed") && !RestrictCustomNodes)
         {
             inputs["var_seed"] = UserInput.Get(T2IParamTypes.VariationSeed, 0);
             inputs["var_seed_strength"] = UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
