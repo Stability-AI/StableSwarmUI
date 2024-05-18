@@ -1150,6 +1150,7 @@ class PromptTabCompleteClass {
         }, true);
         this.lastWord = null;
         this.lastResults = null;
+        this.blockInput = false;
     }
 
     enableFor(box) {
@@ -1243,11 +1244,20 @@ class PromptTabCompleteClass {
             e.preventDefault();
         }
         if (this.popover) {
-            this.popover.onKeyDown(e);
+            let allowThrough = this.popover.onKeyDown(e);
+            if (!allowThrough) {
+                this.popover.remove();
+                this.popover = null;
+                this.blockInput = true;
+                setTimeout(() => this.blockInput = false, 10);
+            }
         }
     }
 
     onInput(box) {
+        if (this.blockInput) {
+            return;
+        }
         if (this.popover) {
             this.popover.remove();
             this.popover = null;
