@@ -262,9 +262,19 @@ public class WorkflowGenerator
                         ["channel"] = "red"
                     });
                     g.EnableDifferential();
+                    if (g.UserInput.TryGet(T2IParamTypes.MaskBlur, out int blurAmount))
+                    {
+                        maskImageNode = g.CreateNode("SwarmMaskBlur", new JObject()
+                        {
+                            ["mask"] = new JArray() { maskImageNode, 0 },
+                            ["blur_radius"] = blurAmount,
+                            ["sigma"] = 1.0
+                        });
+                    }
                 }
                 if (g.UserInput.TryGet(T2IParamTypes.InitImageResetToNorm, out double resetFactor))
                 {
+                    g.InitialImageIsAlteredAsLatent = true;
                     string emptyImg = g.CreateEmptyImage(g.UserInput.Get(T2IParamTypes.Width), g.UserInput.GetImageHeight(), g.UserInput.Get(T2IParamTypes.BatchSize, 1));
                     if (g.Features.Contains("comfy_latent_blend_masked") && maskImageNode is not null)
                     {
@@ -299,17 +309,14 @@ public class WorkflowGenerator
                 }
                 if (maskImageNode is not null)
                 {
-                    if (g.UserInput.TryGet(T2IParamTypes.MaskBlur, out int blurAmount))
-                    {
-                        maskImageNode = g.CreateNode("SwarmMaskBlur", new JObject()
-                        {
-                            ["mask"] = new JArray() { maskImageNode, 0 },
-                            ["blur_radius"] = blurAmount,
-                            ["sigma"] = 1.0
-                        });
-                    }
                     if (g.UserInput.TryGet(T2IParamTypes.MaskShrinkGrow, out int shrinkGrow))
                     {
+                        if (g.InitialImageIsAlteredAsLatent)
+                        {
+                            string decoded = g.CreateVAEDecode(g.FinalVae, g.FinalLatentImage);
+                            g.FinalInputImage = [decoded, 0];
+                            g.InitialImageIsAlteredAsLatent = false;
+                        }
                         g.MaskShrunkInfo = g.CreateImageMaskCrop([maskImageNode, 0], g.FinalInputImage, shrinkGrow);
                         g.FinalLatentImage = [g.MaskShrunkInfo.Item3, 0];
                     }
@@ -1135,6 +1142,9 @@ public class WorkflowGenerator
         FinalSamples = ["10", 0],
         FinalImageOut = ["8", 0],
         LoadingModel = null, LoadingClip = null, LoadingVAE = null;
+
+    /// <summary>If true, the init image was altered in latent space and is no longer valid.</summary>
+    public bool InitialImageIsAlteredAsLatent = false;
 
     /// <summary>If true, something has required the workflow stop now.</summary>
     public bool SkipFurtherSteps = false;
