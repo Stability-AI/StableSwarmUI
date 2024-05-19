@@ -405,8 +405,9 @@ window.addEventListener('keydown', function(kbevent) {
     }
     else if ((kbevent.key == 'ArrowRight' || kbevent.key == 'ArrowDown') && (isFullView || isCurImgFocused)) {
         shiftToNextImagePreview(true, isFullView);
-    }
-    else {
+    } else if (kbevent.key === "Enter" && kbevent.ctrlKey) {
+        mainGenHandler.doGenerate();
+    } else {
         return;
     }
     kbevent.preventDefault();
