@@ -1582,6 +1582,10 @@ function installControlnetPreprocessors() {
     doFeatureInstaller('https://https://github.com/Fannovel16/comfyui_controlnet_aux', 'Fannovel16', 'controlnet_preprocessors', 'controlnet_install_preprocessors');
 }
 
+function installVideoRife() {
+    doFeatureInstaller('https://https://github.com/Fannovel16/ComfyUI-Frame-Interpolation', 'Fannovel16', 'frame_interpolation', 'video_install_frameinterps');
+}
+
 function hideRevisionInputs() {
     let promptImageArea = getRequiredElementById('alt_prompt_image_area');
     promptImageArea.innerHTML = '';

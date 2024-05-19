@@ -72,6 +72,11 @@ public class ComfyUIBackendExtension : Extension
             FeaturesSupported.UnionWith(["controlnetpreprocessors"]);
             FeaturesDiscardIfNotFound.UnionWith(["controlnetpreprocessors"]);
         }
+        if (Directory.Exists($"{FilePath}/DLNodes/ComfyUI-Frame-Interpolation"))
+        {
+            FeaturesSupported.UnionWith(["frameinterps"]);
+            FeaturesDiscardIfNotFound.UnionWith(["frameinterps"]);
+        }
     }
 
     /// <inheritdoc/>
@@ -385,7 +390,7 @@ public class ComfyUIBackendExtension : Extension
     /// <inheritdoc/>
     public override void OnInit()
     {
-        UseIPAdapterForRevision = T2IParamTypes.Register<string>(new("Use IP-Adapter", "Use IP-Adapter for ReVision input handling.",
+        UseIPAdapterForRevision = T2IParamTypes.Register<string>(new("Use IP-Adapter", $"Select an IP-Adapter model to use IP-Adapter for image-prompt input handling.\nModels will automatically be downloaded when you first use them.\n<a href=\"{Utilities.RepoDocsRoot}/Features/IPAdapter-ReVision.md\">See more docs here.</a>",
             "None", IgnoreIf: "None", FeatureFlag: "ipadapter", GetValues: _ => IPAdapterModels, Group: T2IParamTypes.GroupRevision, OrderPriority: 15, ChangeWeight: 1
             ));
         IPAdapterWeight = T2IParamTypes.Register<double>(new("IP-Adapter Weight", "Weight to use with IP-Adapter (if enabled).",

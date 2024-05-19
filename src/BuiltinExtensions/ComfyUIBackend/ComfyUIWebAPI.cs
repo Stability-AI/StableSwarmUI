@@ -181,6 +181,15 @@ public static class ComfyUIWebAPI
             }
             return new JObject() { ["success"] = true };
         }
+        if (feature == "frame_interpolation")
+        {
+            bool didRestart = await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/Fannovel16/ComfyUI-Frame-Interpolation");
+            if (!didRestart)
+            {
+                _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
+            }
+            return new JObject() { ["success"] = true };
+        }
         else
         {
             Logs.Warning($"User {session.User.UserID} tried to install unknown feature '{feature}'.");

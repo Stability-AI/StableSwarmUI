@@ -407,6 +407,10 @@ function genInputs(delay_final = false) {
         if (revisionGroup && !currentBackendFeatureSet.includes('ipadapter')) {
             revisionGroup.append(createDiv(`revision_install_ipadapter`, null, `<button class="basic-button" onclick="revisionInstallIPAdapter()">Install IP Adapter</button>`));
         }
+        let videoGroup = document.getElementById('input_group_content_video');
+        if (videoGroup && !currentBackendFeatureSet.includes('frameinterps')) {
+            videoGroup.append(createDiv(`video_install_frameinterps`, null, `<button class="basic-button" onclick="installVideoRife()">Install Frame Interpolation</button>`));
+        }
         hideUnsupportableParams();
         for (let runnable of postParamBuildSteps) {
             runnable();
@@ -657,6 +661,10 @@ function hideUnsupportableParams() {
     let controlnetInstallButton = document.getElementById('controlnet_install_preprocessors');
     if (controlnetInstallButton && currentBackendFeatureSet.includes('controlnetpreprocessors')) {
         controlnetInstallButton.remove();
+    }
+    let videoFrameInterpInstallButton = document.getElementById('video_install_frameinterps');
+    if (videoFrameInterpInstallButton && currentBackendFeatureSet.includes('frameinterps')) {
+        videoFrameInterpInstallButton.remove();
     }
     let filter = getRequiredElementById('main_inputs_filter').value.toLowerCase();
     let hideUnaltered = filter.includes('<unaltered>');
