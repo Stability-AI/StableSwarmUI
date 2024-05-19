@@ -172,7 +172,7 @@ class SwarmMaskBlur:
         return {
             "required": {
                 "mask": ("MASK",),
-                "blur_radius": ("INT", { "default": 1, "min": 1, "max": 31, "step": 1 }),
+                "blur_radius": ("INT", { "default": 1, "min": 1, "max": 64, "step": 1 }),
                 "sigma": ("FLOAT", { "default": 1.0, "min": 0.1, "max": 10.0, "step": 0.1 }),
             },
         }
