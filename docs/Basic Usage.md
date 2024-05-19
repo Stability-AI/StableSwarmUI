@@ -111,6 +111,12 @@ What's the fun in testing changes one by one, when you can unleash your machine 
 
 ![img](/docs/images/grids.png)
 
+## Combining Features
+
+- Want to use [IP-Adapter](/docs/Features/IPAdapter-ReVision.md) with a [Video](/docs/Features/Video.md)?
+    - No problem! Just... do both! Swarm is so easy it's crazy sometimes - you can just enable multiple different features at the same time, and generally trust Swarm will automatically figure out how to combine them appropriately.
+    - If you ever find a case that doesn't work, you can just [file an issue](https://github.com/Stability-AI/StableSwarmUI/issues) to get that fixed.
+
 ## Take It Further: Advanced Usage
 
 View more info about advanced usages in the [Advanced Usage](/docs/Advanced%20Usage.md) doc.
