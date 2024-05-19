@@ -42,6 +42,7 @@ class AdvancedPopover {
             this.textInput.focus();
         }
         this.created = Date.now();
+        this.optionArea.style.width = (this.optionArea.offsetWidth + 16) + 'px';
     }
 
     remove() {
@@ -60,6 +61,7 @@ class AdvancedPopover {
         let searchText = this.textInput ? this.textInput.value.toLowerCase() : '';
         let didSelect = false;
         this.expectedHeight = 0;
+        this.optionArea.style.width = '';
         for (let button of this.buttons) {
             if (button.key.toLowerCase().includes(searchText)) {
                 let optionDiv = document.createElement(button.href ? 'a' : 'div');
