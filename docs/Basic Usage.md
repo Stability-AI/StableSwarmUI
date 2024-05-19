@@ -75,7 +75,7 @@ Prompting is, primarily, just text input. However, there are some special option
     - If using SDXL or UnClip, you can use *ReVision* by just dragging an image into the prompt box. This will have the model interpret the image (using ClipVision) and include it in the prompt.
     - You can do things like `<random:cat, dog>` to randomly select different options
     - You can type a `<` in the prompt box at any time to see some options
-    - See [Prompt Syntax](/docs/Prompt%20Syntax.md) for more
+    - See [Prompt Syntax](/docs/Features/Prompt%20Syntax.md) for more
 
 ## We Gotta Go Faster: Add More Backends
 
