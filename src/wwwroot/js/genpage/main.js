@@ -1089,6 +1089,11 @@ function serverResourceLoop() {
     if (isVisible(getRequiredElementById('Server-Info'))) {
         genericRequest('GetServerResourceInfo', {}, data => {
             let target = getRequiredElementById('resource_usage_area');
+            let priorWidth = 0;
+            if (target.style.minWidth) {
+                priorWidth = parseFloat(target.style.minWidth.replaceAll('px', ''));
+            }
+            target.style.minWidth = `${Math.max(priorWidth, target.offsetWidth)}px`;
             if (data.gpus) {
                 let html = '<table class="simple-table"><tr><th>Resource</th><th>ID</th><th>Temp</th><th>Usage</th><th>Mem Usage</th><th>Used Mem</th><th>Free Mem</th><th>Total Mem</th></tr>';
                 html += `<tr><td>CPU</td><td>...</td><td>...</td><td>${Math.round(data.cpu.usage * 100)}% (${data.cpu.cores} cores)</td><td>${Math.round(data.system_ram.used / data.system_ram.total * 100)}%</td><td>${fileSizeStringify(data.system_ram.used)}</td><td>${fileSizeStringify(data.system_ram.free)}</td><td>${fileSizeStringify(data.system_ram.total)}</td></tr>`;
@@ -1101,6 +1106,11 @@ function serverResourceLoop() {
         });
         genericRequest('ListConnectedUsers', {}, data => {
             let target = getRequiredElementById('connected_users_list');
+            let priorWidth = 0;
+            if (target.style.minWidth) {
+                priorWidth = parseFloat(target.style.minWidth.replaceAll('px', ''));
+            }
+            target.style.minWidth = `${Math.max(priorWidth, target.offsetWidth)}px`;
             let html = '<table class="simple-table"><tr><th>Name</th><th>Last Active</th><th>Active Sessions</th></tr>';
             for (let user of data.users) {
                 html += `<tr><td>${user.id}</td><td>${user.last_active}</td><td>${user.active_sessions.map(sess => `${sess.count}x from ${sess.address}`).join(', ')}</td></tr>`;
