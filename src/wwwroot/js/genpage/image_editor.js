@@ -651,6 +651,9 @@ class ImageEditorLayer {
         let [cx, cy] = [this.width / 2, this.height / 2];
         ctx.translate((x + cx) * zoom, (y + cy) * zoom);
         ctx.rotate(this.rotation);
+        if (zoom > 5) {
+            ctx.imageSmoothingEnabled = false;
+        }
         ctx.drawImage(this.canvas, -cx * zoom, -cy * zoom, this.width * zoom, this.height * zoom);
         ctx.restore();
     }
