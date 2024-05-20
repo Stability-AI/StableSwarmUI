@@ -118,7 +118,7 @@ public class GridGeneratorExtension : Extension
         };
         GridRunnerPostDryHook = (runner, param, set) =>
         {
-            param.NormalizeSeeds();
+            param.ApplySpecialLogic();
             StableSwarmUIGridData data = runner.Grid.LocalData as StableSwarmUIGridData;
             if (data.Claim.ShouldCancel)
             {

@@ -11,6 +11,37 @@ namespace StableSwarmUI.Text2Image;
 /// <summary>Represents user-input for a Text2Image request.</summary>
 public class T2IParamInput
 {
+    /// <summary>Special handlers for any special logic to apply post-loading a param input.</summary>
+    public static List<Action<T2IParamInput>> SpecialParameterHandlers =
+    [
+        input =>
+        {
+            if (!input.TryGet(T2IParamTypes.Seed, out long seed) || seed == -1)
+            {
+                input.Set(T2IParamTypes.Seed, Random.Shared.Next());
+            }
+        },
+        input =>
+        {
+            if (!input.TryGet(T2IParamTypes.VariationSeed, out long seed) || seed == -1)
+            {
+                input.Set(T2IParamTypes.VariationSeed, Random.Shared.Next());
+            }
+        },
+        input =>
+        {
+            if (input.TryGet(T2IParamTypes.RawResolution, out string res))
+            {
+                (string widthText, string heightText) = res.BeforeAndAfter('x');
+                int width = int.Parse(widthText.Trim());
+                int height = int.Parse(heightText.Trim());
+                input.Set(T2IParamTypes.Width, width);
+                input.Set(T2IParamTypes.Height, height);
+                input.Remove(T2IParamTypes.AltResolutionHeightMult);
+            }
+        }
+    ];
+
     public class PromptTagContext
     {
         public Random Random;
@@ -386,6 +417,10 @@ public class T2IParamInput
     /// <summary>Gets the desired image width, automatically using alt-res parameter if needed.</summary>
     public int GetImageHeight()
     {
+        if (TryGet(T2IParamTypes.RawResolution, out string res))
+        {
+            return int.Parse(res.After('x'));
+        }
         if (TryGet(T2IParamTypes.AltResolutionHeightMult, out double val)
             && TryGet(T2IParamTypes.Width, out int width))
         {
@@ -779,16 +814,12 @@ public class T2IParamInput
         ValuesInput.Remove(param.Type.ID);
     }
 
-    /// <summary>Makes sure the input has valid seed inputs.</summary>
-    public void NormalizeSeeds()
+    /// <summary>Makes sure the input has valid seed inputs and other special parameter handlers.</summary>
+    public void ApplySpecialLogic()
     {
-        if (!TryGet(T2IParamTypes.Seed, out long seed) || seed == -1)
+        foreach (Action<T2IParamInput> handler in SpecialParameterHandlers)
         {
-            Set(T2IParamTypes.Seed, Random.Shared.Next());
-        }
-        if (TryGet(T2IParamTypes.VariationSeed, out long vseed) && vseed == -1)
-        {
-            Set(T2IParamTypes.VariationSeed, Random.Shared.Next());
+            handler(this);
         }
     }
 

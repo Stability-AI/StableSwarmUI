@@ -163,7 +163,7 @@ public static class T2IAPI
                 presetObj.ApplyTo(user_input);
             }
         }
-        user_input.NormalizeSeeds();
+        user_input.ApplySpecialLogic();
         return user_input;
     }
 
