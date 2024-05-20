@@ -16,7 +16,7 @@ class AdvancedPopover {
         this.flipYHeight = flipYHeight;
         this.preSelect = preSelect;
         this.heightLimit = heightLimit;
-        this.overExtendBy = 16;
+        this.overExtendBy = 24;
         if (canSearch) {
             this.textInput = document.createElement('input');
             this.textInput.type = 'text';
