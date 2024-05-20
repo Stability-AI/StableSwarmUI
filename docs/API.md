@@ -15,6 +15,28 @@ Any API route can potentially return an `error` or `error_id`.
 - Other `error_id`s are used contextually for specific calls.
 - Otherwise, generally `error` is display text fit to display to end users.
 
+### Quick Call Guide To Generate An Image
+
+The follow example generates an image using bash curl commands. This assumes running locally, on the default port.
+
+```bash
+# First, get a usable session ID:
+curl -H "Content-Type: application/json" -d "{}" -X POST http://localhost:7801/API/GetNewSession
+# EXAMPLE REPLY:
+#        {"session_id":"9D3534E30DA38499DE782BC38211976A58555AA6","user_id":"local","output_append_user":true,"version":"0.6.3.0.GIT-5ee406ba","server_id":"058716b5-c6f5-49ed-9ca3-be20d82e4c5f","count_running":1}
+# Copy the "session_id" value above to reuse
+
+# Now, generate the image
+curl -H "Content-Type: application/json" -d '{"session_id":"9D3534E30DA38499DE782BC38211976A58555AA6","images":1,"prompt":"a cat","model":"OfficialStableDiffusion/sd_xl_base_1.0","width":1024,"height":1024}' -X POST http://localhost:7801/API/GenerateText2Image
+# EXAMPLE REPLY:
+#        {"images":["View/local/raw/2024-05-19/a cat-OfficialStableDiffusionsd_xl_base_10s-1872258705.png"]}
+# Copy the image URL
+
+# Now download the image to look at it
+wget "http://localhost:7801/View/local/raw/2024-05-19/a cat-OfficialStableDiffusionsd_xl_base_10s-1872258705.png"
+
+```
+
 ### Routes
 
 Route documentation is categorized into a few sections:

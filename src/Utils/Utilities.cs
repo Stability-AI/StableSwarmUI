@@ -72,7 +72,7 @@ public static class Utilities
     /// <summary>Used by linked pages to prevent cache errors when data changes.</summary>
     public static string VaryID = Version;
 
-    /// <summary>A unique ID for this server, used to make sure we don't ever form a circular swarm connection path.</summary>
+    /// <summary>A temporary unique ID for this server, used to make sure we don't ever form a circular swarm connection path.</summary>
     public static Guid LoopPreventionID = Guid.NewGuid();
 
     /// <summary>Matcher for ASCII control codes (including newlines, etc).</summary>

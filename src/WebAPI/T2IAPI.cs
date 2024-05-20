@@ -77,14 +77,14 @@ public static class T2IAPI
         """)]
     public static async Task<JObject> GenerateText2ImageWS(WebSocket socket, Session session,
         [API.APIParameter("The number of images to generate.")] int images,
-        [API.APIParameter("Raw mapping of input should contain general T2I parameters (see listing on Generate tab of main interface) to values, eg `{ \"prompt\": \"a photo of a cat\", \"model\": \"OfficialStableDiffusion/sd_xl_base_1.0\", \"steps\": 20, ... }`")] JObject rawInput)
+        [API.APIParameter("Raw mapping of input should contain general T2I parameters (see listing on Generate tab of main interface) to values, eg `{ \"prompt\": \"a photo of a cat\", \"model\": \"OfficialStableDiffusion/sd_xl_base_1.0\", \"steps\": 20, ... }`. Note that this is the root raw map, ie all params go on the same level as `images`, `session_id`, etc.")] JObject rawInput)
     {
         await API.RunWebsocketHandlerCallWS(GenT2I_Internal, session, (images, rawInput), socket);
         await socket.SendJson(BasicAPIFeatures.GetCurrentStatusRaw(session), API.WebsocketTimeout);
         return null;
     }
 
-    [API.APIDescription("Generate images from text prompts, directly as an HTTP route.",
+    [API.APIDescription("Generate images from text prompts, directly as an HTTP route. See the examples in the API docs root page.",
         """
             "images":
             [
@@ -97,7 +97,7 @@ public static class T2IAPI
         """)]
     public static async Task<JObject> GenerateText2Image(Session session,
         [API.APIParameter("The number of images to generate.")] int images,
-        [API.APIParameter("Raw mapping of input should contain general T2I parameters (see listing on Generate tab of main interface) to values, eg `{ \"prompt\": \"a photo of a cat\", \"model\": \"OfficialStableDiffusion/sd_xl_base_1.0\", \"steps\": 20, ... }`")] JObject rawInput)
+        [API.APIParameter("Raw mapping of input should contain general T2I parameters (see listing on Generate tab of main interface) to values, eg `{ \"prompt\": \"a photo of a cat\", \"model\": \"OfficialStableDiffusion/sd_xl_base_1.0\", \"steps\": 20, ... }`. Note that this is the root raw map, ie all params go on the same level as `images`, `session_id`, etc.")] JObject rawInput)
     {
         List<JObject> outputs = await API.RunWebsocketHandlerCallDirect(GenT2I_Internal, session, (images, rawInput));
         Dictionary<int, string> imageOutputs = [];
