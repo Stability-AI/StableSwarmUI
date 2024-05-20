@@ -223,7 +223,7 @@ function cleanModelName(name) {
     return name.endsWith('.safetensors') ? name.substring(0, name.length - '.safetensors'.length) : name;
 }
 
-function sortModelLocal(a, b) {
+function sortModelLocal(a, b, files) {
     let aCorrect = isModelArchCorrect(a);
     let bCorrect = isModelArchCorrect(b);
     if (aCorrect && !bCorrect) {
@@ -240,7 +240,9 @@ function sortModelLocal(a, b) {
     if (!aName.endsWith('.safetensors') && bName.endsWith('.safetensors')) {
         return 1;
     }
-    return 0;
+    let aIndex = files.indexOf(a);
+    let bIndex = files.indexOf(b);
+    return aIndex - bIndex;
 }
 
 class ModelBrowserWrapper {
@@ -280,7 +282,7 @@ class ModelBrowserWrapper {
         }
         let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
         genericRequest('ListModels', {'path': path, 'depth': depth, 'subtype': this.subType, 'sortBy': sortBy, 'sortReverse': reverse}, data => {
-            let files = data.files.sort(sortModelLocal).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; });
+            let files = data.files.sort((a,b) => sortModelLocal(a, b, data.files)).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; });
             if (this.subType == 'VAE') {
                 let autoFile = {
                     'name': `Automatic`,
