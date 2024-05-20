@@ -57,7 +57,10 @@ public class T2IModel
             ["tags"] = Metadata?.Tags is null ? null : new JArray(Metadata.Tags),
             ["is_safetensors"] = RawFilePath.EndsWith(".safetensors"),
             ["is_negative_embedding"] = Metadata?.IsNegativeEmbedding ?? false,
-            ["local"] = true
+            ["local"] = true,
+            ["time_created"] = Metadata?.TimeCreated ?? 0,
+            ["time_modified"] = Metadata?.TimeModified ?? 0,
+            ["hash"] = Metadata?.Hash ?? ""
         };
     }
 

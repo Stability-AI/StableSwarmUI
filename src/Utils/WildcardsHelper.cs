@@ -19,6 +19,10 @@ public class WildcardsHelper
 
         public string Raw;
 
+        public long TimeModified;
+
+        public long TimeCreated;
+
         public JObject GetNetObject()
         {
             return new()
@@ -75,7 +79,10 @@ public class WildcardsHelper
         }
         if (wildcard.Options is null)
         {
-            string rawText = StringConversionHelper.UTF8Encoding.GetString(File.ReadAllBytes($"{Folder}/{name}.txt")).Replace("\r\n", "\n").Replace("\r", "");
+            string fname = $"{Folder}/{name}.txt";
+            wildcard.TimeCreated = new DateTimeOffset(File.GetCreationTimeUtc(fname)).ToUnixTimeMilliseconds();
+            wildcard.TimeModified = new DateTimeOffset(File.GetLastWriteTimeUtc(fname)).ToUnixTimeMilliseconds();
+            string rawText = StringConversionHelper.UTF8Encoding.GetString(File.ReadAllBytes(fname)).Replace("\r\n", "\n").Replace("\r", "");
             wildcard.Raw = rawText;
             wildcard.Options = rawText.Split('\n').Select(card => card.Before('#').Trim()).Where(card => !string.IsNullOrWhiteSpace(card)).ToArray();
             if (wildcard.Image is null && File.Exists($"{Folder}/{name}.jpg"))

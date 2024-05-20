@@ -141,6 +141,11 @@ function editModel(model, browser) {
         }
         enableImage.disabled = false;
     }
+    let technical = `Created: ${formatDateTime(new Date(model.time_created))}\nModified: ${formatDateTime(new Date(model.time_modified))}`;
+    if (model.hash) {
+        technical += `\nHash: ${model.hash}`;
+    }
+    getRequiredElementById('edit_model_technical_data').innerText = technical;
     getRequiredElementById('edit_model_name').value = model.title || model.name;
     getRequiredElementById('edit_model_type').value = model.architecture || '';
     getRequiredElementById('edit_model_resolution').value = `${model.standard_width}x${model.standard_height}`;
@@ -218,7 +223,7 @@ function cleanModelName(name) {
     return name.endsWith('.safetensors') ? name.substring(0, name.length - '.safetensors'.length) : name;
 }
 
-function sortModelName(a, b) {
+function sortModelLocal(a, b) {
     let aCorrect = isModelArchCorrect(a);
     let bCorrect = isModelArchCorrect(b);
     if (aCorrect && !bCorrect) {
@@ -235,7 +240,7 @@ function sortModelName(a, b) {
     if (!aName.endsWith('.safetensors') && bName.endsWith('.safetensors')) {
         return 1;
     }
-    return aName.localeCompare(bName);
+    return 0;
 }
 
 class ModelBrowserWrapper {
@@ -243,13 +248,39 @@ class ModelBrowserWrapper {
         this.subType = subType;
         this.selectOne = selectOne;
         let format = subType == 'Wildcards' ? 'Small Cards' : 'Cards';
+        extraHeader += `<label for="models_${subType}_sort_by">Sort:</label> <select id="models_${subType}_sort_by"><option>Name</option><option>DateCreated</option><option>DateModified</option></select> <input type="checkbox" id="models_${subType}_sort_reverse"> <label for="models_${subType}_sort_reverse">Reverse</label>`;
         this.browser = new GenPageBrowserClass(container, this.listModelFolderAndFiles.bind(this), id, format, this.describeModel.bind(this), this.selectModel.bind(this), extraHeader);
     }
 
     listModelFolderAndFiles(path, isRefresh, callback, depth) {
+        let sortBy = localStorage.getItem(`models_${this.subType}_sort_by`) ?? 'Name';
+        let reverse = localStorage.getItem(`models_${this.subType}_sort_reverse`) == 'true';
+        let sortElem = document.getElementById(`models_${this.subType}_sort_by`);
+        let sortReverseElem = document.getElementById(`models_${this.subType}_sort_reverse`);
+        let fix = null;
+        if (sortElem) {
+            sortBy = sortElem.value;
+            reverse = sortReverseElem.checked;
+        }
+        else { // first call happens before headers are added built atm
+            fix = () => {
+                let sortElem = document.getElementById(`models_${this.subType}_sort_by`);
+                let sortReverseElem = document.getElementById(`models_${this.subType}_sort_reverse`);
+                sortElem.value = sortBy;
+                sortReverseElem.checked = reverse;
+                sortElem.addEventListener('change', () => {
+                    localStorage.setItem(`models_${this.subType}_sort_by`, sortElem.value);
+                    this.browser.update();
+                });
+                sortReverseElem.addEventListener('change', () => {
+                    localStorage.setItem(`models_${this.subType}_sort_reverse`, sortReverseElem.checked);
+                    this.browser.update();
+                });
+            }
+        }
         let prefix = path == '' ? '' : (path.endsWith('/') ? path : `${path}/`);
-        genericRequest('ListModels', {'path': path, 'depth': depth, 'subtype': this.subType}, data => {
-            let files = data.files.sort(sortModelName).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; });
+        genericRequest('ListModels', {'path': path, 'depth': depth, 'subtype': this.subType, 'sortBy': sortBy, 'sortReverse': reverse}, data => {
+            let files = data.files.sort(sortModelLocal).map(f => { return { 'name': `${prefix}${f.name}`, 'data': f }; });
             if (this.subType == 'VAE') {
                 let autoFile = {
                     'name': `Automatic`,
@@ -286,6 +317,9 @@ class ModelBrowserWrapper {
                 files = [autoFile, noneFile].concat(files);
             }
             callback(data.folders.sort((a, b) => a.localeCompare(b)), files);
+            if (fix) {
+                fix();
+            }
         });
     }
 

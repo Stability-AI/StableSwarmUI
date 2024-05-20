@@ -76,6 +76,14 @@ public class T2IModelHandler
         public string Date { get; set; }
 
         public string Preprocesor { get; set; }
+
+        /// <summary>Time this model was last modified.</summary>
+        public long TimeModified { get; set; }
+
+        /// <summary>Time this model was created.</summary>
+        public long TimeCreated { get; set; }
+
+        public string Hash { get; set; }
     }
 
     public T2IModelHandler()
@@ -364,7 +372,7 @@ public class T2IModelHandler
             return;
         }
         string folder = model.RawFilePath.Replace('\\', '/').BeforeAndAfterLast('/', out string fileName);
-        long modified = ((DateTimeOffset)File.GetLastWriteTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds();
+        long modified = new DateTimeOffset(File.GetLastWriteTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds();
         bool perFolder = Program.ServerSettings.Paths.ModelMetadataPerFolder;
         ILiteCollection<ModelMetadataStore> cache = GetCacheForFolder(perFolder ? folder : Program.DataDir);
         if (cache is null)
@@ -460,6 +468,8 @@ public class T2IModelHandler
             metadata = new()
             {
                 ModelFileVersion = modified,
+                TimeModified = modified,
+                TimeCreated = new DateTimeOffset(File.GetCreationTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds(),
                 ModelName = modelCacheId,
                 ModelClassType = clazz?.ID,
                 Title = metaHeader?.Value<string>("modelspec.title") ?? metaHeader?.Value<string>("title") ?? altName ?? fileName.BeforeLast('.'),
@@ -475,7 +485,8 @@ public class T2IModelHandler
                 Date = metaHeader?.Value<string>("modelspec.date"),
                 Preprocesor = metaHeader?.Value<string>("modelspec.preprocessor"),
                 Tags = metaHeader?.Value<string>("modelspec.tags")?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
-                IsNegativeEmbedding = metaHeader?.Value<string>("modelspec.is_negative_embedding") == "true"
+                IsNegativeEmbedding = metaHeader?.Value<string>("modelspec.is_negative_embedding") == "true",
+                Hash = metaHeader?.Value<string>("modelspec.hash_sha256")
             };
             lock (MetadataLock)
             {
@@ -488,6 +499,11 @@ public class T2IModelHandler
                     Logs.Warning($"Error handling metadata database for model {model.RawFilePath}: {ex}");
                 }
             }
+        }
+        if (metadata.TimeModified == 0)
+        {
+            metadata.TimeModified = modified;
+            metadata.TimeCreated = modified;
         }
         lock (ModificationLock)
         {

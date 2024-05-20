@@ -119,6 +119,10 @@ public static class ModelsAPI
         return new JObject() { ["error"] = "Model not found." };
     }
 
+    public enum ModelHistorySortMode { Name, DateCreated, DateModified }
+
+    public record struct ModelListEntry(string Name, long TimeCreated, long TimeModified, JObject NetData);
+
     [API.APIDescription("Returns a list of models available on the server within a given folder, with their metadata.",
         """
             "folders": ["folder1", "folder2"],
@@ -134,8 +138,14 @@ public static class ModelsAPI
     public static async Task<JObject> ListModels(Session session,
         [API.APIParameter("What folder path to search within. Use empty string for root.")] string path,
         [API.APIParameter("Maximum depth (number of recursive folders) to search.")] int depth,
-        [API.APIParameter("Model sub-type - `LoRA`, `Wildcards`, etc.")] string subtype = "Stable-Diffusion")
+        [API.APIParameter("Model sub-type - `LoRA`, `Wildcards`, etc.")] string subtype = "Stable-Diffusion",
+        [API.APIParameter("What to sort the list by - `Name`, `DateCreated`, or `DateModified.")] string sortBy = "Name",
+        [API.APIParameter("If true, the sorting should be done in reverse.")] bool sortReverse = false)
     {
+        if (!Enum.TryParse(sortBy, true, out ModelHistorySortMode sortMode))
+        {
+            return new JObject() { ["error"] = "Invalid sort mode." };
+        }
         if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler) && subtype != "Wildcards")
         {
             return new JObject() { ["error"] = "Invalid sub-type." };
@@ -153,7 +163,7 @@ public static class ModelsAPI
         string allowedStr = session.User.Restrictions.AllowedModels;
         Regex allowed = allowedStr == ".*" ? null : new Regex(allowedStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
         HashSet<string> folders = [];
-        List<JObject> files = [];
+        List<ModelListEntry> files = [];
         HashSet<string> dedup = [];
         bool tryMatch(string name)
         {
@@ -181,7 +191,7 @@ public static class ModelsAPI
                 if (tryMatch(file))
                 {
                     WildcardsHelper.Wildcard card = WildcardsHelper.GetWildcard(file);
-                    files.Add(card.GetNetObject());
+                    files.Add(new(card.Name, card.TimeCreated, card.TimeModified, card.GetNetObject()));
                 }
             }
         }
@@ -191,7 +201,7 @@ public static class ModelsAPI
             {
                 if (tryMatch(possible.Name))
                 {
-                    files.Add(possible.ToNetObject());
+                    files.Add(new(possible.Name, possible.Metadata?.TimeCreated ?? long.MaxValue, possible.Metadata?.TimeModified ?? long.MaxValue, possible.ToNetObject()));
                 }
             }
         }
@@ -199,13 +209,29 @@ public static class ModelsAPI
         {
             if (tryMatch(name))
             {
-                files.Add(possible);
+                files.Add(new(name, long.MaxValue, long.MaxValue, possible));
             }
+        }
+        if (sortMode == ModelHistorySortMode.Name)
+        {
+            files = [.. files.OrderBy(a => a.Name)];
+        }
+        else if (sortMode == ModelHistorySortMode.DateCreated)
+        {
+            files = [.. files.OrderByDescending(a => a.TimeCreated).ThenBy(a => a.Name)];
+        }
+        else if (sortMode == ModelHistorySortMode.DateModified)
+        {
+            files = [.. files.OrderByDescending(a => a.TimeModified).ThenBy(a => a.Name)];
+        }
+        if (sortReverse)
+        {
+            files.Reverse();
         }
         return new JObject()
         {
-            ["folders"] = JToken.FromObject(folders.ToList()),
-            ["files"] = JToken.FromObject(files)
+            ["folders"] = JArray.FromObject(folders.ToList()),
+            ["files"] = JArray.FromObject(files.Select(f => f.NetData).ToList())
         };
     }
 

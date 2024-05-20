@@ -780,3 +780,11 @@ function hashCode(s) {
     }
     return h;
 }
+
+/** Returns a human-readable string formatting of the Date object's date-time value (yyyy-MM-dd HH:mm:ss) */
+function formatDateTime(date) {
+    function pad(n) {
+        return n < 10 ? '0' + n : n;
+    }
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
