@@ -947,7 +947,7 @@ class ImageEditor {
             let mouseX = e.clientX - this.canvas.offsetLeft;
             let mouseY = e.clientY - this.canvas.offsetTop;
             let [origX, origY] = this.canvasCoordToImageCoord(mouseX, mouseY);
-            this.zoomLevel *= zoom;
+            this.zoomLevel = Math.max(0.01, Math.min(100, this.zoomLevel * zoom));
             let [newX, newY] = this.canvasCoordToImageCoord(mouseX, mouseY);
             this.offsetX += newX - origX;
             this.offsetY += newY - origY;
