@@ -81,6 +81,18 @@ public class GridGeneratorExtension : Extension
             {
                 call.Grid.MinHeight = Math.Min(call.Grid.MinHeight, int.Parse(val));
             }
+            else if (cleaned == "aspectratio")
+            {
+                (int width, int height) = T2IParamTypes.AspectRatioToSizeReference(val);
+                if (width > 0)
+                {
+                    (width, height) = Utilities.ResToModelFit(width, height, call.Grid.InitialParams.Get(T2IParamTypes.Width) * call.Grid.InitialParams.GetImageHeight());
+                    call.Grid.MinWidth = Math.Min(call.Grid.MinWidth, width);
+                    call.Grid.MinHeight = Math.Min(call.Grid.MinHeight, height);
+                    call.Params["width"] = $"{width}";
+                    call.Params["height"] = $"{height}";
+                }
+            }
             return false;
         };
         GridCallApplyHook = (call, param, dry) =>

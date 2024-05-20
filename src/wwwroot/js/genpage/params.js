@@ -274,7 +274,6 @@ function genInputs(delay_final = false) {
                 if (inputAspectRatio.value != "Custom") {
                     let aspectRatio = inputAspectRatio.value;
                     let width, height;
-                    // "1:1", "4:3", "3:2", "8:5", "16:9", "21:9", "3:4", "2:3", "5:8", "9:16", "9:21", "Custom"
                     if (aspectRatio == "1:1") { width = 512; height = 512; }
                     else if (aspectRatio == "4:3") { width = 576; height = 448; }
                     else if (aspectRatio == "3:2") { width = 608; height = 416; }

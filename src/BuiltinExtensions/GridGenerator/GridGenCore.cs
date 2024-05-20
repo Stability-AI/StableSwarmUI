@@ -330,7 +330,7 @@ public partial class GridGenCore
             {
                 foreach (KeyValuePair<string, string> pair in val.Params)
                 {
-                    if (GridCallParamAddHook == null || !GridCallParamAddHook(this, pair.Key, pair.Value))
+                    if (GridCallParamAddHook is null || !GridCallParamAddHook(this, pair.Key, pair.Value))
                     {
                         Params[pair.Key] = pair.Value;
                     }
