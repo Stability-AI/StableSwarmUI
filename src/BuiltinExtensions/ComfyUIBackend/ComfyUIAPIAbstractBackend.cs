@@ -605,7 +605,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "cfg_scale" => $"{user_input.Get(T2IParamTypes.CFGScale)}",
                     "subseed" => $"{user_input.Get(T2IParamTypes.VariationSeed)}",
                     "subseed_strength" => user_input.GetString(T2IParamTypes.VariationSeedStrength),
-                    "init_image" => user_input.Get(T2IParamTypes.InitImage)?.AsBase64,
+                    "init_image" => user_input.Get(T2IParamTypes.InitImage, null)?.AsBase64,
                     "init_image_strength" => user_input.GetString(T2IParamTypes.InitImageCreativity),
                     "comfy_sampler" or "comfyui_sampler" or "sampler" => user_input.GetString(ComfyUIBackendExtension.SamplerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "euler" : defVal),
                     "comfy_scheduler" or "comfyui_scheduler" or "scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "normal" : defVal),

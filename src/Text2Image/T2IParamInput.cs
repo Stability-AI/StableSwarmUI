@@ -689,24 +689,31 @@ public class T2IParamInput
     }
 
     /// <summary>Gets the value of the parameter, if it is present, or default if not.</summary>
-    public T Get<T>(T2IRegisteredParam<T> param) => Get(param, default);
+    public T Get<T>(T2IRegisteredParam<T> param) => Get(param, default, true);
 
     /// <summary>Gets the value of the parameter, if it is present, or default if not.</summary>
-    public T Get<T>(T2IRegisteredParam<T> param, T defVal)
+    public T Get<T>(T2IRegisteredParam<T> param, T defVal, bool autoFixDefault = false)
     {
-        if (ValuesInput.TryGetValue(param.Type.ID, out object val))
+        if (!ValuesInput.TryGetValue(param.Type.ID, out object val))
         {
-            if (val is long lVal && typeof(T) == typeof(int))
+            if (autoFixDefault && !string.IsNullOrWhiteSpace(param.Type.Default))
             {
-                val = (int)lVal;
+                Set(param.Type, param.Type.Default);
+                T result = Get(param, defVal, false);
+                Remove(param);
+                return result;
             }
-            if (val is double dVal && typeof(T) == typeof(float))
-            {
-                val = (float)dVal;
-            }
-            return (T)val;
+            return defVal;
         }
-        return defVal;
+        if (val is long lVal && typeof(T) == typeof(int))
+        {
+            val = (int)lVal;
+        }
+        if (val is double dVal && typeof(T) == typeof(float))
+        {
+            val = (float)dVal;
+        }
+        return (T)val;
     }
 
     /// <summary>Gets the value of the parameter as a string, if it is present, or null if not.</summary>

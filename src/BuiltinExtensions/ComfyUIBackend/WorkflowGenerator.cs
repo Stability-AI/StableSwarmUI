@@ -629,7 +629,7 @@ public class WorkflowGenerator
         #region ControlNet
         AddStep(g =>
         {
-            Image firstImage = g.UserInput.Get(T2IParamTypes.Controlnets[0].Image) ?? g.UserInput.Get(T2IParamTypes.InitImage);
+            Image firstImage = g.UserInput.Get(T2IParamTypes.Controlnets[0].Image, null) ?? g.UserInput.Get(T2IParamTypes.InitImage, null);
             for (int i = 0; i < 3; i++)
             {
                 T2IParamTypes.ControlNetParamHolder controlnetParams = T2IParamTypes.Controlnets[i];
