@@ -183,16 +183,21 @@ public class WorkflowGenerator
         }, -6);
         AddModelGenStep(g =>
         {
-            if (g.UserInput.Get(T2IParamTypes.SeamlessTileable))
+            if (g.UserInput.TryGet(T2IParamTypes.SeamlessTileable, out string tileable) && tileable != "false")
             {
+                string mode = "Both";
+                if (tileable == "X-Only") { mode = "X"; }
+                else if (tileable == "Y-Only") { mode = "Y"; }
                 string tiling = g.CreateNode("SwarmModelTiling", new JObject()
                 {
-                    ["model"] = g.LoadingModel
+                    ["model"] = g.LoadingModel,
+                    ["tile_axis"] = mode
                 });
                 g.LoadingModel = [$"{tiling}", 0];
                 string tilingVae = g.CreateNode("SwarmTileableVAE", new JObject()
                 {
-                    ["vae"] = g.LoadingVAE
+                    ["vae"] = g.LoadingVAE,
+                    ["tile_axis"] = mode
                 });
                 g.LoadingVAE = [$"{tilingVae}", 0];
             }
