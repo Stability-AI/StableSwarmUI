@@ -748,6 +748,8 @@ class ImageEditor {
         // Data:
         this.doFit = doFit;
         this.signalChanged = signalChanged;
+        this.onActivate = null;
+        this.onDeactivate = null;
         this.changeCount = 0;
         this.active = false;
         this.inputDiv = div;
@@ -1013,6 +1015,9 @@ class ImageEditor {
     }
 
     activate() {
+        if (this.onActivate) {
+            this.onActivate();
+        }
         this.active = true;
         this.inputDiv.style.display = 'inline-block';
         this.doParamHides();
@@ -1026,6 +1031,9 @@ class ImageEditor {
     }
 
     deactivate() {
+        if (this.onDeactivate) {
+            this.onDeactivate();
+        }
         this.active = false;
         this.inputDiv.style.display = 'none';
         this.unhideParams();

@@ -1168,6 +1168,7 @@ function registerNewTool(id, name, genOverride = null, runOverride = null) {
 let pageBarTop = -1;
 let pageBarTop2 = -1;
 let pageBarMid = -1;
+let imageEditorSizeBarVal = -1;
 let midForceToBottom = localStorage.getItem('barspot_midForceToBottom') == 'true';
 let leftShut = localStorage.getItem('barspot_leftShut') == 'true';
 
@@ -1183,6 +1184,7 @@ function resetPageSizer() {
     pageBarTop = -1;
     pageBarTop2 = -1;
     pageBarMid = -1;
+    imageEditorSizeBarVal = -1;
     midForceToBottom = false;
     leftShut = false;
     setPageBarsFunc();
@@ -1209,9 +1211,11 @@ function pageSizer() {
     let altText = getRequiredElementById('alt_prompt_textbox');
     let altNegText = getRequiredElementById('alt_negativeprompt_textbox');
     let altImageRegion = getRequiredElementById('alt_prompt_extra_area');
+    let editorSizebar = getRequiredElementById('image_editor_sizebar');
     let topDrag = false;
     let topDrag2 = false;
     let midDrag = false;
+    let imageEditorSizeBarDrag = false;
     let isSmallWindow = window.innerWidth < 768 || window.innerHeight < 768;
     function setPageBars() {
         if (altRegion.style.display != 'none') {
@@ -1224,6 +1228,7 @@ function pageSizer() {
         setCookie('barspot_pageBarTop', pageBarTop, 365);
         setCookie('barspot_pageBarTop2', pageBarTop2, 365);
         setCookie('barspot_pageBarMidPx', pageBarMid, 365);
+        setCookie('barspot_imageEditorSizeBar', imageEditorSizeBarVal, 365);
         let barTopLeft = leftShut ? `0px` : pageBarTop == -1 ? (isSmallWindow ? `14rem` : `28rem`) : `${pageBarTop}px`;
         let barTopRight = pageBarTop2 == -1 ? (isSmallWindow ? `4rem` : `21rem`) : `${pageBarTop2}px`;
         let curImgWidth = `100vw - ${barTopLeft} - ${barTopRight} - 10px`;
@@ -1242,8 +1247,9 @@ function pageSizer() {
         mainImageArea.style.width = `calc(100vw - ${barTopLeft})`;
         mainImageArea.scrollTop = 0;
         if (imageEditor.active) {
-            currentImage.style.width = `calc((${curImgWidth}) / 2)`;
-            imageEditor.inputDiv.style.width = `calc((${curImgWidth}) / 2)`;
+            let imageEditorSizePercent = imageEditorSizeBarVal < 0 ? 0.5 : (imageEditorSizeBarVal / 100.0);
+            imageEditor.inputDiv.style.width = `calc((${curImgWidth}) * ${imageEditorSizePercent} - 3px)`;
+            currentImage.style.width = `calc((${curImgWidth}) * ${(1.0 - imageEditorSizePercent)} - 3px)`;
         }
         else {
             currentImage.style.width = `calc(${curImgWidth})`;
@@ -1267,6 +1273,7 @@ function pageSizer() {
             mainImageArea.style.height = `calc(100vh - ${fixed})`;
             currentImage.style.height = `calc(100vh - ${fixed} - ${altHeight})`;
             imageEditor.inputDiv.style.height = `calc(100vh - ${fixed} - ${altHeight})`;
+            editorSizebar.style.height = `calc(100vh - ${fixed} - ${altHeight})`;
             currentImageBatch.style.height = `calc(100vh - ${fixed})`;
             topBar.style.height = `calc(100vh - ${fixed})`;
             bottomBarContent.style.height = `calc(${fixed} - 2rem)`;
@@ -1279,6 +1286,7 @@ function pageSizer() {
             mainImageArea.style.height = '';
             currentImage.style.height = `calc(49vh - ${altHeight})`;
             imageEditor.inputDiv.style.height = `calc(49vh - ${altHeight})`;
+            editorSizebar.style.height = `calc(49vh - ${altHeight})`;
             currentImageBatch.style.height = '';
             topBar.style.height = '';
             bottomBarContent.style.height = '';
@@ -1300,6 +1308,10 @@ function pageSizer() {
     if (cookieC) {
         pageBarMid = parseInt(cookieC);
     }
+    let cookieD = getCookie('barspot_imageEditorSizeBar');
+    if (cookieD) {
+        imageEditorSizeBarVal = parseInt(cookieD);
+    }
     setPageBars();
     topSplit.addEventListener('mousedown', (e) => {
         topDrag = true;
@@ -1315,6 +1327,14 @@ function pageSizer() {
     }, true);
     topSplit2.addEventListener('touchstart', (e) => {
         topDrag2 = true;
+        e.preventDefault();
+    }, true);
+    editorSizebar.addEventListener('mousedown', (e) => {
+        imageEditorSizeBarDrag = true;
+        e.preventDefault();
+    }, true);
+    editorSizebar.addEventListener('touchstart', (e) => {
+        imageEditorSizeBarDrag = true;
         e.preventDefault();
     }, true);
     function setMidForce(val) {
@@ -1372,6 +1392,13 @@ function pageSizer() {
             }
             setPageBars();
         }
+        if (imageEditorSizeBarDrag) {
+            let maxAreaWidth = imageEditor.inputDiv.offsetWidth + currentImage.offsetWidth + 10;
+            let imageAreaLeft = imageEditor.inputDiv.getBoundingClientRect().left;
+            let val = Math.min(Math.max(offX - imageAreaLeft + 3, 200), maxAreaWidth - 200);
+            imageEditorSizeBarVal = Math.min(90, Math.max(10, val / maxAreaWidth * 100));
+            setPageBars();
+        }
         if (midDrag) {
             const MID_OFF = 85;
             let refY = Math.min(Math.max(e.pageY, MID_OFF), window.innerHeight - MID_OFF);
@@ -1381,16 +1408,18 @@ function pageSizer() {
         }
     };
     document.addEventListener('mousemove', (e) => moveEvt(e, e.pageX, e.pageY));
-    document.addEventListener('touchmove', (e) =>moveEvt(e, e.touches.item(0).pageX, e.touches.item(0).pageY));
+    document.addEventListener('touchmove', (e) => moveEvt(e, e.touches.item(0).pageX, e.touches.item(0).pageY));
     document.addEventListener('mouseup', (e) => {
         topDrag = false;
         topDrag2 = false;
         midDrag = false;
+        imageEditorSizeBarDrag = false;
     });
     document.addEventListener('touchend', (e) => {
         topDrag = false;
         topDrag2 = false;
         midDrag = false;
+        imageEditorSizeBarDrag = false;
     });
     for (let tab of getRequiredElementById('bottombartabcollection').getElementsByTagName('a')) {
         tab.addEventListener('click', (e) => {
@@ -1911,6 +1940,13 @@ function loadHashHelper() {
 function genpageLoad() {
     console.log('Load page...');
     window.imageEditor = new ImageEditor(getRequiredElementById('image_editor_input'), true, true, () => setPageBarsFunc(), () => needsNewPreview());
+    let editorSizebar = getRequiredElementById('image_editor_sizebar');
+    window.imageEditor.onActivate = () => {
+        editorSizebar.style.display = '';
+    };
+    window.imageEditor.onDeactivate = () => {
+        editorSizebar.style.display = 'none';
+    };
     pageSizer();
     reviseStatusBar();
     loadHashHelper();

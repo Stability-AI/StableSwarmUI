@@ -69,6 +69,12 @@ body {
       -0.5rem 0 0.5rem 0 color-mix(in srgb, transparent 50%, var(--emphasis)),
       0.5rem 0 0.5rem 0 color-mix(in srgb, transparent 50%, var(--emphasis));
 }
+.t2i-top-imageeditor-bar {
+    width: 5px;
+    height: 50vh;
+    cursor: col-resize;
+    vertical-align: top;
+}
 .t2i-top-split-bar {
     height: 50vh;
     width: 5px;
