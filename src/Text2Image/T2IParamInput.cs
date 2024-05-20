@@ -23,7 +23,7 @@ public class T2IParamInput
         },
         input =>
         {
-            if (!input.TryGet(T2IParamTypes.VariationSeed, out long seed) && seed == -1)
+            if (input.TryGet(T2IParamTypes.VariationSeed, out long seed) && seed == -1)
             {
                 input.Set(T2IParamTypes.VariationSeed, Random.Shared.Next());
             }
