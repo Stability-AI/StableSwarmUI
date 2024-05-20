@@ -119,9 +119,9 @@ public static class ModelsAPI
         return new JObject() { ["error"] = "Model not found." };
     }
 
-    public enum ModelHistorySortMode { Name, DateCreated, DateModified }
+    public enum ModelHistorySortMode { Name, Title, DateCreated, DateModified }
 
-    public record struct ModelListEntry(string Name, long TimeCreated, long TimeModified, JObject NetData);
+    public record struct ModelListEntry(string Name, string Title, long TimeCreated, long TimeModified, JObject NetData);
 
     [API.APIDescription("Returns a list of models available on the server within a given folder, with their metadata.",
         """
@@ -191,7 +191,7 @@ public static class ModelsAPI
                 if (tryMatch(file))
                 {
                     WildcardsHelper.Wildcard card = WildcardsHelper.GetWildcard(file);
-                    files.Add(new(card.Name, card.TimeCreated, card.TimeModified, card.GetNetObject()));
+                    files.Add(new(card.Name, card.Name.AfterLast('/'), card.TimeCreated, card.TimeModified, card.GetNetObject()));
                 }
             }
         }
@@ -201,7 +201,7 @@ public static class ModelsAPI
             {
                 if (tryMatch(possible.Name))
                 {
-                    files.Add(new(possible.Name, possible.Metadata?.TimeCreated ?? long.MaxValue, possible.Metadata?.TimeModified ?? long.MaxValue, possible.ToNetObject()));
+                    files.Add(new(possible.Name, possible.Title, possible.Metadata?.TimeCreated ?? long.MaxValue, possible.Metadata?.TimeModified ?? long.MaxValue, possible.ToNetObject()));
                 }
             }
         }
@@ -209,12 +209,16 @@ public static class ModelsAPI
         {
             if (tryMatch(name))
             {
-                files.Add(new(name, long.MaxValue, long.MaxValue, possible));
+                files.Add(new(name, name.AfterLast('/'), long.MaxValue, long.MaxValue, possible));
             }
         }
         if (sortMode == ModelHistorySortMode.Name)
         {
             files = [.. files.OrderBy(a => a.Name)];
+        }
+        else if (sortMode == ModelHistorySortMode.Title)
+        {
+            files = [.. files.OrderBy(a => a.Title).ThenBy(a => a.Name)];
         }
         else if (sortMode == ModelHistorySortMode.DateCreated)
         {
