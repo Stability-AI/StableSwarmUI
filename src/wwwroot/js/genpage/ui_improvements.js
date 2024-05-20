@@ -16,6 +16,7 @@ class AdvancedPopover {
         this.flipYHeight = flipYHeight;
         this.preSelect = preSelect;
         this.heightLimit = heightLimit;
+        this.overExtendBy = 16;
         if (canSearch) {
             this.textInput = document.createElement('input');
             this.textInput.type = 'text';
@@ -24,6 +25,7 @@ class AdvancedPopover {
             this.textInput.placeholder = 'Search...';
             this.textInput.addEventListener('input', (e) => {
                 this.buildList();
+                this.optionArea.style.width = (this.optionArea.offsetWidth + this.overExtendBy) + 'px';
             });
             this.textInput.addEventListener('keydown', (e) => {
                 this.onKeyDown(e);
@@ -42,7 +44,7 @@ class AdvancedPopover {
             this.textInput.focus();
         }
         this.created = Date.now();
-        this.optionArea.style.width = (this.optionArea.offsetWidth + 16) + 'px';
+        this.optionArea.style.width = (this.optionArea.offsetWidth + this.overExtendBy) + 'px';
     }
 
     remove() {
