@@ -127,7 +127,7 @@ body {
     vertical-align: top;
 }
 .advanced_input_checkbox {
-    width: calc(100%-2rem);
+    width: calc(100% - 2rem);
     margin-left: 1rem;
     margin-right: 1rem;
     text-align: center;
@@ -1157,20 +1157,25 @@ body {
 }
 .simple-wrapper-flex {
     width: 100%;
-    height: fit-content;
+    height: calc(100vh - 2rem - 15rem);
     display: flex;
     justify-content: flex-start;
+}
+.simple-bottom-area {
+    width: 100%;
+    height: 15rem;
+    display: block;
 }
 .simpleinputsidebar {
     padding-top: 1rem;
     padding-left: 1rem;
     padding-right: 1rem;
-    height: calc(100vh - 2rem);
+    height: 100%;
     min-width: 20rem;
 }
 .simpleinput-top-section {
     width: 100%;
-    height: calc(100vh - 2rem - 7rem);
+    height: calc(100% - 5rem);
     overflow: auto;
 }
 .simpleinputsidebar .auto-input-prompt-tokencount {
@@ -1196,11 +1201,11 @@ body {
     padding-top: 20px;
 }
 .simpleimagearea .loading-spinner {
-    top: -50%;
+    top: -60%;
 }
 .simpleimagearea img {
     max-width: 100%;
-    height: 85vh;
+    height: calc(100vh - 20rem);
     object-fit: contain;
 }
 .simpletab-workflow-header {
@@ -1213,20 +1218,34 @@ body {
 .simpletabbrowserwrapper .model-descblock {
     font-size: 100%;
 }
-.tiny-vertical-bar {
-    height: calc(85vh - 1rem);
-    width: 2px;
-    margin: 1rem;
-    background-color: var(--light-border);
-}
 .simple-outer-wall {
-    height: 100vh;
+    height: 100%;
     width: 5px;
     min-width: 5px;
     margin-left: 1rem;
     margin-right: 0;
     background-color: var(--light-border);
 }
+.simple-vertical-divider {
+    height: 5px;
+    width: 100%;
+    margin: 0;
+    background-color: var(--light-border);
+}
 .simpletab-progress-wrapper .image-preview-progress-inner {
     top: calc(-10rem + 5px);
+}
+.simple_current_image_batch {
+    padding: 1rem;
+    display: block;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    height: 15rem;
+    text-align: right;
+    white-space: normal;
+}
+.simple_current_image_batch .image-block {
+    margin-left: 0.5rem;
+    height: 10rem;
 }

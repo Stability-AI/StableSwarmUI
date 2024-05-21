@@ -15,6 +15,7 @@ class SimpleTab {
         this.imageElem = getRequiredElementById('simple_image_container_img');
         this.progressWrapper = getRequiredElementById('simpletab_progress_wrapper');
         this.loadingSpinner = getRequiredElementById('simple_loading_spinner');
+        this.batchArea = getRequiredElementById('simple_current_image_batch');
         this.browser = new GenPageBrowserClass('simpletabbrowserwrapper', this.browserListEntries.bind(this), 'simpletabbrowser', 'Big Thumbnails', this.browserDescribeEntry.bind(this), this.browserSelectEntry.bind(this), '', 10);
         this.browser.depth = 10;
         this.browser.showDepth = false;
@@ -265,6 +266,9 @@ class SimpleTabGenerateHandler extends GenerateHandler {
     gotImageResult(image, metadata, batchId) {
         simpleTab.markDoneLoading();
         simpleTab.setImage(image);
+        let fname = image && image.includes('/') ? image.substring(image.lastIndexOf('/') + 1) : image;
+        let batch_div = appendImage(simpleTab.batchArea, image, batchId, fname, metadata, 'batch');
+        batch_div.addEventListener('click', () => this.setCurrentImage(image));
     }
 
     gotImagePreview(image, metadata, batchId) {
