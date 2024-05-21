@@ -546,7 +546,7 @@ function makeTextInput(featureid, id, paramid, name, description, value, format,
             <span class="auto-input-name">${getToggleHtml(toggles, id, name)}${translateableHtml(name)}${popover}</span>
         </label>
         ${tokenCounter}
-        <textarea class="auto-text${(isBig ? " auto-text-block" : "")} translate translate-no-text" id="${id}" data-param_id="${paramid}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtmlNoBr(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtml(value)}</textarea>
+        <textarea class="auto-text${(isBig ? " auto-text-block" : "")} translate translate-no-text" id="${id}" data-param_id="${paramid}" rows="${isBig ? 2 : 1}"${onInp} placeholder="${escapeHtmlNoBr(placeholder)}" data-name="${name}" autocomplete="false">${escapeHtmlNoBr(value)}</textarea>
         ${format == 'prompt' ? `<button class="interrupt-button image-clear-button" style="display: none;">${translateableHtml("Clear Images")}</button>
         <div class="added-image-area" style="display: none;"></div>` : ''}
     </div>`;
