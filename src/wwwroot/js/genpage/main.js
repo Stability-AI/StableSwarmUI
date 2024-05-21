@@ -834,7 +834,7 @@ function genOnePreview() {
             input_overrides[param.id] = null;
         }
     }
-    doGenerate(input_overrides);
+    mainGenHandler.doGenerate(input_overrides);
 }
 
 function needsNewPreview() {
