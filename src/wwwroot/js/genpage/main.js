@@ -405,9 +405,11 @@ window.addEventListener('keydown', function(kbevent) {
     }
     else if ((kbevent.key == 'ArrowRight' || kbevent.key == 'ArrowDown') && (isFullView || isCurImgFocused)) {
         shiftToNextImagePreview(true, isFullView);
-    } else if (kbevent.key === "Enter" && kbevent.ctrlKey) {
+    }
+    else if (kbevent.key === "Enter" && kbevent.ctrlKey && isVisible(getRequiredElementById('main_image_area'))) {
         mainGenHandler.doGenerate();
-    } else {
+    }
+    else {
         return;
     }
     kbevent.preventDefault();
