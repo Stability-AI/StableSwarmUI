@@ -884,10 +884,16 @@ class ImageEditor {
         this.inputDiv.insertBefore(canvas, this.rightBar);
         this.canvas = canvas;
         canvas.addEventListener('wheel', (e) => this.onMouseWheel(e));
+        document.addEventListener('mousedown', (e) => this.onGlobalMouseDown(e));
         canvas.addEventListener('mousedown', (e) => this.onMouseDown(e));
         document.addEventListener('mouseup', (e) => this.onGlobalMouseUp(e));
         canvas.addEventListener('mouseup', (e) => this.onMouseUp(e));
         document.addEventListener('mousemove', (e) => this.onGlobalMouseMove(e));
+        document.addEventListener('touchstart', (e) => this.onGlobalMouseDown(e));
+        canvas.addEventListener('touchstart', (e) => this.onMouseDown(e));
+        document.addEventListener('touchend', (e) => this.onGlobalMouseUp(e));
+        canvas.addEventListener('touchend', (e) => this.onMouseUp(e));
+        document.addEventListener('touchmove', (e) => this.onGlobalMouseMove(e));
         canvas.addEventListener('keydown', (e) => this.onKeyDown(e));
         canvas.addEventListener('keyup', (e) => this.onKeyUp(e));
         document.addEventListener('keydown', (e) => this.onGlobalKeyDown(e));
@@ -940,6 +946,10 @@ class ImageEditor {
         }
     }
 
+    onGlobalMouseDown(e) {
+        this.updateMousePosFrom(e);
+    }
+
     onMouseWheel(e) {
         this.activeTool.onMouseWheel(e);
         if (!e.defaultPrevented) {
@@ -981,9 +991,18 @@ class ImageEditor {
         }
     }
 
+    updateMousePosFrom(e) {
+        let eX = e.clientX, eY = e.clientY;
+        if (!eX && !eY && e.touches && e.touches.length > 0) {
+            eX = e.touches[0].clientX;
+            eY = e.touches[0].clientY;
+        }
+        this.mouseX = eX - this.canvas.offsetLeft;
+        this.mouseY = eY - this.canvas.offsetTop;
+    }
+
     onGlobalMouseMove(e) {
-        this.mouseX = e.clientX - this.canvas.offsetLeft;
-        this.mouseY = e.clientY - this.canvas.offsetTop;
+        this.updateMousePosFrom(e);
         let draw = false;
         if (this.isMouseInBox(0, 0, this.canvas.width, this.canvas.height)) {
             this.activeTool.onMouseMove(e);
