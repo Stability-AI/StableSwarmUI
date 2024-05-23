@@ -194,7 +194,7 @@ public static class T2IAPI
             setError(ex.Message);
             return;
         }
-        Logs.Info($"User {session.User.UserID} requested {images} image{(images == 1 ? "": "s")} with model '{user_input.Get(T2IParamTypes.Model)?.Name}'...");
+        Logs.Info($"User {session.User.UserID} requested {images} image{(images == 1 ? "" : "s")} with model '{user_input.Get(T2IParamTypes.Model)?.Name}'...");
         if (Logs.MinimumLevel <= Logs.LogLevel.Verbose)
         {
             Logs.Verbose($"User {session.User.UserID} above image request had parameters: {user_input}");
@@ -359,32 +359,41 @@ public static class T2IAPI
                     ["files"] = new JArray()
                 };
             }
-            List<string> dirs = [];
-            List<string> finalDirs = [];
+            ConcurrentDictionary<string, string> dirsConc = [];
+            ConcurrentDictionary<string, string> finalDirs = [];
+            ConcurrentDictionary<string, Task> tasks = [];
             void addDirs(string dir, int subDepth)
             {
-                if (dir != "")
+                tasks.TryAdd(dir, Utilities.RunCheckedTask(() =>
                 {
-                    (subDepth == 0 ? finalDirs : dirs).Add(dir);
-                }
-                if (subDepth > 0)
-                {
-                    IEnumerable<string> subDirs = Directory.EnumerateDirectories(path + "/" + dir).Select(Path.GetFileName).OrderDescending();
-                    if (sortReverse)
+                    if (dir != "")
                     {
-                        subDirs = subDirs.Reverse();
+                        (subDepth == 0 ? finalDirs : dirsConc).TryAdd(dir, dir);
                     }
-                    foreach (string subDir in subDirs)
+                    if (subDepth > 0)
                     {
-                        string subPath = dir == "" ? subDir : dir + "/" + subDir;
-                        if (isAllowed(subPath))
+                        IEnumerable<string> subDirs = Directory.EnumerateDirectories($"{path}/{dir}").Select(Path.GetFileName).OrderDescending();
+                        foreach (string subDir in subDirs)
                         {
-                            addDirs(subPath, subDepth - 1);
+                            string subPath = dir == "" ? subDir : $"{dir}/{subDir}";
+                            if (isAllowed(subPath))
+                            {
+                                addDirs(subPath, subDepth - 1);
+                            }
                         }
                     }
-                }
+                }));
             }
             addDirs("", depth);
+            while (tasks.Any(t => !t.Value.IsCompleted))
+            {
+                Task.WaitAll([.. tasks.Values]);
+            }
+            List<string> dirs = [.. dirsConc.Keys.OrderDescending()];
+            if (sortReverse)
+            {
+                dirs.Reverse();
+            }
             ConcurrentDictionary<int, List<ImageHistoryHelper>> filesConc = [];
             bool starNoFolders = session.User.Settings.StarNoFolders;
             int id = 0;
@@ -428,7 +437,7 @@ public static class T2IAPI
             sortList(files);
             return new JObject()
             {
-                ["folders"] = JToken.FromObject(dirs.Union(finalDirs).ToList()),
+                ["folders"] = JToken.FromObject(dirs.Union(finalDirs.Keys).ToList()),
                 ["files"] = JToken.FromObject(files.Take(maxInHistory).Select(f => new JObject() { ["src"] = f.Name, ["metadata"] = f.Metadata.Metadata }).ToList())
             };
         }
