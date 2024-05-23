@@ -342,6 +342,7 @@ public static class T2IAPI
         int maxInHistory = session.User.Settings.MaxImagesInHistory;
         int maxScanned = session.User.Settings.MaxImagesScannedInHistory;
         Logs.Verbose($"User {session.User.UserID} wants to list images in '{path}', maxDepth={depth}, sortBy={sortBy}, reverse={sortReverse}, maxInHistory={maxInHistory}, maxScanned={maxScanned}");
+        long timeStart = Environment.TickCount64;
         int limit = sortBy == ImageHistorySortMode.Name ? maxInHistory : Math.Max(maxInHistory, maxScanned);
         (path, string consoleError, string userError) = WebServer.CheckFilePath(root, path);
         if (consoleError is not null)
@@ -435,6 +436,8 @@ public static class T2IAPI
             });
             List<ImageHistoryHelper> files = [.. filesConc.Values.SelectMany(f => f).Take(limit)];
             sortList(files);
+            long timeEnd = Environment.TickCount64;
+            Logs.Verbose($"Listed {files.Count} images in {(timeEnd - timeStart) / 1000.0:0.###} seconds.");
             return new JObject()
             {
                 ["folders"] = JToken.FromObject(dirs.Union(finalDirs.Keys).ToList()),
