@@ -48,7 +48,7 @@ If you have pre-existing Stable Diffusion files, you'll want to configure settin
 
 - If all went well, you should have a nice picture of a cat in the center of your screen!
 
-If it didn't go well, ... well it's alpha software, hopefully there's an error message telling you what went wrong. If you can't figure it out, open an [issue here](https://github.com/Stability-AI/StableSwarmUI/issues) or ask on [discord](https://discord.gg/stablediffusion) in the `stableswarmui` channel.
+If it didn't go well, ... well it's alpha software, hopefully there's an error message telling you what went wrong. If you can't figure it out, open an [issue here](https://github.com/Stability-AI/StableSwarmUI/issues) or ask on [discord](https://discord.gg/q2y38cqjNw).
 
 ## Using The SDXL Refiner
 
