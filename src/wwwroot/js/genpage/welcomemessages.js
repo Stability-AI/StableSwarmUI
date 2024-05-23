@@ -38,6 +38,7 @@ function automaticWelcomeMessage(override = null) {
     let messages = [
         /* Generic welcome messages, order-sensitive, keep at top */
         `Type your prompt below and hit Generate!`,
+        `Join the StableSwarmUI <a href="https://discord.gg/q2y38cqjNw">official Discord!</a>`,
         /* "Did you know" facts - interesting things you can do in swarm */
         `Did you know:\nyou can drag and drop images onto the prompt box to use them as an image-prompt.`,
         `Did you know:\nyou can create multiple variations of one image by locking in your seed, then enabling the <b>Variation Seed</b> parameter.`,
