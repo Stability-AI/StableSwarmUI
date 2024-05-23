@@ -285,16 +285,23 @@ public class Program
         HasShutdown = true;
         Logs.Info("Shutting down...");
         GlobalCancelSource.Cancel();
+        Logs.Verbose("Shutdown webserver...");
         WebServer.WebApp.StopAsync().Wait();
+        Logs.Verbose("Shutdown backends...");
         Backends?.Shutdown();
+        Logs.Verbose("Shutdown sessions...");
         Sessions?.Shutdown();
+        Logs.Verbose("Shutdown proxy handler...");
         ProxyHandler?.Stop();
+        Logs.Verbose("Shutdown model handlers...");
         foreach (T2IModelHandler handler in T2IModelSets.Values)
         {
             handler.Shutdown();
         }
+        Logs.Verbose("Shutdown extensions...");
         RunOnAllExtensions(e => e.OnShutdown());
         Extensions.Clear();
+        Logs.Verbose("Shutdown image metadata tracker...");
         ImageMetadataTracker.Shutdown();
         Logs.Info("All core shutdowns complete.");
         if (Logs.LogSaveThread is not null)
