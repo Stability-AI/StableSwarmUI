@@ -385,32 +385,47 @@ public static class T2IAPI
                 }
             }
             addDirs("", depth);
-            List<ImageHistoryHelper> files = [];
+            ConcurrentDictionary<int, List<ImageHistoryHelper>> filesConc = [];
             bool starNoFolders = session.User.Settings.StarNoFolders;
-            foreach (string folder in dirs.Append(""))
+            int id = 0;
+            int remaining = limit;
+            void sortList(List<ImageHistoryHelper> list)
             {
-                string prefix = folder == "" ? "" : folder + "/";
-                List<string> subFiles = Directory.EnumerateFiles($"{path}/{prefix}").Take(limit).ToList();
-                IEnumerable<string> newFileNames = subFiles.Where(isAllowed).Where(f => extensions.Contains(f.AfterLast('.'))).Select(f => f.Replace('\\', '/'));
-                files.AddRange(newFileNames.Select(f => new ImageHistoryHelper(prefix + f.AfterLast('/'), ImageMetadataTracker.GetMetadataFor(f, root, starNoFolders))).Where(f => f.Metadata is not null));
-                limit -= subFiles.Count;
-                if (limit <= 0)
+                if (sortBy == ImageHistorySortMode.Name)
                 {
-                    break;
+                    list.Sort((a, b) => b.Name.CompareTo(a.Name));
+                }
+                else if (sortBy == ImageHistorySortMode.Date)
+                {
+                    list.Sort((a, b) => b.Metadata.FileTime.CompareTo(a.Metadata.FileTime));
+                }
+                if (sortReverse)
+                {
+                    list.Reverse();
                 }
             }
-            if (sortBy == ImageHistorySortMode.Name)
+            Parallel.ForEach(dirs.Append(""), new ParallelOptions() { MaxDegreeOfParallelism = 5, CancellationToken = Program.GlobalProgramCancel }, folder =>
             {
-                files.Sort((a, b) => b.Name.CompareTo(a.Name));
-            }
-            else if (sortBy == ImageHistorySortMode.Date)
-            {
-                files.Sort((a, b) => b.Metadata.FileTime.CompareTo(a.Metadata.FileTime));
-            }
-            if (sortReverse)
-            {
-                files.Reverse();
-            }
+                int localId = Interlocked.Increment(ref id);
+                int localLimit = Interlocked.CompareExchange(ref remaining, 0, 0);
+                if (localLimit <= 0)
+                {
+                    return;
+                }
+                string prefix = folder == "" ? "" : folder + "/";
+                List<string> subFiles = Directory.EnumerateFiles($"{path}/{prefix}").Take(localLimit).ToList();
+                IEnumerable<string> newFileNames = subFiles.Where(isAllowed).Where(f => extensions.Contains(f.AfterLast('.'))).Select(f => f.Replace('\\', '/'));
+                List<ImageHistoryHelper> localFiles = [.. newFileNames.Select(f => new ImageHistoryHelper(prefix + f.AfterLast('/'), ImageMetadataTracker.GetMetadataFor(f, root, starNoFolders))).Where(f => f.Metadata is not null)];
+                int leftOver = Interlocked.Add(ref remaining, -subFiles.Count);
+                sortList(localFiles);
+                filesConc.TryAdd(localId, localFiles);
+                if (leftOver <= 0)
+                {
+                    return;
+                }
+            });
+            List<ImageHistoryHelper> files = [.. filesConc.Values.SelectMany(f => f).Take(limit)];
+            sortList(files);
             return new JObject()
             {
                 ["folders"] = JToken.FromObject(dirs.Union(finalDirs).ToList()),
