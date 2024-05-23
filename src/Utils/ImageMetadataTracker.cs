@@ -106,9 +106,13 @@ public static class ImageMetadataTracker
         string folder = file.BeforeAndAfterLast('/', out string filename);
         ImageDatabase metadata = GetDatabaseForFolder(folder);
         long timeNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        lock (metadata.Lock)
+        try
         {
-            ImagePreviewEntry entry = metadata.Previews.FindById(filename);
+            ImagePreviewEntry entry;
+            lock (metadata.Lock)
+            {
+                entry = metadata.Previews.FindById(filename);
+            }
             if (entry is not null)
             {
                 if (Math.Abs(timeNow - entry.LastVerified) > 60 * 60 * 24)
@@ -126,7 +130,10 @@ public static class ImageMetadataTracker
                     else
                     {
                         entry.LastVerified = timeNow;
-                        metadata.Previews.Upsert(entry);
+                        lock (metadata.Lock)
+                        {
+                            metadata.Previews.Upsert(entry);
+                        }
                     }
                 }
                 if (entry is not null)
@@ -134,6 +141,10 @@ public static class ImageMetadataTracker
                     return entry.PreviewData;
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading image metadata for file '{file}' from database: {ex}");
         }
         if (!File.Exists(file))
         {
@@ -148,9 +159,9 @@ public static class ImageMetadataTracker
                 return null;
             }
             byte[] fileData = new Image(data, Image.ImageType.IMAGE, ext).ToMetadataJpg().ImageData;
+            ImagePreviewEntry entry = new() { FileName = filename, PreviewData = fileData, LastVerified = timeNow, FileTime = fileTime };
             lock (metadata.Lock)
             {
-                ImagePreviewEntry entry = new() { FileName = filename, PreviewData = fileData, LastVerified = timeNow, FileTime = fileTime };
                 metadata.Previews.Upsert(entry);
             }
             return fileData;
@@ -171,33 +182,37 @@ public static class ImageMetadataTracker
         long timeNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         try
         {
+            ImageMetadataEntry existingEntry;
             lock (metadata.Lock)
             {
-                ImageMetadataEntry existingEntry = metadata.Metadata.FindById(filename);
-                if (existingEntry is not null)
+                existingEntry = metadata.Metadata.FindById(filename);
+            }
+            if (existingEntry is not null)
+            {
+                float chance = Program.ServerSettings.Performance.ImageDataValidationChance;
+                if (chance == 0 || Random.Shared.NextDouble() > chance)
                 {
-                    float chance = Program.ServerSettings.Performance.ImageDataValidationChance;
-                    if (chance == 0 || Random.Shared.NextDouble() > chance)
+                    return existingEntry;
+                }
+                if (Math.Abs(timeNow - existingEntry.LastVerified) > 60 * 60 * 24)
+                {
+                    long fTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
+                    if (existingEntry.FileTime != fTime)
                     {
-                        return existingEntry;
+                        existingEntry = null;
                     }
-                    if (Math.Abs(timeNow - existingEntry.LastVerified) > 60 * 60 * 24)
+                    else
                     {
-                        long fTime = ((DateTimeOffset)File.GetLastWriteTimeUtc(file)).ToUnixTimeSeconds();
-                        if (existingEntry.FileTime != fTime)
+                        existingEntry.LastVerified = timeNow;
+                        lock (metadata.Lock)
                         {
-                            existingEntry = null;
-                        }
-                        else
-                        {
-                            existingEntry.LastVerified = timeNow;
                             metadata.Metadata.Upsert(existingEntry);
                         }
                     }
-                    if (existingEntry is not null)
-                    {
-                        return existingEntry;
-                    }
+                }
+                if (existingEntry is not null)
+                {
+                    return existingEntry;
                 }
             }
         }
