@@ -61,6 +61,7 @@ class GenPageBrowserClass {
         this.folderSelectedEvent = null;
         this.builtEvent = null;
         this.sizeChangedEvent = null;
+        this.maxPreBuild = 512;
     }
 
     /**
@@ -122,6 +123,7 @@ class GenPageBrowserClass {
     update(isRefresh = false, callback = null) {
         if (isRefresh) {
             this.tree = new BrowserTreePart('', {}, false, null, null, '');
+            this.contentDiv.scrollTop = 0;
         }
         let folder = this.folder;
         this.listFoldersAndFiles(folder, isRefresh, (folders, files) => {
@@ -275,13 +277,28 @@ class GenPageBrowserClass {
     /**
      * Fills the container with the content list.
      */
-    buildContentList(container, files) {
-        let id = 0;
-        for (let file of files) {
+    buildContentList(container, files, before = null, startId = 0) {
+        let id = startId;
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i];
             id++;
             let desc = this.describe(file);
             if (this.filter && !desc.searchable.toLowerCase().includes(this.filter)) {
                 continue;
+            }
+            if (i > this.maxPreBuild) {
+                let remainingFiles = files.slice(i);
+                while (remainingFiles.length > 0) {
+                    let chunkSize = Math.min(this.maxPreBuild / 2, remainingFiles.length, 100);
+                    let chunk = remainingFiles.splice(0, chunkSize);
+                    remainingFiles = remainingFiles.slice(chunkSize);
+                    let sectionDiv = createDiv(null, 'lazyload browser-section-loader');
+                    sectionDiv.onclick = () => {
+                        this.buildContentList(container, chunk, sectionDiv, id);
+                    };
+                    container.appendChild(sectionDiv);
+                }
+                break;
             }
             let div = createDiv(null, `${desc.className}`);
             let popoverId = `${this.id}-${id}`;
@@ -306,7 +323,12 @@ class GenPageBrowserClass {
                     }
                     menuDiv.appendChild(buttonElem);
                 }
-                container.appendChild(menuDiv);
+                if (before) {
+                    container.insertBefore(menuDiv, before);
+                }
+                else {
+                    container.appendChild(menuDiv);
+                }
             }
             let img = document.createElement('img');
             img.addEventListener('click', () => {
@@ -354,8 +376,14 @@ class GenPageBrowserClass {
                 div.appendChild(menu);
             }
             div.title = stripHtmlToText(desc.description);
+            img.classList.add('lazyload');
             img.dataset.src = desc.image;
-            container.appendChild(div);
+            if (before) {
+                container.insertBefore(div, before);
+            }
+            else {
+                container.appendChild(div);
+            }
         }
     }
 
@@ -363,14 +391,22 @@ class GenPageBrowserClass {
      * Make any visible images within a container actually load now.
      */
     makeVisible(elem) {
-        for (let img of elem.getElementsByTagName('img')) {
-            if (!img.dataset.src) {
+        for (let subElem of elem.querySelectorAll('.lazyload')) {
+            let top = subElem.getBoundingClientRect().top;
+            if (top >= window.innerHeight + 512 || top == 0) { // Note top=0 means not visible
                 continue;
             }
-            let top = img.getBoundingClientRect().top;
-            if (top < window.innerHeight + 256 && top != 0) {
-                img.src = img.dataset.src;
-                delete img.dataset.src;
+            subElem.classList.remove('lazyload');
+            if (subElem.tagName == 'IMG') {
+                if (!subElem.dataset.src) {
+                    continue;
+                }
+                subElem.src = subElem.dataset.src;
+                delete subElem.dataset.src;
+            }
+            else if (subElem.classList.contains('browser-section-loader')) {
+                subElem.click();
+                subElem.remove();
             }
         }
     }

@@ -1249,3 +1249,8 @@ body {
     margin-left: 0.5rem;
     height: 10rem;
 }
+.browser-section-loader {
+    display: block;
+    height: 40rem;
+    width: 50%;
+}
