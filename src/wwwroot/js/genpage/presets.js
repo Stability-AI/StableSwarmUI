@@ -353,6 +353,15 @@ function importPresetsButton() {
 }
 
 function importPresetsToData(text) {
+    function addValueToPrompt(text) {
+        if (text.includes('{value}')) {
+            return text;
+        }
+        else if (text.includes('{prompt}')) {
+            return text.replace('{prompt}', '{value}');
+        }
+        return '{value} ' + text;
+    }
     if (text.trim() == '') {
         return null;
     }
@@ -369,8 +378,8 @@ function importPresetsToData(text) {
                     description: `Imported prompt preset '${item.name}'`,
                     preview_image: '',
                     param_map: {
-                        prompt: item.prompt || '',
-                        negativeprompt: item.negative_prompt || item.negativeprompt || ''
+                        prompt: addValueToPrompt(item.prompt || ''),
+                        negativeprompt: addValueToPrompt(item.negative_prompt || item.negativeprompt || '')
                     }
                 };
             }
@@ -395,12 +404,8 @@ function importPresetsToData(text) {
             if (!prompt && !negativeprompt) {
                 continue;
             }
-            if (!prompt.includes('{value}')) {
-                prompt = '{value} ' + prompt;
-            }
-            if (!negativeprompt.includes('{value}')) {
-                negativeprompt = '{value} ' + negativeprompt;
-            }
+            prompt = addValueToPrompt(prompt || '');
+            negativeprompt = addValueToPrompt(negativeprompt || '');
             data[parts[0].toLowerCase()] = {
                 title: name,
                 description: `Imported prompt preset '${name}'`,
@@ -433,14 +438,8 @@ function importPresetsToData(text) {
             if (!prompt && !negativeprompt) {
                 continue;
             }
-            prompt = prompt || '';
-            negativeprompt = negativeprompt || '';
-            if (!prompt.includes('{value}')) {
-                prompt = '{value} ' + prompt;
-            }
-            if (!negativeprompt.includes('{value}')) {
-                negativeprompt = '{value} ' + negativeprompt;
-            }
+            prompt = addValueToPrompt(prompt || '');
+            negativeprompt = addValueToPrompt(negativeprompt || '');
             result[key] = {
                 title: key,
                 description: `Imported prompt preset '${key}'`,
