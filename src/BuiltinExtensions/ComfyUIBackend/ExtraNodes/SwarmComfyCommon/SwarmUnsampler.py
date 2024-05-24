@@ -31,7 +31,7 @@ class SwarmUnsampler:
         if "noise_mask" in latent_image:
             noise_mask = latent_image["noise_mask"]
 
-        sampler = comfy.samplers.KSampler(model.model, steps=steps, device=device, sampler=sampler_name, scheduler=scheduler, denoise=1.0, model_options=model.model_options)
+        sampler = comfy.samplers.KSampler(model, steps=steps, device=device, sampler=sampler_name, scheduler=scheduler, denoise=1.0, model_options=model.model_options)
         sigmas = sampler.sigmas.flip(0) + 0.0001
 
         callback = make_swarm_sampler_callback(steps, device, model, previews)
