@@ -383,7 +383,6 @@ textarea, input, select {
     top: 0;
     width: fit-content;
     z-index: 10000;
-    white-space: pre-wrap;
     transition: visibility 0s, opacity 0.3s linear;
     min-width: 10rem;
 }
@@ -394,6 +393,10 @@ textarea, input, select {
 }
 .sui-popover-notransition {
     transition: none;
+}
+.slight-left-margin-block {
+    display: block;
+    margin-left: 0.5rem;
 }
 .auto-slider-toggle {
     position: relative;
