@@ -363,19 +363,19 @@ public class T2IParamTypes
             null, OrderPriority: -5, Group: GroupInitImage, ChangeWeight: 2
             ));
         InitImageCreativity = Register<double>(new("Init Image Creativity", "Higher values make the generation more creative, lower values follow the init image closer.\nSometimes referred to as 'Denoising Strength' for 'img2img'.",
-            "0.6", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, ViewType: ParamViewType.SLIDER, Group: GroupInitImage
+            "0.6", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, ViewType: ParamViewType.SLIDER, Group: GroupInitImage, Examples: ["0", "0.4", "0.6", "1"]
             ));
         InitImageResetToNorm = Register<double>(new("Init Image Reset To Norm", "Merges the init image towards the latent norm.\nThis essentially lets you boost 'init image creativity' past 1.0.\nSet to 0 to disable.",
-            "0", IgnoreIf: "0", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, ViewType: ParamViewType.SLIDER, Group: GroupInitImage
+            "0", IgnoreIf: "0", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4.5, ViewType: ParamViewType.SLIDER, Group: GroupInitImage, Examples: ["0", "0.2", "0.5", "1"]
             ));
         MaskImage = Register<Image>(new("Mask Image", "Mask-image, white pixels are changed, black pixels are not changed, gray pixels are half-changed.",
             null, OrderPriority: -4, Group: GroupInitImage, ChangeWeight: 2
             ));
         MaskShrinkGrow = Register<int>(new("Mask Shrink Grow", "If enabled, the image will be shrunk to just the mask, and then grow by this value many pixels.\nAfter that, the generation process will run in full, and the image will be composited back into the original image at the end.\nThis allows for refining small details of an image for effectively.\nThis is also known as 'Inpaint Only Masked'.\nLarger values increase the surrounding context the generation receives, lower values contain it tighter and allow the AI to create more detail.",
-            "8", Toggleable: true, Min: 0, Max: 512, OrderPriority: -3.7, Group: GroupInitImage
+            "8", Toggleable: true, Min: 0, Max: 512, OrderPriority: -3.7, Group: GroupInitImage, Examples: ["0", "8", "32"]
             ));
         MaskBlur = Register<int>(new("Mask Blur", "If enabled, the mask will be blurred by this blur factor.\nThis makes the transition for the new image smoother.\nSet to 0 to disable.",
-            "4", IgnoreIf: "0", Min: 0, Max: 64, OrderPriority: -3.6, Group: GroupInitImage
+            "4", IgnoreIf: "0", Min: 0, Max: 64, OrderPriority: -3.6, Group: GroupInitImage, Examples: ["0", "4", "8", "16"]
             ));
         MaskBehavior = Register<string>(new("Mask Behavior", "How to process the mask.\n'Differential' = 'Differential Diffusion' technique, wherein the mask values are used as offsets for timestep of when to apply the mask or not.\n'Simple Latent' = the most basic latent masking technique.",
             "Differential", Toggleable: true, IsAdvanced: true, GetValues: (_) => ["Differential", "Simple Latent"], OrderPriority: -3.5, Group: GroupInitImage
@@ -383,7 +383,7 @@ public class T2IParamTypes
         UseInpaintingEncode = Register<bool>(new("Use Inpainting Encode", "Uses VAE Encode logic specifically designed for certain inpainting models.\nNotably this includes the RunwayML Stable-Diffusion-v1 Inpainting model.\nThis covers the masked area with gray.",
             "false", IgnoreIf: "false", Group: GroupInitImage, OrderPriority: -3.2, IsAdvanced: true
             ));
-        UnsamplerPrompt = Register<string>(new("Unsampler Prompt", "If enabled, feeds this prompt to an unsampler before resampling with your main prompt.\nThis is powerful for controlled image editing.",
+        UnsamplerPrompt = Register<string>(new("Unsampler Prompt", "If enabled, feeds this prompt to an unsampler before resampling with your main prompt.\nThis is powerful for controlled image editing.\n\nFor example, use unsampler prompt 'a photo of a man wearing a black hat',\nand give main prompt 'a photo of a man wearing a sombrero', to change what type of hat a person is wearing.",
             "", OrderPriority: -3, Toggleable: true, ViewType: ParamViewType.PROMPT, Group: GroupInitImage
             ));
         GroupRefiners = new("Refiner", Toggles: true, Open: false, OrderPriority: -3);
@@ -401,7 +401,7 @@ public class T2IParamTypes
             "None", IgnoreIf: "None", GetValues: listVaes, IsAdvanced: true, OrderPriority: -4.5, Group: GroupRefiners, FeatureFlag: "refiners", Subtype: "VAE", ChangeWeight: 7, DoNotPreview: true
             ));
         RefinerControl = Register<double>(new("Refiner Control Percentage", "Higher values give the refiner more control, lower values give the base more control.\nThis is similar to 'Init Image Creativity', but for the refiner. This controls how many steps the refiner takes.",
-            "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true
+            "0.2", Min: 0, Max: 1, Step: 0.05, OrderPriority: -4, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true, Examples: ["0.2", "0.3", "0.4"]
             ));
         RefinerSteps = Register<int>(new("Refiner Steps", "Alternate Steps value for the refiner stage.",
             "20", Min: 1, Max: 200, ViewMax: 100, Step: 1, Examples: ["10", "15", "20", "30", "40"], OrderPriority: -3.75, Toggleable: true, IsAdvanced: true, Group: GroupRefiners, ViewType: ParamViewType.SLIDER
@@ -410,7 +410,7 @@ public class T2IParamTypes
             "PostApply", GetValues: (_) => ["PostApply", "StepSwap", "StepSwapNoisy"], OrderPriority: -3, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true
             ));
         RefinerUpscale = Register<double>(new("Refiner Upscale", "Optional upscale of the image between the base and refiner stage.\nSometimes referred to as 'high-res fix'.\nSetting to '1' disables the upscale.",
-            "1", IgnoreIf: "1", Min: 0.25, Max: 8, ViewMax: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true
+            "1", IgnoreIf: "1", Min: 0.25, Max: 8, ViewMax: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true, Examples: ["1", "1.5", "2"]
             ));
         static List<string> listVaes(Session s)
         {
@@ -431,13 +431,13 @@ public class T2IParamTypes
                     "(None)", FeatureFlag: "controlnet", Group: group, Subtype: "ControlNet", OrderPriority: 5, ChangeWeight: 5
                     )),
                 Strength = Register<double>(new($"ControlNet{suffix} Strength", "Higher values make the ControlNet apply more strongly. Weaker values let the prompt overrule the ControlNet.",
-                    "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, ViewType: ParamViewType.SLIDER, Group: group
+                    "1", FeatureFlag: "controlnet", Min: 0, Max: 2, Step: 0.05, OrderPriority: 8, ViewType: ParamViewType.SLIDER, Group: group, Examples: ["0", "0.5", "1", "2"]
                     )),
                 Start = Register<double>(new($"ControlNet{suffix} Start", "When to start applying controlnet, as a fraction of steps.\nFor example, 0.5 starts applying halfway through. Must be less than End.\nExcluding early steps reduces the controlnet's impact on overall image structure.",
-                    "0", IgnoreIf: "0", FeatureFlag: "controlnet", Min: 0, Max: 1, Step: 0.05, OrderPriority: 10, IsAdvanced: true, ViewType: ParamViewType.SLIDER, Group: group
+                    "0", IgnoreIf: "0", FeatureFlag: "controlnet", Min: 0, Max: 1, Step: 0.05, OrderPriority: 10, IsAdvanced: true, ViewType: ParamViewType.SLIDER, Group: group, Examples: ["0", "0.2", "0.5"]
                     )),
                 End = Register<double>(new($"ControlNet{suffix} End", "When to stop applying controlnet, as a fraction of steps.\nFor example, 0.5 stops applying halfway through. Must be greater than Start.\nExcluding later steps reduces the controlnet's impact on finer details.",
-                    "1", IgnoreIf: "1", FeatureFlag: "controlnet", Min: 0, Max: 1, Step: 0.05, OrderPriority: 11, IsAdvanced: true, ViewType: ParamViewType.SLIDER, Group: group
+                    "1", IgnoreIf: "1", FeatureFlag: "controlnet", Min: 0, Max: 1, Step: 0.05, OrderPriority: 11, IsAdvanced: true, ViewType: ParamViewType.SLIDER, Group: group, Examples: ["1", "0.8", "0.5"]
                     )),
             };
         }
