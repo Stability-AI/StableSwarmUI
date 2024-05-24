@@ -120,7 +120,7 @@ public class WebServer
         {
             WebApp.Lifetime.ApplicationStarted.Register(Program.ProxyHandler.Start);
         }
-        WebApp.Lifetime.ApplicationStopping.Register(Program.Shutdown);
+        WebApp.Lifetime.ApplicationStopping.Register(() => Program.Shutdown());
         timer.Check("[Web] StartStop handler");
         WebApp.UseStaticFiles(new StaticFileOptions());
         timer.Check("[Web] static files");

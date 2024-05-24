@@ -4,9 +4,12 @@ using FreneticUtilities.FreneticToolkit;
 using Hardware.Info;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
+using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 
 namespace StableSwarmUI.WebAPI;
@@ -25,6 +28,7 @@ public static class AdminAPI
         API.RegisterAPICall(DebugLanguageAdd, true);
         API.RegisterAPICall(DebugGenDocs, true);
         API.RegisterAPICall(ListConnectedUsers);
+        API.RegisterAPICall(UpdateAndRestart);
     }
 
     public static JObject AutoConfigToParamData(AutoConfiguration config)
@@ -217,7 +221,7 @@ public static class AdminAPI
     [API.APIDescription("Shuts the server down. Returns success before the server is gone.", "\"success\": true")]
     public static async Task<JObject> ShutdownServer(Session session)
     {
-        _ = Task.Run(Program.Shutdown);
+        _ = Task.Run(() => Program.Shutdown());
         return new JObject() { ["success"] = true };
     }
 
@@ -337,5 +341,38 @@ public static class AdminAPI
             ["last_active"] = $"{u.TimeSinceLastUsed.SimpleFormat(false, false)} ago"
         }).ToArray());
         return new JObject() { ["users"] = list };
+    }
+
+    [API.APIDescription("Causes swarm to update, then close and restart itself. If there's no update to apply, won't restart.",
+        """
+            "success": true, // or false if not updated
+            "result": "No changes found." // or any other applicable human-readable English message
+        """)]
+    public static async Task<JObject> UpdateAndRestart(Session session)
+    {
+        static async Task<string> launchGit(string args)
+        {
+            ProcessStartInfo start = new()
+            {
+                RedirectStandardOutput = true,
+                FileName = "git",
+                UseShellExecute = false,
+                Arguments = args
+            };
+            Process p = Process.Start(start);
+            await p.WaitForExitAsync(Program.GlobalProgramCancel);
+            return await p.StandardOutput.ReadToEndAsync();
+        }
+        string priorHash = (await launchGit("rev-parse HEAD")).Trim();
+        await launchGit("pull");
+        string localHash = (await launchGit("rev-parse HEAD")).Trim();
+        Logs.Debug($"Update checker: prior hash was {priorHash}, new hash is {localHash}");
+        if (priorHash == localHash)
+        {
+            return new JObject() { ["success"] = false, ["result"] = "No changes found." };
+        }
+        File.WriteAllText("src/bin/must_rebuild", "yes");
+        _ = Utilities.RunCheckedTask(() => Program.Shutdown(42));
+        return new JObject() { ["success"] = true, ["result"] = "Update successful. Restarting... (please wait a moment, then refresh the page)" };
     }
 }

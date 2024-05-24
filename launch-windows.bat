@@ -7,7 +7,12 @@ cd /D "%~dp0"
 rem Microsoft borked the dotnet installer/path handler, so force x64 to be read first
 set PATH=C:\Program Files\dotnet;%PATH%
 
-if not exist .git (
+if exist .\src\bin\must_rebuild (
+    echo "Rebuilding..."
+    rmdir /s /q .\src\bin\live_release_backup
+    move .\src\bin\live_release .\src\bin\live_release_backup
+    del .\src\bin\must_rebuild
+) else if not exist .git (
     echo "" & echo ""
     echo "WARNING: YOU DID NOT CLONE FROM GIT. THIS WILL BREAK SOME SYSTEMS. PLEASE INSTALL PER THE README."
     echo "" & echo ""
@@ -38,5 +43,11 @@ set ASPNETCORE_ENVIRONMENT="Production"
 set ASPNETCORE_URLS="http://*:7801"
 
 dotnet src\bin\live_release\StableSwarmUI.dll %*
+
+rem Exit code 42 means restart, anything else = don't.
+if %ERRORLEVEL% EQU 42 (
+    echo "Restarting..."
+    call launch-windows.bat %*
+)
 
 IF %ERRORLEVEL% NEQ 0 ( pause )

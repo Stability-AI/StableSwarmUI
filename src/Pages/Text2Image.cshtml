@@ -669,8 +669,12 @@
                         <div class="card-header translate">Shutdown</div>
                         <div class="card-body">
                             <p class="card-text">
-                                If you want to shut down the server, click the button below.
-                                <br><button class="basic-button danger-button" onclick="shutdown_server()">Shutdown Server</button>
+                                <span class="translate">If you want to shut down the server, click the button below.</span>
+                                <br><button class="basic-button danger-button translate" onclick="shutdown_server()">Shutdown Server</button>
+                                <br>
+                                <br><span class="translate">Or you can update and restart if there are updates available:</span>
+                                <br><button class="basic-button danger-button translate" onclick="update_and_restart_server()">Update and Restart Server</button>
+                                <span id="shutdown_notice_area"></span>
                             </p>
                         </div>
                     </div>
@@ -678,7 +682,7 @@
                         <div class="card-header translate">Free Memory</div>
                         <div class="card-body">
                             <p class="card-text">
-                                You can free up the VRAM usage, or system memory usage (cache) from backends with the two buttons below.
+                                <span class="translate">You can free up the VRAM usage, or system memory usage (cache) from backends with the two buttons below.</span>
                                 <br>
                                 <button class="basic-button danger-button" onclick="server_clear_vram()">Free VRAM</button>
                                 <button class="basic-button danger-button" onclick="server_clear_sysram()">Free System RAM</button>

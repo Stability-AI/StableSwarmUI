@@ -1565,10 +1565,25 @@ function updateAllModels(models) {
     pickle2safetensor_load();
 }
 
+let shutdownConfirmationText = translatable("Are you sure you want to shut StableSwarmUI down?");
+
 function shutdown_server() {
-    if (confirm("Are you sure you want to shut StableSwarmUI down?")) {
+    if (confirm(shutdownConfirmationText.get())) {
         genericRequest('ShutdownServer', {}, data => {
             close();
+        });
+    }
+}
+
+let restartConfirmationText = translatable("Are you sure you want to update and restart StableSwarmUI?");
+let checkingForUpdatesText = translatable("Checking for updates...");
+
+function update_and_restart_server() {
+    let noticeArea = getRequiredElementById('shutdown_notice_area');
+    if (confirm(restartConfirmationText.get())) {
+        noticeArea.innerText = checkingForUpdatesText.get();
+        genericRequest('UpdateAndRestart', {}, data => {
+            noticeArea.innerText = data.result;
         });
     }
 }

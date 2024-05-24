@@ -276,13 +276,14 @@ public class Program
     private volatile static bool HasShutdown = false;
 
     /// <summary>Main shutdown handler. Tells everything to stop.</summary>
-    public static void Shutdown()
+    public static void Shutdown(int code = 0)
     {
         if (HasShutdown)
         {
             return;
         }
         HasShutdown = true;
+        Environment.ExitCode = code;
         Logs.Info("Shutting down...");
         GlobalCancelSource.Cancel();
         Logs.Verbose("Shutdown webserver...");
