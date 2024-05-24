@@ -788,3 +788,8 @@ function formatDateTime(date) {
     }
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
+
+/** Escapes a string for use in a regex. */
+function regexEscape(text) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}

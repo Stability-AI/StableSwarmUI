@@ -378,7 +378,8 @@ class ModelBrowserWrapper {
                 raw = raw.substring(0, 512) + '...';
             }
             description = `<span class="wildcard_title">${escapeHtml(name)}</span><br>${escapeHtml(raw)}`;
-            let isSelected = promptBox.value.includes(`<wildcard:${model.data.name}>`);
+            let match = matchWildcard(promptBox.value, model.data.name);
+            let isSelected = match && match.length > 0;
             let className = isSelected ? 'model-selected' : '';
             let searchable = `${model.data.name}, ${description}`;
             return { name, description, buttons, className, searchable, 'image': model.data.image };
@@ -460,15 +461,24 @@ let wildcardsBrowser = new ModelBrowserWrapper('Wildcards', 'wildcard_list', 'wi
 
 let allModelBrowsers = [sdModelBrowser, sdVAEBrowser, sdLoraBrowser, sdEmbedBrowser, sdControlnetBrowser, wildcardsBrowser];
 
+function matchWildcard(prompt, wildcard) {
+    let matcher = new RegExp(`<(wildcard(?:\\[\\d+(?:-\\d+)?\\])?):${regexEscape(wildcard)}>`, 'g');
+    return prompt.match(matcher);
+}
+
 function selectWildcard(model) {
     let promptBox = getRequiredElementById('alt_prompt_textbox');
-    let chunk = `<wildcard:${model.name}>`;
-    if (promptBox.value.endsWith(chunk)) {
-        promptBox.value = promptBox.value.substring(0, promptBox.value.length - chunk.length).trim();
+    let trimmed = promptBox.value.trim();
+    let match = matchWildcard(trimmed, model.name);
+    if (match && match.length > 0) {
+        let last = match[match.length - 1];
+        if (trimmed.endsWith(last.trim())) {
+            promptBox.value = trimmed.substring(0, trimmed.length - last.length).trim();
+            triggerChangeFor(promptBox);
+            return;
+        }
     }
-    else {
-        promptBox.value += ` ${chunk}`;
-    }
+    promptBox.value = `${trimmed} <wildcard:${model.name}>`.trim();
     triggerChangeFor(promptBox);
 }
 
@@ -515,8 +525,8 @@ function monitorPromptChangeForEmbed(promptText, type) {
     if (countNew != countOld) {
         sdEmbedBrowser.browser.rerender();
     }
-    let countNewWc = promptText.split(`<wildcard:`).length - 1;
-    let countOldWc = last.split(`<wildcard:`).length - 1;
+    let countNewWc = promptText.split(`<wildcard`).length - 1;
+    let countOldWc = last.split(`<wildcard`).length - 1;
     if (countNewWc != countOldWc) {
         wildcardsBrowser.browser.rerender();
     }
