@@ -1251,8 +1251,8 @@ class PromptTabCompleteClass {
             e.preventDefault();
         }
         if (this.popover) {
-            let allowThrough = this.popover.onKeyDown(e);
-            if (!allowThrough) {
+            this.popover.onKeyDown(e);
+            if (e.key == 'Tab' || e.key == 'Enter') {
                 this.popover.remove();
                 this.popover = null;
                 this.blockInput = true;
