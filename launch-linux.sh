@@ -12,7 +12,6 @@ if [ -f ./src/bin/must_rebuild ]; then
     rm -rf ./src/bin/live_release_backup
     mv ./src/bin/live_release ./src/bin/live_release_backup
     rm ./src/bin/must_rebuild
-fi
 elif [ -d .git ]; then
     cur_head=`git rev-parse HEAD`
     built_head=`cat src/bin/last_build`
