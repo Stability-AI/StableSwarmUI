@@ -38,6 +38,6 @@ export ASPNETCORE_URLS="http://*:7801"
 dotnet src/bin/live_release/StableSwarmUI.dll $@
 
 # Exit code 42 means restart, anything else = don't.
-if [ $? -ne 42 ]; then
+if [ $? == 42 ]; then
     . ./launch-linux.sh $@
 fi
