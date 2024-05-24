@@ -29,6 +29,8 @@ Colab link if you want to try Swarm: https://colab.research.google.com/github/St
 
 # Installing on Windows
 
+Note: if you're on Windows 10, you may need to manually install [git](https://git-scm.com/download/win) and [DotNET 8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) first. (Windows 11 this is automated).
+
 - Download [The Install-Windows.bat file](https://github.com/Stability-AI/StableSwarmUI/releases/download/0.6.1-Beta/install-windows.bat), store it somewhere you want to install at (not `Program Files`), and run it.
     - It should open a command prompt and install itself.
     - If it closes without going further, try running it again, it sometimes needs to run twice. (TODO: Fix that)
