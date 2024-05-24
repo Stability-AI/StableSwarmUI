@@ -519,15 +519,17 @@ function monitorPromptChangeForEmbed(promptText, type) {
     if (promptText == last) {
         return;
     }
+    let countEndsNew = promptText.split(`>`).length - 1;
+    let countEndsOld = last.split(`>`).length - 1;
     lastPromptForEmbedMonitor[type] = promptText;
     let countNew = promptText.split(`<embed:`).length - 1;
     let countOld = last.split(`<embed:`).length - 1;
-    if (countNew != countOld) {
+    if (countNew != countOld || (countNew > 0 && countEndsNew != countEndsOld)) {
         sdEmbedBrowser.browser.rerender();
     }
     let countNewWc = promptText.split(`<wildcard`).length - 1;
     let countOldWc = last.split(`<wildcard`).length - 1;
-    if (countNewWc != countOldWc) {
+    if (countNewWc != countOldWc || (countNewWc > 0 && countEndsNew != countEndsOld)) {
         wildcardsBrowser.browser.rerender();
     }
 }

@@ -1252,7 +1252,7 @@ class PromptTabCompleteClass {
         }
         if (this.popover) {
             this.popover.onKeyDown(e);
-            if (e.key == 'Tab' || e.key == 'Enter') {
+            if (this.popover && (e.key == 'Tab' || e.key == 'Enter')) {
                 this.popover.remove();
                 this.popover = null;
                 this.blockInput = true;
