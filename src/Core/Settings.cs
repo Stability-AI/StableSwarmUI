@@ -41,6 +41,9 @@ public class Settings : AutoConfiguration
     [ConfigComment("If true, Swarm will check if there's any updates available during startup. If false, it will not check for updates.\nUpdate check only downloads a simple JSON from GitHub to get the current version info, it does not transmit any telemetry nor does it download any files or apply the update.\nDefaults to true.")]
     public bool CheckForUpdates = true;
 
+    [ConfigComment("If true, Swarm will automatically download and apply any development version updates as soon as they're available.\nDefaults to false.")]
+    public bool AutoPullDevUpdates = false;
+
     [ConfigComment("Settings related to logging.")]
     public LogsData Logs = new();
 

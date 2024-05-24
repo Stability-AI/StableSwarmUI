@@ -7,6 +7,12 @@ cd $SCRIPT_DIR
 # Add dotnet non-admin-install to path
 export PATH="$SCRIPT_DIR/.dotnet:~/.dotnet:$PATH"
 
+# Server settings option
+if [ -f ./src/bin/always_pull ]; then
+    echo "Pulling latest changes..."
+    git pull
+fi
+
 if [ -f ./src/bin/must_rebuild ]; then
     echo "Rebuilding..."
     rm -rf ./src/bin/live_release_backup

@@ -7,6 +7,12 @@ cd /D "%~dp0"
 rem Microsoft borked the dotnet installer/path handler, so force x64 to be read first
 set PATH=C:\Program Files\dotnet;%PATH%
 
+rem Server settings option
+if exist .\src\bin\always_pull (
+    echo "Pulling latest changes..."
+    git pull
+)
+
 if exist .\src\bin\must_rebuild (
     echo "Rebuilding..."
     rmdir /s /q .\src\bin\live_release_backup
