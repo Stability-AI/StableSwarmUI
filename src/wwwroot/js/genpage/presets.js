@@ -359,6 +359,24 @@ function importPresetsToData(text) {
     if (text.startsWith('{')) {
         return JSON.parse(text);
     }
+    if (text.startsWith('[')) {
+        let parsed = JSON.parse(`{ "list": ${text} }`);
+        let data = {};
+        for (let item of parsed.list) {
+            if (item.name) {
+                data[item.name] = {
+                    title: item.name,
+                    description: `Imported prompt preset '${item.name}'`,
+                    preview_image: '',
+                    param_map: {
+                        prompt: item.prompt || '',
+                        negativeprompt: item.negative_prompt || item.negativeprompt || ''
+                    }
+                };
+            }
+        }
+        return data;
+    }
     if (text.startsWith('name,prompt,negative_prompt,')) {
         data = {};
         let lines = text.split('\n');
