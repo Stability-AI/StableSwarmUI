@@ -148,6 +148,7 @@ function editModel(model, browser) {
     getRequiredElementById('edit_model_technical_data').innerText = technical;
     getRequiredElementById('edit_model_name').value = model.title || model.name;
     getRequiredElementById('edit_model_type').value = model.architecture || '';
+    getRequiredElementById('edit_model_prediction_type').value = model.prediction_type || '';
     getRequiredElementById('edit_model_resolution').value = `${model.standard_width}x${model.standard_height}`;
     for (let val of ['description', 'author', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags']) {
         getRequiredElementById(`edit_model_${val}`).value = model[val] || '';
@@ -171,7 +172,7 @@ function save_edit_model() {
         'standard_height': parseInt(resolution[1]),
         'preview_image': ''
     };
-    for (let val of ['author', 'type', 'description', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags']) {
+    for (let val of ['author', 'type', 'description', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags', 'prediction_type']) {
         data[val] = getRequiredElementById(`edit_model_${val}`).value;
     }
     data['is_negative_embedding'] = (model.architecture || '').endsWith('/textual-inversion') ? getRequiredElementById('edit_model_is_negative').checked : false;

@@ -630,7 +630,7 @@ public class WorkflowGenerator
                     if (!g.UserInput.TryGet(ComfyUIBackendExtension.ControlNetPreprocessorParams[i], out string preprocessor))
                     {
                         preprocessor = "none";
-                        string wantedPreproc = controlModel.Metadata?.Preprocesor;
+                        string wantedPreproc = controlModel.Metadata?.Preprocessor;
                         if (!string.IsNullOrWhiteSpace(wantedPreproc))
                         {
                             string[] procs = [.. ComfyUIBackendExtension.ControlNetPreprocessors.Keys];
@@ -1408,6 +1408,17 @@ public class WorkflowGenerator
         LoadingModel = [modelNode, 0];
         LoadingClip = [modelNode, 1];
         LoadingVAE = [modelNode, 2];
+        string predType = model.Metadata?.PredictionType;
+        if (!string.IsNullOrWhiteSpace(predType))
+        {
+            string discreteNode = CreateNode("ModelSamplingDiscrete", new JObject()
+            {
+                ["model"] = LoadingModel,
+                ["sampling"] = predType switch { "v" => "v_prediction", "v-zsnr" => "v_prediction", _ => predType },
+                ["zsnr"] = predType.Contains("zsnr")
+            });
+            LoadingModel = [discreteNode, 0];
+        }
         foreach (WorkflowGenStep step in ModelGenSteps)
         {
             step.Action(this);

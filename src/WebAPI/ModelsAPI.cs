@@ -403,6 +403,7 @@ public static class ModelsAPI
         [API.APIParameter("New model `date` metadata value.")] string date,
         [API.APIParameter("New model `license` metadata value.")] string license,
         [API.APIParameter("New model `trigger_phrase` metadata value.")] string trigger_phrase,
+        [API.APIParameter("New model `prediction_type` metadata value.")] string prediction_type,
         [API.APIParameter("New model `tags` metadata value (comma-separated list).")] string tags,
         [API.APIParameter("New model `is_negative_embedding` metadata value.")] bool is_negative_embedding = false,
         [API.APIParameter("The model's sub-type, eg `Stable-Diffusion`, `LoRA`, etc.")] string subtype = "Stable-Diffusion")
@@ -448,6 +449,7 @@ public static class ModelsAPI
             actualModel.Metadata.TriggerPhrase = string.IsNullOrWhiteSpace(trigger_phrase) ? null : trigger_phrase;
             actualModel.Metadata.Tags = string.IsNullOrWhiteSpace(tags) ? null : tags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             actualModel.Metadata.IsNegativeEmbedding = is_negative_embedding;
+            actualModel.Metadata.PredictionType = string.IsNullOrWhiteSpace(prediction_type) ? null : prediction_type;
         }
         handler.ResetMetadataFrom(actualModel);
         _ = Utilities.RunCheckedTask(() => handler.ApplyNewMetadataDirectly(actualModel));
