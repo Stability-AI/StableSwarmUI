@@ -110,32 +110,7 @@ public class WorkflowGenerator
         }, -15);
         AddModelGenStep(g =>
         {
-            if (g.UserInput.TryGet(T2IParamTypes.Loras, out List<string> loras))
-            {
-                List<string> weights = g.UserInput.Get(T2IParamTypes.LoraWeights);
-                T2IModelHandler loraHandler = Program.T2IModelSets["LoRA"];
-                for (int i = 0; i < loras.Count; i++)
-                {
-                    if (!loraHandler.Models.TryGetValue(loras[i] + ".safetensors", out T2IModel lora))
-                    {
-                        if (!loraHandler.Models.TryGetValue(loras[i], out lora))
-                        {
-                            throw new InvalidDataException($"LoRA Model '{loras[i]}' not found in the model set.");
-                        }
-                    }
-                    float weight = weights == null ? 1 : float.Parse(weights[i]);
-                    string newId = g.CreateNode("LoraLoader", new JObject()
-                    {
-                        ["model"] = g.LoadingModel,
-                        ["clip"] = g.LoadingClip,
-                        ["lora_name"] = lora.ToString(g.ModelFolderFormat),
-                        ["strength_model"] = weight,
-                        ["strength_clip"] = weight
-                    }, g.GetStableDynamicID(500, i));
-                    g.LoadingModel = [$"{newId}", 0];
-                    g.LoadingClip = [$"{newId}", 1];
-                }
-            }
+            (g.LoadingModel, g.LoadingClip) = g.LoadLorasForConfinement(0, g.LoadingModel, g.LoadingClip);
         }, -10);
         AddModelGenStep(g =>
         {
@@ -941,14 +916,15 @@ public class WorkflowGenerator
                     });
                     (string boundsNode, string croppedMask, string masked) = g.CreateImageMaskCrop([growNode, 0], g.FinalImageOut, 8);
                     g.EnableDifferential();
-                    JArray prompt = g.CreateConditioning(part.Prompt, g.FinalClip, g.FinalLoadedModel, true);
+                    (JArray model, JArray clip) = g.LoadLorasForConfinement(part.ContextID, g.FinalModel, g.FinalClip);
+                    JArray prompt = g.CreateConditioning(part.Prompt, clip, g.FinalLoadedModel, true);
                     string neg = negativeParts.FirstOrDefault(p => p.DataText == part.DataText)?.Prompt ?? negativeRegion.GlobalPrompt;
-                    JArray negPrompt = g.CreateConditioning(neg, g.FinalClip, g.FinalLoadedModel, false);
+                    JArray negPrompt = g.CreateConditioning(neg, clip, g.FinalLoadedModel, false);
                     int steps = g.UserInput.Get(T2IParamTypes.Steps);
                     int startStep = (int)Math.Round(steps * (1 - part.Strength2));
                     long seed = g.UserInput.Get(T2IParamTypes.Seed) + 2 + i;
                     double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
-                    string sampler = g.CreateKSampler(g.FinalModel, prompt, negPrompt, [masked, 0], cfg, steps, startStep, 10000, seed, false, true);
+                    string sampler = g.CreateKSampler(model, prompt, negPrompt, [masked, 0], cfg, steps, startStep, 10000, seed, false, true);
                     string decoded = g.CreateVAEDecode(g.FinalVae, [sampler, 0]);
                     string composited = g.RecompositeCropped(boundsNode, croppedMask, g.FinalImageOut, [decoded, 0]);
                     g.FinalImageOut = [composited, 0];
@@ -1230,6 +1206,52 @@ public class WorkflowGenerator
     public string CreateNode(string classType, JObject input, string id = null)
     {
         return CreateNode(classType, (_, n) => n["inputs"] = input, id);
+    }
+
+    /// <summary>Loads and applies LoRAs in the user parameters for the given LoRA confinement ID.</summary>
+    public (JArray, JArray) LoadLorasForConfinement(int confinement, JArray model, JArray clip)
+    {
+        if (confinement < 0 || !UserInput.TryGet(T2IParamTypes.Loras, out List<string> loras))
+        {
+            return (model, clip);
+        }
+        List<string> weights = UserInput.Get(T2IParamTypes.LoraWeights);
+        List<string> confinements = UserInput.Get(T2IParamTypes.LoraSectionConfinement);
+        if (confinement > 0 && (confinements is null || confinements.Count == 0))
+        {
+            return (model, clip);
+        }
+        T2IModelHandler loraHandler = Program.T2IModelSets["LoRA"];
+        for (int i = 0; i < loras.Count; i++)
+        {
+            if (!loraHandler.Models.TryGetValue(loras[i] + ".safetensors", out T2IModel lora))
+            {
+                if (!loraHandler.Models.TryGetValue(loras[i], out lora))
+                {
+                    throw new InvalidDataException($"LoRA Model '{loras[i]}' not found in the model set.");
+                }
+            }
+            if (confinements is not null && confinements.Count > i)
+            {
+                int confinementId = int.Parse(confinements[i]);
+                if (confinementId != confinement)
+                {
+                    continue;
+                }
+            }
+            float weight = weights == null ? 1 : float.Parse(weights[i]);
+            string newId = CreateNode("LoraLoader", new JObject()
+            {
+                ["model"] = model,
+                ["clip"] = clip,
+                ["lora_name"] = lora.ToString(ModelFolderFormat),
+                ["strength_model"] = weight,
+                ["strength_clip"] = weight
+            }, GetStableDynamicID(500, i));
+            model = [$"{newId}", 0];
+            clip = [$"{newId}", 1];
+        }
+        return (model, clip);
     }
 
     /// <summary>Creates a new node to load an image.</summary>
