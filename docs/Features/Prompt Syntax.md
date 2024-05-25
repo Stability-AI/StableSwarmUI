@@ -43,3 +43,10 @@
 
 - You can use `<clear:texthere>` to automatically clear parts of an image to transparent. This uses the same input format as `segment` (above) (for obvious reasons, this requires PNG not JPG).
     - For example, `<clear:background>` to clear the background.
+
+- You can use `<break>` to specify a manual CLIP section break (eg in Auto WebUI this is `BREAK`).
+    - If this is confusing, you this a bit of an internal hacky thing, so don't worry about. But if you want to know, here's the explanation:
+        - CLIP (the model that processes text input to pass to SD), has a length of 75 _tokens_ (words basically).
+        - By default, if you write a prompt that's longer than 75 tokens, what it will do is split 75/75, the first 75 tokens go in and become one CLIP result chunk, and then the next tokens get passed for a second CLIP chunk, and then the multiple CLIP results are parsed by SD in a batch and mixed as it goes.
+        - The problem with this, is it's basically random - you might have eg `a photo of a big fluffy dog`, and it gets split into `a photo of a big fluffy` and then `dog` (in practice 75 tokens is a much longer prompt but just an example of how the split might go wrong)
+        - Using `<break>` lets you manually specify where it splits, so you might do eg `a photo <break> big fluffy dog` (to intentionally put the style in one chunk and the subject in the next)
