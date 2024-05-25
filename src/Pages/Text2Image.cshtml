@@ -331,7 +331,12 @@
                 <div class="modal-body">
                     <div><span id="edit_model_technical_data"></span></div>
                     <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra translate" placeholder="Model Author" /></div>
-                    <div>Architecture: <input type="text" id="edit_model_type" class="modal_text_extra translate" placeholder="Model Type" /></div>
+                    <div>Architecture: <select id="edit_model_type" class="modal_text_extra translate" placeholder="Model Type">
+                        @foreach (T2IModelClass arch in T2IModelClassSorter.ModelClasses.Values.OrderBy(x => x.ID))
+                        {
+                            <option value="@arch.ID" class="translate">@arch.Name</option>
+                        }
+                    </select></div>
                     <div>Standard Resolution: <input type="text" id="edit_model_resolution" class="modal_text_extra translate" placeholder="Resolution, eg 1024x1024" /></div>
                     <div>License: <input type="text" id="edit_model_license" class="modal_text_extra translate" placeholder="Model License" /></div>
                     <div>Date: <input type="text" id="edit_model_date" class="modal_text_extra translate" placeholder="Model Date" /></div>
