@@ -142,6 +142,7 @@ public static class ComfyUIWebAPI
         {
             return new JObject() { ["error"] = ex.Message };
         }
+        input.PreparsePromptLikes();
         ComfyUIAPIAbstractBackend backend = ComfyUIBackendExtension.ComfyBackendsDirect().FirstOrDefault().Backend as ComfyUIAPIAbstractBackend;
         string format = backend.SupportedFeatures.Contains("folderbackslash") ? "\\" : "/";
         string flow = ComfyUIAPIAbstractBackend.CreateWorkflow(input, w => w, format, features: backend.SupportedFeatures.ToHashSet());
