@@ -51,6 +51,7 @@ public class T2IModel
             ["standard_height"] = StandardHeight,
             ["license"] = Metadata?.License,
             ["date"] = Metadata?.Date,
+            ["prediction_type"] = Metadata?.PredictionType,
             ["usage_hint"] = Metadata?.UsageHint,
             ["trigger_phrase"] = Metadata?.TriggerPhrase,
             ["merged_from"] = Metadata?.MergedFrom,

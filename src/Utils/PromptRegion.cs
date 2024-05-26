@@ -27,6 +27,8 @@ public class PromptRegion
         public string DataText;
 
         public PartType Type;
+
+        public int ContextID;
     }
 
     public List<Part> Parts = [];
@@ -45,6 +47,7 @@ public class PromptRegion
         string[] pieces = prompt.Split('<');
         bool first = true;
         Action<string> addMore = s => GlobalPrompt += s;
+        int id = -1;
         foreach (string piece in pieces)
         {
             if (first)
@@ -60,6 +63,12 @@ public class PromptRegion
                 continue;
             }
             string tag = piece[..end];
+            (string tagBefore, string cidText) = tag.BeforeAndAfterLast("//cid=");
+            if (!string.IsNullOrWhiteSpace(cidText) && int.TryParse(cidText, out int cid))
+            {
+                id = cid;
+                tag = tagBefore;
+            }
             (string prefix, string regionData) = tag.BeforeAndAfter(':');
             string content = piece[(end + 1)..];
             PartType type;
@@ -99,7 +108,8 @@ public class PromptRegion
             Part p = new()
             {
                 Prompt = content,
-                Type = type
+                Type = type,
+                ContextID = id
             };
             string[] coords = regionData.Split(',');
             if (type == PartType.Segment || type == PartType.ClearSegment)

@@ -331,11 +331,14 @@ body {
 .model-descblock {
     width: 21rem;
     height: 10rem;
-    overflow: auto;
+    overflow: hidden;
     display: inline-block;
     white-space: normal;
     word-break: break-all;
     font-size: 80%;
+}
+.model-descblock:focus {
+    overflow: auto;
 }
 .model-block img:hover {
     border: 2px solid white;

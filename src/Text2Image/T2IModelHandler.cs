@@ -75,7 +75,7 @@ public class T2IModelHandler
 
         public string Date { get; set; }
 
-        public string Preprocesor { get; set; }
+        public string Preprocessor { get; set; }
 
         /// <summary>Time this model was last modified.</summary>
         public long TimeModified { get; set; }
@@ -84,6 +84,8 @@ public class T2IModelHandler
         public long TimeCreated { get; set; }
 
         public string Hash { get; set; }
+
+        public string PredictionType { get; set; }
     }
 
     public T2IModelHandler()
@@ -293,8 +295,9 @@ public class T2IModelHandler
             specSet("tags", string.Join(",", model.Metadata.Tags ?? []));
             specSet("merged_from", model.Metadata.MergedFrom);
             specSet("date", model.Metadata.Date);
-            specSet("preprocessor", model.Metadata.Preprocesor);
+            specSet("preprocessor", model.Metadata.Preprocessor);
             specSet("resolution", $"{model.Metadata.StandardWidth}x{model.Metadata.StandardHeight}");
+            specSet("prediction_type", model.Metadata.PredictionType);
             if (model.Metadata.IsNegativeEmbedding)
             {
                 specSet("is_negative_embedding", "true");
@@ -483,9 +486,10 @@ public class T2IModelHandler
                 TriggerPhrase = metaHeader?.Value<string>("modelspec.trigger_phrase") ?? altTriggerPhrase,
                 License = metaHeader?.Value<string>("modelspec.license"),
                 Date = metaHeader?.Value<string>("modelspec.date"),
-                Preprocesor = metaHeader?.Value<string>("modelspec.preprocessor"),
+                Preprocessor = metaHeader?.Value<string>("modelspec.preprocessor"),
                 Tags = metaHeader?.Value<string>("modelspec.tags")?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
                 IsNegativeEmbedding = metaHeader?.Value<string>("modelspec.is_negative_embedding") == "true",
+                PredictionType = metaHeader?.Value<string>("modelspec.prediction_type"),
                 Hash = metaHeader?.Value<string>("modelspec.hash_sha256")
             };
             lock (MetadataLock)

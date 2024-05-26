@@ -274,6 +274,9 @@ class UIImprovementHandler {
             triggerChangeFor(input);
         }
         window.addEventListener('wheel', (e) => {
+            if (!e.target || !e.target.matches(':focus')) {
+                return;
+            }
             if (e.target.tagName == 'INPUT' && (e.target.type == 'number' || e.target.type == 'range')) {
                 let input = e.target;
                 let step = parseFloat(input.step);

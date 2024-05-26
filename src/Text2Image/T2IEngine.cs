@@ -156,6 +156,38 @@ namespace StableSwarmUI.Text2Image
             {
                 return;
             }
+            long prepTime = Environment.TickCount64;
+            int numImagesGenned = 0;
+            long lastGenTime = Environment.TickCount64;
+            string genTimeReport = "? failed!";
+            void handleImage(ImageOutput img)
+            {
+                lastGenTime = Environment.TickCount64;
+                if (img.GenTimeMS < 0)
+                {
+                    img.GenTimeMS = Environment.TickCount64 - prepTime;
+                }
+                long fullTime = Environment.TickCount64 - timeStart;
+                genTimeReport = $"{(fullTime - img.GenTimeMS) / 1000.0:0.00} (prep) and {img.GenTimeMS / 1000.0:0.00} (gen) seconds";
+                T2IParamInput copyInput = user_input.Clone();
+                copyInput.ExtraMeta["generation_time"] = genTimeReport;
+                if (!img.IsReal)
+                {
+                    copyInput.ExtraMeta["intermediate"] = "intermediate output";
+                }
+                bool refuse = false;
+                PostGenerateEvent?.Invoke(new(img.Img, copyInput, () => refuse = true));
+                if (refuse)
+                {
+                    Logs.Info($"Refused an image.");
+                }
+                else
+                {
+                    (img.Img, string metadata) = copyInput.SourceSession.ApplyMetadata(img.Img, copyInput, numImagesGenned);
+                    saveImages(img, metadata);
+                    numImagesGenned++;
+                }
+            }
             if (canCallTools)
             {
                 string prompt = user_input.Get(T2IParamTypes.Prompt);
@@ -166,7 +198,13 @@ namespace StableSwarmUI.Text2Image
                     {
                         user_input = user_input.Clone();
                         user_input.Set(T2IParamTypes.InitImage, multiImg);
-                        user_input.Set(T2IParamTypes.InitImageCreativity, 0.7); // TODO: Configurable
+                        double cleanup = user_input.Get(T2IParamTypes.RegionalObjectCleanupFactor, 0);
+                        if (cleanup == 0)
+                        {
+                            handleImage(new() { Img = multiImg, IsReal = true, GenTimeMS = -1, RefuseImage = null });
+                            return;
+                        }
+                        user_input.Set(T2IParamTypes.InitImageCreativity, cleanup);
                         foreach (T2IParamTypes.ControlNetParamHolder controlnet in T2IParamTypes.Controlnets)
                         {
                             user_input.Remove(controlnet.Model);
@@ -213,38 +251,6 @@ namespace StableSwarmUI.Text2Image
             {
                 claim.Extend(liveGens: 1);
                 sendStatus();
-                long prepTime;
-                int numImagesGenned = 0;
-                long lastGenTime = Environment.TickCount64;
-                string genTimeReport = "? failed!";
-                void handleImage(ImageOutput img)
-                {
-                    lastGenTime = Environment.TickCount64;
-                    if (img.GenTimeMS < 0)
-                    {
-                        img.GenTimeMS = Environment.TickCount64 - prepTime;
-                    }
-                    long fullTime = Environment.TickCount64 - timeStart;
-                    genTimeReport = $"{(fullTime - img.GenTimeMS) / 1000.0:0.00} (prep) and {img.GenTimeMS / 1000.0:0.00} (gen) seconds";
-                    T2IParamInput copyInput = user_input.Clone();
-                    copyInput.ExtraMeta["generation_time"] = genTimeReport;
-                    if (!img.IsReal)
-                    {
-                        copyInput.ExtraMeta["intermediate"] = "intermediate output";
-                    }
-                    bool refuse = false;
-                    PostGenerateEvent?.Invoke(new(img.Img, copyInput, () => refuse = true));
-                    if (refuse)
-                    {
-                        Logs.Info($"Refused an image.");
-                    }
-                    else
-                    {
-                        (img.Img, string metadata) = copyInput.SourceSession.ApplyMetadata(img.Img, copyInput, numImagesGenned);
-                        saveImages(img, metadata);
-                        numImagesGenned++;
-                    }
-                }
                 using (backend)
                 {
                     if (claim.ShouldCancel)

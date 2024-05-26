@@ -52,10 +52,14 @@ public class T2IParamInput
 
         public string[] Embeds, Loras;
 
+        public int SectionID = 0;
+
         public int Depth = 0;
 
         /// <summary>If the current syntax usage has a pre-data block, it will be here. This will be null otherwise.</summary>
         public string PreData;
+
+        public string RawCurrentTag;
 
         public string Parse(string text)
         {
@@ -358,6 +362,7 @@ public class T2IParamInput
             {
                 List<string> loraList = context.Input.Get(T2IParamTypes.Loras);
                 List<string> weights = context.Input.Get(T2IParamTypes.LoraWeights);
+                List<string> confinements = context.Input.Get(T2IParamTypes.LoraSectionConfinement);
                 if (loraList is null)
                 {
                     loraList = [];
@@ -367,11 +372,32 @@ public class T2IParamInput
                 weights.Add(strength.ToString());
                 context.Input.Set(T2IParamTypes.Loras, loraList);
                 context.Input.Set(T2IParamTypes.LoraWeights, weights);
+                if (context.SectionID > 0)
+                {
+                    if (confinements is null)
+                    {
+                        confinements = [];
+                        for (int i = 0; i < loraList.Count - 1; i++)
+                        {
+                            confinements.Add("0");
+                        }
+                    }
+                    Logs.Verbose($"LoRA {lora} confined to section {context.SectionID}.");
+                    confinements.Add($"{context.SectionID}");
+                    context.Input.Set(T2IParamTypes.LoraSectionConfinement, confinements);
+                }
                 return "";
             }
             Logs.Warning($"Lora '{lora}' does not exist and will be ignored.");
             return null;
         };
+        PromptTagPostProcessors["segment"] = (data, context) =>
+        {
+            context.SectionID++;
+            return $"<{context.RawCurrentTag}//cid={context.SectionID}>";
+        };
+        PromptTagPostProcessors["object"] = PromptTagPostProcessors["segment"];
+        PromptTagPostProcessors["region"] = PromptTagPostProcessors["segment"];
         PromptTagProcessors["break"] = (data, context) =>
         {
             return "<break>";
@@ -619,6 +645,7 @@ public class T2IParamInput
                 {
                     (prefix, preData) = prefix.BeforeLast(']').BeforeAndAfter('[');
                 }
+                context.RawCurrentTag = tag;
                 context.PreData = preData;
                 Logs.Verbose($"[Prompt Parsing] Found tag {val}, will fill... prefix = '{prefix}', data = '{data}', predata = '{preData}'");
                 if (!string.IsNullOrWhiteSpace(data) && set.TryGetValue(prefix, out Func<string, PromptTagContext, string> proc))
