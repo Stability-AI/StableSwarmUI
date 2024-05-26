@@ -297,7 +297,7 @@ public class WorkflowGenerator
                             g.FinalInputImage = [decoded, 0];
                             g.InitialImageIsAlteredAsLatent = false;
                         }
-                        g.MaskShrunkInfo = g.CreateImageMaskCrop([maskImageNode, 0], g.FinalInputImage, shrinkGrow);
+                        g.MaskShrunkInfo = g.CreateImageMaskCrop([maskImageNode, 0], g.FinalInputImage, shrinkGrow, g.FinalVae);
                         g.FinalLatentImage = [g.MaskShrunkInfo.Item3, 0];
                     }
                     else
@@ -891,6 +891,17 @@ public class WorkflowGenerator
                 {
                     g.CreateImageSaveNode(g.FinalImageOut, g.GetStableDynamicID(50000, 0));
                 }
+                T2IModel t2iModel = g.FinalLoadedModel;
+                JArray model = g.FinalModel, clip = g.FinalClip, vae = g.FinalVae;
+                if (g.UserInput.TryGet(T2IParamTypes.SegmentModel, out T2IModel segmentModel))
+                {
+                    if (segmentModel.ModelClass?.CompatClass != t2iModel.ModelClass?.CompatClass)
+                    {
+                        g.NoVAEOverride = true;
+                    }
+                    t2iModel = segmentModel;
+                    (t2iModel, model, clip, vae) = g.CreateStandardModelLoader(t2iModel, "Refiner");
+                }
                 PromptRegion negativeRegion = new(g.UserInput.Get(T2IParamTypes.NegativePrompt, ""));
                 PromptRegion.Part[] negativeParts = negativeRegion.Parts.Where(p => p.Type == PromptRegion.PartType.Segment).ToArray();
                 for (int i = 0; i < parts.Length; i++)
@@ -914,18 +925,18 @@ public class WorkflowGenerator
                         ["expand"] = 16,
                         ["tapered_corners"] = true
                     });
-                    (string boundsNode, string croppedMask, string masked) = g.CreateImageMaskCrop([growNode, 0], g.FinalImageOut, 8);
+                    (string boundsNode, string croppedMask, string masked) = g.CreateImageMaskCrop([growNode, 0], g.FinalImageOut, 8, vae);
                     g.EnableDifferential();
-                    (JArray model, JArray clip) = g.LoadLorasForConfinement(part.ContextID, g.FinalModel, g.FinalClip);
-                    JArray prompt = g.CreateConditioning(part.Prompt, clip, g.FinalLoadedModel, true);
+                    (model, clip) = g.LoadLorasForConfinement(part.ContextID, model, clip);
+                    JArray prompt = g.CreateConditioning(part.Prompt, clip, t2iModel, true);
                     string neg = negativeParts.FirstOrDefault(p => p.DataText == part.DataText)?.Prompt ?? negativeRegion.GlobalPrompt;
-                    JArray negPrompt = g.CreateConditioning(neg, clip, g.FinalLoadedModel, false);
+                    JArray negPrompt = g.CreateConditioning(neg, clip, t2iModel, false);
                     int steps = g.UserInput.Get(T2IParamTypes.Steps);
                     int startStep = (int)Math.Round(steps * (1 - part.Strength2));
                     long seed = g.UserInput.Get(T2IParamTypes.Seed) + 2 + i;
                     double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
                     string sampler = g.CreateKSampler(model, prompt, negPrompt, [masked, 0], cfg, steps, startStep, 10000, seed, false, true);
-                    string decoded = g.CreateVAEDecode(g.FinalVae, [sampler, 0]);
+                    string decoded = g.CreateVAEDecode(vae, [sampler, 0]);
                     string composited = g.RecompositeCropped(boundsNode, croppedMask, g.FinalImageOut, [decoded, 0]);
                     g.FinalImageOut = [composited, 0];
                 }
@@ -1277,9 +1288,10 @@ public class WorkflowGenerator
     /// <param name="mask">The mask node input.</param>
     /// <param name="image">The image node input.</param>
     /// <param name="growBy">Number of pixels to grow the boundary by.</param>
+    /// <param name="vae">The relevant VAE.</param>
     /// <param name="threshold">Optional minimum value threshold.</param>
     /// <returns>(boundsNode, croppedMask, maskedLatent).</returns>
-    public (string, string, string) CreateImageMaskCrop(JArray mask, JArray image, int growBy, double threshold = 0.01)
+    public (string, string, string) CreateImageMaskCrop(JArray mask, JArray image, int growBy, JArray vae, double threshold = 0.01)
     {
         if (threshold > 0)
         {
@@ -1319,7 +1331,7 @@ public class WorkflowGenerator
             ["height"] = UserInput.GetImageHeight(),
             ["can_shrink"] = false
         });
-        string vaeEncoded = CreateVAEEncode(FinalVae, [scaledImage, 0], null, true);
+        string vaeEncoded = CreateVAEEncode(vae, [scaledImage, 0], null, true);
         string masked = CreateNode("SetLatentNoiseMask", new JObject()
         {
             ["samples"] = new JArray() { vaeEncoded, 0 },
