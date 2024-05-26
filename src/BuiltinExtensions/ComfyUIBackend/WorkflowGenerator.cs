@@ -1426,7 +1426,7 @@ public class WorkflowGenerator
             string discreteNode = CreateNode("ModelSamplingDiscrete", new JObject()
             {
                 ["model"] = LoadingModel,
-                ["sampling"] = predType switch { "v" => "v_prediction", "v-zsnr" => "v_prediction", _ => predType },
+                ["sampling"] = predType switch { "v" => "v_prediction", "v-zsnr" => "v_prediction", "epsilon" => "eps", _ => predType },
                 ["zsnr"] = predType.Contains("zsnr")
             });
             LoadingModel = [discreteNode, 0];
