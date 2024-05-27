@@ -1167,7 +1167,7 @@ class ImageEditor {
     }
 
     addImageLayer(img) {
-        let layer = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
+        let layer = new ImageEditorLayer(this, img.naturalWidth || img.width, img.naturalHeight || img.height);
         layer.ctx.drawImage(img, 0, 0);
         layer.hasAnyContent = true;
         this.addLayer(layer);
@@ -1491,8 +1491,6 @@ class ImageEditor {
                 layer.drawToBack(ctx, this.finalOffsetX, this.finalOffsetY, 1);
             }
         }
-        this.ctx.globalAlpha = 1;
-        this.ctx.globalCompositeOperation = 'source-over';
         return canvas.toDataURL(format);
     }
 
@@ -1501,11 +1499,35 @@ class ImageEditor {
         canvas.width = this.realWidth;
         canvas.height = this.realHeight;
         let ctx = canvas.getContext('2d');
-        ctx.fillStyle = this.layers.some(l => l.isMask && l.hasAnyContent) ? '#000000' : '#ffffff';
+        ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        for (let layer of this.layers) {
-            if (layer.isMask) {
-                layer.drawToBack(ctx, this.finalOffsetX, this.finalOffsetY, 1);
+        if (this.layers.some(l => l.isMask && l.hasAnyContent)) {
+            // This is a hack to make transparency in the image layer turn into white on the mask (and areas with image go black unless masked)
+            let imgCanvas = document.createElement('canvas');
+            imgCanvas.width = this.realWidth / 4;
+            imgCanvas.height = this.realHeight / 4;
+            let imgctx = imgCanvas.getContext('2d');
+            imgctx.clearRect(0, 0, imgCanvas.width, imgCanvas.height);
+            for (let layer of this.layers) {
+                if (!layer.isMask) {
+                    layer.drawToBack(imgctx, this.finalOffsetX, this.finalOffsetY, 1.0 / 4);
+                }
+            }
+            let imageData = imgctx.getImageData(0, 0, imgCanvas.width, imgCanvas.height);
+            let buffer = new Uint8ClampedArray(imageData.data.buffer);
+            let len = buffer.length;
+            for (let i = 0; i < len; i += 4) {
+                buffer[i] = 0;
+                buffer[i + 1] = 0;
+                buffer[i + 2] = 0;
+            }
+            imageData = new ImageData(buffer, imgCanvas.width, imgCanvas.height);
+            imgctx.putImageData(imageData, 0, 0);
+            ctx.drawImage(imgCanvas, 0, 0, canvas.width, canvas.height);
+            for (let layer of this.layers) {
+                if (layer.isMask) {
+                    layer.drawToBack(ctx, this.finalOffsetX, this.finalOffsetY, 1);
+                }
             }
         }
         return canvas.toDataURL(format);
