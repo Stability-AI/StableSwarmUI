@@ -341,20 +341,54 @@ class ImageEditorToolGeneral extends ImageEditorTool {
  */
 class ImageEditorToolMove extends ImageEditorTool {
     constructor(editor) {
-        super(editor, 'move', 'move', 'Move', 'Free-move the current layer.');
+        super(editor, 'move', 'move', 'Move', 'Free-move the current layer.\nHold SHIFT to lock to flat directions (45/90 degree movements only).\nHold CTRL to snap to grid (32px).');
+        this.startingX = null;
+        this.startingY = null;
     }
 
     onMouseDown(e) {
+        this.startingX = this.editor.activeLayer.offsetX;
+        this.startingY = this.editor.activeLayer.offsetY;
+        this.moveX = 0;
+        this.moveY = 0;
         this.editor.activeLayer.savePositions();
     }
 
     onGlobalMouseMove(e) {
-        if (this.editor.mouseDown) {
-            this.editor.activeLayer.offsetX += (this.editor.mouseX - this.editor.lastMouseX) / this.editor.zoomLevel;
-            this.editor.activeLayer.offsetY += (this.editor.mouseY - this.editor.lastMouseY) / this.editor.zoomLevel;
+        if (this.editor.mouseDown && this.startingX != null) {
+            this.moveX += (this.editor.mouseX - this.editor.lastMouseX) / this.editor.zoomLevel;
+            this.moveY += (this.editor.mouseY - this.editor.lastMouseY) / this.editor.zoomLevel;
+            let actualX = this.moveX, actualY = this.moveY;
+            if (e.shiftKey) {
+                let absX = Math.abs(actualX), absY = Math.abs(actualY);
+                if (absX > absY * 2) {
+                    actualY = 0;
+                }
+                else if (absY > absX * 2) {
+                    actualX = 0;
+                }
+                else {
+                    let dist = Math.sqrt(actualX * actualX + actualY * actualY);
+                    actualX = dist * Math.sign(actualX);
+                    actualY = dist * Math.sign(actualY);
+                }
+            }
+            let layer = this.editor.activeLayer;
+            layer.offsetX = this.startingX + actualX;
+            layer.offsetY = this.startingY + actualY;
+            if (e.ctrlKey) {
+                layer.offsetX = Math.round(layer.offsetX / 32) * 32;
+                layer.offsetY = Math.round(layer.offsetY / 32) * 32;
+            }
             this.editor.markChanged();
             return true;
         }
+        return false;
+    }
+
+    onGlobalMouseUp(e) {
+        this.startingX = null;
+        this.startingY = null;
         return false;
     }
 }
@@ -578,7 +612,7 @@ class ImageEditorLayer {
             y += offseter.offsetY;
             offseter = offseter.parent;
         }
-        return [x, y];
+        return [Math.round(x), Math.round(y)];
     }
 
     ensureSize() {
@@ -588,6 +622,8 @@ class ImageEditorLayer {
     }
 
     resize(width, height) {
+        width = Math.round(width);
+        height = Math.round(height);
         let newCanvas = document.createElement('canvas');
         newCanvas.width = width;
         newCanvas.height = height;
@@ -1434,7 +1470,8 @@ class ImageEditor {
         // UI:
         let [boundaryX, boundaryY] = this.imageCoordToCanvasCoord(this.finalOffsetX, this.finalOffsetY);
         this.drawSelectionBox(boundaryX, boundaryY, this.realWidth * this.zoomLevel, this.realHeight * this.zoomLevel, this.boundaryColor, 16 * this.zoomLevel, 0);
-        let [offsetX, offsetY] = this.imageCoordToCanvasCoord(this.activeLayer.offsetX, this.activeLayer.offsetY);
+        let [offsetX, offsetY] = this.activeLayer.getOffset();
+        [offsetX, offsetY] = this.imageCoordToCanvasCoord(offsetX, offsetY);
         this.drawSelectionBox(offsetX, offsetY, this.activeLayer.width * this.zoomLevel, this.activeLayer.height * this.zoomLevel, this.uiBorderColor, 8 * this.zoomLevel, this.activeLayer.rotation);
         if (this.hasSelection) {
             let [selectX, selectY] = this.imageCoordToCanvasCoord(this.selectX, this.selectY);
