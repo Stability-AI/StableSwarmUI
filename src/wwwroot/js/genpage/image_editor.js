@@ -125,7 +125,7 @@ class ImageEditorToolOptions extends ImageEditorTool {
 
     onClick() {
         let rect = this.div.getBoundingClientRect();
-        new AdvancedPopover('imageeditor_options_popover', this.optionButtons, false, rect.x, rect.y + this.div.offsetHeight + 6, document.body, null);
+        new AdvancedPopover('imageeditor_options_popover', this.optionButtons, false, rect.x, rect.y + this.div.offsetHeight + 6, document.body, null, null, 999999, false);
     }
 }
 

@@ -8,7 +8,7 @@ class AdvancedPopover {
      * eg: new AdvancedPopover('my_popover', [ { key: 'Button 1', action: () => console.log("Clicked!") } ], true, mouseX, mouseY, document.body, null);
      * Buttons can optionally exclude action to make unclickable.
      */
-    constructor(id, buttons, canSearch, x, y, root, preSelect = null, flipYHeight = null, heightLimit = 999999) {
+    constructor(id, buttons, canSearch, x, y, root, preSelect = null, flipYHeight = null, heightLimit = 999999, canSelect = true) {
         this.id = id;
         this.buttons = buttons;
         this.popover = createDiv(`popover_${id}`, 'sui-popover sui_popover_model sui-popover-notransition');
@@ -17,6 +17,7 @@ class AdvancedPopover {
         this.preSelect = preSelect;
         this.heightLimit = heightLimit;
         this.overExtendBy = 24;
+        this.canSelect = canSelect;
         if (canSearch) {
             this.textInput = document.createElement('input');
             this.textInput.type = 'text';
@@ -97,7 +98,7 @@ class AdvancedPopover {
                 this.expectedHeight += this.blockHeight;
             }
         }
-        if (!didSelect) {
+        if (!didSelect && this.canSelect) {
             let selected = this.optionArea.querySelector('.sui_popover_model_button');
             if (selected) {
                 selected.classList.add('sui_popover_model_button_selected');
