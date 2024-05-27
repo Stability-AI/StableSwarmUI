@@ -807,6 +807,7 @@ class ImageEditor {
                 this.canvasList.insertBefore(this.draggingLayer.div, target);
             }
             this.layers.splice(targetIndex, 0, this.draggingLayer);
+            this.sortLayers();
             this.redraw();
         });
         this.canvasList.addEventListener('dragenter', (e) => {
@@ -830,6 +831,7 @@ class ImageEditor {
     }
 
     clearVars() {
+        this.totalLayersEver = 0;
         this.mouseDown = false;
         this.zoomLevel = 1;
         this.offsetX = 0;
@@ -1146,6 +1148,7 @@ class ImageEditor {
     }
 
     addLayer(layer) {
+        layer.id = this.totalLayersEver++;
         this.layers.push(layer);
         layer.div = createDiv(null, 'image_editor_layer_preview');
         layer.div.appendChild(layer.canvas);
@@ -1217,6 +1220,20 @@ class ImageEditor {
         this.canvasList.insertBefore(layer.div, this.canvasList.firstChild);
         updateRangeStyle(opacitySlider);
         this.setActiveLayer(layer);
+        this.sortLayers();
+    }
+
+    sortLayers() {
+        let maskLayers = this.layers.filter(layer => layer.isMask);
+        let imageLayers = this.layers.filter(layer => !layer.isMask);
+        let newLayerList = imageLayers.concat(maskLayers);
+        if (newLayerList.map(layer => layer.id).join(',') == this.layers.map(layer => layer.id).join(',')) {
+            return;
+        }
+        this.layers = newLayerList;
+        for (let layer of Array.from(this.layers).reverse()) {
+            this.canvasList.appendChild(layer.div);
+        }
     }
 
     setBaseImage(img) {
