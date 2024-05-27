@@ -101,11 +101,7 @@ class ImageEditorTool {
 class ImageEditorToolOptions extends ImageEditorTool {
     constructor(editor) {
         super(editor, 'options', 'dotdotdot', 'Options', 'Additional advanced options for the image editor.');
-    }
-
-    onClick() {
-        let rect = this.div.getBoundingClientRect();
-        let subButtons = [
+        this.optionButtons = [
             { key: 'Save Current Image', action: () => {
                 let link = document.createElement('a');
                 link.href = this.editor.getFinalImageData();
@@ -125,7 +121,11 @@ class ImageEditorToolOptions extends ImageEditorTool {
                 link.click();
             }},
         ];
-        new AdvancedPopover('imageeditor_options_popover', subButtons, false, rect.x, rect.y + this.div.offsetHeight + 6, document.body, null);
+    }
+
+    onClick() {
+        let rect = this.div.getBoundingClientRect();
+        new AdvancedPopover('imageeditor_options_popover', this.optionButtons, false, rect.x, rect.y + this.div.offsetHeight + 6, document.body, null);
     }
 }
 

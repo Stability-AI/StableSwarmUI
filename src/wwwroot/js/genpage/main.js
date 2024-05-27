@@ -1965,6 +1965,16 @@ function loadHashHelper() {
     }
 }
 
+function storeImageToHistoryWithCurrentParams(img) {
+    let data = getGenInput();
+    data['image'] = img;
+    delete data['initimage'];
+    delete data['maskimage'];
+    genericRequest('AddImageToHistory', data, res => {
+        mainGenHandler.gotImageResult(res.images[0].image, res.images[0].metadata, '0');
+    });
+}
+
 function genpageLoad() {
     console.log('Load page...');
     window.imageEditor = new ImageEditor(getRequiredElementById('image_editor_input'), true, true, () => setPageBarsFunc(), () => needsNewPreview());
@@ -1975,6 +1985,17 @@ function genpageLoad() {
     window.imageEditor.onDeactivate = () => {
         editorSizebar.style.display = 'none';
     };
+    window.imageEditor.tools['options'].optionButtons = [
+        ... window.imageEditor.tools['options'].optionButtons,
+        { key: 'Store Current Image To History', action: () => {
+            let img = window.imageEditor.getFinalImageData();
+            storeImageToHistoryWithCurrentParams(img);
+        }},
+        { key: 'Store Full Canvas To History', action: () => {
+            let img = window.imageEditor.getMaximumImageData();
+            storeImageToHistoryWithCurrentParams(img);
+        }}
+    ];
     pageSizer();
     reviseStatusBar();
     loadHashHelper();
