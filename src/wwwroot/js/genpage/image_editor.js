@@ -102,19 +102,19 @@ class ImageEditorToolOptions extends ImageEditorTool {
     constructor(editor) {
         super(editor, 'options', 'dotdotdot', 'Options', 'Additional advanced options for the image editor.');
         this.optionButtons = [
-            { key: 'Save Current Image', action: () => {
+            { key: 'Download Current Image', action: () => {
                 let link = document.createElement('a');
                 link.href = this.editor.getFinalImageData();
                 link.download = 'image.png';
                 link.click();
             }},
-            { key: 'Save Full Canvas', action: () => {
+            { key: 'Download Full Canvas', action: () => {
                 let link = document.createElement('a');
                 link.href = this.editor.getMaximumImageData();
                 link.download = 'canvas.png';
                 link.click();
             }},
-            { key: 'Save Mask', action: () => {
+            { key: 'Download Mask', action: () => {
                 let link = document.createElement('a');
                 link.href = this.editor.getFinalMaskData();
                 link.download = 'mask.png';
