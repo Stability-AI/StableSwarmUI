@@ -358,6 +358,7 @@ class GridGenClass {
             'outputType': type,
             'continueOnError': getOpt('continue-on-error'),
             'showOutputs': getOpt('show-outputs'),
+            'saveConfig': this.getSaveConfig(),
         };
         let axisData = [];
         for (let axis of this.listAxes()) {
@@ -521,6 +522,9 @@ class GridGenClass {
             for (let config of data.data) {
                 selector.add(new Option(config, config));
             }
+            for (let config of data.history) {
+                selector.add(new Option(`History - ${config}`, `history/${config}`));
+            }
             $('#gridgen_load_modal').modal('show');
         });
     }
@@ -536,20 +540,20 @@ class GridGenClass {
 
     loadModalLoadNow() {
         let gridName = document.getElementById('grid_gen_load_config_selector').value;
-        genericRequest('GridGenGetData', { 'gridName': gridName }, data => {
+        let applyData = (data) => {
             this.hideLoadModal();
-            this.outputFolder.value = data.data.output_folder_name;
-            this.outputType.value = data.data.output_type;
+            this.outputFolder.value = data.output_folder_name;
+            this.outputType.value = data.output_type;
             this.typeChanged();
             for (let opt of this.settingsDiv.getElementsByClassName('grid-gen-checkboxes')[0].getElementsByTagName('input')) {
-                if (data.data.checkboxes[opt.id] != null) {
-                    opt.checked = data.data.checkboxes[opt.id];
+                if (data.checkboxes[opt.id] != null) {
+                    opt.checked = data.checkboxes[opt.id];
                 }
             }
             this.axisDiv.innerHTML = '';
             this.lastAxisId = 0;
             this.addAxis();
-            for (let axis of data.data.axes) {
+            for (let axis of data.axes) {
                 let wrapper = this.listAxes()[this.listAxes().length - 1];
                 let selector = wrapper.getElementsByClassName('grid-gen-selector')[0];
                 selector.value = axis.mode;
@@ -560,15 +564,18 @@ class GridGenClass {
             }
             this.outInfoBox.innerHTML = `<b>Config loaded!</b>`;
             setTimeout(() => this.updateOutputInfo(), 5000);
-        });
+        }
+        if (gridName.startsWith('history/')) {
+            getJsonDirect(`${getImageOutPrefix()}/Grids/${gridName.substring('history/'.length)}/swarm_save_config.json`, (_, resp) => {
+                applyData(resp);
+            });
+        }
+        else {
+            genericRequest('GridGenGetData', { 'gridName': gridName }, data => applyData(data.data));
+        }
     }
 
-    saveModalSaveNow() {
-        let gridName = getRequiredElementById('grid_gen_save_config_name').value;
-        if (!gridName) {
-            return;
-        }
-        let isPublic = getRequiredElementById('grid_gen_save_is_public').checked;
+    getSaveConfig() {
         let axes = [];
         for (let axis of this.listAxes()) {
             let type = axis.getElementsByClassName('grid-gen-selector')[0].value;
@@ -581,12 +588,21 @@ class GridGenClass {
         for (let opt of this.settingsDiv.getElementsByClassName('grid-gen-checkboxes')[0].getElementsByTagName('input')) {
             checkboxes[opt.id] = opt.checked;
         }
-        let data = {
+        return {
             'axes': axes,
             'checkboxes': checkboxes,
             'output_folder_name': this.outputFolder.value,
             'output_type': this.outputType.value,
         };
+    }
+
+    saveModalSaveNow() {
+        let gridName = getRequiredElementById('grid_gen_save_config_name').value;
+        if (!gridName) {
+            return;
+        }
+        let isPublic = getRequiredElementById('grid_gen_save_is_public').checked;
+        let data = this.getSaveConfig();
         genericRequest('GridGenSaveData', { 'gridName': gridName, 'data': data, 'isPublic': isPublic }, data => {
             this.outInfoBox.innerHTML = `<b>Config saved!</b>`;
             setTimeout(() => this.updateOutputInfo(), 5000);

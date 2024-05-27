@@ -218,11 +218,16 @@ public class GridGeneratorExtension : Extension
             }
             return t;
         };
-        PostPreprocessCallback = (grid) =>
+        PostPreprocessCallback = (runner) =>
         {
-            StableSwarmUIGridData data = grid.Grid.LocalData as StableSwarmUIGridData;
-            data.Claim.Extend(grid.TotalRun, 0, 0, 0);
+            StableSwarmUIGridData data = runner.Grid.LocalData as StableSwarmUIGridData;
+            data.Claim.Extend(runner.TotalRun, 0, 0, 0);
             data.AddOutput(BasicAPIFeatures.GetCurrentStatusRaw(data.Session));
+            if (data.SaveConfig is not null)
+            {
+                File.WriteAllBytes($"{runner.BasePath}/swarm_save_config.json", data.SaveConfig.ToString().EncodeUTF8());
+                LoadableHistoryList.TryRemove(data.Session.User.UserID, out _);
+            }
         };
     }
 
@@ -244,6 +249,12 @@ public class GridGeneratorExtension : Extension
 
     public async Task<JObject> GridGenDeleteData(Session session, string gridName)
     {
+        if (gridName.StartsWith("history/"))
+        {
+            await T2IAPI.DeleteImage(session, $"Grids/{gridName.After('/')}/swarm_save_config.json");
+            LoadableHistoryList.TryRemove(session.User.UserID, out _);
+            return new JObject() { ["success"] = true };
+        }
         session.User.DeleteGenericData("gridgenerator", gridName);
         Program.Sessions.GenericSharedUser.DeleteGenericData("gridgenerator", gridName);
         return new JObject() { ["success"] = true };
@@ -259,11 +270,25 @@ public class GridGeneratorExtension : Extension
         return new JObject() { ["data"] = data.ParseToJson() };
     }
 
+    public ConcurrentDictionary<string, string[]> LoadableHistoryList = new();
+
     public async Task<JObject> GridGenListData(Session session)
     {
         List<string> data = session.User.ListAllGenericData("gridgenerator");
         data.AddRange(Program.Sessions.GenericSharedUser.ListAllGenericData("gridgenerator"));
-        return new JObject() { ["data"] = JArray.FromObject(data.ToArray()) };
+        string[] history = LoadableHistoryList.GetOrCreate(session.User.UserID, () =>
+        {
+            List<string> results = [];
+            foreach (string dir in Directory.EnumerateDirectories($"{session.User.OutputDirectory}/Grids/"))
+            {
+                if (File.Exists($"{dir}/swarm_save_config.json"))
+                {
+                    results.Add(dir.Replace('\\', '/').Trim('/').AfterLast('/'));
+                }
+            }
+            return [.. results];
+        });
+        return new JObject() { ["data"] = JArray.FromObject(data.ToArray()), ["history"] = JArray.FromObject(history) };
     }
 
     public class GridCallData
@@ -294,6 +319,8 @@ public class GridGeneratorExtension : Extension
         public bool ContinueOnError = false;
 
         public bool ShowOutputs = true;
+
+        public JObject SaveConfig = null;
 
         public Task[] GetActive()
         {
@@ -383,7 +410,15 @@ public class GridGeneratorExtension : Extension
         baseParams.Remove(T2IParamTypes.Images);
         baseParams.Remove(T2IParamTypes.SaveIntermediateImages);
         await sendStatus();
-        StableSwarmUIGridData data = new() { Session = session, Claim = claim, MaxSimul = session.User.Restrictions.CalcMaxT2ISimultaneous, ContinueOnError = continueOnError, ShowOutputs = showOutputs };
+        StableSwarmUIGridData data = new()
+        {
+            Session = session,
+            Claim = claim,
+            MaxSimul = session.User.Restrictions.CalcMaxT2ISimultaneous,
+            ContinueOnError = continueOnError,
+            ShowOutputs = showOutputs,
+            SaveConfig = raw.TryGetValue("saveConfig", out JToken saveConfig) ? saveConfig as JObject : null
+        };
         Grid grid = null;
         try
         {
