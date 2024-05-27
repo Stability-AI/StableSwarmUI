@@ -900,6 +900,8 @@ class ImageEditor {
         document.addEventListener('keyup', (e) => this.onGlobalKeyUp(e));
         this.ctx = canvas.getContext('2d');
         canvas.style.cursor = 'none';
+        this.maskHelperCanvas = document.createElement('canvas');
+        this.maskHelperCtx = this.maskHelperCanvas.getContext('2d');
         this.resize();
     }
 
@@ -1312,6 +1314,10 @@ class ImageEditor {
         if (this.canvas) {
             this.canvas.width = Math.max(100, this.inputDiv.clientWidth - this.leftBar.clientWidth - this.rightBar.clientWidth);
             this.canvas.height = Math.max(100, this.inputDiv.clientHeight - this.bottomBar.clientHeight);
+            if (this.maskHelperCanvas) {
+                this.maskHelperCanvas.width = this.canvas.width;
+                this.maskHelperCanvas.height = this.canvas.height;
+            }
             this.redraw();
             this.markChanged();
         }
@@ -1353,10 +1359,21 @@ class ImageEditor {
             this.renderFullGrid(gridScale / 8, 1, `color-mix(in srgb, ${this.gridColor} ${frac}%, ${this.backgroundColor})`);
         }
         this.renderFullGrid(gridScale, 3, this.gridColor);
-        // Layers:
+        // Image layers:
         for (let layer of this.layers) {
-            layer.drawToBack(this.ctx, this.offsetX, this.offsetY, this.zoomLevel);
+            if (!layer.isMask) {
+                layer.drawToBack(this.ctx, this.offsetX, this.offsetY, this.zoomLevel);
+            }
         }
+        // Masks:
+        this.maskHelperCtx.clearRect(0, 0, this.maskHelperCanvas.width, this.maskHelperCanvas.height);
+        for (let layer of this.layers) {
+            if (layer.isMask) {
+                layer.drawToBack(this.maskHelperCtx, this.offsetX, this.offsetY, this.zoomLevel);
+            }
+        }
+        this.ctx.globalAlpha = this.activeLayer.isMask ? 0.8 : 0.3;
+        this.ctx.drawImage(this.maskHelperCanvas, 0, 0);
         this.ctx.globalAlpha = 1;
         // UI:
         let [boundaryX, boundaryY] = this.imageCoordToCanvasCoord(this.finalOffsetX, this.finalOffsetY);
