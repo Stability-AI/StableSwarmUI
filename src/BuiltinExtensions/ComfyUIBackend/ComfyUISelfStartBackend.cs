@@ -257,6 +257,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             await install("matplotlib", "matplotlib");
             await install("opencv_python_headless", "opencv-python-headless");
             await install("imageio_ffmpeg", "imageio-ffmpeg");
+            await install("spandrel", "spandrel");
             if (Directory.Exists($"{ComfyUIBackendExtension.Folder}/DLNodes/ComfyUI_IPAdapter_plus"))
             {
                 // FaceID IPAdapter models need these, really inconvenient to make dependencies conditional, so...
