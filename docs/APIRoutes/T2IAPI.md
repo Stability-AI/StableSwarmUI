@@ -37,14 +37,14 @@ Delete an image from history.
 
 #### Description
 
-Generate images from text prompts, directly as an HTTP route.
+Generate images from text prompts, directly as an HTTP route. See the examples in the API docs root page.
 
 #### Parameters
 
 | Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | images | Int32 | The number of images to generate. | **(REQUIRED)** |
-| rawInput | JObject | Raw mapping of input should contain general T2I parameters (see listing on Generate tab of main interface) to values, eg `{ "prompt": "a photo of a cat", "model": "OfficialStableDiffusion/sd_xl_base_1.0", "steps": 20, ... }` | **(REQUIRED)** |
+| rawInput | JObject | Raw mapping of input should contain general T2I parameters (see listing on Generate tab of main interface) to values, eg `{ "prompt": "a photo of a cat", "model": "OfficialStableDiffusion/sd_xl_base_1.0", "steps": 20, ... }`. Note that this is the root raw map, ie all params go on the same level as `images`, `session_id`, etc. | **(REQUIRED)** |
 
 #### Return Format
 
@@ -70,7 +70,7 @@ Generate images from text prompts, with WebSocket updates. This is the most impo
 | Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | images | Int32 | The number of images to generate. | **(REQUIRED)** |
-| rawInput | JObject | Raw mapping of input should contain general T2I parameters (see listing on Generate tab of main interface) to values, eg `{ "prompt": "a photo of a cat", "model": "OfficialStableDiffusion/sd_xl_base_1.0", "steps": 20, ... }` | **(REQUIRED)** |
+| rawInput | JObject | Raw mapping of input should contain general T2I parameters (see listing on Generate tab of main interface) to values, eg `{ "prompt": "a photo of a cat", "model": "OfficialStableDiffusion/sd_xl_base_1.0", "steps": 20, ... }`. Note that this is the root raw map, ie all params go on the same level as `images`, `session_id`, etc. | **(REQUIRED)** |
 
 #### Return Format
 

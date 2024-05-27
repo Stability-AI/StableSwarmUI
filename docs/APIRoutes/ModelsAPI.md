@@ -97,6 +97,7 @@ Modifies the metadata of a model. Returns before the file update is necessarily 
 | date | String | New model `date` metadata value. | **(REQUIRED)** |
 | license | String | New model `license` metadata value. | **(REQUIRED)** |
 | trigger_phrase | String | New model `trigger_phrase` metadata value. | **(REQUIRED)** |
+| prediction_type | String | New model `prediction_type` metadata value. | **(REQUIRED)** |
 | tags | String | New model `tags` metadata value (comma-separated list). | **(REQUIRED)** |
 | is_negative_embedding | Boolean | New model `is_negative_embedding` metadata value. | `False` |
 | subtype | String | The model's sub-type, eg `Stable-Diffusion`, `LoRA`, etc. | `Stable-Diffusion` |
@@ -162,6 +163,8 @@ Returns a list of models available on the server within a given folder, with the
 | path | String | What folder path to search within. Use empty string for root. | **(REQUIRED)** |
 | depth | Int32 | Maximum depth (number of recursive folders) to search. | **(REQUIRED)** |
 | subtype | String | Model sub-type - `LoRA`, `Wildcards`, etc. | `Stable-Diffusion` |
+| sortBy | String | What to sort the list by - `Name`, `DateCreated`, or `DateModified. | `Name` |
+| sortReverse | Boolean | If true, the sorting should be done in reverse. | `False` |
 
 #### Return Format
 

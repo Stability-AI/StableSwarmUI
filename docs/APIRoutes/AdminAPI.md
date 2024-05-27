@@ -15,6 +15,7 @@ Administrative APIs related to server management.
 - HTTP Route [ListRecentLogMessages](#http-route-apilistrecentlogmessages)
 - HTTP Route [ListServerSettings](#http-route-apilistserversettings)
 - HTTP Route [ShutdownServer](#http-route-apishutdownserver)
+- HTTP Route [UpdateAndRestart](#http-route-apiupdateandrestart)
 
 ## HTTP Route /API/ChangeServerSettings
 
@@ -216,5 +217,22 @@ Shuts the server down. Returns success before the server is gone.
 
 ```js
 "success": true
+```
+
+## HTTP Route /API/UpdateAndRestart
+
+#### Description
+
+Causes swarm to update, then close and restart itself. If there's no update to apply, won't restart.
+
+#### Parameters
+
+**None.**
+
+#### Return Format
+
+```js
+    "success": true, // or false if not updated
+    "result": "No changes found." // or any other applicable human-readable English message
 ```
 
