@@ -249,6 +249,7 @@ public class Program
         {
             Logs.Error($"Failed to create directory for SD models. You may need to check your ModelRoot and SDModelFolder settings. {ex.Message}");
         }
+        Directory.CreateDirectory($"{modelRoot}/upscale_models");
         T2IModelSets["Stable-Diffusion"] = new() { ModelType = "Stable-Diffusion", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder) };
         T2IModelSets["VAE"] = new() { ModelType = "VAE", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDVAEFolder) };
         T2IModelSets["LoRA"] = new() { ModelType = "LoRA", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDLoraFolder) };
