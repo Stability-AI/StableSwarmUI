@@ -462,7 +462,14 @@ public static class NetworkBackendUtils
             }
             else if (Volatile.Read(ref isShuttingDown))
             {
-                Logs.Info($"Self-Start {nameSimple} exited properly.");
+                if (process.ExitCode == 0)
+                {
+                    Logs.Info($"Self-Start {nameSimple} exited properly.");
+                }
+                else
+                {
+                    Logs.Info($"Self-Start {nameSimple} exited expectedly but with unexpected exit code {process.ExitCode}");
+                }
             }
             else
             {
