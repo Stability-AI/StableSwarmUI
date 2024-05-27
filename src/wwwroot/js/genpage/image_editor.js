@@ -96,6 +96,40 @@ class ImageEditorTool {
 }
 
 /**
+ * The special extra options tool.
+ */
+class ImageEditorToolOptions extends ImageEditorTool {
+    constructor(editor) {
+        super(editor, 'options', 'dotdotdot', 'Options', 'Additional advanced options for the image editor.');
+    }
+
+    onClick() {
+        let rect = this.div.getBoundingClientRect();
+        let subButtons = [
+            { key: 'Save Current Image', action: () => {
+                let link = document.createElement('a');
+                link.href = this.editor.getFinalImageData();
+                link.download = 'image.png';
+                link.click();
+            }},
+            { key: 'Save Full Canvas', action: () => {
+                let link = document.createElement('a');
+                link.href = this.editor.getMaximumImageData();
+                link.download = 'canvas.png';
+                link.click();
+            }},
+            { key: 'Save Mask', action: () => {
+                let link = document.createElement('a');
+                link.href = this.editor.getFinalMaskData();
+                link.download = 'mask.png';
+                link.click();
+            }},
+        ];
+        new AdvancedPopover('imageeditor_options_popover', subButtons, false, rect.x, rect.y + this.div.offsetHeight + 6, document.body, null);
+    }
+}
+
+/**
  * The generic common tool (can be activated freely with the Alt key).
  */
 class ImageEditorToolGeneral extends ImageEditorTool {
@@ -859,6 +893,7 @@ class ImageEditor {
         this.clearVars();
         // Tools:
         this.tools = {};
+        this.addTool(new ImageEditorToolOptions(this));
         this.addTool(new ImageEditorToolGeneral(this));
         this.activateTool('general');
         this.addTool(new ImageEditorToolMove(this));
@@ -1489,6 +1524,31 @@ class ImageEditor {
         for (let layer of this.layers) {
             if (!layer.isMask) {
                 layer.drawToBack(ctx, this.finalOffsetX, this.finalOffsetY, 1);
+            }
+        }
+        return canvas.toDataURL(format);
+    }
+
+    getMaximumImageData(format = 'image/png') {
+        let canvas = document.createElement('canvas');
+        let width = this.realWidth, height = this.realHeight;
+        let minX = 0, minY = 0;
+        for (let layer of this.layers) {
+            if (!layer.isMask) {
+                let [x, y] = layer.getOffset();
+                let [w, h] = [layer.width, layer.height];
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                width = Math.max(width, x + w);
+                height = Math.max(height, y + h);
+            }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        let ctx = canvas.getContext('2d');
+        for (let layer of this.layers) {
+            if (!layer.isMask) {
+                layer.drawToBack(ctx, minX, minY, 1);
             }
         }
         return canvas.toDataURL(format);
