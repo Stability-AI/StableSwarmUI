@@ -898,11 +898,38 @@ class ImageEditor {
         canvas.addEventListener('keyup', (e) => this.onKeyUp(e));
         document.addEventListener('keydown', (e) => this.onGlobalKeyDown(e));
         document.addEventListener('keyup', (e) => this.onGlobalKeyUp(e));
+        canvas.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        canvas.addEventListener('drop', (e) => this.handleCanvasImageDrop(e));
         this.ctx = canvas.getContext('2d');
         canvas.style.cursor = 'none';
         this.maskHelperCanvas = document.createElement('canvas');
         this.maskHelperCtx = this.maskHelperCanvas.getContext('2d');
         this.resize();
+    }
+
+    handleCanvasImageDrop(e) {
+        if (!e.dataTransfer.files || e.dataTransfer.files.length <= 0) {
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        for (let file of e.dataTransfer.files) {
+            if (!file.type.startsWith('image/')) {
+                continue;
+            }
+            let reader = new FileReader();
+            reader.onload = (e) => {
+                let img = new Image();
+                img.onload = () => {
+                    this.addImageLayer(img);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
     }
 
     handleAltDown() {
@@ -1096,6 +1123,12 @@ class ImageEditor {
 
     addEmptyLayer() {
         let layer = new ImageEditorLayer(this, this.realWidth, this.realHeight);
+        this.addLayer(layer);
+    }
+
+    addImageLayer(img) {
+        let layer = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
+        layer.ctx.drawImage(img, 0, 0);
         this.addLayer(layer);
     }
 
