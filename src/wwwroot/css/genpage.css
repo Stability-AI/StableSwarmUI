@@ -1056,6 +1056,10 @@ body {
     padding: 0;
     font-size: 70%;
 }
+.image_editor_layer_info_sub {
+    background-color: rgba(0, 0, 0, 0.6);
+    width: fit-content;
+}
 .image_editor_newlayer_button {
     margin: auto;
     text-align: center;

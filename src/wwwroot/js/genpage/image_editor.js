@@ -1150,7 +1150,9 @@ class ImageEditor {
         layer.div = createDiv(null, 'image_editor_layer_preview');
         layer.div.appendChild(layer.canvas);
         let infoDiv = createDiv(null, 'image_editor_layer_info');
-        infoDiv.innerText = (layer.isMask ? `Mask` : `Image`);
+        let infoSubDiv = createDiv(null, 'image_editor_layer_info_sub');
+        infoSubDiv.innerText = (layer.isMask ? `Mask` : `Image`);
+        infoDiv.appendChild(infoSubDiv);
         layer.div.appendChild(infoDiv);
         layer.div.addEventListener('click', (e) => {
             if (e.defaultPrevented) {
