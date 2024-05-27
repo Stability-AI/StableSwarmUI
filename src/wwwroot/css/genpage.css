@@ -994,6 +994,7 @@ body {
 }
 .image-editor-info-bubble-description {
     max-width: 400px;
+    white-space: wrap;
 }
 .image-editor-tool-bottombar {
     padding-left: 52px;
