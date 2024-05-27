@@ -352,12 +352,10 @@ public static class AdminAPI
     {
         static async Task<string> launchGit(string args)
         {
-            ProcessStartInfo start = new()
+            ProcessStartInfo start = new("git", args)
             {
                 RedirectStandardOutput = true,
-                FileName = "git",
-                UseShellExecute = false,
-                Arguments = args
+                UseShellExecute = false
             };
             Process p = Process.Start(start);
             await p.WaitForExitAsync(Program.GlobalProgramCancel);
