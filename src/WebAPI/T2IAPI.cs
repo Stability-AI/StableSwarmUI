@@ -28,6 +28,7 @@ public static class T2IAPI
         // TODO: Some of these shouldn't be here?
         API.RegisterAPICall(GenerateText2Image, true);
         API.RegisterAPICall(GenerateText2ImageWS, true);
+        API.RegisterAPICall(AddImageToHistory);
         API.RegisterAPICall(ListImages);
         API.RegisterAPICall(ToggleImageStarred, true);
         API.RegisterAPICall(OpenImageFolder, true);
@@ -330,6 +331,42 @@ public static class T2IAPI
         }
         T2IEngine.PostBatchEvent?.Invoke(new(user_input, [.. griddables]));
         output(new JObject() { ["discard_indices"] = JToken.FromObject(discard) });
+    }
+
+    [API.APIDescription("Takes an image and stores it directly in the user's history.\nBehaves identical to GenerateText2Image but never queues a generation.",
+        """
+            "images":
+            [
+                {
+                    "image": "View/local/raw/2024-01-02/0304-a photo of a cat-etc-1.png", // the image file path, GET this path to read the image content
+                    "batch_index": "0", // which image index within the batch this is
+                    "metadata": "{ ... }" // image metadata string, usually a JSON blob stringified. Not guaranteed to be.
+                }
+            ]
+        """)]
+    public static async Task<JObject> AddImageToHistory(Session session,
+        [API.APIParameter("Data URL of the image to save.")] string image,
+        [API.APIParameter("Raw mapping of input should contain general T2I parameters (see listing on Generate tab of main interface) to values, eg `{ \"prompt\": \"a photo of a cat\", \"model\": \"OfficialStableDiffusion/sd_xl_base_1.0\", \"steps\": 20, ... }`. Note that this is the root raw map, ie all params go on the same level as `images`, `session_id`, etc.")] JObject rawInput)
+    {
+        Image img = Image.FromDataString(image);
+        T2IParamInput user_input;
+        rawInput.Remove("image");
+        try
+        {
+            user_input = RequestToParams(session, rawInput);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new() { ["error"] = ex.Message };
+        }
+        catch (InvalidDataException ex)
+        {
+            return new() { ["error"] = ex.Message };
+        }
+        Logs.Info($"User {session.User.UserID} stored an image to history.");
+        (img, string metadata) = user_input.SourceSession.ApplyMetadata(img, user_input, 1);
+        (string path, _) = session.SaveImage(img, 0, user_input, metadata);
+        return new() { ["images"] = new JArray() { new JObject() { ["image"] = path, ["batch_index"] = "0", ["metadata"] = metadata } } };
     }
 
     public static HashSet<string> ImageExtensions = ["png", "jpg", "html", "gif", "webm", "mp4", "webp", "mov"];
