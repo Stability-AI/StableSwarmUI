@@ -536,6 +536,7 @@ class ImageEditorToolBrush extends ImageEditorTool {
             let offset = this.editor.activeLayer.getOffset();
             this.editor.activeLayer.saveBeforeEdit();
             this.bufferLayer.drawToBackDirect(this.editor.activeLayer.ctx, -offset[0], -offset[1], 1);
+            this.editor.activeLayer.hasAnyContent = true;
             this.bufferLayer = null;
             this.brushing = false;
             return true;
@@ -566,6 +567,7 @@ class ImageEditorLayer {
         this.childLayers = [];
         this.buffer = null;
         this.isMask = false;
+        this.hasAnyContent = false;
     }
 
     getOffset() {
@@ -1131,6 +1133,7 @@ class ImageEditor {
     addImageLayer(img) {
         let layer = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
         layer.ctx.drawImage(img, 0, 0);
+        layer.hasAnyContent = true;
         this.addLayer(layer);
     }
 
@@ -1240,6 +1243,7 @@ class ImageEditor {
         this.clearLayers();
         let layer = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
         layer.ctx.drawImage(img, 0, 0);
+        layer.hasAnyContent = true;
         this.addLayer(layer);
         let layer2 = new ImageEditorLayer(this, img.naturalWidth, img.naturalHeight);
         this.addLayer(layer2);
@@ -1460,7 +1464,7 @@ class ImageEditor {
         canvas.width = this.realWidth;
         canvas.height = this.realHeight;
         let ctx = canvas.getContext('2d');
-        ctx.fillStyle = this.layers.some(l => l.isMask) ? '#000000' : '#ffffff';
+        ctx.fillStyle = this.layers.some(l => l.isMask && l.hasAnyContent) ? '#000000' : '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         for (let layer of this.layers) {
             if (layer.isMask) {
