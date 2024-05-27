@@ -276,7 +276,7 @@ public class T2IParamTypes
     public static T2IRegisteredParam<T2IModel> Model, RefinerModel, VAE, ReVisionModel, RegionalObjectInpaintingModel, SegmentModel, VideoModel, RefinerVAE;
     public static T2IRegisteredParam<List<string>> Loras, LoraWeights, LoraSectionConfinement;
     public static T2IRegisteredParam<List<Image>> PromptImages;
-    public static T2IRegisteredParam<bool> SaveIntermediateImages, DoNotSave, ControlNetPreviewOnly, RevisionZeroPrompt, RemoveBackground, NoSeedIncrement, NoPreviews, VideoBoomerang, ModelSpecificEnhancements, UseInpaintingEncode;
+    public static T2IRegisteredParam<bool> SaveIntermediateImages, DoNotSave, ControlNetPreviewOnly, RevisionZeroPrompt, RemoveBackground, NoSeedIncrement, NoPreviews, VideoBoomerang, ModelSpecificEnhancements, UseInpaintingEncode, SaveSegmentMask;
 
     public static T2IParamGroup GroupRevision, GroupCore, GroupVariation, GroupResolution, GroupSampling, GroupInitImage, GroupRefiners,
         GroupAdvancedModelAddons, GroupSwarmInternal, GroupFreeU, GroupRegionalPrompting, GroupAdvancedSampling, GroupVideo;
@@ -573,6 +573,9 @@ public class T2IParamTypes
             ));
         RegionalObjectCleanupFactor = Register<double>(new("Regional Object Cleanup Factor", "When using an 'object' prompt, how much to cleanup the end result by.\nThis is the 'init image creativity' of the final cleanup step.\nSet to 0 to disable.",
             "0", IgnoreIf: "0", Min: 0, Max: 1, Step: 0.05, ViewType: ParamViewType.SLIDER, Group: GroupRegionalPrompting
+            ));
+        SaveSegmentMask = Register<bool>(new("Save Segment Mask", "If checked, any usage of '<segment:>' syntax in prompts will save the generated mask in output.",
+            "false", IgnoreIf: "false", Group: GroupRegionalPrompting
             ));
         EndStepsEarly = Register<double>(new("End Steps Early", "Percentage of steps to cut off before the image is done generation.",
             "0", Toggleable: true, IgnoreIf: "0", VisibleNormally: false, Min: 0, Max: 1, FeatureFlag: "endstepsearly"

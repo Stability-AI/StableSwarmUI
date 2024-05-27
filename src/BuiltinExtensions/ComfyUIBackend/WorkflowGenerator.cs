@@ -925,6 +925,14 @@ public class WorkflowGenerator
                         ["expand"] = 16,
                         ["tapered_corners"] = true
                     });
+                    if (g.UserInput.Get(T2IParamTypes.SaveSegmentMask, false))
+                    {
+                        string imageNode = g.CreateNode("MaskToImage", new JObject()
+                        {
+                            ["mask"] = new JArray() { growNode, 0 }
+                        });
+                        g.CreateImageSaveNode([imageNode, 0], g.GetStableDynamicID(50000, 0));
+                    }
                     (string boundsNode, string croppedMask, string masked) = g.CreateImageMaskCrop([growNode, 0], g.FinalImageOut, 8, vae);
                     g.EnableDifferential();
                     (model, clip) = g.LoadLorasForConfinement(part.ContextID, model, clip);
