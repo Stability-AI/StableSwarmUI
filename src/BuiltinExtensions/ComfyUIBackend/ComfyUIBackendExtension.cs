@@ -77,6 +77,8 @@ public class ComfyUIBackendExtension : Extension
             FeaturesSupported.UnionWith(["frameinterps"]);
             FeaturesDiscardIfNotFound.UnionWith(["frameinterps"]);
         }
+        string[] upscaleModels = [.. Directory.EnumerateFiles($"{Program.ServerSettings.Paths.ModelRoot}/upscale_models").Where(f => f.EndsWith(".pth") || f.EndsWith(".safetensors")).Select(f => f.Replace('\\', '/').AfterLast('/'))];
+        UpscalerModels = [.. UpscalerModels.Concat(upscaleModels.Select(u => $"model-{u}")).Distinct()];
     }
 
     /// <inheritdoc/>
