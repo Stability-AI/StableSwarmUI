@@ -31,7 +31,10 @@ class SwarmYoloDetection:
         masks = masks.data.cpu()
         masks = torch.nn.functional.interpolate(masks.unsqueeze(1), size=(image.shape[1], image.shape[2]), mode="bilinear").squeeze(1)
         if index == 0:
-            return (masks, )
+            result = masks[0]
+            for i in range(1, len(masks)):
+                result = torch.max(result, masks[i])
+            return (result, )
         elif index > len(masks):
             return (torch.zeros_like(masks[0]), )
         else:

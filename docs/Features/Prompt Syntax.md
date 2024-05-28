@@ -61,6 +61,15 @@
 - You can use `<segment:texthere>` to automatically refine part of the image using CLIP Segmentation.
     - Or `<segment:texthere,creativity,threshold>` - where creativity is inpaint strength, and threshold is segmentation minimum threshold - for example, `<segment:face,0.8,0.5>` - defaults to 0.6 creativity, 0.5 threshold.
     - See [the feature announcement](https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7236821) for details.
+    - You can insert a `<lora:...>` inside the prompt area of the segment to have a lora model apply onto that segment
+    - You can also replace the `texthere` with `yolo-modelnamehere` to use YOLOv8 segmentation models
+        - store your models in `(Swarm)/Models/yolov8`
+        - Examples of valid YOLOv8 Segmentation models here: https://github.com/hben35096/assets/releases/
+        - You can also do `yolo-modelnamehere-1` to grab exactly match #1, and `-2` for match #2, and etc.
+            - You can do this all in one prompt to individual refine specific faces separately
+            - Without this, if there are multiple people, it will do a bulk segmented refine on all faces combined
+    - There's an advanced parameter under `Regional Prompting` named `Segment Model` to customize the base model used for segment processing
+    - There's also a parameter named `Save Segment Mask` to save a preview copy of the generated mask
 
 ### Clear (Transparency)
 
