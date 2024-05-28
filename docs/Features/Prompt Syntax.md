@@ -56,7 +56,7 @@
 - You can use `<preset:presetname>` to inject a preset.
     - GUI is generally preferred for LoRAs, this is available to allow dynamically messing with presets (eg `<preset:<random:a, b>>`)
 
-### CLIP Segmentation
+### Automatic Segmentation and Refining
 
 - You can use `<segment:texthere>` to automatically refine part of the image using CLIP Segmentation.
     - Or `<segment:texthere,creativity,threshold>` - where creativity is inpaint strength, and threshold is segmentation minimum threshold - for example, `<segment:face,0.8,0.5>` - defaults to 0.6 creativity, 0.5 threshold.
