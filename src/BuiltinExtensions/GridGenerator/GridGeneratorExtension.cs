@@ -7,7 +7,6 @@ using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
 using StableSwarmUI.WebAPI;
 using System.IO;
-using System.Net.Sockets;
 using System.Net.WebSockets;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
@@ -223,7 +222,7 @@ public class GridGeneratorExtension : Extension
             StableSwarmUIGridData data = runner.Grid.LocalData as StableSwarmUIGridData;
             data.Claim.Extend(runner.TotalRun, 0, 0, 0);
             data.AddOutput(BasicAPIFeatures.GetCurrentStatusRaw(data.Session));
-            if (data.SaveConfig is not null)
+            if (data.SaveConfig is not null && runner.Grid.OutputType == Grid.OutputyTypeEnum.WEB_PAGE)
             {
                 File.WriteAllBytes($"{runner.BasePath}/swarm_save_config.json", data.SaveConfig.ToString().EncodeUTF8());
                 LoadableHistoryList.TryRemove(data.Session.User.UserID, out _);
