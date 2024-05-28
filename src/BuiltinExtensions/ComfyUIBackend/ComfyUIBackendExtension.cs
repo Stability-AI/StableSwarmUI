@@ -25,10 +25,10 @@ public class ComfyUIBackendExtension : Extension
     public static ConcurrentDictionary<string, ComfyCustomWorkflow> CustomWorkflows = new();
 
     /// <summary>Set of all feature-ids supported by ComfyUI backends.</summary>
-    public static HashSet<string> FeaturesSupported = ["comfyui", "refiners", "controlnet", "endstepsearly", "seamless", "video", "variation_seed", "freeu"];
+    public static HashSet<string> FeaturesSupported = ["comfyui", "refiners", "controlnet", "endstepsearly", "seamless", "video", "variation_seed", "freeu", "yolov8"];
 
     /// <summary>Set of feature-ids that were added presumptively during loading and should be removed if the backend turns out to be missing them.</summary>
-    public static HashSet<string> FeaturesDiscardIfNotFound = ["variation_seed", "freeu"];
+    public static HashSet<string> FeaturesDiscardIfNotFound = ["variation_seed", "freeu", "yolov8"];
 
     /// <summary>Extensible map of ComfyUI Node IDs to supported feature IDs.</summary>
     public static Dictionary<string, string> NodeToFeatureMap = new()
@@ -44,7 +44,8 @@ public class ComfyUIBackendExtension : Extension
         ["IPAdapterModelLoader"] = "cubiqipadapter",
         ["IPAdapterUnifiedLoader"] = "cubiqipadapterunified",
         ["MiDaS-DepthMapPreprocessor"] = "controlnetpreprocessors",
-        ["RIFE VFI"] = "frameinterps"
+        ["RIFE VFI"] = "frameinterps",
+        ["SwarmYoloDetection"] = "yolov8"
     };
 
     /// <inheritdoc/>
@@ -77,8 +78,8 @@ public class ComfyUIBackendExtension : Extension
             FeaturesSupported.UnionWith(["frameinterps"]);
             FeaturesDiscardIfNotFound.UnionWith(["frameinterps"]);
         }
-        string[] upscaleModels = [.. Directory.EnumerateFiles($"{Program.ServerSettings.Paths.ModelRoot}/upscale_models").Where(f => f.EndsWith(".pth") || f.EndsWith(".safetensors")).Select(f => f.Replace('\\', '/').AfterLast('/'))];
-        UpscalerModels = [.. UpscalerModels.Concat(upscaleModels.Select(u => $"model-{u}")).Distinct()];
+        static string[] listModelsFor(string subpath) => [.. Directory.EnumerateFiles($"{Program.ServerSettings.Paths.ModelRoot}/{subpath}").Where(f => f.EndsWith(".pth") || f.EndsWith(".pt") || f.EndsWith(".ckpt") || f.EndsWith(".safetensors")).Select(f => f.Replace('\\', '/').AfterLast('/'))];
+        UpscalerModels = [.. UpscalerModels.Concat(listModelsFor("upscale_models").Select(u => $"model-{u}")).Distinct()];
     }
 
     /// <inheritdoc/>
@@ -344,6 +345,10 @@ public class ComfyUIBackendExtension : Extension
             {
                 GligenModels = GligenModels.Concat(gligenLoader["input"]["required"]["gligen_name"][0].Select(m => $"{m}")).Distinct().ToList();
             }
+            if (rawObjectInfo.TryGetValue("SwarmYoloDetection", out JToken yoloDetection))
+            {
+                YoloModels = YoloModels.Concat(yoloDetection["input"]["required"]["model_name"][0].Select(m => $"{m}")).Distinct().ToList();
+            }
             foreach ((string key, JToken data) in rawObjectInfo)
             {
                 if (data["category"].ToString() == "image/preprocessors")
@@ -367,7 +372,7 @@ public class ComfyUIBackendExtension : Extension
         }
     }
 
-    public static T2IRegisteredParam<string> WorkflowParam, CustomWorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod, UseIPAdapterForRevision, VideoPreviewType, VideoFrameInterpolationMethod, GligenModel;
+    public static T2IRegisteredParam<string> WorkflowParam, CustomWorkflowParam, SamplerParam, SchedulerParam, RefinerUpscaleMethod, UseIPAdapterForRevision, VideoPreviewType, VideoFrameInterpolationMethod, GligenModel, YoloModelInternal;
 
     public static T2IRegisteredParam<bool> AITemplateParam, DebugRegionalPrompting, ShiftedLatentAverageInit;
 
@@ -384,6 +389,8 @@ public class ComfyUIBackendExtension : Extension
     public static List<string> IPAdapterModels = ["None"];
 
     public static List<string> GligenModels = ["None"];
+
+    public static List<string> YoloModels = [];
 
     public static ConcurrentDictionary<string, JToken> ControlNetPreprocessors = new() { ["None"] = null };
 
@@ -453,6 +460,9 @@ public class ComfyUIBackendExtension : Extension
             ));
         ShiftedLatentAverageInit = T2IParamTypes.Register<bool>(new("Shifted Latent Average Init", "If checked, shifts the empty latent to use a mean-average per-channel latent value (as calculated by Birchlabs).\nIf unchecked, default behavior of zero-init latents are used.\nThis can potentially improve the color range or even general quality on SDv1, SDv2, and SDXL models.\nNote that the effect is very minor.",
             "false", IgnoreIf: "false", FeatureFlag: "comfyui", Group: T2IParamTypes.GroupAdvancedSampling, IsAdvanced: true
+            ));
+        YoloModelInternal = T2IParamTypes.Register<string>(new("YOLO Model Internal", "Parameter for internally tracking YOLOv8 models.\nThis is not for real usage, it is just to expose the list to the UI handler.",
+            "", IgnoreIf: "", FeatureFlag: "yolov8", Group: ComfyAdvancedGroup, GetValues: (_) => YoloModels, Toggleable: true, IsAdvanced: true, AlwaysRetain: true, VisibleNormally: false
             ));
         Program.Backends.RegisterBackendType<ComfyUIAPIBackend>("comfyui_api", "ComfyUI API By URL", "A backend powered by a pre-existing installation of ComfyUI, referenced via API base URL.", true);
         Program.Backends.RegisterBackendType<ComfyUISelfStartBackend>("comfyui_selfstart", "ComfyUI Self-Starting", "A backend powered by a pre-existing installation of the ComfyUI, automatically launched and managed by this UI server.", isStandard: true);

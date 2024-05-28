@@ -1,4 +1,4 @@
-import torch, folder_paths
+import torch, folder_paths, comfy
 from PIL import Image
 import numpy as np
 from ultralytics import YOLO
@@ -25,13 +25,17 @@ class SwarmYoloDetection:
         # TODO: Cache the model in RAM in some way?
         model = YOLO(folder_paths.get_full_path("yolov8", model_name))
         results = model(img)
-        masks = results[0].masks.data
+        masks = results[0].masks
+        if masks is None:
+            return (torch.zeros(1, image.shape[1], image.shape[2]), )
+        masks = masks.data.cpu()
+        masks = torch.nn.functional.interpolate(masks.unsqueeze(1), size=(image.shape[1], image.shape[2]), mode="bilinear").squeeze(1)
         if index == 0:
             return (masks, )
-        elif index >= len(masks):
+        elif index > len(masks):
             return (torch.zeros_like(masks[0]), )
         else:
-            return (masks[index], )
+            return (masks[index - 1].unsqueeze(0), )
 
 NODE_CLASS_MAPPINGS = {
     "SwarmYoloDetection": SwarmYoloDetection,

@@ -907,12 +907,35 @@ public class WorkflowGenerator
                 for (int i = 0; i < parts.Length; i++)
                 {
                     PromptRegion.Part part = parts[i];
-                    string segmentNode = g.CreateNode("SwarmClipSeg", new JObject()
+                    string segmentNode;
+                    if (part.DataText.StartsWith("yolo-"))
                     {
-                        ["images"] = g.FinalImageOut,
-                        ["match_text"] = part.DataText,
-                        ["threshold"] = part.Strength
-                    });
+                        string fullname = part.DataText.After('-');
+                        (string mname, string indexText) = fullname.BeforeAndAfterLast('-');
+                        if (!string.IsNullOrWhiteSpace(indexText) && int.TryParse(indexText, out int index))
+                        {
+                            fullname = mname;
+                        }
+                        else
+                        {
+                            index = 0;
+                        }
+                        segmentNode = g.CreateNode("SwarmYoloDetection", new JObject()
+                        {
+                            ["image"] = g.FinalImageOut,
+                            ["model_name"] = fullname,
+                            ["index"] = index
+                        });
+                    }
+                    else
+                    {
+                        segmentNode = g.CreateNode("SwarmClipSeg", new JObject()
+                        {
+                            ["images"] = g.FinalImageOut,
+                            ["match_text"] = part.DataText,
+                            ["threshold"] = part.Strength
+                        });
+                    }
                     string blurNode = g.CreateNode("SwarmMaskBlur", new JObject()
                     {
                         ["mask"] = new JArray() { segmentNode, 0 },
