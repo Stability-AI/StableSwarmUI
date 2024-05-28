@@ -68,6 +68,7 @@
         - You can also do `yolo-modelnamehere-1` to grab exactly match #1, and `-2` for match #2, and etc.
             - You can do this all in one prompt to individual refine specific faces separately
             - Without this, if there are multiple people, it will do a bulk segmented refine on all faces combined
+        - To control the creativity with a yolo model just append `,<creativity>,1`, for example `<segment:yolo-face_yolov8m-seg_60.pt-1,0.8,1>` sets a `0.8` creativity.
     - There's an advanced parameter under `Regional Prompting` named `Segment Model` to customize the base model used for segment processing
     - There's also a parameter named `Save Segment Mask` to save a preview copy of the generated mask
 
