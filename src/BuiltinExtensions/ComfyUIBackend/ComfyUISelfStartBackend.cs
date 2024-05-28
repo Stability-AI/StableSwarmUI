@@ -165,6 +165,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     gligen
                 ipadapter: |
                     ipadapter
+                yolov8: |
+                    yolov8
                 custom_nodes: |
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes")}
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/ExtraNodes")}
@@ -258,6 +260,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             await install("opencv_python_headless", "opencv-python-headless");
             await install("imageio_ffmpeg", "imageio-ffmpeg");
             await install("spandrel", "spandrel");
+            await install("dill", "dill");
+            await install("ultralytics", "ultralytics");
             if (Directory.Exists($"{ComfyUIBackendExtension.Folder}/DLNodes/ComfyUI_IPAdapter_plus"))
             {
                 // FaceID IPAdapter models need these, really inconvenient to make dependencies conditional, so...

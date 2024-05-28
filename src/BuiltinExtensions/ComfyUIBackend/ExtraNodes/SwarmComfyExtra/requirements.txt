@@ -1,1 +1,3 @@
 rembg
+dill
+ultralytics

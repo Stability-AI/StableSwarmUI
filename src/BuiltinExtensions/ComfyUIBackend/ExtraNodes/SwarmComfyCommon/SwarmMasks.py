@@ -211,7 +211,6 @@ class SwarmMaskThreshold:
 
     RETURN_TYPES = ("MASK",)
     FUNCTION = "threshold"
-
     CATEGORY = "StableSwarmUI/masks"
 
     def threshold(self, mask, min, max):
