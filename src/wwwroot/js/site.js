@@ -386,15 +386,24 @@ function getToggleHtml(toggles, id, name, extraClass = '', func = 'doToggleEnabl
 function load_image_file(e) {
     updateFileDragging({ target: e }, true);
     let file = e.files[0];
-    const parent = e.closest('.auto-input');
+    let parent = e.closest('.auto-input');
     let preview = parent.querySelector('.auto-input-image-preview');
-    const label = parent.querySelector('.auto-file-input-filename');
+    let label = parent.querySelector('.auto-file-input-filename');
     if (file) {
-        label.textContent = file.name;
+        let name = file.name;
+        if (name.length > 30) {
+            name = `${name.substring(0, 27)}...`;
+        }
+        label.textContent = name;
         let reader = new FileReader();
         reader.addEventListener("load", () => {
             e.dataset.filedata = reader.result;
-            preview.innerHTML = `<button class="interrupt-button auto-input-image-remove-button" title="Remove image">&times;</button><img src="${reader.result}" alt="Image preview" />`;
+            preview.innerHTML = `<button class="interrupt-button auto-input-image-remove-button" title="Remove image">&times;</button><img alt="Image preview" />`;
+            let img = preview.querySelector('img');
+            img.onload = () => {
+                label.textContent = `${name} (${img.naturalWidth}x${img.naturalHeight}, ${describeAspectRatio(img.naturalWidth, img.naturalHeight)})`;
+            };
+            img.src = reader.result;
             preview.firstChild.addEventListener('click', () => {
                 delete e.dataset.filedata;
                 label.textContent = "";
