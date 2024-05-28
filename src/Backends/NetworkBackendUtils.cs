@@ -428,7 +428,7 @@ public static class NetworkBackendUtils
             }
         }
         new Thread(MonitorLoop) { Name = $"SelfStart{nameSimple.Replace(' ', '_')}_Monitor" }.Start();
-        void MonitorErrLoop()
+        async void MonitorErrLoop()
         {
             StringBuilder errorLog = new();
             string line;
@@ -462,7 +462,16 @@ public static class NetworkBackendUtils
             }
             else if (Volatile.Read(ref isShuttingDown))
             {
-                if (process.ExitCode == 0)
+                int loops = 0;
+                while (!process.HasExited && loops++ < 20 && !Program.GlobalProgramCancel.IsCancellationRequested)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
+                if (!process.HasExited)
+                {
+                    Logs.Info($"Self-Start {nameSimple} closed output stream without exiting - something went wrong.");
+                }
+                else if (process.ExitCode == 0)
                 {
                     Logs.Info($"Self-Start {nameSimple} exited properly.");
                 }
