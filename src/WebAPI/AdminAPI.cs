@@ -99,6 +99,7 @@ public static class AdminAPI
     public static async Task<JObject> ChangeServerSettings(Session session,
         [API.APIParameter("Dynamic input of `\"settingname\": valuehere`.")] JObject rawData)
     {
+        Logs.Warning($"User {session.User.UserID} changed server settings.");
         JObject settings = (JObject)rawData["settings"];
         foreach ((string key, JToken val) in settings)
         {
@@ -221,6 +222,7 @@ public static class AdminAPI
     [API.APIDescription("Shuts the server down. Returns success before the server is gone.", "\"success\": true")]
     public static async Task<JObject> ShutdownServer(Session session)
     {
+        Logs.Warning($"User {session.User.UserID} requested server shutdown.");
         _ = Task.Run(() => Program.Shutdown());
         return new JObject() { ["success"] = true };
     }
@@ -350,6 +352,7 @@ public static class AdminAPI
         """)]
     public static async Task<JObject> UpdateAndRestart(Session session)
     {
+        Logs.Warning($"User {session.User.UserID} requested update-and-restart.");
         static async Task<string> launchGit(string args)
         {
             ProcessStartInfo start = new("git", args)

@@ -83,6 +83,7 @@ public class BackendAPI
     public static async Task<JObject> DeleteBackend(Session session,
         [API.APIParameter("ID of the backend to delete.")] int backend_id)
     {
+        Logs.Warning($"User {session.User.UserID} requested delete of backend {backend_id}.");
         if (Program.LockSettings)
         {
             return new() { ["error"] = "Settings are locked." };
@@ -104,6 +105,7 @@ public class BackendAPI
         [API.APIParameter("ID of the backend to toggle.")] int backend_id,
         [API.APIParameter("If true, backend should be enabled. If false, backend should be disabled.")] bool enabled)
     {
+        Logs.Warning($"User {session.User.UserID} requested toggle of backend {backend_id}, enabled={enabled}.");
         if (Program.LockSettings)
         {
             return new() { ["error"] = "Settings are locked." };
@@ -161,6 +163,7 @@ public class BackendAPI
         [API.APIParameter("New title of the backend.")] string title,
         [API.APIParameter(" Input should contain a map of `\"settingname\": value`.")] JObject raw_inp)
     {
+        Logs.Warning($"User {session.User.UserID} requested edit of backend {backend_id}.");
         if (Program.LockSettings)
         {
             return new() { ["error"] = "Settings are locked." };
@@ -233,6 +236,7 @@ public class BackendAPI
     public static async Task<JObject> AddNewBackend(Session session,
         [API.APIParameter("ID of what type of backend to add (see `ListBackendTypes`).")] string type_id)
     {
+        Logs.Warning($"User {session.User.UserID} requested add-new-backend of type {type_id}.");
         if (Program.LockSettings)
         {
             return new() { ["error"] = "Settings are locked." };
@@ -253,6 +257,7 @@ public class BackendAPI
     public static async Task<JObject> RestartBackends(Session session,
         [API.APIParameter("What backend ID to restart, or `all` for all.")] string backend = "all")
     {
+        Logs.Warning($"User {session.User.UserID} requested restart of backend {backend}.");
         if (Program.LockSettings)
         {
             return new() { ["error"] = "Settings are locked." };
