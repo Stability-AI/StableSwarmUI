@@ -214,10 +214,11 @@ public class WorkflowGenerator
                             ["sigma"] = 1.0
                         });
                     }
+                    g.FinalMask = [maskImageNode, 0];
                 }
                 g.CreateLoadImageNode(img, "${initimage}", true, "15");
                 g.FinalInputImage = ["15", 0];
-                g.CreateVAEEncode(g.FinalVae, ["15", 0], "5", mask: [maskImageNode, 0]);
+                g.CreateVAEEncode(g.FinalVae, ["15", 0], "5", mask: g.FinalMask);
                 if (g.UserInput.TryGet(T2IParamTypes.UnsamplerPrompt, out string unprompt))
                 {
                     int steps = g.UserInput.Get(T2IParamTypes.Steps);
@@ -256,13 +257,13 @@ public class WorkflowGenerator
                 {
                     g.InitialImageIsAlteredAsLatent = true;
                     string emptyImg = g.CreateEmptyImage(g.UserInput.Get(T2IParamTypes.Width), g.UserInput.GetImageHeight(), g.UserInput.Get(T2IParamTypes.BatchSize, 1));
-                    if (g.Features.Contains("comfy_latent_blend_masked") && maskImageNode is not null)
+                    if (g.Features.Contains("comfy_latent_blend_masked") && g.FinalMask is not null)
                     {
                         string blended = g.CreateNode("SwarmLatentBlendMasked", new JObject()
                         {
                             ["samples0"] = g.FinalLatentImage,
                             ["samples1"] = new JArray() { emptyImg, 0 },
-                            ["mask"] = new JArray() { maskImageNode, 0 },
+                            ["mask"] = g.FinalMask,
                             ["blend_factor"] = resetFactor
                         });
                         g.FinalLatentImage = [blended, 0];
@@ -287,7 +288,7 @@ public class WorkflowGenerator
                         g.FinalLatentImage = [added, 0];
                     }
                 }
-                if (maskImageNode is not null)
+                if (g.FinalMask is not null)
                 {
                     if (g.UserInput.TryGet(T2IParamTypes.MaskShrinkGrow, out int shrinkGrow))
                     {
@@ -297,7 +298,7 @@ public class WorkflowGenerator
                             g.FinalInputImage = [decoded, 0];
                             g.InitialImageIsAlteredAsLatent = false;
                         }
-                        g.MaskShrunkInfo = g.CreateImageMaskCrop([maskImageNode, 0], g.FinalInputImage, shrinkGrow, g.FinalVae);
+                        g.MaskShrunkInfo = g.CreateImageMaskCrop(g.FinalMask, g.FinalInputImage, shrinkGrow, g.FinalVae);
                         g.FinalLatentImage = [g.MaskShrunkInfo.Item3, 0];
                     }
                     else
@@ -305,7 +306,7 @@ public class WorkflowGenerator
                         string appliedNode = g.CreateNode("SetLatentNoiseMask", new JObject()
                         {
                             ["samples"] = g.FinalLatentImage,
-                            ["mask"] = new JArray() { maskImageNode, 0 }
+                            ["mask"] = g.FinalMask
                         });
                         g.FinalLatentImage = [appliedNode, 0];
                     }
@@ -876,8 +877,11 @@ public class WorkflowGenerator
             (string boundsNode, string croppedMask, string masked) = g.MaskShrunkInfo;
             if (boundsNode is not null)
             {
-                string composited = g.RecompositeCropped(boundsNode, croppedMask, g.FinalInputImage, ["8", 0]);
-                g.FinalImageOut = [composited, 0];
+                g.FinalImageOut = g.RecompositeCropped(boundsNode, [croppedMask, 0], g.FinalInputImage, g.FinalImageOut);
+            }
+            else if (g.UserInput.Get(T2IParamTypes.InitImageRecompositeMask, true) && g.FinalMask is not null)
+            {
+                g.FinalImageOut = g.CompositeMask(g.FinalInputImage, g.FinalImageOut, g.FinalMask);
             }
         }, 1);
         #endregion
@@ -968,8 +972,7 @@ public class WorkflowGenerator
                     double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
                     string sampler = g.CreateKSampler(model, prompt, negPrompt, [masked, 0], cfg, steps, startStep, 10000, seed, false, true);
                     string decoded = g.CreateVAEDecode(vae, [sampler, 0]);
-                    string composited = g.RecompositeCropped(boundsNode, croppedMask, g.FinalImageOut, [decoded, 0]);
-                    g.FinalImageOut = [composited, 0];
+                    g.FinalImageOut = g.RecompositeCropped(boundsNode, [croppedMask, 0], g.FinalImageOut, [decoded, 0]);
                 }
             }
         }, 5);
@@ -1158,6 +1161,7 @@ public class WorkflowGenerator
     public JArray FinalModel = ["4", 0],
         FinalClip = ["4", 1],
         FinalInputImage = null,
+        FinalMask = null,
         FinalVae = ["4", 2],
         FinalLatentImage = ["5", 0],
         FinalPrompt = ["6", 0],
@@ -1371,8 +1375,28 @@ public class WorkflowGenerator
         return (boundsNode, croppedMask, masked);
     }
 
+    /// <summary>Returns a masked image composite with mask thresholding.</summary>
+    public JArray CompositeMask(JArray baseImage, JArray newImage, JArray mask)
+    {
+        string thresholded = CreateNode("ThresholdMask", new JObject()
+        {
+            ["mask"] = mask,
+            ["value"] = 0.001
+        });
+        string composited = CreateNode("ImageCompositeMasked", new JObject()
+        {
+            ["destination"] = baseImage,
+            ["source"] = newImage,
+            ["mask"] = new JArray() { thresholded, 0 },
+            ["x"] = 0,
+            ["y"] = 0,
+            ["resize_source"] = false
+        });
+        return [composited, 0];
+    }
+
     /// <summary>Recomposites a masked image edit, after <see cref="CreateImageMaskCrop(JArray, JArray, int)"/> was used.</summary>
-    public string RecompositeCropped(string boundsNode, string croppedMask, JArray firstImage, JArray newImage)
+    public JArray RecompositeCropped(string boundsNode, JArray croppedMask, JArray firstImage, JArray newImage)
     {
         string scaledBack = CreateNode("ImageScale", new JObject()
         {
@@ -1382,16 +1406,21 @@ public class WorkflowGenerator
             ["upscale_method"] = "bilinear",
             ["crop"] = "disabled"
         });
+        string thresholded = CreateNode("ThresholdMask", new JObject()
+        {
+            ["mask"] = croppedMask,
+            ["value"] = 0.001
+        });
         string composited = CreateNode("ImageCompositeMasked", new JObject()
         {
             ["destination"] = firstImage,
             ["source"] = new JArray() { scaledBack, 0 },
-            ["mask"] = new JArray() { croppedMask, 0 },
+            ["mask"] = new JArray() { thresholded, 0 },
             ["x"] = new JArray() { boundsNode, 0 },
             ["y"] = new JArray() { boundsNode, 1 },
             ["resize_source"] = false
         });
-        return composited;
+        return [composited, 0];
     }
 
     /// <summary>Call to run the generation process and get the result.</summary>
