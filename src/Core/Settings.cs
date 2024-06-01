@@ -208,6 +208,9 @@ public class Settings : AutoConfiguration
 
             [ConfigComment("How long any one part can be.\nDefault is 40 characters.")]
             public int MaxLenPerPart = 40;
+
+            [ConfigComment("If true, when including model name (or loras or etc), the path will skip the folder (ie filename only).")]
+            public bool ModelPathsSkipFolders = false;
         }
 
         [ConfigComment("Settings related to output path building.")]

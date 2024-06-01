@@ -232,6 +232,19 @@ public class User
     {
         int maxLen = Settings.OutPathBuilder.MaxLenPerPart;
         DateTimeOffset time = DateTimeOffset.Now;
+        string simplifyModel(string model)
+        {
+            model = model.Replace('\\', '/').Trim();
+            if (model.EndsWith(".safetensors") || model.EndsWith(".ckpt"))
+            {
+                model = model.BeforeLast('.');
+            }
+            if (Settings.OutPathBuilder.ModelPathsSkipFolders)
+            {
+                model = model.AfterLast('/');
+            }
+            return model;
+        }
         string buildPathPart(string part)
         {
             string data = part switch
@@ -251,8 +264,9 @@ public class User
                 "width" => $"{user_input.Get(T2IParamTypes.Width)}",
                 "height" => $"{user_input.GetImageHeight()}",
                 "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
-                "model" => user_input.Get(T2IParamTypes.Model)?.Name ?? "unknown",
+                "model" => simplifyModel(user_input.Get(T2IParamTypes.Model)?.Name ?? "unknown"),
                 "model_title" => user_input.Get(T2IParamTypes.Model)?.Metadata?.Title ?? "unknown",
+                "loras" => user_input.TryGet(T2IParamTypes.Loras, out List<string> loras) ? loras.Select(simplifyModel).JoinString("-") : "unknown",
                 "batch_id" => $"{batchIndex}",
                 "user_name" => UserID,
                 "number" => "[number]",
@@ -263,7 +277,15 @@ public class User
                 data = $"[{part}]";
                 if (T2IParamTypes.TryGetType(part, out T2IParamType type, user_input))
                 {
-                    data = user_input.TryGetRaw(type, out object val) ? $"{T2IParamInput.SimplifyParamVal(val)}" : "";
+                    data = "";
+                    if (user_input.TryGetRaw(type, out object val))
+                    {
+                        data = $"{T2IParamInput.SimplifyParamVal(val)}";
+                        if (val is T2IModel model)
+                        {
+                            data = simplifyModel(data);
+                        }
+                    }
                 }
             }
             if (data.Length > maxLen)
