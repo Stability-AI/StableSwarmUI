@@ -547,7 +547,7 @@ function importPresetsActivate() {
     console.log(JSON.stringify(data));
     for (let key of Object.keys(data)) {
         let preset = data[key];
-        let toSend = { title: key, description: preset.description, preview_image: preset.preview_image, param_map: preset.param_map, is_edit: overwrite };
+        let toSend = { title: key, description: preset.description, preview_image: preset.preview_image, param_map: preset.param_map, is_edit: overwrite, editing: key };
         genericRequest('AddNewPreset', toSend, data => {
             ranCount++;
             if (Object.keys(data).includes("preset_fail")) {
