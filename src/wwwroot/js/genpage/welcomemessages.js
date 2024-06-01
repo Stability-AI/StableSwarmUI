@@ -46,7 +46,7 @@ function automaticWelcomeMessage(override = null) {
         `Did you know:\nWant to compare how different values of a parameter affect your generations?\nHead to the <b>Tools</b> tab below and select the <b>Grid Generator</b> tool.`,
         `Did you know:\nYou can create a <b>Preset</b> and name it exactly <b>Default</b>\nand that preset will automatically be used to load your default params when you launch Swarm.`,
         `Did you know:\nSomething going wrong?\nCheck the <b>Server</b> tab for debug logs, system resource usage, etc.`,
-        `Did you know:\nWant to try some fancy prompting?\nJust type a '&lt;' symbol and watch the suggestions for prompt-syntax tools appear! Give the syntax features a try!`,
+        `Did you know:\nWant to try some fancy prompting?\nJust type a '&lt;' symbol and watch the suggestions for prompt-syntax tools appear! Give the syntax features a try! <a href="https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/Features/Prompt%20Syntax.md">(Documentation Here)</a>`,
         /* Recent feature updates */
         `New feature (2023-12-06): LoRA Extractor!\nWant to reduce your model file space waste and extract some of your finetuned models into LoRAs?\nHead to the <b>Utilities</b> tab to try the LoRA extractor. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7772593">(Feature Announcement Link)</a>`,
         `New feature (2024-01-15): Translations!\nAI-translated text across the UI.\nSpeak one of these other languages? Submit a PR to fix up the AI translators mistakes! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8131492">(Feature Announcement Link)</a>`,
