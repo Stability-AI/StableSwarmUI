@@ -256,11 +256,15 @@ public class User
                 "batch_id" => $"{batchIndex}",
                 "user_name" => UserID,
                 "number" => "[number]",
-                string other => T2IParamTypes.TryGetType(other, out T2IParamType type, user_input) && user_input.TryGetRaw(type, out object val) ? val.ToString() : null
+                _ => null
             };
             if (data is null)
             {
-                return $"[{part}]";
+                data = $"[{part}]";
+                if (T2IParamTypes.TryGetType(part, out T2IParamType type, user_input))
+                {
+                    data = user_input.TryGetRaw(type, out object val) ? $"{T2IParamInput.SimplifyParamVal(val)}" : "";
+                }
             }
             if (data.Length > maxLen)
             {
