@@ -45,7 +45,8 @@ public class ComfyUIBackendExtension : Extension
         ["IPAdapterUnifiedLoader"] = "cubiqipadapterunified",
         ["MiDaS-DepthMapPreprocessor"] = "controlnetpreprocessors",
         ["RIFE VFI"] = "frameinterps",
-        ["SwarmYoloDetection"] = "yolov8"
+        ["SwarmYoloDetection"] = "yolov8",
+        ["TensorRTLoader"] = "tensorrt"
     };
 
     /// <inheritdoc/>

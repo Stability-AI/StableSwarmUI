@@ -1609,8 +1609,8 @@ function setTitles() {
 }
 setTitles();
 
-function doFeatureInstaller(path, author, name, button_div_id) {
-    if (!confirm(`This will install ${path} which is a third-party extension maintained by community developer '${author}'.\nWe cannot make any guarantees about it.\nDo you wish to install?`)) {
+function doFeatureInstaller(path, author, name, button_div_id, alt_confirm = null, callback = null) {
+    if (!confirm(alt_confirm || `This will install ${path} which is a third-party extension maintained by community developer '${author}'.\nWe cannot make any guarantees about it.\nDo you wish to install?`)) {
         return;
     }
     let buttonDiv = getRequiredElementById(button_div_id);
@@ -1623,6 +1623,9 @@ function doFeatureInstaller(path, author, name, button_div_id) {
             buttonDiv.remove();
             hasAppliedFirstRun = false;
             reviseStatusBar();
+            if (callback) {
+                callback();
+            }
         }, 8000);
     }, 0, (e) => {
         showError(e);
@@ -1636,11 +1639,18 @@ function revisionInstallIPAdapter() {
 }
 
 function installControlnetPreprocessors() {
-    doFeatureInstaller('https://https://github.com/Fannovel16/comfyui_controlnet_aux', 'Fannovel16', 'controlnet_preprocessors', 'controlnet_install_preprocessors');
+    doFeatureInstaller('https://github.com/Fannovel16/comfyui_controlnet_aux', 'Fannovel16', 'controlnet_preprocessors', 'controlnet_install_preprocessors');
 }
 
 function installVideoRife() {
-    doFeatureInstaller('https://https://github.com/Fannovel16/ComfyUI-Frame-Interpolation', 'Fannovel16', 'frame_interpolation', 'video_install_frameinterps');
+    doFeatureInstaller('https://github.com/Fannovel16/ComfyUI-Frame-Interpolation', 'Fannovel16', 'frame_interpolation', 'video_install_frameinterps');
+}
+
+function installTensorRT() {
+    doFeatureInstaller('https://github.com/comfyanonymous/ComfyUI_TensorRT', 'comfyanonymous + NVIDIA', 'comfyui_tensorrt', 'install_trt_button', `This will install TensorRT support developed by Comfy and NVIDIA.\nDo you wish to install?`, () => {
+        getRequiredElementById('tensorrt_mustinstall').style.display = 'none';
+        getRequiredElementById('tensorrt_modal_ready').style.display = '';
+    });
 }
 
 function hideRevisionInputs() {

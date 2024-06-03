@@ -1,8 +1,6 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Accounts;
-using StableSwarmUI.Backends;
-using StableSwarmUI.Builtin_ComfyUIBackend;
 using StableSwarmUI.Core;
 using StableSwarmUI.Text2Image;
 using StableSwarmUI.Utils;
@@ -164,25 +162,25 @@ public static class ComfyUIWebAPI
             Logs.Warning($"User {session.User.UserID} tried to install unknown '{feature}' but have no comfy self-start backends.");
             return new JObject() { ["error"] = $"Cannot install Comfy features as this Swarm instance has no running ComfyUI Self-Start backends currently." };
         }
-        if (feature == "ipadapter")
+        static async Task<JObject> doRepo(string path)
         {
-            bool didRestart = await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/cubiq/ComfyUI_IPAdapter_plus");
+            bool didRestart = await ComfyUISelfStartBackend.EnsureNodeRepo(path);
             if (!didRestart)
             {
                 _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
             }
             return new JObject() { ["success"] = true };
         }
-        if (feature == "controlnet_preprocessors")
+        feature = feature.ToLowerFast().Trim();
+        if (feature == "ipadapter") { return await doRepo("https://github.com/cubiq/ComfyUI_IPAdapter_plus"); }
+        else if (feature == "controlnet_preprocessors") { return await doRepo("https://github.com/Fannovel16/comfyui_controlnet_aux"); }
+        else if (feature == "frame_interpolation") { return await doRepo("https://github.com/Fannovel16/ComfyUI-Frame-Interpolation"); }
+        else if (feature == "comfyui_tensorrt") { return await doRepo("https://github.com/comfyanonymous/ComfyUI_TensorRT"); }
+        else
         {
-            bool didRestart = await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/Fannovel16/comfyui_controlnet_aux");
-            if (!didRestart)
-            {
-                _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
-            }
-            return new JObject() { ["success"] = true };
+            Logs.Warning($"User {session.User.UserID} tried to install unknown feature '{feature}'.");
+            return new JObject() { ["error"] = $"Unknown feature ID {feature}." };
         }
-        if (feature == "frame_interpolation")
         {
             bool didRestart = await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/Fannovel16/ComfyUI-Frame-Interpolation");
             if (!didRestart)
@@ -264,7 +262,7 @@ public static class ComfyUIWebAPI
                     ["other_model"] = new JArray() { "5", 0 },
                     ["other_model_clip"] = new JArray() { "5", 1 },
                     ["rank"] = rank,
-                    ["save_rawpath"] = Program.T2IModelSets["LoRA"].FolderPath + "/",
+                    ["save_rawpath"] = Program.T2IModelSets["LoRA"].FolderPaths[0] + "/",
                     ["save_filename"] = outName.Replace('\\', '/').Replace("/", format ?? $"{Path.DirectorySeparatorChar}"),
                     ["save_clip"] = "true",
                     ["metadata"] = metadata.ToString()
