@@ -407,7 +407,7 @@ public class T2IModelHandler
                         Logs.Debug($"Not loading metadata for {model.Name} as the header is not JSON?");
                         return;
                     }
-                    metaHeader = headerData["__metadata__"] as JObject;
+                    metaHeader = headerData["__metadata__"] as JObject ?? [];
                 }
             }
             string altModelPrefix = $"{model.OriginatingFolderPath}/{model.Name.BeforeLast('.')}";
@@ -419,13 +419,13 @@ public class T2IModelHandler
                     foreach (JProperty prop in altMetadata.Properties())
                     {
                         metaHeader[prop.Name] = prop.Value;
+                        headerData[prop.Name] = prop.Value;
                     }
                 }
             }
-            if (headerData.Count == 0)
+            if (metaHeader.Count == 0)
             {
-                Logs.Debug($"Not loading metadata for {model.Name} as it lacks a proper header.");
-                return;
+                Logs.Debug($"Not loading metadata for {model.Name} as it lacks a proper header (path='{altModelPrefix}').");
             }
             string altDescription = "", altName = null;
             HashSet<string> triggerPhrases = [];
@@ -583,6 +583,7 @@ public class T2IModelHandler
             {
                 T2IModel model = new()
                 {
+                    OriginatingFolderPath = pathBase,
                     Name = fullFilename,
                     Title = fullFilename.AfterLast('/'),
                     RawFilePath = file,
@@ -611,6 +612,7 @@ public class T2IModelHandler
             {
                 T2IModel model = new()
                 {
+                    OriginatingFolderPath = pathBase,
                     Name = fullFilename,
                     RawFilePath = file,
                     Description = "(None, use '.safetensors' to enable metadata descriptions)",

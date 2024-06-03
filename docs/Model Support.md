@@ -51,3 +51,9 @@ Stable Cascade is supported if you use the "ComfyUI Format" models (aka "All In 
 You must keep the two in the same folder, named the same with the only difference being `stage_b` vs `stage_c` in the filename.
 
 Either model can be selected in the UI to use them, it will automatically use both.
+
+### TensorRT
+
+TensorRT support (`.engine`) is available for SDv1, SDv2-768-v, SDXL Base, SDXL Refiner
+
+You can generate TensorRT engines from the model menu

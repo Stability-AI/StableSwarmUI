@@ -191,7 +191,15 @@ public static class ComfyUIWebAPI
         ["4x"] = 4
     };
 
-    public static HashSet<string> ArchitecturesTRTCompat = ["stable-diffusion-v1", "stable-diffusion-v2-768-v", "stable-diffusion-xl-v1-base", "stable-diffusion-xl-turbo-v1", "stable-diffusion-xl-v1-refiner", "stable-video-diffusion-img2vid-v1"];
+    public static Dictionary<string, string> ArchitecturesTRTCompat = new()
+    {
+        ["stable-diffusion-v1"] = "sd1.x",
+        ["stable-diffusion-v2-768-v"] = "sd2.x-768v",
+        ["stable-diffusion-xl-v1-base"] = "sdxl_base",
+        ["stable-diffusion-xl-turbo-v1"] = "sdxl_base",
+        ["stable-diffusion-xl-v1-refiner"] = "sdxl_refiner",
+        ["stable-video-diffusion-img2vid-v1"] = "svd"
+    };
 
     /// <summary>API route to create a TensorRT model.</summary>
     public static async Task<JObject> DoTensorRTCreateWS(Session session, WebSocket ws, string model, string aspect, string aspectRange, int optBatch, int maxBatch)
@@ -208,7 +216,7 @@ public static class ComfyUIWebAPI
             await ws.SendJson(new JObject() { ["error"] = "Unknown input model name." }, API.WebsocketTimeout);
             return null;
         }
-        if (!ArchitecturesTRTCompat.Contains(modelData.ModelClass?.ID))
+        if (!ArchitecturesTRTCompat.ContainsKey(modelData.ModelClass?.ID))
         {
             await ws.SendJson(new JObject() { ["error"] = "This model does not have an Architecture ID listed as compatible with TensorRT (v1, v2-768-v, XL-v1-base, XL-v1-refiner, stable-video-diffusion)." }, API.WebsocketTimeout);
             return null;
@@ -306,7 +314,7 @@ public static class ComfyUIWebAPI
             Directory.CreateDirectory(Path.GetDirectoryName(outPath));
             JObject metadata = modelData.ToNetObject();
             metadata["architecture"] += "/tensorrt";
-            File.WriteAllText($"{outPath}.json", new JObject() { ["__metadata__"] = metadata }.ToString());
+            File.WriteAllText($"{outPath}.json", metadata.ToString());
             File.Copy(file, $"{outPath}.engine", true);
             File.Delete(file);
             Directory.Delete(directory, true);

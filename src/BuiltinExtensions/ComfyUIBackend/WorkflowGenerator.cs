@@ -1473,13 +1473,45 @@ public class WorkflowGenerator
         {
             model = altCascadeModel;
         }
-        string modelNode = CreateNode("CheckpointLoaderSimple", new JObject()
+        if (model.ModelClass?.ID.EndsWith("/tensorrt") ?? false)
         {
-            ["ckpt_name"] = model.ToString(ModelFolderFormat)
-        }, id);
-        LoadingModel = [modelNode, 0];
-        LoadingClip = [modelNode, 1];
-        LoadingVAE = [modelNode, 2];
+            string baseArch = model.ModelClass?.ID?.Before('/');
+            string trtType = ComfyUIWebAPI.ArchitecturesTRTCompat[baseArch];
+            string trtloader = CreateNode("TensorRTLoader", new JObject()
+            {
+                ["unet_name"] = model.ToString(ModelFolderFormat),
+                ["model_type"] = trtType
+            }, id);
+            LoadingModel = [trtloader, 0];
+            // TODO: This is a hack
+            T2IModel[] sameArch = [.. Program.MainSDModels.Models.Values.Where(m => m.ModelClass?.ID == baseArch)];
+            if (sameArch.Length == 0)
+            {
+                throw new InvalidDataException($"No models found with architecture {baseArch}, cannot load CLIP/VAE for this Arch");
+            }
+            T2IModel matchedName = sameArch.FirstOrDefault(m => m.Name.Before('.') == model.Name.Before('.'));
+            matchedName ??= sameArch.First();
+            string secondaryNode = CreateNode("CheckpointLoaderSimple", new JObject()
+            {
+                ["ckpt_name"] = matchedName.ToString(ModelFolderFormat)
+            });
+            LoadingClip = [secondaryNode, 1];
+            LoadingVAE = [secondaryNode, 2];
+        }
+        else if (model.Name.EndsWith(".engine"))
+        {
+            throw new InvalidDataException($"Model {model.Name} appears to be TensorRT lacks metadata to identify its architecture, cannot load");
+        }
+        else
+        {
+            string modelNode = CreateNode("CheckpointLoaderSimple", new JObject()
+            {
+                ["ckpt_name"] = model.ToString(ModelFolderFormat)
+            }, id);
+            LoadingModel = [modelNode, 0];
+            LoadingClip = [modelNode, 1];
+            LoadingVAE = [modelNode, 2];
+        }
         string predType = model.Metadata?.PredictionType;
         if (!string.IsNullOrWhiteSpace(predType))
         {

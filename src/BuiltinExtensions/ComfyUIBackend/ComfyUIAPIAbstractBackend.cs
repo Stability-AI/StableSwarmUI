@@ -57,6 +57,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             }
         }
         trackModels("Stable-Diffusion", "CheckpointLoaderSimple", "ckpt_name");
+        trackModels("Stable-Diffusion", "TensorRTLoader", "unet_name");
         trackModels("LoRA", "LoraLoader", "lora_name");
         trackModels("VAE", "VAELoader", "vae_name");
         trackModels("ControlNet", "ControlNetLoader", "control_net_name");
