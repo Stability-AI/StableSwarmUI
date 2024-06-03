@@ -167,6 +167,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     ipadapter
                 yolov8: |
                     yolov8
+                tensorrt: |
+                    tensorrt
                 custom_nodes: |
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes")}
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/ExtraNodes")}

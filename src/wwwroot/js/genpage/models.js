@@ -241,6 +241,12 @@ function sortModelLocal(a, b, files) {
     if (!aName.endsWith('.safetensors') && bName.endsWith('.safetensors')) {
         return 1;
     }
+    if (aName.endsWith('.engine') && !bName.endsWith('.engine')) {
+        return -1;
+    }
+    if (!aName.endsWith('.engine') && bName.endsWith('.engine')) {
+        return 1;
+    }
     let aIndex = files.indexOf(a);
     let bIndex = files.indexOf(b);
     return aIndex - bIndex;
@@ -295,7 +301,7 @@ class ModelBrowserWrapper {
                         'class': 'VAE',
                         'description': 'Use the VAE sepcified in your User Settings, or use the VAE built-in to your Stable Diffusion model',
                         'preview_image': '/imgs/automatic.jpg',
-                        'is_safetensors': true,
+                        'is_supported_model_format': true,
                         'local': true,
                         standard_width: 0,
                         standard_height: 0
@@ -311,7 +317,7 @@ class ModelBrowserWrapper {
                         'class': 'VAE',
                         'description': 'Use the VAE built-in to your Stable Diffusion model',
                         'preview_image': '/imgs/none.jpg',
-                        'is_safetensors': true,
+                        'is_supported_model_format': true,
                         'local': true,
                         standard_width: 0,
                         standard_height: 0
@@ -390,7 +396,7 @@ class ModelBrowserWrapper {
         if (!isCorrect && this.subType != 'Stable-Diffusion') {
             interject = `<b>(Incompatible with current model!)</b><br>`;
         }
-        if (model.data.is_safetensors) {
+        if (model.data.is_supported_model_format) {
             let getLine = (label, val) => `<b>${label}:</b> <span>${val == null ? "(Unset)" : safeHtmlOnly(val)}</span><br>`;
             let getOptLine = (label, val) => val ? getLine(label, val) : '';
             if (this.subType == 'LoRA' || this.subType == 'Stable-Diffusion') {
@@ -402,6 +408,9 @@ class ModelBrowserWrapper {
             description = `<span class="model_filename">${escapeHtml(name)}</span><br>${getLine("Title", model.data.title)}${getOptLine("Author", model.data.author)}${getLine("Type", model.data.class)}${interject}${getOptLine('Trigger Phrase', model.data.trigger_phrase)}${getOptLine('Usage Hint', model.data.usage_hint)}${getLine("Description", model.data.description)}`;
             if (model.data.local) {
                 buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
+            }
+            if (model.data.local && this.subType == 'Stable-Diffusion') {
+                buttons.push({ label: 'Create TensorRT Engine', onclick: () => showTrtMenu(model.data) });
             }
         }
         else {
@@ -721,6 +730,64 @@ function setCurrentModel(callback) {
             callback();
         }
     }
+}
+
+function showTrtMenu(model) {
+    if (!currentBackendFeatureSet.includes('tensorrt')) {
+        getRequiredElementById('tensorrt_mustinstall').style.display = '';
+        getRequiredElementById('tensorrt_modal_ready').style.display = 'none';
+    }
+    else {
+        getRequiredElementById('tensorrt_mustinstall').style.display = 'none';
+        getRequiredElementById('tensorrt_modal_ready').style.display = '';
+    }
+    getRequiredElementById('tensorrt_create_result_box').innerText = '';
+    let modelSelect = getRequiredElementById('tensorrt_model_select');
+    modelSelect.innerHTML = '';
+    for (let model of allModels.filter(m => m.endsWith('.safetensors'))) {
+        let option = document.createElement('option');
+        let clean = cleanModelName(model);
+        option.value = clean;
+        option.innerText = clean;
+        modelSelect.appendChild(option);
+    }
+    modelSelect.value = cleanModelName(model.name);
+    $('#create_tensorrt_modal').modal('show');
+}
+
+function close_trt_modal() {
+    $('#create_tensorrt_modal').modal('hide');
+}
+
+function trt_modal_create() {
+    let modelSelect = getRequiredElementById('tensorrt_model_select');
+    let aspectSelect = getRequiredElementById('tensorrt_aspect_ratio');
+    let rangeSelect = getRequiredElementById('tensorrt_aspect_range');
+    let batchSize = getRequiredElementById('tensorrt_batch_size');
+    let maxBatch = getRequiredElementById('tensorrt_max_batch_size');
+    let createButton = getRequiredElementById('trt_create_button');
+    let resultBox = getRequiredElementById('tensorrt_create_result_box');
+    let data = {
+        'model': modelSelect.value,
+        'aspect': aspectSelect.value,
+        'aspectRange': rangeSelect.value,
+        'optBatch': batchSize.value,
+        'maxBatch': maxBatch.value
+    };
+    createButton.disabled = true;
+    resultBox.innerText = 'Creating TensorRT engine, please wait...';
+    makeWSRequest('DoTensorRTCreateWS', data, data => {
+        resultBox.innerText = data.status;
+        if (data.complete) {
+            setTimeout(() => {
+                createButton.disabled = false;
+                $('#create_tensorrt_modal').modal('hide');
+            }, 2000);
+        }
+    }, 0, err => {
+        createButton.disabled = false;
+        resultBox.innerText = `Error: ${err}`;
+    });
 }
 
 let noModelChangeDup = false;

@@ -190,9 +190,9 @@ public class T2IModelClassSorter
             Logs.Debug($"Model {model.Name} has unknown architecture ID {arch}");
             return new() { ID = arch, CompatClass = arch, Name = arch, StandardWidth = width, StandardHeight = height, IsThisModelOfClass = (m, h) => false };
         }
-        if (!model.RawFilePath.EndsWith(".safetensors") || header is null)
+        if (!model.RawFilePath.EndsWith(".safetensors") && header is null)
         {
-            Logs.Debug($"Model {model.Name} cannot have known type, not safetensors or no header");
+            Logs.Debug($"Model {model.Name} cannot have known type, not safetensors and no header");
             return null;
         }
         foreach (T2IModelClass modelClass in ModelClasses.Values)

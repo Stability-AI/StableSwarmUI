@@ -63,7 +63,7 @@ public static class ModelsAPI
                 "trigger_phrase": "triggerphrasehere",
                 "merged_from": "mergedfromhere",
                 "tags": ["tag1", "tag2"],
-                "is_safetensors": true,
+                "is_supported_model_format": true,
                 "is_negative_embedding": false,
                 "local": true // false means remote servers (Swarm-API-Backend) have this model, but this server does not
             }

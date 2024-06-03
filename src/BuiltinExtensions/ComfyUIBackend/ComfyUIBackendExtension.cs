@@ -79,7 +79,7 @@ public class ComfyUIBackendExtension : Extension
             FeaturesSupported.UnionWith(["frameinterps"]);
             FeaturesDiscardIfNotFound.UnionWith(["frameinterps"]);
         }
-        static string[] listModelsFor(string subpath) => [.. Directory.EnumerateFiles($"{Program.ServerSettings.Paths.ModelRoot}/{subpath}").Where(f => f.EndsWith(".pth") || f.EndsWith(".pt") || f.EndsWith(".ckpt") || f.EndsWith(".safetensors")).Select(f => f.Replace('\\', '/').AfterLast('/'))];
+        static string[] listModelsFor(string subpath) => [.. Directory.EnumerateFiles($"{Program.ServerSettings.Paths.ModelRoot}/{subpath}").Where(f => f.EndsWith(".pth") || f.EndsWith(".pt") || f.EndsWith(".ckpt") || f.EndsWith(".safetensors") || f.EndsWith(".engine")).Select(f => f.Replace('\\', '/').AfterLast('/'))];
         UpscalerModels = [.. UpscalerModels.Concat(listModelsFor("upscale_models").Select(u => $"model-{u}")).Distinct()];
     }
 
@@ -300,9 +300,9 @@ public class ComfyUIBackendExtension : Extension
         }
     }
 
-    public static async Task RunArbitraryWorkflowOnFirstBackend(string workflow, Action<object> takeRawOutput)
+    public static async Task RunArbitraryWorkflowOnFirstBackend(string workflow, Action<object> takeRawOutput, bool allowRemote = true)
     {
-        ComfyUIAPIAbstractBackend backend = RunningComfyBackends.FirstOrDefault() ?? throw new InvalidOperationException("No available ComfyUI Backend to run this operation");
+        ComfyUIAPIAbstractBackend backend = RunningComfyBackends.FirstOrDefault(b => allowRemote || b is ComfyUISelfStartBackend) ?? throw new InvalidOperationException("No available ComfyUI Backend to run this operation");
         await backend.AwaitJobLive(workflow, "0", takeRawOutput, new(null), Program.GlobalProgramCancel);
     }
 

@@ -58,7 +58,7 @@ function pickle2safetensor_load(mapping = null) {
     }
     for (let type of ['Stable-Diffusion', 'LoRA', 'VAE', 'Embedding', 'ControlNet']) {
         let modelSet = mapping[type];
-        let count = modelSet.filter(x => !x.startsWith("backup") && !x.endsWith('.safetensors')).length;
+        let count = modelSet.filter(x => !x.startsWith("backup") && !x.endsWith('.safetensors') && !x.endsWith('.engine')).length;
         let counter = getRequiredElementById(`pickle2safetensor_${type.toLowerCase()}_count`);
         counter.innerText = count;
         let button = getRequiredElementById(`pickle2safetensor_${type.toLowerCase()}_button`);
@@ -110,8 +110,8 @@ class LoraExtractorUtil {
 
     refillInputModels() {
         let html = '';
-        for (let model of coreModelMap['Stable-Diffusion']) {
-            html += `<option>${model}</option>`;
+        for (let model of allModels.filter(m => !m.endsWith('.engine'))) {
+            html += `<option>${cleanModelName(model)}</option>`;
         }
         let baseSelected = this.baseInput.value;
         let otherSelected = this.otherInput.value;

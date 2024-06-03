@@ -14,14 +14,15 @@ public static class ComfyUIWebAPI
 {
     public static void Register()
     {
-        API.RegisterAPICall(ComfySaveWorkflow);
+        API.RegisterAPICall(ComfySaveWorkflow, true);
         API.RegisterAPICall(ComfyReadWorkflow);
         API.RegisterAPICall(ComfyListWorkflows);
-        API.RegisterAPICall(ComfyDeleteWorkflow);
+        API.RegisterAPICall(ComfyDeleteWorkflow, true);
         API.RegisterAPICall(ComfyGetGeneratedWorkflow);
-        API.RegisterAPICall(DoLoraExtractionWS);
+        API.RegisterAPICall(DoLoraExtractionWS, true);
         API.RegisterAPICall(ComfyEnsureRefreshable);
-        API.RegisterAPICall(ComfyInstallFeatures);
+        API.RegisterAPICall(ComfyInstallFeatures, true);
+        API.RegisterAPICall(DoTensorRTCreateWS, true);
     }
 
     /// <summary>API route to save a comfy workflow object to persistent file.</summary>
@@ -181,19 +182,138 @@ public static class ComfyUIWebAPI
             Logs.Warning($"User {session.User.UserID} tried to install unknown feature '{feature}'.");
             return new JObject() { ["error"] = $"Unknown feature ID {feature}." };
         }
+    }
+
+    public static Dictionary<string, int> AspectRangeToMultiplier = new()
+    {
+        ["Exact"] = 1,
+        ["2x"] = 2,
+        ["4x"] = 4
+    };
+
+    public static HashSet<string> ArchitecturesTRTCompat = ["stable-diffusion-v1", "stable-diffusion-v2-768-v", "stable-diffusion-xl-v1-base", "stable-diffusion-xl-turbo-v1", "stable-diffusion-xl-v1-refiner", "stable-video-diffusion-img2vid-v1"];
+
+    /// <summary>API route to create a TensorRT model.</summary>
+    public static async Task<JObject> DoTensorRTCreateWS(Session session, WebSocket ws, string model, string aspect, string aspectRange, int optBatch, int maxBatch)
+    {
+        if (ModelsAPI.TryGetRefusalForModel(session, model, out JObject refusal))
         {
-            bool didRestart = await ComfyUISelfStartBackend.EnsureNodeRepo("https://github.com/Fannovel16/ComfyUI-Frame-Interpolation");
-            if (!didRestart)
+            await ws.SendJson(refusal, API.WebsocketTimeout);
+            return null;
+        }
+        model = T2IParamTypes.GetBestModelInList(model, Program.MainSDModels.Models.Keys);
+        T2IModel modelData = Program.MainSDModels.Models.GetValueOrDefault(model);
+        if (modelData is null)
+        {
+            await ws.SendJson(new JObject() { ["error"] = "Unknown input model name." }, API.WebsocketTimeout);
+            return null;
+        }
+        if (!ArchitecturesTRTCompat.Contains(modelData.ModelClass?.ID))
+        {
+            await ws.SendJson(new JObject() { ["error"] = "This model does not have an Architecture ID listed as compatible with TensorRT (v1, v2-768-v, XL-v1-base, XL-v1-refiner, stable-video-diffusion)." }, API.WebsocketTimeout);
+            return null;
+        }
+        if (optBatch < 1 || maxBatch < 1 || optBatch > 64 || maxBatch > 64)
+        {
+            await ws.SendJson(new JObject() { ["error"] = "Batch size must be from 1 to 64." }, API.WebsocketTimeout);
+            return null;
+        }
+        (int aspectX, int aspectY) = T2IParamTypes.AspectRatioToSizeReference(aspect);
+        if (aspectX <= 0 || aspectY <= 0)
+        {
+            await ws.SendJson(new JObject() { ["error"] = "Invalid aspect ratio." }, API.WebsocketTimeout);
+            return null;
+        }
+        if (!AspectRangeToMultiplier.TryGetValue(aspectRange, out int rangeMult))
+        {
+            await ws.SendJson(new JObject() { ["error"] = "Invalid aspect range." }, API.WebsocketTimeout);
+            return null;
+        }
+        int standardWidth = modelData.StandardWidth <= 0 ? 1024 : modelData.StandardWidth;
+        int standardHeight = modelData.StandardHeight <= 0 ? 1024 : modelData.StandardHeight;
+        (int prefX, int prefY) = Utilities.ResToModelFit(aspectX, aspectY, standardWidth * standardHeight);
+        (int minX, int minY) = Utilities.ResToModelFit(aspectX, aspectY, (standardWidth / rangeMult) * (standardHeight / rangeMult));
+        (int maxX, int maxY) = Utilities.ResToModelFit(aspectX, aspectY, (standardWidth * rangeMult) * (standardHeight * rangeMult));
+        if (ComfyUIBackendExtension.RunningComfyBackends.FirstOrDefault(b => b is ComfyUISelfStartBackend) is not ComfyUISelfStartBackend backend)
+        {
+            await ws.SendJson(new JObject() { ["error"] = "No ComfyUI self-start backend available." }, API.WebsocketTimeout);
+            return null;
+        }
+        string format = backend.ModelFolderFormat;
+        string prefix = $"{Guid.NewGuid()}";
+        JObject workflow = new()
+        {
+            ["4"] = new JObject()
             {
-                _ = Utilities.RunCheckedTask(ComfyUIBackendExtension.RestartAllComfyBackends);
+                ["class_type"] = "CheckpointLoaderSimple",
+                ["inputs"] = new JObject()
+                {
+                    ["ckpt_name"] = modelData.ToString(format)
+                }
+            },
+            ["10"] = new JObject()
+            {
+                ["class_type"] = "DYNAMIC_TRT_MODEL_CONVERSION",
+                ["inputs"] = new JObject()
+                {
+                    ["model"] = new JArray() { "4", 0 },
+                    ["filename_prefix"] = $"swarmtemptrt/{prefix}/",
+                    ["batch_size_min"] = 1,
+                    ["batch_size_opt"] = optBatch,
+                    ["batch_size_max"] = maxBatch,
+                    ["height_min"] = minY,
+                    ["height_opt"] = prefY,
+                    ["height_max"] = maxY,
+                    ["width_min"] = minX,
+                    ["width_opt"] = prefX,
+                    ["width_max"] = maxX,
+                    ["context_min"] = 1,
+                    ["context_opt"] = 1,
+                    ["context_max"] = 128,
+                    ["num_video_frames"] = 25
+                }
             }
-            return new JObject() { ["success"] = true };
-        }
-        else
+        };
+        long ticks = Environment.TickCount64;
+        await API.RunWebsocketHandlerCallWS<object>(async (s, t, a, b) =>
         {
-            Logs.Warning($"User {session.User.UserID} tried to install unknown feature '{feature}'.");
-            return new JObject() { ["error"] = $"Unknown feature ID {feature}." };
-        }
+            await ComfyUIBackendExtension.RunArbitraryWorkflowOnFirstBackend(workflow.ToString(), data =>
+            {
+                if (data is JObject jData && jData.ContainsKey("overall_percent"))
+                {
+                    long newTicks = Environment.TickCount64;
+                    if (newTicks - ticks > 500)
+                    {
+                        ticks = newTicks;
+                        a(new() { ["status"] = $"Running, monitor Server logs for precise progress...\nOverall progress estimate: {jData["overall_percent"]}%" });
+                    }
+                }
+            }, false);
+            a(new() { ["status"] = "Process completed, moving engine..." });
+            string directory = $"{backend.ComfyPathBase}/output/swarmtemptrt/{prefix}/";
+            if (!Directory.Exists(directory))
+            {
+                a(new() { ["error"] = "Process completed but TensorRT model did not save. Something went wrong?" });
+                return;
+            }
+            string file = Directory.EnumerateFiles(directory, "*.engine").FirstOrDefault();
+            if (!File.Exists(file))
+            {
+                a(new() { ["error"] = "Process completed but TensorRT model did not save. Something went wrong?" });
+                return;
+            }
+            string outPath = $"{Program.ServerSettings.Paths.ModelRoot}/tensorrt/{modelData.Name}_TensorRT";
+            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+            JObject metadata = modelData.ToNetObject();
+            metadata["architecture"] += "/tensorrt";
+            File.WriteAllText($"{outPath}.json", new JObject() { ["__metadata__"] = metadata }.ToString());
+            File.Copy(file, $"{outPath}.engine", true);
+            File.Delete(file);
+            Directory.Delete(directory, true);
+            Program.RefreshAllModelSets();
+            a(new() { ["status"] = "Complete!", ["complete"] = true });
+        }, session, null, ws);
+        return null;
     }
 
     /// <summary>API route to extract a LoRA from two models.</summary>
@@ -212,8 +332,10 @@ public static class ComfyUIWebAPI
             await ws.SendJson(new JObject() { ["error"] = "Rank must be between 1 and 320." }, API.WebsocketTimeout);
             return null;
         }
-        T2IModel baseModelData = Program.MainSDModels.Models[baseModel];
-        T2IModel otherModelData = Program.MainSDModels.Models[otherModel];
+        baseModel = T2IParamTypes.GetBestModelInList(baseModel, Program.MainSDModels.Models.Keys);
+        otherModel = T2IParamTypes.GetBestModelInList(otherModel, Program.MainSDModels.Models.Keys);
+        T2IModel baseModelData = Program.MainSDModels.Models.GetValueOrDefault(baseModel);
+        T2IModel otherModelData = Program.MainSDModels.Models.GetValueOrDefault(otherModel);
         if (baseModelData is null || otherModelData is null)
         {
             await ws.SendJson(new JObject() { ["error"] = "Unknown input model name." }, API.WebsocketTimeout);

@@ -383,6 +383,43 @@
                     <button type="button" class="btn btn-secondary basic-button translate" onclick="close_test_wildcard()">Cancel</button>
                 </div>
             @WebUtil.ModalFooter()
+            @WebUtil.ModalHeader("create_tensorrt_modal", """Create TensorRT Engine""")
+                <div id="tensorrt_mustinstall" style="display:none;">
+                    <div class="modal-body">
+                        <p class="translate">TensorRT support is not yet installed. You must install it to continue.</p>
+                        <div id="install_trt_button">
+                            <button type="button" class="btn btn-primary basic-button translate" onclick="installTensorRT()">Install TensorRT</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="tensorrt_modal_ready">
+                    <div class="modal-body">
+                        <div class="translate hoverable-minor-hint-text">
+                            TensorRT is an NVIDIA-specific optimization library. This will create a ".engine" TensorRT model based on your model.
+                            <br>This will take several minutes to create, and will only work with a limited subset of inputs.
+                            <br>(For example, LoRA will not work, and resolution is constrained to the range you select).
+                            <br>Therefore this should only be used for models you want to use frequently, especially for example models exposed as an external API.
+                        </div>
+                        Model: <select class="auto-dropdown" id="tensorrt_model_select"></select>
+                        <br>Preferred Aspect Ratio: <select class="auto-dropdown" id="tensorrt_aspect_ratio">
+                            <option selected="">1:1</option>
+                            <option>4:3</option><option>3:2</option><option>8:5</option><option>16:9</option><option>21:9</option>
+                            <option>3:4</option><option>2:3</option><option>5:8</option><option>9:16</option><option>9:21</option>
+                        </select>
+                        <br>Aspect Ratio Range Limit: <select class="auto-dropdown" id="tensorrt_aspect_range">
+                            <option>Exact</option><option selected="">2x</option><option>4x</option>
+                        </select>
+                        <br>Preferred Batch Size: <input type="number" class="auto-number" id="tensorrt_batch_size" value="1" min="1" max="64" />
+                        <br>Max Batch Size: <input type="number" class="auto-number" id="tensorrt_max_batch_size" value="4" min="1" max="64" />
+                        <div id="tensorrt_create_result_box">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="trt_create_button" class="btn btn-primary basic-button translate" onclick="trt_modal_create()">Create</button>
+                        <button type="button" class="btn btn-secondary basic-button translate" onclick="close_trt_modal()">Cancel</button>
+                    </div>
+                </div>
+            @WebUtil.ModalFooter()
         </div>
     </div>
     @WebServer.T2ITabBody
