@@ -250,12 +250,12 @@ public class Program
             Logs.Error($"Failed to create directory for SD models. You may need to check your ModelRoot and SDModelFolder settings. {ex.Message}");
         }
         Directory.CreateDirectory($"{modelRoot}/upscale_models");
-        T2IModelSets["Stable-Diffusion"] = new() { ModelType = "Stable-Diffusion", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder) };
-        T2IModelSets["VAE"] = new() { ModelType = "VAE", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDVAEFolder) };
-        T2IModelSets["LoRA"] = new() { ModelType = "LoRA", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDLoraFolder) };
-        T2IModelSets["Embedding"] = new() { ModelType = "Embedding", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDEmbeddingFolder) };
-        T2IModelSets["ControlNet"] = new() { ModelType = "ControlNet", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDControlNetsFolder) };
-        T2IModelSets["ClipVision"] = new() { ModelType = "ClipVision", FolderPath = Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDClipVisionFolder) };
+        T2IModelSets["Stable-Diffusion"] = new() { ModelType = "Stable-Diffusion", FolderPaths = [Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDModelFolder), Utilities.CombinePathWithAbsolute(modelRoot, "unet")] };
+        T2IModelSets["VAE"] = new() { ModelType = "VAE", FolderPaths = [Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDVAEFolder)] };
+        T2IModelSets["LoRA"] = new() { ModelType = "LoRA", FolderPaths = [Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDLoraFolder)] };
+        T2IModelSets["Embedding"] = new() { ModelType = "Embedding", FolderPaths = [Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDEmbeddingFolder)] };
+        T2IModelSets["ControlNet"] = new() { ModelType = "ControlNet", FolderPaths = [Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDControlNetsFolder)] };
+        T2IModelSets["ClipVision"] = new() { ModelType = "ClipVision", FolderPaths = [Utilities.CombinePathWithAbsolute(modelRoot, ServerSettings.Paths.SDClipVisionFolder)] };
     }
 
     /// <summary>Refreshes all model sets from file source.</summary>

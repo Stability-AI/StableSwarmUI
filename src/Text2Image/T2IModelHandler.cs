@@ -34,7 +34,7 @@ public class T2IModelHandler
     public string ModelType;
 
     /// <summary>The full folder path for relevant models.</summary>
-    public string FolderPath;
+    public string[] FolderPaths;
 
     /// <summary>Quick internal tracker for unauthorized access errors, to aggregate the warning.</summary>
     public ConcurrentQueue<string> UnathorizedAccessSet = new();
@@ -145,7 +145,10 @@ public class T2IModelHandler
                 }
                 catch (Exception) { }
             }
-            ClearFolder(FolderPath);
+            foreach (string path in FolderPaths)
+            {
+                ClearFolder(path);
+            }
             ClearFolder(Program.DataDir);
         }
     }
@@ -183,12 +186,18 @@ public class T2IModelHandler
         }
         try
         {
-            Directory.CreateDirectory(FolderPath);
+            foreach (string path in FolderPaths)
+            {
+                Directory.CreateDirectory(path);
+            }
             lock (ModificationLock)
             {
                 Models.Clear();
             }
-            AddAllFromFolder("");
+            foreach (string path in FolderPaths)
+            {
+                AddAllFromFolder(path, "");
+            }
             if (UnathorizedAccessSet.Any())
             {
                 Logs.Warning($"Got UnauthorizedAccessException while loading {ModelType} model paths: {UnathorizedAccessSet.Select(m => $"'{m}'").JoinString(", ")}");
@@ -332,7 +341,7 @@ public class T2IModelHandler
 
     public string GetAutoFormatImage(T2IModel model)
     {
-        string prefix = $"{FolderPath}/{model.Name.BeforeLast('.')}";
+        string prefix = $"{model.OriginatingFolderPath}/{model.Name.BeforeLast('.')}";
         foreach (string suffix in AutoImageFormatSuffixes)
         {
             try
@@ -364,16 +373,6 @@ public class T2IModelHandler
             Logs.Debug($"Not loading metadata for {model.Name} as it is already loaded.");
             return;
         }
-        if (!model.Name.EndsWith(".safetensors"))
-        {
-            string autoImg = GetAutoFormatImage(model);
-            if (autoImg is not null)
-            {
-                model.PreviewImage = autoImg;
-            }
-            Logs.Debug($"Not loading metadata for {model.Name} as it is not safetensors.");
-            return;
-        }
         string folder = model.RawFilePath.Replace('\\', '/').BeforeAndAfterLast('/', out string fileName);
         long modified = new DateTimeOffset(File.GetLastWriteTimeUtc(model.RawFilePath)).ToUnixTimeMilliseconds();
         bool perFolder = Program.ServerSettings.Paths.ModelMetadataPerFolder;
@@ -390,19 +389,44 @@ public class T2IModelHandler
         }
         if (metadata is null || metadata.ModelFileVersion != modified)
         {
-            string header = T2IModel.GetSafetensorsHeaderFrom(model.RawFilePath);
-            if (header is null)
+            string autoImg = GetAutoFormatImage(model);
+            if (autoImg is not null)
+            {
+                model.PreviewImage = autoImg;
+            }
+            JObject headerData = [];
+            JObject metaHeader = [];
+            if (model.Name.EndsWith(".safetensors"))
+            {
+                string headerText = T2IModel.GetSafetensorsHeaderFrom(model.RawFilePath);
+                if (headerText is not null)
+                {
+                    headerData = headerText.ParseToJson();
+                    if (headerData is null)
+                    {
+                        Logs.Debug($"Not loading metadata for {model.Name} as the header is not JSON?");
+                        return;
+                    }
+                    metaHeader = headerData["__metadata__"] as JObject;
+                }
+            }
+            string altModelPrefix = $"{model.OriginatingFolderPath}/{model.Name.BeforeLast('.')}";
+            foreach (string altSuffix in AltModelMetadataJsonFileSuffixes)
+            {
+                if (File.Exists(altModelPrefix + altSuffix))
+                {
+                    JObject altMetadata = File.ReadAllText(altModelPrefix + altSuffix).ParseToJson();
+                    foreach (JProperty prop in altMetadata.Properties())
+                    {
+                        metaHeader[prop.Name] = prop.Value;
+                    }
+                }
+            }
+            if (headerData.Count == 0)
             {
                 Logs.Debug($"Not loading metadata for {model.Name} as it lacks a proper header.");
                 return;
             }
-            JObject headerData = header.ParseToJson();
-            if (headerData is null)
-            {
-                Logs.Debug($"Not loading metadata for {model.Name} as the header is not JSON?");
-                return;
-            }
-            string altModelPrefix = $"{FolderPath}/{model.Name.BeforeLast('.')}";
             string altDescription = "", altName = null;
             HashSet<string> triggerPhrases = [];
             foreach (string altSuffix in AltModelMetadataJsonFileSuffixes)
@@ -447,16 +471,15 @@ public class T2IModelHandler
                 }
             }
             string altTriggerPhrase = triggerPhrases.JoinString(", ");
-            JObject metaHeader = headerData["__metadata__"] as JObject;
             T2IModelClass clazz = T2IModelClassSorter.IdentifyClassFor(model, headerData);
-            string img = metaHeader?.Value<string>("modelspec.thumbnail") ?? metaHeader?.Value<string>("preview_image");
+            string img = metaHeader?.Value<string>("modelspec.thumbnail") ?? metaHeader?.Value<string>("thumbnail") ?? metaHeader?.Value<string>("preview_image");
             if (img is not null && !img.StartsWith("data:image/"))
             {
                 Logs.Warning($"Ignoring image in metadata of {model.Name} '{img}'");
                 img = null;
             }
             int width, height;
-            string res = metaHeader?.Value<string>("modelspec.resolution");
+            string res = metaHeader?.Value<string>("modelspec.resolution") ?? metaHeader?.Value<string>("resolution");
             if (res is not null)
             {
                 width = int.Parse(res.BeforeAndAfter('x', out string h));
@@ -467,7 +490,7 @@ public class T2IModelHandler
                 width = (metaHeader?.ContainsKey("standard_width") ?? false) ? metaHeader.Value<int>("standard_width") : (clazz?.StandardWidth ?? 0);
                 height = (metaHeader?.ContainsKey("standard_height") ?? false) ? metaHeader.Value<int>("standard_height") : (clazz?.StandardHeight ?? 0);
             }
-            img ??= GetAutoFormatImage(model);
+            img ??= autoImg;
             metadata = new()
             {
                 ModelFileVersion = modified,
@@ -481,16 +504,16 @@ public class T2IModelHandler
                 PreviewImage = img,
                 StandardWidth = width,
                 StandardHeight = height,
-                UsageHint = metaHeader?.Value<string>("modelspec.usage_hint"),
-                MergedFrom = metaHeader?.Value<string>("modelspec.merged_from"),
-                TriggerPhrase = metaHeader?.Value<string>("modelspec.trigger_phrase") ?? altTriggerPhrase,
-                License = metaHeader?.Value<string>("modelspec.license"),
-                Date = metaHeader?.Value<string>("modelspec.date"),
-                Preprocessor = metaHeader?.Value<string>("modelspec.preprocessor"),
+                UsageHint = metaHeader?.Value<string>("modelspec.usage_hint") ?? metaHeader?.Value<string>("usage_hint"),
+                MergedFrom = metaHeader?.Value<string>("modelspec.merged_from") ?? metaHeader?.Value<string>("merged_from"),
+                TriggerPhrase = metaHeader?.Value<string>("modelspec.trigger_phrase") ?? metaHeader?.Value<string>("trigger_phrase") ?? altTriggerPhrase,
+                License = metaHeader?.Value<string>("modelspec.license") ?? metaHeader?.Value<string>("license"),
+                Date = metaHeader?.Value<string>("modelspec.date") ?? metaHeader?.Value<string>("date"),
+                Preprocessor = metaHeader?.Value<string>("modelspec.preprocessor") ?? metaHeader?.Value<string>("preprocessor"),
                 Tags = metaHeader?.Value<string>("modelspec.tags")?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
-                IsNegativeEmbedding = metaHeader?.Value<string>("modelspec.is_negative_embedding") == "true",
-                PredictionType = metaHeader?.Value<string>("modelspec.prediction_type"),
-                Hash = metaHeader?.Value<string>("modelspec.hash_sha256")
+                IsNegativeEmbedding = (metaHeader?.Value<string>("modelspec.is_negative_embedding") ?? metaHeader?.Value<string>("is_negative_embedding")) == "true",
+                PredictionType = metaHeader?.Value<string>("modelspec.prediction_type") ?? metaHeader?.Value<string>("prediction_type"),
+                Hash = metaHeader?.Value<string>("modelspec.hash_sha256") ?? metaHeader?.Value<string>("hash_sha256")
             };
             lock (MetadataLock)
             {
@@ -522,7 +545,7 @@ public class T2IModelHandler
     }
 
     /// <summary>Internal model adder route. Do not call.</summary>
-    public void AddAllFromFolder(string folder)
+    public void AddAllFromFolder(string pathBase, string folder)
     {
         if (IsShutdown)
         {
@@ -530,7 +553,7 @@ public class T2IModelHandler
         }
         Logs.Verbose($"[Model Scan] Add all from folder {folder}");
         string prefix = folder == "" ? "" : $"{folder}/";
-        string actualFolder = $"{FolderPath}/{folder}";
+        string actualFolder = $"{pathBase}/{folder}";
         if (!Directory.Exists(actualFolder))
         {
             Logs.Verbose($"[Model Scan] Skipping folder {actualFolder}");
@@ -541,7 +564,7 @@ public class T2IModelHandler
             string path = $"{prefix}{subfolder.Replace('\\', '/').AfterLast('/')}";
             try
             {
-                AddAllFromFolder(path);
+                AddAllFromFolder(pathBase, path);
             }
             catch (UnauthorizedAccessException)
             {

@@ -161,10 +161,10 @@ public class T2IModelClassSorter
         {
             return model.ModelClass;
         }
-        string arch = header?["__metadata__"]?.Value<string>("modelspec.architecture");
+        string arch = header?["__metadata__"]?.Value<string>("modelspec.architecture") ?? header?["__metadata__"]?.Value<string>("architecture");
         if (arch is not null)
         {
-            string res = header["__metadata__"].Value<string>("modelspec.resolution");
+            string res = header["__metadata__"].Value<string>("modelspec.resolution") ?? header["__metadata__"].Value<string>("resolution");
             string h = null;
             int width = string.IsNullOrWhiteSpace(res) ? 0 : int.Parse(res.BeforeAndAfter('x', out h));
             int height = string.IsNullOrWhiteSpace(h) ? 0 : int.Parse(h);

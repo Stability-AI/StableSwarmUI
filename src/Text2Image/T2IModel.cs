@@ -6,6 +6,9 @@ namespace StableSwarmUI.Text2Image;
 /// <summary>Represents the basic data around an (unloaded) Text2Image model.</summary>
 public class T2IModel
 {
+    /// <summary>Path to the main folder this is inside of.</summary>
+    public string OriginatingFolderPath;
+
     /// <summary>Name/ID of the model.</summary>
     public string Name;
 
@@ -47,6 +50,7 @@ public class T2IModel
             ["architecture"] = ModelClass?.ID,
             ["class"] = ModelClass?.Name,
             ["compat_class"] = ModelClass?.CompatClass,
+            ["resolution"] = $"{StandardWidth}x{StandardHeight}",
             ["standard_width"] = StandardWidth,
             ["standard_height"] = StandardHeight,
             ["license"] = Metadata?.License,
@@ -61,7 +65,8 @@ public class T2IModel
             ["local"] = true,
             ["time_created"] = Metadata?.TimeCreated ?? 0,
             ["time_modified"] = Metadata?.TimeModified ?? 0,
-            ["hash"] = Metadata?.Hash ?? ""
+            ["hash"] = Metadata?.Hash ?? "",
+            ["hash_sha256"] = Metadata?.Hash ?? ""
         };
     }
 
