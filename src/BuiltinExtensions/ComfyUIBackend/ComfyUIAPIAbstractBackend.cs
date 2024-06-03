@@ -45,7 +45,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         Logs.Verbose($"Comfy backend {BackendData.ID} loaded value set, parsing...");
         RawObjectInfo = result;
-        Models ??= [];
+        Dictionary<string, List<string>> newModels = [];
         string firstBackSlash = null;
         void trackModels(string subtype, string node, string param)
         {
@@ -53,7 +53,11 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
             {
                 string[] modelList = loaderNode["input"]["required"][param][0].Select(t => (string)t).ToArray();
                 firstBackSlash ??= modelList.FirstOrDefault(m => m.Contains('\\'));
-                Models[subtype] = modelList.Select(m => m.Replace('\\', '/')).ToList();
+                if (newModels.TryGetValue(subtype, out List<string> existingList))
+                {
+                    modelList = [.. modelList.Concat(existingList)];
+                }
+                newModels[subtype] = modelList.Select(m => m.Replace('\\', '/')).ToList();
             }
         }
         trackModels("Stable-Diffusion", "CheckpointLoaderSimple", "ckpt_name");
@@ -63,6 +67,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         trackModels("ControlNet", "ControlNetLoader", "control_net_name");
         trackModels("ClipVision", "CLIPVisionLoader", "clip_name");
         trackModels("Embedding", "SwarmEmbedLoaderListProvider", "embed_name");
+        Models = newModels;
         if (firstBackSlash is not null)
         {
             ModelFolderFormat = "\\";
