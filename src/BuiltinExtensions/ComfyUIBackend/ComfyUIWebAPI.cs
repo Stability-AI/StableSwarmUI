@@ -196,6 +196,7 @@ public static class ComfyUIWebAPI
         ["stable-diffusion-v1"] = "sd1.x",
         ["stable-diffusion-v2-768-v"] = "sd2.x-768v",
         ["stable-diffusion-xl-v1-base"] = "sdxl_base",
+        ["stable-diffusion-xl-v0_9-base"] = "sdxl_base",
         ["stable-diffusion-xl-turbo-v1"] = "sdxl_base",
         ["stable-diffusion-xl-v1-refiner"] = "sdxl_refiner",
         ["stable-video-diffusion-img2vid-v1"] = "svd"
