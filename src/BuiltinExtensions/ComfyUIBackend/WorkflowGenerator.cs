@@ -1268,6 +1268,13 @@ public class WorkflowGenerator
         return clazz is not null && clazz == "stable-cascade-v1";
     }
 
+    /// <summary>Returns true if the current model is Stable Diffusion 3.</summary>
+    public bool IsSD3()
+    {
+        string clazz = CurrentCompatClass();
+        return clazz is not null && clazz == "stable-diffusion-v3-medium";
+    }
+
     /// <summary>Gets a dynamic ID within a semi-stable registration set.</summary>
     public string GetStableDynamicID(int index, int offset)
     {
@@ -1802,6 +1809,15 @@ public class WorkflowGenerator
             {
                 ["batch_size"] = batchSize,
                 ["compression"] = UserInput.Get(T2IParamTypes.CascadeLatentCompression, 32),
+                ["height"] = height,
+                ["width"] = width
+            }, id);
+        }
+        else if (IsSD3())
+        {
+            return CreateNode("EmptySD3LatentImage", new JObject()
+            {
+                ["batch_size"] = batchSize,
                 ["height"] = height,
                 ["width"] = width
             }, id);
