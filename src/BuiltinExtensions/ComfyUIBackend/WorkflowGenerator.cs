@@ -679,7 +679,15 @@ public class WorkflowGenerator
                             };
                             foreach ((string key, JToken data) in (JObject)objectData["input"]["required"])
                             {
-                                if (data.Count() == 2 && data[1] is JObject settings && settings.TryGetValue("default", out JToken defaultValue))
+                                if (key == "mask")
+                                {
+                                    if (g.FinalMask is null)
+                                    {
+                                        throw new InvalidOperationException($"ControlNet Preprocessor '{preprocessor}' requires a mask. Please set a mask under the Init Image parameter group.");
+                                    }
+                                    n["inputs"]["mask"] = g.FinalMask;
+                                }
+                                else if (data.Count() == 2 && data[1] is JObject settings && settings.TryGetValue("default", out JToken defaultValue))
                                 {
                                     n["inputs"][key] = defaultValue;
                                 }
