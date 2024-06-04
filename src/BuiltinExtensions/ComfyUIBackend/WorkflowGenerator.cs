@@ -429,7 +429,7 @@ public class WorkflowGenerator
                         lastVae = g.CreateNode("LatentBatch", new JObject()
                         {
                             ["samples1"] = new JArray() { lastVae, 0 },
-                            ["samples2"] = new JArray() { newImg, 0 }
+                            ["samples2"] = new JArray() { newVae, 0 }
                         });
                     }
                     string referencedModel = g.CreateNode("SwarmReferenceOnly", new JObject()
