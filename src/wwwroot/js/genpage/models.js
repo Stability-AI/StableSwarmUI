@@ -409,7 +409,7 @@ class ModelBrowserWrapper {
             if (model.data.local) {
                 buttons.push({ label: 'Edit Metadata', onclick: () => editModel(model.data, this) });
             }
-            if (model.data.local && this.subType == 'Stable-Diffusion') {
+            if (model.data.local && this.subType == 'Stable-Diffusion' && !model.data.name.endsWith('.engine')) {
                 buttons.push({ label: 'Create TensorRT Engine', onclick: () => showTrtMenu(model.data) });
             }
         }
