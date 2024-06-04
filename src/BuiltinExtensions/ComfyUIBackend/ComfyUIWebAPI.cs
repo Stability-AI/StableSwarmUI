@@ -259,8 +259,28 @@ public static class ComfyUIWebAPI
                 {
                     ["ckpt_name"] = modelData.ToString(format)
                 }
-            },
-            ["10"] = new JObject()
+            }
+        };
+        if (rangeMult == 1)
+        {
+            workflow["10"] = new JObject()
+            {
+                ["class_type"] = "STATIC_TRT_MODEL_CONVERSION",
+                ["inputs"] = new JObject()
+                {
+                    ["model"] = new JArray() { "4", 0 },
+                    ["filename_prefix"] = $"swarmtemptrt/{prefix}/",
+                    ["batch_size_opt"] = optBatch,
+                    ["height_opt"] = prefY,
+                    ["width_opt"] = prefX,
+                    ["context_opt"] = 1,
+                    ["num_video_frames"] = 25
+                }
+            };
+        }
+        else
+        {
+            workflow["10"] = new JObject()
             {
                 ["class_type"] = "DYNAMIC_TRT_MODEL_CONVERSION",
                 ["inputs"] = new JObject()
@@ -281,8 +301,8 @@ public static class ComfyUIWebAPI
                     ["context_max"] = 128,
                     ["num_video_frames"] = 25
                 }
-            }
-        };
+            };
+        }
         long ticks = Environment.TickCount64;
         await API.RunWebsocketHandlerCallWS<object>(async (s, t, a, b) =>
         {
@@ -315,6 +335,7 @@ public static class ComfyUIWebAPI
             Directory.CreateDirectory(Path.GetDirectoryName(outPath));
             JObject metadata = modelData.ToNetObject();
             metadata["architecture"] += "/tensorrt";
+            metadata["title"] = $"{modelData.Title ?? modelData.Name} (TensorRT)";
             File.WriteAllText($"{outPath}.json", metadata.ToString());
             File.Copy(file, $"{outPath}.engine", true);
             File.Delete(file);
