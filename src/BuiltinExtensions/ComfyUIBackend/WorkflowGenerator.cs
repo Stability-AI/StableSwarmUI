@@ -97,7 +97,7 @@ public class WorkflowGenerator
                 {
                     ["vae_name"] = rvae.ToString(g.ModelFolderFormat)
                 }, g.HasNode("21") ? null : "21");
-                g.LoadingVAE = [$"{vaeNode}", 0];
+                g.LoadingVAE = [vaeNode, 0];
             }
             else if (!g.NoVAEOverride && g.UserInput.TryGet(T2IParamTypes.VAE, out T2IModel vae))
             {
@@ -105,7 +105,7 @@ public class WorkflowGenerator
                 {
                     ["vae_name"] = vae.ToString(g.ModelFolderFormat)
                 }, g.HasNode("11") ? null : "11");
-                g.LoadingVAE = [$"{vaeNode}", 0];
+                g.LoadingVAE = [vaeNode, 0];
             }
         }, -15);
         AddModelGenStep(g =>
@@ -127,7 +127,7 @@ public class WorkflowGenerator
                         ["s1"] = g.UserInput.Get(T2IParamTypes.FreeUSkip1),
                         ["s2"] = g.UserInput.Get(T2IParamTypes.FreeUSkip2)
                     });
-                    g.LoadingModel = [$"{freeU}", 0];
+                    g.LoadingModel = [freeU, 0];
                 }
             }
         }, -8);
@@ -141,7 +141,7 @@ public class WorkflowGenerator
                     ["scale"] = sagScale,
                     ["blur_sigma"] = g.UserInput.Get(ComfyUIBackendExtension.SelfAttentionGuidanceSigmaBlur, 2.0)
                 });
-                g.LoadingModel = [$"{guided}", 0];
+                g.LoadingModel = [guided, 0];
             }
         }, -7);
         AddModelGenStep(g =>
@@ -153,7 +153,7 @@ public class WorkflowGenerator
                     ["clip"] = g.LoadingClip,
                     ["stop_at_clip_layer"] = layer
                 });
-                g.LoadingClip = [$"{clipSkip}", 0];
+                g.LoadingClip = [clipSkip, 0];
             }
         }, -6);
         AddModelGenStep(g =>
@@ -168,13 +168,13 @@ public class WorkflowGenerator
                     ["model"] = g.LoadingModel,
                     ["tile_axis"] = mode
                 });
-                g.LoadingModel = [$"{tiling}", 0];
+                g.LoadingModel = [tiling, 0];
                 string tilingVae = g.CreateNode("SwarmTileableVAE", new JObject()
                 {
                     ["vae"] = g.LoadingVAE,
                     ["tile_axis"] = mode
                 });
-                g.LoadingVAE = [$"{tilingVae}", 0];
+                g.LoadingVAE = [tilingVae, 0];
             }
         }, -5);
         AddModelGenStep(g =>
@@ -186,7 +186,7 @@ public class WorkflowGenerator
                     ["model"] = g.LoadingModel,
                     ["keep_loaded"] = "disable"
                 });
-                g.LoadingModel = [$"{aitLoad}", 0];
+                g.LoadingModel = [aitLoad, 0];
             }
         }, -3);
         #endregion
@@ -386,7 +386,7 @@ public class WorkflowGenerator
                         {
                             ["conditioning"] = g.FinalPrompt
                         });
-                        g.FinalPrompt = [$"{zeroed}", 0];
+                        g.FinalPrompt = [zeroed, 0];
                     }
                     if ((g.UserInput.TryGet(T2IParamTypes.NegativePrompt, out string negPromptText) && string.IsNullOrWhiteSpace(negPromptText)) || autoZero)
                     {
@@ -394,7 +394,7 @@ public class WorkflowGenerator
                         {
                             ["conditioning"] = g.FinalNegativePrompt
                         });
-                        g.FinalNegativePrompt = [$"{zeroed}", 0];
+                        g.FinalNegativePrompt = [zeroed, 0];
                     }
                     if (!g.UserInput.TryGet(T2IParamTypes.Model, out T2IModel model) || model.ModelClass is null || model.ModelClass.ID != "stable-diffusion-xl-v1-base")
                     {
@@ -415,7 +415,7 @@ public class WorkflowGenerator
                             ["strength"] = revisionStrength,
                             ["noise_augmentation"] = 0
                         });
-                        g.FinalPrompt = [$"{unclipped}", 0];
+                        g.FinalPrompt = [unclipped, 0];
                     }
                 }
                 if (g.UserInput.TryGet(ComfyUIBackendExtension.UseIPAdapterForRevision, out string ipAdapter) && ipAdapter != "None")
@@ -564,7 +564,7 @@ public class WorkflowGenerator
                             ["end_at"] = 1.0,
                             ["weight_type"] = "standard" // TODO: ...???
                         });
-                        g.FinalModel = [$"{ipAdapterNode}", 0];
+                        g.FinalModel = [ipAdapterNode, 0];
                     }
                     else if (g.Features.Contains("cubiqipadapter"))
                     {
@@ -582,7 +582,7 @@ public class WorkflowGenerator
                             ["noise"] = 0,
                             ["weight_type"] = "original" // TODO: ...???
                         });
-                        g.FinalModel = [$"{ipAdapterNode}", 0];
+                        g.FinalModel = [ipAdapterNode, 0];
                     }
                     else
                     {
@@ -595,7 +595,7 @@ public class WorkflowGenerator
                             ["model_name"] = ipAdapter,
                             ["dtype"] = "fp16" // TODO: ...???
                         });
-                        g.FinalModel = [$"{ipAdapterNode}", 0];
+                        g.FinalModel = [ipAdapterNode, 0];
                     }
                 }
             }
@@ -706,7 +706,7 @@ public class WorkflowGenerator
                         g.NodeHelpers["controlnet_preprocessor"] = $"{preProcNode}";
                         if (g.UserInput.Get(T2IParamTypes.ControlNetPreviewOnly))
                         {
-                            g.FinalImageOut = [$"{preProcNode}", 0];
+                            g.FinalImageOut = [preProcNode, 0];
                             g.CreateImageSaveNode(g.FinalImageOut, "9");
                             g.SkipFurtherSteps = true;
                             return;
@@ -732,8 +732,8 @@ public class WorkflowGenerator
                         ["start_percent"] = g.UserInput.Get(controlnetParams.Start, 0),
                         ["end_percent"] = g.UserInput.Get(controlnetParams.End, 1)
                     });
-                    g.FinalPrompt = [$"{applyNode}", 0];
-                    g.FinalNegativePrompt = [$"{applyNode}", 1];
+                    g.FinalPrompt = [applyNode, 0];
+                    g.FinalNegativePrompt = [applyNode, 1];
                 }
             }
         }, -6);
@@ -1302,8 +1302,8 @@ public class WorkflowGenerator
                 ["strength_model"] = weight,
                 ["strength_clip"] = weight
             }, GetStableDynamicID(500, i));
-            model = [$"{newId}", 0];
-            clip = [$"{newId}", 1];
+            model = [newId, 0];
+            clip = [newId, 1];
         }
         return (model, clip);
     }
