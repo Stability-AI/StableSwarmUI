@@ -48,15 +48,13 @@ function automaticWelcomeMessage(override = null) {
         `Did you know:\nSomething going wrong?\nCheck the <b>Server</b> tab for debug logs, system resource usage, etc.`,
         `Did you know:\nWant to try some fancy prompting?\nJust type a '&lt;' symbol and watch the suggestions for prompt-syntax tools appear! Give the syntax features a try! <a href="https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/Features/Prompt%20Syntax.md">(Documentation Here)</a>`,
         /* Recent feature updates */
-        `New feature (2023-12-06): LoRA Extractor!\nWant to reduce your model file space waste and extract some of your finetuned models into LoRAs?\nHead to the <b>Utilities</b> tab to try the LoRA extractor. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7772593">(Feature Announcement Link)</a>`,
-        `New feature (2024-01-15): Translations!\nAI-translated text across the UI.\nSpeak one of these other languages? Submit a PR to fix up the AI translators mistakes! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8131492">(Feature Announcement Link)</a>`,
-        `New feature (2024-02-19): Stable Cascade\nNatively supported in Swarm with the modern Comfy-style All-In-One format. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8521943">(Feature Announcement Link)</a>`,
         `New feature (2024-03-10): Comfy Workflow Browser\nAn easy browser for Comfy workflows in the Comfy tab. <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-8736304">(Feature Announcement Link)</a>`,
+        `New feature (2024-04-18): Modern Dark and Light themes!\nBuilt by an actual designer this time! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9153506">(Feature Announcement Link)</a>\n<button class="btn btn-secondary" onclick="aggressivelySetTheme('modern_dark')">Click here to try Modern Dark</button>\n(go to User Settings to change back)`,
         `New feature (2024-04-23): Prompt editing!\nThere's now convenient prompt syntax to do things like swapping back and forth between prompts or changing between steps! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9206140">(Feature Announcement Link)</a>`,
         `New feature (2024-05-28): YOLOv8 Segmentation\nAre you really into multi-face matching + detailing? 'segment' prompt syntax now supports YOLOv8 models! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9586318">(Feature Announcement Link)</a>`,
-        `New feature (2024-04-18): Modern Dark and Light themes!\nBuilt by an actual designer this time! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9153506">(Feature Announcement Link)</a>\n<button class="btn btn-secondary" onclick="aggressivelySetTheme('modern_dark')">Click here to try Modern Dark</button>\n(go to User Settings to change back)`,
+        `New feature (2024-06-02): TensorRT Support!\nFor making things go fasterer! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9641683">(Feature Announcement Link)</a>`,
         /* Version release notes */
-        `Release notes (2024-05-15): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.2-Beta">Release Notes for version 0.6.2 (Beta)</a>`
+        `Release notes (2024-06-03): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.3-Beta">Release Notes for version 0.6.3 (Beta)</a>`
     ];
     let dotnetNotice = document.getElementById('dotnet_missing_message');
     if (dotnetNotice) {
