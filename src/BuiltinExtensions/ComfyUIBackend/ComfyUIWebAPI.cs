@@ -331,7 +331,14 @@ public static class ComfyUIWebAPI
                 a(new() { ["error"] = "Process completed but TensorRT model did not save. Something went wrong?" });
                 return;
             }
-            string outPath = $"{Program.ServerSettings.Paths.ModelRoot}/tensorrt/{modelData.Name}_TensorRT";
+            string outPathRaw = $"{Program.ServerSettings.Paths.ModelRoot}/tensorrt/{modelData.Name}_TensorRT";
+            string outPath = outPathRaw;
+            int id = 0;
+            while (File.Exists($"{outPath}.engine"))
+            {
+                id++;
+                outPath = $"{outPathRaw}_{id}";
+            }
             Directory.CreateDirectory(Path.GetDirectoryName(outPath));
             JObject metadata = modelData.ToNetObject();
             metadata["architecture"] += "/tensorrt";
