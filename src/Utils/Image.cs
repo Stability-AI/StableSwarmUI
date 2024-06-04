@@ -8,6 +8,8 @@ using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp.Processing;
 using FreneticUtilities.FreneticExtensions;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 /// <summary>Helper to represent an image file cleanly and quickly.</summary>
 public class Image
@@ -174,7 +176,15 @@ public class Image
         /// <summary>JPEG: Lossy, (90% quality), small file.</summary>
         JPG90,
         /// <summary>JPEG: Lossy, (bad 75% quality), small file.</summary>
-        JPG75
+        JPG75,
+        /// <summary>Webp: Lossless.</summary>
+        WEBP_LOSSLESS,
+        /// <summary>Webp: lossy 100% quality.</summary>
+        WEBP_100,
+        /// <summary>Webp: lossy 90% quality.</summary>
+        WEBP_90,
+        /// <summary>Webp: lossy 75% quality.</summary>
+        WEBP_75
     }
 
     /// <summary>Returns the metadata from this image, or null if none.</summary>
@@ -219,6 +229,10 @@ public class Image
             "JPG" => "jpg",
             "JPG90" => "jpg",
             "JPG75" => "jpg",
+            "WEBP_LOSSLESS" => "webp",
+            "WEBP_100" => "webp",
+            "WEBP_90" => "webp",
+            "WEBP_75" => "webp",
             _ => throw new ArgumentException("Unknown format: " + format, nameof(format)),
         };
     }
@@ -263,15 +277,26 @@ public class Image
                 ext = "png";
                 break;
             case "JPG":
-                img.SaveAsJpeg(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder() { Quality = 100 });
+                img.SaveAsJpeg(ms, new JpegEncoder() { Quality = 100 });
                 break;
             case "JPG90":
-                img.SaveAsJpeg(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder() { Quality = 90 });
+                img.SaveAsJpeg(ms, new JpegEncoder() { Quality = 90 });
                 break;
             case "JPG75":
-                img.SaveAsJpeg(ms, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder() { Quality = 75 });
+                img.SaveAsJpeg(ms, new JpegEncoder() { Quality = 75 });
                 break;
-            // TODO: webp, etc. with appropriate quality handlers
+                case "WEBP_LOSSLESS":
+                img.SaveAsWebp(ms, new WebpEncoder() { NearLossless = true, Quality = 100 });
+                break;
+                case "WEBP_100":
+                img.SaveAsWebp(ms, new WebpEncoder() { NearLossless = false, Quality = 100 });
+                break;
+            case "WEBP_90":
+                img.SaveAsWebp(ms, new WebpEncoder() { NearLossless = false, Quality = 90 });
+                break;
+            case "WEBP_75":
+                img.SaveAsWebp(ms, new WebpEncoder() { NearLossless = false, Quality = 75 });
+                break;
             default:
                 throw new InvalidDataException($"User setting for image format is '{format}', which is invalid");
         }

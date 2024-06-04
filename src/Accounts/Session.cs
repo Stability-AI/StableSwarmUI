@@ -151,7 +151,15 @@ public class Session : IEquatable<Session>
         string rawImagePath = User.BuildImageOutputPath(user_input, batchIndex);
         string imagePath = rawImagePath.Replace("[number]", "1");
         string format = user_input.Get(T2IParamTypes.ImageFormat, User.Settings.FileFormat.ImageFormat);
-        string extension = format == "PNG" ? "png" : "jpg";
+        string extension;
+        try
+        {
+            extension = Image.ImageFormatToExtension(format);
+        }
+        catch (Exception)
+        {
+            extension = "jpg";
+        }
         if (image.Type != Image.ImageType.IMAGE)
         {
             Logs.Verbose($"Image is type {image.Type} and will save with extension '{image.Extension}'.");

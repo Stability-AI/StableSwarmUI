@@ -185,6 +185,10 @@ public class ImageBatchToolExtension : Extension
                     {
                         ext = "jpg";
                     }
+                    else if (properExt == "webp" && ext != "webp")
+                    {
+                        ext = "webp";
+                    }
                     else if (!string.IsNullOrWhiteSpace(properExt))
                     {
                         ext = properExt;

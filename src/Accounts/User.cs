@@ -266,7 +266,7 @@ public class User
                 "steps" => $"{user_input.Get(T2IParamTypes.Steps)}",
                 "model" => simplifyModel(user_input.Get(T2IParamTypes.Model)?.Name ?? "unknown"),
                 "model_title" => user_input.Get(T2IParamTypes.Model)?.Metadata?.Title ?? "unknown",
-                "loras" => user_input.TryGet(T2IParamTypes.Loras, out List<string> loras) ? loras.Select(simplifyModel).JoinString("-") : "unknown",
+                "loras" => user_input.TryGet(T2IParamTypes.Loras, out List<string> loras) ? loras.Select(simplifyModel).JoinString("-") : "",
                 "batch_id" => $"{batchIndex}",
                 "user_name" => UserID,
                 "number" => "[number]",

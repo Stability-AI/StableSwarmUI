@@ -1829,7 +1829,7 @@ function imageInputHandler() {
             let file = e.dataTransfer.files[0];
             if (file.type.startsWith('image/')) {
                 let reader = new FileReader();
-                reader.onload = (e) => {
+                parsemetadata = (e) => {
                     let data = e.target.result;
                     exifr.parse(data).then(parsed => {
                         if (parsed && imageMetadataKeys.some(key => key in parsed)) {
@@ -1896,8 +1896,18 @@ function imageInputHandler() {
                             }
                         }
                         setCurrentImage(data, metadata);
+                    }).catch(err => {
+                        setCurrentImage(e.target.result, null);
                     });
                 };
+                reader.onload = (e) => {
+                    try {
+                        parsemetadata(e);
+                    }
+                    catch (e) {
+                        setCurrentImage(e.target.result, null);
+                    }
+                }
                 reader.readAsDataURL(file);
             }
         }

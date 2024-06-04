@@ -545,7 +545,7 @@ public class T2IParamTypes
             "", IgnoreIf: "", IsAdvanced: true, Group: GroupSwarmInternal, ViewType: ParamViewType.BIG, AlwaysRetain: true, OrderPriority: 0
             ));
         ImageFormat = Register<string>(new("Image Format", "Optional override for the final image file format.",
-            "PNG", GetValues: (_) => ["PNG", "JPG", "JPG90", "JPG75"], IsAdvanced: true, Group: GroupSwarmInternal, AlwaysRetain: true, Toggleable: true, OrderPriority: 1
+            "PNG", GetValues: (_) => [.. Enum.GetNames(typeof(Image.ImageFormat))], IsAdvanced: true, Group: GroupSwarmInternal, AlwaysRetain: true, Toggleable: true, OrderPriority: 1
             ));
         ModelSpecificEnhancements = Register<bool>(new("Model Specific Enhancements", "If checked, enables model-specific enhancements.\nFor example, on SDXL, smarter res-cond will be used.\nIf unchecked, will prefer more 'raw' behavior.",
             "true", IgnoreIf: "true", IsAdvanced: true, Group: GroupSwarmInternal, OrderPriority: 2
