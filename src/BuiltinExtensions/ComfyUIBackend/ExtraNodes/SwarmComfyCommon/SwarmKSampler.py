@@ -87,6 +87,8 @@ def make_swarm_sampler_callback(steps, device, model, previews):
                     swarm_send_extra_preview(i, preview_img[1])
             elif previews == "one":
                 do_preview(0, 0)
+            elif previews == "second":
+                do_preview(0, 1 % x0.shape[0])
     return callback
 
 
@@ -133,7 +135,7 @@ class SwarmKSampler:
                 "rho": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 100.0, "step":0.01, "round": False}),
                 "add_noise": (["enable", "disable"], ),
                 "return_with_leftover_noise": (["disable", "enable"], ),
-                "previews": (["default", "none", "one", "iterate", "animate"], )
+                "previews": (["default", "none", "one", "second", "iterate", "animate"], )
             }
         }
 

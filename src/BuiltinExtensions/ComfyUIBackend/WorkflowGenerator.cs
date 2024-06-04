@@ -418,6 +418,30 @@ public class WorkflowGenerator
                         g.FinalPrompt = [unclipped, 0];
                     }
                 }
+                if (g.UserInput.Get(T2IParamTypes.UseReferenceOnly, false))
+                {
+                    string firstImg = g.CreateLoadImageNode(images[0], "${promptimages.0}", true);
+                    string lastVae = g.CreateVAEEncode(g.FinalVae, [firstImg, 0]);
+                    for (int i = 1; i < images.Count; i++)
+                    {
+                        string newImg = g.CreateLoadImageNode(images[i], "${promptimages." + i + "}", true);
+                        string newVae = g.CreateVAEEncode(g.FinalVae, [newImg, 0]);
+                        lastVae = g.CreateNode("LatentBatch", new JObject()
+                        {
+                            ["samples1"] = new JArray() { lastVae, 0 },
+                            ["samples2"] = new JArray() { newImg, 0 }
+                        });
+                    }
+                    string referencedModel = g.CreateNode("SwarmReferenceOnly", new JObject()
+                    {
+                        ["model"] = g.FinalModel,
+                        ["reference"] = new JArray() { lastVae, 0 },
+                        ["latent"] = g.FinalLatentImage
+                    });
+                    g.FinalModel = [referencedModel, 0];
+                    g.FinalLatentImage = [referencedModel, 1];
+                    g.DefaultPreviews = "second";
+                }
                 if (g.UserInput.TryGet(ComfyUIBackendExtension.UseIPAdapterForRevision, out string ipAdapter) && ipAdapter != "None")
                 {
                     string ipAdapterVisionLoader = visionLoader;
@@ -765,6 +789,16 @@ public class WorkflowGenerator
             {
                 g.CreateKSampler(g.FinalModel, g.FinalPrompt, g.FinalNegativePrompt, g.FinalLatentImage, cfg, steps, startStep, endStep,
                     g.UserInput.Get(T2IParamTypes.Seed), g.UserInput.Get(T2IParamTypes.RefinerMethod, "none") == "StepSwapNoisy", g.MainSamplerAddNoise, id: "10");
+                if (g.UserInput.Get(T2IParamTypes.UseReferenceOnly, false))
+                {
+                    string fromBatch = g.CreateNode("LatentFromBatch", new JObject()
+                    {
+                        ["samples"] = new JArray() { "10", 0 },
+                        ["batch_index"] = 1,
+                        ["length"] = 1
+                    });
+                    g.FinalSamples = [fromBatch, 0];
+                }
             }
         }, -5);
         #endregion
@@ -1311,20 +1345,27 @@ public class WorkflowGenerator
     /// <summary>Creates a new node to load an image.</summary>
     public string CreateLoadImageNode(Image img, string param, bool resize, string nodeId = null)
     {
+        if (nodeId is null && NodeHelpers.TryGetValue($"imgloader_{param}_{resize}", out string alreadyLoaded))
+        {
+            return alreadyLoaded;
+        }
+        string result;
         if (Features.Contains("comfy_loadimage_b64") && !RestrictCustomNodes)
         {
-            return CreateNode("SwarmLoadImageB64", new JObject()
+            result = CreateNode("SwarmLoadImageB64", new JObject()
             {
                 ["image_base64"] = (resize ? img.Resize(UserInput.Get(T2IParamTypes.Width), UserInput.GetImageHeight()) : img).AsBase64
             }, nodeId);
         }
         else
         {
-            return CreateNode("LoadImage", new JObject()
+            result = CreateNode("LoadImage", new JObject()
             {
                 ["image"] = param
             }, nodeId);
         }
+        NodeHelpers[$"imgloader_{param}_{resize}"] = result;
+        return result;
     }
 
     /// <summary>Creates an automatic image mask-crop before sampling, to be followed by <see cref="RecompositeCropped(string, string, JArray, JArray)"/> after sampling.</summary>
@@ -1563,8 +1604,11 @@ public class WorkflowGenerator
     /// <summary>Default sampler scheduler type.</summary>
     public string DefaultScheduler = "normal";
 
+    /// <summary>Default previews type.</summary>
+    public string DefaultPreviews = "default";
+
     /// <summary>Creates a KSampler and returns its node ID.</summary>
-    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, double sigmin = -1, double sigmax = -1, string previews = "default", string defsampler = null, string defscheduler = null, string id = null, bool rawSampler = false)
+    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, double sigmin = -1, double sigmax = -1, string previews = null, string defsampler = null, string defscheduler = null, string id = null, bool rawSampler = false)
     {
         bool willCascadeFix = false;
         JArray cascadeModel = null;
@@ -1698,7 +1742,7 @@ public class WorkflowGenerator
             inputs["sigma_min"] = UserInput.Get(T2IParamTypes.SamplerSigmaMin, sigmin);
             inputs["sigma_max"] = UserInput.Get(T2IParamTypes.SamplerSigmaMax, sigmax);
             inputs["rho"] = UserInput.Get(T2IParamTypes.SamplerRho, 7);
-            inputs["previews"] = UserInput.Get(T2IParamTypes.NoPreviews) ? "none" : previews;
+            inputs["previews"] = UserInput.Get(T2IParamTypes.NoPreviews) ? "none" : previews ?? DefaultPreviews;
             created = CreateNode("SwarmKSampler", inputs, firstId);
         }
         else
@@ -1712,7 +1756,7 @@ public class WorkflowGenerator
                 ["stage_c"] = new JArray() { created, 0 },
                 ["conditioning"] = pos
             });
-            created = CreateKSampler(cascadeModel, [stageBCond, 0], neg, [latent[0], 1], 1.1, steps, startStep, endStep, seed + 27, returnWithLeftoverNoise, addNoise, sigmin, sigmax, previews, defsampler, defscheduler, id, true);
+            created = CreateKSampler(cascadeModel, [stageBCond, 0], neg, [latent[0], 1], 1.1, steps, startStep, endStep, seed + 27, returnWithLeftoverNoise, addNoise, sigmin, sigmax, previews ?? previews, defsampler, defscheduler, id, true);
         }
         return created;
     }
