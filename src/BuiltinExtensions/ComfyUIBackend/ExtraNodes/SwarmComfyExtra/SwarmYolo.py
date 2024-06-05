@@ -27,8 +27,15 @@ class SwarmYoloDetection:
         results = model(img)
         masks = results[0].masks
         if masks is None:
-            return (torch.zeros(1, image.shape[1], image.shape[2]), )
-        masks = masks.data.cpu()
+            box = results[0].boxes[0]
+            if box is None:
+                return (torch.zeros(1, image.shape[1], image.shape[2]), )
+            x1, y1, x2, y2 = box.xyxy[0].tolist()
+            mask = torch.zeros((image.shape[1], image.shape[2]), dtype=torch.float32, device="cpu")
+            mask[int(y1):int(y2), int(x1):int(x2)] = 1.0
+            masks = mask.unsqueeze(0)
+        else:
+            masks = masks.data.cpu()
         masks = torch.nn.functional.interpolate(masks.unsqueeze(1), size=(image.shape[1], image.shape[2]), mode="bilinear").squeeze(1)
         if index == 0:
             result = masks[0]
