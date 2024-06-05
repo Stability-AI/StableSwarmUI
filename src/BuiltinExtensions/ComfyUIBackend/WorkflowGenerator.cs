@@ -985,7 +985,7 @@ public class WorkflowGenerator
                     string blurNode = g.CreateNode("SwarmMaskBlur", new JObject()
                     {
                         ["mask"] = new JArray() { segmentNode, 0 },
-                        ["blur_radius"] = 10,
+                        ["blur_radius"] = g.UserInput.Get(T2IParamTypes.SegmentMaskBlur, 10),
                         ["sigma"] = 1
                     });
                     string growNode = g.CreateNode("GrowMask", new JObject()
