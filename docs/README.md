@@ -1,6 +1,7 @@
 # StableSwarmUI Documentation
 
 - [Basic Usage](/docs/Basic%20Usage.md) to learn how to get started.
+- [Why Use Swarm](/docs/Why%20Use%20Swarm.md) to see what advanced Swarm offers you
 - [Advanced Usage](/docs/Advanced%20Usage.md) for various advanced usage topics (use from external device, comfy workflows, ...)
 - [Using more GPUs](/docs/Using%20More%20GPUs.md) for more info about splitting generations between multiple GPUs.
 - [Model Support](/docs/Model%20Support.md) for details about support of different model types.
