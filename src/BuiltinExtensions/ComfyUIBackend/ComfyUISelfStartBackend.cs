@@ -85,7 +85,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         }
         else
         {
-            await Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }).WaitForExitAsync(Program.GlobalProgramCancel);
+            await NetworkBackendUtils.RunProcessWithMonitoring(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }, "comfy node pull", "comfynodepull");
         }
         return false;
     }
@@ -110,7 +110,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             {
                 if (Directory.Exists($"{node}/.git"))
                 {
-                    tasks.Add(Process.Start(new ProcessStartInfo("git", "pull") { WorkingDirectory = node }).WaitForExitAsync());
+                    tasks.Add(NetworkBackendUtils.RunProcessWithMonitoring(new ProcessStartInfo("git", "pull") { WorkingDirectory = node }, "comfy node pull", "comfynodepull"));
                 }
             }
             await Task.WhenAll(tasks);

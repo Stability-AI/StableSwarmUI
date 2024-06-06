@@ -156,7 +156,14 @@ public static class BasicAPIFeatures
                     {
                         try
                         {
-                            await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_cu121_or_cpu.7z", "dlbackend/comfyui_dl.7z", updateProgress);
+                            if (install_amd)
+                            {
+                                await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_cu118_or_cpu_22_05_2023.7z", "dlbackend/comfyui_dl.7z", updateProgress);
+                            }
+                            else
+                            {
+                                await Utilities.DownloadFile("https://github.com/comfyanonymous/ComfyUI/releases/download/latest/ComfyUI_windows_portable_nvidia_cu121_or_cpu.7z", "dlbackend/comfyui_dl.7z", updateProgress);
+                            }
                         }
                         catch (HttpRequestException ex)
                         {
@@ -203,13 +210,18 @@ public static class BasicAPIFeatures
                         await output("Installing prereqs...");
                         await Utilities.DownloadFile("https://aka.ms/vs/16/release/vc_redist.x64.exe", "dlbackend/vc_redist.x64.exe", updateProgress);
                         updateProgress(0, 0);
-                        Process.Start(new ProcessStartInfo(Path.GetFullPath("dlbackend/vc_redist.x64.exe"), "/quiet /install /passive /norestart") { UseShellExecute = true }).WaitForExit();
+                        await Process.Start(new ProcessStartInfo(Path.GetFullPath("dlbackend/vc_redist.x64.exe"), "/quiet /install /passive /norestart") { UseShellExecute = true }).WaitForExitAsync(Program.GlobalProgramCancel);
                         path = "dlbackend/comfy/ComfyUI/main.py";
                         if (install_amd)
                         {
-                            await output("Installing AMD compatible Torch-DirectML...");
                             string comfyFolderPath = Path.GetFullPath("dlbackend/comfy");
-                            Process.Start(new ProcessStartInfo($"{comfyFolderPath}/python_embeded/python.exe", "-s -m pip install torch-directml") { UseShellExecute = true, WorkingDirectory = comfyFolderPath }).WaitForExit();
+                            await output("Fixing Comfy install...");
+                            // Note: the old Python 3.10 comfy file is needed for AMD, and it has a cursed git config (mandatory auth header? argh) so this is a hack-fix for that
+                            File.WriteAllBytes("dlbackend/comfy/ComfyUI/.git/config", "[core]\n\trepositoryformatversion = 0\n\tfilemode = false\n\tbare = false\n\tlogallrefupdates = true\n\tignorecase = true\n[remote \"origin\"]\n\turl = https://github.com/comfyanonymous/ComfyUI\n\tfetch = +refs/heads/*:refs/remotes/origin/*\n[gc]\n\tauto = 0\n[branch \"master\"]\n\tremote = origin\n\tmerge = refs/heads/master\n[lfs]\n\trepositoryformatversion = 0\n[remote \"upstream\"]\n\turl = https://github.com/comfyanonymous/ComfyUI.git\n\tfetch = +refs/heads/*:refs/remotes/upstream/*\n".EncodeUTF8());
+                            await NetworkBackendUtils.RunProcessWithMonitoring(new ProcessStartInfo("git", "pull") { WorkingDirectory = $"{comfyFolderPath}/ComfyUI" }, "ComfyUI Install (git pull)", "comfyinstall");
+                            await NetworkBackendUtils.RunProcessWithMonitoring(new ProcessStartInfo($"{comfyFolderPath}/python_embeded/python.exe", "-s -m pip install -U -r ComfyUI/requirements.txt") { WorkingDirectory = comfyFolderPath }, "ComfyUI Install (python requirements)", "comfyinstall");
+                            await output("Installing AMD compatible Torch-DirectML...");
+                            await NetworkBackendUtils.RunProcessWithMonitoring(new ProcessStartInfo($"{comfyFolderPath}/python_embeded/python.exe", "-s -m pip install torch-directml") { UseShellExecute = false, WorkingDirectory = comfyFolderPath }, "ComfyUI Install (directml)", "comfyinstall");
                             extraArgs += "--directml ";
                         }
                     }

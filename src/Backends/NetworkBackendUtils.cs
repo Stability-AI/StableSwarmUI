@@ -362,13 +362,22 @@ public static class NetworkBackendUtils
         Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
     }
 
-    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier)
+    public static async Task RunProcessWithMonitoring(ProcessStartInfo procInfo, string nameSimple, string identifier)
     {
-        ReportLogsFromProcess(process, nameSimple, identifier, out Action signalShutdownExpected, () => BackendStatus.RUNNING, _ => { });
-        signalShutdownExpected();
+        procInfo.RedirectStandardOutput = true;
+        procInfo.RedirectStandardError = true;
+        procInfo.UseShellExecute = false;
+        Process process = Process.Start(procInfo);
+        ReportLogsFromProcess(process, nameSimple, identifier, out Action signalShutdownExpected, () => BackendStatus.RUNNING, _ => { }, true);
+        await process.WaitForExitAsync(Program.GlobalProgramCancel);
     }
 
-    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier, out Action signalShutdownExpected, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus)
+    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier)
+    {
+        ReportLogsFromProcess(process, nameSimple, identifier, out Action signalShutdownExpected, () => BackendStatus.RUNNING, _ => { }, true);
+    }
+
+    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier, out Action signalShutdownExpected, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus, bool exitPreExpected = false)
     {
         Logs.LogTracker logTracker = new() { Identifier = identifier };
         lock (Logs.OtherTrackers)
@@ -376,7 +385,7 @@ public static class NetworkBackendUtils
             Logs.OtherTrackers[nameSimple] = logTracker;
         }
         BackendStatus status = getStatus();
-        bool isShuttingDown = false;
+        bool isShuttingDown = exitPreExpected;
         signalShutdownExpected = () => Volatile.Write(ref isShuttingDown, true);
         bool shouldContinueErrorLine(string str)
         {
