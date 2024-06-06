@@ -599,6 +599,16 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                 {
                     return input == -1 ? Random.Shared.Next() : input;
                 }
+                string getLoras()
+                {
+                    string[] loraNames = [.. Program.T2IModelSets["LoRA"].ListModelNamesFor(user_input.SourceSession)];
+                    string[] matches = [.. user_input.Get(T2IParamTypes.Loras).Select(lora => T2IParamTypes.GetBestModelInList(lora, loraNames))];
+                    if (matches.Any(m => string.IsNullOrWhiteSpace(m)))
+                    {
+                        throw new InvalidDataException("One or more LoRA models not found.");
+                    }
+                    return matches.JoinString(",");
+                }
                 string filled = tagBasic switch
                 {
                     "stability_api_key" => user_input.SourceSession.User.GetGenericData("stability_api", "key") ?? throw new InvalidDataException("Stability API key not set - please go to the User tab to set it."),
@@ -617,6 +627,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
                     "comfy_scheduler" or "comfyui_scheduler" or "scheduler" => user_input.GetString(ComfyUIBackendExtension.SchedulerParam) ?? (string.IsNullOrWhiteSpace(defVal) ? "normal" : defVal),
                     "model" => user_input.Get(T2IParamTypes.Model).ToString(ModelFolderFormat),
                     "prefix" => $"StableSwarmUI_{Random.Shared.Next():X4}_",
+                    "loras" => getLoras(),
                     _ => fillDynamic()
                 };
                 filled ??= defVal;
