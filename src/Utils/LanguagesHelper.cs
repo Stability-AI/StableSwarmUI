@@ -93,12 +93,24 @@ public class LanguagesHelper
         }
     }
 
+    /// <summary>Removes invalid/outdated entries from all language files.</summary>
+    public static void RemoveInvalid()
+    {
+        foreach (string filename in Directory.EnumerateFiles("./languages/", "*.json"))
+        {
+            JObject data = JObject.Parse(File.ReadAllText(filename));
+            data["keys"] = JObject.FromObject((data["keys"] as JObject).Properties().Where(p => DebugSet.ContainsKey(p.Name)).ToDictionary(p => p.Name, p => p.Value));
+            File.WriteAllText(filename, data.SerializeClean());
+        }
+    }
+
     /// <summary>Track a set of translatables in the debug set.</summary>
     public static void TrackSet(string[] set)
     {
         AppendSetInternal(set);
         DebugSet = DebugSet.SortByKey(k => k);
         File.WriteAllText($"./languages/en.debug", new JObject() { ["keys"] = DebugSet }.SerializeClean());
+        RemoveInvalid();
         FixUpLangs();
     }
 }
