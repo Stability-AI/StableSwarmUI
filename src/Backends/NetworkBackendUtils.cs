@@ -444,7 +444,8 @@ public static class NetworkBackendUtils
             bool keepShowing = false;
             while ((line = process.StandardError.ReadLine()) != null)
             {
-                if (line.StartsWith("Traceback (") || line.StartsWith("RuntimeError: "))
+                string lineLow = line.ToLowerFast();
+                if (lineLow.StartsWith("traceback (") || lineLow.Contains("error: "))
                 {
                     keepShowing = true;
                     Logs.Warning($"{nameSimple} stderr: {line}");

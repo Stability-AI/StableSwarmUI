@@ -230,7 +230,15 @@ public static class BasicAPIFeatures
                         stepsThusFar++;
                         updateProgress(0, 0);
                         string gpuType = install_amd ? "amd" : "nv";
-                        await Process.Start("/bin/bash", $"launchtools/comfy-install-linux.sh {gpuType}").WaitForExitAsync(Program.GlobalProgramCancel);
+                        Process installer = Process.Start(new ProcessStartInfo("/bin/bash", $"launchtools/comfy-install-linux.sh {gpuType}") { RedirectStandardOutput = true, UseShellExecute = false, RedirectStandardError = true });
+                        NetworkBackendUtils.ReportLogsFromProcess(installer, "ComfyUI Install (Linux Script)", "comfyinstall");
+                        await installer.WaitForExitAsync(Program.GlobalProgramCancel);
+                        if (installer.ExitCode != 0)
+                        {
+                            await output("ComfyUI install failed!");
+                            await socket.SendJson(new JObject() { ["error"] = "ComfyUI install failed! Check debug logs for details." }, API.WebsocketTimeout);
+                            return null;
+                        }
                         path = "dlbackend/ComfyUI/main.py";
                     }
                     NvidiaUtil.NvidiaInfo[] nv = NvidiaUtil.QueryNvidia();
