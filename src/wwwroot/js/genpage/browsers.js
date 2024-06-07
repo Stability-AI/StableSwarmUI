@@ -62,12 +62,14 @@ class GenPageBrowserClass {
         this.builtEvent = null;
         this.sizeChangedEvent = null;
         this.maxPreBuild = 512;
+        this.chunksRendered = 0;
     }
 
     /**
      * Navigates the browser to a given folder path.
      */
     navigate(folder, callback = null) {
+        this.chunksRendered = 0;
         this.folder = folder;
         this.selected = null;
         this.update(false, callback);
@@ -110,6 +112,7 @@ class GenPageBrowserClass {
      */
     refresh() {
         refreshParameterValues(true, () => {
+            this.chunksRendered = 0;
             let path = this.folder;
             this.update(true, () => {
                 this.clickPath(path);
@@ -279,6 +282,14 @@ class GenPageBrowserClass {
      */
     buildContentList(container, files, before = null, startId = 0) {
         let id = startId;
+        let maxBuildNow = this.maxPreBuild;
+        if (startId == 0) {
+            maxBuildNow += this.chunksRendered * Math.min(this.maxPreBuild / 2, 100);
+            this.chunksRendered = 0;
+        }
+        else {
+            this.chunksRendered++;
+        }
         for (let i = 0; i < files.length; i++) {
             let file = files[i];
             id++;
@@ -286,7 +297,7 @@ class GenPageBrowserClass {
             if (this.filter && !desc.searchable.toLowerCase().includes(this.filter)) {
                 continue;
             }
-            if (i > this.maxPreBuild) {
+            if (i > maxBuildNow) {
                 let remainingFiles = files.slice(i);
                 while (remainingFiles.length > 0) {
                     let chunkSize = Math.min(this.maxPreBuild / 2, remainingFiles.length, 100);
@@ -386,6 +397,9 @@ class GenPageBrowserClass {
                 container.appendChild(div);
             }
         }
+        setTimeout(() => {
+            this.makeVisible(container);
+        }, 100);
     }
 
     /**
