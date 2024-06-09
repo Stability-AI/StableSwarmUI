@@ -683,6 +683,9 @@ function gotImageResult(image, metadata, batchId) {
     batch_div.addEventListener('click', () => clickImageInBatch(batch_div));
     if (!document.getElementById('current_image_img') || autoLoadImagesElem.checked) {
         setCurrentImage(src, metadata, batchId, false, true);
+        if (getUserSetting('AutoSwapImagesIncludesFullView') && imageFullView.isOpen()) {
+            imageFullView.showImage(src, metadata);
+        }
     }
     return batch_div;
 }

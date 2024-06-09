@@ -61,7 +61,6 @@ class GenerateHandler {
     }
 
     doGenerateButton(e) {
-        console.log(e)
         if (e.altKey) {
             this.doInterruptAndGen();
         }
@@ -115,6 +114,9 @@ class GenerateHandler {
                         let curImgElem = document.getElementById(this.imageId);
                         if (!curImgElem || autoLoadImagesElem.checked || curImgElem.dataset.batch_id == `${batch_id}_${data.batch_index}`) {
                             this.setCurrentImage(data.image, data.metadata, `${batch_id}_${data.batch_index}`, false, true);
+                            if (getUserSetting('AutoSwapImagesIncludesFullView') && imageFullView.isOpen()) {
+                                imageFullView.showImage(data.image, data.metadata);
+                            }
                         }
                         let imgElem = imgHolder.div.querySelector('img');
                         imgElem.src = data.image;

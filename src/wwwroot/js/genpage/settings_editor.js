@@ -73,6 +73,7 @@ function buildSettingsMenu(container, data, prefix, tracker) {
 
 /** Returns the current value of the specified user setting (by ID). */
 function getUserSetting(id, def = 'require') {
+    id = id.toLowerCase();
     let elem = document.getElementById(`usersettings_${id}`);
     if (!elem) {
         if (def == 'require') {

@@ -255,6 +255,9 @@ public class Settings : AutoConfiguration
         [ConfigComment("If true, images in the main center area will always grow to better fill the screen.")]
         public bool CenterImageAlwaysGrow = false;
 
+        [ConfigComment("If true, when 'Auto Swap To Images' is enabled, and you have FullView open, the FullView will also be swapped.\nIf false, the FullView will not change.")]
+        public bool AutoSwapImagesIncludesFullView = true;
+
         [ConfigComment("If enabled, batch size will be reset to 1 when parameters are loaded.\nThis can prevent accidents that might thrash your GPU or cause compatibility issues, especially for example when importing a comfy workflow.\nYou can still set the batch size at will in the GUI.")]
         public bool ResetBatchSizeToOne = false;
 
