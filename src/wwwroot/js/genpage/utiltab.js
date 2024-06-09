@@ -186,6 +186,73 @@ class ModelDownloaderUtil {
         this.civitPrefix = 'https://civitai.com/';
     }
 
+    getCivitaiMetadata(id, versId, callback) {
+        getJsonDirect(`${this.civitPrefix}api/v1/models/${id}`, (status, rawData) => {
+            let modelType = null;
+            let metadata = null;
+            let rawVersion = rawData.modelVersions[0];
+            let file = rawVersion.files[0];
+            if (versId) {
+                for (let vers of rawData.modelVersions) {
+                    for (let vFile of vers.files) {
+                        if (vFile.downloadUrl.endsWith(`/${versId}`)) {
+                            rawVersion = vers;
+                            file = vFile;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (rawData.type == 'Checkpoint') { modelType = 'Stable-Diffusion'; }
+            if (rawData.type == 'LORA') { modelType = 'LoRA'; }
+            if (rawData.type == 'TextualInversion') { modelType = 'Embedding'; }
+            if (rawData.type == 'ControlNet') { modelType = 'ControlNet'; }
+            let applyMetadata = (img) => {
+                let url = `${this.civitPrefix}models/${id}?modelVersionId=${versId}`;
+                metadata = {
+                    'modelspec.title': `${rawData.name} - ${rawVersion.name}`,
+                    'modelspec.author': rawData.creator.username,
+                    'modelspec.description': `From <a href="${url}">${url}</a>\n${rawVersion.description || ''}\n${rawData.description}\n`,
+                    'modelspec.date': rawVersion.createdAt,
+                };
+                if (rawVersion.trainedWords) {
+                    metadata['modelspec.trigger_phrase'] = rawVersion.trainedWords.join(", ");
+                }
+                if (rawData.tags) {
+                    metadata['modelspec.tags'] = rawData.tags.join(", ");
+                }
+                if (img) {
+                    metadata['modelspec.thumbnail'] = img;
+                }
+                callback(rawData, rawVersion, metadata, modelType, file.downloadUrl);
+            }
+            if (rawVersion.images.length > 0) {
+                imageToData(rawVersion.images[0].url, img => applyMetadata(img));
+            }
+            else {
+                applyMetadata('');
+            }
+        });
+    }
+
+    parseCivitaiUrl(url) {
+        let parts = url.substring(this.civitPrefix.length).split('/', 4); // 'models', id, name + sometimes version OR 'api', 'download', 'models', versid
+        if (parts.length == 2 && parts[0] == 'models' && parts[1].includes('?')) {
+            let subparts = parts[1].split('?', 2);
+            parts = ['models', subparts[0], `?${subparts[1]}`];
+        }
+        if (parts.length < 3) {
+            return null;
+        }
+        if (parts[0] == 'models') {
+            let subparts = parts[2].split('?modelVersionId=', 2);
+            if (subparts.length == 2) {
+                return [parts[1], subparts[1]];
+            }
+        }
+        return null;
+    }
+
     urlInput() {
         let url = this.url.value;
         if (url.endsWith('.pt') || url.endsWith('.pth') || url.endsWith('.ckpt') || url.endsWith('.bin')) {
@@ -227,7 +294,6 @@ class ModelDownloaderUtil {
         }
         if (url.startsWith(this.civitPrefix)) {
             let parts = url.substring(this.civitPrefix.length).split('/', 4); // 'models', id, name + sometimes version OR 'api', 'download', 'models', versid
-            console.log(parts)
             if (parts.length == 2 && parts[0] == 'models' && parts[1].includes('?')) {
                 let subparts = parts[1].split('?', 2);
                 parts = ['models', subparts[0], `?${subparts[1]}`];
@@ -238,62 +304,24 @@ class ModelDownloaderUtil {
                 return;
             }
             let loadMetadata = (id, versId) => {
-                getJsonDirect(`${this.civitPrefix}api/v1/models/${id}`, (status, data) => {
-                    let version = data.modelVersions[0];
-                    let file = version.files[0];
-                    if (versId) {
-                        for (let vers of data.modelVersions) {
-                            for (let vFile of vers.files) {
-                                if (vFile.downloadUrl.endsWith(`/${versId}`)) {
-                                    version = vers;
-                                    file = vFile;
-                                    break;
-                                }
-                            }
-                        }
+                this.getCivitaiMetadata(id, versId, (rawData, rawVersion, metadata, modelType, url) => {
+                    this.url.value = url;
+                    if (modelType) {
+                        this.type.value = modelType;
                     }
-                    if (data.type == 'Checkpoint') { this.type.value = 'Stable-Diffusion'; }
-                    if (data.type == 'LORA') { this.type.value = 'LoRA'; }
-                    if (data.type == 'TextualInversion') { this.type.value = 'Embedding'; }
-                    if (data.type == 'ControlNet') { this.type.value = 'ControlNet'; }
-                    this.url.value = file.downloadUrl;
                     this.urlStatusArea.innerText = "URL appears to be a CivitAI link, and has been loaded from Civitai API.";
                     this.nameInput();
-                    let applyMetadata = (img) => {
-                        this.metadataZone.innerHTML = `
-                            Found civitai metadata for model ID ${escapeHtml(id)} version id ${escapeHtml(versId)}:
-                            <br><b>Model title</b>: ${escapeHtml(data.name)}
-                            <br><b>Version title</b>: ${escapeHtml(version.name)}
-                            <br><b>Base model</b>: ${escapeHtml(version.baseModel)}
-                            <br><b>Date</b>: ${escapeHtml(version.createdAt)}`
-                            + (img ? `<br><b>Thumbnail</b>:<br> <img src="${img}" style="max-width: 100%; max-height: 100%;">` : '')
-                            + `<br><b>Model description</b>: ${safeHtmlOnly(data.description)}`
-                            + (version.description ? `<br><b>Version description</b>: ${safeHtmlOnly(version.description)}` : '')
-                            + (version.trainedWords ? `<br><b>Trained words</b>: ${escapeHtml(version.trainedWords.join(", "))}` : '');
-                        let url = `${this.civitPrefix}models/${id}?modelVersionId=${versId}`;
-                        let modelData = {
-                            'modelspec.title': `${data.name} - ${version.name}`,
-                            'modelspec.author': data.creator.username,
-                            'modelspec.description': `From <a href="${url}">${url}</a>\n${version.description || ''}\n${data.description}\n`,
-                            'modelspec.date': version.createdAt,
-                        };
-                        if (version.trainedWords) {
-                            modelData['modelspec.trigger_phrase'] = version.trainedWords.join(", ");
-                        }
-                        if (data.tags) {
-                            modelData['modelspec.tags'] = data.tags.join(", ");
-                        }
-                        if (img) {
-                            modelData['modelspec.thumbnail'] = img;
-                        }
-                        this.metadataZone.dataset.raw = `${JSON.stringify(modelData, null, 2)}`;
-                    }
-                    if (version.images.length > 0) {
-                        imageToData(version.images[0].url, img => applyMetadata(img));
-                    }
-                    else {
-                        applyMetadata('');
-                    }
+                    this.metadataZone.innerHTML = `
+                        Found civitai metadata for model ID ${escapeHtml(id)} version id ${escapeHtml(versId)}:
+                        <br><b>Model title</b>: ${escapeHtml(rawData.name)}
+                        <br><b>Version title</b>: ${escapeHtml(rawVersion.name)}
+                        <br><b>Base model</b>: ${escapeHtml(rawVersion.baseModel)}
+                        <br><b>Date</b>: ${escapeHtml(rawVersion.createdAt)}`
+                        + (img ? `<br><b>Thumbnail</b>:<br> <img src="${img}" style="max-width: 100%; max-height: 100%;">` : '')
+                        + `<br><b>Model description</b>: ${safeHtmlOnly(rawData.description)}`
+                        + (rawVersion.description ? `<br><b>Version description</b>: ${safeHtmlOnly(rawVersion.description)}` : '')
+                        + (rawVersion.trainedWords ? `<br><b>Trained words</b>: ${escapeHtml(rawVersion.trainedWords.join(", "))}` : '');
+                    this.metadataZone.dataset.raw = `${JSON.stringify(metadata, null, 2)}`;
                 });
             }
             if (parts[0] == 'models') {

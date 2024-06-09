@@ -159,6 +159,44 @@ function editModel(model, browser) {
     $('#edit_model_modal').modal('show');
 }
 
+function edit_model_load_civitai() {
+    let url = getRequiredElementById('edit_model_civitai_url').value;
+    let info = getRequiredElementById('edit_model_civitai_info');
+    if (!url) {
+        info.innerText = 'No URL provided.';
+        return;
+    }
+    let [id, versId] = modelDownloader.parseCivitaiUrl(url);
+    if (!id) {
+        info.innerText = 'Invalid URL.';
+        return;
+    }
+    info.innerText = 'Loading...';
+    modelDownloader.getCivitaiMetadata(id, versId, (rawData, rawVersion, metadata, modelType, url) => {
+        getRequiredElementById('edit_model_name').value = metadata['modelspec.title'];
+        getRequiredElementById('edit_model_author').value = metadata['modelspec.author'];
+        getRequiredElementById('edit_model_description').value = metadata['modelspec.description'];
+        getRequiredElementById('edit_model_date').value = metadata['modelspec.date'];
+        if (metadata['modelspec.trigger_phrase']) {
+            getRequiredElementById('edit_model_trigger_phrase').value = metadata['modelspec.trigger_phrase'];
+        }
+        if (metadata['modelspec.tags']) {
+            getRequiredElementById('edit_model_tags').value = metadata['modelspec.tags'];
+        }
+        if (metadata['modelspec.thumbnail']) {
+            let imageInput = getRequiredElementById('edit_model_image');
+            imageInput.innerHTML = '';
+            let newImg = document.createElement('img');
+            newImg.src = metadata['modelspec.thumbnail'];
+            newImg.id = 'edit_model_image_img';
+            newImg.style.maxWidth = '100%';
+            newImg.style.maxHeight = '';
+            imageInput.appendChild(newImg);
+        }
+        info.innerText = 'Loaded.';
+    });
+}
+
 function save_edit_model() {
     let model = curModelMenuModel;
     if (model == null) {

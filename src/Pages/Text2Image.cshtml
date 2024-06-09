@@ -330,6 +330,9 @@
             @WebUtil.ModalHeader("edit_model_modal", """Edit Model Metadata: <input type="text" class="modal_text_extra" id="edit_model_name" placeholder="Model Name" />""")
                 <div class="modal-body">
                     <div><span id="edit_model_technical_data"></span></div>
+                    <hr>
+                    <div>Load from civitai: <input type="text" id="edit_model_civitai_url" class="auto-text translate" placeholder="Civitai URL" /> <button type="button" class="btn btn-primary basic-button translate" onclick="edit_model_load_civitai()">Load</button>
+                    <div id="edit_model_civitai_info"></div></div>
                     <div>Author: <input type="text" id="edit_model_author" class="modal_text_extra translate" placeholder="Model Author" /></div>
                     <div>Architecture: <select id="edit_model_type" class="modal_text_extra" placeholder="Model Type">
                         @foreach (T2IModelClass arch in T2IModelClassSorter.ModelClasses.Values.OrderBy(x => x.ID))
