@@ -46,14 +46,18 @@ public static class BasicAPIFeatures
         UtilAPI.Register();
     }
 
+    public static string GetUserIdFor(HttpContext context)
+    {
+        if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id)) // TODO: Proper auth
+        {
+            return user_id[0];
+        }
+        return SessionHandler.LocalUserID; // TODO: disable this if non-local swarm instance
+    }
+
     /// <summary>API Route to create a new session automatically.</summary>
     public static async Task<JObject> GetNewSession(HttpContext context)
     {
-        string user = null;
-        if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id)) // TODO: Proper auth
-        {
-            user = user_id[0];
-        }
         string source = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         if (context.Request.Headers.TryGetValue("X-Forwarded-For", out StringValues forwardedFor) && forwardedFor.Count > 0)
         {
@@ -66,7 +70,7 @@ public static class BasicAPIFeatures
         {
             source = source[..100] + "...";
         }
-        Session session = Program.Sessions.CreateAdminSession(source, user);
+        Session session = Program.Sessions.CreateAdminSession(source, GetUserIdFor(context));
         return new JObject()
         {
             ["session_id"] = session.ID,

@@ -287,15 +287,7 @@ public class WebServer
             path = path.After("/Output/");
         }
         path = Uri.UnescapeDataString(path).Replace('\\', '/');
-        string userId;
-        if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id)) // TODO: Proper auth
-        {
-            userId = user_id[0];
-        }
-        else
-        {
-            userId = SessionHandler.LocalUserID; // TODO: disable this if non-local swarm instance
-        }
+        string userId = BasicAPIFeatures.GetUserIdFor(context);
         (path, string consoleError, string userError) = CheckOutputFilePath(path, userId, isExact);
         if (consoleError is not null)
         {

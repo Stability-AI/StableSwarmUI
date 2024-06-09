@@ -1,7 +1,6 @@
 ﻿using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using StableSwarmUI.Backends;
 using StableSwarmUI.Core;
@@ -10,6 +9,8 @@ using System.IO;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Net;
+using StableSwarmUI.WebAPI;
+using StableSwarmUI.Accounts;
 
 namespace StableSwarmUI.Builtin_ComfyUIBackend;
 
@@ -98,6 +99,9 @@ public class ComfyUIRedirectHelper
 
     /// <summary>Set of backend IDs that have recently been assigned to a user (to try to spread new users onto different backends where possible).</summary>
     public static ConcurrentDictionary<int, int> RecentlyClaimedBackends = new();
+
+    /// <summary>Map of themes to theme file injection content.</summary>
+    public static ConcurrentDictionary<string, string> ComfyThemeData = new();
 
     /// <summary>Backup for <see cref="ObjectInfoReadCacher"/>.</summary>
     public static volatile JObject LastObjectInfo;
@@ -410,12 +414,9 @@ public class ComfyUIRedirectHelper
                                     address = client.Address;
                                     parsed["client_id"] = client.SID;
                                     client.FixUpPrompt(parsed["prompt"] as JObject);
-                                    string userText = "";
-                                    if (context.Request.Headers.TryGetValue("X-SWARM-USER_ID", out StringValues user_id)) // TODO: Temporary: hacky header user ID tracker
-                                    {
-                                        Program.Sessions.GetUser(user_id[0]).UpdateLastUsedTime();
-                                        userText = $" (from user {user_id[0]})";
-                                    }
+                                    string userId = BasicAPIFeatures.GetUserIdFor(context);
+                                    string userText = $" (from user {userId})";
+                                    Program.Sessions.GetUser(userId).UpdateLastUsedTime();
                                     Logs.Info($"Sent Comfy backend direct prompt requested to backend #{backend.BackendData.ID}{userText}");
                                     backend.BackendData.UpdateLastReleaseTime();
                                     redirected = true;
@@ -489,6 +490,30 @@ public class ComfyUIRedirectHelper
                     ObjectInfoReadCacher.ForceExpire();
                 }
                 response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(data.ToString(), Encoding.UTF8, "application/json") };
+            }
+            else if (path == "user.css")
+            {
+                string remoteUserThemeText = await webClient.GetStringAsync($"{address}/user.css");
+                string userId = BasicAPIFeatures.GetUserIdFor(context);
+                User user = Program.Sessions.GetUser(userId);
+                string theme = user.Settings.Theme ?? Program.ServerSettings.DefaultUser.Theme;
+                if (Program.Web.RegisteredThemes.ContainsKey(theme))
+                {
+                    string themeText = ComfyThemeData.GetOrCreate(theme, () =>
+                    {
+                        string path = $"{ComfyUIBackendExtension.Folder}/ThemeCSS/{theme}.css";
+                        if (!File.Exists(path))
+                        {
+                            return null;
+                        }
+                        return File.ReadAllText(path);
+                    });
+                    if (themeText is not null)
+                    {
+                        remoteUserThemeText += $"\n{themeText}\n";
+                    }
+                }
+                response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(remoteUserThemeText, Encoding.UTF8, "text/css") };
             }
             else
             {
