@@ -93,7 +93,8 @@ function save_edit_wildcard() {
     let data = {
         'card': getRequiredElementById('edit_wildcard_name').value,
         'options': getRequiredElementById('edit_wildcard_contents').value.trim() + '\n',
-        'preview_image': ''
+        'preview_image': '',
+        'preview_image_metadata': currentMetadataVal
     };
     function complete() {
         genericRequest('EditWildcard', data, data => {
@@ -170,7 +171,8 @@ function save_edit_model() {
         'title': getRequiredElementById('edit_model_name').value,
         'standard_width': parseInt(resolution[0]),
         'standard_height': parseInt(resolution[1]),
-        'preview_image': ''
+        'preview_image': '',
+        'preview_image_metadata': currentMetadataVal
     };
     for (let val of ['author', 'type', 'description', 'usage_hint', 'date', 'license', 'trigger_phrase', 'tags', 'prediction_type']) {
         data[val] = getRequiredElementById(`edit_model_${val}`).value;

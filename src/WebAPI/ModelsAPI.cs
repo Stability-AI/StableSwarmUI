@@ -369,7 +369,8 @@ public static class ModelsAPI
     public static async Task<JObject> EditWildcard(Session session,
         [API.APIParameter("Exact filepath name of the wildcard.")] string card,
         [API.APIParameter("Newline-separated string listing of wildcard options.")] string options,
-        [API.APIParameter("Image-data-string of a preview, or null to not change.")] string preview_image)
+        [API.APIParameter("Image-data-string of a preview, or null to not change.")] string preview_image = null,
+        [API.APIParameter("Optional raw text of metadata to inject to the preview image.")] string preview_image_metadata = null)
     {
         card = Utilities.StrictFilenameClean(card);
         if (TryGetRefusalForModel(session, card, out JObject refusal))
@@ -382,8 +383,8 @@ public static class ModelsAPI
         File.WriteAllBytes(path, StringConversionHelper.UTF8Encoding.GetBytes(options));
         if (!string.IsNullOrWhiteSpace(preview_image))
         {
-            Image img = Image.FromDataString(preview_image);
-            File.WriteAllBytes($"{WildcardsHelper.Folder}/{card}.jpg", img.ToMetadataJpg().ImageData);
+            Image img = Image.FromDataString(preview_image).ToMetadataJpg(preview_image_metadata);
+            File.WriteAllBytes($"{WildcardsHelper.Folder}/{card}.jpg", img.ImageData);
             WildcardsHelper.WildcardFiles[card] = new WildcardsHelper.Wildcard() { Name = card };
         }
         return new JObject() { ["success"] = true };
@@ -398,13 +399,14 @@ public static class ModelsAPI
         [API.APIParameter("New model `description` metadata value.")] string description,
         [API.APIParameter("New model `standard_width` metadata value.")] int standard_width,
         [API.APIParameter("New model `standard_height` metadata value.")] int standard_height,
-        [API.APIParameter("New model `preview_image` metadata value (image-data-string format, or null to not change).")] string preview_image,
         [API.APIParameter("New model `usage_hint` metadata value.")] string usage_hint,
         [API.APIParameter("New model `date` metadata value.")] string date,
         [API.APIParameter("New model `license` metadata value.")] string license,
         [API.APIParameter("New model `trigger_phrase` metadata value.")] string trigger_phrase,
         [API.APIParameter("New model `prediction_type` metadata value.")] string prediction_type,
         [API.APIParameter("New model `tags` metadata value (comma-separated list).")] string tags,
+        [API.APIParameter("New model `preview_image` metadata value (image-data-string format, or null to not change).")] string preview_image = null,
+        [API.APIParameter("Optional raw text of metadata to inject to the preview image.")] string preview_image_metadata = null,
         [API.APIParameter("New model `is_negative_embedding` metadata value.")] bool is_negative_embedding = false,
         [API.APIParameter("The model's sub-type, eg `Stable-Diffusion`, `LoRA`, etc.")] string subtype = "Stable-Diffusion")
     {
@@ -439,8 +441,9 @@ public static class ModelsAPI
             actualModel.Metadata ??= new();
             if (!string.IsNullOrWhiteSpace(preview_image))
             {
-                actualModel.PreviewImage = preview_image;
-                actualModel.Metadata.PreviewImage = preview_image;
+                Image img = Image.FromDataString(preview_image).ToMetadataJpg(preview_image_metadata);
+                actualModel.PreviewImage = img.AsDataString();
+                actualModel.Metadata.PreviewImage = actualModel.PreviewImage;
             }
             actualModel.Metadata.Author = string.IsNullOrWhiteSpace(author) ? null : author;
             actualModel.Metadata.UsageHint = string.IsNullOrWhiteSpace(usage_hint) ? null : usage_hint;
