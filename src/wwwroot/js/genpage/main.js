@@ -490,6 +490,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
     let isVideo = src.endsWith(".mp4") || src.endsWith(".webm") || src.endsWith(".mov");
     let img;
     let isReuse = false;
+    let srcTarget;
     if (isVideo) {
         curImg.innerHTML = '';
         img = document.createElement('video');
@@ -497,7 +498,7 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
         img.autoplay = true;
         img.muted = true;
         let sourceObj = document.createElement('source');
-        sourceObj.src = src;
+        srcTarget = sourceObj;
         sourceObj.type = `video/${src.substring(src.lastIndexOf('.') + 1)}`;
         img.appendChild(sourceObj);
     }
@@ -513,16 +514,8 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
             img.removeAttribute('width');
             img.removeAttribute('height');
         }
-        img.src = src;
+        srcTarget = img;
     }
-    img.className = 'current-image-img';
-    img.id = 'current_image_img';
-    img.dataset.src = src;
-    img.dataset.batch_id = batchId;
-    img.onclick = () => imageFullView.showImage(src, metadata);
-    let extrasWrapper = isReuse ? document.getElementById('current-image-extras-wrapper') : createDiv('current-image-extras-wrapper', 'current-image-extras-wrapper');
-    extrasWrapper.innerHTML = '';
-    let buttons = createDiv(null, 'current-image-buttons');
     function naturalDim() {
         if (isVideo) {
             return [img.videoWidth, img.videoHeight];
@@ -531,6 +524,24 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
             return [img.naturalWidth, img.naturalHeight];
         }
     }
+    img.onload = () => {
+        let [width, height] = naturalDim();
+        if (previewGrow || getUserSetting('centerimagealwaysgrow')) {
+            img.width = width * 8;
+            img.height = height * 8;
+            img.dataset.previewGrow = 'true';
+        }
+        alignImageDataFormat();
+    }
+    srcTarget.src = src;
+    img.className = 'current-image-img';
+    img.id = 'current_image_img';
+    img.dataset.src = src;
+    img.dataset.batch_id = batchId;
+    img.onclick = () => imageFullView.showImage(src, metadata);
+    let extrasWrapper = isReuse ? document.getElementById('current-image-extras-wrapper') : createDiv('current-image-extras-wrapper', 'current-image-extras-wrapper');
+    extrasWrapper.innerHTML = '';
+    let buttons = createDiv(null, 'current-image-buttons');
     let imagePathClean = src;
     if (imagePathClean.startsWith("http://") || imagePathClean.startsWith("https://")) {
         imagePathClean = imagePathClean.substring(imagePathClean.indexOf('/', imagePathClean.indexOf('/') + 2));
@@ -626,15 +637,6 @@ function setCurrentImage(src, metadata = '', batchId = '', previewGrow = false, 
     let data = createDiv(null, 'current-image-data');
     data.innerHTML = formatMetadata(metadata);
     extrasWrapper.appendChild(data);
-    img.onload = () => {
-        let [width, height] = naturalDim();
-        if (previewGrow) {
-            img.width = width * 8;
-            img.height = height * 8;
-            img.dataset.previewGrow = 'true';
-        }
-        alignImageDataFormat();
-    }
     if (!isReuse) {
         curImg.appendChild(img);
         curImg.appendChild(extrasWrapper);
