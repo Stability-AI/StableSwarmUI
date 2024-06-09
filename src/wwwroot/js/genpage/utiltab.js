@@ -170,3 +170,222 @@ class LoraExtractorUtil {
 }
 
 loraExtractor = new LoraExtractorUtil();
+
+class ModelDownloaderUtil {
+    constructor() {
+        this.tabHeader = getRequiredElementById('modeldownloadertabbutton');
+        this.url = getRequiredElementById('model_downloader_url');
+        this.urlStatusArea = getRequiredElementById('model_downloader_status');
+        this.type = getRequiredElementById('model_downloader_type');
+        this.name = getRequiredElementById('model_downloader_name');
+        this.textArea = getRequiredElementById('model_downloader_text_area');
+        this.progressBar = getRequiredElementById('model_downloader_special_progressbar');
+        this.button = getRequiredElementById('model_downloader_button');
+        this.metadataZone = getRequiredElementById('model_downloader_metadatazone');
+        this.hfPrefix = 'https://huggingface.co/';
+        this.civitPrefix = 'https://civitai.com/';
+    }
+
+    urlInput() {
+        let url = this.url.value;
+        if (url.endsWith('.pt') || url.endsWith('.pth') || url.endsWith('.ckpt') || url.endsWith('.bin')) {
+            this.urlStatusArea.innerText = "URL looks to be a pickle file, cannot download. Only safetensors can be auto-downloaded. Pickle files may contain malware.";
+            this.button.disabled = true;
+            return;
+        }
+        if (url.startsWith(this.hfPrefix)) {
+            let parts = url.substring(this.hfPrefix.length).split('/', 5); // org, repo, 'blob', branch, filepath
+            if (parts.length < 5) {
+                this.urlStatusArea.innerText = "URL appears to be a huggingface link, but not a specific file. Please use the path of a specific file inside the repo.";
+                this.button.disabled = false;
+                return;
+            }
+            if (parts[4].endsWith('?download=true')) {
+                parts[4] = parts[4].substring(0, parts[4].length - '?download=true'.length);
+                this.url.value = `${this.hfPrefix}${parts.join('/')}`;
+            }
+            if (!parts[4].endsWith('.safetensors')) {
+                this.urlStatusArea.innerText = "URL appears to be a huggingface link, but not a safetensors file. Only safetensors can be auto-downloaded.";
+                this.button.disabled = false;
+                return;
+            }
+            if (parts[2] == 'blob') {
+                parts[2] = 'resolve';
+                this.url.value = `${this.hfPrefix}${parts.join('/')}`;
+                this.urlStatusArea.innerText = "URL appears to be a huggingface link, and has been autocorrected to a download link.";
+                this.button.disabled = false;
+                return;
+            }
+            if (parts[2] == 'resolve') {
+                this.urlStatusArea.innerText = "URL appears to be a valid HuggingFace download link.";
+                this.button.disabled = false;
+                return;
+            }
+            this.urlStatusArea.innerText = "URL appears to be a huggingface link, but seems to not be valid. Please double-check the link.";
+            this.button.disabled = false;
+            return;
+        }
+        if (url.startsWith(this.civitPrefix)) {
+            let parts = url.substring(this.civitPrefix.length).split('/', 4); // 'models', id, name + sometimes version OR 'api', 'download', 'models', versid
+            console.log(parts)
+            if (parts.length == 2 && parts[0] == 'models' && parts[1].includes('?')) {
+                let subparts = parts[1].split('?', 2);
+                parts = ['models', subparts[0], `?${subparts[1]}`];
+            }
+            if (parts.length < 3) {
+                this.urlStatusArea.innerText = "URL appears to be a CivitAI link, but not a specific model. Please use the path of a specific model.";
+                this.nameInput();
+                return;
+            }
+            let loadMetadata = (id, versId) => {
+                getJsonDirect(`${this.civitPrefix}api/v1/models/${id}`, (status, data) => {
+                    let version = data.modelVersions[0];
+                    let file = version.files[0];
+                    if (versId) {
+                        for (let vers of data.modelVersions) {
+                            for (let vFile of vers.files) {
+                                if (vFile.downloadUrl.endsWith(`/${versId}`)) {
+                                    version = vers;
+                                    file = vFile;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (data.type == 'Checkpoint') { this.type.value = 'Stable-Diffusion'; }
+                    if (data.type == 'LORA') { this.type.value = 'LoRA'; }
+                    if (data.type == 'TextualInversion') { this.type.value = 'Embedding'; }
+                    if (data.type == 'ControlNet') { this.type.value = 'ControlNet'; }
+                    this.url.value = file.downloadUrl;
+                    this.urlStatusArea.innerText = "URL appears to be a CivitAI link, and has been loaded from Civitai API.";
+                    this.nameInput();
+                    let applyMetadata = (img) => {
+                        this.metadataZone.innerHTML = `
+                            Found civitai metadata for model ID ${escapeHtml(id)} version id ${escapeHtml(versId)}:
+                            <br><b>Model title</b>: ${escapeHtml(data.name)}
+                            <br><b>Version title</b>: ${escapeHtml(version.name)}
+                            <br><b>Base model</b>: ${escapeHtml(version.baseModel)}
+                            <br><b>Date</b>: ${escapeHtml(version.createdAt)}`
+                            + (img ? `<br><b>Thumbnail</b>:<br> <img src="${img}" style="max-width: 100%; max-height: 100%;">` : '')
+                            + `<br><b>Model description</b>: ${safeHtmlOnly(data.description)}`
+                            + (version.description ? `<br><b>Version description</b>: ${safeHtmlOnly(version.description)}` : '')
+                            + (version.trainedWords ? `<br><b>Trained words</b>: ${escapeHtml(version.trainedWords.join(", "))}` : '');
+                        let url = `${this.civitPrefix}models/${id}?modelVersionId=${versId}`;
+                        let modelData = {
+                            'modelspec.title': `${data.name} - ${version.name}`,
+                            'modelspec.author': data.creator.username,
+                            'modelspec.description': `From <a href="${url}">${url}</a>\n${version.description || ''}\n${data.description}\n`,
+                            'modelspec.date': version.createdAt,
+                        };
+                        if (version.trainedWords) {
+                            modelData['modelspec.trigger_phrase'] = version.trainedWords.join(", ");
+                        }
+                        if (data.tags) {
+                            modelData['modelspec.tags'] = data.tags.join(", ");
+                        }
+                        if (img) {
+                            modelData['modelspec.thumbnail'] = img;
+                        }
+                        this.metadataZone.dataset.raw = `${JSON.stringify(modelData, null, 2)}`;
+                    }
+                    if (version.images.length > 0) {
+                        imageToData(version.images[0].url, img => applyMetadata(img));
+                    }
+                    else {
+                        applyMetadata('');
+                    }
+                });
+            }
+            if (parts[0] == 'models') {
+                let subparts = parts[2].split('?modelVersionId=', 2);
+                if (subparts.length == 2) {
+                    this.url.value = `${this.civitPrefix}api/download/models/${subparts[1]}`;
+                    this.urlStatusArea.innerText = "URL appears to be a CivitAI link, and has been autocorrected to a download link.";
+                    this.nameInput();
+                    loadMetadata(parts[1], subparts[1]);
+                    return;
+                }
+                this.urlStatusArea.innerText = "URL appears to be a CivitAI link, but is missing a version ID. Please double-check the link.";
+                this.nameInput();
+                return;
+            }
+            if (parts[0] == 'api' && parts[1] == 'download' && parts[2] == 'models') {
+                this.urlStatusArea.innerText = "URL appears to be a valid CivitAI download link.";
+                this.nameInput();
+                loadMetadata(parts[3], null);
+                return;
+            }
+            this.urlStatusArea.innerText = "URL appears to be a CivitAI link, but seems to not be valid. Attempting to check it...";
+            this.nameInput();
+            return;
+        }
+        else {
+            this.metadataZone.innerHTML = '';
+            this.metadataZone.dataset.raw = '';
+        }
+        if (url.trim() == '') {
+            this.urlStatusArea.innerText = "(...)";
+            this.button.disabled = true;
+            return;
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            this.urlStatusArea.innerText = "URL is not a valid link (should start with 'https://').";
+            this.button.disabled = true;
+            return;
+        }
+        this.urlStatusArea.innerText = "URL is unrecognized but looks valid.";
+        this.nameInput();
+        return;
+    }
+
+    nameInput() {
+        this.button.disabled = false;
+        if (this.name.value.trim() == '') {
+            this.name.style.borderColor = 'red';
+            this.button.disabled = true;
+        }
+        else {
+            this.name.style.borderColor = '';
+        }
+
+        if (this.url.value.trim() == '') {
+            this.url.style.borderColor = 'red';
+            this.button.disabled = true;
+        }
+        else {
+            this.url.style.borderColor = '';
+        }
+    }
+
+    run() {
+        let data = {
+            'url': this.url.value,
+            'type': this.type.value,
+            'name': this.name.value,
+            'metadata': this.metadataZone.dataset.raw || '',
+        }
+        this.textArea.innerText = "Downloading, please wait...";
+        this.button.disabled = true;
+        let overall = this.progressBar.querySelector('.image-preview-progress-overall');
+        let current = this.progressBar.querySelector('.image-preview-progress-current');
+        makeWSRequest('DoModelDownloadWS', data, data => {
+            if (data.overall_percent) {
+                overall.style.width = `${data.overall_percent * 100}%`;
+                current.style.width = `${data.current_percent * 100}%`;
+                this.textArea.innerText = `Downloading, please wait... ${roundToStr(data.current_percent * 100, 1)}%`;
+            }
+            else if (data.success) {
+                this.textArea.innerText = "Done!";
+                refreshParameterValues(true);
+                overall.style.width = `0%`;
+                current.style.width = `0%`;
+            }
+        }, 0, e => {
+            this.textArea.innerText = `Error: ${e}`;
+            overall.style.width = `0%`;
+            current.style.width = `0%`;
+        });
+    }
+}
+
+modelDownloader = new ModelDownloaderUtil();

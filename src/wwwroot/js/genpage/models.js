@@ -106,7 +106,7 @@ function save_edit_wildcard() {
         imageToData(getRequiredElementById('edit_wildcard_image').getElementsByTagName('img')[0].src, (dataURL) => {
             data['preview_image'] = dataURL;
             complete();
-        });
+        }, true);
     }
     else {
         complete();
@@ -189,7 +189,7 @@ function save_edit_model() {
         imageToData(getRequiredElementById('edit_model_image').getElementsByTagName('img')[0].src, (dataURL) => {
             data['preview_image'] = dataURL;
             complete();
-        });
+        }, true);
     }
     else {
         complete();

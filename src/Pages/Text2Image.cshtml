@@ -437,6 +437,9 @@
             <li class="nav-item" role="presentation">
                 <a class="nav-link translate" data-bs-toggle="tab" href="#Utilities-LoraExtractor-Tab" id="loraextractortabbutton" aria-selected="false" tabindex="-1" role="tab">LoRA Extractor</a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link translate" data-bs-toggle="tab" href="#Utilities-ModelDownloader-Tab" id="modeldownloadertabbutton" aria-selected="false" tabindex="-1" role="tab">Model Downloader</a>
+            </li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane show active" id="Utilities-Info-Tab" role="tabpanel">
@@ -543,6 +546,42 @@
                     <div class="lora_extractor_special" id="lora_extractor_special_progressbar"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>
                 </div>
                 <div class="card-center-container" id="lora_extractor_text_area">
+                </div>
+            </div>
+            <div class="tab-pane" id="Utilities-ModelDownloader-Tab" role="tabpanel">
+                <div class="card border-secondary mb-3 card-center-container">
+                    <div class="card-header translate">Model Downloader</div>
+                    <div class="card-body">
+                        <p class="card-text translate">
+                            This is a tool to download models for you and save them to Swarm's model folder.
+                            <br>Note that only <code>.safetensors</code> models may be downloaded.
+                            <br><b>HuggingFace</b> file URLs are supported.
+                            <br><b>Civitai</b> URLs are supported and will automatically download+apply model metadata from the civitai API.
+                            <br>For anything else, make sure your URL is a direct download URL (not eg an html page with the info about it).
+                        </p>
+                    </div>
+                </div>
+                <div class="card-center-container">
+                    <br><b>URL</b>: <input type="text" id="model_downloader_url" class="auto-text auto-text-wide" placeholder="Model URL" oninput="modelDownloader.urlInput()" autocomplete="off" />
+                    <br><b>Status</b>: <span id="model_downloader_status">(...)</span>
+                    <div class="model_downloader_metadatazone" id="model_downloader_metadatazone"></div>
+                    <br><b>Model Type</b>: <select class="auto-dropdown" id="model_downloader_type" autocomplete="off">
+                        <option value="Stable-Diffusion">Base Model</option>
+                        <option value="LoRA">LoRA</option>
+                        <option value="VAE">VAE</option>
+                        <option value="Embedding">Embedding</option>
+                        <option value="ControlNet">ControlNet</option>
+                    </select>
+                    <br><b>Save as</b>: <input type="text" id="model_downloader_name" class="auto-text auto-text-wide" placeholder="Model Name" autocomplete="off" oninput="modelDownloader.nameInput()" />
+                    <br>
+                    <br>
+                    <center>
+                        <button id="model_downloader_button" class="basic-button translate" onclick="modelDownloader.run()" disabled>Download</button>
+                    </center>
+                    <br>
+                    <div class="lora_extractor_special" id="model_downloader_special_progressbar"><div class="image-preview-progress-overall"></div><div class="image-preview-progress-current"></div></div>
+                </div>
+                <div class="card-center-container" id="model_downloader_text_area">
                 </div>
             </div>
         </div>

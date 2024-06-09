@@ -519,12 +519,14 @@ public static class Utilities
             int read = await dlStream.ReadAsync(buffer, Program.GlobalProgramCancel);
             if (read <= 0)
             {
+                Logs.Verbose($"Download {url} completed with {progress} bytes.");
                 progressUpdate?.Invoke(progress, length);
                 return;
             }
             progress += read;
             if (Environment.TickCount64 - lastUpdate > 1000)
             {
+                Logs.Verbose($"Download {url} now at {new MemoryNum(progress)} / {new MemoryNum(length)}... {(progress / (double)length) * 100:00.0}%");
                 progressUpdate?.Invoke(progress, length);
                 lastUpdate = Environment.TickCount64;
             }

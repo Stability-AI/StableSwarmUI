@@ -26,6 +26,7 @@ public static class ModelsAPI
         API.RegisterAPICall(TestPromptFill);
         API.RegisterAPICall(EditWildcard, true);
         API.RegisterAPICall(EditModelMetadata, true);
+        API.RegisterAPICall(DoModelDownloadWS, true);
     }
 
     public static Dictionary<string, JObject> InternalExtraModels(string subtype)
@@ -457,5 +458,44 @@ public static class ModelsAPI
         handler.ResetMetadataFrom(actualModel);
         _ = Utilities.RunCheckedTask(() => handler.ApplyNewMetadataDirectly(actualModel));
         return new JObject() { ["success"] = true };
+    }
+
+
+    [API.APIDescription("Downloads a model to the server, with websocket progress updates.\nNote that this does not trigger a model refresh itself, you must do that after a 'success' reply.", "")]
+    public static async Task<JObject> DoModelDownloadWS(Session session, WebSocket ws,
+        [API.APIParameter("The URL to download a model from.")] string url,
+        [API.APIParameter("The model's sub-type, eg `Stable-Diffusion`, `LoRA`, etc.")] string type,
+        [API.APIParameter("The filename to use for the model.")] string name,
+        [API.APIParameter("Optional raw text of JSON metadata to inject to the model.")] string metadata = null)
+    {
+        if (!url.StartsWith("http://") && !url.StartsWith("https://"))
+        {
+            return new JObject() { ["error"] = "Invalid URL." };
+        }
+        name = Utilities.StrictFilenameClean(name);
+        if (TryGetRefusalForModel(session, name, out JObject refusal))
+        {
+            return refusal;
+        }
+        if (!Program.T2IModelSets.TryGetValue(type, out T2IModelHandler handler))
+        {
+            return new JObject() { ["error"] = "Invalid type." };
+        }
+        string tempPath = $"{handler.FolderPaths[0]}/{name}.download.tmp";
+        await Utilities.DownloadFile(url, tempPath, async (progress, total) =>
+        {
+            await ws.SendJson(new JObject()
+            {
+                ["current_percent"] = progress / (double)total,
+                ["overall_percent"] = 0.2
+            }, API.WebsocketTimeout);
+        });
+        File.Move(tempPath, $"{handler.FolderPaths[0]}/{name}.safetensors");
+        if (!string.IsNullOrWhiteSpace(metadata))
+        {
+            File.WriteAllText($"{handler.FolderPaths[0]}/{name}.json", metadata);
+        }
+        await ws.SendJson(new JObject() { ["success"] = true }, API.WebsocketTimeout);
+        return null;
     }
 }

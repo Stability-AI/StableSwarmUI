@@ -257,8 +257,21 @@ public class T2IModelHandler
     {
         lock (ModificationLock)
         {
-            if (model.Metadata is null || !model.RawFilePath.EndsWith(".safetensors"))
+            if (model.Metadata is null)
             {
+                return;
+            }
+            foreach (string altMetadata in AltModelMetadataJsonFileSuffixes)
+            {
+                string path = $"{model.RawFilePath.BeforeLast('.')}{altMetadata}";
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            if (!model.RawFilePath.EndsWith(".safetensors"))
+            {
+                File.WriteAllText($"{model.RawFilePath.BeforeLast('.')}.json", model.ToNetObject().ToString());
                 return;
             }
             Logs.Debug($"Will reapply metadata for model {model.RawFilePath}");
@@ -269,6 +282,7 @@ public class T2IModelHandler
             if (len < 0 || len > 100 * 1024 * 1024)
             {
                 Logs.Warning($"Model {model.Name} has invalid metadata length {len}.");
+                File.WriteAllText($"{model.RawFilePath.BeforeLast('.')}.json", model.ToNetObject().ToString());
                 return;
             }
             byte[] header = new byte[len];

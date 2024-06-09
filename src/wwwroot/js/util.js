@@ -77,16 +77,25 @@ function createDiv(id, classes, html = null) {
 
 /** Escapes a string for use in HTML. */
 function escapeHtml(text) {
+    if (text == null) {
+        return '';
+    }
     return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;').replaceAll('\n', '\n<br>');
 }
 
 /** Escapes a string for use in HTML (no line break handling). */
 function escapeHtmlNoBr(text) {
+    if (text == null) {
+        return '';
+    }
     return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }
 
 /** Escapes a string for use in a JavaScript string literal. */
 function escapeJsString(text) {
+    if (text == null) {
+        return '';
+    }
     return text.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll("'", "\\'").replaceAll('\n', '\\n').replaceAll('\r', '\\r').replaceAll('\t', '\\t');
 }
 
@@ -136,6 +145,9 @@ let allowedHtmlFullAttrs = ['target="_blank"', 'target="_new"', 'rel="noopener n
 let autoExcludeHtmlAttrs = ['id', 'class'];
 /** Partially escapes HTML, allowing 'basic format' codes (bold, italic, etc) to remain. */
 function safeHtmlOnly(text) {
+    if (text == null) {
+        return '';
+    }
     let tagStart = text.indexOf('<');
     if (tagStart < 0) {
         return text.replaceAll('>', '&gt;').replaceAll('\n', '\n<br>');
@@ -736,18 +748,33 @@ function formatNumberClean(num, maxDigits) {
 }
 
 /** Gets a data image URL from an image src. */
-function imageToData(src, callback) {
-    var image = new Image();
-    image.crossOrigin = 'Anonymous';
-    image.onload = () => {
-        let canvas = document.createElement('canvas');
-        let context = canvas.getContext('2d');
-        canvas.height = 256;
-        canvas.width = 256;
-        context.drawImage(image, 0, 0, 256, 256);
-        callback(canvas.toDataURL('image/jpeg'));
-    };
-    image.src = src;
+function imageToData(src, callback, resize256 = false) {
+    if (resize256) {
+        var image = new Image();
+        image.crossOrigin = 'Anonymous';
+        image.onload = () => {
+                let canvas = document.createElement('canvas');
+                let context = canvas.getContext('2d');
+                canvas.height = 256;
+                canvas.width = 256;
+                context.drawImage(image, 0, 0, 256, 256);
+                callback(canvas.toDataURL('image/jpeg'));
+        };
+        image.src = src;
+    }
+    else {
+        let xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+            let reader = new FileReader();
+            reader.onloadend = () => {
+                callback(reader.result);
+            };
+            reader.readAsDataURL(xhr.response);
+        };
+        xhr.open('GET', src);
+        xhr.responseType = 'blob';
+        xhr.send();
+    }
 }
 
 /** Takes a UTF-16 Uint8Array and returns a string. */

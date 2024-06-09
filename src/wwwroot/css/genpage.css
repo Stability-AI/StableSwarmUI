@@ -1262,3 +1262,11 @@ body {
     height: 40rem;
     width: 50%;
 }
+.model_downloader_metadatazone {
+    max-width: 100rem;
+    max-height: 20rem;
+    padding: 1rem;
+    border: 1px solid var(--light-border);
+    border-radius: 0.5rem;
+    overflow: auto;
+}
