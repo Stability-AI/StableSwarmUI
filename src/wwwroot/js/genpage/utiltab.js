@@ -244,15 +244,18 @@ class ModelDownloaderUtil {
             parts = ['models', subparts[0], `?${subparts[1]}`];
         }
         if (parts.length < 3) {
-            return null;
+            return [null, null];
         }
         if (parts[0] == 'models') {
             let subparts = parts[2].split('?modelVersionId=', 2);
             if (subparts.length == 2) {
                 return [parts[1], subparts[1]];
             }
+            else {
+                return [parts[1], null];
+            }
         }
-        return null;
+        return [null, null];
     }
 
     urlInput() {
@@ -300,11 +303,6 @@ class ModelDownloaderUtil {
                 let subparts = parts[1].split('?', 2);
                 parts = ['models', subparts[0], `?${subparts[1]}`];
             }
-            if (parts.length < 3) {
-                this.urlStatusArea.innerText = "URL appears to be a CivitAI link, but not a specific model. Please use the path of a specific model.";
-                this.nameInput();
-                return;
-            }
             let loadMetadata = (id, versId) => {
                 this.getCivitaiMetadata(id, versId, (rawData, rawVersion, metadata, modelType, url, img) => {
                     if (!rawData) {
@@ -331,13 +329,20 @@ class ModelDownloaderUtil {
                     this.metadataZone.dataset.raw = `${JSON.stringify(metadata, null, 2)}`;
                 });
             }
+            if (parts.length < 3) {
+                this.urlStatusArea.innerText = "URL appears to be a CivitAI link, but not a specific model. Please use the path of a specific model.";
+                this.nameInput();
+                return;
+            }
             if (parts[0] == 'models') {
-                let subparts = parts[2].split('?modelVersionId=', 2);
-                if (subparts.length == 2) {
-                    this.url.value = `${this.civitPrefix}api/download/models/${subparts[1]}`;
-                    this.urlStatusArea.innerText = "URL appears to be a CivitAI link, and has been autocorrected to a download link.";
-                    this.nameInput();
-                    loadMetadata(parts[1], subparts[1]);
+                let [id, versId] = this.parseCivitaiUrl(url);
+                if (id) {
+                    if (versId) {
+                        this.url.value = `${this.civitPrefix}api/download/models/${versId}`;
+                        this.urlStatusArea.innerText = "URL appears to be a CivitAI link, and has been autocorrected to a download link.";
+                        this.nameInput();
+                    }
+                    loadMetadata(id, versId);
                     return;
                 }
                 this.urlStatusArea.innerText = "URL appears to be a CivitAI link, but is missing a version ID. Please double-check the link.";
