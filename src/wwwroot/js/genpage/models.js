@@ -196,6 +196,9 @@ function edit_model_load_civitai() {
             newImg.style.maxWidth = '100%';
             newImg.style.maxHeight = '';
             imageInput.appendChild(newImg);
+            let enableImage = getRequiredElementById('edit_model_enable_image');
+            enableImage.checked = true;
+            enableImage.disabled = false;
         }
         info.innerText = 'Loaded.';
     });
