@@ -1823,9 +1823,9 @@ function imageInputHandler() {
         e.stopPropagation();
     });
     imageArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
             let file = e.dataTransfer.files[0];
             if (file.type.startsWith('image/')) {
                 let reader = new FileReader();
