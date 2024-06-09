@@ -23,7 +23,7 @@ To use more GPUs in your machine, simply add more self-start backends (interface
         - Set the address to the same LAN address you used in your web browser
         - Note that using the `Swarm-API-Backend` is highly recommended, if you use `ComfyUI API By URL` please make sure you know what you're doing and properly load in the [Swarm custom node set](https://github.com/Stability-AI/StableSwarmUI/tree/master/src/BuiltinExtensions/ComfyUIBackend/ExtraNodes) and all.
     - Generate!
-- If you are using Google Colab or rented servers:
+- If you are using Google Colab, Runpod, or other rented servers:
     - Same as in-home, but use the public address of the server if possible, or the share address if not (eg a trycloudflare or ngrok URL)
 - If you have family or friends willing to share GPU power:
     - Same as rented servers, your friends will need to create some form of public share URL.

@@ -45,7 +45,7 @@ public abstract class ComfyUIAPIAbstractBackend : AbstractT2IBackend
         }
         Logs.Verbose($"Comfy backend {BackendData.ID} loaded value set, parsing...");
         RawObjectInfo = result;
-        Dictionary<string, List<string>> newModels = [];
+        ConcurrentDictionary<string, List<string>> newModels = [];
         string firstBackSlash = null;
         void trackModels(string subtype, string node, string param)
         {

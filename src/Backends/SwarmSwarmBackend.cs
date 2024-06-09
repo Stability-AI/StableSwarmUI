@@ -74,7 +74,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             Logs.Error($"Swarm is connecting to itself as a backend. This is a bad idea. Check the address being used: {Address}");
             throw new Exception("Swarm connected to itself, backend load failed.");
         }
-        await ReviseRemoteDataList();
+        await ReviseRemoteDataList(true);
     }
 
     public static void AutoThrowException(JObject data)
@@ -111,26 +111,25 @@ public class SwarmSwarmBackend : AbstractT2IBackend
         {
             Logs.Verbose($"Trigger refresh on remote swarm {Address}");
             await HttpClient.PostJson($"{Address}/TriggerRefresh", new() { ["session_id"] = Session });
-            await ReviseRemoteDataList();
             List<Task> tasks =
             [
-                ReviseRemoteDataList()
+                ReviseRemoteDataList(true)
             ];
             foreach (BackendHandler.T2IBackendData backend in ControlledNonrealBackends.Values)
             {
-                tasks.Add((backend.Backend as SwarmSwarmBackend).ReviseRemoteDataList());
+                tasks.Add((backend.Backend as SwarmSwarmBackend).ReviseRemoteDataList(false));
             }
             await Task.WhenAll(tasks);
         });
     }
 
-    public async Task ReviseRemoteDataList()
+    public async Task ReviseRemoteDataList(bool fullLoad)
     {
         await RunWithSession(async () =>
         {
             JObject backendData = await HttpClient.PostJson($"{Address}/API/ListBackends", new() { ["session_id"] = Session, ["nonreal"] = true, ["full_data"] = true });
             AutoThrowException(backendData);
-            if (IsReal)
+            if (IsReal && fullLoad)
             {
                 List<Task> tasks = [];
                 RemoteModels ??= [];
@@ -288,7 +287,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
             if (Settings.AllowIdle)
             {
                 Idler.Backend = this;
-                Idler.ValidateCall = () => ReviseRemoteDataList().Wait();
+                Idler.ValidateCall = () => ReviseRemoteDataList(false).Wait();
                 Idler.StatusChangeEvent = status =>
                 {
                     foreach (BackendHandler.T2IBackendData data in ControlledNonrealBackends.Values)
@@ -316,7 +315,7 @@ public class SwarmSwarmBackend : AbstractT2IBackend
                             return;
                         }
                         await Task.Delay(TimeSpan.FromSeconds(1));
-                        await ReviseRemoteDataList();
+                        await ReviseRemoteDataList(true);
                     }
                     Status = BackendStatus.RUNNING;
                 }

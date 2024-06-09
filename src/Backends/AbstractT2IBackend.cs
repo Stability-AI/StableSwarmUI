@@ -93,7 +93,7 @@ public abstract class AbstractT2IBackend
     public volatile int Reservations = 0;
 
     /// <summary>The list of all model names this server has (key=model subtype, value=list of filenames), or null if untracked.</summary>
-    public Dictionary<string, List<string>> Models = null;
+    public ConcurrentDictionary<string, List<string>> Models = null;
 
     /// <summary>Tells the backend to free its memory usage. Returns true if it happened, false if memory is still in use.
     /// Note that some backends may take extra time between when this call returns and when memory is actually freed, such as if they have jobs to wrap up or slow polling rates.
