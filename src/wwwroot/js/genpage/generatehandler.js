@@ -59,6 +59,16 @@ class GenerateHandler {
             this.doGenerate();
         });
     }
+
+    doGenerateButton(e) {
+        console.log(e)
+        if (e.altKey) {
+            this.doInterruptAndGen();
+        }
+        else {
+            this.doGenerate();
+        }
+    }
     
     doGenerate(input_overrides = {}, input_preoverrides = {}) {
         if (session_id == null) {
