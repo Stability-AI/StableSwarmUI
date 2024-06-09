@@ -26,6 +26,18 @@
     --bs-nav-tabs-border-color: var(--shadow);
 }
 
+/* Simple Tab */
+
+#simple_generate_button{
+    background-color: rgba(0, 0, 0, 0) !important;
+    border-color: var(--emphasis) !important;
+    transition: background-color .3s;
+}
+#simple_generate_button:hover{
+    background-color: var(--pteal) !important;
+    color: white !important;
+}
+
 /* Section Splitters */
 .splitter-bar {
     background-color: var(--pteal) !important;
