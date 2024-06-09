@@ -226,8 +226,9 @@ class ModelDownloaderUtil {
                 }
                 callback(rawData, rawVersion, metadata, modelType, file.downloadUrl, img);
             }
-            if (rawVersion.images.length > 0) {
-                imageToData(rawVersion.images[0].url, img => applyMetadata(img));
+            let imgs = rawVersion.images ? rawVersion.images.filter(img => img.type == 'image') : [];
+            if (imgs.length > 0) {
+                imageToData(imgs[0].url, img => applyMetadata(img));
             }
             else {
                 applyMetadata('');
