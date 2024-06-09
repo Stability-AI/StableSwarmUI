@@ -172,7 +172,11 @@ function edit_model_load_civitai() {
         return;
     }
     info.innerText = 'Loading...';
-    modelDownloader.getCivitaiMetadata(id, versId, (rawData, rawVersion, metadata, modelType, url) => {
+    modelDownloader.getCivitaiMetadata(id, versId, (rawData, rawVersion, metadata, modelType, url, img) => {
+        if (!rawData) {
+            info.innerText = 'Failed to load metadata.';
+            return;
+        }
         getRequiredElementById('edit_model_name').value = metadata['modelspec.title'];
         getRequiredElementById('edit_model_author').value = metadata['modelspec.author'];
         getRequiredElementById('edit_model_description').value = metadata['modelspec.description'];
@@ -183,11 +187,11 @@ function edit_model_load_civitai() {
         if (metadata['modelspec.tags']) {
             getRequiredElementById('edit_model_tags').value = metadata['modelspec.tags'];
         }
-        if (metadata['modelspec.thumbnail']) {
+        if (img) {
             let imageInput = getRequiredElementById('edit_model_image');
             imageInput.innerHTML = '';
             let newImg = document.createElement('img');
-            newImg.src = metadata['modelspec.thumbnail'];
+            newImg.src = img;
             newImg.id = 'edit_model_image_img';
             newImg.style.maxWidth = '100%';
             newImg.style.maxHeight = '';

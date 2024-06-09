@@ -512,6 +512,10 @@ public static class Utilities
         byte[] buffer = new byte[Math.Min(length + 1024, 1024 * 1024 * 64)]; // up to 64 megabytes, just grab as big a chunk as we can at a time
         long progress = 0;
         long lastUpdate = Environment.TickCount64;
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            throw new InvalidOperationException($"Failed to download {url}: got response code {(int)response.StatusCode} {response.StatusCode}");
+        }
         using Stream dlStream = await response.Content.ReadAsStreamAsync();
         progressUpdate?.Invoke(0, length);
         while (true)

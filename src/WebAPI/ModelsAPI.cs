@@ -481,21 +481,35 @@ public static class ModelsAPI
         {
             return new JObject() { ["error"] = "Invalid type." };
         }
-        string tempPath = $"{handler.FolderPaths[0]}/{name}.download.tmp";
-        await Utilities.DownloadFile(url, tempPath, async (progress, total) =>
+        try
         {
-            await ws.SendJson(new JObject()
+            string tempPath = $"{handler.FolderPaths[0]}/{name}.download.tmp";
+            await Utilities.DownloadFile(url, tempPath, async (progress, total) =>
             {
-                ["current_percent"] = progress / (double)total,
-                ["overall_percent"] = 0.2
-            }, API.WebsocketTimeout);
-        });
-        File.Move(tempPath, $"{handler.FolderPaths[0]}/{name}.safetensors");
-        if (!string.IsNullOrWhiteSpace(metadata))
-        {
-            File.WriteAllText($"{handler.FolderPaths[0]}/{name}.json", metadata);
+                await ws.SendJson(new JObject()
+                {
+                    ["current_percent"] = progress / (double)total,
+                    ["overall_percent"] = 0.2
+                }, API.WebsocketTimeout);
+            });
+            File.Move(tempPath, $"{handler.FolderPaths[0]}/{name}.safetensors");
+            if (!string.IsNullOrWhiteSpace(metadata))
+            {
+                File.WriteAllText($"{handler.FolderPaths[0]}/{name}.json", metadata);
+            }
+            await ws.SendJson(new JObject() { ["success"] = true }, API.WebsocketTimeout);
         }
-        await ws.SendJson(new JObject() { ["success"] = true }, API.WebsocketTimeout);
+        catch (Exception ex)
+        {
+            if (ex is InvalidOperationException || ex is InvalidDataException)
+            {
+                Logs.Warning($"Failed to download the model due to: {ex.Message}");
+                await ws.SendJson(new JObject() { ["error"] = ex.Message }, API.WebsocketTimeout);
+                return null;
+            }
+            Logs.Warning($"Failed to download the model due to internal exception: {ex}");
+            await ws.SendJson(new JObject() { ["error"] = "Failed to download the model due to internal exception." }, API.WebsocketTimeout);
+        }
         return null;
     }
 }

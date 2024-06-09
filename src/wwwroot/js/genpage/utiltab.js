@@ -224,7 +224,7 @@ class ModelDownloaderUtil {
                 if (img) {
                     metadata['modelspec.thumbnail'] = img;
                 }
-                callback(rawData, rawVersion, metadata, modelType, file.downloadUrl);
+                callback(rawData, rawVersion, metadata, modelType, file.downloadUrl, img);
             }
             if (rawVersion.images.length > 0) {
                 imageToData(rawVersion.images[0].url, img => applyMetadata(img));
@@ -232,6 +232,8 @@ class ModelDownloaderUtil {
             else {
                 applyMetadata('');
             }
+        }, (status, data) => {
+            callback(null, null, null, null, null, null);
         });
     }
 
@@ -304,7 +306,12 @@ class ModelDownloaderUtil {
                 return;
             }
             let loadMetadata = (id, versId) => {
-                this.getCivitaiMetadata(id, versId, (rawData, rawVersion, metadata, modelType, url) => {
+                this.getCivitaiMetadata(id, versId, (rawData, rawVersion, metadata, modelType, url, img) => {
+                    if (!rawData) {
+                        this.urlStatusArea.innerText = "URL appears to be a CivitAI link, but seems to not be valid. Please double-check the link.";
+                        this.nameInput();
+                        return;
+                    }
                     this.url.value = url;
                     if (modelType) {
                         this.type.value = modelType;
@@ -409,7 +416,7 @@ class ModelDownloaderUtil {
                 current.style.width = `0%`;
             }
         }, 0, e => {
-            this.textArea.innerText = `Error: ${e}`;
+            this.textArea.innerHTML = `Error: ${escapeHtml(e)}\n<br>Are you sure the URL is correct? Note some models may require you to be logged in, which is incompatible with an auto-downloader.`;
             overall.style.width = `0%`;
             current.style.width = `0%`;
         });
