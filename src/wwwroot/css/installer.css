@@ -104,6 +104,19 @@
     background-color: #a1a1a1;
     color: #101010;
 }
+.theme_preview_punked {
+    background-color: #0a0a0a;
+    color: #eeeeee;
+}
+.theme_preview_punked .button_example {
+    border: 1px solid #00fff7;
+    background-color: #0a0a0a;
+    color: #ffffff;
+    border-radius: 1rem;
+    padding-top: 0.1em;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+}
 label {
     font-size: 120%;
     vertical-align: top;

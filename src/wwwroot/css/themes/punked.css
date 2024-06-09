@@ -1,203 +1,3 @@
-/* note: this goes from the top of the webpage to the bottom, starting from the "Generate" tab. Though, every section ought to be labled */
-.input-group .basic-button {
-    border-radius: 1rem;
-    padding-top: 0.1em;
-    padding-left: 0.3em;
-    padding-right: 0.3em;
-}
-
-/* navigation tabs */
-.nav-tabs .nav-link {
-    border-radius: 10px 0px 10px 0px;
-    transition: border-radius .5s;
-}
-.nav-link.active {
-    border-radius: 0px 10px 0px 10px;
-}
-.nav-link.active:hover {
-    border-radius: 10px 0px 10px 0px;
-    border-color: var(--pyellow);
-    transition: border-radius .5s;
-}
-.nav-tabs {
-    --bs-nav-tabs-link-active-bg: var(--background);
-    --bs-nav-tabs-link-active-border-color: var(--emphasis);
-    --bs-nav-tabs-link-hover-border-color: var(--pyellow);
-    --bs-nav-tabs-border-color: var(--shadow);
-}
-
-/* Simple Tab */
-
-#simple_generate_button{
-    background-color: rgba(0, 0, 0, 0) !important;
-    border-color: var(--emphasis) !important;
-    transition: background-color .3s;
-}
-#simple_generate_button:hover{
-    background-color: var(--pteal) !important;
-    color: white !important;
-}
-
-/* Section Splitters */
-.splitter-bar {
-    background-color: var(--pteal) !important;
-}
-.t2i-area-quicktools {
-    padding: 5px 20px 5px 15px !important;
-    font-size: 12px !important;
-    right: 10px !important;
-    top: 5px !important;
-    border: 1px solid var(--border-color) !important;
-    box-shadow: 0px 0px 1px 0px rgba(0, 0, 0, 0.5) !important;
-    border-radius: 55px !important;
-}
-.t2i-area-quicktools:hover{
-    color: black
-}
-.t2i-split-quickbutton:hover {
-    background-color: rgba(0, 0, 0, 0) !important;
-    color: var(--button-background) !important;
-}
-/* Left Side */
-.seed-button:hover{
-    background-color: var(--pteal) !important;
-}
-.auto-input-qbutton {
-    font-weight: bold;
-    text-align: center;
-    border-color: var(--pyellow) !important;
-    color: white !important;
-}
-.auto-input-qbutton:hover {
-    background-color: var(--pyellow) !important;
-}
-.auto-symbol {
-    display: inline-block;
-    text-align: center;
-    font-size: 10px;
-    width: 20px;
-    height: 17px;
-    background: var(--background);
-    border: 1px solid var(--pteal) !important;
-    border-radius: 5px;
-    margin-right: 10px;
-    position: relative;
-    top: -2px;
-    transition: background .2s;
-    color: white !important; 
-}
-.auto-symbol:hover {
-    background: var(--pteal);
-}
-.input-group{
-    transition-duration: .2s;
-}
-.input-group-open{
-    min-width: 280px !important;
-}
-#main_inputs_filter {
-    margin-bottom: 15px;
-}
-.advanced_input_checkbox{
-    border-radius: 10px 10px 0px 0px;
-    background-color: rgba(203, 203, 203, .88) !important;
-    color: black;
-    left: -6px;
-    transition: background-color .5s;
-}
-.advanced_input_checkbox:hover{
-    background-color: rgba(203, 203, 203, 1) !important;
-    transition: background-color .5s;
-}
-.disabled-input{
-    border-radius: 8px 8px 8px 8px !important;
-    background-color: rgba(50, 0, 0, .5) !important;
-}
-
-/* modifying all buttons */
-.basic-button{
-    background-color: rgba(0, 0, 0, 0) !important;
-    border-color: var(--emphasis) !important;
-    transition: background-color .3s;
-}
-.basic-button:hover{
-    background-color: var(--pteal) !important;
-    color: white !important;
-}
-
-/* popout selection/dialog boxes */
-.sui_popover_model_button:hover{
-    color: black !important;
-    background-color: var(--pteal) !important;
-}
-.sui_popover_model_button_selected{
-    color: black !important;
-    background-color: var(--emphasis) !important;
-}
-.sui-popover{
-    border-color: var(--pyellow) !important;
-    background: rgba(0, 0, 0, .5) !important;
-    backdrop-filter: blur(2px);
-    transition: background .5s !important;
-}
-.sui-popover:hover{
-    background: rgba(0, 0, 0, .90) !important;
-    backdrop-filter: blur(2px);
-    transition: background .5s;
-}
-.refresh-button{
-    color: black !important;
-}
-
-/* Generate Button set */
-.alt-prompt-generate-button:hover{
-    background-color: green !important;
-}
-.alt-prompt-center-button:hover{
-    background-color: var(--pyellow) !important;
-    color: grey !important;
-}
-
-/* Image History Tab */
-.image-block{
-    border: 2px solid var(--background) !important;
-    border-radius: 5px !important;
-}
-.image-block:hover{
-    background-color: var(--background) !important;
-    border: 2px solid var(--pyellow) !important;
-}
-
-/* Presets Tab */
-.preset-block-selected{
-    background-color: #1e6961 !important;
-    border-color: var(--emphasis) !important;
-}
-/*Other Tabs */
-.model-selected{
-    background-color: #1e6961 !important;
-    border-color: var(--emphasis) !important;
-}
-
-/* ComfyUI Tab */
-.comfy_workflow_buttons * {
-    border-radius: 10px !important;
-}
-.comfy_workflow_buttons_actual {
-    padding: 25px !important;
-    left: 50px !important;
-    top: 20px !important;
-    border-color: var(--emphasis) !important;
-    background: rgba(0, 0, 0, .5) !important;
-    backdrop-filter: blur(2px);
-    transition: background .5s !important;
-}
-.comfy_workflow_buttons_actual:hover{
-    background-color: rgba(0, 0, 0, 1) !important;
-    transition: background-color .5s !important;
-}
-
-/* Common Variables */
 :root {
     --pteal: #39c4b6;
     --pyellow: #e5ed02;
@@ -234,4 +34,201 @@
     --box-selected-background: rgba(120, 85, 225, 0.2);
     --box-selected-border-stronger: rgba(120, 85, 225, 1.0);
     --box-selected-background-stronger: rgba(120, 85, 225, 0.3);
+}
+
+/* navigation tabs */
+.nav-tabs .nav-link {
+    border-radius: 10px 0px 10px 0px;
+    transition: border-radius .5s;
+}
+.nav-link.active {
+    border-radius: 0px 10px 0px 10px;
+}
+.nav-link.active:hover {
+    border-radius: 10px 0px 10px 0px;
+    border-color: var(--pyellow);
+    transition: border-radius .5s;
+}
+.nav-tabs {
+    --bs-nav-tabs-link-active-bg: var(--background);
+    --bs-nav-tabs-link-active-border-color: var(--emphasis);
+    --bs-nav-tabs-link-hover-border-color: var(--pyellow);
+    --bs-nav-tabs-border-color: var(--shadow);
+}
+
+/* Simple Tab */
+#simple_generate_button {
+    background-color: rgba(0, 0, 0, 0) !important;
+    border-color: var(--emphasis) !important;
+    transition: background-color .3s;
+}
+#simple_generate_button:hover {
+    background-color: var(--pteal) !important;
+    color: white !important;
+}
+
+/* Section Splitters */
+.splitter-bar, .simple-outer-wall, .simple-vertical-divider {
+    background-color: var(--pteal) !important;
+}
+.t2i-area-quicktools {
+    padding: 5px 20px 5px 15px !important;
+    font-size: 12px !important;
+    right: 10px !important;
+    top: 5px !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0px 0px 1px 0px rgba(0, 0, 0, 0.5) !important;
+    border-radius: 55px !important;
+}
+.t2i-area-quicktools:hover {
+    color: black
+}
+.t2i-split-quickbutton:hover {
+    background-color: rgba(0, 0, 0, 0) !important;
+    color: var(--button-background) !important;
+}
+
+/* Left Side */
+.seed-button:hover {
+    background-color: var(--pteal) !important;
+}
+.auto-input-qbutton {
+    font-weight: bold;
+    text-align: center;
+    border-color: var(--pyellow) !important;
+    color: white !important;
+}
+.auto-input-qbutton:hover {
+    background-color: var(--pyellow) !important;
+}
+.auto-symbol {
+    display: inline-block;
+    text-align: center;
+    font-size: 10px;
+    width: 20px;
+    height: 17px;
+    background: var(--background);
+    border: 1px solid var(--pteal) !important;
+    border-radius: 5px;
+    margin-right: 10px;
+    position: relative;
+    top: -2px;
+    transition: background .2s;
+    color: white !important; 
+}
+.auto-symbol:hover {
+    background: var(--pteal);
+}
+.input-group {
+    transition-duration: .2s;
+}
+.input-group-open {
+    min-width: 280px !important;
+}
+.input-group .basic-button {
+    border-radius: 1rem;
+    padding-top: 0.1em;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+}
+.main_inputs_filter {
+    margin-bottom: 15px;
+}
+.advanced_input_checkbox {
+    border-radius: 10px 10px 0px 0px;
+    background-color: rgba(203, 203, 203, .88) !important;
+    color: black;
+    left: -6px;
+    transition: background-color .5s;
+}
+.advanced_input_checkbox:hover {
+    background-color: rgba(203, 203, 203, 1) !important;
+    transition: background-color .5s;
+}
+.disabled-input {
+    border-radius: 8px 8px 8px 8px !important;
+    background-color: rgba(50, 0, 0, .5) !important;
+}
+
+/* modifying all buttons */
+.basic-button {
+    background-color: rgba(0, 0, 0, 0) !important;
+    border-color: var(--emphasis) !important;
+    transition: background-color .3s;
+}
+.basic-button:hover {
+    background-color: var(--pteal) !important;
+    color: white !important;
+}
+
+/* popout selection/dialog boxes */
+.sui_popover_model_button:hover {
+    color: black !important;
+    background-color: var(--pteal) !important;
+}
+.sui_popover_model_button_selected {
+    color: black !important;
+    background-color: var(--emphasis) !important;
+}
+.sui-popover {
+    border-color: var(--pyellow) !important;
+    background: rgba(0, 0, 0, .5) !important;
+    backdrop-filter: blur(2px);
+    transition: background .5s !important;
+}
+.sui-popover:hover {
+    background: rgba(0, 0, 0, .90) !important;
+    backdrop-filter: blur(2px);
+    transition: background .5s;
+}
+.refresh-button {
+    color: black !important;
+}
+
+/* Generate Button set */
+.alt-prompt-generate-button:hover {
+    background-color: green !important;
+}
+.alt-prompt-center-button:hover {
+    background-color: var(--pyellow) !important;
+    color: grey !important;
+}
+
+/* Image History Tab */
+.image-block {
+    border: 2px solid var(--background) !important;
+    border-radius: 5px !important;
+}
+.image-block:hover {
+    background-color: var(--background) !important;
+    border: 2px solid var(--pyellow) !important;
+}
+
+/* Presets Tab */
+.preset-block-selected {
+    background-color: #1e6961 !important;
+    border-color: var(--emphasis) !important;
+}
+/*Other Tabs */
+.model-selected {
+    background-color: #1e6961 !important;
+    border-color: var(--emphasis) !important;
+}
+
+/* ComfyUI Tab */
+.comfy_workflow_buttons * {
+    border-radius: 10px !important;
+}
+.comfy_workflow_buttons_actual {
+    padding: 25px !important;
+    left: 50px !important;
+    top: 20px !important;
+    border-color: var(--emphasis) !important;
+    background: rgba(0, 0, 0, .5) !important;
+    backdrop-filter: blur(2px);
+    transition: background .5s !important;
+}
+.comfy_workflow_buttons_actual:hover {
+    background-color: rgba(0, 0, 0, 1) !important;
+    transition: background-color .5s !important;
 }
