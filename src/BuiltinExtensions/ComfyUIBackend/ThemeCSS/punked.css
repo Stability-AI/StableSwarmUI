@@ -1,0 +1,260 @@
+/* Choose the color of your menu panel buttons */
+.comfy-menu button {
+    background-color: rgba(57, 57, 57, .58) !important;
+    font-size: 14px;
+    border-radius: 0px 10px 0px 10px;
+
+}
+
+#queue-front-button,
+#comfy-view-queue-button,
+#comfy-view-history-button,
+.comfy-list-actions button {
+    font-size: 11px !important;
+}
+
+#queue-front-button,
+.comfy-menu div label {
+    border-radius: 7px !important;
+    padding: 1px;
+    margin: 1px;
+}
+
+#comfy-view-queue-button,
+.comfy-menu div label {
+    border-radius: 7px 0px 0px 7px !important;
+    padding: 2px;
+}
+
+#comfy-view-history-button,
+.comfy-menu div label {
+    border-radius: 0px 7px 7px 0px !important;
+    padding: 2px;
+}
+
+#comfy-view-queue-button,
+#comfy-view-history-button,
+
+.comfy-list-items button {
+    background-color: rgba(68, 61, 61, .58) !important;
+    font-size: 11px !important;
+}
+
+
+.comfy-menu button.comfy-queue-btn {
+    background-color: rgba(255, 0, 0, .75) !important;
+    border-radius: 7px;
+}
+
+/* stylize the menu panel */
+.comfy-menu {
+    border: 1px solid rgb(126, 179, 189) !important;
+    border-radius: 0px 0px 0px 10px !important;
+    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, .5);
+    transition: background-color .5s;
+    right: 0px !important;
+    top: 16px !important;
+    height: 832px !important;
+    z-index: 999999 !important;
+}
+
+.comfy-menu:hover {
+    background-color: rgba(0, 0, 0, 1);
+    transition: background-color .5s;
+}
+
+/* hide the drag handle because it's stuck in place anyway */
+.comfy-menu span.drag-handle {
+    visibility:hidden
+}
+
+/* font */
+.comfy-menu * {
+    /* Global font: */
+    font-family: 'Source Sans Pro', sans-serif;
+    font-variant-ligatures: common-ligatures;
+    /* Disable tap highlight (for touchscreens): */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-tap-highlight-color: transparent;
+    /* Disable text selection: */
+    -webkit-user-select: none;
+    /* Safari */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer/Edge */
+    user-select: none;
+    /* Chrome and Opera */
+}
+
+/* this is ugly, don't look at it */
+.comfy-menu:after {
+    font-weight: bold;
+    content: "_______________ Welcome to ComfyUI ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾  Useful hotkeys: ⁢⁢⁢Space+Move Mouse Ctrl/Shift+Click Ctrl+Z/Ctrl+Y Shift+Drag DoubleCLick LMB";
+}
+
+/* Stylize the ComfyUI Manager Menu */
+.comfy-modal {
+    background-color: rgba(0, 0, 0, .5) !important;
+    border: 1px solid rgb(126, 179, 189) !important;
+    
+}
+
+.cm-button {
+    border-radius: 5px !important;
+}
+
+.cm-menu-combo {
+    border-radius: 3px !important;
+}
+
+
+button.cm-btn-disable,
+button.cm-btn-update,
+button.cm-btn-install {
+    border: solid 1px #00eaff;
+    border-radius: 5px 0px 5px 0px !important;
+    font-size: small !important;
+    box-shadow: 1px 2px 5px #111;
+    padding: 4px !important;
+    margin: 3px 4px;
+}
+
+
+button.cm-btn-disable,
+button.cm-btn-update {
+    background-color: rgb(0, 0, 0) !important;
+}
+
+button.cm-btn-disable:hover,
+button.cm-btn-update:hover {
+    background-color: rgba(113, 24, 181, .54) !important;
+}
+
+button.cm-btn-install:hover {
+    background-color: rgba(34, 181, 24, .41) !important;
+}
+
+.cm-node-desc > p {
+    font-size: small;
+    padding: 3px;
+    border-radius: 2px;
+}
+
+.cm-node-name font  {
+    color: #00fcff;
+}
+
+.cm-node-author {
+    color:  #09821f;
+}
+
+/* Stylize the doubleclick searchbox */
+.litesearchbox {
+    border: 1px solid rgb(126, 179, 189) !important; 
+}
+
+.litegraph {
+    background-color: rgba(0, 0, 0, .53) !important;
+}
+
+.litegraph div.helper {
+     background-color: rgba(0, 0, 0, .11) !important;
+     border-radius: 5px 0px 0px 5px !important;
+}
+
+.litegraph div.helper div.lite-search-item:hover {
+     background-color: rgba(74, 70, 70, .75) !important;
+     border-radius: 13px 0px 0px 13px !important;
+}
+
+/* Stylize the options menu (This isn't done as well as I'd like, thanks to my lack of care for actually understanding CSS) */
+.comfy-table {
+    background-color: rgba(0, 0, 0, .42) !important;
+    color: rgb(58, 128, 155) !important;
+}
+
+/* Stylize the menu from Comfy Workspace Manager (If it doesn't work, try switching to dark mode in this nodes settings panel) */
+.chakra-card {
+    border: 1px solid rgb(126, 179, 189) !important;
+    background-color: rgba(0, 0, 0, .58) !important;
+    border-radius: 0px 0px 10px 0px !important;
+    backdrop-filter: blur(1px);
+    transition: background-color .5s;
+}
+
+.chakra-card:hover {
+    background-color: rgba(0, 0, 0, 1) !important;
+    transition: background-color .5s;
+}
+
+.css-1kubmca {
+    background-color: rgba(145, 144, 144, .21) !important;
+    color: rgb(255, 255, 255) !important;
+    border: 2px solid rgb(126, 179, 189) !important;
+    border-radius: 10px 0px 10px 0px !important;
+}
+
+.css-1an9aux:hover {
+    background-color: rgba(145, 144, 144, .21) !important;
+}
+
+.css-xt9d3 {
+    right: 0px;
+    top: 0px;
+    border: 1px solid rgb(126, 179, 189) !important;
+    color: rgb(255, 255, 255) !important;
+    background-color: rgba(0, 0, 0, .58) !important;
+    backdrop-filter: blur(1px);
+    transition: background-color .5s;
+}
+
+.css-xt9d3:hover {
+    background-color: rgba(145, 144, 144, .21) !important;
+}
+
+.chakra-modal__content {
+    top: -30px;
+    right: 70px;
+    border: 1px solid rgb(126, 179, 189) !important;
+    background-color: rgba(0, 0, 0, .58) !important;
+    border-radius: 10px 10px 10px 10px !important;
+    backdrop-filter: blur(1px);
+    transition: background-color .5s;
+}
+
+.chakra-modal__content:hover {
+    background-color: rgba(0, 0, 0, 1) !important;
+    transition: background-color .5s;
+}
+
+.chakra-menu__menu-list {
+    border: 1px solid rgb(126, 179, 189) !important;
+    background-color: rgba(0, 0, 0, .58) !important;
+    border-radius: 10px 10px 10px 10px !important;
+    backdrop-filter: blur(1px);
+    transition: background-color .5s;
+}
+
+.css-18esm8n {
+    background-color: rgba(0, 0, 0, 0) !important;
+    backdrop-filter: blur(1px);
+    transition: background-color .5s;
+}
+
+.css-18esm8n:hover {
+    background-color: rgba(0, 0, 0, 1) !important;
+    transition: background-color .5s;
+}
+
+.css-2mnsnq {
+    background-color: rgba(0, 0, 0, 0) !important;
+    backdrop-filter: blur(1px);
+    transition: background-color .5s;
+}
+
+.css-2mnsnq:hover {
+    background-color: rgba(0, 0, 0, 1) !important;
+    transition: background-color .5s;
+}
