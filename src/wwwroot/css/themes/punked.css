@@ -81,7 +81,6 @@
     transition-duration: .2s;
 }
 .input-group-open{
-    max-width: unset !important;
     min-width: 280px !important;
 }
 #main_inputs_filter {
