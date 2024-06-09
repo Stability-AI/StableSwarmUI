@@ -25,11 +25,15 @@ Key feature targets not yet implemented:
 - LLM-assisted prompting
 - convenient direct-distribution of Swarm as a program (Electron app?)
 
-# Try It On Google Colab
+# Try It On Cloud GPU's
 
 **WARNING**: Google Colab does not necessarily allow remote WebUIs, particularly for free accounts, use at your own risk.
 
 Colab link if you want to try Swarm: https://colab.research.google.com/github/Stability-AI/StableSwarmUI/blob/master/colab/colab-notebook.ipynb
+
+Runpod link if you want to try Swarm: https://runpod.io/console/deploy?template=u7mlkrmxq3&ref=c6jd6jj0
+
+With easy Jupyter Lab already setup ^^
 
 # Installing on Windows
 
