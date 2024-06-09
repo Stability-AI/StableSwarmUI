@@ -52,6 +52,13 @@ class GenerateHandler {
         this.interrupted = this.batchesEver;
         doInterrupt(allSessions);
     }
+
+    doInterruptAndGen() {
+        this.doInterrupt();
+        getSession(() => {
+            this.doGenerate();
+        });
+    }
     
     doGenerate(input_overrides = {}, input_preoverrides = {}) {
         if (session_id == null) {
