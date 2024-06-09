@@ -91,6 +91,7 @@ public class WebServer
         RegisterTheme(new("gravity_blue", "Gravity Blue", ["/css/themes/gravity_blue.css"], true));
         RegisterTheme(new("cyber_swarm", "Cyber Swarm", ["/css/themes/cyber_swarm.css"], true));
         RegisterTheme(new("eyesear_white", "Eyesear White", ["/css/themes/eyesear_white.css"], false));
+        RegisterTheme(new("punked", "Punked", ["/css/themes/punked.css"], true));
     }
 
     /// <summary>Main prep, called by <see cref="Program"/>, generally should not be touched externally.</summary>
