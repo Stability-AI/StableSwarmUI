@@ -32,6 +32,7 @@ class SwarmSaveImageWS:
 
         return {}
 
+    @classmethod
     def IS_CHANGED(s, images):
         return time.time()
 
@@ -77,7 +78,8 @@ class SwarmSaveAnimatedWebpWS:
 
         return { }
 
-    def IS_CHANGED(s, images):
+    @classmethod
+    def IS_CHANGED(s, images, fps, lossless, quality, method):
         return time.time()
 
 

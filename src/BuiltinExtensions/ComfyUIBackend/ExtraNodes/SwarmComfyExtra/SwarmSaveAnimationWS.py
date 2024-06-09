@@ -85,7 +85,8 @@ class SwarmSaveAnimationWS:
 
         return { }
 
-    def IS_CHANGED(s, images):
+    @classmethod
+    def IS_CHANGED(s, images, fps, lossless, quality, method, format):
         return time.time()
 
 
