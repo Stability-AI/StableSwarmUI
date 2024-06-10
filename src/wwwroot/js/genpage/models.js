@@ -438,7 +438,7 @@ class ModelBrowserWrapper {
             let searchable = `${model.data.name}, ${description}`;
             return { name, description, buttons, className, searchable, 'image': model.data.image };
         }
-        let isCorrect = isModelArchCorrect(model.data);
+        let isCorrect = this.subType == 'Stable-Diffusion' || isModelArchCorrect(model.data);
         let interject = '';
         if (!isCorrect && this.subType != 'Stable-Diffusion') {
             interject = `<b>(Incompatible with current model!)</b><br>`;
