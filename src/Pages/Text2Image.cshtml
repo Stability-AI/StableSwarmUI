@@ -566,18 +566,20 @@
                         </p>
                     </div>
                 </div>
-                <div class="card-center-container">
-                    <br><b>URL</b>: <input type="text" id="model_downloader_url" class="auto-text auto-text-wide" placeholder="Model URL" oninput="modelDownloader.urlInput()" autocomplete="off" />
-                    <br><b>Status</b>: <span id="model_downloader_status">(...)</span>
+                <div class="card-center-container" style="min-width: 30rem">
+                    <br>@WebUtil.TextPopoverButton("modeldownloaderurl", "Exact web URL to the model.\nCivitai URLs are fully supported and will load metadata.\nHuggingFace URLs will be recognized.\nFor anything else, make sure the URL is a direct download URL, not a webpage.\nNote only '.safetensors' models are allowed.") <b>URL</b>: <input type="text" id="model_downloader_url" class="auto-text auto-text-wide" placeholder="Model URL" oninput="modelDownloader.urlInput()" autocomplete="off" />
+                    <br>
+                    <br><div style="text-align: center">@WebUtil.TextPopoverButton("modeldownloaderstatus", "This section will update after you input a URL to inform you if the URL is valid.\nThe box below will display loaded metadata if you use a civitai URL.") <b>Status</b>: <span id="model_downloader_status">(...)</span></div>
                     <div class="model_downloader_metadatazone" id="model_downloader_metadatazone"></div>
-                    <br><b>Model Type</b>: <select class="auto-dropdown" id="model_downloader_type" autocomplete="off">
+                    <br>@WebUtil.TextPopoverButton("modeldownloadertype", "The base model sub-type to use, ie what category it gets saved to.\nMake sure this is correct, you don't want a LoRA in your base models folder or similar.\nCivitai links will autoset this when they load metadata.") <b>Model Type</b>: <select class="auto-dropdown" id="model_downloader_type" autocomplete="off">
                         <option value="Stable-Diffusion">Base Model</option>
                         <option value="LoRA">LoRA</option>
                         <option value="VAE">VAE</option>
                         <option value="Embedding">Embedding</option>
                         <option value="ControlNet">ControlNet</option>
                     </select>
-                    <br><b>Save as</b>: <input type="text" id="model_downloader_name" class="auto-text auto-text-wide" placeholder="Model Name" autocomplete="off" oninput="modelDownloader.nameInput()" />
+                    <br>
+                    <br>@WebUtil.TextPopoverButton("modeldownloadersaveas", "File name to save as. Don't include the '.safetensors' file extension, just the name.\nYou can use a folder path with the '/' symbol.") <b>Save as</b>: <input type="text" id="model_downloader_name" class="auto-text auto-text-wide" placeholder="Model Name" autocomplete="off" oninput="modelDownloader.nameInput()" />
                     <br>
                     <br>
                     <center>

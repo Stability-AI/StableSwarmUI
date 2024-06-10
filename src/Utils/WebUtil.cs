@@ -38,9 +38,15 @@ public static class WebUtil
     public static HtmlString ModalFooter() => new("</div></div></div>");
 
     /// <summary>Escapes a string for safe usage inside HTML blocks.</summary>
-    public static string HtmlEscape(string str)
+    public static string EscapeHtmlNoBr(string str)
     {
         return str.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+    }
+
+    /// <summary>Escapes a string for safe usage inside HTML blocks, converting '\n' to '&lt;br&gt;'.</summary>
+    public static string EscapeHtml(string str)
+    {
+        return EscapeHtmlNoBr(str).Replace("\n", "\n<br>");
     }
 
     /// <summary>Escapes a string for safe usage inside JavaScript strings.</summary>
@@ -102,5 +108,19 @@ public static class WebUtil
             return false;
         }
         return true;
+    }
+
+    /// <summary>Returns a simple popover button for some custom html popover.</summary>
+    public static HtmlString RawHtmlPopover(string id, string innerHtml, string classes = "")
+    {
+        classes = (classes + " sui-popover").Trim();
+        return new HtmlString($"<div class=\"{classes}\" id=\"popover_{id}\">{innerHtml}</div>\n"
+            + $"<span class=\"auto-input-qbutton info-popover-button\" onclick=\"doPopover('{id}', arguments[0])\">?</span>");
+    }
+
+    /// <summary>Returns a simple popover button for some basic text.</summary>
+    public static HtmlString TextPopoverButton(string id, string text)
+    {
+        return RawHtmlPopover(EscapeHtmlNoBr(id), EscapeHtml(text), "translate");
     }
 }
