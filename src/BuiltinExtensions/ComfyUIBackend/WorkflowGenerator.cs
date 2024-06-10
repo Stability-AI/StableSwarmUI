@@ -33,6 +33,9 @@ public class WorkflowGenerator
     /// <summary>Supported Features of the comfy backend.</summary>
     public HashSet<string> Features = [];
 
+    /// <summary>Helper tracker for CLIP Models that are loaded (to skip a datadrive read from being reused every time).</summary>
+    public static HashSet<string> ClipModelsValid = [];
+
     /// <summary>Helper tracker for Vision Models that are loaded (to skip a datadrive read from being reused every time).</summary>
     public static HashSet<string> VisionModelsValid = [];
 
@@ -329,31 +332,6 @@ public class WorkflowGenerator
         {
             if (g.UserInput.TryGet(T2IParamTypes.PromptImages, out List<Image> images) && images.Any())
             {
-                void downloadModel(string name, string filePath, string url)
-                {
-                    if (!File.Exists(filePath))
-                    {
-                        lock (ModelDownloaderLock)
-                        {
-                            if (!File.Exists(filePath)) // Double-check in case another thread downloaded it
-                            {
-                                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                                Logs.Info($"Downloading {name} to {filePath}...");
-                                double nextPerc = 0.05;
-                                Utilities.DownloadFile(url, filePath, (bytes, total) =>
-                                {
-                                    double perc = bytes / (double)total;
-                                    if (perc >= nextPerc)
-                                    {
-                                        Logs.Info($"{name} download at {perc * 100:0.0}%...");
-                                        nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
-                                    }
-                                }).Wait();
-                                Logs.Info($"Downloading complete, continuing.");
-                            }
-                        }
-                    }
-                }
                 void requireVisionModel(string name, string url)
                 {
                     if (!VisionModelsValid.Add(name))
@@ -361,7 +339,7 @@ public class WorkflowGenerator
                         return;
                     }
                     string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, name);
-                    downloadModel(name, filePath, url);
+                    g.DownloadModel(name, filePath, url);
                 }
                 string visModelName = "clip_vision_g.safetensors";
                 if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
@@ -483,7 +461,7 @@ public class WorkflowGenerator
                                 return;
                             }
                             string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, $"ipadapter/{name}");
-                            downloadModel(name, filePath, url);
+                            g.DownloadModel(name, filePath, url);
                         }
                         void requireLora(string name, string url)
                         {
@@ -492,7 +470,7 @@ public class WorkflowGenerator
                                 return;
                             }
                             string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDLoraFolder, $"ipadapter/{name}");
-                            downloadModel(name, filePath, url);
+                            g.DownloadModel(name, filePath, url);
                         }
                         if (presetLow.StartsWith("light"))
                         {
@@ -1303,6 +1281,36 @@ public class WorkflowGenerator
         return CreateNode(classType, (_, n) => n["inputs"] = input, id);
     }
 
+    /// <summary>Helper to download a core model file required by the workflow.</summary>
+    public void DownloadModel(string name, string filePath, string url)
+    {
+        if (File.Exists(filePath))
+        {
+            return;
+        }
+        lock (ModelDownloaderLock)
+        {
+            if (File.Exists(filePath)) // Double-check in case another thread downloaded it
+            {
+                return;
+            }
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            Logs.Info($"Downloading {name} to {filePath}...");
+            double nextPerc = 0.05;
+            Utilities.DownloadFile(url, filePath, (bytes, total) =>
+            {
+                double perc = bytes / (double)total;
+                if (perc >= nextPerc)
+                {
+                    Logs.Info($"{name} download at {perc * 100:0.0}%...");
+                    // TODO: Send a signal back so a progress bar can be displayed on a UI
+                    nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
+                }
+            }).Wait();
+            Logs.Info($"Downloading complete, continuing.");
+        }
+    }
+
     /// <summary>Loads and applies LoRAs in the user parameters for the given LoRA confinement ID.</summary>
     public (JArray, JArray) LoadLorasForConfinement(int confinement, JArray model, JArray clip)
     {
@@ -1577,6 +1585,25 @@ public class WorkflowGenerator
                 ["shift"] = UserInput.Get(T2IParamTypes.SigmaShift, 3)
             });
             LoadingModel = [sd3Node, 0];
+            void requireClipModel(string name, string url)
+            {
+                if (!ClipModelsValid.Add(name))
+                {
+                    return;
+                }
+                string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, "clip", name);
+                DownloadModel(name, filePath, url);
+            }
+            requireClipModel("clip_g_sdxl_base.safetensors", "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/text_encoder_2/model.fp16.safetensors");
+            requireClipModel("clip_l_sdxl_base.safetensors", "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/text_encoder/model.fp16.safetensors");
+            // TODO: Param for SD3 CLIP mode (G+L, vs G+L+T5, vs T5-only)
+            string tripleClipLoader = CreateNode("TripleCLIPLoader", new JObject()
+            {
+                ["clip_name1"] = "clip_g_sdxl_base.safetensors",
+                ["clip_name2"] = "clip_l_sdxl_base.safetensors",
+                ["clip_name3"] = "clip_l_sdxl_base.safetensors" // TODO: Temporary! Replace with option to use T5.
+            });
+            LoadingClip = [tripleClipLoader, 0];
         }
         else if (!string.IsNullOrWhiteSpace(predType))
         {
