@@ -445,6 +445,10 @@ function doPopover(id, e) {
     if (pop.dataset.visible == "true") {
         hidePopover(id);
     }
+    else if (e && e.target) {
+        let rect = e.target.getBoundingClientRect();
+        showPopover(id, rect.left, rect.bottom);
+    }
     else {
         showPopover(id);
     }
