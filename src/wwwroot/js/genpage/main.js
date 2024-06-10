@@ -1043,6 +1043,7 @@ let hasAppliedFirstRun = false;
 let backendsWereLoadingEver = false;
 let reviseStatusInterval = null;
 let currentBackendFeatureSet = [];
+let rawBackendFeatureSet = [];
 let lastStatusRequestPending = 0;
 function reviseStatusBar() {
     if (lastStatusRequestPending + 20 * 1000 > Date.now()) {
@@ -1057,6 +1058,7 @@ function reviseStatusBar() {
     genericRequest('GetCurrentStatus', {}, data => {
         lastStatusRequestPending = 0;
         if (JSON.stringify(data.supported_features) != JSON.stringify(currentBackendFeatureSet)) {
+            rawBackendFeatureSet = data.supported_features;
             currentBackendFeatureSet = data.supported_features;
             hideUnsupportableParams();
         }
@@ -1091,6 +1093,34 @@ function reviseStatusBar() {
         statusBarElem.innerText = translate(status.message);
         statusBarElem.className = `top-status-bar status-bar-${status.class}`;
     });
+}
+
+function reviseBackendFeatureSet() {
+    currentBackendFeatureSet = Array.from(currentBackendFeatureSet);
+    let addMe = [], removeMe = [];
+    if (curModelCompatClass == 'stable-diffusion-v3-medium') {
+        addMe.push('sd3');
+    }
+    else {
+        removeMe.push('sd3');
+    }
+    let anyChanged = false;
+    for (let add of addMe) {
+        if (!currentBackendFeatureSet.includes(add)) {
+            currentBackendFeatureSet.push(add);
+            anyChanged = true;
+        }
+    }
+    for (let remove of removeMe) {
+        let index = currentBackendFeatureSet.indexOf(remove);
+        if (index != -1) {
+            currentBackendFeatureSet.splice(index, 1);
+            anyChanged = true;
+        }
+    }
+    if (anyChanged) {
+        hideUnsupportableParams();
+    }
 }
 
 function serverResourceLoop() {

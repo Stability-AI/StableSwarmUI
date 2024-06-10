@@ -737,6 +737,7 @@ function directSetModel(model) {
         curModelArch = arch;
         curModelCompatClass = compatClass;
     }
+    reviseBackendFeatureSet();
     getRequiredElementById('input_model').dispatchEvent(new Event('change'));
     currentAutomaticVae = 'None';
     if (curModelArch) {
