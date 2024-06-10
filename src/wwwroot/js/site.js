@@ -414,7 +414,7 @@ function load_image_file(e) {
         reader.readAsDataURL(file);
     }
     else {
-        e.dataset.filedata = null;
+        delete e.dataset.filedata;
         label.textContent = "";
         preview.innerHTML = '';
     }
