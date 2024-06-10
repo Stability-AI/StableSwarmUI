@@ -3,7 +3,7 @@
  * Base class for an image editor tool, such as Paintbrush or the General tool.
  */
 class ImageEditorTool {
-    constructor(editor, id, icon, name, description) {
+    constructor(editor, id, icon, name, description, hotkey = null) {
         this.editor = editor;
         this.id = id;
         this.icon = icon;
@@ -13,6 +13,7 @@ class ImageEditorTool {
         this.description = description;
         this.active = false;
         this.cursor = 'crosshair';
+        this.hotkey = hotkey;
         this.makeDivs();
     }
 
@@ -134,7 +135,7 @@ class ImageEditorToolOptions extends ImageEditorTool {
  */
 class ImageEditorToolGeneral extends ImageEditorTool {
     constructor(editor) {
-        super(editor, 'general', 'mouse', 'General', 'General tool. Lets you move around the canvas, or adjust size of current layer.\nWhile resizing an object, hold CTRL to snap-to-grid, or hold SHIFT to disable aspect preservation.\nThe general tool can be activated at any time with the Alt key.');
+        super(editor, 'general', 'mouse', 'General', 'General tool. Lets you move around the canvas, or adjust size of current layer.\nWhile resizing an object, hold CTRL to snap-to-grid, or hold SHIFT to disable aspect preservation.\nThe general tool can be activated at any time with the Alt key.\nHotKey: G', 'g');
         this.currentDragCircle = null;
         this.rotateIcon = new Image();
         this.rotateIcon.src = '/imgs/rotate.png';
@@ -375,7 +376,7 @@ class ImageEditorToolGeneral extends ImageEditorTool {
  */
 class ImageEditorToolMove extends ImageEditorTool {
     constructor(editor) {
-        super(editor, 'move', 'move', 'Move', 'Free-move the current layer.\nHold SHIFT to lock to flat directions (45/90 degree movements only).\nHold CTRL to snap to grid (32px).');
+        super(editor, 'move', 'move', 'Move', 'Free-move the current layer.\nHold SHIFT to lock to flat directions (45/90 degree movements only).\nHold CTRL to snap to grid (32px).\nHotKey: M', 'm');
         this.startingX = null;
         this.startingY = null;
     }
@@ -432,7 +433,7 @@ class ImageEditorToolMove extends ImageEditorTool {
  */
 class ImageEditorToolSelect extends ImageEditorTool {
     constructor(editor) {
-        super(editor, 'select', 'select', 'Select', 'Select a region of the image.');
+        super(editor, 'select', 'select', 'Select', 'Select a region of the image.\nHotKey: S', 's');
         let makeRegionButton = `<div class="image-editor-tool-block">
             <button class="basic-button id-make-region">Make Region</button>
         </div>`;
@@ -488,8 +489,8 @@ class ImageEditorToolSelect extends ImageEditorTool {
  * The Paintbrush tool (also the base used for other brush-likes, such as the Eraser).
  */
 class ImageEditorToolBrush extends ImageEditorTool {
-    constructor(editor, id, icon, name, description, isEraser) {
-        super(editor, id, icon, name, description);
+    constructor(editor, id, icon, name, description, isEraser, hotkey = null) {
+        super(editor, id, icon, name, description, hotkey);
         this.cursor = 'none';
         this.color = '#ffffff';
         this.radius = 10;
@@ -893,13 +894,14 @@ class ImageEditor {
         this.clearVars();
         // Tools:
         this.tools = {};
+        this.toolHotkeys = {};
         this.addTool(new ImageEditorToolOptions(this));
         this.addTool(new ImageEditorToolGeneral(this));
         this.activateTool('general');
         this.addTool(new ImageEditorToolMove(this));
         this.addTool(new ImageEditorToolSelect(this));
-        this.addTool(new ImageEditorToolBrush(this, 'brush', 'paintbrush', 'Paintbrush', 'Draw on the image.', false));
-        this.addTool(new ImageEditorToolBrush(this, 'eraser', 'eraser', 'Eraser', 'Erase parts of the image.', true));
+        this.addTool(new ImageEditorToolBrush(this, 'brush', 'paintbrush', 'Paintbrush', 'Draw on the image.\nHotKey: B', false, 'b'));
+        this.addTool(new ImageEditorToolBrush(this, 'eraser', 'eraser', 'Eraser', 'Erase parts of the image.\nHotKey: E', true, 'e'));
         this.maxHistory = 10;
     }
 
@@ -942,6 +944,9 @@ class ImageEditor {
 
     addTool(tool) {
         this.tools[tool.id] = tool;
+        if (tool.hotkey) {
+            this.toolHotkeys[tool.hotkey] = tool.id;
+        }
     }
 
     activateTool(id) {
@@ -1031,6 +1036,12 @@ class ImageEditor {
         if (e.ctrlKey && e.key == 'z') {
             e.preventDefault();
             this.undoOnce();
+        }
+        if (!e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey) {
+            let toolId = this.toolHotkeys[e.key];
+            if (toolId) {
+                this.activateTool(toolId);
+            }
         }
     }
 
