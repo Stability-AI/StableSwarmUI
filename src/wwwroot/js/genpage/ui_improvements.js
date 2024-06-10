@@ -447,7 +447,7 @@ function doPopover(id, e) {
     }
     else if (e && e.target) {
         let rect = e.target.getBoundingClientRect();
-        showPopover(id, rect.left, rect.bottom);
+        showPopover(id, rect.left, rect.bottom + 15);
     }
     else {
         showPopover(id);
