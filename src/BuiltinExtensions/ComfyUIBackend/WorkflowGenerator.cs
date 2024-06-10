@@ -1569,7 +1569,16 @@ public class WorkflowGenerator
             LoadingVAE = [modelNode, 2];
         }
         string predType = model.Metadata?.PredictionType;
-        if (!string.IsNullOrWhiteSpace(predType))
+        if (CurrentCompatClass() == "stable-diffusion-v3-medium")
+        {
+            string sd3Node = CreateNode("ModelSamplingSD3", new JObject()
+            {
+                ["model"] = LoadingModel,
+                ["shift"] = UserInput.Get(T2IParamTypes.SigmaShift, 3)
+            });
+            LoadingModel = [sd3Node, 0];
+        }
+        else if (!string.IsNullOrWhiteSpace(predType))
         {
             string discreteNode = CreateNode("ModelSamplingDiscrete", new JObject()
             {
