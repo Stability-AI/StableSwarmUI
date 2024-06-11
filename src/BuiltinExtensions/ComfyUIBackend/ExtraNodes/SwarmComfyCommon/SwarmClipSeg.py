@@ -18,7 +18,7 @@ def get_path():
 # Manual download of the model from a safetensors conversion.
 # Done manually to guarantee it's only a safetensors file ever and not a pickle
 def download_model(path, urlbase):
-    if os.path.exists(filepath):
+    if os.path.exists(path):
         return
     for file in ["config.json", "merges.txt", "model.safetensors", "preprocessor_config.json", "special_tokens_map.json", "tokenizer_config.json", "vocab.json"]:
         os.makedirs(path, exist_ok=True)
@@ -49,8 +49,8 @@ class SwarmClipSeg:
         i = 255.0 * images[0].cpu().numpy()
         img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
         # TODO: Cache the model in RAM in some way?
-        path = get_path() + "/clipseg-rd64-refined-safetensors/"
-        download_model(path, "https://huggingface.co/CIDAS/clipseg-rd64-refined/resolve/refs%2Fpr%2F5/")
+        path = get_path() + "/clipseg-rd64-refined-fp16-safetensors/"
+        download_model(path, "https://huggingface.co/mcmonkey/clipseg-rd64-refined-fp16/resolve/main/")
         processor = CLIPSegProcessor.from_pretrained(path)
         model = CLIPSegForImageSegmentation.from_pretrained(path)
         with torch.no_grad():
