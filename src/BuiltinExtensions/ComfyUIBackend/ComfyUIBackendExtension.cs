@@ -46,6 +46,7 @@ public class ComfyUIBackendExtension : Extension
         ["MiDaS-DepthMapPreprocessor"] = "controlnetpreprocessors",
         ["RIFE VFI"] = "frameinterps",
         ["SwarmYoloDetection"] = "yolov8",
+        ["BNK_TiledKSamplerAdvanced"] = "tiledksampler",
         ["TensorRTLoader"] = "tensorrt"
     };
 
@@ -437,7 +438,7 @@ public class ComfyUIBackendExtension : Extension
             "2", Min: 0, Max: 10, Step: 0.25, FeatureFlag: "comfyui", Group: T2IParamTypes.GroupAdvancedSampling, IsAdvanced: true, Toggleable: true, ViewType: ParamViewType.SLIDER
             ));
         RefinerUpscaleMethod = T2IParamTypes.Register<string>(new("Refiner Upscale Method", "How to upscale the image, if upscaling is used.",
-            "pixel-bilinear", Group: T2IParamTypes.GroupRefiners, OrderPriority: 1, FeatureFlag: "comfyui", ChangeWeight: 1,
+            "pixel-lanczos", Group: T2IParamTypes.GroupRefiners, OrderPriority: -1, FeatureFlag: "comfyui", ChangeWeight: 1,
             GetValues: (_) => UpscalerModels
             ));
         for (int i = 0; i < 3; i++)

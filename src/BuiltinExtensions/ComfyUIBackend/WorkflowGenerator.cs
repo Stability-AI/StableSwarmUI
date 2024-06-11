@@ -883,11 +883,10 @@ public class WorkflowGenerator
                 int steps = g.UserInput.Get(T2IParamTypes.RefinerSteps, g.UserInput.Get(T2IParamTypes.Steps));
                 double cfg = g.UserInput.Get(T2IParamTypes.CFGScale);
                 g.CreateKSampler(model, prompt, negPrompt, g.FinalSamples, cfg, steps, (int)Math.Round(steps * (1 - refinerControl)), 10000,
-                    g.UserInput.Get(T2IParamTypes.Seed) + 1, false, method != "StepSwapNoisy", id: "23");
+                    g.UserInput.Get(T2IParamTypes.Seed) + 1, false, method != "StepSwapNoisy", id: "23", doTiled: g.UserInput.Get(T2IParamTypes.RefinerDoTiling, false));
                 g.FinalSamples = ["23", 0];
                 g.IsRefinerStage = false;
             }
-            // TODO: Refiner
         }, -4);
         #endregion
         #region VAEDecode
@@ -1677,7 +1676,7 @@ public class WorkflowGenerator
     public string DefaultPreviews = "default";
 
     /// <summary>Creates a KSampler and returns its node ID.</summary>
-    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, double sigmin = -1, double sigmax = -1, string previews = null, string defsampler = null, string defscheduler = null, string id = null, bool rawSampler = false)
+    public string CreateKSampler(JArray model, JArray pos, JArray neg, JArray latent, double cfg, int steps, int startStep, int endStep, long seed, bool returnWithLeftoverNoise, bool addNoise, double sigmin = -1, double sigmax = -1, string previews = null, string defsampler = null, string defscheduler = null, string id = null, bool rawSampler = false, bool doTiled = false)
     {
         bool willCascadeFix = false;
         JArray cascadeModel = null;
@@ -1804,7 +1803,15 @@ public class WorkflowGenerator
             ["add_noise"] = addNoise ? "enable" : "disable"
         };
         string created;
-        if (Features.Contains("variation_seed") && !RestrictCustomNodes)
+        if (doTiled)
+        {
+            inputs["tile_width"] = FinalLoadedModel.StandardWidth <= 0 ? 768 : FinalLoadedModel.StandardWidth;
+            inputs["tile_height"] = FinalLoadedModel.StandardHeight <= 0 ? 768 : FinalLoadedModel.StandardHeight;
+            inputs["tiling_strategy"] = "padded";
+            inputs["preview"] = UserInput.Get(T2IParamTypes.NoPreviews) ? "disable" : "enable";
+            created = CreateNode("BNK_TiledKSamplerAdvanced", inputs, firstId);
+        }
+        else if (Features.Contains("variation_seed") && !RestrictCustomNodes)
         {
             inputs["var_seed"] = UserInput.Get(T2IParamTypes.VariationSeed, 0);
             inputs["var_seed_strength"] = UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
