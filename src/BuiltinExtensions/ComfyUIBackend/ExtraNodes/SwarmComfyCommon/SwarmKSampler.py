@@ -5,7 +5,10 @@ import latent_preview
 import comfy
 from server import PromptServer
 from comfy.model_base import SDXL, SVD_img2vid
+from nodes import VAEDecode, VAEEncode, ImageScaleBy
+from PIL import Image
 import numpy as np
+from math import ceil
 
 def slerp(val, low, high):
     low_norm = low / torch.norm(low, dim=1, keepdim=True)
@@ -111,6 +114,103 @@ AYS_NOISE_LEVELS = {
     "SVD": [700.00, 54.5, 15.886, 7.977, 4.248, 1.789, 0.981, 0.403, 0.173, 0.034, 0.002]
 }
 
+# Tensor to PIL
+def tensor2pil(image):
+    return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+
+# PIL to Tensor
+def pil2tensor(image):
+    return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
+
+def split_image(img, tile_size=1024):
+    """Generate tiles for a given image."""
+    tile_width, tile_height = tile_size, tile_size
+    width, height = img.width, img.height
+
+    # Determine the number of tiles needed
+    num_tiles_x = ceil(width / tile_width)
+    num_tiles_y = ceil(height / tile_height)
+
+    # If width or height is an exact multiple of the tile size, add an additional tile for overlap
+    if width % tile_width == 0:
+        num_tiles_x += 1
+    if height % tile_height == 0:
+        num_tiles_y += 1
+
+    # Calculate the overlap
+    overlap_x = (num_tiles_x * tile_width - width) / (num_tiles_x - 1)
+    overlap_y = (num_tiles_y * tile_height - height) / (num_tiles_y - 1)
+    if overlap_x < 256:
+        num_tiles_x += 1
+        overlap_x = (num_tiles_x * tile_width - width) / (num_tiles_x - 1)
+    if overlap_y < 256:
+        num_tiles_y += 1
+        overlap_y = (num_tiles_y * tile_height - height) / (num_tiles_y - 1)
+
+    tiles = []
+
+    for i in range(num_tiles_y):
+        for j in range(num_tiles_x):
+            x_start = j * tile_width - j * overlap_x
+            y_start = i * tile_height - i * overlap_y
+
+            # Correct for potential float precision issues
+            x_start = round(x_start)
+            y_start = round(y_start)
+
+            # Crop the tile from the image
+            tile_img = img.crop((x_start, y_start, x_start + tile_width, y_start + tile_height))
+            tiles.append(((x_start, y_start, x_start + tile_width, y_start + tile_height), tile_img))
+
+    return tiles
+
+def stitch_images(upscaled_size, tiles):
+    """Stitch tiles together to create the final upscaled image with overlaps."""
+    width, height = upscaled_size
+    result = torch.zeros((3, height, width))
+
+    # We assume tiles come in the format [(coordinates, tile), ...]
+    sorted_tiles = sorted(tiles, key=lambda x: (x[0][1], x[0][0]))  # Sort by upper then left
+
+    # Variables to keep track of the current row's starting point
+    current_row_upper = None
+
+    for (left, upper, right, lower), tile in sorted_tiles:
+
+        # Check if we're starting a new row
+        if current_row_upper != upper:
+            current_row_upper = upper
+            first_tile_in_row = True
+        else:
+            first_tile_in_row = False
+
+        tile_width = right - left
+        tile_height = lower - upper
+        feather = tile_width // 8  # Assuming feather size is consistent with the example
+
+        mask = torch.ones(tile.shape[0], tile.shape[1], tile.shape[2])
+
+        if not first_tile_in_row:  # Left feathering for tiles other than the first in the row
+            for t in range(feather):
+                mask[:, :, t:t+1] *= (1.0 / feather) * (t + 1)
+
+        if upper != 0:  # Top feathering for all tiles except the first row
+            for t in range(feather):
+                mask[:, t:t+1, :] *= (1.0 / feather) * (t + 1)
+
+        # Apply the feathering mask
+        tile = tile.squeeze(0).squeeze(0)  # Removes first two dimensions
+        tile_to_add = tile.permute(2, 0, 1)
+        # Use the mask to correctly feather the new tile on top of the existing image
+        combined_area = tile_to_add * mask.unsqueeze(0) + result[:, upper:lower, left:right] * (1.0 - mask.unsqueeze(0))
+        result[:, upper:lower, left:right] = combined_area
+
+    # Expand dimensions to get (1, 3, height, width)
+    tensor_expanded = result.unsqueeze(0)
+
+    # Permute dimensions to get (1, height, width, 3)
+    tensor_final = tensor_expanded.permute(0, 2, 3, 1)
+    return tensor_final
 
 class SwarmKSampler:
     @classmethod
@@ -135,13 +235,20 @@ class SwarmKSampler:
                 "rho": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 100.0, "step":0.01, "round": False}),
                 "add_noise": (["enable", "disable"], ),
                 "return_with_leftover_noise": (["disable", "enable"], ),
-                "previews": (["default", "none", "one", "second", "iterate", "animate"], )
+                "previews": (["default", "none", "one", "second", "iterate", "animate"], ),
+                "tile_upscale": (["disable", "enable"], ),
+                "tile_upscale_by": ("FLOAT", {"default": 2.0, "min": 1.0, "max": 10, "step": 0.01, "round": 0.001}),
+                "tile_size": ("INT", {"default": 1024, "min": 256, "max": 4096}),
+                "tile_denoise": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.001}),
+            },
+            "optional": {
+                "vae": ("VAE",)
             }
         }
 
     CATEGORY = "StableSwarmUI/sampling"
     RETURN_TYPES = ("LATENT",)
-    FUNCTION = "sample"
+    FUNCTION = "run_sampling"
 
     def sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews):
         device = comfy.model_management.get_torch_device()
@@ -191,7 +298,44 @@ class SwarmKSampler:
         out = latent_image.copy()
         out["samples"] = samples
         return (out, )
-
+    
+    # tiled sample version of sample function
+    def tiled_sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_upscale, tile_upscale_by, tile_size, tile_denoise, vae):
+        out = self.sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews)
+        if tile_upscale == "disable" or tile_upscale_by == 1:
+            return out
+        else:
+            if vae is None:
+                raise Exception("VAE is required for tile upscaling")
+            # upscale image with lanczos
+            image_scaler = ImageScaleBy()
+            vaedecoder = VAEDecode()
+            vaeencoder = VAEEncode()
+            pixels = vaedecoder.decode(vae, out[0])[0]
+            scaled_img = image_scaler.upscale(pixels, 'lanczos', tile_upscale_by)[0]
+            # split image into tiles
+            scaled_img = tensor2pil(scaled_img)
+            tiles = split_image(scaled_img, tile_size=tile_size)
+            # resample each tile using self.sample
+            start_step = int(steps - (steps * tile_denoise))
+            end_step = steps
+            resampled_tiles = []
+            for coords, tile in tiles:
+                tile = pil2tensor(tile)
+                encoded_tile = vaeencoder.encode(vae, tile)[0]
+                resampled_tile = self.sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, encoded_tile, start_step, end_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews)
+                resampled_tile = vaedecoder.decode(vae, resampled_tile[0])[0]
+                resampled_tiles.append((coords, resampled_tile))
+            # stitch the tiles to get the final upscaled image
+            result = stitch_images(scaled_img.size, resampled_tiles)
+            result = vaeencoder.encode(vae, result)[0]
+            return (result,)
+        
+    def run_sampling(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_upscale, tile_upscale_by, tile_size, tile_denoise, vae):
+        if tile_upscale == "enable":
+            return self.tiled_sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_upscale, tile_upscale_by, tile_size, tile_denoise, vae)
+        else:
+            return self.sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews)
 
 NODE_CLASS_MAPPINGS = {
     "SwarmKSampler": SwarmKSampler,
