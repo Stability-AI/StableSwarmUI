@@ -220,7 +220,6 @@ class SwarmKSampler:
                 "previews": (["default", "none", "one", "second", "iterate", "animate"], ),
                 "tile_sample": (["disable", "enable"], ),
                 "tile_size": ("INT", {"default": 1024, "min": 256, "max": 4096}),
-                "tile_denoise": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.001}),
             }
         }
 
@@ -278,7 +277,7 @@ class SwarmKSampler:
         return (out, )
     
     # tiled sample version of sample function
-    def tiled_sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample, tile_size, tile_denoise):
+    def tiled_sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample, tile_size):
         out = latent_image.copy()
         if tile_sample == "disable":
             return out
@@ -287,20 +286,18 @@ class SwarmKSampler:
             latent_samples = latent_image["samples"]
             tiles = split_latent_tensor(latent_samples, tile_size=tile_size)
             # resample each tile using self.sample
-            start_step = int(steps - (steps * tile_denoise))
-            end_step = steps
             resampled_tiles = []
             for coords, tile in tiles:
-                resampled_tile = self.sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, {"samples": tile}, start_step, end_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews)
+                resampled_tile = self.sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, {"samples": tile}, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews)
                 resampled_tiles.append((coords, resampled_tile[0]["samples"]))
             # stitch the tiles to get the final upscaled image
             result = stitch_latent_tensors(latent_samples.shape, resampled_tiles)
             out["samples"] = result
             return (out,)
         
-    def run_sampling(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample,  tile_size, tile_denoise):
+    def run_sampling(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample,  tile_size):
         if tile_sample == "enable":
-            return self.tiled_sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample, tile_size, tile_denoise)
+            return self.tiled_sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample, tile_size)
         else:
             return self.sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews)
 
