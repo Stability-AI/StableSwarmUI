@@ -169,6 +169,8 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                     yolov8
                 tensorrt: |
                     tensorrt
+                clipseg: |
+                    clipseg
                 custom_nodes: |
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/DLNodes")}
                     {Path.GetFullPath(ComfyUIBackendExtension.Folder + "/ExtraNodes")}

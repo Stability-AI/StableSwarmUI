@@ -59,8 +59,10 @@
 ### Automatic Segmentation and Refining
 
 - You can use `<segment:texthere>` to automatically refine part of the image using CLIP Segmentation.
+    - This is like a "restore faces" feature but much more versatile, you can refine anything and control what it does.
     - Or `<segment:texthere,creativity,threshold>` - where creativity is inpaint strength, and threshold is segmentation minimum threshold - for example, `<segment:face,0.8,0.5>` - defaults to 0.6 creativity, 0.5 threshold.
     - See [the feature announcement](https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-7236821) for details.
+    - Note the first time you run with CLIPSeg, Swarm will automatically download [a safetensors version of the clipseg-rd64-refined model](https://huggingface.co/CIDAS/clipseg-rd64-refined/tree/refs%2Fpr%2F5)
     - You can insert a `<lora:...>` inside the prompt area of the segment to have a lora model apply onto that segment
     - You can also replace the `texthere` with `yolo-modelnamehere` to use YOLOv8 segmentation models
         - store your models in `(Swarm)/Models/yolov8`
