@@ -287,11 +287,15 @@ class ModelDownloaderUtil {
                 this.url.value = `${this.hfPrefix}${parts.join('/')}`;
                 this.urlStatusArea.innerText = "URL appears to be a huggingface link, and has been autocorrected to a download link.";
                 this.button.disabled = false;
+                this.name.value = parts.slice(4).join('/').replaceAll('.safetensors', '');
+                this.nameInput();
                 return;
             }
             if (parts[2] == 'resolve') {
                 this.urlStatusArea.innerText = "URL appears to be a valid HuggingFace download link.";
                 this.button.disabled = false;
+                this.name.value = parts.slice(4).join('/').replaceAll('.safetensors', '');
+                this.nameInput();
                 return;
             }
             this.urlStatusArea.innerText = "URL appears to be a huggingface link, but seems to not be valid. Please double-check the link.";
@@ -316,6 +320,7 @@ class ModelDownloaderUtil {
                         this.type.value = modelType;
                     }
                     this.urlStatusArea.innerText = "URL appears to be a CivitAI link, and has been loaded from Civitai API.";
+                    this.name.value = `${rawData.name} - ${rawVersion.name}`;
                     this.nameInput();
                     this.metadataZone.innerHTML = `
                         Found civitai metadata for model ID ${escapeHtml(id)} version id ${escapeHtml(versId)}:
