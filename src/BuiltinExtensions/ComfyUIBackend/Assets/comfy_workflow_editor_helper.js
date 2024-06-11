@@ -372,6 +372,18 @@ function comfyBuildParams(callback) {
         let defaultParamsRetain = [...initialRetainSet];
         let defaultParamValue = {};
         let groups = [];
+        let findConnection = (target, pos) => {
+            for (let nodeId of Object.keys(prompt)) {
+                let node = prompt[nodeId];
+                for (let inputId of Object.keys(node.inputs)) {
+                    let val = node.inputs[inputId];
+                    if (typeof val == 'object' && val.length == 2 && val[0] == target && val[1] == pos) {
+                        return [nodeId, inputId];
+                    }
+                }
+            }
+            return [null, null];
+        };
         for (let nodeId of Object.keys(prompt)) {
             let node = prompt[nodeId];
             let groupLabel = `${labelAlterations[nodeId] || node.class_type} (Node ${nodeId})`;
@@ -394,6 +406,7 @@ function comfyBuildParams(callback) {
                 let type = '';
                 let subtype = null;
                 let defaultVal = node.inputs['value'];
+                let values = null;
                 switch (node.class_type) {
                     case 'SwarmInputInteger': type = 'integer'; break;
                     case 'SwarmInputFloat': type = 'decimal'; break;
@@ -408,7 +421,25 @@ function comfyBuildParams(callback) {
                         subtype = 'Stable-Diffusion';
                         defaultVal = defaultVal.replaceAll('\\', '/').replaceAll('.safetensors', '');
                         break;
-                    case 'SwarmInputDropdown': type = 'dropdown'; break;
+                    case 'SwarmInputDropdown':
+                        type = 'dropdown';
+                        values = node.inputs['values'].split(',').map(s => s.trim());
+                        if (values.length <= 1) {
+                            let [remoteNodeId, remoteInput] = findConnection(nodeId, 1);
+                            if (remoteNodeId && remoteInput) {
+                                let remoteNode = prompt[remoteNodeId];
+                                let data = comfyObjectData[remoteNode.class_type];
+                                if (data) {
+                                    if (remoteInput in data.input.required) {
+                                        values = data.input.required[remoteInput][0];
+                                    }
+                                    else if (remoteInput in data.input.optional) {
+                                        values = data.input.optional[remoteInput][0];
+                                    }
+                                }
+                            }
+                        }
+                    break;
                     case 'SwarmInputBoolean': type = 'boolean'; break;
                     case 'SwarmInputImage': type = 'image'; break;
                     default: throw new Error(`Unknown SwarmInput type ${node.class_type}`);
@@ -439,7 +470,7 @@ function comfyBuildParams(callback) {
                     subtype: subtype,
                     description: node.inputs['description'],
                     default: defaultVal,
-                    values: type == 'dropdown' ? node.inputs['values'].split(',').map(s => s.trim()) : null,
+                    values: values,
                     view_type: node.inputs['view_type'],
                     min: node.inputs['min'] || 0,
                     max: node.inputs['max'] || 0,
