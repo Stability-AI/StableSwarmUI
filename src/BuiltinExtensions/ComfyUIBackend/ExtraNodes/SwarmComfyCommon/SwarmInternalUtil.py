@@ -37,7 +37,6 @@ def validate_inputs(prompt, item, validated):
         return raw_result
     for error in errors:
         if error['type'] == "return_type_mismatch":
-            print(f"\n\nERR = {error}\n\n")
             o_id = error['extra_info']['linked_node'][0]
             o_class_type = prompt[o_id]['class_type']
             if o_class_type == "SwarmInputModelName" or o_class_type == "SwarmInputDropdown":
