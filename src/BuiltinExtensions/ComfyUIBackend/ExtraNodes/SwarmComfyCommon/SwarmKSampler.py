@@ -156,8 +156,7 @@ def split_latent_tensor(latent_tensor, tile_size=1024, scale_factor=8):
 
 def stitch_latent_tensors(original_size, tiles, scale_factor=8):
     """Stitch tiles together to create the final upscaled latent tensor with overlaps."""
-    _, _, height, width = original_size
-    result = torch.zeros((1, 4, height, width))
+    result = torch.zeros(original_size)
 
     # We assume tiles come in the format [(coordinates, tile), ...]
     sorted_tiles = sorted(tiles, key=lambda x: (x[0][1], x[0][0]))  # Sort by upper then left
