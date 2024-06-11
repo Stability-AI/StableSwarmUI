@@ -20,7 +20,15 @@ Additional, SDXL-Refiner architecture models can be inferenced, both as refiner 
 
 ### Stable Diffusion 3
 
-Stable Diffusion 3 will be supported when it's released.
+Stable Diffusion 3 Medium is supported and works as normal.
+
+By default the first time you run an SD3 model, Swarm will download the text encoders for you.
+
+Under the `Sampling` parameters group, a parameter named `SD3 TextEncs` is available to select whether to use CLIP, T5, or both. By default, CLIP is used (no T5) as results are near-identical but CLIP-only has much better performance, especially on systems with limited resources.
+
+Under `Advanced Sampling`, the parameter `Sigma Shift` is available. This defaults to `3` on SD3, but you can lower it to around ~1.5 if you wish to experiment with different values. Messing with this value too much is not recommended.
+
+You may wish to install [BNK_TiledKSampler](https://github.com/BlenderNeko/ComfyUI_TiledKSampler) to have the `Refiner Do Tiling` parameter available for better upscaling (SD3 does not respond well to regular upscaling without tiling).
 
 ### SDXL Turbo and SD Turbo
 

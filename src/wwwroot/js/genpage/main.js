@@ -1060,6 +1060,7 @@ function reviseStatusBar() {
         if (JSON.stringify(data.supported_features) != JSON.stringify(currentBackendFeatureSet)) {
             rawBackendFeatureSet = data.supported_features;
             currentBackendFeatureSet = data.supported_features;
+            reviseBackendFeatureSet();
             hideUnsupportableParams();
         }
         doesHaveGenCountUpdateQueued = false;
