@@ -1594,16 +1594,42 @@ public class WorkflowGenerator
                 string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, "clip", name);
                 DownloadModel(name, filePath, url);
             }
+            string mode = UserInput.Get(T2IParamTypes.SD3TextEncs, "CLIP Only");
             requireClipModel("clip_g_sdxl_base.safetensors", "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/text_encoder_2/model.fp16.safetensors");
             requireClipModel("clip_l_sdxl_base.safetensors", "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/text_encoder/model.fp16.safetensors");
-            // TODO: Param for SD3 CLIP mode (G+L, vs G+L+T5, vs T5-only)
-            string tripleClipLoader = CreateNode("TripleCLIPLoader", new JObject()
+            if (mode.Contains("T5"))
             {
-                ["clip_name1"] = "clip_g_sdxl_base.safetensors",
-                ["clip_name2"] = "clip_l_sdxl_base.safetensors",
-                ["clip_name3"] = "clip_l_sdxl_base.safetensors" // TODO: Temporary! Replace with option to use T5.
-            });
-            LoadingClip = [tripleClipLoader, 0];
+                requireClipModel("t5xxl_enconly.safetensors", "https://huggingface.co/mcmonkey/google_t5-v1_1-xxl_encoderonly/resolve/main/pytorch_model.safetensors");
+            }
+            if (mode == "T5 Only")
+            {
+                string singleClipLoader = CreateNode("CLIPLoader", new JObject()
+                {
+                    ["clip_name"] = "t5xxl_enconly.safetensors",
+                    ["type"] = "stable_diffusion"
+                });
+                LoadingClip = [singleClipLoader, 0];
+            }
+            else if (mode == "CLIP Only TEMPORARYDISABLE")
+            {
+                string dualClipLoader = CreateNode("DualCLIPLoader", new JObject()
+                {
+                    ["clip_name1"] = "clip_g_sdxl_base.safetensors",
+                    ["clip_name2"] = "clip_l_sdxl_base.safetensors"
+                });
+                LoadingClip = [dualClipLoader, 0];
+            }
+            else
+            {
+                string tripleClipLoader = CreateNode("TripleCLIPLoader", new JObject()
+                {
+                    ["clip_name1"] = "clip_g_sdxl_base.safetensors",
+                    ["clip_name2"] = "clip_l_sdxl_base.safetensors",
+                    // TODO: This is a hack, DualCLIPLoader breaks with SD3
+                    ["clip_name3"] = mode == "CLIP Only" ? "clip_l_sdxl_base.safetensors" : "t5xxl_enconly.safetensors"
+                });
+                LoadingClip = [tripleClipLoader, 0];
+            }
         }
         else if (!string.IsNullOrWhiteSpace(predType))
         {
