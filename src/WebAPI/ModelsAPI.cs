@@ -483,7 +483,16 @@ public static class ModelsAPI
         }
         try
         {
+            string outPath = $"{handler.FolderPaths[0]}/{name}.safetensors";
+            if (File.Exists(outPath))
+            {
+                return new JObject() { ["error"] = "Model at that save path already exists." };
+            }
             string tempPath = $"{handler.FolderPaths[0]}/{name}.download.tmp";
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath);
+            }
             await Utilities.DownloadFile(url, tempPath, async (progress, total) =>
             {
                 await ws.SendJson(new JObject()
@@ -492,7 +501,7 @@ public static class ModelsAPI
                     ["overall_percent"] = 0.2
                 }, API.WebsocketTimeout);
             });
-            File.Move(tempPath, $"{handler.FolderPaths[0]}/{name}.safetensors");
+            File.Move(tempPath, outPath);
             if (!string.IsNullOrWhiteSpace(metadata))
             {
                 File.WriteAllText($"{handler.FolderPaths[0]}/{name}.json", metadata);
