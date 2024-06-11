@@ -221,9 +221,6 @@ class SwarmKSampler:
                 "tile_sample": (["disable", "enable"], ),
                 "tile_size": ("INT", {"default": 1024, "min": 256, "max": 4096}),
                 "tile_denoise": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.001}),
-            },
-            "optional": {
-                "vae": ("VAE",)
             }
         }
 
@@ -281,13 +278,11 @@ class SwarmKSampler:
         return (out, )
     
     # tiled sample version of sample function
-    def tiled_sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample, tile_size, tile_denoise, vae):
+    def tiled_sample(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample, tile_size, tile_denoise):
         out = latent_image.copy()
         if tile_sample == "disable":
             return out
         else:
-            if vae is None:
-                raise Exception("VAE is required for tile upscaling")
             # split image into tiles
             latent_samples = latent_image["samples"]
             tiles = split_latent_tensor(latent_samples, tile_size=tile_size)
@@ -303,9 +298,9 @@ class SwarmKSampler:
             out["samples"] = result
             return (out,)
         
-    def run_sampling(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample,  tile_size, tile_denoise, vae):
+    def run_sampling(self, model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample,  tile_size, tile_denoise):
         if tile_sample == "enable":
-            return self.tiled_sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample, tile_size, tile_denoise, vae)
+            return self.tiled_sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews, tile_sample, tile_size, tile_denoise)
         else:
             return self.sample(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, var_seed, var_seed_strength, sigma_max, sigma_min, rho, add_noise, return_with_leftover_noise, previews)
 
