@@ -420,8 +420,8 @@ public class T2IParamTypes
         RefinerUpscale = Register<double>(new("Refiner Upscale", "Optional upscale of the image between the base and refiner stage.\nSometimes referred to as 'high-res fix'.\nSetting to '1' disables the upscale.",
             "1", IgnoreIf: "1", Min: 0.25, Max: 8, ViewMax: 4, Step: 0.25, OrderPriority: -2, ViewType: ParamViewType.SLIDER, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true, Examples: ["1", "1.5", "2"]
             ));
-        RefinerDoTiling = Register<bool>(new("Refiner Do Tiling", "If enabled, use Tiled KSampler to do tiling in the refiner stage.\nThis can fix some visual artifacts from scaling, but also introduce others (eg seams).\nThis may take a while to run.\nRecommended for SD3 if upscaling.\nThis relies on a third party node pack and is incompatible with some other features.",
-            "false", IgnoreIf: "false", OrderPriority: 5, Group: GroupRefiners, FeatureFlag: "tiledksampler", DoNotPreview: true
+        RefinerDoTiling = Register<bool>(new("Refiner Do Tiling", "If enabled, do generation tiling in the refiner stage.\nThis can fix some visual artifacts from scaling, but also introduce others (eg seams).\nThis may take a while to run.\nRecommended for SD3 if upscaling.",
+            "false", IgnoreIf: "false", OrderPriority: 5, Group: GroupRefiners, FeatureFlag: "refiners", DoNotPreview: true
             ));
         static List<string> listVaes(Session s)
         {

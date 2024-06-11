@@ -1803,15 +1803,7 @@ public class WorkflowGenerator
             ["add_noise"] = addNoise ? "enable" : "disable"
         };
         string created;
-        if (doTiled)
-        {
-            inputs["tile_width"] = FinalLoadedModel.StandardWidth <= 0 ? 768 : FinalLoadedModel.StandardWidth;
-            inputs["tile_height"] = FinalLoadedModel.StandardHeight <= 0 ? 768 : FinalLoadedModel.StandardHeight;
-            inputs["tiling_strategy"] = "padded";
-            inputs["preview"] = UserInput.Get(T2IParamTypes.NoPreviews) ? "disable" : "enable";
-            created = CreateNode("BNK_TiledKSamplerAdvanced", inputs, firstId);
-        }
-        else if (Features.Contains("variation_seed") && !RestrictCustomNodes)
+        if (Features.Contains("variation_seed") && !RestrictCustomNodes)
         {
             inputs["var_seed"] = UserInput.Get(T2IParamTypes.VariationSeed, 0);
             inputs["var_seed_strength"] = UserInput.Get(T2IParamTypes.VariationSeedStrength, 0);
@@ -1819,6 +1811,8 @@ public class WorkflowGenerator
             inputs["sigma_max"] = UserInput.Get(T2IParamTypes.SamplerSigmaMax, sigmax);
             inputs["rho"] = UserInput.Get(T2IParamTypes.SamplerRho, 7);
             inputs["previews"] = UserInput.Get(T2IParamTypes.NoPreviews) ? "none" : previews ?? DefaultPreviews;
+            inputs["tile_sample"] = doTiled;
+            inputs["tile_size"] = FinalLoadedModel.StandardWidth <= 0 ? 768 : FinalLoadedModel.StandardWidth;
             created = CreateNode("SwarmKSampler", inputs, firstId);
         }
         else
