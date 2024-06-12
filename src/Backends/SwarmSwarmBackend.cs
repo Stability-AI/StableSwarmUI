@@ -25,6 +25,9 @@ public class SwarmSwarmBackend : AbstractT2IBackend
 
         [ConfigComment("Whether remote Swarm backends should be followed through.\nIf false, only backends directly local to the remote machine are used.\nIf true, the remote backend can chain further connected backends.")]
         public bool AllowForwarding = true;
+
+        [ConfigComment("Whether the backend is allowed to use WebSocket connections.\nIf true, the backend will work normally and provide previews and updates and all.\nIf false, the backend will freeze while generating until the generation completes.\nFalse may be needed for some limited network environments.")]
+        public bool AllowWebsocket = true;
     }
 
     /// <summary>Internal HTTP handler.</summary>
@@ -418,6 +421,15 @@ public class SwarmSwarmBackend : AbstractT2IBackend
     /// <inheritdoc/>
     public override async Task GenerateLive(T2IParamInput user_input, string batchId, Action<object> takeOutput)
     {
+        if (!Settings.AllowWebsocket)
+        {
+            Image[] results = await Generate(user_input);
+            foreach (Image img in results)
+            {
+                takeOutput(img);
+            }
+            return;
+        }
         user_input.ProcessPromptEmbeds(x => $"<embedding:{x}>");
         await RunWithSession(async () =>
         {
