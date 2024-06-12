@@ -552,6 +552,11 @@ public static class T2IAPI
             return new JObject() { ["error"] = "That file does not exist, cannot delete." };
         }
         File.Delete(path);
+        string txtFile = path.BeforeLast('.') + ".txt";
+        if (File.Exists(txtFile))
+        {
+            File.Delete(txtFile);
+        }
         ImageMetadataTracker.RemoveMetadataFor(path);
         return new JObject() { ["success"] = true };
     }
