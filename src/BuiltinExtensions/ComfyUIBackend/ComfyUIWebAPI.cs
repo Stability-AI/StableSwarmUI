@@ -210,7 +210,8 @@ public static class ComfyUIWebAPI
         ["stable-diffusion-xl-v0_9-base"] = "sdxl_base",
         ["stable-diffusion-xl-turbo-v1"] = "sdxl_base",
         ["stable-diffusion-xl-v1-refiner"] = "sdxl_refiner",
-        ["stable-video-diffusion-img2vid-v1"] = "svd"
+        ["stable-video-diffusion-img2vid-v1"] = "svd",
+        ["stable-diffusion-v3-medium"] = "sd3"
     };
 
     /// <summary>API route to create a TensorRT model.</summary>
