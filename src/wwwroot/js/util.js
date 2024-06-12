@@ -755,9 +755,14 @@ function imageToData(src, callback, resize256 = false) {
         image.onload = () => {
                 let canvas = document.createElement('canvas');
                 let context = canvas.getContext('2d');
-                canvas.height = 256;
-                canvas.width = 256;
-                context.drawImage(image, 0, 0, 256, 256);
+                let targetMp = 256 * 256;
+                let mp = image.width * image.height;
+                let ratio = targetMp / mp;
+                let widthFixed = Math.round(image.width * ratio);
+                let heightFixed = Math.round(image.height * ratio);
+                canvas.width = widthFixed;
+                canvas.height = heightFixed;
+                context.drawImage(image, 0, 0, widthFixed, heightFixed);
                 callback(canvas.toDataURL('image/jpeg'));
         };
         image.src = src;
