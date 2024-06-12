@@ -608,11 +608,17 @@ public static class T2IAPI
             Logs.Warning($"User {session.User.UserID} tried to star image path '{origPath}' which maps to '{path}', but cannot as the image does not exist.");
             return new JObject() { ["error"] = "That file does not exist, cannot star." };
         }
+        string txtFile = path.BeforeLast('.') + ".txt";
         string starPath = $"Starred/{(session.User.Settings.StarNoFolders ? origPath.Replace("/", "") : origPath)}";
         (starPath, _, _) = WebServer.CheckFilePath(root, starPath);
+        string starTxtFile = starPath.BeforeLast('.') + ".txt";
         if (File.Exists(starPath))
         {
             File.Delete(starPath);
+            if (File.Exists(starTxtFile))
+            {
+                File.Delete(starTxtFile);
+            }
             ImageMetadataTracker.RemoveMetadataFor(path);
             ImageMetadataTracker.RemoveMetadataFor(starPath);
             return new JObject() { ["new_state"] = false };
@@ -621,6 +627,10 @@ public static class T2IAPI
         {
             Directory.CreateDirectory(Path.GetDirectoryName(starPath));
             File.Copy(path, starPath);
+            if (File.Exists(txtFile))
+            {
+                File.Copy(txtFile, starTxtFile);
+            }
             ImageMetadataTracker.RemoveMetadataFor(path);
             ImageMetadataTracker.RemoveMetadataFor(starPath);
             return new JObject() { ["new_state"] = true };
