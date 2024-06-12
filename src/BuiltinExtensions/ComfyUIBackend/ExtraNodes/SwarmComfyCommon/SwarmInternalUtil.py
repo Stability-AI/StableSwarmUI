@@ -24,24 +24,3 @@ class SwarmEmbedLoaderListProvider:
 NODE_CLASS_MAPPINGS = {
     "SwarmEmbedLoaderListProvider": SwarmEmbedLoaderListProvider,
 }
-
-
-# This is a dirty hack to shut up the errors from Dropdown combo mismatch, pending Comfy upstream fix
-ORIG_EXECUTION_VALIDATE = execution.validate_inputs
-def validate_inputs(prompt, item, validated):
-    raw_result = ORIG_EXECUTION_VALIDATE(prompt, item, validated)
-    if raw_result is None:
-        return None
-    (did_succeed, errors, unique_id) = raw_result
-    if did_succeed:
-        return raw_result
-    for error in errors:
-        if error['type'] == "return_type_mismatch":
-            o_id = error['extra_info']['linked_node'][0]
-            o_class_type = prompt[o_id]['class_type']
-            if o_class_type == "SwarmInputModelName" or o_class_type == "SwarmInputDropdown":
-                errors.remove(error)
-    did_succeed = len(errors) == 0
-    return (did_succeed, errors, unique_id)
-
-execution.validate_inputs = validate_inputs

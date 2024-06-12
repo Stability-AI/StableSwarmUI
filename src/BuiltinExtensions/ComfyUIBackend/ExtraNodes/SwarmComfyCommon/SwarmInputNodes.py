@@ -117,7 +117,7 @@ class SwarmInputModelName:
         } | STANDARD_OTHER_INPUTS
 
     CATEGORY = "StableSwarmUI/inputs"
-    RETURN_TYPES = ("COMBO",)
+    RETURN_TYPES = ("",)
     FUNCTION = "do_input"
 
     def do_input(self, value, **kwargs):
@@ -154,7 +154,7 @@ class SwarmInputDropdown:
         } | STANDARD_OTHER_INPUTS
 
     CATEGORY = "StableSwarmUI/inputs"
-    RETURN_TYPES = ("STRING", "COMBO",)
+    RETURN_TYPES = ("STRING", "",)
     FUNCTION = "do_input"
 
     def do_input(self, value, **kwargs):
