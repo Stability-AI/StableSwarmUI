@@ -57,6 +57,10 @@ public static class ImageMetadataTracker
     /// <summary>Returns the database corresponding to the given folder path.</summary>
     public static ImageDatabase GetDatabaseForFolder(string folder)
     {
+        if (!Program.ServerSettings.Paths.ImageMetadataPerFolder)
+        {
+            folder = Program.ServerSettings.Paths.DataPath;
+        }
         return Databases.GetOrCreate(folder, () =>
         {
             string path = $"{folder}/image_metadata.ldb";
@@ -104,6 +108,10 @@ public static class ImageMetadataTracker
             return null;
         }
         string folder = file.BeforeAndAfterLast('/', out string filename);
+        if (!Program.ServerSettings.Paths.ImageMetadataPerFolder)
+        {
+            filename = file;
+        }
         ImageDatabase metadata = GetDatabaseForFolder(folder);
         long timeNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         try
@@ -178,6 +186,10 @@ public static class ImageMetadataTracker
     {
         string ext = file.AfterLast('.');
         string folder = file.BeforeAndAfterLast('/', out string filename);
+        if (!Program.ServerSettings.Paths.ImageMetadataPerFolder)
+        {
+            filename = file;
+        }
         ImageDatabase metadata = GetDatabaseForFolder(folder);
         long timeNow = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         try
@@ -326,5 +338,6 @@ public static class ImageMetadataTracker
             }
         }
         ClearFolder(Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, Program.ServerSettings.Paths.OutputPath));
+        ClearFolder(Program.ServerSettings.Paths.DataPath);
     }
 }
