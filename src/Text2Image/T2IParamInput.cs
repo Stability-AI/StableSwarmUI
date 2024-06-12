@@ -788,7 +788,7 @@ public class T2IParamInput
         {
             T2IModelHandler handler = Program.T2IModelSets[param.Subtype ?? "Stable-Diffusion"];
             string best = T2IParamTypes.GetBestModelInList(name.Replace('\\', '/'), [.. handler.Models.Keys]);
-            return handler.Models.TryGetValue(best ?? name, out T2IModel actualModel) ? actualModel : new T2IModel() { Name = name };
+            return handler.Models.TryGetValue(best ?? name, out T2IModel actualModel) ? actualModel : null;
         }
         if (param.IgnoreIf is not null && param.IgnoreIf == val)
         {
@@ -814,6 +814,11 @@ public class T2IParamInput
         if (param.SharpType == typeof(float))
         {
             obj = (float)(double)obj;
+        }
+        if (obj is null)
+        {
+            Logs.Debug($"Ignoring input to parameter {param.ID} because the value maps to null.");
+            return;
         }
         ValuesInput[param.ID] = obj;
         if (param.FeatureFlag is not null)
