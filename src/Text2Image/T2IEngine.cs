@@ -34,6 +34,9 @@ namespace StableSwarmUI.Text2Image
         /// Use "RefuseImage" to mark an image as removed. Note that it may have already been shown to a user, when the live result websocket API is in use.</summary>
         public static Action<PostBatchEventParams> PostBatchEvent;
 
+        /// <summary>Feature flags that don't block a backend from running, such as model-specific flags.</summary>
+        public static HashSet<string> DisregardedFeatureFlags = ["sd3"];
+
         /// <summary>Parameters for <see cref="PostBatchEvent"/>.</summary>
         public record class PostBatchEventParams(T2IParamInput UserInput, ImageOutput[] Images);
 
@@ -76,7 +79,7 @@ namespace StableSwarmUI.Text2Image
                 HashSet<string> features = backend.Backend.SupportedFeatures.ToHashSet();
                 foreach (string flag in user_input.RequiredFlags)
                 {
-                    if (!features.Contains(flag))
+                    if (!features.Contains(flag) && !DisregardedFeatureFlags.Contains(flag))
                     {
                         Logs.Verbose($"Filter out backend {backend.ID} as the request requires flag {flag}, but the backend does not support it");
                         user_input.RefusalReasons.Add($"Request requires flag '{flag}' which is not present on the backend");
