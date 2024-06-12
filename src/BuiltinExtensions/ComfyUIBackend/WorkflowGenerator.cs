@@ -1605,16 +1605,17 @@ public class WorkflowGenerator
                 string singleClipLoader = CreateNode("CLIPLoader", new JObject()
                 {
                     ["clip_name"] = "t5xxl_enconly.safetensors",
-                    ["type"] = "stable_diffusion"
+                    ["type"] = "sd3"
                 });
                 LoadingClip = [singleClipLoader, 0];
             }
-            else if (mode == "CLIP Only TEMPORARYDISABLE")
+            else if (mode == "CLIP Only")
             {
                 string dualClipLoader = CreateNode("DualCLIPLoader", new JObject()
                 {
                     ["clip_name1"] = "clip_g_sdxl_base.safetensors",
-                    ["clip_name2"] = "clip_l_sdxl_base.safetensors"
+                    ["clip_name2"] = "clip_l_sdxl_base.safetensors",
+                    ["type"] = "sd3"
                 });
                 LoadingClip = [dualClipLoader, 0];
             }
@@ -1624,8 +1625,7 @@ public class WorkflowGenerator
                 {
                     ["clip_name1"] = "clip_g_sdxl_base.safetensors",
                     ["clip_name2"] = "clip_l_sdxl_base.safetensors",
-                    // TODO: This is a hack, DualCLIPLoader breaks with SD3
-                    ["clip_name3"] = mode == "CLIP Only" ? "clip_l_sdxl_base.safetensors" : "t5xxl_enconly.safetensors"
+                    ["clip_name3"] = "t5xxl_enconly.safetensors"
                 });
                 LoadingClip = [tripleClipLoader, 0];
             }
