@@ -334,12 +334,13 @@ public class WorkflowGenerator
             {
                 void requireVisionModel(string name, string url)
                 {
-                    if (!VisionModelsValid.Add(name))
+                    if (VisionModelsValid.Contains(name))
                     {
                         return;
                     }
                     string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDClipVisionFolder, name);
                     g.DownloadModel(name, filePath, url);
+                    VisionModelsValid.Add(name);
                 }
                 string visModelName = "clip_vision_g.safetensors";
                 if (g.UserInput.TryGet(T2IParamTypes.ReVisionModel, out T2IModel visionModel))
@@ -456,21 +457,23 @@ public class WorkflowGenerator
                         bool isXl = g.CurrentCompatClass() == "stable-diffusion-xl-v1";
                         void requireIPAdapterModel(string name, string url)
                         {
-                            if (!IPAdapterModelsValid.Add(name))
+                            if (IPAdapterModelsValid.Contains(name))
                             {
                                 return;
                             }
                             string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, $"ipadapter/{name}");
                             g.DownloadModel(name, filePath, url);
+                            IPAdapterModelsValid.Add(name);
                         }
                         void requireLora(string name, string url)
                         {
-                            if (!IPAdapterModelsValid.Add($"LORA-{name}"))
+                            if (IPAdapterModelsValid.Contains($"LORA-{name}"))
                             {
                                 return;
                             }
                             string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, Program.ServerSettings.Paths.SDLoraFolder, $"ipadapter/{name}");
                             g.DownloadModel(name, filePath, url);
+                            IPAdapterModelsValid.Add($"LORA-{name}");
                         }
                         if (presetLow.StartsWith("light"))
                         {
@@ -1595,12 +1598,13 @@ public class WorkflowGenerator
             LoadingModel = [sd3Node, 0];
             void requireClipModel(string name, string url)
             {
-                if (!ClipModelsValid.Add(name))
+                if (ClipModelsValid.Contains(name))
                 {
                     return;
                 }
                 string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, "clip", name);
                 DownloadModel(name, filePath, url);
+                ClipModelsValid.Add(name);
             }
             string mode = UserInput.Get(T2IParamTypes.SD3TextEncs, "CLIP Only");
             requireClipModel("clip_g_sdxl_base.safetensors", "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/text_encoder_2/model.fp16.safetensors");
