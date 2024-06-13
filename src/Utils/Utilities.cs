@@ -524,6 +524,10 @@ public static class Utilities
             if (read <= 0)
             {
                 Logs.Verbose($"Download {url} completed with {progress} bytes.");
+                if (length != 0 && progress != length)
+                {
+                    throw new InvalidOperationException($"Download {url} failed: expected {length} bytes but got {progress} bytes.");
+                }
                 progressUpdate?.Invoke(progress, length);
                 return;
             }

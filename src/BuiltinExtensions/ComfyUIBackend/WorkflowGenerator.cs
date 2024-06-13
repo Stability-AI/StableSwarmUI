@@ -1296,16 +1296,25 @@ public class WorkflowGenerator
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             Logs.Info($"Downloading {name} to {filePath}...");
             double nextPerc = 0.05;
-            Utilities.DownloadFile(url, filePath, (bytes, total) =>
+            try
             {
-                double perc = bytes / (double)total;
-                if (perc >= nextPerc)
+                Utilities.DownloadFile(url, filePath, (bytes, total) =>
                 {
-                    Logs.Info($"{name} download at {perc * 100:0.0}%...");
-                    // TODO: Send a signal back so a progress bar can be displayed on a UI
-                    nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
-                }
-            }).Wait();
+                    double perc = bytes / (double)total;
+                    if (perc >= nextPerc)
+                    {
+                        Logs.Info($"{name} download at {perc * 100:0.0}%...");
+                        // TODO: Send a signal back so a progress bar can be displayed on a UI
+                        nextPerc = Math.Round(perc / 0.05) * 0.05 + 0.05;
+                    }
+                }).Wait();
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Failed to download {name} from {url}: {ex.Message}");
+                File.Delete(filePath);
+                throw new InvalidOperationException("Required model download failed.");
+            }
             Logs.Info($"Downloading complete, continuing.");
         }
     }
