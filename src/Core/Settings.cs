@@ -221,9 +221,9 @@ public class Settings : AutoConfiguration
 
         public class FileFormatData : AutoConfiguration
         {
-            [ConfigComment("What format to save images in.\nDefault is '.jpg' (at 100% quality).")]
+            [ConfigComment("What format to save images in.\nDefault is '.png', but '.jpg' is recommended to save some filespace.")]
             [SettingsOptions(Impl = typeof(SettingsOptionsAttribute.ForEnum<Image.ImageFormat>))]
-            public string ImageFormat = "JPG";
+            public string ImageFormat = "PNG";
 
             [ConfigComment("Whether to store metadata into saved images.\nDefaults enabled.")]
             public bool SaveMetadata = true;
