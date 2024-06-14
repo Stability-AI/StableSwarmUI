@@ -24,11 +24,11 @@ public static class NvidiaUtil
     /// <summary>Queries and returns data from nvidia-smi, or returns null if not possible (eg non-nvidia GPU).</summary>
     public static NvidiaInfo[] QueryNvidia()
     {
-        float ParseFloat(string f) => float.Parse(f.Replace("%", "").Trim().Replace(",", "."));
+        float ParseFloat(string str) => float.TryParse(str.Replace("%", "").Trim().Replace(",", "."), out float f) ? f : 0;
         long ParseMemory(string m)
         {
             string[] parts = m.Split(' ', StringSplitOptions.TrimEntries);
-            long v = long.Parse(parts[0]);
+            long v = long.TryParse(parts[0], out long lval) ? lval : 0;
             if (parts.Length == 1)
             {
                 return v;
