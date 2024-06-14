@@ -630,11 +630,13 @@ function reapplyLoraWeights() {
     }
 }
 
-function updateLoraWeights() {
+function updateLoraWeights(doChange = true) {
     let valSet = [...getRequiredElementById('input_loras').selectedOptions].map(option => option.value);
     let inputWeights = getRequiredElementById('input_loraweights');
     inputWeights.value = valSet.map(lora => loraWeightPref[lora] || 1).join(',');
-    inputWeights.dispatchEvent(new Event('change'));
+    if (doChange) {
+        inputWeights.dispatchEvent(new Event('change'));
+    }
     getRequiredElementById('input_loraweights_toggle').checked = valSet.length > 0;
     doToggleEnable('input_loraweights');
 }
@@ -662,6 +664,10 @@ function updateLoraList() {
         weightInput.addEventListener('change', () => {
             loraWeightPref[lora] = weightInput.value;
             updateLoraWeights();
+        });
+        weightInput.addEventListener('input', () => {
+            loraWeightPref[lora] = weightInput.value;
+            updateLoraWeights(false);
         });
         let removeButton = createDiv(null, 'preset-remove-button');
         removeButton.innerHTML = '&times;';
