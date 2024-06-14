@@ -104,13 +104,17 @@ public class WorkflowGenerator
             }
             else if (!g.NoVAEOverride && g.UserInput.TryGet(T2IParamTypes.VAE, out T2IModel vae))
             {
+                if (g.FinalLoadedModel.ModelClass?.ID == "stable-diffusion-v3-medium")
+                {
+                    Logs.Warning($"WARNING: Model {g.FinalLoadedModel.Title} is an SD3 model, but you have VAE {vae.Title} selected. If that VAE is not an SD3 specific VAE, this is likely a mistake. Errors may follow. If this breaks, disable the custom VAE.");
+                }
                 string vaeNode = g.CreateNode("VAELoader", new JObject()
                 {
                     ["vae_name"] = vae.ToString(g.ModelFolderFormat)
                 }, g.HasNode("11") ? null : "11");
                 g.LoadingVAE = [vaeNode, 0];
             }
-        }, -15);
+        }, -14);
         AddModelGenStep(g =>
         {
             (g.LoadingModel, g.LoadingClip) = g.LoadLorasForConfinement(0, g.LoadingModel, g.LoadingClip);
