@@ -63,7 +63,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             await Process.Start(new ProcessStartInfo("git", $"clone {url}") { WorkingDirectory = nodePath }).WaitForExitAsync(Program.GlobalProgramCancel);
             string reqFile = $"{nodePath}/{folderName}/requirements.txt";
             ComfyUISelfStartBackend[] backends = [.. Program.Backends.RunningBackendsOfType<ComfyUISelfStartBackend>()];
-            ComfyUISelfStartBackend avaialble = backends.FirstOrDefault();
+            ComfyUISelfStartBackend available = backends.FirstOrDefault();
             if (File.Exists(reqFile) && backends.Any())
             {
                 Task[] tasks = [.. backends.Select(b => Program.Backends.ShutdownBackendCleanly(b.BackendData))];
