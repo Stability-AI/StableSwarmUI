@@ -725,6 +725,11 @@
                                         <br>@(address)</p>
                                     }
                                 }
+                                @if (Program.ProxyHandler is not null && Program.ProxyHandler.PublicURL is not null)
+                                {
+                                    <p><span class="translate">This server is also accessible from the open internet at:</span>
+                                    <br>@(Program.ProxyHandler?.PublicURL)</p>
+                                }
                             </p>
                         </div>
                     </div>

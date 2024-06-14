@@ -486,12 +486,13 @@ public class Program
                 BasicAuth = GetCommandLineFlag("ngrok-basic-auth", null)
             };
         }
-        if (CommandLineFlags.ContainsKey("cloudflared-path"))
+        string cloudflared = ServerSettings.Network.CloudflaredPath;
+        if (CommandLineFlags.ContainsKey("cloudflared-path") || !string.IsNullOrWhiteSpace(cloudflared))
         {
             ProxyHandler = new()
             {
                 Name = "Cloudflare",
-                Path = GetCommandLineFlag("cloudflared-path", null),
+                Path = GetCommandLineFlag("cloudflared-path", cloudflared).Trim('"'),
                 Region = GetCommandLineFlag("proxy-region", null)
             };
         }

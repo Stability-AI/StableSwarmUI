@@ -124,6 +124,9 @@ public class Settings : AutoConfiguration
 
         [ConfigComment("Backends are automatically assigned unique ports. This value selects which port number to start the assignment from.\nDefault is '7820'.")]
         public int BackendStartingPort = 7820;
+
+        [ConfigComment("If you wish to access your Swarm instance externally, set this to the path of a CloudFlared executable, and it will automatically be used.\n(Must restart to apply).\nThe URL will be visible on the Server Info tab and/or terminal log.")]
+        public string CloudflaredPath = "";
     }
 
     /// <summary>Settings related to file paths.</summary>
