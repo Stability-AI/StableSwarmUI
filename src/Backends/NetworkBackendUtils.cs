@@ -280,86 +280,95 @@ public static class NetworkBackendUtils
     }
 
     /// <summary>Starts a self-start backend based on the user-configuration and backend-specifics provided.</summary>
-    public static Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, string identifier, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput)
+    public static Task DoSelfStart(string startScript, AbstractT2IBackend backend, string nameSimple, string identifier, int gpuId, string extraArgs, Func<bool, Task> initInternal, Action<int, Process> takeOutput, bool autoRestart = false)
     {
-        return DoSelfStart(startScript, nameSimple, identifier, gpuId, extraArgs, status => backend.Status = status, async (b) => { await initInternal(b); return backend.Status == BackendStatus.RUNNING; }, takeOutput, () => backend.Status, a => backend.OnShutdown += a);
+        return DoSelfStart(startScript, nameSimple, identifier, gpuId, extraArgs, status => backend.Status = status, async (b) => { await initInternal(b); return backend.Status == BackendStatus.RUNNING; }, takeOutput, () => backend.Status, a => backend.OnShutdown += a, autoRestart);
     }
 
     /// <summary>Starts a self-start backend based on the user-configuration and backend-specifics provided.</summary>
-    public static async Task DoSelfStart(string startScript, string nameSimple, string identifier, int gpuId, string extraArgs, Action<BackendStatus> reviseStatus, Func<bool, Task<bool>> initInternal, Action<int, Process> takeOutput, Func<BackendStatus> getStatus, Action<Action> addShutdownEvent)
+    public static async Task DoSelfStart(string startScript, string nameSimple, string identifier, int gpuId, string extraArgs, Action<BackendStatus> reviseStatus, Func<bool, Task<bool>> initInternal, Action<int, Process> takeOutput, Func<BackendStatus> getStatus, Action<Action> addShutdownEvent, bool autoRestart = false)
     {
-        if (string.IsNullOrWhiteSpace(startScript))
+        async Task launch()
         {
-            Logs.Debug($"Cancelling start of {nameSimple} as it has an empty start script.");
-            reviseStatus(BackendStatus.DISABLED);
-            return;
-        }
-        Logs.Debug($"Requested generic launch of {startScript} on GPU {gpuId} from {nameSimple}");
-        string path = startScript.Replace('\\', '/');
-        string ext = path.AfterLast('.');
-        if (!IsValidStartPath(nameSimple, path, ext))
-        {
-            reviseStatus(BackendStatus.ERRORED);
-            return;
-        }
-        int port = GetNextPort();
-        string dir = Path.GetDirectoryName(path);
-        ProcessStartInfo start = new()
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            WorkingDirectory = dir
-        };
-        PythonLaunchHelper.CleanEnvironmentOfPythonMess(start, $"({nameSimple} launch) ");
-        start.Environment["CUDA_VISIBLE_DEVICES"] = $"{gpuId}";
-        string preArgs = "";
-        string postArgs = extraArgs.Replace("{PORT}", $"{port}").Trim();
-        if (path.EndsWith(".py"))
-        {
-            ConfigurePythonExeFor(startScript, nameSimple, start, out preArgs);
-            Logs.Debug($"({nameSimple} launch) Will use python: {start.FileName}");
-        }
-        else
-        {
-            Logs.Debug($"({nameSimple} launch) Will shellexec");
-            start.FileName = Path.GetFullPath(path);
-        }
-        start.Arguments = $"{preArgs} {postArgs}".Trim();
-        BackendStatus status = BackendStatus.LOADING;
-        reviseStatus(status);
-        Process runningProcess = new() { StartInfo = start };
-        takeOutput(port, runningProcess);
-        runningProcess.Start();
-        Logs.Init($"Self-Start {nameSimple} on port {port} is loading...");
-        ReportLogsFromProcess(runningProcess, $"{nameSimple} on port {port}", identifier, out Action signalShutdownExpected, getStatus, s => { status = s; reviseStatus(s); });
-        addShutdownEvent?.Invoke(signalShutdownExpected);
-        int checks = 0;
-        while (status == BackendStatus.LOADING)
-        {
-            checks++;
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            if (checks % 10 == 0)
+            if (string.IsNullOrWhiteSpace(startScript))
             {
-                Logs.Debug($"{nameSimple} port {port} waiting for server...");
-            }
-            try
-            {
-                bool alive = await initInternal(true);
-                if (alive)
-                {
-                    Logs.Init($"Self-Start {nameSimple} on port {port} started.");
-                }
-                status = getStatus();
-            }
-            catch (Exception ex)
-            {
-                Logs.Error($"Self-Start {nameSimple} on port {port} failed to start: {ex.Message}");
-                status = BackendStatus.ERRORED;
-                reviseStatus(status);
+                Logs.Debug($"Cancelling start of {nameSimple} as it has an empty start script.");
+                reviseStatus(BackendStatus.DISABLED);
                 return;
             }
+            Logs.Debug($"Requested generic launch of {startScript} on GPU {gpuId} from {nameSimple}");
+            string path = startScript.Replace('\\', '/');
+            string ext = path.AfterLast('.');
+            if (!IsValidStartPath(nameSimple, path, ext))
+            {
+                reviseStatus(BackendStatus.ERRORED);
+                return;
+            }
+            int port = GetNextPort();
+            string dir = Path.GetDirectoryName(path);
+            ProcessStartInfo start = new()
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                WorkingDirectory = dir
+            };
+            PythonLaunchHelper.CleanEnvironmentOfPythonMess(start, $"({nameSimple} launch) ");
+            start.Environment["CUDA_VISIBLE_DEVICES"] = $"{gpuId}";
+            string preArgs = "";
+            string postArgs = extraArgs.Replace("{PORT}", $"{port}").Trim();
+            if (path.EndsWith(".py"))
+            {
+                ConfigurePythonExeFor(startScript, nameSimple, start, out preArgs);
+                Logs.Debug($"({nameSimple} launch) Will use python: {start.FileName}");
+            }
+            else
+            {
+                Logs.Debug($"({nameSimple} launch) Will shellexec");
+                start.FileName = Path.GetFullPath(path);
+            }
+            start.Arguments = $"{preArgs} {postArgs}".Trim();
+            BackendStatus status = BackendStatus.LOADING;
+            reviseStatus(status);
+            Process runningProcess = new() { StartInfo = start };
+            takeOutput(port, runningProcess);
+            runningProcess.Start();
+            Logs.Init($"Self-Start {nameSimple} on port {port} is loading...");
+            Action onFail = autoRestart ? () =>
+            {
+                Logs.Error($"Self-Start {nameSimple} on port {port} failed. Restarting per configuration AutoRestart=true...");
+                Utilities.RunCheckedTask(launch);
+            } : null;
+            ReportLogsFromProcess(runningProcess, $"{nameSimple} on port {port}", identifier, out Action signalShutdownExpected, getStatus, s => { status = s; reviseStatus(s); }, onFail: onFail);
+            addShutdownEvent?.Invoke(signalShutdownExpected);
+            int checks = 0;
+            while (status == BackendStatus.LOADING)
+            {
+                checks++;
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                if (checks % 10 == 0)
+                {
+                    Logs.Debug($"{nameSimple} port {port} waiting for server...");
+                }
+                try
+                {
+                    bool alive = await initInternal(true);
+                    if (alive)
+                    {
+                        Logs.Init($"Self-Start {nameSimple} on port {port} started.");
+                    }
+                    status = getStatus();
+                }
+                catch (Exception ex)
+                {
+                    Logs.Error($"Self-Start {nameSimple} on port {port} failed to start: {ex.Message}");
+                    status = BackendStatus.ERRORED;
+                    reviseStatus(status);
+                    return;
+                }
+            }
+            Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
         }
-        Logs.Debug($"{nameSimple} self-start port {port} loop ending (should now be alive)");
+        await launch();
     }
 
     public static async Task RunProcessWithMonitoring(ProcessStartInfo procInfo, string nameSimple, string identifier)
@@ -372,12 +381,12 @@ public static class NetworkBackendUtils
         await process.WaitForExitAsync(Program.GlobalProgramCancel);
     }
 
-    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier)
+    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier, Action onFail = null)
     {
-        ReportLogsFromProcess(process, nameSimple, identifier, out Action signalShutdownExpected, () => BackendStatus.RUNNING, _ => { }, true);
+        ReportLogsFromProcess(process, nameSimple, identifier, out Action signalShutdownExpected, () => BackendStatus.RUNNING, _ => { }, true, onFail);
     }
 
-    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier, out Action signalShutdownExpected, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus, bool exitPreExpected = false)
+    public static void ReportLogsFromProcess(Process process, string nameSimple, string identifier, out Action signalShutdownExpected, Func<BackendStatus> getStatus, Action<BackendStatus> setStatus, bool exitPreExpected = false, Action onFail = null)
     {
         Logs.LogTracker logTracker = new() { Identifier = identifier };
         lock (Logs.OtherTrackers)
@@ -497,6 +506,7 @@ public static class NetworkBackendUtils
                 {
                     Logs.Info($"Self-Start {nameSimple} had errors before shutdown:\n{errorLog}");
                 }
+                onFail?.Invoke();
             }
         }
         new Thread(MonitorErrLoop) { Name = $"SelfStart{nameSimple.Replace(' ', '_')}_MonitorErr" }.Start();
