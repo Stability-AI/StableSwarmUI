@@ -990,7 +990,7 @@ public class WorkflowGenerator
                         });
                         g.CreateImageSaveNode([imageNode, 0], g.GetStableDynamicID(50000, 0));
                     }
-                    (string boundsNode, string croppedMask, string masked) = g.CreateImageMaskCrop([segmentNode, 0], g.FinalImageOut, 8, vae);
+                    (string boundsNode, string croppedMask, string masked) = g.CreateImageMaskCrop([segmentNode, 0], g.FinalImageOut, 8, vae, thresholdMax: g.UserInput.Get(T2IParamTypes.SegmentThresholdMax, 1));
                     g.EnableDifferential();
                     (model, clip) = g.LoadLorasForConfinement(part.ContextID, model, clip);
                     JArray prompt = g.CreateConditioning(part.Prompt, clip, t2iModel, true);
@@ -1409,7 +1409,7 @@ public class WorkflowGenerator
     /// <param name="vae">The relevant VAE.</param>
     /// <param name="threshold">Optional minimum value threshold.</param>
     /// <returns>(boundsNode, croppedMask, maskedLatent).</returns>
-    public (string, string, string) CreateImageMaskCrop(JArray mask, JArray image, int growBy, JArray vae, double threshold = 0.01)
+    public (string, string, string) CreateImageMaskCrop(JArray mask, JArray image, int growBy, JArray vae, double threshold = 0.01, double thresholdMax = 1)
     {
         if (threshold > 0)
         {
@@ -1417,7 +1417,7 @@ public class WorkflowGenerator
             {
                 ["mask"] = mask,
                 ["min"] = threshold,
-                ["max"] = 1
+                ["max"] = thresholdMax
             });
             mask = [thresholded, 0];
         }
