@@ -407,7 +407,7 @@ window.addEventListener('keydown', function(kbevent) {
         shiftToNextImagePreview(true, isFullView);
     }
     else if (kbevent.key === "Enter" && kbevent.ctrlKey && isVisible(getRequiredElementById('main_image_area'))) {
-        mainGenHandler.doGenerate();
+        getRequiredElementById('alt_generate_button').click();
     }
     else {
         return;
