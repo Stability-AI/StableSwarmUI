@@ -557,6 +557,11 @@ public static class T2IAPI
         {
             File.Delete(txtFile);
         }
+        string metaFile = path.BeforeLast('.') + ".metadata.js";
+        if (File.Exists(metaFile))
+        {
+            File.Delete(metaFile);
+        }
         ImageMetadataTracker.RemoveMetadataFor(path);
         return new JObject() { ["success"] = true };
     }
