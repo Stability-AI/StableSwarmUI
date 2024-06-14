@@ -86,6 +86,9 @@ public class T2IModelHandler
         public string Hash { get; set; }
 
         public string PredictionType { get; set; }
+
+        /// <summary>Special cache of what text encoders the model appears to contain. Primarily for SD3 which has optional text encoders.</summary>
+        public string TextEncoders { get; set; }
     }
 
     public T2IModelHandler()
@@ -401,6 +404,11 @@ public class T2IModelHandler
         {
             metadata = cache.FindById(modelCacheId);
         }
+        if (metadata is not null && metadata.TextEncoders is null && metadata.ModelClassType == "stable-diffusion-v3-medium")
+        {
+            // TODO: Temporary metadata fix for SD3 models before the commit that added TextEncs tracking
+            metadata = null;
+        }
         if (metadata is null || metadata.ModelFileVersion != modified)
         {
             string autoImg = GetAutoFormatImage(model);
@@ -410,6 +418,7 @@ public class T2IModelHandler
             }
             JObject headerData = [];
             JObject metaHeader = [];
+            string textEncs = null;
             if (model.Name.EndsWith(".safetensors"))
             {
                 string headerText = T2IModel.GetSafetensorsHeaderFrom(model.RawFilePath);
@@ -422,6 +431,12 @@ public class T2IModelHandler
                         return;
                     }
                     metaHeader = headerData["__metadata__"] as JObject ?? [];
+                    textEncs = "";
+                    string[] keys = headerData.Properties().Select(p => p.Name).Where(k => k.StartsWith("text_encoders.")).ToArray();
+                    if (keys.Any(k => k.StartsWith("text_encoders.clip_g."))) { textEncs += "clip_g,"; }
+                    if (keys.Any(k => k.StartsWith("text_encoders.clip_l."))) { textEncs += "clip_l,"; }
+                    if (keys.Any(k => k.StartsWith("text_encoders.t5xxl."))) { textEncs += "t5xxl,"; }
+                    textEncs = textEncs.TrimEnd(',');
                 }
             }
             string altModelPrefix = $"{model.OriginatingFolderPath}/{model.Name.BeforeLast('.')}";
@@ -527,7 +542,8 @@ public class T2IModelHandler
                 Tags = metaHeader?.Value<string>("modelspec.tags")?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
                 IsNegativeEmbedding = (metaHeader?.Value<string>("modelspec.is_negative_embedding") ?? metaHeader?.Value<string>("is_negative_embedding")) == "true",
                 PredictionType = metaHeader?.Value<string>("modelspec.prediction_type") ?? metaHeader?.Value<string>("prediction_type"),
-                Hash = metaHeader?.Value<string>("modelspec.hash_sha256") ?? metaHeader?.Value<string>("hash_sha256")
+                Hash = metaHeader?.Value<string>("modelspec.hash_sha256") ?? metaHeader?.Value<string>("hash_sha256"),
+                TextEncoders = textEncs
             };
             lock (MetadataLock)
             {

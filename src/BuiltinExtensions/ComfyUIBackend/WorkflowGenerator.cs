@@ -1606,41 +1606,58 @@ public class WorkflowGenerator
                 DownloadModel(name, filePath, url);
                 ClipModelsValid.Add(name);
             }
-            string mode = UserInput.Get(T2IParamTypes.SD3TextEncs, "CLIP Only");
-            requireClipModel("clip_g_sdxl_base.safetensors", "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/text_encoder_2/model.fp16.safetensors");
-            requireClipModel("clip_l_sdxl_base.safetensors", "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/text_encoder/model.fp16.safetensors");
-            if (mode.Contains("T5"))
+            string tencs = model.Metadata?.TextEncoders ?? "";
+            if (!UserInput.TryGet(T2IParamTypes.SD3TextEncs, out string mode))
             {
-                requireClipModel("t5xxl_enconly.safetensors", "https://huggingface.co/mcmonkey/google_t5-v1_1-xxl_encoderonly/resolve/main/t5xxl_fp8_e4m3fn.safetensors");
-            }
-            if (mode == "T5 Only")
-            {
-                string singleClipLoader = CreateNode("CLIPLoader", new JObject()
+                if (tencs == "")
                 {
-                    ["clip_name"] = "t5xxl_enconly.safetensors",
-                    ["type"] = "sd3"
-                });
-                LoadingClip = [singleClipLoader, 0];
-            }
-            else if (mode == "CLIP Only")
-            {
-                string dualClipLoader = CreateNode("DualCLIPLoader", new JObject()
+                    mode = "CLIP Only";
+                }
+                else
                 {
-                    ["clip_name1"] = "clip_g_sdxl_base.safetensors",
-                    ["clip_name2"] = "clip_l_sdxl_base.safetensors",
-                    ["type"] = "sd3"
-                });
-                LoadingClip = [dualClipLoader, 0];
+                    mode = null;
+                }
             }
-            else
+            if (mode == "CLIP Only" && tencs.Contains("clip_l") && !tencs.Contains("t5xxl")) { mode = null; }
+            if (mode == "T5 Only" && !tencs.Contains("clip_l") && tencs.Contains("t5xxl")) { mode = null; }
+            if (mode == "CLIP + T5" && tencs.Contains("clip_l") && tencs.Contains("t5xxl")) { mode = null; }
+            if (mode is not null)
             {
-                string tripleClipLoader = CreateNode("TripleCLIPLoader", new JObject()
+                requireClipModel("clip_g_sdxl_base.safetensors", "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/text_encoder_2/model.fp16.safetensors");
+                requireClipModel("clip_l_sdxl_base.safetensors", "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/text_encoder/model.fp16.safetensors");
+                if (mode.Contains("T5"))
                 {
-                    ["clip_name1"] = "clip_g_sdxl_base.safetensors",
-                    ["clip_name2"] = "clip_l_sdxl_base.safetensors",
-                    ["clip_name3"] = "t5xxl_enconly.safetensors"
-                });
-                LoadingClip = [tripleClipLoader, 0];
+                    requireClipModel("t5xxl_enconly.safetensors", "https://huggingface.co/mcmonkey/google_t5-v1_1-xxl_encoderonly/resolve/main/t5xxl_fp8_e4m3fn.safetensors");
+                }
+                if (mode == "T5 Only")
+                {
+                    string singleClipLoader = CreateNode("CLIPLoader", new JObject()
+                    {
+                        ["clip_name"] = "t5xxl_enconly.safetensors",
+                        ["type"] = "sd3"
+                    });
+                    LoadingClip = [singleClipLoader, 0];
+                }
+                else if (mode == "CLIP Only")
+                {
+                    string dualClipLoader = CreateNode("DualCLIPLoader", new JObject()
+                    {
+                        ["clip_name1"] = "clip_g_sdxl_base.safetensors",
+                        ["clip_name2"] = "clip_l_sdxl_base.safetensors",
+                        ["type"] = "sd3"
+                    });
+                    LoadingClip = [dualClipLoader, 0];
+                }
+                else
+                {
+                    string tripleClipLoader = CreateNode("TripleCLIPLoader", new JObject()
+                    {
+                        ["clip_name1"] = "clip_g_sdxl_base.safetensors",
+                        ["clip_name2"] = "clip_l_sdxl_base.safetensors",
+                        ["clip_name3"] = "t5xxl_enconly.safetensors"
+                    });
+                    LoadingClip = [tripleClipLoader, 0];
+                }
             }
         }
         else if (!string.IsNullOrWhiteSpace(predType))
