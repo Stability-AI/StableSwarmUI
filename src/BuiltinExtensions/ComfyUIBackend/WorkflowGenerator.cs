@@ -782,6 +782,21 @@ public class WorkflowGenerator
                 }
             }
         }, -5);
+        JArray doMaskShrinkApply(WorkflowGenerator g, JArray imgIn)
+        {
+            (string boundsNode, string croppedMask, string masked) = g.MaskShrunkInfo;
+            g.MaskShrunkInfo = (null, null, null);
+            if (boundsNode is not null)
+            {
+                imgIn = g.RecompositeCropped(boundsNode, [croppedMask, 0], g.FinalInputImage, imgIn);
+            }
+            else if (g.UserInput.Get(T2IParamTypes.InitImageRecompositeMask, true) && g.FinalMask is not null && !g.NodeHelpers.ContainsKey("recomposite_mask_result"))
+            {
+                imgIn = g.CompositeMask(g.FinalInputImage, imgIn, g.FinalMask);
+            }
+            g.NodeHelpers["recomposite_mask_result"] = $"{imgIn[0]}";
+            return imgIn;
+        }
         #endregion
         #region Refiner
         AddStep(g =>
@@ -808,13 +823,14 @@ public class WorkflowGenerator
                 bool doUspcale = g.UserInput.TryGet(T2IParamTypes.RefinerUpscale, out double refineUpscale) && refineUpscale != 1;
                 // TODO: Better same-VAE check
                 bool doPixelUpscale = doUspcale && (upscaleMethod.StartsWith("pixel-") || upscaleMethod.StartsWith("model-"));
-                if (modelMustReencode || doPixelUpscale || doSave)
+                if (modelMustReencode || doPixelUpscale || doSave || g.MaskShrunkInfo.Item1 is not null)
                 {
                     g.CreateVAEDecode(origVae, g.FinalSamples, "24");
-                    string pixelsNode = "24";
+                    JArray pixelsNode = ["24", 0];
+                    pixelsNode = doMaskShrinkApply(g, pixelsNode);
                     if (doSave)
                     {
-                        g.CreateImageSaveNode([pixelsNode, 0], "29");
+                        g.CreateImageSaveNode(pixelsNode, "29");
                     }
                     if (doPixelUpscale)
                     {
@@ -822,7 +838,7 @@ public class WorkflowGenerator
                         {
                             g.CreateNode("ImageScaleBy", new JObject()
                             {
-                                ["image"] = new JArray() { "24", 0 },
+                                ["image"] = pixelsNode,
                                 ["upscale_method"] = upscaleMethod.After("pixel-"),
                                 ["scale_by"] = refineUpscale
                             }, "26");
@@ -836,7 +852,7 @@ public class WorkflowGenerator
                             g.CreateNode("ImageUpscaleWithModel", new JObject()
                             {
                                 ["upscale_model"] = new JArray() { "27", 0 },
-                                ["image"] = new JArray() { "24", 0 }
+                                ["image"] = pixelsNode
                             }, "28");
                             g.CreateNode("ImageScale", new JObject()
                             {
@@ -847,16 +863,16 @@ public class WorkflowGenerator
                                 ["crop"] = "disabled"
                             }, "26");
                         }
-                        pixelsNode = "26";
+                        pixelsNode = ["26", 0];
                         if (refinerControl <= 0)
                         {
-                            g.FinalImageOut = ["26", 0];
+                            g.FinalImageOut = pixelsNode;
                             return;
                         }
                     }
                     if (modelMustReencode || doPixelUpscale)
                     {
-                        g.CreateVAEEncode(g.FinalVae, [pixelsNode, 0], "25");
+                        g.CreateVAEEncode(g.FinalVae, pixelsNode, "25");
                         g.FinalSamples = ["25", 0];
                     }
                 }
@@ -896,15 +912,7 @@ public class WorkflowGenerator
         AddStep(g =>
         {
             g.CreateVAEDecode(g.FinalVae, g.FinalSamples, "8");
-            (string boundsNode, string croppedMask, string masked) = g.MaskShrunkInfo;
-            if (boundsNode is not null)
-            {
-                g.FinalImageOut = g.RecompositeCropped(boundsNode, [croppedMask, 0], g.FinalInputImage, g.FinalImageOut);
-            }
-            else if (g.UserInput.Get(T2IParamTypes.InitImageRecompositeMask, true) && g.FinalMask is not null)
-            {
-                g.FinalImageOut = g.CompositeMask(g.FinalInputImage, g.FinalImageOut, g.FinalMask);
-            }
+            g.FinalImageOut = doMaskShrinkApply(g, ["8", 0]);
         }, 1);
         #endregion
         #region Segmentation Processing
