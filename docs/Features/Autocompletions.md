@@ -6,7 +6,7 @@ When you're typing into a prompt box within Swarm, the **autocompletions engine*
 
 The first way it will try to help you is with regards to advanced prompt syntax, as documented in [Basic Usage](/docs/Basic%20Usage.md). As soon as you type the `<` symbol, you'll see suggestions for prompt syntax options:
 
-![image](images/autocompletions.png)
+![image](/docs/images/autocompletions.png)
 
 - You can start typing the name of one to narrow down to just that option.
 - You can hit *tab* or click an option to immediately complete it.
