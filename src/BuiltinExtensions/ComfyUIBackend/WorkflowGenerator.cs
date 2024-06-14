@@ -962,27 +962,35 @@ public class WorkflowGenerator
                             ["threshold"] = part.Strength
                         });
                     }
-                    string blurNode = g.CreateNode("SwarmMaskBlur", new JObject()
+                    int blurAmt = g.UserInput.Get(T2IParamTypes.SegmentMaskBlur, 10);
+                    if (blurAmt > 0)
                     {
-                        ["mask"] = new JArray() { segmentNode, 0 },
-                        ["blur_radius"] = g.UserInput.Get(T2IParamTypes.SegmentMaskBlur, 10),
-                        ["sigma"] = 1
-                    });
-                    string growNode = g.CreateNode("GrowMask", new JObject()
+                        segmentNode = g.CreateNode("SwarmMaskBlur", new JObject()
+                        {
+                            ["mask"] = new JArray() { segmentNode, 0 },
+                            ["blur_radius"] = blurAmt,
+                            ["sigma"] = 1
+                        });
+                    }
+                    int growAmt = g.UserInput.Get(T2IParamTypes.SegmentMaskGrow, 16);
+                    if (growAmt > 0)
                     {
-                        ["mask"] = new JArray() { blurNode, 0 },
-                        ["expand"] = 16,
-                        ["tapered_corners"] = true
-                    });
+                        segmentNode = g.CreateNode("GrowMask", new JObject()
+                        {
+                            ["mask"] = new JArray() { segmentNode, 0 },
+                            ["expand"] = growAmt,
+                            ["tapered_corners"] = true
+                        });
+                    }
                     if (g.UserInput.Get(T2IParamTypes.SaveSegmentMask, false))
                     {
                         string imageNode = g.CreateNode("MaskToImage", new JObject()
                         {
-                            ["mask"] = new JArray() { growNode, 0 }
+                            ["mask"] = new JArray() { segmentNode, 0 }
                         });
                         g.CreateImageSaveNode([imageNode, 0], g.GetStableDynamicID(50000, 0));
                     }
-                    (string boundsNode, string croppedMask, string masked) = g.CreateImageMaskCrop([growNode, 0], g.FinalImageOut, 8, vae);
+                    (string boundsNode, string croppedMask, string masked) = g.CreateImageMaskCrop([segmentNode, 0], g.FinalImageOut, 8, vae);
                     g.EnableDifferential();
                     (model, clip) = g.LoadLorasForConfinement(part.ContextID, model, clip);
                     JArray prompt = g.CreateConditioning(part.Prompt, clip, t2iModel, true);
