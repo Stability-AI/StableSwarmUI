@@ -53,8 +53,10 @@ function automaticWelcomeMessage(override = null) {
         `New feature (2024-04-23): Prompt editing!\nThere's now convenient prompt syntax to do things like swapping back and forth between prompts or changing between steps! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9206140">(Feature Announcement Link)</a>`,
         `New feature (2024-05-28): YOLOv8 Segmentation\nAre you really into multi-face matching + detailing? 'segment' prompt syntax now supports YOLOv8 models! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9586318">(Feature Announcement Link)</a>`,
         `New feature (2024-06-02): TensorRT Support!\nFor making things go fasterer! <a href="https://github.com/Stability-AI/StableSwarmUI/discussions/11#discussioncomment-9641683">(Feature Announcement Link)</a>`,
+        `New feature (2024-06-12): SD3-Medium!\nCool new model architecture! <a href="https://new.reddit.com/r/StableDiffusion/comments/1de65iz">(Reddit Post Link)</a>`,
         /* Version release notes */
-        `Release notes (2024-06-03): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.3-Beta">Release Notes for version 0.6.3 (Beta)</a>`
+        `Release notes (2024-06-03): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.3-Beta">Release Notes for version 0.6.3 (Beta)</a>`,
+        `Release notes (2024-06-15): Check out the <a href="https://github.com/Stability-AI/StableSwarmUI/releases/tag/0.6.4-Beta">Release Notes for version 0.6.4 (Beta)</a>`
     ];
     let dotnetNotice = document.getElementById('dotnet_missing_message');
     if (dotnetNotice) {
