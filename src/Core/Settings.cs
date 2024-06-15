@@ -209,7 +209,7 @@ public class Settings : AutoConfiguration
         public class OutPath : AutoConfiguration
         {
             [ConfigComment("Builder for output file paths. Can use auto-filling placeholders like '[model]' for the model name, '[prompt]' for a snippet of prompt text, etc.\n"
-                + "Full details in the docs: https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/User%20Settings.md#path-format")]
+                + "Full details in <a href=\"https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/User%20Settings.md#path-format\">the docs here</a>")]
             public string Format = "raw/[year]-[month]-[day]/[hour][minute]-[prompt]-[model]-[seed]";
 
             [ConfigComment("How long any one part can be.\nDefault is 40 characters.")]
