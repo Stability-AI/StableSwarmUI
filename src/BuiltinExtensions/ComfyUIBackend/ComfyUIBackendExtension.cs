@@ -46,6 +46,7 @@ public class ComfyUIBackendExtension : Extension
         ["MiDaS-DepthMapPreprocessor"] = "controlnetpreprocessors",
         ["RIFE VFI"] = "frameinterps",
         ["SwarmYoloDetection"] = "yolov8",
+        ["PixArtCheckpointLoader"] = "extramodelspixart",
         ["TensorRTLoader"] = "tensorrt"
     };
 

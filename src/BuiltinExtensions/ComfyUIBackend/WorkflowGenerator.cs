@@ -1562,6 +1562,16 @@ public class WorkflowGenerator
     /// <summary>Creates a model loader and adapts it with any registered model adapters, and returns (Model, Clip, VAE).</summary>
     public (T2IModel, JArray, JArray, JArray) CreateStandardModelLoader(T2IModel model, string type, string id = null, bool noCascadeFix = false)
     {
+        void requireClipModel(string name, string url)
+        {
+            if (ClipModelsValid.Contains(name))
+            {
+                return;
+            }
+            string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, "clip", name);
+            DownloadModel(name, filePath, url);
+            ClipModelsValid.Add(name);
+        }
         IsDifferentialDiffusion = false;
         LoadingModelType = type;
         if (!noCascadeFix && model.ModelClass?.ID == "stable-cascade-v1-stage-b" && model.Name.Contains("stage_b") && Program.MainSDModels.Models.TryGetValue(model.Name.Replace("stage_b", "stage_c"), out T2IModel altCascadeModel))
@@ -1597,6 +1607,36 @@ public class WorkflowGenerator
         {
             throw new InvalidDataException($"Model {model.Name} appears to be TensorRT lacks metadata to identify its architecture, cannot load");
         }
+        else if (model.ModelClass?.ID == "pixart-ms-sigma-xl-2")
+        {
+            string pixartNode = CreateNode("PixArtCheckpointLoader", new JObject()
+            {
+                ["ckpt_name"] = model.ToString(ModelFolderFormat),
+                ["model"] = "PixArtMS_Sigma_XL_2"
+            }, id);
+            LoadingModel = [pixartNode, 0];
+            requireClipModel("t5xxl_enconly.safetensors", "https://huggingface.co/mcmonkey/google_t5-v1_1-xxl_encoderonly/resolve/main/t5xxl_fp8_e4m3fn.safetensors");
+            string singleClipLoader = CreateNode("CLIPLoader", new JObject()
+            {
+                ["clip_name"] = "t5xxl_enconly.safetensors",
+                ["type"] = "sd3"
+            });
+            LoadingClip = [singleClipLoader, 0];
+            string xlVae = UserInput.SourceSession?.User?.Settings?.VAEs?.DefaultSDXLVAE;
+            if (string.IsNullOrWhiteSpace(xlVae))
+            {
+                xlVae = Program.T2IModelSets["VAE"].Models.Keys.FirstOrDefault(m => m.ToLowerFast().Contains("sdxl"));
+            }
+            if (string.IsNullOrWhiteSpace(xlVae))
+            {
+                throw new InvalidDataException("No default SDXL VAE found, please download and SDXL VAE and set it as default in User Settings");
+            }
+            string vaeLoader = CreateNode("VAELoader", new JObject()
+            {
+                ["vae_name"] = xlVae
+            });
+            LoadingVAE = [vaeLoader, 0];
+        }
         else
         {
             string modelNode = CreateNode("CheckpointLoaderSimple", new JObject()
@@ -1616,16 +1656,6 @@ public class WorkflowGenerator
                 ["shift"] = UserInput.Get(T2IParamTypes.SigmaShift, 3)
             });
             LoadingModel = [sd3Node, 0];
-            void requireClipModel(string name, string url)
-            {
-                if (ClipModelsValid.Contains(name))
-                {
-                    return;
-                }
-                string filePath = Utilities.CombinePathWithAbsolute(Program.ServerSettings.Paths.ModelRoot, "clip", name);
-                DownloadModel(name, filePath, url);
-                ClipModelsValid.Add(name);
-            }
             string tencs = model.Metadata?.TextEncoders ?? "";
             if (!UserInput.TryGet(T2IParamTypes.SD3TextEncs, out string mode))
             {

@@ -65,3 +65,18 @@ Either model can be selected in the UI to use them, it will automatically use bo
 TensorRT support (`.engine`) is available for SDv1, SDv2-768-v, SDXL Base, SDXL Refiner
 
 You can generate TensorRT engines from the model menu
+
+# PixArt Sigma
+
+The PixArt Sigma MS XL 2 1024 model found here https://huggingface.co/PixArt-alpha/PixArt-Sigma/blob/main/PixArt-Sigma-XL-2-1024-MS.pth is supported in Swarm with a few setup steps.
+
+These steps are not friendly to beginners, but advanced users can follow:
+
+- You must install https://github.com/city96/ComfyUI_ExtraModels to your Comfy backend.
+- After downloading the model, run Swarm's **Utilities** -> **Pickle To Safetensors** -> `Convert Models`. You need a safetensors models for Swarm to accurately identify model type.
+- After you have a safetensors model, find it in the Models tab and click the menu button on the model and select "`Edit Metadata`"
+    - From the `Architecture` dropdown, select `PixArtMS Sigma XL 2`
+    - In the `Standard Resolution` box, enter `1024x1024`
+- Make sure in **User Settings**, you have a `DefaultSDXLVae` selected. If not, you can download this one https://huggingface.co/madebyollin/sdxl-vae-fp16-fix and save it in `(Swarm)/Models/VAE`
+- Swarm will autodownload T5XXL-EncoderOnly for you on first run (same as SD3-Medium T5-Only mode)
+- You can now use the model as easily as any other model. Some feature compatibility features might arise.
