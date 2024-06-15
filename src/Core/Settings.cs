@@ -325,7 +325,7 @@ public class Settings : AutoConfiguration
             public override string[] GetOptions => ["", .. AutoCompleteListHelper.FileNames];
         }
 
-        [ConfigComment("Optional source file for auto-completion texts (inside Data/Autocompletions).\nSee <a href=\"https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/Autocompletions.md#word-lists\">docs/Autocompletions</a> for info.")]
+        [ConfigComment("Optional source file for auto-completion texts (inside Data/Autocompletions).\nSee <a href=\"https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/Features/Autocompletions.md#word-lists\">docs/Features/Autocompletions</a> for info.")]
         [SettingsOptions(Impl = typeof(AutocompletionsImpl))]
         public string AutoCompletionsSource = "";
     }
