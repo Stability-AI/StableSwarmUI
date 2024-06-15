@@ -747,4 +747,17 @@ public static class Utilities
             }
         });
     }
+
+    /// <summary>Launch, run, and return the text output of, a 'git' command input.</summary>
+    public static async Task<string> RunGitProcess(string args)
+    {
+        ProcessStartInfo start = new("git", args)
+        {
+            RedirectStandardOutput = true,
+            UseShellExecute = false
+        };
+        Process p = Process.Start(start);
+        await p.WaitForExitAsync(Program.GlobalProgramCancel);
+        return await p.StandardOutput.ReadToEndAsync();
+    }
 }

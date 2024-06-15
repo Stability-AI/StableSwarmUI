@@ -79,6 +79,9 @@ public class Program
     /// <summary>If a version update is available, this is the message.</summary>
     public static string VersionUpdateMessage = null;
 
+    /// <summary>Date of the current git commit, if known.</summary>
+    public static string CurrentGitDate = null;
+
     /// <summary>Primary execution entry point.</summary>
     public static void Main(string[] args)
     {
@@ -92,6 +95,7 @@ public class Program
         {
             Logs.Debug($"Unhandled exception: {e.ExceptionObject}");
         };
+        List<Task> waitFor = [];
         //Utilities.CheckDotNet("8");
         PrepExtensions();
         try
@@ -124,7 +128,7 @@ public class Program
         timer.Check("Initial settings load");
         if (ServerSettings.CheckForUpdates)
         {
-            Utilities.RunCheckedTask(async () =>
+            waitFor.Add(Utilities.RunCheckedTask(async () =>
             {
                 JObject vers = (await Utilities.UtilWebClient.GetStringAsync("https://mcmonkeyprojects.github.io/swarm/update.json", GlobalProgramCancel)).ParseToJson();
                 string versId = $"{vers["version"]}";
@@ -139,10 +143,25 @@ public class Program
                 }
                 else
                 {
-                    Logs.Info($"Swarm is up to date! Version {Utilities.Version} is the latest.");
+                    Logs.Init($"Swarm is up to date! Version {Utilities.Version} is the latest.");
                 }
-            });
+            }));
         }
+        waitFor.Add(Utilities.RunCheckedTask(async () =>
+        {
+            try
+            {
+                string commitDate = await Utilities.RunGitProcess("show --no-patch --format=%ci HEAD");
+                DateTimeOffset date = DateTimeOffset.Parse(commitDate.Trim()).ToUniversalTime();
+                CurrentGitDate = $"{date:yyyy-MM-dd HH:mm:ss}";
+                Logs.Init($"Current git commit marked as date {CurrentGitDate}");
+            }
+            catch (Exception ex)
+            {
+                Logs.Error($"Failed to get git commit date: {ex}");
+                CurrentGitDate = "Git failed to load";
+            }
+        }));
         RunOnAllExtensions(e => e.OnPreInit());
         timer.Check("Extension PreInit");
         Logs.Init("Prepping options...");
@@ -185,6 +204,14 @@ public class Program
         Logs.Init("Launching server...");
         Web.Launch();
         timer.Check("Web launch");
+        try
+        {
+            Task.WaitAll([.. waitFor], Utilities.TimedCancel(TimeSpan.FromSeconds(5)));
+        }
+        catch (Exception ex)
+        {
+            Logs.Debug($"Startup tasks took too long: {ex}");
+        }
         Task.Run(() =>
         {
             Thread.Sleep(500);

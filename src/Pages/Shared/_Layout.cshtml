@@ -39,6 +39,6 @@
     @RenderBody()
     <script src="/js/site.js?vary=@Utilities.VaryID"></script>
     @RenderSection("Scripts", required: false)
-    <div id="version_display" class="version-display">StableSwarmUI v<span>@Utilities.Version</span></div>
+    <div id="version_display" class="version-display">StableSwarmUI v<span>@Utilities.Version</span><span> (@Program.CurrentGitDate)</span></div>
 </body>
 </html>

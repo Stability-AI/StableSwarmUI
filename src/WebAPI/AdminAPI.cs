@@ -353,20 +353,9 @@ public static class AdminAPI
     public static async Task<JObject> UpdateAndRestart(Session session)
     {
         Logs.Warning($"User {session.User.UserID} requested update-and-restart.");
-        static async Task<string> launchGit(string args)
-        {
-            ProcessStartInfo start = new("git", args)
-            {
-                RedirectStandardOutput = true,
-                UseShellExecute = false
-            };
-            Process p = Process.Start(start);
-            await p.WaitForExitAsync(Program.GlobalProgramCancel);
-            return await p.StandardOutput.ReadToEndAsync();
-        }
-        string priorHash = (await launchGit("rev-parse HEAD")).Trim();
-        await launchGit("pull");
-        string localHash = (await launchGit("rev-parse HEAD")).Trim();
+        string priorHash = (await Utilities.RunGitProcess("rev-parse HEAD")).Trim();
+        await Utilities.RunGitProcess("pull");
+        string localHash = (await Utilities.RunGitProcess("rev-parse HEAD")).Trim();
         Logs.Debug($"Update checker: prior hash was {priorHash}, new hash is {localHash}");
         if (priorHash == localHash)
         {
