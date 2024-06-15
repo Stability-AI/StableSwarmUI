@@ -94,13 +94,14 @@ Note: if you're on Windows 10, you may need to manually install [git](https://gi
 
 > **Note**: You can only run StableSwarmUI on Mac computers with M1 or M2 (Mx) Apple silicon processors.
 
-1. Open Terminal.
-2. Ensure your `brew` packages are updated with `brew update`.
-3. Verify your `brew` installation with `brew doctor`. You should not see any error in the command output.
-4. Install .NET for macOS: `brew install dotnet`.
-5. Change the directory (`cd`) to the folder where you want to install StableSwarmUI.
-6. Clone the StableSwarmUI GitHub repository: `git clone https://github.com/Stability-AI/StableSwarmUI`.
-7. `cd StableSwarmUI` and run the installation script: `./launch-macos.sh`.
+- Open Terminal.
+- Ensure your `brew` packages are updated with `brew update`.
+- Verify your `brew` installation with `brew doctor`. You should not see any error in the command output.
+- Install .NET for macOS: `brew install dotnet`.
+- If you don't have Python, install it: `brew install python@3.10` and `brew install virtualenv`
+- Change the directory (`cd`) to the folder where you want to install StableSwarmUI.
+- Clone the StableSwarmUI GitHub repository: `git clone https://github.com/Stability-AI/StableSwarmUI`.
+- `cd StableSwarmUI` and run the installation script: `./launch-macos.sh`.
 
 The installation starts now and downloads the Stable Diffusion models from the internet. Depending on your internet connection, this may take several minutes. Wait for your web browser to open the StableSwarmUI window.
 
