@@ -76,6 +76,32 @@ public class WorkflowGeneratorSteps
                 }, g.HasNode("11") ? null : "11");
                 g.LoadingVAE = [vaeNode, 0];
             }
+            else if (!g.NoVAEOverride && g.UserInput.Get(T2IParamTypes.AutomaticVAE, false))
+            {
+                string clazz = g.FinalLoadedModel.ModelClass?.CompatClass;
+                string vaeName = null;
+                if (clazz == "stable-diffusion-xl-v1-base" || clazz == "stable-diffusion-xl-v0_9-base")
+                {
+                    vaeName = g.UserInput.SourceSession?.User?.Settings.VAEs.DefaultSDXLVAE;
+                }
+                else if (clazz == "stable-diffusion-v1")
+                {
+                    vaeName = g.UserInput.SourceSession?.User?.Settings.VAEs.DefaultSDv1VAE;
+                }
+                if (!string.IsNullOrWhiteSpace(vaeName) && vaeName.ToLowerFast() != "none")
+                {
+                    string match = T2IParamTypes.GetBestModelInList(vaeName, Program.T2IModelSets["VAE"].ListModelNamesFor(g.UserInput.SourceSession));
+                    if (match is not null)
+                    {
+                        T2IModel vaeModel = Program.T2IModelSets["VAE"].Models[match];
+                        string vaeNode = g.CreateNode("VAELoader", new JObject()
+                        {
+                            ["vae_name"] = vaeModel.ToString(g.ModelFolderFormat)
+                        }, g.HasNode("11") ? null : "11");
+                        g.LoadingVAE = [vaeNode, 0];
+                    }
+                }
+            }
         }, -14);
         AddModelGenStep(g =>
         {

@@ -451,8 +451,6 @@ function toggle_advanced_checkbox_manual() {
     toggle_advanced();
 }
 
-let currentAutomaticVae = 'None';
-
 function getGenInput(input_overrides = {}, input_preoverrides = {}) {
     let input = JSON.parse(JSON.stringify(input_preoverrides));
     for (let type of gen_param_types) {
@@ -485,7 +483,7 @@ function getGenInput(input_overrides = {}, input_preoverrides = {}) {
         }
     }
     if (!input['vae'] || input['vae'] == 'Automatic') {
-        input['vae'] = currentAutomaticVae;
+        input['automaticvae'] = true;
     }
     let revisionImageArea = getRequiredElementById('alt_prompt_image_area');
     let revisionImages = [...revisionImageArea.children].filter(c => c.tagName == "IMG");

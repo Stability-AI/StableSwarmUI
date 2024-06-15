@@ -745,19 +745,6 @@ function directSetModel(model) {
     }
     reviseBackendFeatureSet();
     getRequiredElementById('input_model').dispatchEvent(new Event('change'));
-    currentAutomaticVae = 'None';
-    if (curModelArch) {
-        let setting = null;
-        if (curModelArch.startsWith('stable-diffusion-xl-v1')) {
-            setting = document.getElementById('usersettings_vaes.defaultsdxlvae');
-        }
-        else if (curModelArch.startsWith('stable-diffusion-v1')) {
-            setting = document.getElementById('usersettings_vaes.defaultsdv1vae');
-        }
-        if (setting) {
-            currentAutomaticVae = setting.value;
-        }
-    }
     let aspect = document.getElementById('input_aspectratio');
     if (aspect) {
         aspect.dispatchEvent(new Event('change'));
