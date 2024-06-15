@@ -297,7 +297,9 @@ public static class T2IAPI
         }
         while (tasks.Any())
         {
-            await Task.WhenAny(tasks);
+            Task timeout = Task.Delay(TimeSpan.FromSeconds(30));
+            await Task.WhenAny([.. tasks, timeout]);
+            output(new JObject() { ["keep_alive"] = true });
             removeDoneTasks();
         }
         long finalTime = Environment.TickCount64;
