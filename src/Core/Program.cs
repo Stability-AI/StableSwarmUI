@@ -1,6 +1,7 @@
 using FreneticUtilities.FreneticDataSyntax;
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticToolkit;
+using Hardware.Info;
 using LiteDB;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -160,6 +161,21 @@ public class Program
             {
                 Logs.Error($"Failed to get git commit date: {ex}");
                 CurrentGitDate = "Git failed to load";
+            }
+        }));
+        waitFor.Add(Utilities.RunCheckedTask(async () =>
+        {
+            NvidiaUtil.NvidiaInfo[] gpuInfo = NvidiaUtil.QueryNvidia();
+            SystemStatusMonitor.HardwareInfo.RefreshMemoryStatus();
+            MemoryStatus memStatus = SystemStatusMonitor.HardwareInfo.MemoryStatus;
+            Logs.Init($"CPU Cores: {Environment.ProcessorCount} | RAM: {new MemoryNum((long)memStatus.TotalPhysical)} total, {new MemoryNum((long)memStatus.AvailablePhysical)} available");
+            if (gpuInfo is not null)
+            {
+                JObject gpus = [];
+                foreach (NvidiaUtil.NvidiaInfo gpu in gpuInfo)
+                {
+                    Logs.Init($"GPU {gpu.ID}: {gpu.GPUName} | Temp {gpu.Temperature}C | Util {gpu.UtilizationGPU}% GPU, {gpu.UtilizationMemory}% Memory | VRAM {gpu.TotalMemory} total, {gpu.FreeMemory} free, {gpu.UsedMemory} used");
+                }
             }
         }));
         RunOnAllExtensions(e => e.OnPreInit());
