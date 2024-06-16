@@ -70,7 +70,12 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                 try
                 {
                     Logs.Debug($"Will install requirements file {reqFile}");
-                    Process p = backends.FirstOrDefault().DoPythonCall($"-s -m pip install -r {Path.GetFullPath(reqFile)}");
+                    string path = Path.GetFullPath(reqFile);
+                    if (path.Contains(' '))
+                    {
+                        path = $"\"{path}\"";
+                    }
+                    Process p = backends.FirstOrDefault().DoPythonCall($"-s -m pip install -r {path}");
                     NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Requirements Install)", "");
                     await p.WaitForExitAsync(Program.GlobalProgramCancel);
                 }
@@ -187,6 +192,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
     /// <summary>Runs a generic python call for the current comfy backend.</summary>
     public Process DoPythonCall(string call)
     {
+        Logs.Debug($"Will do Comfy Python call: {call}");
         ProcessStartInfo start = new()
         {
             RedirectStandardOutput = true,
