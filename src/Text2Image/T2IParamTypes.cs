@@ -358,7 +358,7 @@ public class T2IParamTypes
             ));
         GroupSampling = new("Sampling", Toggles: false, Open: false, OrderPriority: -8);
         SD3TextEncs = Register<string>(new("SD3 TextEncs", "Which text encoders to use for Stable Diffusion 3 (SD3) models.\nCan use CLIP pairs, or T5, or both.\nBoth is the standard way to run SD3, but CLIP only uses fewer system resources.",
-            "CLIP Only", GetValues: _ => ["CLIP Only", "T5 Only", "CLIP + T5"], Toggleable: true, Group: GroupSampling, FeatureFlag: "sd3", OrderPriority: 5
+            "CLIP Only", GetValues: _ => ["CLIP Only", "T5 Only", "CLIP + T5"], Toggleable: true, Group: GroupSampling, FeatureFlag: "sd3", OrderPriority: 5, ChangeWeight: 9
             ));
         SeamlessTileable = Register<string>(new("Seamless Tileable", "Makes the generated image seamlessly tileable (like a 3D texture would be).\nOptionally, can be tileable on only the X axis (horizontal) or Y axis (vertical).",
             "false", IgnoreIf: "false", GetValues: _ => ["false", "true", "X-Only", "Y-Only"], Group: GroupSampling, FeatureFlag: "seamless", OrderPriority: 15

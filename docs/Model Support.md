@@ -70,7 +70,7 @@ You can generate TensorRT engines from the model menu
 
 The PixArt Sigma MS XL 2 1024 model found here https://huggingface.co/PixArt-alpha/PixArt-Sigma/blob/main/PixArt-Sigma-XL-2-1024-MS.pth is supported in Swarm with a few setup steps.
 
-These steps are not friendly to beginners, but advanced users can follow:
+These steps are not friendly to beginners (if PixArt gains popularity, likely more direct/automated/native support will be added), but advanced users can follow:
 
 - You must install https://github.com/city96/ComfyUI_ExtraModels to your Comfy backend.
 - After downloading the model, run Swarm's **Utilities** -> **Pickle To Safetensors** -> `Convert Models`. You need a safetensors models for Swarm to accurately identify model type.
