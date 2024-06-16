@@ -64,7 +64,7 @@ public static class Utilities
     public static readonly string Version = Assembly.GetEntryAssembly()?.GetName().Version.ToString();
 
     /// <summary>URL to where the documentation files start.</summary>
-    public static string RepoDocsRoot = "https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/";
+    public const string RepoDocsRoot = "https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/";
 
     /// <summary>Current git commit (if known -- empty if unknown).</summary>
     public static string GitCommit = "";

@@ -209,7 +209,7 @@ public class Settings : AutoConfiguration
         public class OutPath : AutoConfiguration
         {
             [ConfigComment("Builder for output file paths. Can use auto-filling placeholders like '[model]' for the model name, '[prompt]' for a snippet of prompt text, etc.\n"
-                + "Full details in <a href=\"https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/User%20Settings.md#path-format\">the docs here</a>")]
+                + $"Full details in <a target=\"_blank\" href=\"{Utilities.RepoDocsRoot}/User%20Settings.md#path-format\">the docs here</a>")]
             public string Format = "raw/[year]-[month]-[day]/[hour][minute]-[prompt]-[model]-[seed]";
 
             [ConfigComment("How long any one part can be.\nDefault is 40 characters.")]
@@ -325,7 +325,7 @@ public class Settings : AutoConfiguration
             public override string[] GetOptions => ["", .. AutoCompleteListHelper.FileNames];
         }
 
-        [ConfigComment("Optional source file for auto-completion texts (inside Data/Autocompletions).\nSee <a href=\"https://github.com/Stability-AI/StableSwarmUI/blob/master/docs/Features/Autocompletions.md#word-lists\">docs/Features/Autocompletions</a> for info.")]
+        [ConfigComment($"Optional source file for auto-completion texts (inside Data/Autocompletions).\nSee <a target=\"_blank\" href=\"{Utilities.RepoDocsRoot}/Features/Autocompletions.md#word-lists\">docs/Features/Autocompletions</a> for info.")]
         [SettingsOptions(Impl = typeof(AutocompletionsImpl))]
         public string AutoCompletionsSource = "";
     }

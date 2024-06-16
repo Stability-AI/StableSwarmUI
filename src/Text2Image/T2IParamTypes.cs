@@ -312,7 +312,7 @@ public class T2IParamTypes
         NegativePrompt = Register<string>(new("Negative Prompt", "Like the input prompt text, but describe what NOT to generate.\nTell the AI things you don't want to see.",
             "", IgnoreIf: "", Clean: ApplyStringEdit, Examples: ["ugly, bad, gross", "lowres, low quality"], OrderPriority: -90, ViewType: ParamViewType.PROMPT, ChangeWeight: -5, VisibleNormally: false
             ));
-        GroupRevision = new("ReVision", Open: false, Toggles: true, OrderPriority: -70, Description: $"Image prompting with ReVision, IP-Adapter, etc.\n<a href=\"{Utilities.RepoDocsRoot}/Features/IPAdapter-ReVision.md\">See more docs here.</a>");
+        GroupRevision = new("ReVision", Open: false, Toggles: true, OrderPriority: -70, Description: $"Image prompting with ReVision, IP-Adapter, etc.\n<a target=\"_blank\" href=\"{Utilities.RepoDocsRoot}/Features/IPAdapter-ReVision.md\">See more docs here.</a>");
         ReVisionStrength = Register<double>(new("ReVision Strength", $"How strong to apply ReVision image inputs.\nSet to 0 to disable ReVision processing.",
             "1", OrderPriority: -70, Min: 0, Max: 10, Step: 0.1, ViewType: ParamViewType.SLIDER, Group: GroupRevision
             ));
@@ -430,7 +430,7 @@ public class T2IParamTypes
         for (int i = 1; i <= 3; i++)
         {
             string suffix = i switch { 1 => "", 2 => " Two", 3 => " Three", _ => "Error" };
-            T2IParamGroup group = new($"ControlNet{suffix}", Toggles: true, Open: false, IsAdvanced: i != 1, OrderPriority: -1 + i * 0.1, Description: $"Guide your image generations with ControlNets.\n<a href=\"{Utilities.RepoDocsRoot}/Features/ControlNet.md\">See more docs here.</a>");
+            T2IParamGroup group = new($"ControlNet{suffix}", Toggles: true, Open: false, IsAdvanced: i != 1, OrderPriority: -1 + i * 0.1, Description: $"Guide your image generations with ControlNets.\n<a target=\"_blank\" href=\"{Utilities.RepoDocsRoot}/Features/ControlNet.md\">See more docs here.</a>");
             Controlnets[i - 1] = new()
             {
                 NameSuffix = suffix,
