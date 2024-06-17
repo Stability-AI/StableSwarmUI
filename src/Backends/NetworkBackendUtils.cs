@@ -50,17 +50,16 @@ public static class NetworkBackendUtils
         }
         try
         {
-            if (typeof(JType) == typeof(JObject)) // TODO: Surely C# has syntax for this?
+            switch (typeof(JType))
             {
-                return JObject.Parse(content) as JType;
-            }
-            else if (typeof(JType) == typeof(JArray))
-            {
-                return JArray.Parse(content) as JType;
-            }
-            else if (typeof(JType) == typeof(string))
-            {
-                return content as JType;
+                case Type t when t == typeof(JObject):
+                    return JObject.Parse(content) as JType;
+                case Type t when t == typeof(JArray):
+                    return JArray.Parse(content) as JType;
+                case Type t when t == typeof(string):
+                    return content as JType;
+                default:
+                    throw new NotImplementedException($"Invalid JSON type requested: {typeof(JType)}");
             }
         }
         catch (JsonReaderException ex)
