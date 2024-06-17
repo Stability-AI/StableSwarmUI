@@ -33,14 +33,20 @@ function enableSliderForBox(div) {
     });
     if (range.dataset.ispot == "true") {
         let max = parseInt(range.getAttribute('max')), min = parseInt(range.getAttribute('min')), step = parseInt(range.getAttribute('step'));
-        range.addEventListener('input', () => {
+        range.addEventListener('input', (e) => {
             number.value = linearToPot(range.value, max, min, step);
             range.value = potToLinear(number.value, max, min, step);
             number.dispatchEvent(new Event('change'));
+            if (number.onchange) {
+                number.onchange(e);
+            }
         });
-        number.addEventListener('input', () => {
+        number.addEventListener('input', (e) => {
             range.value = potToLinear(number.value, max, min, step);
             range.dispatchEvent(new Event('change'));
+            if (range.onchange) {
+                range.onchange(e);
+            }
         });
         range.step = 1;
     }
