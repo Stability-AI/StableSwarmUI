@@ -76,7 +76,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
                         path = $"\"{path}\"";
                     }
                     Process p = backends.FirstOrDefault().DoPythonCall($"-s -m pip install -r {path}");
-                    NetworkBackendUtils.ReportLogsFromProcess(p, "ComfyUI (Requirements Install)", "");
+                    NetworkBackendUtils.ReportLogsFromProcess(p, $"ComfyUI (Requirements Install - {folderName})", "");
                     await p.WaitForExitAsync(Program.GlobalProgramCancel);
                 }
                 catch (Exception ex)
@@ -92,7 +92,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
         }
         else
         {
-            await NetworkBackendUtils.RunProcessWithMonitoring(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }, "comfy node pull", "comfynodepull");
+            await NetworkBackendUtils.RunProcessWithMonitoring(new ProcessStartInfo("git", "pull") { WorkingDirectory = Path.GetFullPath($"{nodePath}/{folderName}") }, $"comfy node pull ({folderName})", "comfynodepull");
         }
         return false;
     }
@@ -117,7 +117,7 @@ public class ComfyUISelfStartBackend : ComfyUIAPIAbstractBackend
             {
                 if (Directory.Exists($"{node}/.git"))
                 {
-                    tasks.Add(NetworkBackendUtils.RunProcessWithMonitoring(new ProcessStartInfo("git", "pull") { WorkingDirectory = node }, "comfy node pull", "comfynodepull"));
+                    tasks.Add(NetworkBackendUtils.RunProcessWithMonitoring(new ProcessStartInfo("git", "pull") { WorkingDirectory = node }, $"comfy node pull ({node.Replace('\\', '/').AfterLast('/')})", "comfynodepull"));
                 }
             }
             await Task.WhenAll(tasks);
