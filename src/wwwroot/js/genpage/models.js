@@ -503,9 +503,7 @@ class ModelBrowserWrapper {
 
     selectModel(model) {
         this.selectOne(model);
-        setTimeout(() => {
-            this.browser.rerender();
-        }, 50);
+        this.browser.planRerender(50);
     }
 }
 
@@ -544,14 +542,14 @@ function embedClearFromPrompt(model, element) {
     let chunk = `<embed:${cleanModelName(model.name)}>`;
     box.value = box.value.replace(` ${chunk}`, '').replace(chunk, '').trim();
     triggerChangeFor(box);
-    sdEmbedBrowser.browser.rerender();
+    sdEmbedBrowser.browser.planRerender(5);
 }
 
 function embedAddToPrompt(model, element) {
     let box = getRequiredElementById(element);
     box.value += ` <embed:${cleanModelName(model.name)}>`;
     triggerChangeFor(box);
-    sdEmbedBrowser.browser.rerender();
+    sdEmbedBrowser.browser.planRerender(5);
 }
 
 function selectEmbedding(model) {
@@ -582,12 +580,12 @@ function monitorPromptChangeForEmbed(promptText, type) {
     let countNew = promptText.split(`<embed:`).length - 1;
     let countOld = last.split(`<embed:`).length - 1;
     if (countNew != countOld || (countNew > 0 && countEndsNew != countEndsOld)) {
-        sdEmbedBrowser.browser.rerender();
+        sdEmbedBrowser.browser.planRerender(5);
     }
     let countNewWc = promptText.split(`<wildcard`).length - 1;
     let countOldWc = last.split(`<wildcard`).length - 1;
     if (countNewWc != countOldWc || (countNewWc > 0 && countEndsNew != countEndsOld)) {
-        wildcardsBrowser.browser.rerender();
+        wildcardsBrowser.browser.planRerender(5);
     }
 }
 
@@ -675,7 +673,7 @@ function updateLoraList() {
         removeButton.addEventListener('click', () => {
             toggleSelectLora(lora);
             updateLoraList();
-            sdLoraBrowser.browser.rerender();
+            sdLoraBrowser.browser.planRerender(5);
         });
         div.appendChild(weightInput);
         div.appendChild(removeButton);

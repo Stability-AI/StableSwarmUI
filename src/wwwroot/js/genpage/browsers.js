@@ -63,6 +63,21 @@ class GenPageBrowserClass {
         this.sizeChangedEvent = null;
         this.maxPreBuild = 512;
         this.chunksRendered = 0;
+        this.rerenderPlanned = false;
+    }
+
+    /**
+     * Schedules a rerender with a small delay.
+     */
+    planRerender(timeout) {
+        if (this.rerenderPlanned) {
+            return;
+        }
+        this.rerenderPlanned = true;
+        setTimeout(() => {
+            this.rerenderPlanned = false;
+            this.rerender();
+        }, timeout);
     }
 
     /**
