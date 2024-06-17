@@ -16,7 +16,7 @@ This project is in **Beta** status. This means for most tasks, Swarm has excelle
 
 Beginner users will love Swarm's primary Generate tab interface, making it easy to generate anything with a variety of powerful features. Advanced users may favor the Comfy Workflow tab to get the unrestricted raw graph, but will still have reason to come back to the Generate tab for convenience features (image editor, auto-workflow-generation, etc) and powertools (eg Grid Generator).
 
-Those interested in helping push Swarm from Beta to a Full ready-for-anything perfected Release status are welcome to submit PRs (read the [Contributing](/CONTRIBUTING.md) document first), and you can contact us here on GitHub or on [Discord](https://discord.gg/q2y38cqjNw). I highly recommended reaching out to ask about plans for a feature before PRing it. There may already be specific plans or even a work in progress.
+Those interested in helping push Swarm from Beta to a Full ready-for-anything perfected Release status are welcome to submit PRs (read the [Contributing](/CONTRIBUTING.md) document first), and you can contact us here on GitHub or on [Discord](https://discord.gg/q2y38cqjNw). I highly recommend reaching out to ask about plans for a feature before PRing it. There may already be specific plans or even a work in progress.
 
 Key feature targets not yet implemented:
 - Better mobile browser support
@@ -37,7 +37,7 @@ Colab link if you want to try Swarm: https://colab.research.google.com/github/St
 
 Runpod template (note: maintained by third party contributor [nerdylive123](https://github.com/nerdylive123)): https://runpod.io/console/deploy?template=u7mlkrmxq3&ref=c6jd6jj0
 
-Note it may take several minutes to start up the first time. Check the container logs to see setup progress. Check the template `?` info for hint on how to use.
+Note it may take several minutes to start up the first time. Check the container logs to see setup progress. Check the template `?` info for hints on how to use.
 
 # Installing on Windows
 
