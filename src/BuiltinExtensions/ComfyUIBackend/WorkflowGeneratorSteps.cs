@@ -80,7 +80,7 @@ public class WorkflowGeneratorSteps
             {
                 string clazz = g.FinalLoadedModel.ModelClass?.CompatClass;
                 string vaeName = null;
-                if (clazz == "stable-diffusion-xl-v1-base" || clazz == "stable-diffusion-xl-v0_9-base")
+                if (clazz == "stable-diffusion-xl-v1")
                 {
                     vaeName = g.UserInput.SourceSession?.User?.Settings.VAEs.DefaultSDXLVAE;
                 }
