@@ -34,6 +34,23 @@ function comfyFrame() {
     return getRequiredElementById('comfy_workflow_frame');
 }
 
+function comfyFixMenuLocation() {
+    let frame = comfyFrame();
+    if (!frame) {
+        return;
+    }
+    let menu = frame.contentWindow.document.querySelector('.comfy-menu');
+    if (!menu) {
+        return;
+    }
+    let rect = menu.getBoundingClientRect();
+    if (rect.x > 300 || rect.y > 120) {
+        return;
+    }
+    console.log(`Comfy menu was behind the Swarm menu at ${rect.x} x ${rect.y}, fixing with a downward offset...`);
+    menu.style.top = '150px';
+}
+
 let comfyEnableInterval = null;
 
 let comfyFailedToLoad = translatable(`Failed to load ComfyUI Workflow backend. The server may still be loading.`);
@@ -74,6 +91,7 @@ function comfyOnLoadCallback() {
                 };
                 app.swarmHasReplacedRefresh = true;
             }
+            comfyFixMenuLocation();
             clearInterval(comfyRefreshControlInterval);
         }, 500);
         if (getCookie('comfy_domulti') == 'true') {
