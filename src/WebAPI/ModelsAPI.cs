@@ -145,7 +145,7 @@ public static class ModelsAPI
     {
         if (!Enum.TryParse(sortBy, true, out ModelHistorySortMode sortMode))
         {
-            return new JObject() { ["error"] = "Invalid sort mode." };
+            return new JObject() { ["error"] = $"Invalid sort mode '{sortBy}'." };
         }
         if (!Program.T2IModelSets.TryGetValue(subtype, out T2IModelHandler handler) && subtype != "Wildcards")
         {

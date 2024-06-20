@@ -587,7 +587,7 @@ public static class T2IAPI
     {
         if (!Enum.TryParse(sortBy, true, out ImageHistorySortMode sortMode))
         {
-            return new JObject() { ["error"] = "Invalid sort mode." };
+            return new JObject() { ["error"] = $"Invalid sort mode '{sortBy}'." };
         }
         string root = Utilities.CombinePathWithAbsolute(Environment.CurrentDirectory, session.User.OutputDirectory);
         return GetListAPIInternal(session, path, root, ImageExtensions, f => true, depth, sortMode, sortReverse);
