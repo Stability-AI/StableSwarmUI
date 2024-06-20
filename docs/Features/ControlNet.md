@@ -13,6 +13,7 @@
         - Afterwards, go to the "ControlNets" list on the bottom of the Generate tab and click the lil spinny icon (Refresh, not your browser refresh, the one on the model list).
     - To use any ControlNet other than Canny, you'll need to install Preprocessors - luckily, this one's automated. Just click the "Install Controlnet Preprocessors" button at the bottom of the ControlNet parameter group, and accept the confirmation prompt.
         - This will take a moment to download, install, and restart your backend. Check the server logs for a progress report. When it's done, the UI will automatically update.
+        - Alternately, you can use pre-preprocessed images. For example, if you have OpenPose images (they look like little rgb lineart stick figure people), just select preprocessor None and an openpose controlnet model.
     - To get started, just click a model you want in the ControlNets models list.
         - Then, open the ControlNet parameter group
         - Then drag an image to the "Choose File" slot - or leave it disabled and it will use the Init Image if you have one.
