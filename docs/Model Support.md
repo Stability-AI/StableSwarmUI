@@ -62,9 +62,15 @@ Either model can be selected in the UI to use them, it will automatically use bo
 
 ### TensorRT
 
-TensorRT support (`.engine`) is available for SDv1, SDv2-768-v, SDXL Base, SDXL Refiner
+TensorRT support (`.engine`) is available for SDv1, SDv2-768-v, SDXL Base, SDXL Refiner, SD3-Medium
 
-You can generate TensorRT engines from the model menu
+TensorRT is an nvidia-specific accelerator library that provides faster SD image generation at the cost of reduced flexibility. Generally this is best for heavy usages, especially for API/Bots/etc. and less useful for regular individual usage.
+
+You can generate TensorRT engines from the model menu. This includes a button on-page to autoinstall TRT support your first time using it, and configuration of graph size limits and optimal scales. (TensorRT works fastest when you generate at the selected optimal resolution, and slightly less fast at any dynamic resolution outside the optimal setting.)
+
+Note that TensorRT is not compatible with LoRAs, ControlNets, etc.
+
+Note that you need to make a fresh TRT engine for any different model you want to use.
 
 # PixArt Sigma
 
