@@ -38,6 +38,7 @@ function automaticWelcomeMessage(override = null) {
     let messages = [
         /* Generic welcome messages, order-sensitive, keep at top */
         `Type your prompt below and hit Generate!`,
+        `<h2>Important Migration Notice</h2><br>StableSwarmUI will no longer be maintained under Stability AI.<br>To migrate to new independent repository, see <a href="https://github.com/mcmonkeyprojects/SwarmUI/discussions/2">the migration guide here</a>`,
         `Join the StableSwarmUI <a href="https://discord.gg/q2y38cqjNw">official Discord!</a>`,
         /* "Did you know" facts - interesting things you can do in swarm */
         `Did you know:\nyou can drag and drop images onto the prompt box to use them as an image-prompt.`,
@@ -61,6 +62,9 @@ function automaticWelcomeMessage(override = null) {
     let dotnetNotice = document.getElementById('dotnet_missing_message');
     if (dotnetNotice) {
         messages.push(dotnetNotice.innerHTML.trim());
+    }
+    for (let i = 0; i < 10; i++) {
+        messages.push(messages[1]);
     }
     if (override == null) {
         if (dotnetNotice) {

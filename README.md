@@ -10,6 +10,20 @@ Join the [Discord](https://discord.gg/q2y38cqjNw) to discuss the project, get su
 
 Follow the [Feature Announcements Thread](https://github.com/Stability-AI/StableSwarmUI/discussions/11) for updates on new features.
 
+# Migration Notice
+
+As of 2024/06/21 StableSwarmUI will no longer be maintained under Stability AI.
+
+The original developer will be maintaining an independent version of this project as [mcmonkeyprojects/SwarmUI](https://github.com/mcmonkeyprojects/SwarmUI)
+
+Windows users can migrate to the new independent repo by simply updating and then running `migrate-windows.bat`
+
+For Linux, Mac, or manual Windows: open a terminal in your Swarm folder then run `git remote set-url origin https://github.com/mcmonkeyprojects/SwarmUI`
+
+See full migration guide here: https://github.com/mcmonkeyprojects/SwarmUI/discussions/2
+
+----
+
 # Status
 
 This project is in **Beta** status. This means for most tasks, Swarm has excellent tooling available to you, but there is much more planned. Swarm is recommended as an ideal UI for most users, beginners and pros alike. There are still some things to be worked out.
