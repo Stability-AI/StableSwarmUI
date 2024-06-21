@@ -1,0 +1,43 @@
+name: Publish Nightly Release
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # This runs the workflow nightly at midnight UTC
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+       
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Run PowerShell script
+        shell: pwsh
+        run: ./nightly_build.ps1
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nightly-tag-${{ steps.date.outputs.date }}
+          release_name: nightly-release-${{ steps.date.outputs.date }}
+          draft: false
+          prerelease: true
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: .\StableSwarmUI-Installer.exe
+          asset_name: StableSwarmUI-Installer.exe
+          asset_content_type: application/octet-stream
