@@ -50,17 +50,13 @@ public static class NetworkBackendUtils
         }
         try
         {
-            switch (typeof(JType))
+            return typeof(JType) switch
             {
-                case Type t when t == typeof(JObject):
-                    return JObject.Parse(content) as JType;
-                case Type t when t == typeof(JArray):
-                    return JArray.Parse(content) as JType;
-                case Type t when t == typeof(string):
-                    return content as JType;
-                default:
-                    throw new NotImplementedException($"Invalid JSON type requested: {typeof(JType)}");
-            }
+                Type t when t == typeof(JObject) => JObject.Parse(content) as JType,
+                Type t when t == typeof(JArray) => JArray.Parse(content) as JType,
+                Type t when t == typeof(string) => content as JType,
+                _ => throw new NotImplementedException($"Invalid JSON type requested: {typeof(JType)}"),
+            };
         }
         catch (JsonReaderException ex)
         {
