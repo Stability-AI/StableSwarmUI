@@ -427,7 +427,7 @@ class ModelDownloaderUtil {
                 current.style.width = `0%`;
             }
         }, 0, e => {
-            this.textArea.innerHTML = `Error: ${escapeHtml(e)}\n<br>Are you sure the URL is correct? Note some models may require you to be logged in, which is incompatible with an auto-downloader.`;
+            this.textArea.innerHTML = `Error: ${escapeHtml(e)}\n<br>Are you sure the URL is correct? Note some models may require you to authenticate using an <a href="#" onclick="getRequiredElementById('usersettingstabbutton').click();getRequiredElementById('userinfotabbutton').click();">API Key</a>.`;
             overall.style.width = `0%`;
             current.style.width = `0%`;
         });

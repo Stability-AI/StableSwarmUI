@@ -15,12 +15,14 @@ Basic general API routes, primarily for users and session handling.
 - HTTP Route [GetMyUserData](#http-route-apigetmyuserdata)
 - HTTP Route [GetNewSession](#http-route-apigetnewsession)
 - HTTP Route [GetStabilityAPIKeyStatus](#http-route-apigetstabilityapikeystatus)
+- HTTP Route [GetCivitaiAPIKeyStatus](#http-route-apigetcivitaiapikeystatus)
 - HTTP Route [GetUserSettings](#http-route-apigetusersettings)
 - WebSocket Route [InstallConfirmWS](#websocket-route-apiinstallconfirmws)
 - HTTP Route [InterruptAll](#http-route-apiinterruptall)
 - HTTP Route [ServerDebugMessage](#http-route-apiserverdebugmessage)
 - HTTP Route [SetParamEdits](#http-route-apisetparamedits)
 - HTTP Route [SetStabilityAPIKey](#http-route-apisetstabilityapikey)
+- HTTP Route [SetCivitaiAPIKey](#http-route-apisetcivitaiapikey)
 
 ## HTTP Route /API/AddNewPreset
 
@@ -185,6 +187,22 @@ Basic general API routes, primarily for users and session handling.
 (RETURN INFO NOT SET)
 ```
 
+## HTTP Route /API/GetCivitaiAPIKeyStatus
+
+#### Description
+
+(ROUTE DESCRIPTION NOT SET)
+
+#### Parameters
+
+**None.**
+
+#### Return Format
+
+```js
+(RETURN INFO NOT SET)
+```
+
 ## HTTP Route /API/GetUserSettings
 
 #### Description
@@ -280,6 +298,24 @@ Basic general API routes, primarily for users and session handling.
 ```
 
 ## HTTP Route /API/SetStabilityAPIKey
+
+#### Description
+
+(ROUTE DESCRIPTION NOT SET)
+
+#### Parameters
+
+| Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| key | String | (PARAMETER DESCRIPTION NOT SET) | **(REQUIRED)** |
+
+#### Return Format
+
+```js
+(RETURN INFO NOT SET)
+```
+
+## HTTP Route /API/SetCivitaiAPIKey
 
 #### Description
 

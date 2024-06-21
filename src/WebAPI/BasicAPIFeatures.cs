@@ -39,6 +39,8 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(ServerDebugMessage);
         API.RegisterAPICall(SetStabilityAPIKey, true);
         API.RegisterAPICall(GetStabilityAPIKeyStatus);
+        API.RegisterAPICall(SetCivitaiAPIKey, true);
+        API.RegisterAPICall(GetCivitaiAPIKeyStatus);
         T2IAPI.Register();
         ModelsAPI.Register();
         BackendAPI.Register();
@@ -515,7 +517,8 @@ public static class BasicAPIFeatures
 
     public static async Task<JObject> SetStabilityAPIKey(Session session, string key)
     {
-        if (key == "none")
+        key = key?.Trim();
+        if (string.IsNullOrEmpty(key))
         {
             session.User.DeleteGenericData("stability_api", "key");
             session.User.DeleteGenericData("stability_api", "key_last_updated");
@@ -534,8 +537,42 @@ public static class BasicAPIFeatures
         string updated = session.User.GetGenericData("stability_api", "key_last_updated");
         if (string.IsNullOrWhiteSpace(updated))
         {
-            return new JObject() { ["status"] = "not set" };
+            return new JObject() { ["status"] = "(Unset)" };
         }
         return new JObject() { ["status"] = $"last updated {updated}" };
+    }
+
+    public static async Task<JObject> SetCivitaiAPIKey(Session session, string key)
+    {
+        key = key?.Trim();
+        if (string.IsNullOrEmpty(key))
+        {
+            session.User.DeleteGenericData("civitai_api", "key");
+            session.User.DeleteGenericData("civitai_api", "key_last_updated");
+        }
+        else
+        {
+            // Civitai API keys are (currently) 32-character hex strings, but to be very future-compatible, we're just going to
+            // validate that the string is entirely alphanumeric
+            if (!key.All(char.IsLetterOrDigit))
+            {
+                return new JObject() { ["success"] = false, ["error"] = "Invalid API key." };
+            }
+
+            session.User.SaveGenericData("civitai_api", "key", key);
+            session.User.SaveGenericData("civitai_api", "key_last_updated", $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm}");
+        }
+        session.User.Save();
+        return new JObject() { ["success"] = true };
+    }
+
+    public static async Task<JObject> GetCivitaiAPIKeyStatus(Session session)
+    {
+        string updated = session.User.GetGenericData("civitai_api", "key_last_updated");
+        if (string.IsNullOrWhiteSpace(updated))
+        {
+            return new JObject() { ["status"] = "(Unset)" };
+        }
+        return new JObject() { ["status"] = $"last set {updated}" };
     }
 }

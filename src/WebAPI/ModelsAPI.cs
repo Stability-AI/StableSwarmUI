@@ -481,6 +481,45 @@ public static class ModelsAPI
         {
             return new JObject() { ["error"] = "Invalid type." };
         }
+
+        // Only auto-inject civitai token on HTTPS requests to (help) prevent leaking API keys over the network
+        if (url.StartsWith("https://"))
+        {
+            // Example (valid) full URL format: https://example-sub.domain.example.org:80/Example/Page.html?Query1=Text&Query2=MoreText#Wow,A,Page?Wild
+
+            // Check for the civitai domain
+            string domainName = url.After("//").Before('/').Before(':').ToLower();
+            if (domainName == "civitai.com")
+            {
+                // Check that we have a civitai api key set
+                string civitaiApiKey = session.User.GetGenericData("civitai_api", "key");
+                if (!string.IsNullOrEmpty(civitaiApiKey))
+                {
+                    // Check if our URL has a Fragment (a '#' and optionally some text), as we need to append our token to the query params _before_ that
+                    bool urlHasFragment = url.Contains('#');
+                    string fragment = "";
+                    string domainPathAndQuery = urlHasFragment ? url.BeforeAndAfter('#', out fragment) : url; 
+
+                    // Check that our query params don't already have a API key set
+                    if (!domainPathAndQuery.Contains("?token=") && !domainPathAndQuery.Contains("&token="))
+                    {
+                        // We have a Secure Request to Civitai, we have an API key set, and there is not already an API key on the URL. We should now add our API Key into the original URL's query parameter list.
+
+                        // If there's already query parameters, we append &token=TOKEN, otherwise we start them by appending ?token=TOKEN
+                        domainPathAndQuery += (domainPathAndQuery.Contains('?') ? "&token=" : "?token=") + civitaiApiKey;
+
+                        // Rebuild our final URL
+                        string newUrl = domainPathAndQuery + (urlHasFragment ? '#' + fragment : "");
+
+                        Logs.Debug($"Added Civitai API Key to download request. Original URL: {url}");
+
+                        // Finally replace our URL
+                        url = newUrl;
+                    }
+                }
+            }
+        }
+
         try
         {
             string outPath = $"{handler.FolderPaths[0]}/{name}.safetensors";
