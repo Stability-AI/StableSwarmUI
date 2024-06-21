@@ -37,10 +37,8 @@ public static class BasicAPIFeatures
         API.RegisterAPICall(SetParamEdits, true);
         API.RegisterAPICall(GetLanguage);
         API.RegisterAPICall(ServerDebugMessage);
-        API.RegisterAPICall(SetStabilityAPIKey, true);
-        API.RegisterAPICall(GetStabilityAPIKeyStatus);
-        API.RegisterAPICall(SetCivitaiAPIKey, true);
-        API.RegisterAPICall(GetCivitaiAPIKeyStatus);
+        API.RegisterAPICall(SetAPIKey, true);
+        API.RegisterAPICall(GetAPIKeyStatus);
         T2IAPI.Register();
         ModelsAPI.Register();
         BackendAPI.Register();
@@ -515,64 +513,35 @@ public static class BasicAPIFeatures
         return new JObject() { ["success"] = true };
     }
 
-    public static async Task<JObject> SetStabilityAPIKey(Session session, string key)
+    public static HashSet<string> AcceptedAPIKeyTypes = ["stability_api", "civitai_api"];
+
+    public static async Task<JObject> SetAPIKey(Session session, string keyType, string key)
     {
-        key = key?.Trim();
-        if (string.IsNullOrEmpty(key))
+        if (!AcceptedAPIKeyTypes.Contains(keyType))
         {
-            session.User.DeleteGenericData("stability_api", "key");
-            session.User.DeleteGenericData("stability_api", "key_last_updated");
+            return new JObject() { ["error"] = $"Invalid key type '{AcceptedAPIKeyTypes}'." };
+        }
+        if (key == "none")
+        {
+            session.User.DeleteGenericData(keyType, "key");
+            session.User.DeleteGenericData(keyType, "key_last_updated");
         }
         else
         {
-            session.User.SaveGenericData("stability_api", "key", key);
-            session.User.SaveGenericData("stability_api", "key_last_updated", $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm}");
+            session.User.SaveGenericData(keyType, "key", key);
+            session.User.SaveGenericData(keyType, "key_last_updated", $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm}");
         }
         session.User.Save();
         return new JObject() { ["success"] = true };
     }
 
-    public static async Task<JObject> GetStabilityAPIKeyStatus(Session session)
+    public static async Task<JObject> GetAPIKeyStatus(Session session, string keyType)
     {
-        string updated = session.User.GetGenericData("stability_api", "key_last_updated");
+        string updated = session.User.GetGenericData(keyType, "key_last_updated");
         if (string.IsNullOrWhiteSpace(updated))
         {
-            return new JObject() { ["status"] = "(Unset)" };
+            return new JObject() { ["status"] = "not set" };
         }
         return new JObject() { ["status"] = $"last updated {updated}" };
-    }
-
-    public static async Task<JObject> SetCivitaiAPIKey(Session session, string key)
-    {
-        key = key?.Trim();
-        if (string.IsNullOrEmpty(key))
-        {
-            session.User.DeleteGenericData("civitai_api", "key");
-            session.User.DeleteGenericData("civitai_api", "key_last_updated");
-        }
-        else
-        {
-            // Civitai API keys are (currently) 32-character hex strings, but to be very future-compatible, we're just going to
-            // validate that the string is entirely alphanumeric
-            if (!key.All(char.IsLetterOrDigit))
-            {
-                return new JObject() { ["success"] = false, ["error"] = "Invalid API key." };
-            }
-
-            session.User.SaveGenericData("civitai_api", "key", key);
-            session.User.SaveGenericData("civitai_api", "key_last_updated", $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm}");
-        }
-        session.User.Save();
-        return new JObject() { ["success"] = true };
-    }
-
-    public static async Task<JObject> GetCivitaiAPIKeyStatus(Session session)
-    {
-        string updated = session.User.GetGenericData("civitai_api", "key_last_updated");
-        if (string.IsNullOrWhiteSpace(updated))
-        {
-            return new JObject() { ["status"] = "(Unset)" };
-        }
-        return new JObject() { ["status"] = $"last set {updated}" };
     }
 }
