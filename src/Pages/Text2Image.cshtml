@@ -599,7 +599,7 @@
     <div class="tab-pane tab-pane-vw" id="user_tab" role="tabpanel">
         <ul class="nav nav-tabs" role="tablist" id="usertablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link active translate" data-bs-toggle="tab" href="#user-info" aria-selected="true" role="tab">User Info</a>
+                <a class="nav-link active translate" data-bs-toggle="tab" href="#user-info" id="userinfotabbutton" aria-selected="true" role="tab">User Info</a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link translate" data-bs-toggle="tab" href="#Settings-User" id="userconfigtabbutton" aria-selected="false" tabindex="-1" role="tab">User Settings</a>
@@ -624,6 +624,22 @@
                             <button class="basic-button translate" id="stability_key_submit" onclick="stabilityAPIHelper.onSaveButton()" disabled>Save</button>
                             <button class="basic-button translate" id="stability_key_remove" onclick="stabilityAPIHelper.onRemoveButton()" disabled>Remove</button>
                             <br>Your key: <span id="stability_key_status">(Unknown)</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="card border-secondary mb-3 card-center-container">
+                    <div class="card-header translate">Civitai API Key</div>
+                    <div class="card-body">
+                        <p class="card-text translate">
+                            If you plan to use the <a href="#" onclick="getRequiredElementById('utilitiestabbutton').click();getRequiredElementById('modeldownloadertabbutton').click();">Model Downloader</a> utility to download content from <a href="https://civitai.com/" target="_blank" rel="noreferrer noopener">Civitai</a>, you might want to set your Civitai API key below.
+                            <br>This will allow you to download gated or early-access content that your Civitai account has access to.
+                            <br>You can create an API key <a href="https://civitai.com/user/account" target="_blank" rel="noreferrer noopener">here</a>.
+                            <br>
+                            <br>Once you have your API key, enter it below and click save:
+                            <br><input type="text" id="civitai_api_key" placeholder="Civitai API Key" autocomplete="off" oninput="civitaiAPIHelper.onKeyInput()" />
+                            <button class="basic-button translate" id="civitai_key_submit" onclick="civitaiAPIHelper.onSaveButton()" disabled>Save</button>
+                            <button class="basic-button translate" id="civitai_key_remove" onclick="civitaiAPIHelper.onRemoveButton()" disabled>Remove</button>
+                            <br>Your key: <span id="civitai_key_status">(Unknown)</span>
                         </p>
                     </div>
                 </div>

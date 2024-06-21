@@ -504,8 +504,9 @@ public static class Utilities
     public static HttpClient UtilWebClient = NetworkBackendUtils.MakeHttpClient();
 
     /// <summary>Downloads a file from a given URL and saves it to a given filepath.</summary>
-    public static async Task DownloadFile(string url, string filepath, Action<long, long> progressUpdate)
+    public static async Task DownloadFile(string url, string filepath, Action<long, long> progressUpdate, string altUrl = null)
     {
+        altUrl ??= url;
         using FileStream writer = File.OpenWrite(filepath);
         using HttpResponseMessage response = await UtilWebClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseHeadersRead, Program.GlobalProgramCancel);
         long length = response.Content.Headers.ContentLength ?? 0;
@@ -514,7 +515,7 @@ public static class Utilities
         long lastUpdate = Environment.TickCount64;
         if (response.StatusCode != HttpStatusCode.OK)
         {
-            throw new InvalidOperationException($"Failed to download {url}: got response code {(int)response.StatusCode} {response.StatusCode}");
+            throw new InvalidOperationException($"Failed to download {altUrl}: got response code {(int)response.StatusCode} {response.StatusCode}");
         }
         using Stream dlStream = await response.Content.ReadAsStreamAsync();
         progressUpdate?.Invoke(0, length);
@@ -523,10 +524,10 @@ public static class Utilities
             int read = await dlStream.ReadAsync(buffer, Program.GlobalProgramCancel);
             if (read <= 0)
             {
-                Logs.Verbose($"Download {url} completed with {progress} bytes.");
+                Logs.Verbose($"Download {altUrl} completed with {progress} bytes.");
                 if (length != 0 && progress != length)
                 {
-                    throw new InvalidOperationException($"Download {url} failed: expected {length} bytes but got {progress} bytes.");
+                    throw new InvalidOperationException($"Download {altUrl} failed: expected {length} bytes but got {progress} bytes.");
                 }
                 progressUpdate?.Invoke(progress, length);
                 return;
@@ -534,7 +535,7 @@ public static class Utilities
             progress += read;
             if (Environment.TickCount64 - lastUpdate > 1000)
             {
-                Logs.Verbose($"Download {url} now at {new MemoryNum(progress)} / {new MemoryNum(length)}... {(progress / (double)length) * 100:00.0}%");
+                Logs.Verbose($"Download {altUrl} now at {new MemoryNum(progress)} / {new MemoryNum(length)}... {(progress / (double)length) * 100:00.0}%");
                 progressUpdate?.Invoke(progress, length);
                 lastUpdate = Environment.TickCount64;
             }

@@ -14,13 +14,13 @@ Basic general API routes, primarily for users and session handling.
 - HTTP Route [GetLanguage](#http-route-apigetlanguage)
 - HTTP Route [GetMyUserData](#http-route-apigetmyuserdata)
 - HTTP Route [GetNewSession](#http-route-apigetnewsession)
-- HTTP Route [GetStabilityAPIKeyStatus](#http-route-apigetstabilityapikeystatus)
+- HTTP Route [GetAPIKeyStatus](#http-route-apigetstabilityapikeystatus)
 - HTTP Route [GetUserSettings](#http-route-apigetusersettings)
 - WebSocket Route [InstallConfirmWS](#websocket-route-apiinstallconfirmws)
 - HTTP Route [InterruptAll](#http-route-apiinterruptall)
 - HTTP Route [ServerDebugMessage](#http-route-apiserverdebugmessage)
 - HTTP Route [SetParamEdits](#http-route-apisetparamedits)
-- HTTP Route [SetStabilityAPIKey](#http-route-apisetstabilityapikey)
+- HTTP Route [SetAPIKey](#http-route-apisetstabilityapikey)
 
 ## HTTP Route /API/AddNewPreset
 
@@ -169,7 +169,7 @@ Basic general API routes, primarily for users and session handling.
 (RETURN INFO NOT SET)
 ```
 
-## HTTP Route /API/GetStabilityAPIKeyStatus
+## HTTP Route /API/GetAPIKeyStatus
 
 #### Description
 
@@ -279,7 +279,7 @@ Basic general API routes, primarily for users and session handling.
 (RETURN INFO NOT SET)
 ```
 
-## HTTP Route /API/SetStabilityAPIKey
+## HTTP Route /API/SetAPIKey
 
 #### Description
 
@@ -296,4 +296,3 @@ Basic general API routes, primarily for users and session handling.
 ```js
 (RETURN INFO NOT SET)
 ```
-

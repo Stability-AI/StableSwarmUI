@@ -481,6 +481,20 @@ public static class ModelsAPI
         {
             return new JObject() { ["error"] = "Invalid type." };
         }
+        string originalUrl = url;
+        url = url.Before('#');
+        if (url.StartsWith("https://civitai.com/"))
+        {
+            string civitaiApiKey = session.User.GetGenericData("civitai_api", "key");
+            if (!string.IsNullOrEmpty(civitaiApiKey))
+            {
+                if (!url.Contains("?token=") && !url.Contains("&token="))
+                {
+                    url += (url.Contains('?') ? "&token=" : "?token=") + civitaiApiKey;
+                    Logs.Debug($"Added Civitai API Key to download request. Original URL: {originalUrl}");
+                }
+            }
+        }
         try
         {
             string outPath = $"{handler.FolderPaths[0]}/{name}.safetensors";
@@ -500,7 +514,7 @@ public static class ModelsAPI
                     ["current_percent"] = progress / (double)total,
                     ["overall_percent"] = 0.2
                 }, API.WebsocketTimeout);
-            });
+            }, originalUrl);
             File.Move(tempPath, outPath);
             if (!string.IsNullOrWhiteSpace(metadata))
             {
