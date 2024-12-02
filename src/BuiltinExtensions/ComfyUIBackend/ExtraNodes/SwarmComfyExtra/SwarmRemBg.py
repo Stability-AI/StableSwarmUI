@@ -1,7 +1,6 @@
 from PIL import Image
 import numpy as np
 import torch
-from rembg import remove
 
 class SwarmRemBg:
     @classmethod
@@ -17,6 +16,7 @@ class SwarmRemBg:
     FUNCTION = "rem"
 
     def rem(self, images):
+        from rembg import remove
         output = []
         masks = []
         for image in images:
